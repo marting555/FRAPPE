@@ -49,6 +49,18 @@
   "set_target_warehouse",
   "section_break_42",
   "items",
+<<<<<<< HEAD
+=======
+  "pricing_rule_details",
+  "pricing_rules",
+  "packing_list",
+  "packed_items",
+  "product_bundle_help",
+  "time_sheet_list",
+  "timesheets",
+  "total_billing_amount",
+  "total_billing_hours",
+>>>>>>> b57521a337 (feat: add `total_billing_hours` to Sales Invoice)
   "section_break_30",
   "total_qty",
   "total_net_weight",
@@ -1977,6 +1989,7 @@
    "read_only": 1
   },
   {
+<<<<<<< HEAD
    "default": "0",
    "fieldname": "ignore_default_payment_terms_template",
    "fieldtype": "Check",
@@ -1985,11 +1998,14 @@
    "read_only": 1
   },
   {
+=======
+>>>>>>> b57521a337 (feat: add `total_billing_hours` to Sales Invoice)
    "fieldname": "total_billing_hours",
    "fieldtype": "Float",
    "label": "Total Billing Hours",
    "print_hide": 1,
    "read_only": 1
+<<<<<<< HEAD
   },
   {
    "fieldname": "amount_eligible_for_commission",
@@ -2199,6 +2215,8 @@
    "label": "Company Contact Person",
    "options": "Contact",
    "print_hide": 1
+=======
+>>>>>>> b57521a337 (feat: add `total_billing_hours` to Sales Invoice)
   }
  ],
  "icon": "fa fa-file-text",
@@ -2211,7 +2229,11 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
+<<<<<<< HEAD
  "modified": "2025-02-06 15:59:54.636202",
+=======
+ "modified": "2021-08-02 18:36:51.978581",
+>>>>>>> b57521a337 (feat: add `total_billing_hours` to Sales Invoice)
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

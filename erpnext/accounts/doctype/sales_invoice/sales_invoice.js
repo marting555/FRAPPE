@@ -909,6 +909,7 @@ frappe.ui.form.on("Sales Invoice", {
 		}
 	},
 
+<<<<<<< HEAD
 	async add_timesheet_data(frm, kwargs) {
 		if (kwargs === "Sales Invoice") {
 			// called via frm.trigger()
@@ -921,6 +922,19 @@ frappe.ui.form.on("Sales Invoice", {
 
 		const timesheets = await frm.events.get_timesheet_data(frm, kwargs);
 		return frm.events.set_timesheet_data(frm, timesheets);
+=======
+	add_timesheet_row: function(frm, row, exchange_rate) {
+		frm.add_child('timesheets', {
+			'activity_type': row.activity_type,
+			'description': row.description,
+			'time_sheet': row.parent,
+			'billing_hours': row.billing_hours,
+			'billing_amount': flt(row.billing_amount) * flt(exchange_rate),
+			'timesheet_detail': row.name
+		});
+		frm.refresh_field('timesheets');
+		frm.trigger("calculate_timesheet_totals");
+>>>>>>> b57521a337 (feat: add `total_billing_hours` to Sales Invoice)
 	},
 
 	async get_timesheet_data(frm, kwargs) {
@@ -1082,7 +1096,58 @@ var set_timesheet_detail_rate = function (cdt, cdn, currency, timelog) {
 	});
 };
 
+<<<<<<< HEAD
 var select_loyalty_program = function (frm, loyalty_programs) {
+=======
+	create_invoice_discounting: function(frm) {
+		frappe.model.open_mapped_doc({
+			method: "erpnext.accounts.doctype.sales_invoice.sales_invoice.create_invoice_discounting",
+			frm: frm
+		});
+	},
+
+	create_dunning: function(frm) {
+		frappe.model.open_mapped_doc({
+			method: "erpnext.accounts.doctype.sales_invoice.sales_invoice.create_dunning",
+			frm: frm
+		});
+	},
+
+	calculate_timesheet_totals: function(frm) {
+		frm.set_value("total_billing_amount",
+			frm.doc.timesheets.reduce((a, b) => a + (b["billing_amount"] || 0.0), 0.0));
+		frm.set_value("total_billing_hours",
+			frm.doc.timesheets.reduce((a, b) => a + (b["billing_hours"] || 0.0), 0.0));
+	}
+});
+
+
+frappe.ui.form.on("Sales Invoice Timesheet", {
+	time_sheet: function(frm, cdt, cdn){
+		var d = locals[cdt][cdn];
+		if(d.time_sheet) {
+			frappe.call({
+				method: "erpnext.projects.doctype.timesheet.timesheet.get_timesheet_data",
+				args: {
+					"name": d.time_sheet,
+					"project": frm.doc.project || null
+				},
+				callback: function(r) {
+					if(r.message) {
+						frappe.model.set_value(cdt, cdn, "billing_hours", r.message.billing_hours);
+						frappe.model.set_value(cdt, cdn, "billing_amount", r.message.billing_amount);
+						frappe.model.set_value(cdt, cdn, "timesheet_detail", r.message.timesheet_detail);
+						frm.trigger("calculate_timesheet_totals");
+					}
+				}
+			});
+		}
+	}
+});
+
+
+var select_loyalty_program = function(frm, loyalty_programs) {
+>>>>>>> b57521a337 (feat: add `total_billing_hours` to Sales Invoice)
 	var dialog = new frappe.ui.Dialog({
 		title: __("Select Loyalty Program"),
 		fields: [
