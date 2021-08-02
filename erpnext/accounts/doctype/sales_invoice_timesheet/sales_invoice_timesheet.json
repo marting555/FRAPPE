@@ -103,6 +103,7 @@
    "fieldname": "section_break_11",
    "fieldtype": "Section Break",
    "label": "Reference"
+<<<<<<< HEAD
   },
   {
    "fieldname": "project_name",
@@ -113,11 +114,17 @@
   {
    "fieldname": "column_break_13",
    "fieldtype": "Column Break"
+=======
+>>>>>>> 1110f88e5a (feat: refactor and enhance sales invoice timesheet)
   }
  ],
  "istable": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2024-03-27 13:10:36.562795",
+=======
+ "modified": "2021-08-02 23:03:08.084930",
+>>>>>>> 1110f88e5a (feat: refactor and enhance sales invoice timesheet)
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice Timesheet",

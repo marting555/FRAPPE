@@ -1110,6 +1110,7 @@ class SalesInvoice(SellingController):
 		self.set("timesheets", [])
 		if self.project:
 			for data in get_projectwise_timesheet_data(self.project):
+<<<<<<< HEAD
 				self.append(
 					"timesheets",
 					{
@@ -1121,6 +1122,16 @@ class SalesInvoice(SellingController):
 						"description": data.description,
 					},
 				)
+=======
+				self.append('timesheets', {
+						'time_sheet': data.time_sheet,
+						'billing_hours': data.billing_hours,
+						'billing_amount': data.billing_amount,
+						'timesheet_detail': data.name,
+						'activity_type': data.activity_type,
+						'description': data.description
+					})
+>>>>>>> 1110f88e5a (feat: refactor and enhance sales invoice timesheet)
 
 			self.calculate_billing_amount_for_timesheet()
 
