@@ -299,10 +299,14 @@ def get_projectwise_timesheet_data(project=None, parent=None, from_time=None, to
 		condition += "AND CAST(tsd.from_time as DATE) BETWEEN %(from_time)s AND %(to_time)s"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 	query = f"""
 		SELECT
 =======
 	return frappe.db.sql("""
+=======
+	query = f"""
+>>>>>>> c82611aa62 (feat: sort timesheets by start time)
 		SELECT
 
 >>>>>>> 1110f88e5a (feat: refactor and enhance sales invoice timesheet)
@@ -358,9 +362,12 @@ def get_timesheet_detail_rate(timelog, currency):
 			INNER JOIN `tabTimesheet` ts
 			ON ts.name = tsd.parent
 
-		WHERE tsd.parenttype = 'Timesheet'
-			AND tsd.docstatus=1 {0}
+		WHERE
+
+			tsd.parenttype = 'Timesheet'
+			AND tsd.docstatus = 1
 			AND tsd.is_billable = 1
+<<<<<<< HEAD
 			AND tsd.sales_invoice is null
 		""".format(condition), {
 			'project': project,
@@ -369,6 +376,22 @@ def get_timesheet_detail_rate(timelog, currency):
 			'to_time': to_time
 		}, as_dict=1)
 >>>>>>> 1110f88e5a (feat: refactor and enhance sales invoice timesheet)
+=======
+			AND tsd.sales_invoice is NULL
+			{condition}
+
+		ORDER BY tsd.from_time ASC
+	"""
+
+	filters = {
+		"project": project,
+		"parent": parent,
+		"from_time": from_time,
+		"to_time": to_time
+	}
+
+	return frappe.db.sql(query, filters, as_dict=1)
+>>>>>>> c82611aa62 (feat: sort timesheets by start time)
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
