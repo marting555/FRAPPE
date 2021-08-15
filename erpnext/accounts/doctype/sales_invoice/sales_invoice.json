@@ -2230,10 +2230,14 @@
   }
  ],
 <<<<<<< HEAD
+<<<<<<< HEAD
  "modified": "2025-02-06 15:59:54.636202",
 =======
  "modified": "2021-08-02 18:36:51.978581",
 >>>>>>> b57521a337 (feat: add `total_billing_hours` to Sales Invoice)
+=======
+ "modified": "2021-08-15 18:40:20.445127",
+>>>>>>> 0f2f11cb33 (fix: typo)
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",
