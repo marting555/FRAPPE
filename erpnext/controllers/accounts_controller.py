@@ -3620,6 +3620,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 			fg_qty_unchanged = prev_fg_qty == new_fg_qty
 			uom_unchanged = prev_uom == new_uom
 			conversion_factor_unchanged = prev_con_fac == new_con_fac
+<<<<<<< HEAD
 			any_conversion_factor_changed |= not conversion_factor_unchanged
 			date_unchanged = (
 				prev_date == getdate(new_date) if prev_date and new_date else False
@@ -3632,6 +3633,10 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 				and uom_unchanged
 				and date_unchanged
 			):
+=======
+			date_unchanged = prev_date == getdate(new_date) if prev_date and new_date else False # in case of delivery note etc
+			if rate_unchanged and qty_unchanged and conversion_factor_unchanged and uom_unchanged and date_unchanged:
+>>>>>>> d8a7abcd02 (fix: date_unchanged calculation in "Update Items" (#26992))
 				continue
 
 		validate_quantity(child_item, d)
