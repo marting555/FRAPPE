@@ -415,7 +415,11 @@ class ProductionPlan(Document):
 
 		if self.total_produced_qty > 0:
 			self.status = "In Process"
+<<<<<<< HEAD
 			if self.all_items_completed():
+=======
+			if self.total_produced_qty >= self.total_planned_qty:
+>>>>>>> 09f34e558e (fix: set production plan to completed even on over production (#27027))
 				self.status = "Completed"
 
 		if self.status != "Completed":
