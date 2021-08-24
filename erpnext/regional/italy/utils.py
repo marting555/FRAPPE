@@ -3,7 +3,10 @@ import json
 
 import frappe
 from frappe import _
+<<<<<<< HEAD
 from frappe.utils import cstr, flt
+=======
+>>>>>>> 1e05c9467b (fix: Use remove_all from file_manager)
 from frappe.utils.file_manager import remove_file
 from six import string_types
 
