@@ -294,10 +294,48 @@ class TestTaxWithholdingCategory(IntegrationTestCase):
 		for d in reversed(invoices):
 			d.cancel()
 
+<<<<<<< HEAD
 	def test_tcs_on_unallocated_advance_payments(self):
 		frappe.db.set_value(
 			"Customer", "Test TCS Customer", "tax_withholding_category", "Cumulative Threshold TCS"
 		)
+=======
+	def test_tds_calculation_on_net_total(self):
+		frappe.db.set_value("Supplier", "Test TDS Supplier4", "tax_withholding_category", "Cumulative Threshold TDS")
+		invoices = []
+
+		pi = create_purchase_invoice(supplier = "Test TDS Supplier4", rate = 20000, do_not_save=True)
+		pi.append('taxes', {
+			"category": "Total",
+			"charge_type": "Actual",
+			"account_head": '_Test Account VAT - _TC',
+			"cost_center": 'Main - _TC',
+			"tax_amount": 1000,
+			"description": "Test",
+			"add_deduct_tax": "Add"
+
+		})
+		pi.save()
+		pi.submit()
+		invoices.append(pi)
+
+		# Second Invoice will apply TDS checked
+		pi1 = create_purchase_invoice(supplier = "Test TDS Supplier4", rate = 20000)
+		pi1.submit()
+		invoices.append(pi1)
+
+		self.assertEqual(pi1.taxes[0].tax_amount, 4000)
+
+		#delete invoices to avoid clashing
+		for d in invoices:
+			d.cancel()
+
+def cancel_invoices():
+	purchase_invoices = frappe.get_all("Purchase Invoice", {
+		'supplier': ['in', ['Test TDS Supplier', 'Test TDS Supplier1', 'Test TDS Supplier2']],
+		'docstatus': 1
+	}, pluck="name")
+>>>>>>> 4eb7c2a011 (fix: TDS calculation on net total (#27058))
 
 		vouchers = []
 
@@ -996,6 +1034,7 @@ def create_payment_entry(**args):
 
 def create_records():
 	# create a new suppliers
+<<<<<<< HEAD
 	for name in [
 		"Test TDS Supplier",
 		"Test TDS Supplier1",
@@ -1009,6 +1048,10 @@ def create_records():
 		"Test LDC Supplier",
 	]:
 		if frappe.db.exists("Supplier", name):
+=======
+	for name in ['Test TDS Supplier', 'Test TDS Supplier1', 'Test TDS Supplier2', 'Test TDS Supplier3', 'Test TDS Supplier4']:
+		if frappe.db.exists('Supplier', name):
+>>>>>>> 4eb7c2a011 (fix: TDS calculation on net total (#27058))
 			continue
 
 		frappe.get_doc(

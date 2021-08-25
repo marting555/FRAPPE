@@ -551,6 +551,7 @@ def get_advance_tax_across_fiscal_year(tax_deducted_on_advances, tax_details):
 
 def get_tds_amount(ldc, parties, inv, tax_details, voucher_wise_amount):
 	tds_amount = 0
+<<<<<<< HEAD
 
 	pi_grand_total = 0
 	pi_base_net_total = 0
@@ -575,13 +576,25 @@ def get_tds_amount(ldc, parties, inv, tax_details, voucher_wise_amount):
 		"posting_date": ["between", (tax_details.from_date, tax_details.to_date)],
 		"tax_withholding_category": tax_details.get("tax_withholding_category"),
 		"company": inv.company,
+=======
+	invoice_filters = {
+		'name': ('in', vouchers), 
+		'docstatus': 1,
+		'apply_tds': 1
+>>>>>>> 4eb7c2a011 (fix: TDS calculation on net total (#27058))
 	}
 
 	consider_party_ledger_amt = cint(tax_details.consider_party_ledger_amount)
 
+<<<<<<< HEAD
 	if consider_party_ledger_amt:
 		pe_filters.pop("apply_tax_withholding_amount", None)
 		pe_filters.pop("tax_withholding_category", None)
+=======
+	if cint(tax_details.consider_party_ledger_amount):
+		invoice_filters.pop('apply_tds', None)
+		field = 'sum(grand_total)'
+>>>>>>> 4eb7c2a011 (fix: TDS calculation on net total (#27058))
 
 	# Get Amount via payment entry
 	payment_entries = frappe.db.get_all(
