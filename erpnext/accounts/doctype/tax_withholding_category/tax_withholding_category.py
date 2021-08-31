@@ -15,11 +15,16 @@ class TaxWithholdingCategory(Document):
 
 	def validate_dates(self):
 		last_date = None
+<<<<<<< HEAD
 		for d in self.get("rates"):
+=======
+		for d in self.get('rates'):
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
 			if getdate(d.from_date) >= getdate(d.to_date):
 				frappe.throw(_("Row #{0}: From Date cannot be before To Date").format(d.idx))
 
 			# validate overlapping of dates
+<<<<<<< HEAD
 			if last_date and getdate(d.to_date) < getdate(last_date):
 				frappe.throw(_("Row #{0}: Dates overlapping with other row").format(d.idx))
 
@@ -34,6 +39,15 @@ class TaxWithholdingCategory(Document):
 					)
 				)
 
+=======
+			if last_date and getdate(r.to_date) < getdate(last_date):
+				frappe.throw(_("Row #{0}: Dates overlapping with other row").format(d.idx))
+
+	def validate_thresholds(self):
+		for d in self.get('rates'):
+			if d.cumulative_threshold and d.cumulative_threshold < d.single_threshold:
+				frappe.throw(_("Row #{0}: Cumulative threshold cannot be less than Single Transaction threshold").format(d.idx))
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
 
 def get_party_details(inv):
 	party_type, party = "", ""
@@ -82,7 +96,11 @@ def get_party_tax_withholding_details(inv, tax_withholding_category=None):
 	if not parties:
 		parties.append(party)
 
+<<<<<<< HEAD
 	posting_date = inv.get("posting_date") or inv.get("transaction_date")
+=======
+	posting_date = inv.get('posting_date') or inv.get('transaction_date')
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
 	tax_details = get_tax_withholding_details(tax_withholding_category, posting_date, inv.company)
 
 	if not tax_details:
@@ -100,8 +118,15 @@ def get_party_tax_withholding_details(inv, tax_withholding_category=None):
 			).format(tax_withholding_category, inv.company, party)
 		)
 
+<<<<<<< HEAD
 	tax_amount, tax_deducted, tax_deducted_on_advances, voucher_wise_amount = get_tax_amount(
 		party_type, parties, inv, tax_details, posting_date, pan_no
+=======
+	tax_amount, tax_deducted = get_tax_amount(
+		party_type, parties,
+		inv, tax_details,
+		posting_date, pan_no
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
 	)
 
 	if party_type == "Supplier":
@@ -114,7 +139,10 @@ def get_party_tax_withholding_details(inv, tax_withholding_category=None):
 	else:
 		return tax_row
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
 def get_tax_withholding_details(tax_withholding_category, posting_date, company):
 	tax_withholding = frappe.get_doc("Tax Withholding Category", tax_withholding_category)
 
@@ -122,6 +150,7 @@ def get_tax_withholding_details(tax_withholding_category, posting_date, company)
 
 	for account_detail in tax_withholding.accounts:
 		if company == account_detail.company:
+<<<<<<< HEAD
 			return frappe._dict(
 				{
 					"tax_withholding_category": tax_withholding_category,
@@ -141,6 +170,21 @@ def get_tax_withholding_details(tax_withholding_category, posting_date, company)
 			)
 
 
+=======
+			return frappe._dict({
+				"account_head": account_detail.account,
+				"rate": tax_rate_detail.tax_withholding_rate,
+				"from_date": tax_rate_detail.from_date,
+				"to_date": tax_rate_detail.to_date,
+				"threshold": tax_rate_detail.single_threshold,
+				"cumulative_threshold": tax_rate_detail.cumulative_threshold,
+				"description": tax_withholding.category_name if tax_withholding.category_name else tax_withholding_category,
+				"consider_party_ledger_amount": tax_withholding.consider_party_ledger_amount,
+				"tax_on_excess_amount": tax_withholding.tax_on_excess_amount,
+				"round_off_tax_amount": tax_withholding.round_off_tax_amount
+			})
+
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
 def get_tax_withholding_rates(tax_withholding, posting_date):
 	# returns the row that matches with the fiscal year from posting date
 	for rate in tax_withholding.rates:
@@ -148,7 +192,10 @@ def get_tax_withholding_rates(tax_withholding, posting_date):
 			return rate
 
 	frappe.throw(_("No Tax Withholding data found for the current posting date."))
+<<<<<<< HEAD
 
+=======
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
 
 def get_tax_row_for_tcs(inv, tax_details, tax_amount, tax_deducted):
 	row = {
@@ -190,6 +237,7 @@ def get_tax_row_for_tds(tax_details, tax_amount):
 		"account_head": tax_details.account_head,
 	}
 
+<<<<<<< HEAD
 
 def get_lower_deduction_certificate(tax_details, pan_no):
 	ldc_name = frappe.db.get_value(
@@ -218,6 +266,23 @@ def get_tax_amount(party_type, parties, inv, tax_details, posting_date, pan_no=N
 		to_date=tax_details.to_date,
 		party_type=party_type,
 	)
+=======
+def get_lower_deduction_certificate(tax_details, pan_no):
+	ldc_name = frappe.db.get_value('Lower Deduction Certificate', 
+		{
+			'pan_no': pan_no, 
+			'valid_from': ('>=', tax_details.from_date),
+			'valid_upto': ('<=', tax_details.to_date)
+		}, 'name')
+
+	if ldc_name:
+		return frappe.get_doc('Lower Deduction Certificate', ldc_name)
+
+def get_tax_amount(party_type, parties, inv, tax_details, posting_date, pan_no=None):
+	vouchers = get_invoice_vouchers(parties, tax_details, inv.company, party_type=party_type)
+	advance_vouchers = get_advance_vouchers(parties, company=inv.company, from_date=tax_details.from_date,
+		to_date=tax_details.to_date, party_type=party_type)
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
 	taxable_vouchers = vouchers + advance_vouchers
 	tax_deducted_on_advances = 0
 
@@ -229,17 +294,29 @@ def get_tax_amount(party_type, parties, inv, tax_details, posting_date, pan_no=N
 		tax_deducted = get_deducted_tax(taxable_vouchers, tax_details)
 
 	tax_amount = 0
+<<<<<<< HEAD
 
 	if party_type == "Supplier":
+=======
+	if party_type == 'Supplier':
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
 		ldc = get_lower_deduction_certificate(tax_details, pan_no)
 		if tax_deducted:
 			net_total = inv.net_total
 			if ldc:
+<<<<<<< HEAD
 				tax_amount = get_tds_amount_from_ldc(
 					ldc, parties, pan_no, tax_details, posting_date, net_total
 				)
 			else:
 				tax_amount = net_total * tax_details.rate / 100 if net_total > 0 else 0
+=======
+				tax_amount = get_tds_amount_from_ldc(ldc, parties, pan_no, tax_details, posting_date, net_total)
+			else:
+				tax_amount = net_total * tax_details.rate / 100 if net_total > 0 else 0
+		else:
+			tax_amount = get_tds_amount(ldc, parties, inv, tax_details, tax_deducted, vouchers)
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
 
 			# once tds is deducted, not need to add vouchers in the invoice
 			voucher_wise_amount = {}
@@ -254,6 +331,7 @@ def get_tax_amount(party_type, parties, inv, tax_details, posting_date, pan_no=N
 			#  if no TCS has been charged in FY,
 			# then chargeable value is "prev invoices + advances" value which cross the threshold
 			tax_amount = get_tcs_amount(parties, inv, tax_details, vouchers, advance_vouchers)
+<<<<<<< HEAD
 
 	if cint(tax_details.round_off_tax_amount):
 		tax_amount = normal_round(tax_amount)
@@ -360,9 +438,12 @@ def get_taxes_deducted_on_advances_allocated(inv, tax_details):
 				.where(at.account_head == tax_details.account_head)
 				.run(as_dict=True)
 			)
+=======
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
 
 	return tax_info
 
+<<<<<<< HEAD
 
 def get_deducted_tax(taxable_vouchers, tax_details):
 	# check if TDS / TCS account is already charged on taxable vouchers
@@ -379,6 +460,57 @@ def get_deducted_tax(taxable_vouchers, tax_details):
 	return sum(entries)
 
 
+=======
+def get_invoice_vouchers(parties, tax_details, company, party_type='Supplier'):
+	dr_or_cr = 'credit' if party_type == 'Supplier' else 'debit'
+
+	filters = {
+		dr_or_cr: ['>', 0],
+		'company': company,
+		'party_type': party_type,
+		'party': ['in', parties],
+		'posting_date': ['between', (tax_details.from_date, tax_details.to_date)],
+		'is_opening': 'No',
+		'is_cancelled': 0
+	}
+
+	return frappe.get_all('GL Entry', filters=filters, distinct=1, pluck="voucher_no") or [""]
+
+def get_advance_vouchers(parties, company=None, from_date=None, to_date=None, party_type='Supplier'):
+	# for advance vouchers, debit and credit is reversed
+	dr_or_cr = 'debit' if party_type == 'Supplier' else 'credit'
+
+	filters = {
+		dr_or_cr: ['>', 0],
+		'is_opening': 'No',
+		'is_cancelled': 0,
+		'party_type': party_type,
+		'party': ['in', parties],
+		'against_voucher': ['is', 'not set']
+	}
+
+	if company:
+		filters['company'] = company
+	if from_date and to_date:
+		filters['posting_date'] = ['between', (from_date, to_date)]
+
+	return frappe.get_all('GL Entry', filters=filters, distinct=1, pluck='voucher_no') or [""]
+
+def get_deducted_tax(taxable_vouchers, tax_details):
+	# check if TDS / TCS account is already charged on taxable vouchers
+	filters = {
+		'is_cancelled': 0,
+		'credit': ['>', 0],
+		'posting_date': ['between', (tax_details.from_date, tax_details.to_date)],
+		'account': tax_details.account_head,
+		'voucher_no': ['in', taxable_vouchers],
+	}
+	field = "credit"
+
+	entries = frappe.db.get_all('GL Entry', filters, pluck=field)
+	return sum(entries)
+
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
 def get_tds_amount(ldc, parties, inv, tax_details, tax_deducted, vouchers):
 	tds_amount = 0
 	supp_credit_amt = 0.0
@@ -411,8 +543,13 @@ def get_tds_amount(ldc, parties, inv, tax_details, tax_deducted, vouchers):
 	supp_credit_amt += supp_jv_credit_amt
 	supp_credit_amt += inv.net_total
 
+<<<<<<< HEAD
 	threshold = tax_details.get("threshold", 0)
 	cumulative_threshold = tax_details.get("cumulative_threshold", 0)
+=======
+	debit_note_amount = get_debit_note_amount(parties, tax_details.from_date, tax_details.to_date, inv.company)
+	supp_credit_amt -= debit_note_amount
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
 
 	if (threshold and inv.net_total >= threshold) or (
 		cumulative_threshold and supp_credit_amt >= cumulative_threshold
@@ -443,11 +580,16 @@ def get_tds_amount(ldc, parties, inv, tax_details, tax_deducted, vouchers):
 
 	return tds_amount
 
+<<<<<<< HEAD
 
 def get_tcs_amount(parties, inv, tax_details, vouchers, adv_vouchers):
 	tcs_amount = 0
 	invoiced_amt = 0
 	advance_amt = 0
+=======
+def get_tcs_amount(parties, inv, tax_details, vouchers, adv_vouchers):
+	tcs_amount = 0
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
 
 	# sum of debit entries made from sales invoices
 	if vouchers:
@@ -482,6 +624,7 @@ def get_tcs_amount(parties, inv, tax_details, vouchers, adv_vouchers):
 		)
 
 	# sum of credit entries made from sales invoice
+<<<<<<< HEAD
 	credit_note_amt = sum(
 		frappe.db.get_all(
 			"GL Entry",
@@ -496,6 +639,16 @@ def get_tcs_amount(parties, inv, tax_details, vouchers, adv_vouchers):
 			pluck="credit",
 		)
 	)
+=======
+	credit_note_amt = sum(frappe.db.get_all('GL Entry', {
+		'is_cancelled': 0,
+		'credit': ['>', 0],
+		'party': ['in', parties],
+		'posting_date': ['between', (tax_details.from_date, tax_details.to_date)],
+		'company': inv.company,
+		'voucher_type': 'Sales Invoice',
+	}, pluck='credit'))
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
 
 	cumulative_threshold = tax_details.get("cumulative_threshold", 0)
 
@@ -515,7 +668,10 @@ def get_invoice_total_without_tcs(inv, tax_details):
 
 	return inv.grand_total - tcs_tax_row_amount
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
 def get_tds_amount_from_ldc(ldc, parties, pan_no, tax_details, posting_date, net_total):
 	tds_amount = 0
 
@@ -542,6 +698,23 @@ def get_tds_amount_from_ldc(ldc, parties, pan_no, tax_details, posting_date, net
 
 	return tds_amount
 
+<<<<<<< HEAD
+=======
+def get_debit_note_amount(suppliers, from_date, to_date, company=None):
+
+	filters = {
+		'supplier': ['in', suppliers],
+		'is_return': 1,
+		'docstatus': 1,
+		'posting_date': ['between', (from_date, to_date)]
+	}
+	fields = ['abs(sum(net_total)) as net_total']
+
+	if company:
+		filters['company'] = company
+
+	return frappe.get_all('Purchase Invoice', filters, fields)[0].get('net_total') or 0.0
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
 
 def get_ltds_amount(current_amount, deducted_amount, certificate_limit, rate, tax_details):
 	if certificate_limit - flt(deducted_amount) - flt(current_amount) >= 0:

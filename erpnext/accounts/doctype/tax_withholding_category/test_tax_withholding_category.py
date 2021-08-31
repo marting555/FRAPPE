@@ -494,6 +494,7 @@ def create_tax_with_holding_category():
 	fiscal_year = get_fiscal_year(today(), company="_Test Company")
 	# Cumulative threshold
 	if not frappe.db.exists("Tax Withholding Category", "Cumulative Threshold TDS"):
+<<<<<<< HEAD
 		frappe.get_doc(
 			{
 				"doctype": "Tax Withholding Category",
@@ -629,3 +630,79 @@ def create_tax_with_holding_category():
 				"accounts": [{"company": "_Test Company", "account": "TDS - _TC"}],
 			}
 		).insert()
+=======
+		frappe.get_doc({
+			"doctype": "Tax Withholding Category",
+			"name": "Cumulative Threshold TDS",
+			"category_name": "10% TDS",
+			"rates": [{
+				'from_date': fiscal_year[1],
+				'to_date': fiscal_year[2],
+				'tax_withholding_rate': 10,
+				'single_threshold': 0,
+				'cumulative_threshold': 30000.00
+			}],
+			"accounts": [{
+				'company': '_Test Company',
+				'account': 'TDS - _TC'
+			}]
+		}).insert()
+
+	if not frappe.db.exists("Tax Withholding Category", "Cumulative Threshold TCS"):
+		frappe.get_doc({
+			"doctype": "Tax Withholding Category",
+			"name": "Cumulative Threshold TCS",
+			"category_name": "10% TCS",
+			"rates": [{
+				'from_date': fiscal_year[1],
+				'to_date': fiscal_year[2],
+				'tax_withholding_rate': 10,
+				'single_threshold': 0,
+				'cumulative_threshold': 30000.00
+			}],
+			"accounts": [{
+				'company': '_Test Company',
+				'account': 'TCS - _TC'
+			}]
+		}).insert()
+
+	# Single thresold
+	if not frappe.db.exists("Tax Withholding Category", "Single Threshold TDS"):
+		frappe.get_doc({
+			"doctype": "Tax Withholding Category",
+			"name": "Single Threshold TDS",
+			"category_name": "10% TDS",
+			"rates": [{
+				'from_date': fiscal_year[1],
+				'to_date': fiscal_year[2],
+				'tax_withholding_rate': 10,
+				'single_threshold': 20000.00,
+				'cumulative_threshold': 0
+			}],
+			"accounts": [{
+				'company': '_Test Company',
+				'account': 'TDS - _TC'
+			}]
+		}).insert()
+
+	if not frappe.db.exists("Tax Withholding Category", "New TDS Category"):
+		frappe.get_doc({
+			"doctype": "Tax Withholding Category",
+			"name": "New TDS Category",
+			"category_name": "New TDS Category",
+			"round_off_tax_amount": 1,
+			"consider_party_ledger_amount": 1,
+			"tax_on_excess_amount": 1,
+			"rates": [{
+				'from_date': fiscal_year[1],
+				'to_date': fiscal_year[2],
+				'tax_withholding_rate': 10,
+				'single_threshold': 0,
+				'cumulative_threshold': 30000
+			}],
+			"accounts": [{
+				'company': '_Test Company',
+				'account': 'TDS - _TC'
+			}]
+		}).insert()
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)

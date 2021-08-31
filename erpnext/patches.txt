@@ -311,6 +311,7 @@ execute:frappe.reload_doc("erpnext_integrations", "doctype", "TaxJar Settings")
 execute:frappe.reload_doc("erpnext_integrations", "doctype", "Product Tax Category")
 erpnext.patches.v13_0.custom_fields_for_taxjar_integration          #08-11-2021
 erpnext.patches.v13_0.set_operation_time_based_on_operating_cost
+<<<<<<< HEAD
 erpnext.patches.v13_0.create_website_items #30-09-2021
 erpnext.patches.v13_0.populate_e_commerce_settings
 erpnext.patches.v13_0.make_homepage_products_website_items
@@ -379,3 +380,7 @@ erpnext.patches.v13_0.update_asset_value_for_manual_depr_entries
 erpnext.patches.v13_0.update_docs_link
 erpnext.patches.v13_0.correct_asset_value_if_je_with_workflow
 execute:frappe.db.set_value("Accounts Settings", "Accounts Settings", "service_provider", "frankfurter.app")
+=======
+erpnext.patches.v13_0.validate_options_for_data_field
+erpnext.patches.v13_0.update_dates_in_tax_withholding_category
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)

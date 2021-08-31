@@ -28,14 +28,22 @@
   {
    "columns": 2,
    "fieldname": "single_threshold",
+<<<<<<< HEAD
    "fieldtype": "Float",
+=======
+   "fieldtype": "Currency",
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
    "in_list_view": 1,
    "label": "Single Transaction Threshold"
   },
   {
    "columns": 3,
    "fieldname": "cumulative_threshold",
+<<<<<<< HEAD
    "fieldtype": "Float",
+=======
+   "fieldtype": "Currency",
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
    "in_list_view": 1,
    "label": "Cumulative Transaction Threshold"
   },
@@ -59,7 +67,11 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2022-01-13 12:04:42.904263",
+=======
+ "modified": "2021-08-31 11:42:12.213977",
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Tax Withholding Rate",
@@ -68,6 +80,9 @@
  "quick_entry": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
+<<<<<<< HEAD
  "states": [],
+=======
+>>>>>>> 5e10e10329 (feat: Validity dates in Tax Withholding Rates)
  "track_changes": 1
 }
