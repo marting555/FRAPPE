@@ -4,6 +4,9 @@
 # import frappe
 from frappe.model.document import Document
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 class PaymentReconciliationAllocation(Document):
 	pass

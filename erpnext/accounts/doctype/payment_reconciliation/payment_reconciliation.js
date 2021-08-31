@@ -2,6 +2,7 @@
 // For license information, please see license.txt
 
 frappe.provide("erpnext.accounts");
+<<<<<<< HEAD
 erpnext.accounts.PaymentReconciliationController = frappe.ui.form.Controller.extend({
 	onload: function() {
 		const default_company = frappe.defaults.get_default('company');
@@ -12,6 +13,13 @@ erpnext.accounts.PaymentReconciliationController = frappe.ui.form.Controller.ext
 		this.frm.set_value('receivable_payable_account', '');
 
 		this.frm.set_query("party_type", () => {
+=======
+erpnext.accounts.PaymentReconciliationController = class PaymentReconciliationController extends frappe.ui.form.Controller {
+	onload() {
+		var me = this;
+
+		this.frm.set_query("party_type", function() {
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 			return {
 				"filters": {
 					"name": ["in", Object.keys(frappe.boot.party_account_types)],
@@ -93,11 +101,47 @@ erpnext.accounts.PaymentReconciliationController = frappe.ui.form.Controller.ext
 		this.frm.set_value('party', '');
 	},
 
+<<<<<<< HEAD
 	party: function() {
 		this.frm.set_value('receivable_payable_account', '');
 		this.frm.trigger("clear_child_tables");
 
 		if (!this.frm.doc.receivable_payable_account && this.frm.doc.party_type && this.frm.doc.party) {
+=======
+	refresh() {
+		this.frm.disable_save();
+
+		if (this.frm.doc.receivable_payable_account) {
+			this.frm.add_custom_button(__('Get Unreconciled Entries'), () =>
+				this.frm.trigger("get_unreconciled_entries")
+			);
+		}
+		if (this.frm.doc.invoices.length && this.frm.doc.payments.length) {
+			this.frm.add_custom_button(__('Allocate'), () =>
+				this.frm.trigger("allocate")
+			);
+		}
+		if (this.frm.doc.allocation.length) {
+			this.frm.add_custom_button(__('Reconcile'), () =>
+				this.frm.trigger("reconcile")
+			);
+		}
+	}
+
+	company() {
+		var me = this;
+		this.frm.set_value('receivable_payable_account', '');
+		me.frm.clear_table("allocation");
+		me.frm.clear_table("invoices");
+		me.frm.clear_table("payments");
+		me.frm.refresh_fields();
+		me.frm.trigger('party');
+	}
+
+	party() {
+		var me = this;
+		if (!me.frm.doc.receivable_payable_account && me.frm.doc.party_type && me.frm.doc.party) {
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 			return frappe.call({
 				method: "erpnext.accounts.party.get_party_account",
 				args: {
@@ -109,8 +153,12 @@ erpnext.accounts.PaymentReconciliationController = frappe.ui.form.Controller.ext
 					if (!r.exc && r.message) {
 						this.frm.set_value("receivable_payable_account", r.message);
 					}
+<<<<<<< HEAD
 					this.frm.refresh();
 
+=======
+					me.frm.refresh();
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 				}
 			});
 		}
@@ -133,6 +181,7 @@ erpnext.accounts.PaymentReconciliationController = frappe.ui.form.Controller.ext
 		return this.frm.call({
 			doc: this.frm.doc,
 			method: 'get_unreconciled_entries',
+<<<<<<< HEAD
 			callback: () => {
 				if (!(this.frm.doc.payments.length || this.frm.doc.invoices.length)) {
 					frappe.throw({message: __("No Unreconciled Invoices and Payments found for this party and account")});
@@ -142,11 +191,19 @@ erpnext.accounts.PaymentReconciliationController = frappe.ui.form.Controller.ext
 					frappe.throw({message: __("No Unreconciled Payments found for this party")});
 				}
 				this.frm.refresh();
+=======
+			callback: function(r, rt) {
+				if (!(me.frm.doc.payments.length || me.frm.doc.invoices.length)) {
+					frappe.throw({message: __("No invoice and payment records found for this party")});
+				}
+				me.frm.refresh();
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 			}
 		});
 
 	},
 
+<<<<<<< HEAD
 	allocate: function() {
 		let payments = this.frm.fields_dict.payments.grid.get_selected_children();
 		if (!(payments.length)) {
@@ -158,11 +215,26 @@ erpnext.accounts.PaymentReconciliationController = frappe.ui.form.Controller.ext
 		}
 		return this.frm.call({
 			doc: this.frm.doc,
+=======
+	allocate() {
+		var me = this;
+		let payments = me.frm.fields_dict.payments.grid.get_selected_children();
+		if (!(payments.length)) {
+			payments = me.frm.doc.payments;
+		}
+		let invoices = me.frm.fields_dict.invoices.grid.get_selected_children();
+		if (!(invoices.length)) {
+			invoices = me.frm.doc.invoices;
+		}
+		return me.frm.call({
+			doc: me.frm.doc,
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 			method: 'allocate_entries',
 			args: {
 				payments: payments,
 				invoices: invoices
 			},
+<<<<<<< HEAD
 			callback: () => {
 				this.frm.refresh();
 			}
@@ -171,6 +243,17 @@ erpnext.accounts.PaymentReconciliationController = frappe.ui.form.Controller.ext
 
 	reconcile: function() {
 		var show_dialog = this.frm.doc.allocation.filter(d => d.difference_amount && !d.difference_account);
+=======
+			callback: function() {
+				me.frm.refresh();
+			}
+		});
+	}
+
+	reconcile() {
+		var me = this;
+		var show_dialog = me.frm.doc.allocation.filter(d => d.difference_amount && !d.difference_account);
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 
 		if (show_dialog && show_dialog.length) {
 
@@ -219,7 +302,11 @@ erpnext.accounts.PaymentReconciliationController = frappe.ui.form.Controller.ext
 						}]
 					},
 				],
+<<<<<<< HEAD
 				primary_action: () => {
+=======
+				primary_action: function() {
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 					const args = dialog.get_values()["allocation"];
 
 					args.forEach(d => {
@@ -256,6 +343,7 @@ erpnext.accounts.PaymentReconciliationController = frappe.ui.form.Controller.ext
 		return this.frm.call({
 			doc: this.frm.doc,
 			method: 'reconcile',
+<<<<<<< HEAD
 			callback: () => {
 				this.frm.clear_table("allocation");
 				this.frm.refresh();
@@ -265,3 +353,15 @@ erpnext.accounts.PaymentReconciliationController = frappe.ui.form.Controller.ext
 });
 
 $.extend(cur_frm.cscript, new erpnext.accounts.PaymentReconciliationController({frm: cur_frm}));
+=======
+			callback: function(r, rt) {
+				me.frm.clear_table("allocation");
+				me.frm.refresh_fields();
+				me.frm.refresh();
+			}
+		});
+	}
+};
+
+extend_cscript(cur_frm.cscript, new erpnext.accounts.PaymentReconciliationController({frm: cur_frm}));
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))

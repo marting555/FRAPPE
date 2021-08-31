@@ -7,21 +7,33 @@
  "field_order": [
   "reference_type",
   "reference_name",
+<<<<<<< HEAD
   "reference_row",
+=======
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
   "column_break_3",
   "invoice_type",
   "invoice_number",
   "section_break_6",
   "allocated_amount",
   "unreconciled_amount",
+<<<<<<< HEAD
   "column_break_8",
   "amount",
+=======
+  "amount",
+  "column_break_8",
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
   "is_advance",
   "section_break_5",
   "difference_amount",
   "column_break_7",
+<<<<<<< HEAD
   "difference_account",
   "currency"
+=======
+  "difference_account"
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
  ],
  "fields": [
   {
@@ -38,7 +50,11 @@
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Allocated Amount",
+<<<<<<< HEAD
    "options": "currency",
+=======
+   "options": "Currency",
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
    "reqd": 1
   },
   {
@@ -113,7 +129,11 @@
    "fieldtype": "Currency",
    "hidden": 1,
    "label": "Unreconciled Amount",
+<<<<<<< HEAD
    "options": "currency",
+=======
+   "options": "Currency",
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
    "read_only": 1
   },
   {
@@ -121,6 +141,7 @@
    "fieldtype": "Currency",
    "hidden": 1,
    "label": "Amount",
+<<<<<<< HEAD
    "options": "currency",
    "read_only": 1
   },
@@ -137,11 +158,19 @@
    "hidden": 1,
    "label": "Currency",
    "options": "Currency"
+=======
+   "options": "Currency",
+   "read_only": 1
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
   }
  ],
  "istable": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2023-11-28 16:30:43.344612",
+=======
+ "modified": "2021-08-30 10:58:42.665107",
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payment Reconciliation Allocation",

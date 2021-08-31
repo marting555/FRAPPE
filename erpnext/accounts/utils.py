@@ -422,7 +422,11 @@ def add_cc(args=None):
 
 def reconcile_against_document(args):
 	"""
+<<<<<<< HEAD
 	Cancel PE or JV, Update against document, split if required and resubmit
+=======
+		Cancel PE or JV, Update against document, split if required and resubmit
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 	"""
 	# To optimize making GL Entry for PE or JV with multiple references
 	reconciled_entries = {}
@@ -454,10 +458,17 @@ def reconcile_against_document(args):
 		doc.save(ignore_permissions=True)
 		# re-submit advance entry
 		doc = frappe.get_doc(entry.voucher_type, entry.voucher_no)
+<<<<<<< HEAD
 		doc.make_gl_entries(cancel=0, adv_adj=1)
 		frappe.flags.ignore_party_validation = False
 
 		if entry.voucher_type in ("Payment Entry", "Journal Entry"):
+=======
+		doc.make_gl_entries(cancel = 0, adv_adj =1)
+		frappe.flags.ignore_party_validation = False
+
+		if entry.voucher_type in ('Payment Entry', 'Journal Entry'):
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 			doc.update_expense_claim()
 
 
@@ -467,8 +478,13 @@ def check_if_advance_entry_modified(args):
 	check if amount is same
 	check if jv is submitted
 	"""
+<<<<<<< HEAD
 	if not args.get("unreconciled_amount"):
 		args.update({"unreconciled_amount": args.get("unadjusted_amount")})
+=======
+	if not args.get('unreconciled_amount'):
+		args.update({'unreconciled_amount': args.get('unadjusted_amount')})
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 
 	ret = None
 	if args.voucher_type == "Journal Entry":
@@ -499,11 +515,15 @@ def check_if_advance_entry_modified(args):
 					and t1.party_type = %(party_type)s and t1.party = %(party)s and t1.{0} = %(account)s
 					and t2.reference_doctype in ("", "Sales Order", "Purchase Order")
 					and t2.allocated_amount = %(unreconciled_amount)s
+<<<<<<< HEAD
 			""".format(
 					party_account_field
 				),
 				args,
 			)
+=======
+			""".format(party_account_field), args)
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 		else:
 			ret = frappe.db.sql(
 				"""select name from `tabPayment Entry`
@@ -511,11 +531,15 @@ def check_if_advance_entry_modified(args):
 					name = %(voucher_no)s and docstatus = 1
 					and party_type = %(party_type)s and party = %(party)s and {0} = %(account)s
 					and unallocated_amount = %(unreconciled_amount)s
+<<<<<<< HEAD
 			""".format(
 					party_account_field
 				),
 				args,
 			)
+=======
+			""".format(party_account_field), args)
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 
 	if not ret:
 		throw(_("""Payment Entry has been modified after you pulled it. Please pull it again."""))
@@ -530,12 +554,16 @@ def validate_allocated_amount(args):
 	elif flt(args.get("allocated_amount"), precision) > flt(args.get("unadjusted_amount"), precision):
 		throw(_("Allocated amount cannot be greater than unadjusted amount"))
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 def update_reference_in_journal_entry(d, journal_entry, do_not_save=False):
 	"""
 	Updates against document, if partial amount splits into rows
 	"""
 	jv_detail = journal_entry.get("accounts", {"name": d["voucher_detail_no"]})[0]
+<<<<<<< HEAD
 
 	# Update Advance Paid in SO/PO since they might be getting unlinked
 	if jv_detail.get("reference_type") in ("Sales Order", "Purchase Order"):
@@ -575,6 +603,33 @@ def update_reference_in_journal_entry(d, journal_entry, do_not_save=False):
 	new_row.set("reference_type", d["against_voucher_type"])
 	new_row.set("reference_name", d["against_voucher"])
 
+=======
+
+	if flt(d['unadjusted_amount']) - flt(d['allocated_amount']) != 0:
+		# adjust the unreconciled balance
+		amount_in_account_currency = flt(d['unadjusted_amount']) - flt(d['allocated_amount'])
+		amount_in_company_currency = amount_in_account_currency * flt(jv_detail.exchange_rate)
+		jv_detail.set(d['dr_or_cr'], amount_in_account_currency)
+		jv_detail.set('debit' if d['dr_or_cr'] == 'debit_in_account_currency' else 'credit', amount_in_company_currency)
+	else:
+		journal_entry.remove(jv_detail)
+
+	# new row with references
+	new_row = journal_entry.append("accounts")
+	new_row.update(jv_detail.as_dict().copy())
+
+	new_row.set(d["dr_or_cr"], d["allocated_amount"])
+	new_row.set('debit' if d['dr_or_cr'] == 'debit_in_account_currency' else 'credit',
+		d["allocated_amount"] * flt(jv_detail.exchange_rate))
+
+	new_row.set('credit_in_account_currency' if d['dr_or_cr'] == 'debit_in_account_currency'
+		else 'debit_in_account_currency', 0)
+	new_row.set('credit' if d['dr_or_cr'] == 'debit_in_account_currency' else 'debit', 0)
+
+	new_row.set("reference_type", d["against_voucher_type"])
+	new_row.set("reference_name", d["against_voucher"])
+
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 	new_row.against_account = cstr(jv_detail.against_account)
 	new_row.is_advance = cstr(jv_detail.is_advance)
 	new_row.docstatus = 1
@@ -583,7 +638,10 @@ def update_reference_in_journal_entry(d, journal_entry, do_not_save=False):
 	journal_entry.flags.ignore_validate_update_after_submit = True
 	if not do_not_save:
 		journal_entry.save(ignore_permissions=True)
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 
 def update_reference_in_payment_entry(d, payment_entry, do_not_save=False):
 	reference_details = {
@@ -730,7 +788,11 @@ def remove_ref_doc_link_from_pe(ref_type, ref_no):
 
 @frappe.whitelist()
 def get_company_default(company, fieldname, ignore_validation=False):
+<<<<<<< HEAD
 	value = frappe.get_cached_value("Company", company, fieldname)
+=======
+	value = frappe.get_cached_value('Company',  company,  fieldname)
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 
 	if not ignore_validation and not value:
 		throw(

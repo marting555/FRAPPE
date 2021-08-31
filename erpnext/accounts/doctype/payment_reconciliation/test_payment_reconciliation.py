@@ -1,6 +1,7 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 
+<<<<<<< HEAD
 import unittest
 
 import frappe
@@ -94,3 +95,10 @@ def make_invoice_and_payment():
 	)
 	pe.insert()
 	pe.submit()
+=======
+# import frappe
+import unittest
+
+class TestPaymentReconciliation(unittest.TestCase):
+	pass
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))

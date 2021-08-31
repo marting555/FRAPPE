@@ -2135,6 +2135,7 @@ def get_advance_journal_entries(
 	return list(journal_entries)
 
 
+<<<<<<< HEAD
 def get_advance_payment_entries(
 	party_type,
 	party,
@@ -2146,6 +2147,10 @@ def get_advance_payment_entries(
 	limit=None,
 	condition=None,
 ):
+=======
+def get_advance_payment_entries(party_type, party, party_account, order_doctype,
+		order_list=None, include_unallocated=True, against_all_orders=False, limit=None, condition=None):
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 	party_account_field = "paid_from" if party_type == "Customer" else "paid_to"
 	currency_field = (
 		"paid_from_account_currency" if party_type == "Customer" else "paid_to_account_currency"
@@ -2188,8 +2193,12 @@ def get_advance_payment_entries(
 		)
 
 	if include_unallocated:
+<<<<<<< HEAD
 		unallocated_payment_entries = frappe.db.sql(
 			"""
+=======
+		unallocated_payment_entries = frappe.db.sql("""
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 				select "Payment Entry" as reference_type, name as reference_name, posting_date,
 				remarks, unallocated_amount as amount, {2} as exchange_rate, {3} as currency
 				from `tabPayment Entry`
@@ -2197,12 +2206,17 @@ def get_advance_payment_entries(
 					{0} = %s and party_type = %s and party = %s and payment_type = %s
 					and docstatus = 1 and unallocated_amount > 0 {condition}
 				order by posting_date {1}
+<<<<<<< HEAD
 			""".format(
 				party_account_field, limit_cond, exchange_rate_field, currency_field, condition=condition or ""
 			),
 			(party_account, party_type, party, payment_type),
 			as_dict=1,
 		)
+=======
+			""".format(party_account_field, limit_cond, exchange_rate_field, currency_field, condition=condition or ""),
+			(party_account, party_type, party, payment_type), as_dict=1)
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
 
 	return list(payment_entries_against_order) + list(unallocated_payment_entries)
 

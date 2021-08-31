@@ -12,6 +12,7 @@
   "receivable_payable_account",
   "col_break1",
   "from_invoice_date",
+<<<<<<< HEAD
   "from_payment_date",
   "minimum_invoice_amount",
   "minimum_payment_amount",
@@ -25,6 +26,19 @@
   "payment_limit",
   "bank_cash_account",
   "cost_center",
+=======
+  "to_invoice_date",
+  "minimum_invoice_amount",
+  "maximum_invoice_amount",
+  "invoice_limit",
+  "column_break_13",
+  "from_payment_date",
+  "to_payment_date",
+  "minimum_payment_amount",
+  "maximum_payment_amount",
+  "payment_limit",
+  "bank_cash_account",
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
   "sec_break1",
   "invoices",
   "column_break_15",
@@ -81,7 +95,10 @@
   },
   {
    "depends_on": "eval:(doc.payments).length || (doc.invoices).length",
+<<<<<<< HEAD
    "description": "If you need to reconcile particular transactions against each other, then please select accordingly. If not, all the transactions will be allocated in FIFO order.",
+=======
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
    "fieldname": "sec_break1",
    "fieldtype": "Section Break",
    "label": "Unreconciled Entries"
@@ -166,7 +183,10 @@
    "label": "Maximum Payment Amount"
   },
   {
+<<<<<<< HEAD
    "description": "System will fetch all the entries if limit value is zero.",
+=======
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
    "fieldname": "payment_limit",
    "fieldtype": "Int",
    "label": "Payment Limit"
@@ -175,6 +195,7 @@
    "fieldname": "maximum_invoice_amount",
    "fieldtype": "Currency",
    "label": "Maximum Invoice Amount"
+<<<<<<< HEAD
   },
   {
    "fieldname": "column_break_11",
@@ -185,13 +206,19 @@
    "fieldtype": "Link",
    "label": "Cost Center",
    "options": "Cost Center"
+=======
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
   }
  ],
  "hide_toolbar": 1,
  "icon": "icon-resize-horizontal",
  "issingle": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2022-04-29 15:37:10.246831",
+=======
+ "modified": "2021-08-30 13:05:51.977861",
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payment Reconciliation",
@@ -216,6 +243,9 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
+<<<<<<< HEAD
  "states": [],
+=======
+>>>>>>> 3e404f15ff (refactor: payment reconciliation tool (#27128))
  "track_changes": 1
 }
