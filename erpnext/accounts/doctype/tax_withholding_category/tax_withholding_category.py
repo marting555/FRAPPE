@@ -25,6 +25,7 @@ class TaxWithholdingCategory(Document):
 
 			# validate overlapping of dates
 <<<<<<< HEAD
+<<<<<<< HEAD
 			if last_date and getdate(d.to_date) < getdate(last_date):
 				frappe.throw(_("Row #{0}: Dates overlapping with other row").format(d.idx))
 
@@ -41,6 +42,9 @@ class TaxWithholdingCategory(Document):
 
 =======
 			if last_date and getdate(r.to_date) < getdate(last_date):
+=======
+			if last_date and getdate(d.to_date) < getdate(last_date):
+>>>>>>> b6d0b17ed6 (fix: Linting and patch fixes)
 				frappe.throw(_("Row #{0}: Dates overlapping with other row").format(d.idx))
 
 	def validate_thresholds(self):
