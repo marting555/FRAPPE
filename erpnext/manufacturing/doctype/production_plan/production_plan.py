@@ -451,6 +451,7 @@ class ProductionPlan(Document):
 
 		for d in self.po_items:
 			item_details = {
+<<<<<<< HEAD
 				"production_item": d.item_code,
 				"use_multi_level_bom": d.include_exploded_items,
 				"sales_order": d.sales_order,
@@ -467,6 +468,23 @@ class ProductionPlan(Document):
 				"product_bundle_item": d.product_bundle_item,
 				"planned_start_date": d.planned_start_date,
 				"project": self.project,
+=======
+				"production_item"		: d.item_code,
+				"use_multi_level_bom"   : d.include_exploded_items,
+				"sales_order"			: d.sales_order,
+				"sales_order_item"		: d.sales_order_item,
+				"material_request"		: d.material_request,
+				"material_request_item"	: d.material_request_item,
+				"bom_no"				: d.bom_no,
+				"description"			: d.description,
+				"stock_uom"				: d.stock_uom,
+				"company"				: self.company,
+				"fg_warehouse"			: d.warehouse,
+				"production_plan"       : self.name,
+				"production_plan_item"  : d.name,
+				"product_bundle_item"	: d.product_bundle_item,
+				"planned_start_date"    : d.planned_start_date
+>>>>>>> 2a8cd05b44 (fix: production plan UX and validation message (#27278))
 			}
 
 			if not item_details["project"] and d.sales_order:
@@ -604,7 +622,11 @@ class ProductionPlan(Document):
 
 		wo = frappe.new_doc("Work Order")
 		wo.update(item)
+<<<<<<< HEAD
 		wo.planned_start_date = item.get("planned_start_date") or item.get("schedule_date")
+=======
+		wo.planned_start_date = item.get('planned_start_date') or item.get('schedule_date')
+>>>>>>> 2a8cd05b44 (fix: production plan UX and validation message (#27278))
 
 		if item.get("warehouse"):
 			wo.fg_warehouse = item.get("warehouse")
@@ -763,9 +785,18 @@ def download_raw_materials(doc, warehouses=None):
 
 	doc.warehouse = None
 	frappe.flags.show_qty_in_stock_uom = 1
+<<<<<<< HEAD
 	items = get_items_for_material_requests(
 		doc, warehouses=warehouses, get_parent_warehouse_data=True
 	)
+=======
+	items = get_items_for_material_requests(doc, warehouses=warehouses, get_parent_warehouse_data=True)
+
+	for d in items:
+		item_list.append([d.get('item_code'), d.get('description'), d.get('stock_uom'), d.get('warehouse'),
+			d.get('required_bom_qty'), d.get('projected_qty'), d.get('actual_qty'), d.get('ordered_qty'),
+			d.get('planned_qty'), d.get('reserved_qty_for_production'), d.get('safety_stock'), d.get('quantity')])
+>>>>>>> 2a8cd05b44 (fix: production plan UX and validation message (#27278))
 
 	for d in items:
 		item_list.append(
@@ -810,6 +841,7 @@ def download_raw_materials(doc, warehouses=None):
 
 
 def get_exploded_items(item_details, company, bom_no, include_non_stock_items, planned_qty=1):
+<<<<<<< HEAD
 	bei = frappe.qb.DocType("BOM Explosion Item")
 	bom = frappe.qb.DocType("BOM")
 	item = frappe.qb.DocType("Item")
@@ -915,6 +947,64 @@ def get_subitems(
 		)
 		.groupby(bom_item.item_code)
 	).run(as_dict=True)
+=======
+	for d in frappe.db.sql("""select bei.item_code, item.default_bom as bom,
+			ifnull(sum(bei.stock_qty/ifnull(bom.quantity, 1)), 0)*%s as qty, item.item_name,
+			bei.description, bei.stock_uom, item.min_order_qty, bei.source_warehouse,
+			item.default_material_request_type, item.min_order_qty, item_default.default_warehouse,
+			item.purchase_uom, item_uom.conversion_factor, item.safety_stock
+		from
+			`tabBOM Explosion Item` bei
+			JOIN `tabBOM` bom ON bom.name = bei.parent
+			JOIN `tabItem` item ON item.name = bei.item_code
+			LEFT JOIN `tabItem Default` item_default
+				ON item_default.parent = item.name and item_default.company=%s
+			LEFT JOIN `tabUOM Conversion Detail` item_uom
+				ON item.name = item_uom.parent and item_uom.uom = item.purchase_uom
+		where
+			bei.docstatus < 2
+			and bom.name=%s and item.is_stock_item in (1, {0})
+		group by bei.item_code, bei.stock_uom""".format(0 if include_non_stock_items else 1),
+		(planned_qty, company, bom_no), as_dict=1):
+		if not d.conversion_factor and d.purchase_uom:
+			d.conversion_factor = get_uom_conversion_factor(d.item_code, d.purchase_uom)
+		item_details.setdefault(d.get('item_code'), d)
+
+	return item_details
+
+def get_uom_conversion_factor(item_code, uom):
+	return frappe.db.get_value('UOM Conversion Detail',
+		{'parent': item_code, 'uom': uom}, 'conversion_factor')
+
+def get_subitems(doc, data, item_details, bom_no, company, include_non_stock_items,
+	include_subcontracted_items, parent_qty, planned_qty=1):
+	items = frappe.db.sql("""
+		SELECT
+			bom_item.item_code, default_material_request_type, item.item_name,
+			ifnull(%(parent_qty)s * sum(bom_item.stock_qty/ifnull(bom.quantity, 1)) * %(planned_qty)s, 0) as qty,
+			item.is_sub_contracted_item as is_sub_contracted, bom_item.source_warehouse,
+			item.default_bom as default_bom, bom_item.description as description,
+			bom_item.stock_uom as stock_uom, item.min_order_qty as min_order_qty, item.safety_stock as safety_stock,
+			item_default.default_warehouse, item.purchase_uom, item_uom.conversion_factor
+		FROM
+			`tabBOM Item` bom_item
+			JOIN `tabBOM` bom ON bom.name = bom_item.parent
+			JOIN tabItem item ON bom_item.item_code = item.name
+			LEFT JOIN `tabItem Default` item_default
+				ON item.name = item_default.parent and item_default.company = %(company)s
+			LEFT JOIN `tabUOM Conversion Detail` item_uom
+				ON item.name = item_uom.parent and item_uom.uom = item.purchase_uom
+		where
+			bom.name = %(bom)s
+			and bom_item.docstatus < 2
+			and item.is_stock_item in (1, {0})
+		group by bom_item.item_code""".format(0 if include_non_stock_items else 1),{
+			'bom': bom_no,
+			'parent_qty': parent_qty,
+			'planned_qty': planned_qty,
+			'company': company
+		}, as_dict=1)
+>>>>>>> 2a8cd05b44 (fix: production plan UX and validation message (#27278))
 
 	for d in items:
 		if not data.get("include_exploded_items") or not d.default_bom:
@@ -961,6 +1051,7 @@ def get_material_request_items(
 	if not row["purchase_uom"]:
 		row["purchase_uom"] = row["stock_uom"]
 
+<<<<<<< HEAD
 	if row["purchase_uom"] != row["stock_uom"]:
 		if not (row["conversion_factor"] or frappe.flags.show_qty_in_stock_uom):
 			frappe.throw(
@@ -968,6 +1059,14 @@ def get_material_request_items(
 					row["purchase_uom"], row["stock_uom"], row.item_code
 				)
 			)
+=======
+	if row['purchase_uom'] != row['stock_uom']:
+		if not (row['conversion_factor'] or frappe.flags.show_qty_in_stock_uom):
+			frappe.throw(_("UOM Conversion factor ({0} -> {1}) not found for item: {2}")
+				.format(row['purchase_uom'], row['stock_uom'], row.item_code))
+
+			required_qty = required_qty / row['conversion_factor']
+>>>>>>> 2a8cd05b44 (fix: production plan UX and validation message (#27278))
 
 			required_qty = required_qty / row["conversion_factor"]
 
@@ -1214,9 +1313,14 @@ def get_items_for_material_requests(doc, warehouses=None, get_parent_warehouse_d
 		elif data.get("item_code"):
 			item_master = frappe.get_doc("Item", data["item_code"]).as_dict()
 			purchase_uom = item_master.purchase_uom or item_master.stock_uom
+<<<<<<< HEAD
 			conversion_factor = (
 				get_uom_conversion_factor(item_master.name, purchase_uom) if item_master.purchase_uom else 1.0
 			)
+=======
+			conversion_factor = (get_uom_conversion_factor(item_master.name, purchase_uom)
+				if item_master.purchase_uom else 1.0)
+>>>>>>> 2a8cd05b44 (fix: production plan UX and validation message (#27278))
 
 			item_details[item_master.name] = frappe._dict(
 				{

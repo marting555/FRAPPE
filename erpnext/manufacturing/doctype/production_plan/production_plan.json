@@ -378,7 +378,11 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2022-03-25 09:15:25.017664",
+=======
+ "modified": "2021-08-23 17:26:03.799876",
+>>>>>>> 2a8cd05b44 (fix: production plan UX and validation message (#27278))
  "modified_by": "Administrator",
  "module": "Manufacturing",
  "name": "Production Plan",
