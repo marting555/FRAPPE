@@ -1673,6 +1673,7 @@ def update_tax_witholding_category(company, account):
 
 	fiscal_year = get_fiscal_year(date=nowdate())
 
+<<<<<<< HEAD
 	if not frappe.db.get_value(
 		"Tax Withholding Rate",
 		{
@@ -1694,6 +1695,18 @@ def update_tax_witholding_category(company, account):
 				"cumulative_threshold": 0,
 			},
 		)
+=======
+	if not frappe.db.get_value('Tax Withholding Rate',
+		{'parent': 'TDS - 194 - Dividends - Individual', 'fiscal_year': fiscal_year[0]}):
+		tds_category = frappe.get_doc('Tax Withholding Category', 'TDS - 194 - Dividends - Individual')
+		tds_category.append('rates', {
+			'from_date': fiscal_year[1],
+			'to_date': fiscal_year[2],
+			'tax_withholding_rate': 10,
+			'single_threshold': 2500,
+			'cumulative_threshold': 0
+		})
+>>>>>>> d06221ad7a (fix: Advance TDS test case)
 		tds_category.save()
 
 	if not frappe.db.get_value(
