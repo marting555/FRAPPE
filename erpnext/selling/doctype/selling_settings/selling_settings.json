@@ -222,7 +222,6 @@
 =======
    "default": "Stop",
    "depends_on": "maintain_same_sales_rate",
-   "description": "Configure the action to stop the transaction or just warn if the same rate is not maintained.",
    "fieldname": "maintain_same_rate_action",
    "fieldtype": "Select",
    "label": "Action if Same Rate is Not Maintained",
@@ -282,10 +281,14 @@
  "issingle": 1,
  "links": [],
 <<<<<<< HEAD
+<<<<<<< HEAD
  "modified": "2023-03-22 13:09:38.513317",
 =======
  "modified": "2021-09-01 22:47:24.298970",
 >>>>>>> 06484321d1 (fix: Move related fields to the same section)
+=======
+ "modified": "2021-09-01 22:48:30.860203",
+>>>>>>> f2a7fbd126 (fix: Remove redundant description)
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Selling Settings",
