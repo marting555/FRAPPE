@@ -223,7 +223,11 @@ erpnext.HierarchyChart = class {
 				let node = undefined;
 
 				$.each(r.message, (_i, data) => {
+<<<<<<< HEAD
 					if ($(`[id="${data.id}"]`).length)
+=======
+					if ($(`#${data.id}`).length)
+>>>>>>> f828d853e3 (fix: Org Chart fixes (#27290))
 						return;
 
 					node = new me.Node({
@@ -351,13 +355,21 @@ erpnext.HierarchyChart = class {
 	}
 
 	get_all_nodes() {
+<<<<<<< HEAD
 		let me = this;
+=======
+>>>>>>> f828d853e3 (fix: Org Chart fixes (#27290))
 		return new Promise(resolve => {
 			frappe.call({
 				method: 'erpnext.utilities.hierarchy_chart.get_all_nodes',
 				args: {
+<<<<<<< HEAD
 					method: me.method,
 					company: me.company
+=======
+					method: this.method,
+					company: this.company
+>>>>>>> f828d853e3 (fix: Org Chart fixes (#27290))
 				},
 				callback: (r) => {
 					resolve(r.message);
