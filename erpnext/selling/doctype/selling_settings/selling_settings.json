@@ -30,7 +30,11 @@
   "so_required",
   "dn_required",
   "sales_update_frequency",
+<<<<<<< HEAD
   "over_order_allowance",
+=======
+  "column_break_5",
+>>>>>>> 06484321d1 (fix: Move related fields to the same section)
   "allow_multiple_items",
   "allow_against_multiple_purchase_orders",
   "hide_tax_id",
@@ -210,10 +214,66 @@
    "label": "Hide Customer's Tax ID from Sales Transactions"
   },
   {
+<<<<<<< HEAD
    "default": "0",
    "fieldname": "allow_sales_order_creation_for_expired_quotation",
    "fieldtype": "Check",
    "label": "Allow Sales Order Creation For Expired Quotation"
+=======
+   "default": "Stop",
+   "depends_on": "maintain_same_sales_rate",
+   "description": "Configure the action to stop the transaction or just warn if the same rate is not maintained.",
+   "fieldname": "maintain_same_rate_action",
+   "fieldtype": "Select",
+   "label": "Action if Same Rate is Not Maintained",
+   "mandatory_depends_on": "maintain_same_sales_rate",
+   "options": "Stop\nWarn"
+  },
+  {
+   "depends_on": "eval: doc.maintain_same_rate_action == 'Stop'",
+   "fieldname": "role_to_override_stop_action",
+   "fieldtype": "Link",
+   "label": "Role Allowed to Override Stop Action",
+   "options": "Role"
+  },
+  {
+   "fieldname": "customer_defaults_section",
+   "fieldtype": "Section Break",
+   "label": "Customer Defaults"
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "crm_settings_section",
+   "fieldtype": "Section Break",
+   "label": "CRM Settings"
+  },
+  {
+   "fieldname": "column_break_9",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "item_price_settings_section",
+   "fieldtype": "Section Break",
+   "label": "Item Price Settings"
+  },
+  {
+   "fieldname": "column_break_15",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sales_transactions_settings_section",
+   "fieldtype": "Section Break",
+   "label": "Transaction Settings"
+  },
+  {
+   "default": "0",
+   "fieldname": "editable_bundle_item_rates",
+   "fieldtype": "Check",
+   "label": "Calculate Product Bundle Price based on Child Items' Rates"
+>>>>>>> 06484321d1 (fix: Move related fields to the same section)
   }
  ],
  "icon": "fa fa-cog",
@@ -221,7 +281,11 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2023-03-22 13:09:38.513317",
+=======
+ "modified": "2021-09-01 22:47:24.298970",
+>>>>>>> 06484321d1 (fix: Move related fields to the same section)
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Selling Settings",
