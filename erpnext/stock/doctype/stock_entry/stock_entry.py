@@ -2166,7 +2166,11 @@ class StockEntry(StockController):
 
 			if material_request and material_request not in material_requests:
 				material_requests.append(material_request)
+<<<<<<< HEAD
 				frappe.db.set_value("Material Request", material_request, "transfer_status", status)
+=======
+				frappe.db.set_value('Material Request', material_request, 'transfer_status', status)
+>>>>>>> 9506c14d35 (fix: Zero division error while fetching unconsumed materials (#27293))
 
 	def update_items_for_process_loss(self):
 		process_loss_dict = {}
