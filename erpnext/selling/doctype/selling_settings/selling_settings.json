@@ -229,7 +229,7 @@
    "options": "Stop\nWarn"
   },
   {
-   "depends_on": "eval: doc.maintain_same_rate_action == 'Stop'",
+   "depends_on": "eval: doc.maintain_same_sales_rate && doc.maintain_same_rate_action == 'Stop'",
    "fieldname": "role_to_override_stop_action",
    "fieldtype": "Link",
    "label": "Role Allowed to Override Stop Action",
@@ -282,6 +282,7 @@
  "links": [],
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
  "modified": "2023-03-22 13:09:38.513317",
 =======
  "modified": "2021-09-01 22:47:24.298970",
@@ -289,6 +290,9 @@
 =======
  "modified": "2021-09-01 22:48:30.860203",
 >>>>>>> f2a7fbd126 (fix: Remove redundant description)
+=======
+ "modified": "2021-09-01 22:53:53.394444",
+>>>>>>> 799d67d785 (fix: Only display 'Role Allowed to Override Stop Action' if 'Maintain Same Rate Throughout Sales Cycle' is checked)
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Selling Settings",
