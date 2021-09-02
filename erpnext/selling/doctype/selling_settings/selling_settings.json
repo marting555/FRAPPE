@@ -224,7 +224,7 @@
    "depends_on": "maintain_same_sales_rate",
    "fieldname": "maintain_same_rate_action",
    "fieldtype": "Select",
-   "label": "Action if Same Rate is Not Maintained",
+   "label": "Action if Same Rate is Not Maintained Throughout Sales Cycle",
    "mandatory_depends_on": "maintain_same_sales_rate",
    "options": "Stop\nWarn"
   },
@@ -283,6 +283,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
  "modified": "2023-03-22 13:09:38.513317",
 =======
  "modified": "2021-09-01 22:47:24.298970",
@@ -293,6 +294,9 @@
 =======
  "modified": "2021-09-01 22:53:53.394444",
 >>>>>>> 799d67d785 (fix: Only display 'Role Allowed to Override Stop Action' if 'Maintain Same Rate Throughout Sales Cycle' is checked)
+=======
+ "modified": "2021-09-01 22:55:33.803624",
+>>>>>>> ebdc568e85 (fix: Rename 'Action if Same Rate is Not Maintained' to 'Action if Same Rate is Not Maintained Throughout Sales Cycle')
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Selling Settings",
