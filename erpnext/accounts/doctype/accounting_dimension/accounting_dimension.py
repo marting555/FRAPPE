@@ -56,7 +56,11 @@ class AccountingDimension(Document):
 		if frappe.flags.in_test:
 			delete_accounting_dimension(doc=self)
 		else:
+<<<<<<< HEAD
 			frappe.enqueue(delete_accounting_dimension, doc=self, queue="long")
+=======
+			frappe.enqueue(delete_accounting_dimension, doc=self, queue='long')
+>>>>>>> eec40513be (fix: minor linting issues (#27314))
 
 	def set_fieldname_and_label(self):
 		if not self.label:

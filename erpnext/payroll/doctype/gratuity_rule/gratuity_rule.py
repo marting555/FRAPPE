@@ -11,6 +11,7 @@ class GratuityRule(Document):
 	def validate(self):
 		for current_slab in self.gratuity_rule_slabs:
 			if (current_slab.from_year > current_slab.to_year) and current_slab.to_year != 0:
+<<<<<<< HEAD
 				frappe.throw(
 					_("Row {0}: From (Year) can not be greater than To (Year)").format(current_slab.idx)
 				)
@@ -21,6 +22,9 @@ class GratuityRule(Document):
 				frappe.throw(
 					_("You can not define multiple slabs if you have a slab with no lower and upper limits.")
 				)
+=======
+				frappe.throw(_("Row {0}: From (Year) can not be greater than To (Year)").format(current_slab.idx))
+>>>>>>> eec40513be (fix: minor linting issues (#27314))
 
 
 def get_gratuity_rule(name, slabs, **args):

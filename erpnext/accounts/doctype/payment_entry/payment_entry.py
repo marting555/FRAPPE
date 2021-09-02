@@ -1839,10 +1839,14 @@ def get_reference_details(reference_doctype, reference_name, party_account_curre
 		}
 	)
 
+<<<<<<< HEAD
 
 def get_amounts_based_on_reference_doctype(
 	reference_doctype, ref_doc, party_account_currency, company_currency, reference_name
 ):
+=======
+def get_amounts_based_on_reference_doctype(reference_doctype, ref_doc, party_account_currency, company_currency, reference_name):
+>>>>>>> eec40513be (fix: minor linting issues (#27314))
 	total_amount = outstanding_amount = exchange_rate = None
 	if reference_doctype == "Fees":
 		total_amount = ref_doc.get("grand_total")
@@ -1864,10 +1868,14 @@ def get_amounts_based_on_reference_doctype(
 
 	return total_amount, outstanding_amount, exchange_rate
 
+<<<<<<< HEAD
 
 def get_amounts_based_on_ref_doc(
 	reference_doctype, ref_doc, party_account_currency, company_currency
 ):
+=======
+def get_amounts_based_on_ref_doc(reference_doctype, ref_doc, party_account_currency, company_currency):
+>>>>>>> eec40513be (fix: minor linting issues (#27314))
 	total_amount = outstanding_amount = exchange_rate = None
 	if ref_doc.doctype == "Expense Claim":
 		total_amount = flt(ref_doc.total_sanctioned_amount) + flt(ref_doc.total_taxes_and_charges)
@@ -1916,10 +1924,14 @@ def get_total_amount_exchange_rate_base_on_currency(
 
 	return total_amount, exchange_rate
 
+<<<<<<< HEAD
 
 def get_bill_no_and_update_amounts(
 	reference_doctype, ref_doc, total_amount, exchange_rate, party_account_currency, company_currency
 ):
+=======
+def get_bill_no_and_update_amounts(reference_doctype, ref_doc, total_amount, exchange_rate, party_account_currency, company_currency):
+>>>>>>> eec40513be (fix: minor linting issues (#27314))
 	outstanding_amount = bill_no = None
 	if reference_doctype in ("Sales Invoice", "Purchase Invoice"):
 		outstanding_amount = ref_doc.get("outstanding_amount")
