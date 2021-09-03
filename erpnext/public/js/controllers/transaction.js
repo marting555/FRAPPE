@@ -526,7 +526,10 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 
 		item.weight_per_unit = 0;
 		item.weight_uom = '';
+<<<<<<< HEAD
 		item.conversion_factor = 0;
+=======
+>>>>>>> 7b4a65484a (fix: manually added weight per unit reset to zero after save (#27330))
 
 		if(['Sales Invoice'].includes(this.frm.doc.doctype)) {
 			update_stock = cint(me.frm.doc.update_stock);
