@@ -438,6 +438,7 @@ doc_events = {
 		"validate": ["erpnext.erpnext_integrations.taxjar_integration.set_sales_tax"]
 	},
 	"Company": {
+<<<<<<< HEAD
 		"on_trash": [
 			"erpnext.regional.india.utils.delete_gst_settings_for_company",
 			"erpnext.regional.saudi_arabia.utils.delete_vat_settings_for_company",
@@ -446,6 +447,13 @@ doc_events = {
 	"Integration Request": {
 		"validate": "erpnext.accounts.doctype.payment_request.payment_request.validate_payment"
 	},
+=======
+		"on_trash": "erpnext.regional.india.utils.delete_gst_settings_for_company"
+	},
+	"Integration Request": {
+		"validate": "erpnext.accounts.doctype.payment_request.payment_request.validate_payment"
+	}
+>>>>>>> 798b464ee3 (fix: braintree payment processed twice (#27300))
 }
 
 # On cancel event Payment Entry will be exempted and all linked submittable doctype will get cancelled.

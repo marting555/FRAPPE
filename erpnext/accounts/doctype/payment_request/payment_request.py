@@ -660,6 +660,7 @@ def make_payment_order(source_name, target_doc=None):
 
 	return doclist
 
+<<<<<<< HEAD
 
 def validate_payment(doc, method=None):
 	if doc.reference_doctype != "Payment Request" or (
@@ -672,3 +673,12 @@ def validate_payment(doc, method=None):
 			doc.reference_docname
 		)
 	)
+=======
+def validate_payment(doc, method=""):
+	if not frappe.db.has_column(doc.reference_doctype, 'status'):
+		return
+
+	status = frappe.db.get_value(doc.reference_doctype, doc.reference_docname, 'status')
+	if status == 'Paid':
+		frappe.throw(_("The Payment Request {0} is already paid, cannot process payment twice").format(doc.reference_docname))
+>>>>>>> 798b464ee3 (fix: braintree payment processed twice (#27300))
