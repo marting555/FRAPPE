@@ -1671,7 +1671,12 @@ def check_gl_entries(doc, voucher_no, expected_gle, posting_date):
 def update_tax_witholding_category(company, account):
 	from erpnext.accounts.utils import get_fiscal_year
 
+<<<<<<< HEAD
 	fiscal_year = get_fiscal_year(date=nowdate())
+=======
+	fiscal_year = get_fiscal_year(date=date, company=company)
+	print(fiscal_year[0], fiscal_year[1], fiscal_year[2], "$#$#$#")
+>>>>>>> 092d41ecda (fix: Debug CI)
 
 <<<<<<< HEAD
 	if not frappe.db.get_value(
