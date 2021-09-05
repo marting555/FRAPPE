@@ -11,5 +11,17 @@ def get_data():
 				"label": _("Target Details"),
 				"items": ["Sales Person", "Sales Partner", "Territory", "Monthly Distribution"],
 			},
+<<<<<<< HEAD
 		],
+=======
+			{
+				'label': _('References'),
+				'items': ['Period Closing Voucher']
+			},
+			{
+				'label': _('Target Details'),
+				'items': ['Sales Person', 'Sales Partner', 'Territory', 'Monthly Distribution']
+			}
+		]
+>>>>>>> 51d9572fe7 (fix: Hardcode fiscal year and posting date)
 	}

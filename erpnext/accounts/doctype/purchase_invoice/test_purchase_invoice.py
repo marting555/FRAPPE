@@ -1394,6 +1394,7 @@ class TestPurchaseInvoice(unittest.TestCase, StockTestMixin):
 		)
 
 		# Update tax withholding category with current fiscal year and rate details
+<<<<<<< HEAD
 		update_tax_witholding_category("_Test Company", "TDS Payable - _TC")
 
 		# Create Purchase Order with TDS applied
@@ -1404,6 +1405,15 @@ class TestPurchaseInvoice(unittest.TestCase, StockTestMixin):
 			item="_Test Non Stock Item",
 			posting_date="2021-09-15",
 		)
+=======
+		update_tax_witholding_category('_Test Company', 'TDS Payable - _TC')
+
+		# Create Purchase Order with TDS applied
+		po = create_purchase_order(do_not_save=1, supplier=supplier.name, rate=3000, item='_Test Non Stock Item',
+			posting_date='2021-09-15')
+		po.apply_tds = 1
+		po.tax_withholding_category = 'TDS - 194 - Dividends - Individual'
+>>>>>>> 51d9572fe7 (fix: Hardcode fiscal year and posting date)
 		po.save()
 		po.submit()
 
@@ -1667,6 +1677,7 @@ def check_gl_entries(doc, voucher_no, expected_gle, posting_date):
 		doc.assertEqual(expected_gle[i][2], gle.credit)
 		doc.assertEqual(getdate(expected_gle[i][3]), gle.posting_date)
 
+<<<<<<< HEAD
 
 def update_tax_witholding_category(company, account):
 	from erpnext.accounts.utils import get_fiscal_year
@@ -1677,6 +1688,12 @@ def update_tax_witholding_category(company, account):
 	fiscal_year = get_fiscal_year(date=date, company=company)
 	print(fiscal_year[0], fiscal_year[1], fiscal_year[2], "$#$#$#")
 >>>>>>> 092d41ecda (fix: Debug CI)
+=======
+def update_tax_witholding_category(company, account):
+	from erpnext.accounts.utils import get_fiscal_year
+
+	fiscal_year = get_fiscal_year(fiscal_year='_Test Fiscal Year 2021')
+>>>>>>> 51d9572fe7 (fix: Hardcode fiscal year and posting date)
 
 <<<<<<< HEAD
 	if not frappe.db.get_value(
