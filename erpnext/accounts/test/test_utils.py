@@ -4,6 +4,7 @@ import frappe
 from frappe.test_runner import make_test_objects
 
 from erpnext.accounts.party import get_party_shipping_address
+<<<<<<< HEAD
 from erpnext.accounts.utils import (
 	get_future_stock_vouchers,
 	get_voucherwise_gl_entries,
@@ -12,6 +13,10 @@ from erpnext.accounts.utils import (
 from erpnext.stock.doctype.item.test_item import make_item
 from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
+=======
+from erpnext.accounts.utils import get_future_stock_vouchers, get_voucherwise_gl_entries
+from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
+>>>>>>> 058d98342a (fix: missed to add voucher_type, voucher_no to get GL Entries (#27368))
 
 
 class TestUtils(unittest.TestCase):
@@ -50,6 +55,7 @@ class TestUtils(unittest.TestCase):
 		posting_date = "2021-01-01"
 		gl_entries = get_voucherwise_gl_entries(future_vouchers, posting_date)
 		self.assertTrue(
+<<<<<<< HEAD
 			voucher_type_and_no in gl_entries,
 			msg="get_voucherwise_gl_entries not returning expected GLes",
 		)
@@ -72,6 +78,10 @@ class TestUtils(unittest.TestCase):
 
 		sorted_vouchers = sort_stock_vouchers_by_posting_date(list(reversed(vouchers)))
 		self.assertEqual(sorted_vouchers, vouchers)
+=======
+			voucher_type_and_no in gl_entries, msg="get_voucherwise_gl_entries not returning expected GLes",
+		)
+>>>>>>> 058d98342a (fix: missed to add voucher_type, voucher_no to get GL Entries (#27368))
 
 
 ADDRESS_RECORDS = [

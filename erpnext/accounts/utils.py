@@ -1302,7 +1302,11 @@ def get_voucherwise_gl_entries(future_stock_vouchers, posting_date):
 	Check compare_existing_and_expected_gle function below.
 
 	returns:
+<<<<<<< HEAD
 	        Dict[Tuple[voucher_type, voucher_no], List[GL Entries]]
+=======
+		Dict[Tuple[voucher_type, voucher_no], List[GL Entries]]
+>>>>>>> 058d98342a (fix: missed to add voucher_type, voucher_no to get GL Entries (#27368))
 	"""
 	gl_entries = {}
 	if not future_stock_vouchers:
@@ -1310,8 +1314,12 @@ def get_voucherwise_gl_entries(future_stock_vouchers, posting_date):
 
 	voucher_nos = [d[1] for d in future_stock_vouchers]
 
+<<<<<<< HEAD
 	gles = frappe.db.sql(
 		"""
+=======
+	gles = frappe.db.sql("""
+>>>>>>> 058d98342a (fix: missed to add voucher_type, voucher_no to get GL Entries (#27368))
 		select name, account, credit, debit, cost_center, project, voucher_type, voucher_no
 			from `tabGL Entry`
 		where
