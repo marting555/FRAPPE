@@ -51,7 +51,6 @@ class Gstr1Report(object):
 		self.gst_accounts = get_gst_accounts(self.filters.company, only_non_reverse_charge=1)
 		self.get_invoice_data()
 
-		print(self.invoices, "$#$#$#$#$#")
 		if self.invoices:
 			self.get_invoice_items()
 			self.get_items_based_on_tax_rate()
@@ -297,8 +296,12 @@ class Gstr1Report(object):
 		)
 =======
 			""".format(select_columns=self.select_columns, doctype=self.doctype,
+<<<<<<< HEAD
 				where_conditions=conditions), self.filters, as_dict=1, debug=1)
 >>>>>>> e1f55df4d7 (fix: GSTR-1 Reports not showing any data)
+=======
+				where_conditions=conditions), self.filters, as_dict=1)
+>>>>>>> 6dfcc1e2ae (fix: Remove print and debug)
 
 		for d in invoice_data:
 			self.invoices.setdefault(d.invoice_number, d)
