@@ -423,6 +423,10 @@ class Subscription(Document):
 		invoice.to_date = self.current_invoice_end
 
 		invoice.flags.ignore_mandatory = True
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9c27f9be1e (fix: document naming rule not working for subscription invoices (#27386))
 		invoice.set_missing_values()
 		invoice.save()
 
