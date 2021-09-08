@@ -2047,7 +2047,11 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
+<<<<<<< HEAD
  "modified": "2023-01-28 19:45:47.538163",
+=======
+ "modified": "2021-09-08 15:24:25.486499",
+>>>>>>> df3e4ce1c0 (fix: scan barcode fields input length (#27389))
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",
