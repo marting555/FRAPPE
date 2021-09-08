@@ -73,13 +73,23 @@ def validate_filters(filters, account_details):
 			if not account_details.get(account):
 				frappe.throw(_("Account {0} does not exists").format(account))
 
+<<<<<<< HEAD
 	if filters.get("account") and filters.get("group_by") == "Group by Account":
 		filters.account = frappe.parse_json(filters.get("account"))
+=======
+	if (filters.get("account") and filters.get("group_by") == 'Group by Account'):
+		filters.account = frappe.parse_json(filters.get('account'))
+>>>>>>> fa819f2fb0 (fix: General Ledger translation issues (#27298))
 		for account in filters.account:
 			if account_details[account].is_group == 0:
 				frappe.throw(_("Can not filter based on Child Account, if grouped by Account"))
 
+<<<<<<< HEAD
 	if filters.get("voucher_no") and filters.get("group_by") in ["Group by Voucher"]:
+=======
+	if (filters.get("voucher_no")
+		and filters.get("group_by") in ['Group by Voucher']):
+>>>>>>> fa819f2fb0 (fix: General Ledger translation issues (#27298))
 		frappe.throw(_("Can not filter based on Voucher No, if grouped by Voucher"))
 
 	if filters.from_date > filters.to_date:
@@ -359,7 +369,11 @@ def get_data_with_opening_closing(filters, account_details, accounting_dimension
 	# Opening for filtered account
 	data.append(totals.opening)
 
+<<<<<<< HEAD
 	if filters.get("group_by") != "Group by Voucher (Consolidated)":
+=======
+	if filters.get("group_by") != 'Group by Voucher (Consolidated)':
+>>>>>>> fa819f2fb0 (fix: General Ledger translation issues (#27298))
 		for acc, acc_dict in iteritems(gle_map):
 			# acc
 			if acc_dict.entries:
@@ -407,10 +421,17 @@ def get_totals_dict():
 
 
 def group_by_field(group_by):
+<<<<<<< HEAD
 	if group_by == "Group by Party":
 		return "party"
 	elif group_by in ["Group by Voucher (Consolidated)", "Group by Account"]:
 		return "account"
+=======
+	if group_by == 'Group by Party':
+		return 'party'
+	elif group_by in ['Group by Voucher (Consolidated)', 'Group by Account']:
+		return 'account'
+>>>>>>> fa819f2fb0 (fix: General Ledger translation issues (#27298))
 	else:
 		return "voucher_no"
 
@@ -500,6 +521,19 @@ def get_accountwise_gle(filters, accounting_dimensions, gl_entries, gle_map):
 						keylist.append(gle.get(dim))
 					keylist.append(gle.get("cost_center"))
 
+<<<<<<< HEAD
+=======
+		elif gle.posting_date <= to_date:
+			update_value_in_dict(gle_map[gle.get(group_by)].totals, 'total', gle)
+			update_value_in_dict(totals, 'total', gle)
+			if filters.get("group_by") != 'Group by Voucher (Consolidated)':
+				gle_map[gle.get(group_by)].entries.append(gle)
+			elif filters.get("group_by") == 'Group by Voucher (Consolidated)':
+				keylist = [gle.get("voucher_type"), gle.get("voucher_no"), gle.get("account")]
+				for dim in accounting_dimensions:
+					keylist.append(gle.get(dim))
+				keylist.append(gle.get("cost_center"))
+>>>>>>> fa819f2fb0 (fix: General Ledger translation issues (#27298))
 				key = tuple(keylist)
 				if key not in consolidated_gle:
 					consolidated_gle.setdefault(key, gle)
