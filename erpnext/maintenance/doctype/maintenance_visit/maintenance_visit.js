@@ -8,6 +8,7 @@ frappe.ui.form.on('Maintenance Visit', {
 		frm.set_query('customer_address', erpnext.queries.address_query);
 		frm.set_query('customer', erpnext.queries.customer);
 	},
+<<<<<<< HEAD
 	onload: function (frm) {
 		// filters for serial no based on item code
 		if (frm.doc.maintenance_type === "Scheduled") {
@@ -15,6 +16,12 @@ frappe.ui.form.on('Maintenance Visit', {
 			if (!item_code) {
 				return;
 			}
+=======
+	onload: function (frm, cdt, cdn) {
+		let item = locals[cdt][cdn];
+		if (frm.doc.maintenance_type === "Scheduled") {
+			const schedule_id = item.purposes[0].prevdoc_detail_docname || frm.doc.maintenance_schedule_detail;
+>>>>>>> acdb10377f (refactor: .doc missing and empty row on new doc (#27408))
 			frappe.call({
 				method: "erpnext.maintenance.doctype.maintenance_schedule.maintenance_schedule.get_serial_nos_from_schedule",
 				args: {
@@ -49,6 +56,13 @@ frappe.ui.form.on('Maintenance Visit', {
 				};
 			});
 		}
+<<<<<<< HEAD
+=======
+		else {
+			frm.clear_table("purposes");
+		}
+
+>>>>>>> acdb10377f (refactor: .doc missing and empty row on new doc (#27408))
 		if (!frm.doc.status) {
 			frm.set_value({ status: 'Draft' });
 		}
