@@ -1692,8 +1692,12 @@ def update_tax_witholding_category(company, account):
 def update_tax_witholding_category(company, account):
 	from erpnext.accounts.utils import get_fiscal_year
 
+<<<<<<< HEAD
 	fiscal_year = get_fiscal_year(fiscal_year='_Test Fiscal Year 2021')
 >>>>>>> 51d9572fe7 (fix: Hardcode fiscal year and posting date)
+=======
+	fiscal_year = get_fiscal_year(fiscal_year='2021')
+>>>>>>> c33bbd4f39 (fix: Test Case)
 
 <<<<<<< HEAD
 	if not frappe.db.get_value(
@@ -1722,6 +1726,8 @@ def update_tax_witholding_category(company, account):
 		{'parent': 'TDS - 194 - Dividends - Individual', 'from_date': ('>=', fiscal_year[1]),
 			'to_date': ('<=', fiscal_year[2])}):
 		tds_category = frappe.get_doc('Tax Withholding Category', 'TDS - 194 - Dividends - Individual')
+		tds_category.set('rates', [])
+
 		tds_category.append('rates', {
 			'from_date': fiscal_year[1],
 			'to_date': fiscal_year[2],
