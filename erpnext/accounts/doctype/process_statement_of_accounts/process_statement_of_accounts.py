@@ -241,8 +241,15 @@ def fetch_customers(customer_collection, collection_name, primary_mandatory):
 		billing_email = get_customer_emails(customer.name, 1, billing_and_primary=False)
 
 		if int(primary_mandatory):
+<<<<<<< HEAD
 			if primary_email == "":
 				continue
+=======
+			if (primary_email == ''):
+				continue
+		elif (billing_email == '') and (primary_email == ''):
+			continue
+>>>>>>> a58e309297 (fix: fix to fetch customers and billing email in PSOA (#27363))
 
 		customer_list.append(
 			{
@@ -257,12 +264,20 @@ def fetch_customers(customer_collection, collection_name, primary_mandatory):
 
 @frappe.whitelist()
 def get_customer_emails(customer_name, primary_mandatory, billing_and_primary=True):
+<<<<<<< HEAD
 	"""Returns first email from Contact Email table as a Billing email
 	when Is Billing Contact checked
 	and Primary email- email with Is Primary checked"""
 
 	billing_email = frappe.db.sql(
 		"""
+=======
+	""" Returns first email from Contact Email table as a Billing email
+		when Is Billing Contact checked
+		and Primary email- email with Is Primary checked """
+
+	billing_email = frappe.db.sql("""
+>>>>>>> a58e309297 (fix: fix to fetch customers and billing email in PSOA (#27363))
 		SELECT
 			email.email_id
 		FROM
@@ -279,6 +294,7 @@ def get_customer_emails(customer_name, primary_mandatory, billing_and_primary=Tr
 			link.link_doctype='Customer'
 			and link.link_name=%s
 			and contact.is_billing_contact=1
+<<<<<<< HEAD
 			{mcond}
 		ORDER BY
 			contact.creation desc
@@ -287,6 +303,10 @@ def get_customer_emails(customer_name, primary_mandatory, billing_and_primary=Tr
 		),
 		customer_name,
 	)
+=======
+		ORDER BY
+			contact.creation desc""", customer_name)
+>>>>>>> a58e309297 (fix: fix to fetch customers and billing email in PSOA (#27363))
 
 	if len(billing_email) == 0 or (billing_email[0][0] is None):
 		if billing_and_primary:
