@@ -149,7 +149,11 @@ class JobCard(Document):
 		if args.get("employee"):
 			# override capacity for employee
 			production_capacity = 1
+<<<<<<< HEAD
 			query = query.where(jctl.employee == args.get("employee"))
+=======
+			validate_overlap_for = " and jctl.employee = %(employee)s "
+>>>>>>> 678335f8ac (fix: job card overlap unknown column `jc.employee`  (#27403))
 
 		existing = query.run(as_dict=True)
 
