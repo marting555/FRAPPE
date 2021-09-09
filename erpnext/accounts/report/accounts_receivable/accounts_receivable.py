@@ -111,6 +111,7 @@ class ReceivablePayableReport(object):
 			key = (gle.voucher_type, gle.voucher_no, gle.party)
 			if not key in self.voucher_balance:
 				self.voucher_balance[key] = frappe._dict(
+<<<<<<< HEAD
 					voucher_type=gle.voucher_type,
 					voucher_no=gle.voucher_no,
 					party=gle.party,
@@ -126,6 +127,18 @@ class ReceivablePayableReport(object):
 					paid_in_account_currency=0.0,
 					credit_note_in_account_currency=0.0,
 					outstanding_in_account_currency=0.0,
+=======
+					voucher_type = gle.voucher_type,
+					voucher_no = gle.voucher_no,
+					party = gle.party,
+					posting_date = gle.posting_date,
+					account_currency = gle.account_currency,
+					remarks = gle.remarks if self.filters.get("show_remarks") else None,
+					invoiced = 0.0,
+					paid = 0.0,
+					credit_note = 0.0,
+					outstanding = 0.0
+>>>>>>> 3576668638 (fix: added Show Remarks checkbox in AR & AP reports (#27374))
 				)
 			self.get_invoices(gle)
 
@@ -696,11 +709,18 @@ class ReceivablePayableReport(object):
 
 		remarks = ", remarks" if self.filters.get("show_remarks") else ""
 
+<<<<<<< HEAD
 		self.gl_entries = frappe.db.sql(
 			"""
 			select
 				name, posting_date, account, party_type, party, voucher_type, voucher_no, cost_center,
 				against_voucher_type, against_voucher, account_currency, {0}, {1} {remarks}
+=======
+		self.gl_entries = frappe.db.sql("""
+			select
+				name, posting_date, account, party_type, party, voucher_type, voucher_no, cost_center,
+				against_voucher_type, against_voucher, account_currency, {0} {remarks}
+>>>>>>> 3576668638 (fix: added Show Remarks checkbox in AR & AP reports (#27374))
 			from
 				`tabGL Entry`
 			where
@@ -708,12 +728,17 @@ class ReceivablePayableReport(object):
 				and is_cancelled = 0
 				and party_type=%s
 				and (party is not null and party != '')
+<<<<<<< HEAD
 				{2} {3} {4}""".format(
 				select_fields, doc_currency_fields, date_condition, conditions, order_by, remarks=remarks
 			),
 			values,
 			as_dict=True,
 		)
+=======
+				{1} {2} {3}"""
+			.format(select_fields, date_condition, conditions, order_by, remarks=remarks), values, as_dict=True)
+>>>>>>> 3576668638 (fix: added Show Remarks checkbox in AR & AP reports (#27374))
 
 	def get_sales_invoices_or_customers_based_on_sales_person(self):
 		if self.filters.get("sales_person"):
@@ -920,6 +945,7 @@ class ReceivablePayableReport(object):
 				options="Contact",
 			)
 
+<<<<<<< HEAD
 		self.add_column(label=_("Cost Center"), fieldname="cost_center", fieldtype="Data")
 		self.add_column(label=_("Voucher Type"), fieldname="voucher_type", fieldtype="Data")
 		self.add_column(
@@ -934,6 +960,17 @@ class ReceivablePayableReport(object):
 			self.add_column(label=_("Remarks"), fieldname="remarks", fieldtype="Text", width=200),
 
 		self.add_column(label="Due Date", fieldtype="Date")
+=======
+		self.add_column(label=_('Cost Center'), fieldname='cost_center', fieldtype='Data')
+		self.add_column(label=_('Voucher Type'), fieldname='voucher_type', fieldtype='Data')
+		self.add_column(label=_('Voucher No'), fieldname='voucher_no', fieldtype='Dynamic Link',
+			options='voucher_type', width=180)
+
+		if self.filters.show_remarks:
+			self.add_column(label=_('Remarks'), fieldname='remarks', fieldtype='Text', width=200),
+
+		self.add_column(label='Due Date', fieldtype='Date')
+>>>>>>> 3576668638 (fix: added Show Remarks checkbox in AR & AP reports (#27374))
 
 		if self.party_type == "Supplier":
 			self.add_column(label=_("Bill No"), fieldname="bill_no", fieldtype="Data")

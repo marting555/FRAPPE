@@ -67,6 +67,7 @@ frappe.query_reports["Accounts Receivable"] = {
 			}
 		},
 		{
+<<<<<<< HEAD
 			"fieldname": "party_account",
 			"label": __("Receivable Account"),
 			"fieldtype": "Link",
@@ -83,6 +84,8 @@ frappe.query_reports["Accounts Receivable"] = {
 			}
 		},
 		{
+=======
+>>>>>>> 3576668638 (fix: added Show Remarks checkbox in AR & AP reports (#27374))
 			"fieldname": "ageing_based_on",
 			"label": __("Ageing Based On"),
 			"fieldtype": "Select",
