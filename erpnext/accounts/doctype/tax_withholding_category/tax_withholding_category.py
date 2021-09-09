@@ -5,7 +5,11 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
+<<<<<<< HEAD
 from frappe.utils import cint, flt, getdate
+=======
+from frappe.utils import cint, getdate
+>>>>>>> e7e2ce1271 (fix: Linting Issues)
 
 
 class TaxWithholdingCategory(Document):
@@ -272,9 +276,9 @@ def get_tax_amount(party_type, parties, inv, tax_details, posting_date, pan_no=N
 	)
 =======
 def get_lower_deduction_certificate(tax_details, pan_no):
-	ldc_name = frappe.db.get_value('Lower Deduction Certificate', 
+	ldc_name = frappe.db.get_value('Lower Deduction Certificate',
 		{
-			'pan_no': pan_no, 
+			'pan_no': pan_no,
 			'valid_from': ('>=', tax_details.from_date),
 			'valid_upto': ('<=', tax_details.to_date)
 		}, 'name')

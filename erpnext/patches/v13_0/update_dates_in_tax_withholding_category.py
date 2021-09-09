@@ -3,6 +3,7 @@
 
 import frappe
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 
 def execute():
@@ -27,7 +28,11 @@ def execute():
 				"Tax Withholding Rate", rate.name, {"from_date": from_date, "to_date": to_date}
 			)
 =======
+=======
+
+>>>>>>> e7e2ce1271 (fix: Linting Issues)
 from erpnext.accounts.utils import get_fiscal_year
+
 
 def execute():
 	frappe.reload_doc('accounts', 'doctype', 'Tax Withholding Rate')
