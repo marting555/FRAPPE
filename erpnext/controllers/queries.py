@@ -337,9 +337,14 @@ def bom(doctype, txt, searchfield, start, page_len, filters):
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
 def get_project_name(doctype, txt, searchfield, start, page_len, filters):
+<<<<<<< HEAD
 	doctype = "Project"
 	cond = ""
 	if filters and filters.get("customer"):
+=======
+	cond = ''
+	if filters and filters.get('customer'):
+>>>>>>> 62fc544280 (test: basic tests for controllers/queries (#27422))
 		cond = """(`tabProject`.customer = %s or
 			ifnull(`tabProject`.customer,"")="") and""" % (
 			frappe.db.escape(filters.get("customer"))
