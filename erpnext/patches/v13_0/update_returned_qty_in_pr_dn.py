@@ -13,9 +13,13 @@ def execute():
 	frappe.reload_doc("stock", "doctype", "stock_settings")
 
 	def update_from_return_docs(doctype):
+<<<<<<< HEAD
 		for return_doc in frappe.get_all(
 			doctype, filters={"is_return": 1, "docstatus": 1, "return_against": ("!=", "")}
 		):
+=======
+		for return_doc in frappe.get_all(doctype, filters={'is_return' : 1, 'docstatus' : 1, 'return_against': ('!=', '')}):
+>>>>>>> becf471a3a (fix: fail migration due to None type during v13_0.update_returned_qty_in_pr_dn (#27430))
 			# Update original receipt/delivery document from return
 			return_doc = frappe.get_cached_doc(doctype, return_doc.name)
 			try:
