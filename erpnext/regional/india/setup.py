@@ -1394,7 +1394,11 @@ def set_tax_withholding_category(company):
 		accounts = [dict(company=company, account=tds_account)]
 
 	try:
+<<<<<<< HEAD
 		fiscal_year_details = get_fiscal_year(today(), verbose=0)
+=======
+		fiscal_year_details = get_fiscal_year(today(), verbose=0, company=company)
+>>>>>>> c53b78e712 (fix: Patch for updating tax withholding category dates (#27489))
 	except FiscalYearError:
 		pass
 
@@ -1415,11 +1419,16 @@ def set_tax_withholding_category(company):
 
 			if fiscal_year_details:
 				# if fiscal year don't match with any of the already entered data, append rate row
+<<<<<<< HEAD
 				fy_exist = [
 					k
 					for k in doc.get("rates")
 					if k.get("from_date") <= fiscal_year_details[1] and k.get("to_date") >= fiscal_year_details[2]
 				]
+=======
+				fy_exist = [k for k in doc.get('rates') if k.get('from_date') <= fiscal_year_details[1] \
+					and k.get('to_date') >= fiscal_year_details[2]]
+>>>>>>> c53b78e712 (fix: Patch for updating tax withholding category dates (#27489))
 				if not fy_exist:
 					doc.append("rates", d.get("rates")[0])
 
@@ -1430,6 +1439,7 @@ def set_tax_withholding_category(company):
 			doc.save()
 
 
+<<<<<<< HEAD
 def set_tds_account(docs, company):
 	parent_account = frappe.db.get_value(
 		"Account", filters={"account_name": "Duties and Taxes", "company": company}
@@ -1448,12 +1458,15 @@ def set_tds_account(docs, company):
 		)
 
 
+=======
+>>>>>>> c53b78e712 (fix: Patch for updating tax withholding category dates (#27489))
 def get_tds_details(accounts, fiscal_year_details):
 	# bootstrap default tax withholding sections
 	return [
 		dict(
 			name="TDS - 194C - Company",
 			category_name="Payment to Contractors (Single / Aggregate)",
+<<<<<<< HEAD
 			doctype="Tax Withholding Category",
 			accounts=accounts,
 			rates=[
@@ -1871,6 +1884,146 @@ def get_tds_details(accounts, fiscal_year_details):
 				}
 			],
 		),
+=======
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 2, "single_threshold": 30000, "cumulative_threshold": 100000}]),
+		dict(name="TDS - 194C - Individual",
+			category_name="Payment to Contractors (Single / Aggregate)",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 1, "single_threshold": 30000, "cumulative_threshold": 100000}]),
+		dict(name="TDS - 194C - No PAN / Invalid PAN",
+			category_name="Payment to Contractors (Single / Aggregate)",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 20, "single_threshold": 30000, "cumulative_threshold": 100000}]),
+		dict(name="TDS - 194D - Company",
+			category_name="Insurance Commission",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 5, "single_threshold": 15000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194D - Company Assessee",
+			category_name="Insurance Commission",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 10, "single_threshold": 15000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194D - Individual",
+			category_name="Insurance Commission",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 5, "single_threshold": 15000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194D - No PAN / Invalid PAN",
+			category_name="Insurance Commission",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 20, "single_threshold": 15000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194DA - Company",
+			category_name="Non-exempt payments made under a life insurance policy",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 1, "single_threshold": 100000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194DA - Individual",
+			category_name="Non-exempt payments made under a life insurance policy",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 1, "single_threshold": 100000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194DA - No PAN / Invalid PAN",
+			category_name="Non-exempt payments made under a life insurance policy",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 20, "single_threshold": 100000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194H - Company",
+			category_name="Commission / Brokerage",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 5, "single_threshold": 15000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194H - Individual",
+			category_name="Commission / Brokerage",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 5, "single_threshold": 15000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194H - No PAN / Invalid PAN",
+			category_name="Commission / Brokerage",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 20, "single_threshold": 15000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194I - Rent - Company",
+			category_name="Rent",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 10, "single_threshold": 180000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194I - Rent - Individual",
+			category_name="Rent",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 10, "single_threshold": 180000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194I - Rent - No PAN / Invalid PAN",
+			category_name="Rent",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 20, "single_threshold": 180000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194I - Rent/Machinery - Company",
+			category_name="Rent-Plant / Machinery",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 2, "single_threshold": 180000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194I - Rent/Machinery - Individual",
+			category_name="Rent-Plant / Machinery",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 2, "single_threshold": 180000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194I - Rent/Machinery - No PAN / Invalid PAN",
+			category_name="Rent-Plant / Machinery",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 20, "single_threshold": 180000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194J - Professional Fees - Company",
+			category_name="Professional Fees",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 10, "single_threshold": 30000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194J - Professional Fees - Individual",
+			category_name="Professional Fees",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 10, "single_threshold": 30000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194J - Professional Fees - No PAN / Invalid PAN",
+			category_name="Professional Fees",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 20, "single_threshold": 30000, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194J - Director Fees - Company",
+			category_name="Director Fees",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 10, "single_threshold": 0, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194J - Director Fees - Individual",
+			category_name="Director Fees",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 10, "single_threshold": 0, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194J - Director Fees - No PAN / Invalid PAN",
+			category_name="Director Fees",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 20, "single_threshold": 0, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194 - Dividends - Company",
+			category_name="Dividends",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 10, "single_threshold": 2500, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194 - Dividends - Individual",
+			category_name="Dividends",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 10, "single_threshold": 2500, "cumulative_threshold": 0}]),
+		dict(name="TDS - 194 - Dividends - No PAN / Invalid PAN",
+			category_name="Dividends",
+			doctype="Tax Withholding Category", accounts=accounts,
+			rates=[{"from_date": fiscal_year_details[1], "to_date": fiscal_year_details[2],
+			"tax_withholding_rate": 20, "single_threshold": 2500, "cumulative_threshold": 0}])
+>>>>>>> c53b78e712 (fix: Patch for updating tax withholding category dates (#27489))
 	]
 
 
