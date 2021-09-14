@@ -14,11 +14,14 @@ from erpnext.hr.doctype.employee_advance.employee_advance import (
 	make_bank_entry,
 	make_return_entry,
 )
+<<<<<<< HEAD
 from erpnext.hr.doctype.expense_claim.expense_claim import get_advances
 from erpnext.hr.doctype.expense_claim.test_expense_claim import (
 	get_payable_account,
 	make_expense_claim,
 )
+=======
+>>>>>>> b98740b44a (fix: employee advance return through multiple additional salaries (#27438))
 from erpnext.payroll.doctype.salary_component.test_salary_component import create_salary_component
 from erpnext.payroll.doctype.salary_structure.test_salary_structure import make_salary_structure
 
@@ -43,6 +46,7 @@ class TestEmployeeAdvance(unittest.TestCase):
 		journal_entry1 = make_payment_entry(advance)
 		self.assertRaises(EmployeeAdvanceOverPayment, journal_entry1.submit)
 
+<<<<<<< HEAD
 	def test_paid_amount_on_pe_cancellation(self):
 		employee_name = make_employee("_T@employe.advance")
 		advance = make_employee_advance(employee_name)
@@ -169,6 +173,15 @@ class TestEmployeeAdvance(unittest.TestCase):
 		make_salary_structure(
 			"Test Additional Salary for Advance Return", "Monthly", employee=employee_name
 		)
+=======
+	def test_repay_unclaimed_amount_from_salary(self):
+		employee_name = make_employee("_T@employe.advance")
+		advance = make_employee_advance(employee_name, {"repay_unclaimed_amount_from_salary": 1})
+
+		args = {"type": "Deduction"}
+		create_salary_component("Advance Salary - Deduction", **args)
+		make_salary_structure("Test Additional Salary for Advance Return", "Monthly", employee=employee_name)
+>>>>>>> b98740b44a (fix: employee advance return through multiple additional salaries (#27438))
 
 		# additional salary for 700 first
 		advance.reload()
@@ -192,13 +205,19 @@ class TestEmployeeAdvance(unittest.TestCase):
 
 		advance.reload()
 		self.assertEqual(advance.return_amount, 1000)
+<<<<<<< HEAD
 		self.assertEqual(advance.status, "Returned")
+=======
+>>>>>>> b98740b44a (fix: employee advance return through multiple additional salaries (#27438))
 
 		# update advance return amount on additional salary cancellation
 		additional_salary.cancel()
 		advance.reload()
 		self.assertEqual(advance.return_amount, 700)
+<<<<<<< HEAD
 		self.assertEqual(advance.status, "Paid")
+=======
+>>>>>>> b98740b44a (fix: employee advance return through multiple additional salaries (#27438))
 
 	def tearDown(self):
 		frappe.db.rollback()
@@ -212,7 +231,10 @@ def make_payment_entry(advance):
 
 	return journal_entry
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> b98740b44a (fix: employee advance return through multiple additional salaries (#27438))
 def make_employee_advance(employee_name, args=None):
 	doc = frappe.new_doc("Employee Advance")
 	doc.employee = employee_name

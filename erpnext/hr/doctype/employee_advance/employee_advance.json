@@ -200,10 +200,15 @@
  ],
  "is_submittable": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2022-05-23 19:33:52.345823",
+=======
+ "modified": "2021-09-11 18:38:38.617478",
+>>>>>>> b98740b44a (fix: employee advance return through multiple additional salaries (#27438))
  "modified_by": "Administrator",
  "module": "HR",
  "name": "Employee Advance",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {

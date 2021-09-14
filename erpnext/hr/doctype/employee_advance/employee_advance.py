@@ -232,7 +232,11 @@ def create_return_through_additional_salary(doc):
 	if isinstance(doc, str):
 		doc = frappe._dict(json.loads(doc))
 
+<<<<<<< HEAD
 	additional_salary = frappe.new_doc("Additional Salary")
+=======
+	additional_salary = frappe.new_doc('Additional Salary')
+>>>>>>> b98740b44a (fix: employee advance return through multiple additional salaries (#27438))
 	additional_salary.employee = doc.employee
 	additional_salary.currency = doc.currency
 	additional_salary.amount = doc.paid_amount - doc.claimed_amount
