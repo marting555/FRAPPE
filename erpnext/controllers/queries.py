@@ -235,6 +235,7 @@ def item_query(doctype, txt, searchfield, start, page_len, filters, as_dict=Fals
 	searchfields = " or ".join([field + " like %(txt)s" for field in searchfields])
 
 	if filters and isinstance(filters, dict):
+<<<<<<< HEAD
 		if filters.get("customer") or filters.get("supplier"):
 			party = filters.get("customer") or filters.get("supplier")
 			item_rules_list = frappe.get_all(
@@ -245,13 +246,36 @@ def item_query(doctype, txt, searchfield, start, page_len, filters, as_dict=Fals
 			for rule in item_rules_list:
 				if rule["restrict_based_on"] == "Item":
 					rule["restrict_based_on"] = "name"
+=======
+		if filters.get('customer') or filters.get('supplier'):
+			party = filters.get('customer') or filters.get('supplier')
+			item_rules_list = frappe.get_all('Party Specific Item',
+				filters = {'party': party}, fields = ['restrict_based_on', 'based_on_value'])
+
+			filters_dict = {}
+			for rule in item_rules_list:
+				if rule['restrict_based_on'] == 'Item':
+					rule['restrict_based_on'] = 'name'
+>>>>>>> aa82624f31 (Merge pull request #27281 from DeeMysterio/party-specific-items)
 				filters_dict[rule.restrict_based_on] = []
 
 			for rule in item_rules_list:
 				filters_dict[rule.restrict_based_on].append(rule.based_on_value)
+<<<<<<< HEAD
 
 			for filter in filters_dict:
 				filters[scrub(filter)] = ["in", filters_dict[filter]]
+=======
+
+			for filter in filters_dict:
+				filters[scrub(filter)] = ['in', filters_dict[filter]]
+
+			if filters.get('customer'):
+				del filters['customer']
+			else:
+				del filters['supplier']
+
+>>>>>>> aa82624f31 (Merge pull request #27281 from DeeMysterio/party-specific-items)
 
 			if filters.get("customer"):
 				del filters["customer"]

@@ -63,7 +63,11 @@ erpnext.selling.SellingController = erpnext.TransactionController.extend({
 			this.frm.set_query("item_code", "items", function() {
 				return {
 					query: "erpnext.controllers.queries.item_query",
+<<<<<<< HEAD
 					filters: {'is_sales_item': 1, 'customer': cur_frm.doc.customer, 'has_variants': 0}
+=======
+					filters: {'is_sales_item': 1, 'customer': cur_frm.doc.customer}
+>>>>>>> aa82624f31 (Merge pull request #27281 from DeeMysterio/party-specific-items)
 				}
 			});
 		}
