@@ -1376,8 +1376,24 @@ class update_entries_after:
 			self.wh_data.qty_after_transaction + actual_qty
 		)
 
+<<<<<<< HEAD
 		if self.valuation_method == "LIFO":
 			stock_queue = LIFOValuation(self.wh_data.stock_queue)
+=======
+			# last row has the same rate, just updated the qty
+			if self.wh_data.stock_queue[-1][1]==incoming_rate:
+				self.wh_data.stock_queue[-1][0] += actual_qty
+			else:
+				# Item has a positive balance qty, add new entry
+				if self.wh_data.stock_queue[-1][0] > 0:
+					self.wh_data.stock_queue.append([actual_qty, incoming_rate])
+				else: # negative balance qty
+					qty = self.wh_data.stock_queue[-1][0] + actual_qty
+					if qty > 0: # new balance qty is positive
+						self.wh_data.stock_queue[-1] = [qty, incoming_rate]
+					else: # new balance qty is still negative, maintain same rate
+						self.wh_data.stock_queue[-1][0] = qty
+>>>>>>> 10754831c3 (fix: Maintain same rate in Stock Ledger until stock become positive (#27227))
 		else:
 			stock_queue = FIFOValuation(self.wh_data.stock_queue)
 
