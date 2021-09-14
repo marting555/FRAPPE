@@ -11,7 +11,10 @@
   "col_break1",
   "workstation",
   "time_in_mins",
+<<<<<<< HEAD
   "fixed_time",
+=======
+>>>>>>> 2e2985e4f1 (fix: calculate operating cost based on BOM Quantity (#27464))
   "costing_section",
   "hour_rate",
   "base_hour_rate",
@@ -186,7 +189,11 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2022-08-22 01:18:33.547481",
+=======
+ "modified": "2021-09-13 16:45:01.092868",
+>>>>>>> 2e2985e4f1 (fix: calculate operating cost based on BOM Quantity (#27464))
  "modified_by": "Administrator",
  "module": "Manufacturing",
  "name": "BOM Operation",

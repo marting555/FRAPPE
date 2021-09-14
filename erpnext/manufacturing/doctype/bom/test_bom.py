@@ -140,7 +140,11 @@ class TestBOM(FrappeTestCase):
 		for op_row in bom.operations:
 			self.assertAlmostEqual(op_row.cost_per_unit, op_row.operating_cost / 2)
 
+<<<<<<< HEAD
 		self.assertAlmostEqual(bom.operating_cost, op_cost / 2)
+=======
+		self.assertAlmostEqual(bom.operating_cost, op_cost/2)
+>>>>>>> 2e2985e4f1 (fix: calculate operating cost based on BOM Quantity (#27464))
 		bom.delete()
 
 	def test_bom_cost_multi_uom_multi_currency_based_on_price_list(self):

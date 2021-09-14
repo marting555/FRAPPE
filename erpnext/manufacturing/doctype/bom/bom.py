@@ -621,6 +621,12 @@ class BOM(WebsiteGenerator):
 			if d.set_cost_based_on_bom_qty:
 				operating_cost = flt(d.cost_per_unit) * flt(self.quantity)
 				base_operating_cost = flt(d.base_cost_per_unit) * flt(self.quantity)
+<<<<<<< HEAD
+=======
+
+			self.operating_cost += flt(operating_cost)
+			self.base_operating_cost += flt(base_operating_cost)
+>>>>>>> 2e2985e4f1 (fix: calculate operating cost based on BOM Quantity (#27464))
 
 			self.operating_cost += flt(operating_cost)
 			self.base_operating_cost += flt(base_operating_cost)
