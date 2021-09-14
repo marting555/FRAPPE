@@ -186,11 +186,21 @@ def update_employee_work_history(employee, details, date=None, cancel=False):
 		field = frappe.get_meta("Employee").get_field(item.fieldname)
 		if not field:
 			continue
+<<<<<<< HEAD
 
 		new_value = item.new if not cancel else item.current
 		new_value = get_formatted_value(new_value, field.fieldtype)
 		setattr(employee, item.fieldname, new_value)
 
+=======
+		fieldtype = field.fieldtype
+		new_data = item.new if not cancel else item.current
+		if fieldtype == "Date" and new_data:
+			new_data = getdate(new_data)
+		elif fieldtype =="Datetime" and new_data:
+			new_data = get_datetime(new_data)
+		setattr(employee, item.fieldname, new_data)
+>>>>>>> 95460d9818 (fix(HR): Ignore invalid fields when updating employee details (#27456))
 		if item.fieldname in ["department", "designation", "branch"]:
 			internal_work_history[item.fieldname] = item.new
 
