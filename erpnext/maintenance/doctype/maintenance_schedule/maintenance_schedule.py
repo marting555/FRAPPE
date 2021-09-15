@@ -16,7 +16,11 @@ class MaintenanceSchedule(TransactionBase):
 	def generate_schedule(self):
 		if self.docstatus != 0:
 			return
+<<<<<<< HEAD
 		self.set("schedules", [])
+=======
+		self.set('schedules', [])
+>>>>>>> 5e0b21582a (fix: table data deleted on submitted maintenance schedule (#27513))
 		count = 1
 		for d in self.get("items"):
 			self.validate_maintenance_detail()
