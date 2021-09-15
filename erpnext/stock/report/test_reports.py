@@ -37,6 +37,7 @@ REPORT_FILTER_TEST_CASES: List[Tuple[ReportName, ReportFilters]] = [
 		},
 	),
 	("Warehouse wise Item Balance Age and Value", {"_optional": True}),
+<<<<<<< HEAD
 	(
 		"Item Variant Details",
 		{
@@ -54,6 +55,12 @@ REPORT_FILTER_TEST_CASES: List[Tuple[ReportName, ReportFilters]] = [
 	("Stock Ledger Invariant Check", {"warehouse": "_Test Warehouse - _TC", "item": "_Test Item"}),
 	("FIFO Queue vs Qty After Transaction Comparison", {"warehouse": "_Test Warehouse - _TC"}),
 	("FIFO Queue vs Qty After Transaction Comparison", {"item_group": "All Item Groups"}),
+=======
+	("Item Variant Details", {"item": "_Test Variant Item",}),
+	("Total Stock Summary", {"group_by": "warehouse",}),
+	("Batch Item Expiry Status", {}),
+	("Stock Ageing", {"range1": 30, "range2": 60, "range3": 90, "_optional": True}),
+>>>>>>> 70c203d19e (test: automated test for running all stock reports (#27510))
 ]
 
 OPTIONAL_FILTERS = {
