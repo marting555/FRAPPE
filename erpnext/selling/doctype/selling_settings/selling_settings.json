@@ -49,6 +49,16 @@
    "in_list_view": 1,
    "label": "Customer Naming By",
    "options": "Customer Name\nNaming Series\nAuto Name"
+<<<<<<< HEAD
+=======
+  },
+  {
+   "fieldname": "campaign_naming_by",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Campaign Naming By",
+   "options": "Campaign Name\nNaming Series\nAuto Name"
+>>>>>>> 759f2b7920 (fix: Autoname for customer and supplier (#27398))
   },
   {
    "fieldname": "customer_group",
@@ -221,7 +231,11 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2023-03-22 13:09:38.513317",
+=======
+ "modified": "2021-09-08 19:38:10.175989",
+>>>>>>> 759f2b7920 (fix: Autoname for customer and supplier (#27398))
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Selling Settings",

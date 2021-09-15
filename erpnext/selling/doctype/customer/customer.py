@@ -43,7 +43,11 @@ class Customer(TransactionBase):
 		cust_master_name = frappe.defaults.get_global_default("cust_master_name")
 		if cust_master_name == "Customer Name":
 			self.name = self.get_customer_name()
+<<<<<<< HEAD
 		elif cust_master_name == "Naming Series":
+=======
+		elif cust_master_name == 'Naming Series':
+>>>>>>> 759f2b7920 (fix: Autoname for customer and supplier (#27398))
 			set_name_by_naming_series(self)
 		else:
 			self.name = set_name_from_naming_options(frappe.get_meta(self.doctype).autoname, self)

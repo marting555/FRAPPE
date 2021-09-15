@@ -131,7 +131,11 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2023-03-22 13:01:49.640869",
+=======
+ "modified": "2021-09-08 19:26:23.548837",
+>>>>>>> 759f2b7920 (fix: Autoname for customer and supplier (#27398))
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Buying Settings",
