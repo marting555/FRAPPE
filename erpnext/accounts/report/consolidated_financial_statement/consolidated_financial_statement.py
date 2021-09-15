@@ -400,12 +400,20 @@ def calculate_values(accounts_by_name, gl_entries_by_account, companies, filters
 	for entries in gl_entries_by_account.values():
 		for entry in entries:
 			if entry.account_number:
+<<<<<<< HEAD
 				account_name = entry.account_number + " - " + entry.account_name
 			else:
 				account_name = entry.account_name
 
 			d = accounts_by_name.get(account_name)
 
+=======
+				account_name = entry.account_number + ' - ' + entry.account_name
+			else:
+				account_name =  entry.account_name
+
+			d = accounts_by_name.get(account_name)
+>>>>>>> 625626b973 (fix: Values with same account and different account number in consolidated balance sheet report (#27493))
 			if d:
 				debit, credit = 0, 0
 				for company in companies:
@@ -482,9 +490,15 @@ def update_parent_account_names(accounts):
 
 	for d in accounts:
 		if d.account_number:
+<<<<<<< HEAD
 			account_name = d.account_number + " - " + d.account_name
 		else:
 			account_name = d.account_name
+=======
+			account_name = d.account_number + ' - ' + d.account_name
+		else:
+			account_name =  d.account_name
+>>>>>>> 625626b973 (fix: Values with same account and different account number in consolidated balance sheet report (#27493))
 		name_to_account_map[d.name] = account_name
 
 	for account in accounts:
@@ -660,9 +674,15 @@ def set_gl_entries_by_account(
 
 		for entry in gl_entries:
 			if entry.account_number:
+<<<<<<< HEAD
 				account_name = entry.account_number + " - " + entry.account_name
 			else:
 				account_name = entry.account_name
+=======
+				account_name = entry.account_number + ' - ' + entry.account_name
+			else:
+				account_name =  entry.account_name
+>>>>>>> 625626b973 (fix: Values with same account and different account number in consolidated balance sheet report (#27493))
 
 			validate_entries(account_name, entry, accounts_by_name, accounts)
 			gl_entries_by_account.setdefault(account_name, []).append(entry)
@@ -770,10 +790,16 @@ def filter_accounts(accounts, depth=10):
 	accounts_by_name = {}
 	for d in accounts:
 		if d.account_number:
+<<<<<<< HEAD
 			account_name = d.account_number + " - " + d.account_name
 		else:
 			account_name = d.account_name
 		d["company_wise_opening_bal"] = defaultdict(float)
+=======
+			account_name = d.account_number + ' - ' + d.account_name
+		else:
+			account_name =  d.account_name
+>>>>>>> 625626b973 (fix: Values with same account and different account number in consolidated balance sheet report (#27493))
 		accounts_by_name[account_name] = d
 
 		parent_children_map.setdefault(d.parent_account or None, []).append(d)
