@@ -844,6 +844,7 @@ def make_bom(**args):
 	)
 
 	for item in args.raw_materials:
+<<<<<<< HEAD
 		item_doc = frappe.get_doc("Item", item)
 		bom.append(
 			"items",
@@ -856,6 +857,18 @@ def make_bom(**args):
 				"source_warehouse": args.source_warehouse,
 			},
 		)
+=======
+		item_doc = frappe.get_doc('Item', item)
+
+		bom.append('items', {
+			'item_code': item,
+			'qty': args.rm_qty or 1.0,
+			'uom': item_doc.stock_uom,
+			'stock_uom': item_doc.stock_uom,
+			'rate': item_doc.valuation_rate or args.rate,
+			'source_warehouse': args.source_warehouse
+		})
+>>>>>>> c5a77f60ed (feat: provision to add scrap item in job card (#27483))
 
 	if not args.do_not_save:
 		bom.insert(ignore_permissions=True)

@@ -1285,6 +1285,60 @@ def update_job_card(job_card, jc_qty=None):
 	job_card_doc.submit()
 
 
+	def test_job_card_scrap_item(self):
+		items = ['Test FG Item for Scrap Item Test', 'Test RM Item 1 for Scrap Item Test',
+			'Test RM Item 2 for Scrap Item Test']
+
+		company = '_Test Company with perpetual inventory'
+		for item_code in items:
+			create_item(item_code = item_code, is_stock_item = 1,
+				is_purchase_item=1, opening_stock=100, valuation_rate=10, company=company, warehouse='Stores - TCP1')
+
+		item = 'Test FG Item for Scrap Item Test'
+		raw_materials = ['Test RM Item 1 for Scrap Item Test', 'Test RM Item 2 for Scrap Item Test']
+		if not frappe.db.get_value('BOM', {'item': item}):
+			bom = make_bom(item=item, source_warehouse='Stores - TCP1', raw_materials=raw_materials, do_not_save=True)
+			bom.with_operations = 1
+			bom.append('operations', {
+				'operation': '_Test Operation 1',
+				'workstation': '_Test Workstation 1',
+				'hour_rate': 20,
+				'time_in_mins': 60
+			})
+
+			bom.submit()
+
+		wo_order = make_wo_order_test_record(item=item, company=company, planned_start_date=now(), qty=20, skip_transfer=1)
+		job_card = frappe.db.get_value('Job Card', {'work_order': wo_order.name}, 'name')
+		update_job_card(job_card)
+
+		stock_entry = frappe.get_doc(make_stock_entry(wo_order.name, "Manufacture", 10))
+		for row in stock_entry.items:
+			if row.is_scrap_item:
+				self.assertEqual(row.qty, 1)
+
+def update_job_card(job_card):
+	job_card_doc = frappe.get_doc('Job Card', job_card)
+	job_card_doc.set('scrap_items', [
+		{
+			'item_code': 'Test RM Item 1 for Scrap Item Test',
+			'stock_qty': 2
+		},
+		{
+			'item_code': 'Test RM Item 2 for Scrap Item Test',
+			'stock_qty': 2
+		},
+	])
+
+	job_card_doc.append('time_logs', {
+		'from_time': now(),
+		'time_in_mins': 60,
+		'completed_qty': job_card_doc.for_quantity
+	})
+
+	job_card_doc.submit()
+
+
 def get_scrap_item_details(bom_no):
 	scrap_items = {}
 	for item in frappe.db.sql(

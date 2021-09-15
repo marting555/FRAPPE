@@ -921,7 +921,11 @@ class StockEntry(StockController):
 						row.db_set("po_detail", po_detail)
 
 	def validate_bom(self):
+<<<<<<< HEAD
 		for d in self.get("items"):
+=======
+		for d in self.get('items'):
+>>>>>>> c5a77f60ed (feat: provision to add scrap item in job card (#27483))
 			if d.bom_no and d.is_finished_item:
 				item_code = d.original_item or d.item_code
 				validate_bom_no(item_code, d.bom_no)
@@ -1548,10 +1552,15 @@ class StockEntry(StockController):
 		from erpnext.manufacturing.doctype.bom.bom import get_bom_items_as_dict
 
 		# item dict = { item_code: {qty, description, stock_uom} }
+<<<<<<< HEAD
 		item_dict = (
 			get_bom_items_as_dict(self.bom_no, self.company, qty=qty, fetch_exploded=0, fetch_scrap_items=1)
 			or {}
 		)
+=======
+		item_dict = get_bom_items_as_dict(self.bom_no, self.company, qty=qty,
+			fetch_exploded = 0, fetch_scrap_items = 1) or {}
+>>>>>>> c5a77f60ed (feat: provision to add scrap item in job card (#27483))
 
 		for item in itervalues(item_dict):
 			item.from_warehouse = ""
@@ -1565,6 +1574,7 @@ class StockEntry(StockController):
 			if not item_row:
 				item_row = frappe._dict({})
 
+<<<<<<< HEAD
 			item_row.update(
 				{
 					"uom": row.stock_uom,
@@ -1577,6 +1587,18 @@ class StockEntry(StockController):
 					"allow_zero_valuation_rate": 1,
 				}
 			)
+=======
+			item_row.update({
+				'uom': row.stock_uom,
+				'from_warehouse': '',
+				'qty': row.stock_qty + flt(item_row.stock_qty),
+				'converison_factor': 1,
+				'is_scrap_item': 1,
+				'item_name': row.item_name,
+				'description': row.description,
+				'allow_zero_valuation_rate': 1
+			})
+>>>>>>> c5a77f60ed (feat: provision to add scrap item in job card (#27483))
 
 			item_dict[row.item_code] = item_row
 
@@ -1586,6 +1608,7 @@ class StockEntry(StockController):
 		if not self.pro_doc:
 			self.set_work_order_details()
 
+<<<<<<< HEAD
 		if not self.pro_doc.operations:
 			return []
 
@@ -1613,6 +1636,24 @@ class StockEntry(StockController):
 
 		pending_qty = flt(self.get_completed_job_card_qty()) - flt(self.pro_doc.produced_qty)
 
+=======
+		scrap_items = frappe.db.sql('''
+			SELECT
+				JCSI.item_code, JCSI.item_name, SUM(JCSI.stock_qty) as stock_qty, JCSI.stock_uom, JCSI.description
+			FROM
+				`tabJob Card` JC, `tabJob Card Scrap Item` JCSI
+			WHERE
+				JCSI.parent = JC.name AND JC.docstatus = 1
+				AND JCSI.item_code IS NOT NULL AND JC.work_order = %s
+			GROUP BY
+				JCSI.item_code
+		''', self.work_order, as_dict=1)
+
+		pending_qty = flt(self.pro_doc.qty) - flt(self.pro_doc.produced_qty)
+		if pending_qty <=0:
+			return []
+
+>>>>>>> c5a77f60ed (feat: provision to add scrap item in job card (#27483))
 		used_scrap_items = self.get_used_scrap_items()
 		for row in scrap_items:
 			row.stock_qty -= flt(used_scrap_items.get(row.item_code))
@@ -1621,11 +1662,16 @@ class StockEntry(StockController):
 			if used_scrap_items.get(row.item_code):
 				used_scrap_items[row.item_code] -= row.stock_qty
 
+<<<<<<< HEAD
 			if cint(frappe.get_cached_value("UOM", row.stock_uom, "must_be_whole_number")):
+=======
+			if cint(frappe.get_cached_value('UOM', row.stock_uom, 'must_be_whole_number')):
+>>>>>>> c5a77f60ed (feat: provision to add scrap item in job card (#27483))
 				row.stock_qty = frappe.utils.ceil(row.stock_qty)
 
 		return scrap_items
 
+<<<<<<< HEAD
 	def get_completed_job_card_qty(self):
 		return flt(min([d.completed_qty for d in self.pro_doc.operations]))
 
@@ -1640,6 +1686,21 @@ class StockEntry(StockController):
 				["Stock Entry", "docstatus", "=", 1],
 				["Stock Entry", "purpose", "in", ["Repack", "Manufacture"]],
 			],
+=======
+	def get_used_scrap_items(self):
+		used_scrap_items = defaultdict(float)
+		data = frappe.get_all(
+			'Stock Entry',
+			fields = [
+				'`tabStock Entry Detail`.`item_code`', '`tabStock Entry Detail`.`qty`'
+			],
+			filters = [
+				['Stock Entry', 'work_order', '=', self.work_order],
+				['Stock Entry Detail', 'is_scrap_item', '=', 1],
+				['Stock Entry', 'docstatus', '=', 1],
+				['Stock Entry', 'purpose', 'in', ['Repack', 'Manufacture']]
+			]
+>>>>>>> c5a77f60ed (feat: provision to add scrap item in job card (#27483))
 		)
 
 		for row in data:
@@ -1929,6 +1990,7 @@ class StockEntry(StockController):
 			se_child.is_scrap_item = item_row.get("is_scrap_item", 0)
 			se_child.is_process_loss = item_row.get("is_process_loss", 0)
 
+<<<<<<< HEAD
 			for field in [
 				"po_detail",
 				"original_item",
@@ -1941,6 +2003,12 @@ class StockEntry(StockController):
 			]:
 				if item_row.get(field):
 					se_child.set(field, item_row.get(field))
+=======
+			for field in ["idx", "po_detail", "original_item", "expense_account",
+				"description", "item_name", "serial_no", "batch_no", "allow_zero_valuation_rate"]:
+				if item_dict[d].get(field):
+					se_child.set(field, item_dict[d].get(field))
+>>>>>>> c5a77f60ed (feat: provision to add scrap item in job card (#27483))
 
 			if se_child.s_warehouse == None:
 				se_child.s_warehouse = self.from_warehouse

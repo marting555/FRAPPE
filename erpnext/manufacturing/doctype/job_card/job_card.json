@@ -397,7 +397,10 @@
    "options": "Batch"
   },
   {
+<<<<<<< HEAD
    "collapsible": 1,
+=======
+>>>>>>> c5a77f60ed (feat: provision to add scrap item in job card (#27483))
    "fieldname": "scrap_items_section",
    "fieldtype": "Section Break",
    "label": "Scrap Items"
@@ -409,6 +412,7 @@
    "no_copy": 1,
    "options": "Job Card Scrap Item",
    "print_hide": 1
+<<<<<<< HEAD
   },
   {
    "fetch_from": "operation.quality_inspection_template",
@@ -416,11 +420,17 @@
    "fieldtype": "Link",
    "label": "Quality Inspection Template",
    "options": "Quality Inspection Template"
+=======
+>>>>>>> c5a77f60ed (feat: provision to add scrap item in job card (#27483))
   }
  ],
  "is_submittable": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2023-05-22 23:26:57.589331",
+=======
+ "modified": "2021-09-14 00:38:46.873105",
+>>>>>>> c5a77f60ed (feat: provision to add scrap item in job card (#27483))
  "modified_by": "Administrator",
  "module": "Manufacturing",
  "name": "Job Card",
