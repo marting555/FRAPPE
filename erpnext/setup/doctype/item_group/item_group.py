@@ -37,6 +37,7 @@ class ItemGroup(NestedSet, WebsiteGenerator):
 
 		self.make_route()
 		self.validate_item_group_defaults()
+<<<<<<< HEAD
 		self.check_item_tax()
 		ECommerceSettings.validate_field_filters(self.filter_fields, enable_field_filters=True)
 
@@ -54,6 +55,8 @@ class ItemGroup(NestedSet, WebsiteGenerator):
 					)
 				else:
 					check_list.append((d.item_tax_template, d.tax_category))
+=======
+>>>>>>> 5eba1ccd51 (fix: no validation on item defaults (#27393))
 
 	def on_update(self):
 		NestedSet.on_update(self)
@@ -122,6 +125,18 @@ class ItemGroup(NestedSet, WebsiteGenerator):
 
 	def validate_item_group_defaults(self):
 		from erpnext.stock.doctype.item.item import validate_item_default_company_links
+<<<<<<< HEAD
+=======
+		validate_item_default_company_links(self.item_group_defaults)
+
+@frappe.whitelist(allow_guest=True)
+def get_product_list_for_group(product_group=None, start=0, limit=10, search=None):
+	if product_group:
+		item_group = frappe.get_cached_doc('Item Group', product_group)
+		if item_group.is_group:
+			# return child item groups if the type is of "Is Group"
+			return get_child_groups_for_list_in_html(item_group, start, limit, search)
+>>>>>>> 5eba1ccd51 (fix: no validation on item defaults (#27393))
 
 		validate_item_default_company_links(self.item_group_defaults)
 

@@ -30,7 +30,14 @@ from erpnext.controllers.item_variant import (
 	make_variant_item_code,
 	validate_item_variant_attributes,
 )
+<<<<<<< HEAD
 from erpnext.setup.doctype.item_group.item_group import invalidate_cache_for
+=======
+from erpnext.setup.doctype.item_group.item_group import (
+	get_parent_item_groups,
+	invalidate_cache_for,
+)
+>>>>>>> 5eba1ccd51 (fix: no validation on item defaults (#27393))
 from erpnext.stock.doctype.item_default.item_default import ItemDefault
 
 
@@ -649,11 +656,16 @@ class Item(Document):
 
 		validate_item_default_company_links(self.item_defaults)
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 5eba1ccd51 (fix: no validation on item defaults (#27393))
 	def update_defaults_from_item_group(self):
 		"""Get defaults from Item Group"""
 		if self.item_defaults or not self.item_group:
 			return
 
+<<<<<<< HEAD
 		item_defaults = frappe.db.get_values(
 			"Item Default",
 			{"parent": self.item_group},
@@ -684,10 +696,28 @@ class Item(Document):
 						"income_account": item.income_account,
 					},
 				)
+=======
+		item_defaults = frappe.db.get_values("Item Default", {"parent": self.item_group},
+			['company', 'default_warehouse','default_price_list','buying_cost_center','default_supplier',
+			'expense_account','selling_cost_center','income_account'], as_dict = 1)
+		if item_defaults:
+			for item in item_defaults:
+				self.append('item_defaults', {
+					'company': item.company,
+					'default_warehouse': item.default_warehouse,
+					'default_price_list': item.default_price_list,
+					'buying_cost_center': item.buying_cost_center,
+					'default_supplier': item.default_supplier,
+					'expense_account': item.expense_account,
+					'selling_cost_center': item.selling_cost_center,
+					'income_account': item.income_account
+				})
+>>>>>>> 5eba1ccd51 (fix: no validation on item defaults (#27393))
 		else:
 			defaults = frappe.defaults.get_defaults() or {}
 
 			# To check default warehouse is belong to the default company
+<<<<<<< HEAD
 			if (
 				defaults.get("default_warehouse")
 				and defaults.company
@@ -699,6 +729,14 @@ class Item(Document):
 					"item_defaults",
 					{"company": defaults.get("company"), "default_warehouse": defaults.default_warehouse},
 				)
+=======
+			if defaults.get("default_warehouse") and defaults.company and frappe.db.exists("Warehouse",
+				{'name': defaults.default_warehouse, 'company': defaults.company}):
+					self.append("item_defaults", {
+						"company": defaults.get("company"),
+						"default_warehouse": defaults.default_warehouse
+					})
+>>>>>>> 5eba1ccd51 (fix: no validation on item defaults (#27393))
 
 	def update_variants(self):
 		if self.flags.dont_update_variants or frappe.db.get_single_value(
@@ -1274,6 +1312,7 @@ def set_item_tax_from_hsn_code(item):
 def validate_item_default_company_links(item_defaults: List[ItemDefault]) -> None:
 	for item_default in item_defaults:
 		for doctype, field in [
+<<<<<<< HEAD
 			["Warehouse", "default_warehouse"],
 			["Cost Center", "buying_cost_center"],
 			["Cost Center", "selling_cost_center"],
@@ -1285,10 +1324,24 @@ def validate_item_default_company_links(item_defaults: List[ItemDefault]) -> Non
 				if company and company != item_default.company:
 					frappe.throw(
 						_("Row #{}: {} {} doesn't belong to Company {}. Please select valid {}.").format(
+=======
+			['Warehouse', 'default_warehouse'],
+			['Cost Center', 'buying_cost_center'],
+			['Cost Center', 'selling_cost_center'],
+			['Account', 'expense_account'],
+			['Account', 'income_account']
+		]:
+			if item_default.get(field):
+				company = frappe.db.get_value(doctype, item_default.get(field), 'company', cache=True)
+				if company and company != item_default.company:
+					frappe.throw(_("Row #{}: {} {} doesn't belong to Company {}. Please select valid {}.")
+						.format(
+>>>>>>> 5eba1ccd51 (fix: no validation on item defaults (#27393))
 							item_default.idx,
 							doctype,
 							frappe.bold(item_default.get(field)),
 							frappe.bold(item_default.company),
+<<<<<<< HEAD
 							frappe.bold(frappe.unscrub(field)),
 						),
 						title=_("Invalid Item Defaults"),
@@ -1300,3 +1353,7 @@ def get_asset_naming_series():
 	from erpnext.assets.doctype.asset.asset import get_asset_naming_series
 
 	return get_asset_naming_series()
+=======
+							frappe.bold(frappe.unscrub(field))
+						), title=_("Invalid Item Defaults"))
+>>>>>>> 5eba1ccd51 (fix: no validation on item defaults (#27393))
