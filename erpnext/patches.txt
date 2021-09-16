@@ -315,6 +315,7 @@ erpnext.patches.v13_0.create_website_items #30-09-2021
 erpnext.patches.v13_0.populate_e_commerce_settings
 erpnext.patches.v13_0.make_homepage_products_website_items
 erpnext.patches.v13_0.update_dates_in_tax_withholding_category
+<<<<<<< HEAD
 erpnext.patches.v13_0.fix_invoice_statuses
 erpnext.patches.v13_0.replace_supplier_item_group_with_party_specific_item
 erpnext.patches.v13_0.gst_fields_for_pos_invoice
@@ -379,3 +380,7 @@ erpnext.patches.v13_0.update_asset_value_for_manual_depr_entries
 erpnext.patches.v13_0.update_docs_link
 erpnext.patches.v13_0.correct_asset_value_if_je_with_workflow
 execute:frappe.db.set_value("Accounts Settings", "Accounts Settings", "service_provider", "frankfurter.app")
+=======
+erpnext.patches.v14_0.update_opportunity_currency_fields
+erpnext.patches.v13_0.create_accounting_dimensions_in_pos_doctypes
+>>>>>>> c9c8957250 (feat: Merge POS invoices based on customer group (#27471))

@@ -556,7 +556,10 @@ class SalesInvoice(SellingController):
 			)
 
 		from erpnext.stock.get_item_details import get_pos_profile, get_pos_profile_item_details
+<<<<<<< HEAD
 
+=======
+>>>>>>> c9c8957250 (feat: Merge POS invoices based on customer group (#27471))
 		if not self.pos_profile and not self.flags.ignore_pos_profile:
 			pos_profile = get_pos_profile(self.company) or {}
 			if not pos_profile:

@@ -3,12 +3,18 @@ from frappe.custom.doctype.custom_field.custom_field import create_custom_field
 
 
 def execute():
+<<<<<<< HEAD
 	frappe.reload_doc("accounts", "doctype", "accounting_dimension")
 	accounting_dimensions = frappe.db.sql(
 		"""select fieldname, label, document_type, disabled from
 		`tabAccounting Dimension`""",
 		as_dict=1,
 	)
+=======
+	frappe.reload_doc('accounts', 'doctype', 'accounting_dimension')
+	accounting_dimensions = frappe.db.sql("""select fieldname, label, document_type, disabled from
+		`tabAccounting Dimension`""", as_dict=1)
+>>>>>>> c9c8957250 (feat: Merge POS invoices based on customer group (#27471))
 
 	if not accounting_dimensions:
 		return
@@ -17,9 +23,15 @@ def execute():
 	for d in accounting_dimensions:
 
 		if count % 2 == 0:
+<<<<<<< HEAD
 			insert_after_field = "dimension_col_break"
 		else:
 			insert_after_field = "accounting_dimensions_section"
+=======
+			insert_after_field = 'dimension_col_break'
+		else:
+			insert_after_field = 'accounting_dimensions_section'
+>>>>>>> c9c8957250 (feat: Merge POS invoices based on customer group (#27471))
 
 		for doctype in ["POS Invoice", "POS Invoice Item"]:
 
@@ -35,10 +47,17 @@ def execute():
 				"label": d.label,
 				"fieldtype": "Link",
 				"options": d.document_type,
+<<<<<<< HEAD
 				"insert_after": insert_after_field,
 			}
 
 			if df["fieldname"] not in fieldnames:
+=======
+				"insert_after": insert_after_field
+			}
+
+			if df['fieldname'] not in fieldnames:
+>>>>>>> c9c8957250 (feat: Merge POS invoices based on customer group (#27471))
 				create_custom_field(doctype, df)
 				frappe.clear_cache(doctype=doctype)
 

@@ -36,7 +36,11 @@ class POSInvoiceMergeLog(Document):
 			frappe.throw(error_list, title=_("Duplicate POS Invoices found"), as_list=True)
 
 	def validate_customer(self):
+<<<<<<< HEAD
 		if self.merge_invoices_based_on == "Customer Group":
+=======
+		if self.merge_invoices_based_on == 'Customer Group':
+>>>>>>> c9c8957250 (feat: Merge POS invoices based on customer group (#27471))
 			return
 
 		for d in self.pos_invoices:
@@ -165,6 +169,7 @@ class POSInvoiceMergeLog(Document):
 			for item in doc.get("items"):
 				found = False
 				for i in items:
+<<<<<<< HEAD
 					if (
 						i.item_code == item.item_code
 						and not i.serial_no
@@ -173,6 +178,10 @@ class POSInvoiceMergeLog(Document):
 						and i.net_rate == item.net_rate
 						and i.warehouse == item.warehouse
 					):
+=======
+					if (i.item_code == item.item_code and not i.serial_no and not i.batch_no and
+						i.uom == item.uom and i.net_rate == item.net_rate and i.warehouse == item.warehouse):
+>>>>>>> c9c8957250 (feat: Merge POS invoices based on customer group (#27471))
 						found = True
 						i.qty = i.qty + item.qty
 						i.amount = i.amount + item.net_amount
@@ -238,6 +247,7 @@ class POSInvoiceMergeLog(Document):
 		invoice.taxes_and_charges = None
 		invoice.ignore_pricing_rule = 1
 		invoice.customer = self.customer
+<<<<<<< HEAD
 		invoice.disable_rounded_total = cint(
 			frappe.db.get_value("POS Profile", invoice.pos_profile, "disable_rounded_total")
 		)
@@ -245,6 +255,12 @@ class POSInvoiceMergeLog(Document):
 		if self.merge_invoices_based_on == "Customer Group":
 			invoice.flags.ignore_pos_profile = True
 			invoice.pos_profile = ""
+=======
+
+		if self.merge_invoices_based_on == 'Customer Group':
+			invoice.flags.ignore_pos_profile = True
+			invoice.pos_profile = ''
+>>>>>>> c9c8957250 (feat: Merge POS invoices based on customer group (#27471))
 
 		return invoice
 
