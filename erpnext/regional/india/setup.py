@@ -916,6 +916,7 @@ def get_custom_fields():
 				read_only=1,
 			),
 		],
+<<<<<<< HEAD
 		"Purchase Invoice": purchase_invoice_gst_category
 		+ invoice_gst_fields
 		+ purchase_invoice_itc_fields
@@ -974,6 +975,43 @@ def get_custom_fields():
 				insert_after="description",
 				options="\nProvident Fund\nAdditional Provident Fund\nProvident Fund Loan\nProfessional Tax",
 				depends_on='eval:doc.type == "Deduction"',
+=======
+		'Purchase Invoice': purchase_invoice_gst_category + invoice_gst_fields + purchase_invoice_itc_fields + purchase_invoice_gst_fields,
+		'Purchase Order': purchase_invoice_gst_fields,
+		'Purchase Receipt': purchase_invoice_gst_fields,
+		'Sales Invoice': sales_invoice_gst_category + invoice_gst_fields + sales_invoice_shipping_fields + sales_invoice_gst_fields + si_ewaybill_fields,
+		'POS Invoice': sales_invoice_gst_fields,
+		'Delivery Note': sales_invoice_gst_fields + ewaybill_fields + sales_invoice_shipping_fields + delivery_note_gst_category,
+		'Payment Entry': payment_entry_fields,
+		'Journal Entry': journal_entry_fields,
+		'Sales Order': sales_invoice_gst_fields,
+		'Tax Category': inter_state_gst_field,
+		'Item': [
+			dict(fieldname='gst_hsn_code', label='HSN/SAC',
+				fieldtype='Link', options='GST HSN Code', insert_after='item_group'),
+			dict(fieldname='is_nil_exempt', label='Is Nil Rated or Exempted',
+				fieldtype='Check', insert_after='gst_hsn_code'),
+			dict(fieldname='is_non_gst', label='Is Non GST ',
+				fieldtype='Check', insert_after='is_nil_exempt')
+		],
+		'Quotation Item': [hsn_sac_field, nil_rated_exempt, is_non_gst],
+		'Supplier Quotation Item': [hsn_sac_field, nil_rated_exempt, is_non_gst],
+		'Sales Order Item': [hsn_sac_field, nil_rated_exempt, is_non_gst],
+		'Delivery Note Item': [hsn_sac_field, nil_rated_exempt, is_non_gst],
+		'Sales Invoice Item': [hsn_sac_field, nil_rated_exempt, is_non_gst, taxable_value],
+		'POS Invoice Item': [hsn_sac_field, nil_rated_exempt, is_non_gst, taxable_value],
+		'Purchase Order Item': [hsn_sac_field, nil_rated_exempt, is_non_gst],
+		'Purchase Receipt Item': [hsn_sac_field, nil_rated_exempt, is_non_gst],
+		'Purchase Invoice Item': [hsn_sac_field, nil_rated_exempt, is_non_gst, taxable_value],
+		'Material Request Item': [hsn_sac_field, nil_rated_exempt, is_non_gst],
+		'Salary Component': [
+			dict(fieldname=  'component_type',
+				label= 'Component Type',
+				fieldtype=  'Select',
+				insert_after= 'description',
+				options= "\nProvident Fund\nAdditional Provident Fund\nProvident Fund Loan\nProfessional Tax",
+				depends_on = 'eval:doc.type == "Deduction"'
+>>>>>>> d49346ac45 (fix: Tax breakup based on items, missing GST fields (#27524))
 			)
 		],
 		"Employee": [

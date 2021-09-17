@@ -1908,8 +1908,27 @@ class TestSalesInvoice(unittest.TestCase):
 		itemised_tax, itemised_taxable_amount = get_itemised_tax_breakup_data(si)
 
 		expected_itemised_tax = {
+<<<<<<< HEAD
 			"_Test Item": {"Service Tax": {"tax_rate": 10.0, "tax_amount": 1000.0}},
 			"_Test Item 2": {"Service Tax": {"tax_rate": 10.0, "tax_amount": 500.0}},
+=======
+			"_Test Item": {
+				"Service Tax": {
+					"tax_rate": 10.0,
+					"tax_amount": 1000.0
+				}
+			},
+			"_Test Item 2": {
+				"Service Tax": {
+					"tax_rate": 10.0,
+					"tax_amount": 500.0
+				}
+			}
+		}
+		expected_itemised_taxable_amount = {
+			"_Test Item": 10000.0,
+			"_Test Item 2": 5000.0
+>>>>>>> d49346ac45 (fix: Tax breakup based on items, missing GST fields (#27524))
 		}
 		expected_itemised_taxable_amount = {"_Test Item": 10000.0, "_Test Item 2": 5000.0}
 

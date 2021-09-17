@@ -162,7 +162,10 @@ def get_itemised_tax_breakup_header(item_doctype, tax_accounts):
 	else:
 		return [_("Item"), _("Taxable Amount")] + tax_accounts
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> d49346ac45 (fix: Tax breakup based on items, missing GST fields (#27524))
 def get_itemised_tax_breakup_data(doc, account_wise=False, hsn_wise=False):
 	itemised_tax = get_itemised_tax(doc.taxes, with_tax_account=account_wise)
 
@@ -171,22 +174,34 @@ def get_itemised_tax_breakup_data(doc, account_wise=False, hsn_wise=False):
 	if not frappe.get_meta(doc.doctype + " Item").has_field("gst_hsn_code"):
 		return itemised_tax, itemised_taxable_amount
 
+<<<<<<< HEAD
 	hsn_wise_in_gst_settings = frappe.db.get_single_value("GST Settings", "hsn_wise_tax_breakup")
 
 	tax_breakup_hsn_wise = hsn_wise or hsn_wise_in_gst_settings
 	if tax_breakup_hsn_wise:
+=======
+	if hsn_wise:
+>>>>>>> d49346ac45 (fix: Tax breakup based on items, missing GST fields (#27524))
 		item_hsn_map = frappe._dict()
 		for d in doc.items:
 			item_hsn_map.setdefault(d.item_code or d.item_name, d.get("gst_hsn_code"))
 
 	hsn_tax = {}
 	for item, taxes in itemised_tax.items():
+<<<<<<< HEAD
 		item_or_hsn = item if not tax_breakup_hsn_wise else item_hsn_map.get(item)
+=======
+		item_or_hsn = item if not hsn_wise else item_hsn_map.get(item)
+>>>>>>> d49346ac45 (fix: Tax breakup based on items, missing GST fields (#27524))
 		hsn_tax.setdefault(item_or_hsn, frappe._dict())
 		for tax_desc, tax_detail in taxes.items():
 			key = tax_desc
 			if account_wise:
+<<<<<<< HEAD
 				key = tax_detail.get("tax_account")
+=======
+				key = tax_detail.get('tax_account')
+>>>>>>> d49346ac45 (fix: Tax breakup based on items, missing GST fields (#27524))
 			hsn_tax[item_or_hsn].setdefault(key, {"tax_rate": 0, "tax_amount": 0})
 			hsn_tax[item_or_hsn][key]["tax_rate"] = tax_detail.get("tax_rate")
 			hsn_tax[item_or_hsn][key]["tax_amount"] += tax_detail.get("tax_amount")
@@ -194,7 +209,11 @@ def get_itemised_tax_breakup_data(doc, account_wise=False, hsn_wise=False):
 	# set taxable amount
 	hsn_taxable_amount = frappe._dict()
 	for item in itemised_taxable_amount:
+<<<<<<< HEAD
 		item_or_hsn = item if not tax_breakup_hsn_wise else item_hsn_map.get(item)
+=======
+		item_or_hsn = item if not hsn_wise else item_hsn_map.get(item)
+>>>>>>> d49346ac45 (fix: Tax breakup based on items, missing GST fields (#27524))
 		hsn_taxable_amount.setdefault(item_or_hsn, 0)
 		hsn_taxable_amount[item_or_hsn] += itemised_taxable_amount.get(item)
 
@@ -746,9 +765,14 @@ def get_address_details(data, doc, company_address, billing_address, dispatch_ad
 
 	return data
 
+<<<<<<< HEAD
 
 def get_item_list(data, doc, hsn_wise=False):
 	for attr in ["cgstValue", "sgstValue", "igstValue", "cessValue", "OthValue"]:
+=======
+def get_item_list(data, doc, hsn_wise=False):
+	for attr in ['cgstValue', 'sgstValue', 'igstValue', 'cessValue', 'OthValue']:
+>>>>>>> d49346ac45 (fix: Tax breakup based on items, missing GST fields (#27524))
 		data[attr] = 0
 
 	gst_accounts = get_gst_accounts(doc.company, account_wise=True)
@@ -758,11 +782,17 @@ def get_item_list(data, doc, hsn_wise=False):
 		"igst_account": ["igstRate", "igstValue"],
 		"cess_account": ["cessRate", "cessValue"],
 	}
+<<<<<<< HEAD
 	item_data_attrs = ["sgstRate", "cgstRate", "igstRate", "cessRate", "cessNonAdvol"]
 	hsn_wise_charges, hsn_taxable_amount = get_itemised_tax_breakup_data(
 		doc, account_wise=True, hsn_wise=hsn_wise
 	)
 	for item_or_hsn, taxable_amount in hsn_taxable_amount.items():
+=======
+	item_data_attrs = ['sgstRate', 'cgstRate', 'igstRate', 'cessRate', 'cessNonAdvol']
+	hsn_wise_charges, hsn_taxable_amount = get_itemised_tax_breakup_data(doc, account_wise=True, hsn_wise=hsn_wise)
+	for hsn_code, taxable_amount in hsn_taxable_amount.items():
+>>>>>>> d49346ac45 (fix: Tax breakup based on items, missing GST fields (#27524))
 		item_data = frappe._dict()
 		if not item_or_hsn:
 			frappe.throw(_("GST HSN Code does not exist for one or more items"))
