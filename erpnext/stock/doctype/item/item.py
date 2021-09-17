@@ -343,11 +343,19 @@ class Item(Document):
 
 	def fill_customer_code(self):
 		"""
+<<<<<<< HEAD
 		Append all the customer codes and insert into "customer_code" field of item table.
 		Used to search Item by customer code.
 		"""
 		customer_codes = set(d.ref_code for d in self.get("customer_items", []))
 		self.customer_code = ",".join(customer_codes)
+=======
+			Append all the customer codes and insert into "customer_code" field of item table.
+			Used to search Item by customer code.
+		"""
+		customer_codes = set(d.ref_code for d in self.get("customer_items", []))
+		self.customer_code = ','.join(customer_codes)
+>>>>>>> 41f11eca72 (fix: Remove duplicates from customer_code field (#27555))
 
 	def check_item_tax(self):
 		"""Check whether Tax Rate is not entered twice for same Tax Type"""
