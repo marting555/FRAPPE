@@ -358,7 +358,10 @@ def update_status(name, status):
 	material_request.check_permission("write")
 	material_request.update_status(status)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> e03d9aa889 (fix: unecessary keyword args were passed in mapper functions (#27563))
 @frappe.whitelist()
 def make_purchase_order(source_name, target_doc=None, args=None):
 	if args is None:
