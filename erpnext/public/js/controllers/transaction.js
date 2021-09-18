@@ -988,11 +988,31 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 			['Purchase Order', 'Purchase Receipt', 'Purchase Invoice'].includes(this.frm.doctype)) {
 				let is_drop_ship = me.frm.doc.items.some(item => item.delivered_by_supplier);
 
+<<<<<<< HEAD
 				if (!is_drop_ship) {
 					erpnext.utils.get_shipping_address(this.frm, function() {
 						set_party_account(set_pricing);
 					});
 				}
+=======
+			// Get default company billing address in Purchase Invoice, Order and Receipt
+			if (this.frm.doc.company && frappe.meta.get_docfield(this.frm.doctype, "billing_address")) {
+				frappe.call({
+					method: "erpnext.setup.doctype.company.company.get_default_company_address",
+					args: {name: this.frm.doc.company, existing_address: this.frm.doc.billing_address || ""},
+					debounce: 2000,
+					callback: function(r) {
+						if (r.message) {
+							me.frm.set_value("billing_address", r.message);
+						} else {
+							if (frappe.meta.get_docfield(me.frm.doctype, 'company_address')) {
+								me.frm.set_value("company_address", "");
+							}
+						}
+					}
+				});
+			}
+>>>>>>> 666eaae6ce (fix: PO/PINV -  Check if doctype has company_address field before setting the value (#27441))
 
 		} else {
 			set_party_account(set_pricing);
