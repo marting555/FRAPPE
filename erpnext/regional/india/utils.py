@@ -156,11 +156,15 @@ def validate_gstin_check_digit(gstin, label="GSTIN"):
 
 
 def get_itemised_tax_breakup_header(item_doctype, tax_accounts):
+<<<<<<< HEAD
 	hsn_wise_in_gst_settings = frappe.db.get_single_value("GST Settings", "hsn_wise_tax_breakup")
 	if frappe.get_meta(item_doctype).has_field("gst_hsn_code") and hsn_wise_in_gst_settings:
 		return [_("HSN/SAC"), _("Taxable Amount")] + tax_accounts
 	else:
 		return [_("Item"), _("Taxable Amount")] + tax_accounts
+=======
+	return [_("Item"), _("Taxable Amount")] + tax_accounts
+>>>>>>> 0ff7367f39 (fix: Tax Breakup table headers fix (#27596))
 
 
 def get_itemised_tax_breakup_data(doc, account_wise=False, hsn_wise=False):
