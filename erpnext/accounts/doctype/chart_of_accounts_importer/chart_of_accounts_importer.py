@@ -23,6 +23,7 @@ from erpnext.accounts.doctype.account.chart_of_accounts.chart_of_accounts import
 
 
 class ChartofAccountsImporter(Document):
+<<<<<<< HEAD
 	def validate(self):
 		if self.import_file:
 			get_coa(
@@ -33,15 +34,26 @@ class ChartofAccountsImporter(Document):
 def validate_columns(data):
 	if not data:
 		frappe.throw(_("No data found. Seems like you uploaded a blank file"))
+=======
+	pass
+
+def validate_columns(data):
+	if not data:
+		frappe.throw(_('No data found. Seems like you uploaded a blank file'))
+>>>>>>> f07ff92a35 (fix: Improvements in COA Importer (#27584))
 
 	no_of_columns = max([len(d) for d in data])
 
 	if no_of_columns > 7:
+<<<<<<< HEAD
 		frappe.throw(
 			_("More columns found than expected. Please compare the uploaded file with standard template"),
 			title=(_("Wrong Template")),
 		)
 
+=======
+		frappe.throw(_('More columns found than expected. Please compare the uploaded file with standard template'))
+>>>>>>> f07ff92a35 (fix: Improvements in COA Importer (#27584))
 
 @frappe.whitelist()
 def validate_company(company):
@@ -158,7 +170,13 @@ def get_coa(doctype, parent, is_root=False, file_name=None, for_validate=0):
 		data = generate_data_from_excel(file_doc, extension)
 
 	validate_columns(data)
+<<<<<<< HEAD
 	validate_accounts(file_doc, extension)
+=======
+	validate_accounts(data)
+	forest = build_forest(data)
+	accounts = build_tree_from_json("", chart_data=forest) # returns alist of dict in a tree render-able form
+>>>>>>> f07ff92a35 (fix: Improvements in COA Importer (#27584))
 
 	if not for_validate:
 		forest = build_forest(data)
@@ -387,9 +405,14 @@ def validate_accounts(file_doc, extension):
 
 	return [True, len(accounts)]
 
+<<<<<<< HEAD
 
 def validate_root(accounts):
 	roots = [accounts[d] for d in accounts if not accounts[d].get("parent_account")]
+=======
+def validate_root(accounts):
+	roots = [accounts[d] for d in accounts if not accounts[d].get('parent_account')]
+>>>>>>> f07ff92a35 (fix: Improvements in COA Importer (#27584))
 	error_messages = []
 
 	for account in roots:
@@ -448,6 +471,17 @@ def get_mandatory_account_types():
 	]
 
 
+<<<<<<< HEAD
+=======
+def validate_account_types(accounts):
+	account_types_for_ledger = ["Cost of Goods Sold", "Depreciation", "Fixed Asset", "Payable", "Receivable", "Stock Adjustment"]
+	account_types = [accounts[d]["account_type"] for d in accounts if not cint(accounts[d]['is_group']) == 1]
+
+	missing = list(set(account_types_for_ledger) - set(account_types))
+	if missing:
+		frappe.throw(_("Please identify/create Account (Ledger) for type - {0}").format(' , '.join(missing)))
+
+>>>>>>> f07ff92a35 (fix: Improvements in COA Importer (#27584))
 def unset_existing_data(company):
 	linked = frappe.db.sql(
 		'''select fieldname from tabDocField
