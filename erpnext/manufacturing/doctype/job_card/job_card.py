@@ -1486,8 +1486,12 @@ def get_job_details(start, end, filters=None):
 
 	conditions = get_filters_cond("Job Card", filters, [])
 
+<<<<<<< HEAD
 	job_cards = frappe.db.sql(
 		f""" SELECT `tabJob Card`.name, `tabJob Card`.work_order,
+=======
+	job_cards = frappe.db.sql(""" SELECT `tabJob Card`.name, `tabJob Card`.work_order,
+>>>>>>> 9ebabb86b3 (fix: remove unknown field employee_name from query (#27634))
 			`tabJob Card`.status, ifnull(`tabJob Card`.remarks, ''),
 			min(`tabJob Card Time Log`.from_time) as from_time,
 			max(`tabJob Card Time Log`.to_time) as to_time
@@ -1499,10 +1503,16 @@ def get_job_details(start, end, filters=None):
 	)
 
 	for d in job_cards:
+<<<<<<< HEAD
 		subject_data = []
 		for field in ["name", "work_order", "remarks"]:
 			if not d.get(field):
 				continue
+=======
+			subject_data = []
+			for field in ["name", "work_order", "remarks"]:
+				if not d.get(field): continue
+>>>>>>> 9ebabb86b3 (fix: remove unknown field employee_name from query (#27634))
 
 			subject_data.append(d.get(field))
 
