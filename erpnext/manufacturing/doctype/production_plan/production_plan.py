@@ -599,6 +599,21 @@ class ProductionPlan(Document):
 			doc_list = [get_link_to_form(doctype, p) for p in doc_list]
 			msgprint(_("{0} created").format(comma_and(doc_list)))
 
+<<<<<<< HEAD
+=======
+	def prepare_args_for_sub_assembly_items(self, row, args):
+		for field in ["production_item", "item_name", "qty", "fg_warehouse",
+			"description", "bom_no", "stock_uom", "bom_level",
+			"production_plan_item", "schedule_date"]:
+			args[field] = row.get(field)
+
+		args.update({
+			"use_multi_level_bom": 0,
+			"production_plan": self.name,
+			"production_plan_sub_assembly_item": row.name
+		})
+
+>>>>>>> 9110223341 (fix: (ux) Use subassembly schedule date while making WO from Prod Plan (#27628))
 	def create_work_order(self, item):
 		from erpnext.manufacturing.doctype.work_order.work_order import OverProductionError
 
