@@ -2216,6 +2216,11 @@ class TestSalesInvoice(unittest.TestCase):
 
 	def test_credit_note(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
+<<<<<<< HEAD
+=======
+
+		si = create_sales_invoice(item_code = "_Test Item", qty = (5 * -1), rate=500, is_return = 1)
+>>>>>>> c8b9a55e96 (feat: add `Partly Paid` status in Invoices (#27625))
 
 		si = create_sales_invoice(item_code="_Test Item", qty=(5 * -1), rate=500, is_return=1)
 
@@ -3567,6 +3572,54 @@ class TestSalesInvoice(unittest.TestCase):
 
 		self.assertTrue(return_si.docstatus == 1)
 
+
+	def test_payment_statuses(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
+
+		today = nowdate()
+
+		# Test Overdue
+		si = create_sales_invoice(do_not_submit=True)
+		si.payment_schedule = []
+		si.append("payment_schedule", {
+			"due_date": add_days(today, -5),
+			"invoice_portion": 50,
+			"payment_amount": si.grand_total / 2
+		})
+		si.append("payment_schedule", {
+			"due_date": add_days(today, 5),
+			"invoice_portion": 50,
+			"payment_amount": si.grand_total / 2
+		})
+		si.submit()
+		self.assertEqual(si.status, "Overdue")
+
+		# Test payment less than due amount
+		pe = get_payment_entry("Sales Invoice", si.name, bank_account="_Test Bank - _TC")
+		pe.reference_no = "1"
+		pe.reference_date = nowdate()
+		pe.paid_amount = 1
+		pe.references[0].allocated_amount = pe.paid_amount
+		pe.submit()
+		si.reload()
+		self.assertEqual(si.status, "Overdue")
+
+		# Test Partly Paid
+		pe = frappe.copy_doc(pe)
+		pe.paid_amount = si.grand_total / 2
+		pe.references[0].allocated_amount = pe.paid_amount
+		pe.submit()
+		si.reload()
+		self.assertEqual(si.status, "Partly Paid")
+
+		# Test Paid
+		pe = get_payment_entry("Sales Invoice", si.name, bank_account="_Test Bank - _TC")
+		pe.reference_no = "1"
+		pe.reference_date = nowdate()
+		pe.paid_amount = si.outstanding_amount
+		pe.submit()
+		si.reload()
+		self.assertEqual(si.status, "Paid")
 
 def get_sales_invoice_for_e_invoice():
 	si = make_sales_invoice_for_ewaybill()

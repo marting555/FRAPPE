@@ -13,7 +13,10 @@ from erpnext.accounts.deferred_revenue import validate_service_stop_date
 from erpnext.accounts.doctype.gl_entry.gl_entry import update_outstanding_amt
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import (
 	check_if_return_invoice_linked_with_payment_entry,
+<<<<<<< HEAD
 	get_total_in_party_account_currency,
+=======
+>>>>>>> c8b9a55e96 (feat: add `Partly Paid` status in Invoices (#27625))
 	is_overdue,
 	unlink_inter_company_doc,
 	update_linked_doc,
@@ -1567,17 +1570,27 @@ class PurchaseInvoice(BuyingController):
 			return
 
 		outstanding_amount = flt(self.outstanding_amount, self.precision("outstanding_amount"))
+<<<<<<< HEAD
 		total = get_total_in_party_account_currency(self)
+=======
+>>>>>>> c8b9a55e96 (feat: add `Partly Paid` status in Invoices (#27625))
 
 		if not status:
 			if self.docstatus == 2:
 				status = "Cancelled"
 			elif self.docstatus == 1:
 				if self.is_internal_transfer():
+<<<<<<< HEAD
 					self.status = "Internal Transfer"
 				elif is_overdue(self, total):
 					self.status = "Overdue"
 				elif 0 < outstanding_amount < total:
+=======
+					self.status = 'Internal Transfer'
+				elif is_overdue(self):
+					self.status = "Overdue"
+				elif 0 < outstanding_amount < flt(self.grand_total, self.precision("grand_total")):
+>>>>>>> c8b9a55e96 (feat: add `Partly Paid` status in Invoices (#27625))
 					self.status = "Partly Paid"
 				elif outstanding_amount > 0 and getdate(self.due_date) >= getdate():
 					self.status = "Unpaid"

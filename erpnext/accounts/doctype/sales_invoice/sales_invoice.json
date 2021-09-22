@@ -2047,7 +2047,11 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
+<<<<<<< HEAD
  "modified": "2023-01-28 19:45:47.538163",
+=======
+ "modified": "2021-09-21 09:27:50.191854",
+>>>>>>> c8b9a55e96 (feat: add `Partly Paid` status in Invoices (#27625))
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

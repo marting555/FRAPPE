@@ -1685,21 +1685,32 @@ class SalesInvoice(SellingController):
 			return
 
 		outstanding_amount = flt(self.outstanding_amount, self.precision("outstanding_amount"))
+<<<<<<< HEAD
 		total = get_total_in_party_account_currency(self)
+=======
+>>>>>>> c8b9a55e96 (feat: add `Partly Paid` status in Invoices (#27625))
 
 		if not status:
 			if self.docstatus == 2:
 				status = "Cancelled"
 			elif self.docstatus == 1:
 				if self.is_internal_transfer():
+<<<<<<< HEAD
 					self.status = "Internal Transfer"
 				elif is_overdue(self, total):
 					self.status = "Overdue"
 				elif 0 < outstanding_amount < total:
+=======
+					self.status = 'Internal Transfer'
+				elif is_overdue(self):
+					self.status = "Overdue"
+				elif 0 < outstanding_amount < flt(self.grand_total, self.precision("grand_total")):
+>>>>>>> c8b9a55e96 (feat: add `Partly Paid` status in Invoices (#27625))
 					self.status = "Partly Paid"
 				elif outstanding_amount > 0 and getdate(self.due_date) >= getdate():
 					self.status = "Unpaid"
 				# Check if outstanding amount is 0 due to credit note issued against invoice
+<<<<<<< HEAD
 				elif (
 					outstanding_amount <= 0
 					and self.is_return == 0
@@ -1707,6 +1718,9 @@ class SalesInvoice(SellingController):
 						"Sales Invoice", {"is_return": 1, "return_against": self.name, "docstatus": 1}
 					)
 				):
+=======
+				elif outstanding_amount <= 0 and self.is_return == 0 and frappe.db.get_value('Sales Invoice', {'is_return': 1, 'return_against': self.name, 'docstatus': 1}):
+>>>>>>> c8b9a55e96 (feat: add `Partly Paid` status in Invoices (#27625))
 					self.status = "Credit Note Issued"
 				elif self.is_return == 1:
 					self.status = "Return"
@@ -1759,6 +1773,28 @@ def is_overdue(doc, total):
 
 	return (total - outstanding_amount) < payable_amount
 
+
+def is_overdue(doc):
+	outstanding_amount = flt(doc.outstanding_amount, doc.precision("outstanding_amount"))
+
+	if outstanding_amount <= 0:
+		return
+
+	grand_total = flt(doc.grand_total, doc.precision("grand_total"))
+	nowdate = getdate()
+	if doc.payment_schedule:
+		# calculate payable amount till date
+		payable_amount = sum(
+			payment.payment_amount
+			for payment in doc.payment_schedule
+			if getdate(payment.due_date) < nowdate
+		)
+
+		if (grand_total - outstanding_amount) < payable_amount:
+			return True
+
+	elif getdate(doc.due_date) < nowdate:
+		return True
 
 def get_discounting_status(sales_invoice):
 	status = None

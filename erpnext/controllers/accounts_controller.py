@@ -2209,6 +2209,7 @@ def get_advance_payment_entries(
 
 def update_invoice_status():
 	"""Updates status as Overdue for applicable invoices. Runs daily."""
+<<<<<<< HEAD
 	today = getdate()
 	payment_schedule = frappe.qb.DocType("Payment Schedule")
 	for doctype in ("Sales Invoice", "Purchase Invoice"):
@@ -2261,7 +2262,19 @@ def update_invoice_status():
 		)
 
 		frappe.qb.update(invoice).set("status", status).where(conditions).run()
+=======
+>>>>>>> c8b9a55e96 (feat: add `Partly Paid` status in Invoices (#27625))
 
+	for doctype in ("Sales Invoice", "Purchase Invoice"):
+		frappe.db.sql("""
+			update `tab{}` as dt set dt.status = 'Overdue'
+			where dt.docstatus = 1
+				and dt.status != 'Overdue'
+				and dt.outstanding_amount > 0
+				and (dt.grand_total - dt.outstanding_amount) <
+					(select sum(payment_amount) from `tabPayment Schedule` as ps
+						where ps.parent = dt.name and ps.due_date < %s)
+		""".format(doctype), getdate())
 
 @frappe.whitelist()
 def get_payment_terms(
