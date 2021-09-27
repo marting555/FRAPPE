@@ -186,8 +186,39 @@ class TestTaxWithholdingCategory(unittest.TestCase):
 		for d in reversed(invoices):
 			d.cancel()
 
+<<<<<<< HEAD
 	def test_tds_deduction_for_po_via_payment_entry(self):
 		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+=======
+	def test_multi_category_single_supplier(self):
+		frappe.db.set_value("Supplier", "Test TDS Supplier5", "tax_withholding_category", "Test Service Category")
+		invoices = []
+
+		pi = create_purchase_invoice(supplier = "Test TDS Supplier5", rate = 500, do_not_save=True)
+		pi.tax_withholding_category = "Test Service Category"
+		pi.save()
+		pi.submit()
+		invoices.append(pi)
+
+		# Second Invoice will apply TDS checked
+		pi1 = create_purchase_invoice(supplier = "Test TDS Supplier5", rate = 2500, do_not_save=True)
+		pi1.tax_withholding_category = "Test Goods Category"
+		pi1.save()
+		pi1.submit()
+		invoices.append(pi1)
+
+		self.assertEqual(pi1.taxes[0].tax_amount, 250)
+
+		#delete invoices to avoid clashing
+		for d in invoices:
+			d.cancel()
+
+def cancel_invoices():
+	purchase_invoices = frappe.get_all("Purchase Invoice", {
+		'supplier': ['in', ['Test TDS Supplier', 'Test TDS Supplier1', 'Test TDS Supplier2']],
+		'docstatus': 1
+	}, pluck="name")
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
 
 		frappe.db.set_value(
 			"Supplier", "Test TDS Supplier8", "tax_withholding_category", "Cumulative Threshold TDS"
@@ -410,6 +441,7 @@ def create_sales_invoice(**args):
 
 def create_records():
 	# create a new suppliers
+<<<<<<< HEAD
 	for name in [
 		"Test TDS Supplier",
 		"Test TDS Supplier1",
@@ -422,6 +454,11 @@ def create_records():
 		"Test TDS Supplier8",
 	]:
 		if frappe.db.exists("Supplier", name):
+=======
+	for name in ['Test TDS Supplier', 'Test TDS Supplier1', 'Test TDS Supplier2', 'Test TDS Supplier3',
+		'Test TDS Supplier4', 'Test TDS Supplier5']:
+		if frappe.db.exists('Supplier', name):
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
 			continue
 
 		frappe.get_doc(
@@ -552,6 +589,7 @@ def create_tax_with_holding_category():
 		).insert()
 
 	if not frappe.db.exists("Tax Withholding Category", "New TDS Category"):
+<<<<<<< HEAD
 		frappe.get_doc(
 			{
 				"doctype": "Tax Withholding Category",
@@ -629,3 +667,60 @@ def create_tax_with_holding_category():
 				"accounts": [{"company": "_Test Company", "account": "TDS - _TC"}],
 			}
 		).insert()
+=======
+		frappe.get_doc({
+			"doctype": "Tax Withholding Category",
+			"name": "New TDS Category",
+			"category_name": "New TDS Category",
+			"round_off_tax_amount": 1,
+			"consider_party_ledger_amount": 1,
+			"tax_on_excess_amount": 1,
+			"rates": [{
+				'from_date': fiscal_year[1],
+				'to_date': fiscal_year[2],
+				'tax_withholding_rate': 10,
+				'single_threshold': 0,
+				'cumulative_threshold': 30000
+			}],
+			"accounts": [{
+				'company': '_Test Company',
+				'account': 'TDS - _TC'
+			}]
+		}).insert()
+
+	if not frappe.db.exists("Tax Withholding Category", "Test Service Category"):
+		frappe.get_doc({
+			"doctype": "Tax Withholding Category",
+			"name": "Test Service Category",
+			"category_name": "Test Service Category",
+			"rates": [{
+				'from_date': fiscal_year[1],
+				'to_date': fiscal_year[2],
+				'tax_withholding_rate': 10,
+				'single_threshold': 2000,
+				'cumulative_threshold': 2000
+			}],
+			"accounts": [{
+				'company': '_Test Company',
+				'account': 'TDS - _TC'
+			}]
+		}).insert()
+
+	if not frappe.db.exists("Tax Withholding Category", "Test Goods Category"):
+		frappe.get_doc({
+			"doctype": "Tax Withholding Category",
+			"name": "Test Goods Category",
+			"category_name": "Test Goods Category",
+			"rates": [{
+				'from_date': fiscal_year[1],
+				'to_date': fiscal_year[2],
+				'tax_withholding_rate': 10,
+				'single_threshold': 2000,
+				'cumulative_threshold': 2000
+			}],
+			"accounts": [{
+				'company': '_Test Company',
+				'account': 'TDS - _TC'
+			}]
+		}).insert()
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))

@@ -14,6 +14,7 @@ def execute(filters=None):
 	filters.naming_series = frappe.db.get_single_value("Buying Settings", "supp_master_name")
 
 	columns = get_columns(filters)
+<<<<<<< HEAD
 	tds_docs, tds_accounts, tax_category_map, journal_entry_party_map = get_tds_docs(filters)
 
 	res = get_result(filters, tds_docs, tds_accounts, tax_category_map, journal_entry_party_map)
@@ -21,6 +22,14 @@ def execute(filters=None):
 
 	return columns, final_result
 
+=======
+	tds_docs, tds_accounts, tax_category_map = get_tds_docs(filters)
+
+	res = get_result(filters, tds_docs, tds_accounts, tax_category_map)
+	final_result = group_by_supplier_and_category(res)
+
+	return columns, final_result
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
 
 def validate_filters(filters):
 	"""Validate if dates are properly set and lie in the same fiscal year"""
@@ -34,6 +43,7 @@ def validate_filters(filters):
 
 	filters["fiscal_year"] = from_year
 
+<<<<<<< HEAD
 
 def group_by_supplier_and_category(data):
 	supplier_category_wise_map = {}
@@ -60,6 +70,28 @@ def group_by_supplier_and_category(data):
 		supplier_category_wise_map.get((row.get("supplier"), row.get("section_code")))[
 			"tds_deducted"
 		] += row.get("tds_deducted", 0.0)
+=======
+def group_by_supplier_and_category(data):
+	supplier_category_wise_map = {}
+
+	for row in data:
+		supplier_category_wise_map.setdefault((row.get('supplier'), row.get('section_code')), {
+			'pan': row.get('pan'),
+			'supplier': row.get('supplier'),
+			'supplier_name': row.get('supplier_name'),
+			'section_code': row.get('section_code'),
+			'entity_type': row.get('entity_type'),
+			'tds_rate': row.get('tds_rate'),
+			'total_amount_credited': 0.0,
+			'tds_deducted': 0.0
+		})
+
+		supplier_category_wise_map.get((row.get('supplier'), row.get('section_code')))['total_amount_credited'] += \
+			row.get('total_amount_credited', 0.0)
+
+		supplier_category_wise_map.get((row.get('supplier'), row.get('section_code')))['tds_deducted'] += \
+			row.get('tds_deducted', 0.0)
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
 
 	final_result = get_final_result(supplier_category_wise_map)
 
@@ -73,7 +105,10 @@ def get_final_result(supplier_category_wise_map):
 
 	return out
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
 def get_columns(filters):
 	columns = [
 		{"label": _("PAN"), "fieldname": "pan", "fieldtype": "Data", "width": 90},
@@ -91,6 +126,7 @@ def get_columns(filters):
 			{"label": _("Supplier Name"), "fieldname": "supplier_name", "fieldtype": "Data", "width": 180}
 		)
 
+<<<<<<< HEAD
 	columns.extend(
 		[
 			{
@@ -116,5 +152,40 @@ def get_columns(filters):
 			},
 		]
 	)
+=======
+	columns.extend([
+		{
+			"label": _("Section Code"),
+			"options": "Tax Withholding Category",
+			"fieldname": "section_code",
+			"fieldtype": "Link",
+			"width": 180
+		},
+		{
+			"label": _("Entity Type"),
+			"fieldname": "entity_type",
+			"fieldtype": "Data",
+			"width": 180
+		},
+		{
+			"label": _("TDS Rate %"),
+			"fieldname": "tds_rate",
+			"fieldtype": "Percent",
+			"width": 90
+		},
+		{
+			"label": _("Total Amount Credited"),
+			"fieldname": "total_amount_credited",
+			"fieldtype": "Float",
+			"width": 90
+		},
+		{
+			"label": _("Amount of TDS Deducted"),
+			"fieldname": "tds_deducted",
+			"fieldtype": "Float",
+			"width": 90
+		}
+	])
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
 
 	return columns

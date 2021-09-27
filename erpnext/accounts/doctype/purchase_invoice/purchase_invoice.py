@@ -1468,20 +1468,29 @@ class PurchaseInvoice(BuyingController):
 		if not self.apply_tds:
 			return
 
+<<<<<<< HEAD
 		if self.apply_tds and not self.get("tax_withholding_category"):
 			self.tax_withholding_category = frappe.db.get_value(
 				"Supplier", self.supplier, "tax_withholding_category"
 			)
+=======
+		if self.apply_tds and not self.get('tax_withholding_category'):
+			self.tax_withholding_category = frappe.db.get_value('Supplier', self.supplier, 'tax_withholding_category')
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
 
 		if not self.tax_withholding_category:
 			return
 
+<<<<<<< HEAD
 		tax_withholding_details, advance_taxes, voucher_wise_amount = get_party_tax_withholding_details(
 			self, self.tax_withholding_category
 		)
 
 		# Adjust TDS paid on advances
 		self.allocate_advance_tds(tax_withholding_details, advance_taxes)
+=======
+		tax_withholding_details = get_party_tax_withholding_details(self, self.tax_withholding_category)
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
 
 		if not tax_withholding_details:
 			return

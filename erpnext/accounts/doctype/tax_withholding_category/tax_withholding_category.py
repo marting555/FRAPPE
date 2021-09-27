@@ -122,6 +122,7 @@ def get_tax_withholding_details(tax_withholding_category, posting_date, company)
 
 	for account_detail in tax_withholding.accounts:
 		if company == account_detail.company:
+<<<<<<< HEAD
 			return frappe._dict(
 				{
 					"tax_withholding_category": tax_withholding_category,
@@ -140,6 +141,21 @@ def get_tax_withholding_details(tax_withholding_category, posting_date, company)
 				}
 			)
 
+=======
+			return frappe._dict({
+				"tax_withholding_category": tax_withholding_category,
+				"account_head": account_detail.account,
+				"rate": tax_rate_detail.tax_withholding_rate,
+				"from_date": tax_rate_detail.from_date,
+				"to_date": tax_rate_detail.to_date,
+				"threshold": tax_rate_detail.single_threshold,
+				"cumulative_threshold": tax_rate_detail.cumulative_threshold,
+				"description": tax_withholding.category_name if tax_withholding.category_name else tax_withholding_category,
+				"consider_party_ledger_amount": tax_withholding.consider_party_ledger_amount,
+				"tax_on_excess_amount": tax_withholding.tax_on_excess_amount,
+				"round_off_tax_amount": tax_withholding.round_off_tax_amount
+			})
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
 
 def get_tax_withholding_rates(tax_withholding, posting_date):
 	# returns the row that matches with the fiscal year from posting date
@@ -258,6 +274,7 @@ def get_tax_amount(party_type, parties, inv, tax_details, posting_date, pan_no=N
 	if cint(tax_details.round_off_tax_amount):
 		tax_amount = normal_round(tax_amount)
 
+<<<<<<< HEAD
 	return tax_amount, tax_deducted, tax_deducted_on_advances, voucher_wise_amount
 
 
@@ -278,6 +295,43 @@ def get_invoice_vouchers(parties, tax_details, company, party_type="Supplier"):
 		filters.update(
 			{"apply_tds": 1, "tax_withholding_category": tax_details.get("tax_withholding_category")}
 		)
+=======
+def get_invoice_vouchers(parties, tax_details, company, party_type='Supplier'):
+	dr_or_cr = 'credit' if party_type == 'Supplier' else 'debit'
+	doctype = 'Purchase Invoice' if party_type == 'Supplier' else 'Sales Invoice'
+
+	filters = {
+		'company': company,
+		frappe.scrub(party_type): ['in', parties],
+		'posting_date': ['between', (tax_details.from_date, tax_details.to_date)],
+		'is_opening': 'No',
+		'docstatus': 1
+	}
+
+	if not tax_details.get('consider_party_ledger_amount') and doctype != "Sales Invoice":
+		filters.update({
+			'apply_tds': 1,
+			'tax_withholding_category': tax_details.get('tax_withholding_category')
+		})
+
+	invoices = frappe.get_all(doctype, filters=filters, pluck="name") or [""]
+
+	journal_entries = frappe.db.sql("""
+		SELECT j.name
+			FROM `tabJournal Entry` j, `tabJournal Entry Account` ja
+		WHERE
+			j.docstatus = 1
+			AND j.is_opening = 'No'
+			AND j.posting_date between %s and %s
+			AND ja.{dr_or_cr} > 0
+			AND ja.party in %s
+	""".format(dr_or_cr=dr_or_cr), (tax_details.from_date, tax_details.to_date, tuple(parties)), as_list=1)
+
+	if journal_entries:
+		journal_entries = journal_entries[0]
+
+	return invoices + journal_entries
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
 
 	invoices_details = frappe.get_all(doctype, filters=filters, fields=["name", "base_net_total"])
 

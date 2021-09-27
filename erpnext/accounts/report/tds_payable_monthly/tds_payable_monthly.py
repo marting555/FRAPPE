@@ -8,11 +8,19 @@ from frappe import _
 
 def execute(filters=None):
 	validate_filters(filters)
+<<<<<<< HEAD
 	tds_docs, tds_accounts, tax_category_map, journal_entry_party_map = get_tds_docs(filters)
 
 	columns = get_columns(filters)
 
 	res = get_result(filters, tds_docs, tds_accounts, tax_category_map, journal_entry_party_map)
+=======
+	tds_docs, tds_accounts, tax_category_map = get_tds_docs(filters)
+
+	columns = get_columns(filters)
+
+	res = get_result(filters, tds_docs, tds_accounts, tax_category_map)
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
 	return columns, res
 
 
@@ -21,11 +29,18 @@ def validate_filters(filters):
 	if filters.from_date > filters.to_date:
 		frappe.throw(_("From Date must be before To Date"))
 
+<<<<<<< HEAD
 
 def get_result(filters, tds_docs, tds_accounts, tax_category_map, journal_entry_party_map):
 	supplier_map = get_supplier_pan_map()
 	tax_rate_map = get_tax_rate_map(filters)
 	gle_map = get_gle_map(tds_docs)
+=======
+def get_result(filters, tds_docs, tds_accounts, tax_category_map):
+	supplier_map = get_supplier_pan_map()
+	tax_rate_map = get_tax_rate_map(filters)
+	gle_map = get_gle_map(filters, tds_docs)
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
 
 	out = []
 	for name, details in gle_map.items():
@@ -38,6 +53,7 @@ def get_result(filters, tds_docs, tds_accounts, tax_category_map, journal_entry_
 			posting_date = entry.posting_date
 			voucher_type = entry.voucher_type
 
+<<<<<<< HEAD
 			if voucher_type == "Journal Entry":
 				suppliers = journal_entry_party_map.get(name)
 				if suppliers:
@@ -75,11 +91,38 @@ def get_result(filters, tds_docs, tds_accounts, tax_category_map, journal_entry_
 					"ref_no": name,
 				}
 			)
+=======
+			if entry.account in tds_accounts:
+				tds_deducted += (entry.credit - entry.debit)
+
+			total_amount_credited += (entry.credit - entry.debit)
+
+		if rate and tds_deducted:
+			row = {
+				'pan' if frappe.db.has_column('Supplier', 'pan') else 'tax_id': supplier_map.get(supplier).pan,
+				'supplier': supplier_map.get(supplier).name
+			}
+
+			if filters.naming_series == 'Naming Series':
+				row.update({'supplier_name': supplier_map.get(supplier).supplier_name})
+
+			row.update({
+				'section_code': tax_withholding_category,
+				'entity_type': supplier_map.get(supplier).supplier_type,
+				'tds_rate': rate,
+				'total_amount_credited': total_amount_credited,
+				'tds_deducted': tds_deducted,
+				'transaction_date': posting_date,
+				'transaction_type': voucher_type,
+				'ref_no': name
+			})
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
 
 			out.append(row)
 
 	return out
 
+<<<<<<< HEAD
 
 def get_supplier_pan_map():
 	supplier_map = frappe._dict()
@@ -94,13 +137,33 @@ def get_supplier_pan_map():
 
 
 def get_gle_map(documents):
+=======
+def get_supplier_pan_map():
+	supplier_map = frappe._dict()
+	suppliers = frappe.db.get_all('Supplier', fields=['name', 'pan', 'supplier_type', 'supplier_name'])
+
+	for d in suppliers:
+		supplier_map[d.name] = d
+
+	return supplier_map
+
+def get_gle_map(filters, documents):
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
 	# create gle_map of the form
 	# {"purchase_invoice": list of dict of all gle created for this invoice}
 	gle_map = {}
 
+<<<<<<< HEAD
 	gle = frappe.db.get_all(
 		"GL Entry",
 		{"voucher_no": ["in", documents], "is_cancelled": 0},
+=======
+	gle = frappe.db.get_all('GL Entry',
+		{
+			"voucher_no": ["in", documents],
+			"credit": (">", 0)
+		},
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
 		["credit", "debit", "account", "voucher_no", "posting_date", "voucher_type", "against", "party"],
 	)
 
@@ -173,13 +236,17 @@ def get_columns(filters):
 
 	return columns
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
 def get_tds_docs(filters):
 	tds_documents = []
 	purchase_invoices = []
 	payment_entries = []
 	journal_entries = []
 	tax_category_map = {}
+<<<<<<< HEAD
 	or_filters = {}
 	journal_entry_party_map = {}
 	bank_accounts = frappe.get_all("Account", {"is_group": 0, "account_type": "Bank"}, pluck="name")
@@ -206,6 +273,23 @@ def get_tds_docs(filters):
 		or_filters=or_filters,
 		fields=["voucher_no", "voucher_type", "against", "party"],
 	)
+=======
+
+	tds_accounts = frappe.get_all("Tax Withholding Account", {'company': filters.get('company')},
+		pluck="account")
+
+	query_filters = {
+		"credit": ('>', 0),
+		"account": ("in", tds_accounts),
+		"posting_date": ("between", [filters.get("from_date"), filters.get("to_date")]),
+		"is_cancelled": 0
+	}
+
+	if filters.get('supplier'):
+		query_filters.update({'against': filters.get('supplier')})
+
+	tds_docs = frappe.get_all("GL Entry", query_filters, ["voucher_no", "voucher_type", "against", "party"])
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
 
 	for d in tds_docs:
 		if d.voucher_type == "Purchase Invoice":
@@ -218,6 +302,7 @@ def get_tds_docs(filters):
 		tds_documents.append(d.voucher_no)
 
 	if purchase_invoices:
+<<<<<<< HEAD
 		get_tax_category_map(purchase_invoices, "Purchase Invoice", tax_category_map)
 
 	if payment_entries:
@@ -269,3 +354,26 @@ def get_tax_rate_map(filters):
 	)
 
 	return frappe._dict(rate_map)
+=======
+		get_tax_category_map(purchase_invoices, 'Purchase Invoice', tax_category_map)
+
+	if payment_entries:
+		get_tax_category_map(payment_entries, 'Payment Entry', tax_category_map)
+
+	if journal_entries:
+		get_tax_category_map(journal_entries, 'Journal Entry', tax_category_map)
+
+	return tds_documents, tds_accounts, tax_category_map
+
+def get_tax_category_map(vouchers, doctype, tax_category_map):
+	tax_category_map.update(frappe._dict(frappe.get_all(doctype,
+		filters = {'name': ('in', vouchers)}, fields=['name', 'tax_withholding_category'], as_list=1)))
+
+def get_tax_rate_map(filters):
+	rate_map = frappe.get_all('Tax Withholding Rate', filters={
+		'from_date': ('<=', filters.get('from_date')),
+		'to_date': ('>=', filters.get('to_date'))
+	}, fields=['parent', 'tax_withholding_rate'], as_list=1)
+
+	return frappe._dict(rate_map)
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))

@@ -13,8 +13,11 @@
   "voucher_type",
   "naming_series",
   "finance_book",
+<<<<<<< HEAD
   "process_deferred_accounting",
   "reversal_of",
+=======
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
   "tax_withholding_category",
   "column_break1",
   "from_template",
@@ -518,6 +521,7 @@
    "fieldname": "apply_tds",
    "fieldtype": "Check",
    "label": "Apply Tax Withholding Amount "
+<<<<<<< HEAD
   },
   {
    "depends_on": "eval:doc.docstatus",
@@ -533,13 +537,19 @@
    "label": "Process Deferred Accounting",
    "options": "Process Deferred Accounting",
    "read_only": 1
+=======
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 176,
  "is_submittable": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2022-06-23 22:01:32.348337",
+=======
+ "modified": "2021-09-09 15:31:14.484029",
+>>>>>>> cc5dd5c67d (feat: TDS deduction using journal entry and other fixes (#27451))
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Journal Entry",
