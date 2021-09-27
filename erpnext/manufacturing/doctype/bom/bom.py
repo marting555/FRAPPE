@@ -1346,6 +1346,7 @@ def item_query(doctype, txt, searchfield, start, page_len, filters):
 		if not has_variants:
 			query_filters["has_variants"] = 0
 
+<<<<<<< HEAD
 	if filters:
 		for fieldname, value in filters.items():
 			query_filters[fieldname] = value
@@ -1360,6 +1361,11 @@ def item_query(doctype, txt, searchfield, start, page_len, filters):
 		limit_page_length=page_len,
 		as_list=1,
 	)
+=======
+	if filters and filters.get("is_stock_item"):
+		or_cond_filters["is_stock_item"] = 1
+		or_cond_filters["has_variants"] = 1
+>>>>>>> 5c249decbb (fix(ux): added exception of template item in filters (#27560))
 
 
 @frappe.whitelist()
