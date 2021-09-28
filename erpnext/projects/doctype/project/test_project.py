@@ -155,7 +155,10 @@ class TestProject(unittest.TestCase):
 		so.reload()
 		self.assertFalse(so.project)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 0b040c7437 (fix: cannot delete a project if linked with sales order (#27536))
 def get_project(name, template):
 
 	project = frappe.get_doc(
