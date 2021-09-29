@@ -1548,7 +1548,11 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2022-09-16 17:43:57.007441",
+=======
+ "modified": "2021-09-28 13:09:51.515542",
+>>>>>>> b39f8a6215 (fix: Ignore user permission for Represents Company field in Sales and Purchase docs (#27684))
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

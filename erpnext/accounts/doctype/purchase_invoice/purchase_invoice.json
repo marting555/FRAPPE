@@ -1312,6 +1312,18 @@
    "fieldtype": "Column Break"
   },
   {
+<<<<<<< HEAD
+=======
+   "default": "0",
+   "fetch_from": "supplier.is_internal_supplier",
+   "fieldname": "is_internal_supplier",
+   "fieldtype": "Check",
+   "ignore_user_permissions": 1,
+   "label": "Is Internal Supplier",
+   "read_only": 1
+  },
+  {
+>>>>>>> b39f8a6215 (fix: Ignore user permission for Represents Company field in Sales and Purchase docs (#27684))
    "fieldname": "tax_withholding_category",
    "fieldtype": "Link",
    "hidden": 1,
@@ -1437,7 +1449,11 @@
  "idx": 204,
  "is_submittable": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2022-10-07 14:19:14.214157",
+=======
+ "modified": "2021-09-28 13:10:28.351810",
+>>>>>>> b39f8a6215 (fix: Ignore user permission for Represents Company field in Sales and Purchase docs (#27684))
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice",

@@ -1336,7 +1336,11 @@
  "idx": 146,
  "is_submittable": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2023-09-04 14:15:28.363184",
+=======
+ "modified": "2021-09-28 13:10:09.761714",
+>>>>>>> b39f8a6215 (fix: Ignore user permission for Represents Company field in Sales and Purchase docs (#27684))
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note",

@@ -2047,7 +2047,11 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
+<<<<<<< HEAD
  "modified": "2023-01-28 19:45:47.538163",
+=======
+ "modified": "2021-09-28 13:09:34.391799",
+>>>>>>> b39f8a6215 (fix: Ignore user permission for Represents Company field in Sales and Purchase docs (#27684))
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

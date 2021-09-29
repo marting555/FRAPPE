@@ -1148,7 +1148,11 @@
  "idx": 261,
  "is_submittable": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2022-09-16 17:45:58.430132",
+=======
+ "modified": "2021-09-28 13:11:10.181328",
+>>>>>>> b39f8a6215 (fix: Ignore user permission for Represents Company field in Sales and Purchase docs (#27684))
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Purchase Receipt",
