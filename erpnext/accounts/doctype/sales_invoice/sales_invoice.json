@@ -2022,6 +2022,7 @@
    "label": "Total Billing Hours",
    "print_hide": 1,
    "read_only": 1
+<<<<<<< HEAD
   },
   {
    "fieldname": "amount_eligible_for_commission",
@@ -2035,6 +2036,8 @@
    "fieldname": "is_cash_or_non_trade_discount",
    "fieldtype": "Check",
    "label": "Is Cash or Non Trade Discount"
+=======
+>>>>>>> 09ccdee2db ( feat: add `total_billing_hours` to Sales Invoice (fp #26783) (#27742))
   }
  ],
  "icon": "fa fa-file-text",
@@ -2047,7 +2050,11 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
+<<<<<<< HEAD
  "modified": "2023-01-28 19:45:47.538163",
+=======
+ "modified": "2021-10-02 03:36:10.251715",
+>>>>>>> 09ccdee2db ( feat: add `total_billing_hours` to Sales Invoice (fp #26783) (#27742))
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

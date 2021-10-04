@@ -478,7 +478,11 @@ erpnext.accounts.SalesInvoiceController = erpnext.selling.SellingController.exte
 				let row = frappe.get_doc(d.doctype, d.name)
 				set_timesheet_detail_rate(row.doctype, row.name, me.frm.doc.currency, row.timesheet_detail)
 			});
+<<<<<<< HEAD
 			this.frm.trigger("calculate_timesheet_totals");
+=======
+			frm.trigger("calculate_timesheet_totals");
+>>>>>>> 09ccdee2db ( feat: add `total_billing_hours` to Sales Invoice (fp #26783) (#27742))
 		}
 	},
 
@@ -887,18 +891,37 @@ frappe.ui.form.on('Sales Invoice', {
 
 	set_timesheet_data: function(frm, timesheets) {
 		frm.clear_table("timesheets")
+<<<<<<< HEAD
 		timesheets.forEach(async (timesheet) => {
 			if (frm.doc.currency != timesheet.currency) {
 				const exchange_rate = await frm.events.get_exchange_rate(
 					frm, timesheet.currency, frm.doc.currency
 				)
 				frm.events.append_time_log(frm, timesheet, exchange_rate)
+=======
+		timesheets.forEach(timesheet => {
+			if (frm.doc.currency != timesheet.currency) {
+				frappe.call({
+					method: "erpnext.setup.utils.get_exchange_rate",
+					args: {
+						from_currency: timesheet.currency,
+						to_currency: frm.doc.currency
+					},
+					callback: function(r) {
+						if (r.message) {
+							exchange_rate = r.message;
+							frm.events.append_time_log(frm, timesheet, exchange_rate);
+						}
+					}
+				});
+>>>>>>> 09ccdee2db ( feat: add `total_billing_hours` to Sales Invoice (fp #26783) (#27742))
 			} else {
 				frm.events.append_time_log(frm, timesheet, 1.0);
 			}
 		});
 	},
 
+<<<<<<< HEAD
 	async get_exchange_rate(frm, from_currency, to_currency) {
 		if (
 			frm.exchange_rates
@@ -925,6 +948,8 @@ frappe.ui.form.on('Sales Invoice', {
 		});
 	},
 
+=======
+>>>>>>> 09ccdee2db ( feat: add `total_billing_hours` to Sales Invoice (fp #26783) (#27742))
 	append_time_log: function(frm, time_log, exchange_rate) {
 		const row = frm.add_child("timesheets");
 		row.activity_type = time_log.activity_type;
@@ -935,7 +960,11 @@ frappe.ui.form.on('Sales Invoice', {
 		row.billing_hours = time_log.billing_hours;
 		row.billing_amount = flt(time_log.billing_amount) * flt(exchange_rate);
 		row.timesheet_detail = time_log.name;
+<<<<<<< HEAD
 		row.project_name = time_log.project_name;
+=======
+    row.project_name = time_log.project_name;
+>>>>>>> 09ccdee2db ( feat: add `total_billing_hours` to Sales Invoice (fp #26783) (#27742))
 
 		frm.refresh_field("timesheets");
 		frm.trigger("calculate_timesheet_totals");
@@ -1032,13 +1061,19 @@ frappe.ui.form.on('Sales Invoice', {
 	}
 });
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 09ccdee2db ( feat: add `total_billing_hours` to Sales Invoice (fp #26783) (#27742))
 frappe.ui.form.on("Sales Invoice Timesheet", {
 	timesheets_remove(frm) {
 		frm.trigger("calculate_timesheet_totals");
 	}
 });
+<<<<<<< HEAD
 
+=======
+>>>>>>> 09ccdee2db ( feat: add `total_billing_hours` to Sales Invoice (fp #26783) (#27742))
 
 var set_timesheet_detail_rate = function(cdt, cdn, currency, timelog) {
 	frappe.call({

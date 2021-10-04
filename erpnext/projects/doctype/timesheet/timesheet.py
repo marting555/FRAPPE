@@ -294,7 +294,16 @@ def get_projectwise_timesheet_data(project=None, parent=None, from_time=None, to
 		ORDER BY tsd.from_time ASC
 	"""
 
+<<<<<<< HEAD
 	filters = {"project": project, "parent": parent, "from_time": from_time, "to_time": to_time}
+=======
+	filters = {
+		"project": project,
+		"parent": parent,
+		"from_time": from_time,
+		"to_time": to_time
+	}
+>>>>>>> 09ccdee2db ( feat: add `total_billing_hours` to Sales Invoice (fp #26783) (#27742))
 
 	return frappe.db.sql(query, filters, as_dict=1)
 
