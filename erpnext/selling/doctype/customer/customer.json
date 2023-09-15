@@ -16,8 +16,6 @@
     "customer_name",
     "customer_type",
     "customer_group",
-    "phone_number",
-    "email",
     "column_break0",
     "territory",
     "gender",
@@ -86,16 +84,6 @@
     "disabled"
   ],
   "fields": [
-    {
-      "fieldname": "phone_number",
-      "fieldtype": "Data",
-      "label": "Phone number"
-    },
-    {
-      "fieldname": "email",
-      "fieldtype": "Data",
-      "label": "Email"
-    },
     {
       "fieldname": "basic_info",
       "fieldtype": "Section Break",
