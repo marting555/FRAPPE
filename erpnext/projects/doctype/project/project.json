@@ -116,7 +116,7 @@
       "no_copy": 1,
       "oldfieldname": "status",
       "oldfieldtype": "Select",
-      "options": "In queue\nIn parking\nPre-diagnosed\nDiagnosed\nQuoted\nQuote approved\nRepair ready\nQuick-tested\nFully-tested/adapted\nQuality check approved\nInvoice paid",
+      "options": "In queue\nIn parking\nPre-diagnosed\nDiagnosed\nQuoted\nQuote approved\nRepair ready\nQuick-tested\nFully-tested/adapted\nQuality check approved\nInvoice paid\nCancelled",
       "search_index": 1
     },
     {
