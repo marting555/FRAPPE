@@ -16,6 +16,7 @@
     "customer_name",
     "customer_type",
     "customer_group",
+    "phone_number",
     "column_break0",
     "territory",
     "gender",
@@ -180,6 +181,12 @@
       "options": "Customer Group",
       "reqd": 1,
       "search_index": 1
+    },
+    {
+      "fieldname": "phone_number",
+      "fieldtype": "Data",
+      "label": "Phone number",
+      "reqd": 1
     },
     {
       "fieldname": "territory",
