@@ -11,12 +11,11 @@
     "naming_series",
     "project_name",
     "queue_position",
+    "callback_date",
+    "callback_time",
     "status",
     "payment_status",
     "project_type",
-    "is_active",
-    "percent_complete_method",
-    "percent_complete",
     "column_break_5",
     "project_template",
     "expected_start_date",
@@ -25,6 +24,9 @@
     "department",
     "project_mechanic",
     "project_diagnozer",
+    "is_active",
+    "percent_complete_method",
+    "percent_complete",
     "customer_details",
     "customer",
     "column_break_14",
@@ -96,8 +98,7 @@
     "day_to_send",
     "weekly_time_to_send",
     "column_break_45",
-    "message",
-    "queue_position"
+    "message"
   ],
   "fields": [
     {
@@ -124,6 +125,17 @@
       "fieldname": "queue_position",
       "fieldtype": "Select",
       "label": "Queue position"
+    },
+    {
+      "fieldname": "callback_date",
+      "fieldtype": "Date",
+      "label": "Callback date"
+    },
+    {
+      "fieldname": "callback_time",
+      "fieldtype": "Select",
+      "label": "Callback time",
+      "options": "\n9:30-10:00\n13:30-14:00\n17:30-18:00"
     },
     {
       "default": "No",
