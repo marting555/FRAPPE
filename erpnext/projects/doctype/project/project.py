@@ -312,7 +312,7 @@ def get_timeline_data(doctype, name):
 
 
 def get_project_list(
-	doctype, txt, filters, limit_start, limit_page_length=20, order_by="queue_position"
+	doctype, txt, filters, limit_start, limit_page_length=20, order_by="modified"
 ):
 	meta = frappe.get_meta(doctype)
 	if not filters:

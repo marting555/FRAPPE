@@ -16,6 +16,7 @@
     "status",
     "payment_status",
     "project_type",
+    "parts_status",
     "column_break_5",
     "project_template",
     "expected_start_date",
@@ -199,6 +200,15 @@
       "oldfieldname": "priority",
       "oldfieldtype": "Select",
       "options": "Medium\nLow\nHigh"
+    },
+    {
+      "fieldname": "parts_status",
+      "fieldtype": "Select",
+      "in_standard_filter": 1,
+      "label": "Parts Status",
+      "oldfieldname": "parts_status",
+      "oldfieldtype": "Select",
+      "options": "\nWaiting for parts\nParts are ready for pickup\nParts have been picked up"
     },
     {
       "fieldname": "department",
@@ -725,7 +735,7 @@
   "quick_entry": 1,
   "search_fields": "project_name,customer, status, priority, is_active",
   "show_name_in_global_search": 1,
-  "sort_field": "queue_position",
+  "sort_field": "modified",
   "sort_order": "DESC",
   "states": [],
   "timeline_field": "customer",
