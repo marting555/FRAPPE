@@ -17,6 +17,7 @@
     "payment_status",
     "project_type",
     "parts_status",
+    "software_status",
     "column_break_5",
     "project_template",
     "expected_start_date",
@@ -209,6 +210,15 @@
       "oldfieldname": "parts_status",
       "oldfieldtype": "Select",
       "options": "\nWaiting for parts\nParts are ready for pickup\nParts have been picked up"
+    },
+    {
+      "fieldname": "software_status",
+      "fieldtype": "Select",
+      "in_standard_filter": 1,
+      "label": "Software Status",
+      "oldfieldname": "software_status",
+      "oldfieldtype": "Select",
+      "options": "\nSoftware request\nSoftware is ready for use\nSoftware has been attached"
     },
     {
       "fieldname": "department",
