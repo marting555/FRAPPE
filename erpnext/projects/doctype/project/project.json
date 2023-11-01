@@ -16,8 +16,6 @@
     "status",
     "payment_status",
     "project_type",
-    "parts_status",
-    "software_status",
     "column_break_5",
     "project_template",
     "expected_start_date",
@@ -26,6 +24,8 @@
     "department",
     "project_mechanic",
     "project_diagnozer",
+    "parts_status",
+    "software_status",
     "is_active",
     "percent_complete_method",
     "percent_complete",
@@ -144,6 +144,7 @@
       "fieldname": "payment_status",
       "label": "Payment status",
       "fieldtype": "Select",
+      "in_list_view": 1,
       "no_copy": 1,
       "options": "No\nAwaiting approval quotation\nQuotation approved\nInvoice send awaiting payment\nPayment ready."
     },
@@ -208,6 +209,7 @@
       "in_standard_filter": 1,
       "label": "Parts Status",
       "oldfieldname": "parts_status",
+      "in_list_view": 1,
       "oldfieldtype": "Select",
       "options": "\nWaiting for parts\nParts are ready for pickup\nParts have been picked up"
     },
@@ -217,6 +219,7 @@
       "in_standard_filter": 1,
       "label": "Software Status",
       "oldfieldname": "software_status",
+      "in_list_view": 1,
       "oldfieldtype": "Select",
       "options": "\nSoftware request\nSoftware is ready for use\nSoftware has been attached"
     },
