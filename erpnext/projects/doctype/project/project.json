@@ -435,6 +435,7 @@
     },
     {
       "fieldname": "client_description",
+      "in_list_view": 1,
       "fieldtype": "Text Editor",
       "label": "Problem description"
     },
