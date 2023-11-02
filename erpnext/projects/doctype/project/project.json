@@ -126,16 +126,19 @@
     {
       "fieldname": "queue_position",
       "fieldtype": "Select",
+      "in_list_view": 1,
       "label": "Queue position"
     },
     {
       "fieldname": "callback_date",
+      "in_list_view": 1,
       "fieldtype": "Date",
       "label": "Callback date"
     },
     {
       "fieldname": "callback_time",
       "fieldtype": "Select",
+      "in_list_view": 1,
       "label": "Callback time",
       "options": "\n9:30-10:00\n13:30-14:00\n17:30-18:00"
     },
