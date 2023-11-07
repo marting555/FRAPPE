@@ -9,3 +9,12 @@ frappe.listview_settings['Project'] = {
 		}
 	}
 };
+
+
+
+frappe.require('erp-calendar.bundle.js').then(() => {
+	const el = document.createElement('erp-calendar')
+	el.setAttribute('url', location.origin)
+	document.querySelector('body').appendChild(el)
+})
+

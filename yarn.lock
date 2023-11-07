@@ -2,26 +2,299 @@
 # yarn lockfile v1
 
 
-base64-arraybuffer@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/base64-arraybuffer/-/base64-arraybuffer-0.2.0.tgz#4b944fac0191aa5907afe2d8c999ccc57ce80f45"
-  integrity sha512-7emyCsu1/xiBXgQZrscw/8KPRT44I4Yq9Pe6EGs3aPRTsWuggML1/1DTuZUuIaJPIm1FTDUVXl4x/yW8s0kQDQ==
+"@babel/parser@^7.23.0":
+  "integrity" "sha512-vvPKKdMemU85V9WE/l5wZEmImpCtLqbnTvqDS2U1fJ96KrxoW7KrXhNsNCblQlg8Ck4b85yxdTyelsMUgFUXiw=="
+  "resolved" "https://registry.npmjs.org/@babel/parser/-/parser-7.23.0.tgz"
+  "version" "7.23.0"
 
-css-line-break@1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/css-line-break/-/css-line-break-1.1.1.tgz#d5e9bdd297840099eb0503c7310fd34927a026ef"
-  integrity sha512-1feNVaM4Fyzdj4mKPIQNL2n70MmuYzAXZ1aytlROFX1JsOo070OsugwGjj7nl6jnDJWHDM8zRZswkmeYVWZJQA==
+"@fullcalendar/core@^6.1.9", "@fullcalendar/core@~6.1.9":
+  "integrity" "sha512-eeG+z9BWerdsU9Ac6j16rpYpPnE0wxtnEHiHrh/u/ADbGTR3hCOjCD9PxQOfhOTHbWOVs7JQunGcksSPu5WZBQ=="
+  "resolved" "https://registry.npmjs.org/@fullcalendar/core/-/core-6.1.9.tgz"
+  "version" "6.1.9"
   dependencies:
-    base64-arraybuffer "^0.2.0"
+    "preact" "~10.12.1"
 
-html2canvas@^1.1.4:
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/html2canvas/-/html2canvas-1.1.4.tgz#53ae91cd26e9e9e623c56533cccb2e3f57c8124c"
-  integrity sha512-uHgQDwrXsRmFdnlOVFvHin9R7mdjjZvoBoXxicPR+NnucngkaLa5zIDW9fzMkiip0jSffyTyWedE8iVogYOeWg==
+"@fullcalendar/daygrid@^6.1.9", "@fullcalendar/daygrid@~6.1.9":
+  "integrity" "sha512-o/6joH/7lmVHXAkbaa/tUbzWYnGp/LgfdiFyYPkqQbjKEeivNZWF1WhHqFbhx0zbFONSHtrvkjY2bjr+Ef2quQ=="
+  "resolved" "https://registry.npmjs.org/@fullcalendar/daygrid/-/daygrid-6.1.9.tgz"
+  "version" "6.1.9"
+
+"@fullcalendar/interaction@^6.1.9":
+  "integrity" "sha512-I3FGnv0kKZpIwujg3HllbKrciNjTqeTYy3oJG226oAn7lV6wnrrDYMmuGmA0jPJAGN46HKrQqKN7ItxQRDec4Q=="
+  "resolved" "https://registry.npmjs.org/@fullcalendar/interaction/-/interaction-6.1.9.tgz"
+  "version" "6.1.9"
+
+"@fullcalendar/list@^6.1.9":
+  "integrity" "sha512-OCKdC1Gz26cJ5QsXdQyXVyzVu23ypT2xzyAR+Wc8jEytcJLWXw2a914m/MVax8n8EHuaIYY2exhsy/eaSU0XNA=="
+  "resolved" "https://registry.npmjs.org/@fullcalendar/list/-/list-6.1.9.tgz"
+  "version" "6.1.9"
+
+"@fullcalendar/premium-common@~6.1.9":
+  "integrity" "sha512-hbyXAPU0r9psO0oH22ge0GCxQhlHQ0KJRJhAM2KkTTfYUSAYgaaYfX9cUC6ysNE7T1gZ5JDlYDu/xskwPymyvA=="
+  "resolved" "https://registry.npmjs.org/@fullcalendar/premium-common/-/premium-common-6.1.9.tgz"
+  "version" "6.1.9"
+
+"@fullcalendar/scrollgrid@^6.1.9":
+  "integrity" "sha512-mrdNb0kgDrs15oesKFfr475UYEuqAEQmxBJB2IjQVUL1v213ZqY1TYzgXsIQhVmyGudosVbBOaiQ+vb0zMk8HA=="
+  "resolved" "https://registry.npmjs.org/@fullcalendar/scrollgrid/-/scrollgrid-6.1.9.tgz"
+  "version" "6.1.9"
   dependencies:
-    css-line-break "1.1.1"
+    "@fullcalendar/premium-common" "~6.1.9"
 
-onscan.js@^1.5.2:
-  version "1.5.2"
-  resolved "https://registry.yarnpkg.com/onscan.js/-/onscan.js-1.5.2.tgz#14ed636e5f4c3f0a78bacbf9a505dad3140ee341"
-  integrity sha512-9oGYy2gXYRjvXO9GYqqVca0VuCTAmWhbmX3egBSBP13rXiMNb+dKPJzKFEeECGqPBpf0m40Zoo+GUQ7eCackdw==
+"@fullcalendar/timegrid@^6.1.9":
+  "integrity" "sha512-le7UV05wVE1Trdr054kgJXTwa+A1pEI8nlCBnPWdcyrL+dTLoPvQ4AWEVCnV7So+4zRYaCqnqGXfCJsj0RQa0g=="
+  "resolved" "https://registry.npmjs.org/@fullcalendar/timegrid/-/timegrid-6.1.9.tgz"
+  "version" "6.1.9"
+  dependencies:
+    "@fullcalendar/daygrid" "~6.1.9"
+
+"@fullcalendar/vue3@^6.1.9":
+  "integrity" "sha512-nuEEb/6uRhD0AH3PzU4Mtod3dD7S729nA1oYorMdCYMgUvXoHJlz2wOKK8w4LGZIn6K2R8Yzo8ol33ElBjHo3A=="
+  "resolved" "https://registry.npmjs.org/@fullcalendar/vue3/-/vue3-6.1.9.tgz"
+  "version" "6.1.9"
+
+"@jhonjtoloza/erp-calendar@^0.0.1":
+  "integrity" "sha512-Je/sm8Nt+gvRk7ACUHSWF2X3WTRr1LBj0RvXPnnLtcivnYyYONIme9k0RooZJyxuXJ8eNCQ+3EjITqVRg+Fixg=="
+  "resolved" "https://registry.npmjs.org/@jhonjtoloza/erp-calendar/-/erp-calendar-0.0.1.tgz"
+  "version" "0.0.1"
+  dependencies:
+    "@fullcalendar/core" "^6.1.9"
+    "@fullcalendar/daygrid" "^6.1.9"
+    "@fullcalendar/interaction" "^6.1.9"
+    "@fullcalendar/list" "^6.1.9"
+    "@fullcalendar/scrollgrid" "^6.1.9"
+    "@fullcalendar/timegrid" "^6.1.9"
+    "@fullcalendar/vue3" "^6.1.9"
+    "frappe-js-sdk" "^1.3.7"
+    "pinia" "^2.1.7"
+    "vue" "^3.3.4"
+
+"@jhonjtoloza/erp-calendar@^0.0.3":
+  "integrity" "sha512-pkv2VIDbzfFz7EcWd5VyRZNYtGM4mgoNwfD3GDMh1wpmPZ01yjd75jAIIUH1ltiLbsIgZZCPBwbMSsATTq/YZw=="
+  "resolved" "https://registry.npmjs.org/@jhonjtoloza/erp-calendar/-/erp-calendar-0.0.3.tgz"
+  "version" "0.0.3"
+  dependencies:
+    "@fullcalendar/core" "^6.1.9"
+    "@fullcalendar/daygrid" "^6.1.9"
+    "@fullcalendar/interaction" "^6.1.9"
+    "@fullcalendar/list" "^6.1.9"
+    "@fullcalendar/scrollgrid" "^6.1.9"
+    "@fullcalendar/timegrid" "^6.1.9"
+    "@fullcalendar/vue3" "^6.1.9"
+    "@jhonjtoloza/erp-calendar" "^0.0.1"
+    "frappe-js-sdk" "^1.3.7"
+    "pinia" "^2.1.7"
+    "vue" "^3.3.4"
+
+"@jridgewell/sourcemap-codec@^1.4.15":
+  "integrity" "sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg=="
+  "resolved" "https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.4.15.tgz"
+  "version" "1.4.15"
+
+"@vue/compiler-core@3.3.8":
+  "integrity" "sha512-hN/NNBUECw8SusQvDSqqcVv6gWq8L6iAktUR0UF3vGu2OhzRqcOiAno0FmBJWwxhYEXRlQJT5XnoKsVq1WZx4g=="
+  "resolved" "https://registry.npmjs.org/@vue/compiler-core/-/compiler-core-3.3.8.tgz"
+  "version" "3.3.8"
+  dependencies:
+    "@babel/parser" "^7.23.0"
+    "@vue/shared" "3.3.8"
+    "estree-walker" "^2.0.2"
+    "source-map-js" "^1.0.2"
+
+"@vue/compiler-dom@3.3.8":
+  "integrity" "sha512-+PPtv+p/nWDd0AvJu3w8HS0RIm/C6VGBIRe24b9hSyNWOAPEUosFZ5diwawwP8ip5sJ8n0Pe87TNNNHnvjs0FQ=="
+  "resolved" "https://registry.npmjs.org/@vue/compiler-dom/-/compiler-dom-3.3.8.tgz"
+  "version" "3.3.8"
+  dependencies:
+    "@vue/compiler-core" "3.3.8"
+    "@vue/shared" "3.3.8"
+
+"@vue/compiler-sfc@3.3.8":
+  "integrity" "sha512-WMzbUrlTjfYF8joyT84HfwwXo+8WPALuPxhy+BZ6R4Aafls+jDBnSz8PDz60uFhuqFbl3HxRfxvDzrUf3THwpA=="
+  "resolved" "https://registry.npmjs.org/@vue/compiler-sfc/-/compiler-sfc-3.3.8.tgz"
+  "version" "3.3.8"
+  dependencies:
+    "@babel/parser" "^7.23.0"
+    "@vue/compiler-core" "3.3.8"
+    "@vue/compiler-dom" "3.3.8"
+    "@vue/compiler-ssr" "3.3.8"
+    "@vue/reactivity-transform" "3.3.8"
+    "@vue/shared" "3.3.8"
+    "estree-walker" "^2.0.2"
+    "magic-string" "^0.30.5"
+    "postcss" "^8.4.31"
+    "source-map-js" "^1.0.2"
+
+"@vue/compiler-ssr@3.3.8":
+  "integrity" "sha512-hXCqQL/15kMVDBuoBYpUnSYT8doDNwsjvm3jTefnXr+ytn294ySnT8NlsFHmTgKNjwpuFy7XVV8yTeLtNl/P6w=="
+  "resolved" "https://registry.npmjs.org/@vue/compiler-ssr/-/compiler-ssr-3.3.8.tgz"
+  "version" "3.3.8"
+  dependencies:
+    "@vue/compiler-dom" "3.3.8"
+    "@vue/shared" "3.3.8"
+
+"@vue/devtools-api@^6.5.0":
+  "integrity" "sha512-+KpckaAQyfbvshdDW5xQylLni1asvNSGme1JFs8I1+/H5pHEhqUKMEQD/qn3Nx5+/nycBq11qAEi8lk+LXI2dA=="
+  "resolved" "https://registry.npmjs.org/@vue/devtools-api/-/devtools-api-6.5.1.tgz"
+  "version" "6.5.1"
+
+"@vue/reactivity-transform@3.3.8":
+  "integrity" "sha512-49CvBzmZNtcHua0XJ7GdGifM8GOXoUMOX4dD40Y5DxI3R8OUhMlvf2nvgUAcPxaXiV5MQQ1Nwy09ADpnLQUqRw=="
+  "resolved" "https://registry.npmjs.org/@vue/reactivity-transform/-/reactivity-transform-3.3.8.tgz"
+  "version" "3.3.8"
+  dependencies:
+    "@babel/parser" "^7.23.0"
+    "@vue/compiler-core" "3.3.8"
+    "@vue/shared" "3.3.8"
+    "estree-walker" "^2.0.2"
+    "magic-string" "^0.30.5"
+
+"@vue/reactivity@3.3.8":
+  "integrity" "sha512-ctLWitmFBu6mtddPyOKpHg8+5ahouoTCRtmAHZAXmolDtuZXfjL2T3OJ6DL6ezBPQB1SmMnpzjiWjCiMYmpIuw=="
+  "resolved" "https://registry.npmjs.org/@vue/reactivity/-/reactivity-3.3.8.tgz"
+  "version" "3.3.8"
+  dependencies:
+    "@vue/shared" "3.3.8"
+
+"@vue/runtime-core@3.3.8":
+  "integrity" "sha512-qurzOlb6q26KWQ/8IShHkMDOuJkQnQcTIp1sdP4I9MbCf9FJeGVRXJFr2mF+6bXh/3Zjr9TDgURXrsCr9bfjUw=="
+  "resolved" "https://registry.npmjs.org/@vue/runtime-core/-/runtime-core-3.3.8.tgz"
+  "version" "3.3.8"
+  dependencies:
+    "@vue/reactivity" "3.3.8"
+    "@vue/shared" "3.3.8"
+
+"@vue/runtime-dom@3.3.8":
+  "integrity" "sha512-Noy5yM5UIf9UeFoowBVgghyGGPIDPy1Qlqt0yVsUdAVbqI8eeMSsTqBtauaEoT2UFXUk5S64aWVNJN4MJ2vRdA=="
+  "resolved" "https://registry.npmjs.org/@vue/runtime-dom/-/runtime-dom-3.3.8.tgz"
+  "version" "3.3.8"
+  dependencies:
+    "@vue/runtime-core" "3.3.8"
+    "@vue/shared" "3.3.8"
+    "csstype" "^3.1.2"
+
+"@vue/server-renderer@3.3.8":
+  "integrity" "sha512-zVCUw7RFskvPuNlPn/8xISbrf0zTWsTSdYTsUTN1ERGGZGVnRxM2QZ3x1OR32+vwkkCm0IW6HmJ49IsPm7ilLg=="
+  "resolved" "https://registry.npmjs.org/@vue/server-renderer/-/server-renderer-3.3.8.tgz"
+  "version" "3.3.8"
+  dependencies:
+    "@vue/compiler-ssr" "3.3.8"
+    "@vue/shared" "3.3.8"
+
+"@vue/shared@3.3.8":
+  "integrity" "sha512-8PGwybFwM4x8pcfgqEQFy70NaQxASvOC5DJwLQfpArw1UDfUXrJkdxD3BhVTMS+0Lef/TU7YO0Jvr0jJY8T+mw=="
+  "resolved" "https://registry.npmjs.org/@vue/shared/-/shared-3.3.8.tgz"
+  "version" "3.3.8"
+
+"axios@^0.26.1":
+  "integrity" "sha512-fPwcX4EvnSHuInCMItEhAGnaSEXRBjtzh9fOtsE6E1G6p7vl7edEeZe11QHf18+6+9gR5PbKV/sGKNaD8YaMeA=="
+  "resolved" "https://registry.npmjs.org/axios/-/axios-0.26.1.tgz"
+  "version" "0.26.1"
+  dependencies:
+    "follow-redirects" "^1.14.8"
+
+"base64-arraybuffer@^0.2.0":
+  "integrity" "sha512-7emyCsu1/xiBXgQZrscw/8KPRT44I4Yq9Pe6EGs3aPRTsWuggML1/1DTuZUuIaJPIm1FTDUVXl4x/yW8s0kQDQ=="
+  "resolved" "https://registry.npmjs.org/base64-arraybuffer/-/base64-arraybuffer-0.2.0.tgz"
+  "version" "0.2.0"
+
+"css-line-break@1.1.1":
+  "integrity" "sha512-1feNVaM4Fyzdj4mKPIQNL2n70MmuYzAXZ1aytlROFX1JsOo070OsugwGjj7nl6jnDJWHDM8zRZswkmeYVWZJQA=="
+  "resolved" "https://registry.npmjs.org/css-line-break/-/css-line-break-1.1.1.tgz"
+  "version" "1.1.1"
+  dependencies:
+    "base64-arraybuffer" "^0.2.0"
+
+"csstype@^3.1.2":
+  "integrity" "sha512-I7K1Uu0MBPzaFKg4nI5Q7Vs2t+3gWWW648spaF+Rg7pI9ds18Ugn+lvg4SHczUdKlHI5LWBXyqfS8+DufyBsgQ=="
+  "resolved" "https://registry.npmjs.org/csstype/-/csstype-3.1.2.tgz"
+  "version" "3.1.2"
+
+"estree-walker@^2.0.2":
+  "integrity" "sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w=="
+  "resolved" "https://registry.npmjs.org/estree-walker/-/estree-walker-2.0.2.tgz"
+  "version" "2.0.2"
+
+"follow-redirects@^1.14.8":
+  "integrity" "sha512-1VzOtuEM8pC9SFU1E+8KfTjZyMztRsgEfwQl44z8A25uy13jSzTj6dyK2Df52iV0vgHCfBwLhDWevLn95w5v6Q=="
+  "resolved" "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.15.3.tgz"
+  "version" "1.15.3"
+
+"frappe-js-sdk@^1.3.7":
+  "integrity" "sha512-DtB36ylQsXSa0GuFIq0CXQSRsospZZgXoU/RJ/U6ZBX3EKHrA5hPMDCBmVyTEAPNXJImc+TeZxe2ETO1u3VZ8Q=="
+  "resolved" "https://registry.npmjs.org/frappe-js-sdk/-/frappe-js-sdk-1.3.7.tgz"
+  "version" "1.3.7"
+  dependencies:
+    "axios" "^0.26.1"
+
+"html2canvas@^1.1.4":
+  "integrity" "sha512-uHgQDwrXsRmFdnlOVFvHin9R7mdjjZvoBoXxicPR+NnucngkaLa5zIDW9fzMkiip0jSffyTyWedE8iVogYOeWg=="
+  "resolved" "https://registry.npmjs.org/html2canvas/-/html2canvas-1.1.4.tgz"
+  "version" "1.1.4"
+  dependencies:
+    "css-line-break" "1.1.1"
+
+"magic-string@^0.30.5":
+  "integrity" "sha512-7xlpfBaQaP/T6Vh8MO/EqXSW5En6INHEvEXQiuff7Gku0PWjU3uf6w/j9o7O+SpB5fOAkrI5HeoNgwjEO0pFsA=="
+  "resolved" "https://registry.npmjs.org/magic-string/-/magic-string-0.30.5.tgz"
+  "version" "0.30.5"
+  dependencies:
+    "@jridgewell/sourcemap-codec" "^1.4.15"
+
+"nanoid@^3.3.6":
+  "integrity" "sha512-eSRppjcPIatRIMC1U6UngP8XFcz8MQWGQdt1MTBQ7NaAmvXDfvNxbvWV3x2y6CdEUciCSsDHDQZbhYaB8QEo2g=="
+  "resolved" "https://registry.npmjs.org/nanoid/-/nanoid-3.3.7.tgz"
+  "version" "3.3.7"
+
+"onscan.js@^1.5.2":
+  "integrity" "sha512-9oGYy2gXYRjvXO9GYqqVca0VuCTAmWhbmX3egBSBP13rXiMNb+dKPJzKFEeECGqPBpf0m40Zoo+GUQ7eCackdw=="
+  "resolved" "https://registry.npmjs.org/onscan.js/-/onscan.js-1.5.2.tgz"
+  "version" "1.5.2"
+
+"picocolors@^1.0.0":
+  "integrity" "sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ=="
+  "resolved" "https://registry.npmjs.org/picocolors/-/picocolors-1.0.0.tgz"
+  "version" "1.0.0"
+
+"pinia@^2.1.7":
+  "integrity" "sha512-+C2AHFtcFqjPih0zpYuvof37SFxMQ7OEG2zV9jRI12i9BOy3YQVAHwdKtyyc8pDcDyIc33WCIsZaCFWU7WWxGQ=="
+  "resolved" "https://registry.npmjs.org/pinia/-/pinia-2.1.7.tgz"
+  "version" "2.1.7"
+  dependencies:
+    "@vue/devtools-api" "^6.5.0"
+    "vue-demi" ">=0.14.5"
+
+"postcss@^8.4.31":
+  "integrity" "sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ=="
+  "resolved" "https://registry.npmjs.org/postcss/-/postcss-8.4.31.tgz"
+  "version" "8.4.31"
+  dependencies:
+    "nanoid" "^3.3.6"
+    "picocolors" "^1.0.0"
+    "source-map-js" "^1.0.2"
+
+"preact@~10.12.1":
+  "integrity" "sha512-l8386ixSsBdbreOAkqtrwqHwdvR35ID8c3rKPa8lCWuO86dBi32QWHV4vfsZK1utLLFMvw+Z5Ad4XLkZzchscg=="
+  "resolved" "https://registry.npmjs.org/preact/-/preact-10.12.1.tgz"
+  "version" "10.12.1"
+
+"source-map-js@^1.0.2":
+  "integrity" "sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw=="
+  "resolved" "https://registry.npmjs.org/source-map-js/-/source-map-js-1.0.2.tgz"
+  "version" "1.0.2"
+
+"vue-demi@>=0.14.5":
+  "integrity" "sha512-8QA7wrYSHKaYgUxDA5ZC24w+eHm3sYCbp0EzcDwKqN3p6HqtTCGR/GVsPyZW92unff4UlcSh++lmqDWN3ZIq4w=="
+  "resolved" "https://registry.npmjs.org/vue-demi/-/vue-demi-0.14.6.tgz"
+  "version" "0.14.6"
+
+"vue@^2.6.14 || ^3.3.0", "vue@^3.0.0-0 || ^2.6.0", "vue@^3.0.11", "vue@^3.3.4", "vue@3.3.8":
+  "integrity" "sha512-5VSX/3DabBikOXMsxzlW8JyfeLKlG9mzqnWgLQLty88vdZL7ZJgrdgBOmrArwxiLtmS+lNNpPcBYqrhE6TQW5w=="
+  "resolved" "https://registry.npmjs.org/vue/-/vue-3.3.8.tgz"
+  "version" "3.3.8"
+  dependencies:
+    "@vue/compiler-dom" "3.3.8"
+    "@vue/compiler-sfc" "3.3.8"
+    "@vue/runtime-dom" "3.3.8"
+    "@vue/server-renderer" "3.3.8"
+    "@vue/shared" "3.3.8"
