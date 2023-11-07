@@ -1,1 +1,1 @@
-import "@jhonjtoloza/erp-calendar";
+import "@tvsgroup/erp-calendar";

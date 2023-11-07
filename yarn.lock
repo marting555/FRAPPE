@@ -69,9 +69,14 @@
     "pinia" "^2.1.7"
     "vue" "^3.3.4"
 
-"@jhonjtoloza/erp-calendar@^0.0.3":
-  "integrity" "sha512-pkv2VIDbzfFz7EcWd5VyRZNYtGM4mgoNwfD3GDMh1wpmPZ01yjd75jAIIUH1ltiLbsIgZZCPBwbMSsATTq/YZw=="
-  "resolved" "https://registry.npmjs.org/@jhonjtoloza/erp-calendar/-/erp-calendar-0.0.3.tgz"
+"@jridgewell/sourcemap-codec@^1.4.15":
+  "integrity" "sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg=="
+  "resolved" "https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.4.15.tgz"
+  "version" "1.4.15"
+
+"@tvsgroup/erp-calendar@^0.0.3":
+  "integrity" "sha512-WK6w2jd2G+b9ezH4/HnVTotKnv+d/5dbNrG5ehoT8IU6K6zw0C5xVHMhNmEGhVG+my2MVI0IbVcL+VByroueJg=="
+  "resolved" "https://registry.npmjs.org/@tvsgroup/erp-calendar/-/erp-calendar-0.0.3.tgz"
   "version" "0.0.3"
   dependencies:
     "@fullcalendar/core" "^6.1.9"
@@ -85,11 +90,6 @@
     "frappe-js-sdk" "^1.3.7"
     "pinia" "^2.1.7"
     "vue" "^3.3.4"
-
-"@jridgewell/sourcemap-codec@^1.4.15":
-  "integrity" "sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg=="
-  "resolved" "https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.4.15.tgz"
-  "version" "1.4.15"
 
 "@vue/compiler-core@3.3.8":
   "integrity" "sha512-hN/NNBUECw8SusQvDSqqcVv6gWq8L6iAktUR0UF3vGu2OhzRqcOiAno0FmBJWwxhYEXRlQJT5XnoKsVq1WZx4g=="
