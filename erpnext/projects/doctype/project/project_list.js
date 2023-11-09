@@ -9,12 +9,21 @@ frappe.listview_settings['Project'] = {
 		}
 	}
 };
+const el = document.createElement('erp-calendar')
+el.setAttribute('url', location.origin);
+const add = () => {
+	if(!document.querySelector('erp-calendar')){
+		frappe.require('erp-calendar.bundle.js').then(() => {
+			document.querySelector('body').appendChild(el)
+		})
+	}
+}
 
-
-
-frappe.require('erp-calendar.bundle.js').then(() => {
-	const el = document.createElement('erp-calendar')
-	el.setAttribute('url', location.origin)
-	document.querySelector('body').appendChild(el)
+navigation.addEventListener("navigatesuccess", () => {
+	if (/\/project\.*/.test(location.pathname)){
+		add()
+	} else {
+		document.querySelector('erp-calendar')?.remove()
+	}
 })
 
