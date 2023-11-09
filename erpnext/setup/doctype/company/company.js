@@ -40,7 +40,7 @@ frappe.ui.form.on("Company", {
 				filters:{
 					'warehouse_type' : 'Transit',
 					'is_group': 0,
-					'company': frm.doc.company
+					'company': frm.doc.company_name
 				}
 			};
 		});
@@ -81,8 +81,6 @@ frappe.ui.form.on("Company", {
 			frm.doc.abbr && frm.set_df_property("abbr", "read_only", 1);
 			disbale_coa_fields(frm);
 			frappe.contacts.render_address_and_contact(frm);
-
-			frappe.dynamic_link = {doc: frm.doc, fieldname: 'name', doctype: 'Company'}
 
 			if (frappe.perm.has_perm("Cost Center", 0, 'read')) {
 				frm.add_custom_button(__('Cost Centers'), function() {
@@ -202,8 +200,8 @@ erpnext.company.setup_queries = function(frm) {
 	$.each([
 		["default_bank_account", {"account_type": "Bank"}],
 		["default_cash_account", {"account_type": "Cash"}],
-		["default_receivable_account", {"account_type": "Receivable"}],
-		["default_payable_account", {"account_type": "Payable"}],
+		["default_receivable_account", { "root_type": "Asset", "account_type": "Receivable" }],
+		["default_payable_account", { "root_type": "Liability", "account_type": "Payable" }],
 		["default_expense_account", {"root_type": "Expense"}],
 		["default_income_account", {"root_type": "Income"}],
 		["round_off_account", {"root_type": "Expense"}],
@@ -227,7 +225,9 @@ erpnext.company.setup_queries = function(frm) {
 		["capital_work_in_progress_account", {"account_type": "Capital Work in Progress"}],
 		["asset_received_but_not_billed", {"account_type": "Asset Received But Not Billed"}],
 		["unrealized_profit_loss_account", {"root_type": ["in", ["Liability", "Asset"]]}],
-		["default_provisional_account", {"root_type": ["in", ["Liability", "Asset"]]}]
+		["default_provisional_account", {"root_type": ["in", ["Liability", "Asset"]]}],
+		["default_advance_received_account", {"root_type": "Liability", "account_type": "Receivable"}],
+		["default_advance_paid_account", {"root_type": "Asset", "account_type": "Payable"}],
 	], function(i, v) {
 		erpnext.company.set_custom_query(frm, v);
 	});

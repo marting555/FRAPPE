@@ -6,7 +6,7 @@ import json
 
 import frappe
 from frappe import _, msgprint, scrub
-from frappe.utils import cint, cstr, flt, fmt_money, formatdate, get_link_to_form, nowdate
+from frappe.utils import cstr, flt, fmt_money, formatdate, get_link_to_form, nowdate
 
 import erpnext
 from erpnext.accounts.deferred_revenue import get_deferred_booking_accounts
@@ -24,6 +24,9 @@ from erpnext.accounts.utils import (
 	get_stock_accounts,
 	get_stock_and_account_balance,
 )
+from erpnext.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
+	get_depr_schedule,
+)
 from erpnext.controllers.accounts_controller import AccountsController
 
 
@@ -34,9 +37,6 @@ class StockAccountInvalidTransaction(frappe.ValidationError):
 class JournalEntry(AccountsController):
 	def __init__(self, *args, **kwargs):
 		super(JournalEntry, self).__init__(*args, **kwargs)
-
-	def get_feed(self):
-		return self.voucher_type
 
 	def validate(self):
 		if self.voucher_type == "Opening Entry":
@@ -339,22 +339,34 @@ class JournalEntry(AccountsController):
 				asset = frappe.get_doc("Asset", d.reference_name)
 
 				if asset.calculate_depreciation:
-					fb_idx = None
-					for s in asset.get("schedules"):
-						if s.journal_entry == self.name:
-							s.db_set("journal_entry", None)
-							fb_idx = cint(s.finance_book_id) or 1
+					je_found = False
+
+					for fb_row in asset.get("finance_books"):
+						if je_found:
 							break
-					if not fb_idx:
+
+						depr_schedule = get_depr_schedule(asset.name, "Active", fb_row.finance_book)
+
+						for s in depr_schedule or []:
+							if s.journal_entry == self.name:
+								s.db_set("journal_entry", None)
+
+								fb_row.value_after_depreciation += d.debit
+								fb_row.db_update()
+
+								je_found = True
+								break
+					if not je_found:
 						fb_idx = 1
 						if self.finance_book:
 							for fb_row in asset.get("finance_books"):
 								if fb_row.finance_book == self.finance_book:
 									fb_idx = fb_row.idx
 									break
-					fb_row = asset.get("finance_books")[fb_idx - 1]
-					fb_row.value_after_depreciation += d.debit
-					fb_row.db_update()
+
+						fb_row = asset.get("finance_books")[fb_idx - 1]
+						fb_row.value_after_depreciation += d.debit
+						fb_row.db_update()
 				else:
 					asset.db_set("value_after_depreciation", asset.value_after_depreciation + d.debit)
 				asset.set_status()
@@ -390,7 +402,7 @@ class JournalEntry(AccountsController):
 
 	def validate_party(self):
 		for d in self.get("accounts"):
-			account_type = frappe.db.get_value("Account", d.account, "account_type")
+			account_type = frappe.get_cached_value("Account", d.account, "account_type")
 			if account_type in ["Receivable", "Payable"]:
 				if not (d.party_type and d.party):
 					frappe.throw(
@@ -462,7 +474,7 @@ class JournalEntry(AccountsController):
 	def validate_against_jv(self):
 		for d in self.get("accounts"):
 			if d.reference_type == "Journal Entry":
-				account_root_type = frappe.db.get_value("Account", d.account, "root_type")
+				account_root_type = frappe.get_cached_value("Account", d.account, "root_type")
 				if account_root_type == "Asset" and flt(d.debit) > 0:
 					frappe.throw(
 						_(
@@ -715,7 +727,7 @@ class JournalEntry(AccountsController):
 	def validate_multi_currency(self):
 		alternate_currency = []
 		for d in self.get("accounts"):
-			account = frappe.db.get_value(
+			account = frappe.get_cached_value(
 				"Account", d.account, ["account_currency", "account_type"], as_dict=1
 			)
 			if account:
@@ -855,7 +867,7 @@ class JournalEntry(AccountsController):
 					party_amount += flt(d.debit_in_account_currency) or flt(d.credit_in_account_currency)
 					party_account_currency = d.account_currency
 
-			elif frappe.db.get_value("Account", d.account, "account_type") in ["Bank", "Cash"]:
+			elif frappe.get_cached_value("Account", d.account, "account_type") in ["Bank", "Cash"]:
 				bank_amount += d.debit_in_account_currency or d.credit_in_account_currency
 				bank_account_currency = d.account_currency
 
@@ -1097,7 +1109,7 @@ def get_default_bank_cash_account(company, account_type=None, mode_of_payment=No
 					account = account_list[0].name
 
 	if account:
-		account_details = frappe.db.get_value(
+		account_details = frappe.get_cached_value(
 			"Account", account, ["account_currency", "account_type"], as_dict=1
 		)
 
@@ -1226,7 +1238,7 @@ def get_payment_entry(ref_doc, args):
 			"party_type": args.get("party_type"),
 			"party": ref_doc.get(args.get("party_type").lower()),
 			"cost_center": cost_center,
-			"account_type": frappe.db.get_value("Account", args.get("party_account"), "account_type"),
+			"account_type": frappe.get_cached_value("Account", args.get("party_account"), "account_type"),
 			"account_currency": args.get("party_account_currency")
 			or get_account_currency(args.get("party_account")),
 			"balance": get_balance_on(args.get("party_account")),
@@ -1393,7 +1405,7 @@ def get_party_account_and_balance(company, party_type, party, cost_center=None):
 		"account": account,
 		"balance": account_balance,
 		"party_balance": party_balance,
-		"account_currency": frappe.db.get_value("Account", account, "account_currency"),
+		"account_currency": frappe.get_cached_value("Account", account, "account_currency"),
 	}
 
 
@@ -1406,7 +1418,7 @@ def get_account_balance_and_party_type(
 		frappe.msgprint(_("No Permission"), raise_exception=1)
 
 	company_currency = erpnext.get_company_currency(company)
-	account_details = frappe.db.get_value(
+	account_details = frappe.get_cached_value(
 		"Account", account, ["account_type", "account_currency"], as_dict=1
 	)
 
@@ -1459,7 +1471,7 @@ def get_exchange_rate(
 ):
 	from erpnext.setup.utils import get_exchange_rate
 
-	account_details = frappe.db.get_value(
+	account_details = frappe.get_cached_value(
 		"Account", account, ["account_type", "root_type", "account_currency", "company"], as_dict=1
 	)
 

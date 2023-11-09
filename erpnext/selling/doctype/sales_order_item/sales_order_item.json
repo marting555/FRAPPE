@@ -10,6 +10,7 @@
   "item_code",
   "customer_item_code",
   "ensure_delivery_based_on_produced_serial_no",
+  "reserve_stock",
   "col_break1",
   "delivery_date",
   "item_name",
@@ -27,6 +28,7 @@
   "uom",
   "conversion_factor",
   "stock_qty",
+  "stock_reserved_qty",
   "section_break_16",
   "price_list_rate",
   "base_price_list_rate",
@@ -66,6 +68,7 @@
   "total_weight",
   "column_break_21",
   "weight_uom",
+  "accounting_dimensions_section",
   "warehouse_and_reference",
   "warehouse",
   "target_warehouse",
@@ -115,7 +118,6 @@
    "oldfieldtype": "Link",
    "options": "Item",
    "print_width": "150px",
-   "reqd": 1,
    "width": "150px"
   },
   {
@@ -161,7 +163,6 @@
    "oldfieldname": "description",
    "oldfieldtype": "Small Text",
    "print_width": "300px",
-   "reqd": 1,
    "width": "300px"
   },
   {
@@ -863,17 +864,44 @@
    "label": "Material Request Item"
   },
   {
+   "allow_on_submit": 1,
+   "default": "1",
+   "fieldname": "reserve_stock",
+   "fieldtype": "Check",
+   "label": "Reserve Stock",
+   "print_hide": 1,
+   "report_hide": 1
+  },
+  {
+   "default": "0",
+   "depends_on": "eval: doc.stock_reserved_qty",
+   "fieldname": "stock_reserved_qty",
+   "fieldtype": "Float",
+   "label": "Stock Reserved Qty (in Stock UOM)",
+   "no_copy": 1,
+   "non_negative": 1,
+   "print_hide": 1,
+   "read_only": 1,
+   "report_hide": 1
+  },
+  {
    "fieldname": "production_plan_qty",
    "fieldtype": "Float",
    "label": "Production Plan Qty",
    "no_copy": 1,
    "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "accounting_dimensions_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Dimensions"
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2023-07-28 14:56:42.031636",
+ "modified": "2023-10-17 18:18:26.475259",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order Item",

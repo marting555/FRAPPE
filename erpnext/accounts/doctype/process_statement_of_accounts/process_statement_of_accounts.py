@@ -6,6 +6,7 @@ import copy
 
 import frappe
 from frappe import _
+from frappe.desk.reportview import get_match_cond
 from frappe.model.document import Document
 from frappe.utils import add_days, add_months, format_date, getdate, today
 from frappe.utils.jinja import validate_template
@@ -47,6 +48,20 @@ class ProcessStatementOfAccounts(Document):
 
 
 def get_report_pdf(doc, consolidated=True):
+	statement_dict = get_statement_dict(doc)
+	if not bool(statement_dict):
+		return False
+	elif consolidated:
+		delimiter = '<div style="page-break-before: always;"></div>' if doc.include_break else ""
+		result = delimiter.join(list(statement_dict.values()))
+		return get_pdf(result, {"orientation": doc.orientation})
+	else:
+		for customer, statement_html in statement_dict.items():
+			statement_dict[customer] = get_pdf(statement_html, {"orientation": doc.orientation})
+		return statement_dict
+
+
+def get_statement_dict(doc, get_statement_dict=False):
 	statement_dict = {}
 	ageing = ""
 
@@ -77,17 +92,11 @@ def get_report_pdf(doc, consolidated=True):
 			if not res:
 				continue
 
-		statement_dict[entry.customer] = get_html(doc, filters, entry, col, res, ageing)
+		statement_dict[entry.customer] = (
+			[res, ageing] if get_statement_dict else get_html(doc, filters, entry, col, res, ageing)
+		)
 
-	if not bool(statement_dict):
-		return False
-	elif consolidated:
-		result = "".join(list(statement_dict.values()))
-		return get_pdf(result, {"orientation": doc.orientation})
-	else:
-		for customer, statement_html in statement_dict.items():
-			statement_dict[customer] = get_pdf(statement_html, {"orientation": doc.orientation})
-		return statement_dict
+	return statement_dict
 
 
 def set_ageing(doc, entry):
@@ -100,7 +109,8 @@ def set_ageing(doc, entry):
 			"range2": 60,
 			"range3": 90,
 			"range4": 120,
-			"customer": entry.customer,
+			"party_type": "Customer",
+			"party": [entry.customer],
 		}
 	)
 	col1, ageing = get_ageing(ageing_filters)
@@ -144,7 +154,7 @@ def get_ar_filters(doc, entry):
 	return {
 		"report_date": doc.posting_date if doc.posting_date else None,
 		"party_type": "Customer",
-		"party": entry.customer,
+		"party": [entry.customer],
 		"customer_name": entry.customer_name if entry.customer_name else None,
 		"payment_terms_template": doc.payment_terms_template if doc.payment_terms_template else None,
 		"sales_partner": doc.sales_partner if doc.sales_partner else None,
@@ -214,7 +224,7 @@ def get_customers_based_on_territory_or_customer_group(customer_collection, coll
 	return frappe.get_list(
 		"Customer",
 		fields=["name", "customer_name", "email_id"],
-		filters=[[fields_dict[customer_collection], "IN", selected]],
+		filters=[["disabled", "=", 0], [fields_dict[customer_collection], "IN", selected]],
 	)
 
 
@@ -300,8 +310,6 @@ def fetch_customers(customer_collection, collection_name, primary_mandatory):
 		if int(primary_mandatory):
 			if primary_email == "":
 				continue
-		elif (billing_email == "") and (primary_email == ""):
-			continue
 
 		customer_list.append(
 			{
@@ -338,8 +346,12 @@ def get_customer_emails(customer_name, primary_mandatory, billing_and_primary=Tr
 			link.link_doctype='Customer'
 			and link.link_name=%s
 			and contact.is_billing_contact=1
+			{mcond}
 		ORDER BY
-			contact.creation desc""",
+			contact.creation desc
+		""".format(
+			mcond=get_match_cond("Contact")
+		),
 		customer_name,
 	)
 

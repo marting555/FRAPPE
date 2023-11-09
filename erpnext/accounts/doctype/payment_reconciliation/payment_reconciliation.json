@@ -10,6 +10,7 @@
   "column_break_4",
   "party",
   "receivable_payable_account",
+  "default_advance_account",
   "col_break1",
   "from_invoice_date",
   "from_payment_date",
@@ -189,6 +190,14 @@
    "fieldtype": "Link",
    "label": "Cost Center",
    "options": "Cost Center"
+  },
+  {
+   "depends_on": "eval:doc.party",
+   "fieldname": "default_advance_account",
+   "fieldtype": "Link",
+   "label": "Default Advance Account",
+   "mandatory_depends_on": "doc.party_type",
+   "options": "Account"
   },
   {
    "fieldname": "invoice_name",

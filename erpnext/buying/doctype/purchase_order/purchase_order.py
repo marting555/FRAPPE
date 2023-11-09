@@ -28,6 +28,9 @@ from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
 from erpnext.stock.doctype.item.item import get_item_defaults, get_last_purchase_details
 from erpnext.stock.stock_balance import get_ordered_qty, update_bin_qty
 from erpnext.stock.utils import get_bin
+from erpnext.subcontracting.doctype.subcontracting_bom.subcontracting_bom import (
+	get_subcontracting_boms_for_finished_goods,
+)
 
 form_grid_templates = {"items": "templates/form_grid/item_grid.html"}
 
@@ -52,6 +55,7 @@ class PurchaseOrder(BuyingController):
 	def onload(self):
 		supplier_tds = frappe.db.get_value("Supplier", self.supplier, "tax_withholding_category")
 		self.set_onload("supplier_tds", supplier_tds)
+		self.set_onload("can_update_items", self.can_update_items())
 
 	def validate(self):
 		super(PurchaseOrder, self).validate()
@@ -450,6 +454,36 @@ class PurchaseOrder(BuyingController):
 		else:
 			self.db_set("per_received", 0, update_modified=False)
 
+	def set_service_items_for_finished_goods(self):
+		if not self.is_subcontracted or self.is_old_subcontracting_flow:
+			return
+
+		finished_goods_without_service_item = {
+			d.fg_item for d in self.items if (not d.item_code and d.fg_item)
+		}
+
+		if subcontracting_boms := get_subcontracting_boms_for_finished_goods(
+			finished_goods_without_service_item
+		):
+			for item in self.items:
+				if not item.item_code and item.fg_item in subcontracting_boms:
+					subcontracting_bom = subcontracting_boms[item.fg_item]
+
+					item.item_code = subcontracting_bom.service_item
+					item.qty = flt(item.fg_item_qty) * flt(subcontracting_bom.conversion_factor)
+					item.uom = subcontracting_bom.service_item_uom
+
+	def can_update_items(self) -> bool:
+		result = True
+
+		if self.is_subcontracted and not self.is_old_subcontracting_flow:
+			if frappe.db.exists(
+				"Subcontracting Order", {"purchase_order": self.name, "docstatus": ["!=", 2]}
+			):
+				result = False
+
+		return result
+
 
 def item_last_purchase_rate(name, conversion_rate, item_code, conversion_factor=1.0):
 	"""get last purchase rate for an item"""
@@ -522,6 +556,9 @@ def make_purchase_receipt(source_name, target_doc=None):
 					"bom": "bom",
 					"material_request": "material_request",
 					"material_request_item": "material_request_item",
+					"sales_order": "sales_order",
+					"sales_order_item": "sales_order_item",
+					"wip_composite_asset": "wip_composite_asset",
 				},
 				"postprocess": update_item,
 				"condition": lambda doc: abs(doc.received_qty) < abs(doc.qty)
@@ -598,6 +635,7 @@ def get_mapped_purchase_invoice(source_name, target_doc=None, ignore_permissions
 			"field_map": {
 				"name": "po_detail",
 				"parent": "purchase_order",
+				"wip_composite_asset": "wip_composite_asset",
 			},
 			"postprocess": update_item,
 			"condition": lambda doc: (doc.base_amount == 0 or abs(doc.billed_amt) < abs(doc.amount)),

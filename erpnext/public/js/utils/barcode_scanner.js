@@ -82,7 +82,7 @@ erpnext.utils.BarcodeScanner = class BarcodeScanner {
 	}
 
 	update_table(data) {
-		return new Promise(resolve => {
+		return new Promise((resolve, reject) => {
 			let cur_grid = this.frm.fields_dict[this.items_table_name].grid;
 
 			const {item_code, barcode, batch_no, serial_no, uom} = data;

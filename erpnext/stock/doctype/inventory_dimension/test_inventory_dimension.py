@@ -414,6 +414,53 @@ class TestInventoryDimension(FrappeTestCase):
 			else:
 				self.assertEqual(d.store, "Inter Transfer Store 2")
 
+	def test_validate_negative_stock_for_inventory_dimension(self):
+		frappe.local.inventory_dimensions = {}
+		item_code = "Test Negative Inventory Dimension Item"
+		frappe.db.set_single_value("Stock Settings", "allow_negative_stock", 1)
+		create_item(item_code)
+
+		inv_dimension = create_inventory_dimension(
+			apply_to_all_doctypes=1,
+			dimension_name="Inv Site",
+			reference_document="Inv Site",
+			document_type="Inv Site",
+			validate_negative_stock=1,
+		)
+
+		warehouse = create_warehouse("Negative Stock Warehouse")
+		doc = make_stock_entry(item_code=item_code, target=warehouse, qty=10, do_not_submit=True)
+
+		doc.items[0].to_inv_site = "Site 1"
+		doc.submit()
+
+		site_name = frappe.get_all(
+			"Stock Ledger Entry", filters={"voucher_no": doc.name, "is_cancelled": 0}, fields=["inv_site"]
+		)[0].inv_site
+
+		self.assertEqual(site_name, "Site 1")
+
+		doc = make_stock_entry(item_code=item_code, source=warehouse, qty=100, do_not_submit=True)
+
+		doc.items[0].inv_site = "Site 1"
+		self.assertRaises(frappe.ValidationError, doc.submit)
+
+		inv_dimension.reload()
+		inv_dimension.db_set("validate_negative_stock", 0)
+		frappe.local.inventory_dimensions = {}
+
+		doc = make_stock_entry(item_code=item_code, source=warehouse, qty=100, do_not_submit=True)
+
+		doc.items[0].inv_site = "Site 1"
+		doc.submit()
+		self.assertEqual(doc.docstatus, 1)
+
+		site_name = frappe.get_all(
+			"Stock Ledger Entry", filters={"voucher_no": doc.name, "is_cancelled": 0}, fields=["inv_site"]
+		)[0].inv_site
+
+		self.assertEqual(site_name, "Site 1")
+
 
 def get_voucher_sl_entries(voucher_no, fields):
 	return frappe.get_all(
@@ -504,6 +551,26 @@ def prepare_test_data():
 			}
 		).insert(ignore_permissions=True)
 
+	if not frappe.db.exists("DocType", "Inv Site"):
+		frappe.get_doc(
+			{
+				"doctype": "DocType",
+				"name": "Inv Site",
+				"module": "Stock",
+				"custom": 1,
+				"naming_rule": "By fieldname",
+				"autoname": "field:site_name",
+				"fields": [{"label": "Site Name", "fieldname": "site_name", "fieldtype": "Data"}],
+				"permissions": [
+					{"role": "System Manager", "permlevel": 0, "read": 1, "write": 1, "create": 1, "delete": 1}
+				],
+			}
+		).insert(ignore_permissions=True)
+
+	for site in ["Site 1", "Site 2"]:
+		if not frappe.db.exists("Inv Site", site):
+			frappe.get_doc({"doctype": "Inv Site", "site_name": site}).insert(ignore_permissions=True)
+
 
 def create_inventory_dimension(**args):
 	args = frappe._dict(args)
@@ -529,13 +596,13 @@ def prepare_data_for_internal_transfer():
 	company = "_Test Company with perpetual inventory"
 
 	customer = create_internal_customer(
-		"_Test Internal Customer 2",
+		"_Test Internal Customer 3",
 		company,
 		company,
 	)
 
 	supplier = create_internal_supplier(
-		"_Test Internal Supplier 2",
+		"_Test Internal Supplier 3",
 		company,
 		company,
 	)
@@ -574,7 +641,7 @@ def prepare_data_for_internal_transfer():
 		"Cost Center", {"company": company}, "name"
 	)
 
-	expense_account = frappe.db.get_value(
+	expene_account = frappe.db.get_value(
 		"Company", company, "stock_adjustment_account"
 	) or frappe.db.get_value(
 		"Account", {"company": company, "account_type": "Expense Account"}, "name"
@@ -588,7 +655,7 @@ def prepare_data_for_internal_transfer():
 			"supplier": supplier,
 			"company": company,
 			"cost_center": cost_center,
-			"expense_account": expense_account,
+			"expene_account": expene_account,
 			"store_warehouse": frappe.db.get_value(
 				"Warehouse", {"name": ("like", "Store%"), "company": company}, "name"
 			),

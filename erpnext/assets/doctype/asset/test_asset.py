@@ -12,21 +12,29 @@ from frappe.utils import (
 	get_first_day,
 	get_last_day,
 	getdate,
+	is_last_day_of_the_month,
 	nowdate,
 )
 
 from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
 from erpnext.assets.doctype.asset.asset import (
+	get_asset_value_after_depreciation,
 	make_sales_invoice,
 	split_asset,
 	update_maintenance_status,
 )
 from erpnext.assets.doctype.asset.depreciation import (
-	is_last_day_of_the_month,
 	post_depreciation_entries,
 	restore_asset,
 	scrap_asset,
+)
+from erpnext.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
+	_check_is_pro_rata,
+	_get_pro_rata_amt,
+	get_asset_depr_schedule_doc,
+	get_depr_schedule,
+	get_depreciation_amount,
 )
 from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 	make_purchase_invoice as make_invoice,
@@ -206,6 +214,9 @@ class TestAsset(AssetSetup):
 			submit=1,
 		)
 
+		first_asset_depr_schedule = get_asset_depr_schedule_doc(asset.name, "Active")
+		self.assertEquals(first_asset_depr_schedule.status, "Active")
+
 		post_depreciation_entries(date=add_months(purchase_date, 2))
 		asset.load_from_db()
 
@@ -217,12 +228,17 @@ class TestAsset(AssetSetup):
 
 		scrap_asset(asset.name)
 		asset.load_from_db()
+		first_asset_depr_schedule.load_from_db()
+
+		second_asset_depr_schedule = get_asset_depr_schedule_doc(asset.name, "Active")
+		self.assertEquals(second_asset_depr_schedule.status, "Active")
+		self.assertEquals(first_asset_depr_schedule.status, "Cancelled")
 
 		accumulated_depr_amount = flt(
 			asset.gross_purchase_amount - asset.finance_books[0].value_after_depreciation,
 			asset.precision("gross_purchase_amount"),
 		)
-		pro_rata_amount, _, _ = asset.get_pro_rata_amt(
+		pro_rata_amount, _, _ = _get_pro_rata_amt(
 			asset.finance_books[0], 9000, get_last_day(add_months(purchase_date, 1)), date
 		)
 		pro_rata_amount = flt(pro_rata_amount, asset.precision("gross_purchase_amount"))
@@ -257,6 +273,11 @@ class TestAsset(AssetSetup):
 		self.assertSequenceEqual(gle, expected_gle)
 
 		restore_asset(asset.name)
+		second_asset_depr_schedule.load_from_db()
+
+		third_asset_depr_schedule = get_asset_depr_schedule_doc(asset.name, "Active")
+		self.assertEquals(third_asset_depr_schedule.status, "Active")
+		self.assertEquals(second_asset_depr_schedule.status, "Cancelled")
 
 		asset.load_from_db()
 		self.assertFalse(asset.journal_entry_for_scrap)
@@ -284,6 +305,9 @@ class TestAsset(AssetSetup):
 			submit=1,
 		)
 
+		first_asset_depr_schedule = get_asset_depr_schedule_doc(asset.name, "Active")
+		self.assertEquals(first_asset_depr_schedule.status, "Active")
+
 		post_depreciation_entries(date=add_months(purchase_date, 2))
 
 		si = make_sales_invoice(asset=asset.name, item_code="Macbook Pro", company="_Test Company")
@@ -295,7 +319,13 @@ class TestAsset(AssetSetup):
 
 		self.assertEqual(frappe.db.get_value("Asset", asset.name, "status"), "Sold")
 
-		pro_rata_amount, _, _ = asset.get_pro_rata_amt(
+		first_asset_depr_schedule.load_from_db()
+
+		second_asset_depr_schedule = get_asset_depr_schedule_doc(asset.name, "Active")
+		self.assertEquals(second_asset_depr_schedule.status, "Active")
+		self.assertEquals(first_asset_depr_schedule.status, "Cancelled")
+
+		pro_rata_amount, _, _ = _get_pro_rata_amt(
 			asset.finance_books[0], 9000, get_last_day(add_months(purchase_date, 1)), date
 		)
 		pro_rata_amount = flt(pro_rata_amount, asset.precision("gross_purchase_amount"))
@@ -350,7 +380,9 @@ class TestAsset(AssetSetup):
 			["2025-03-31", 12000, 60000],
 		]
 
-		for i, schedule in enumerate(asset.schedules):
+		first_asset_depr_schedule = get_depr_schedule(asset.name, "Active")
+
+		for i, schedule in enumerate(first_asset_depr_schedule):
 			self.assertEqual(getdate(expected_depr_values[i][0]), schedule.schedule_date)
 			self.assertEqual(expected_depr_values[i][1], schedule.depreciation_amount)
 			self.assertEqual(expected_depr_values[i][2], schedule.accumulated_depreciation_amount)
@@ -366,7 +398,9 @@ class TestAsset(AssetSetup):
 
 		expected_values = [["2023-03-31", 12000, 36000], ["2023-05-23", 1742.47, 37742.47]]
 
-		for i, schedule in enumerate(asset.schedules):
+		second_asset_depr_schedule = get_depr_schedule(asset.name, "Active")
+
+		for i, schedule in enumerate(second_asset_depr_schedule):
 			self.assertEqual(getdate(expected_values[i][0]), schedule.schedule_date)
 			self.assertEqual(expected_values[i][1], schedule.depreciation_amount)
 			self.assertEqual(expected_values[i][2], schedule.accumulated_depreciation_amount)
@@ -444,6 +478,9 @@ class TestAsset(AssetSetup):
 			submit=1,
 		)
 
+		first_asset_depr_schedule = get_asset_depr_schedule_doc(asset.name, "Active")
+		self.assertEquals(first_asset_depr_schedule.status, "Active")
+
 		post_depreciation_entries(date="2021-01-01")
 
 		self.assertEqual(asset.asset_quantity, 10)
@@ -452,21 +489,31 @@ class TestAsset(AssetSetup):
 
 		new_asset = split_asset(asset.name, 2)
 		asset.load_from_db()
+		first_asset_depr_schedule.load_from_db()
+
+		second_asset_depr_schedule = get_asset_depr_schedule_doc(asset.name, "Active")
+		first_asset_depr_schedule_of_new_asset = get_asset_depr_schedule_doc(new_asset.name, "Active")
+		self.assertEquals(second_asset_depr_schedule.status, "Active")
+		self.assertEquals(first_asset_depr_schedule_of_new_asset.status, "Active")
+		self.assertEquals(first_asset_depr_schedule.status, "Cancelled")
+
+		depr_schedule_of_asset = second_asset_depr_schedule.get("depreciation_schedule")
+		depr_schedule_of_new_asset = first_asset_depr_schedule_of_new_asset.get("depreciation_schedule")
 
 		self.assertEqual(new_asset.asset_quantity, 2)
 		self.assertEqual(new_asset.gross_purchase_amount, 24000)
 		self.assertEqual(new_asset.opening_accumulated_depreciation, 4000)
 		self.assertEqual(new_asset.split_from, asset.name)
-		self.assertEqual(new_asset.schedules[0].depreciation_amount, 4000)
-		self.assertEqual(new_asset.schedules[1].depreciation_amount, 4000)
+		self.assertEqual(depr_schedule_of_new_asset[0].depreciation_amount, 4000)
+		self.assertEqual(depr_schedule_of_new_asset[1].depreciation_amount, 4000)
 
 		self.assertEqual(asset.asset_quantity, 8)
 		self.assertEqual(asset.gross_purchase_amount, 96000)
 		self.assertEqual(asset.opening_accumulated_depreciation, 16000)
-		self.assertEqual(asset.schedules[0].depreciation_amount, 16000)
-		self.assertEqual(asset.schedules[1].depreciation_amount, 16000)
+		self.assertEqual(depr_schedule_of_asset[0].depreciation_amount, 16000)
+		self.assertEqual(depr_schedule_of_asset[1].depreciation_amount, 16000)
 
-		journal_entry = asset.schedules[0].journal_entry
+		journal_entry = depr_schedule_of_asset[0].journal_entry
 
 		jv = frappe.get_doc("Journal Entry", journal_entry)
 		self.assertEqual(jv.accounts[0].credit_in_account_currency, 16000)
@@ -703,7 +750,43 @@ class TestDepreciationMethods(AssetSetup):
 
 		schedules = [
 			[cstr(d.schedule_date), d.depreciation_amount, d.accumulated_depreciation_amount]
-			for d in asset.get("schedules")
+			for d in get_depr_schedule(asset.name, "Draft")
+		]
+
+		self.assertEqual(schedules, expected_schedules)
+
+	def test_schedule_for_straight_line_method_with_daily_prorata_based(
+		self,
+	):
+		asset = create_asset(
+			calculate_depreciation=1,
+			available_for_use_date="2023-01-01",
+			purchase_date="2023-01-01",
+			gross_purchase_amount=12000,
+			depreciation_start_date="2023-01-31",
+			total_number_of_depreciations=12,
+			frequency_of_depreciation=1,
+			daily_prorata_based=1,
+		)
+
+		expected_schedules = [
+			["2023-01-31", 1021.98, 1021.98],
+			["2023-02-28", 923.08, 1945.06],
+			["2023-03-31", 1021.98, 2967.04],
+			["2023-04-30", 989.01, 3956.05],
+			["2023-05-31", 1021.98, 4978.03],
+			["2023-06-30", 989.01, 5967.04],
+			["2023-07-31", 1021.98, 6989.02],
+			["2023-08-31", 1021.98, 8011.0],
+			["2023-09-30", 989.01, 9000.01],
+			["2023-10-31", 1021.98, 10021.99],
+			["2023-11-30", 989.01, 11011.0],
+			["2023-12-31", 989.0, 12000.0],
+		]
+
+		schedules = [
+			[cstr(d.schedule_date), d.depreciation_amount, d.accumulated_depreciation_amount]
+			for d in get_depr_schedule(asset.name, "Draft")
 		]
 
 		self.assertEqual(schedules, expected_schedules)
@@ -725,41 +808,7 @@ class TestDepreciationMethods(AssetSetup):
 		expected_schedules = [["2032-12-31", 42904.11, 90000.0]]
 		schedules = [
 			[cstr(d.schedule_date), flt(d.depreciation_amount, 2), d.accumulated_depreciation_amount]
-			for d in asset.get("schedules")
-		]
-
-		self.assertEqual(schedules, expected_schedules)
-
-	def test_schedule_for_straight_line_method_with_daily_depreciation(self):
-		asset = create_asset(
-			calculate_depreciation=1,
-			available_for_use_date="2023-01-01",
-			purchase_date="2023-01-01",
-			gross_purchase_amount=12000,
-			depreciation_start_date="2023-01-31",
-			total_number_of_depreciations=12,
-			frequency_of_depreciation=1,
-			daily_depreciation=1,
-		)
-
-		expected_schedules = [
-			["2023-01-31", 1021.98, 1021.98],
-			["2023-02-28", 923.08, 1945.06],
-			["2023-03-31", 1021.98, 2967.04],
-			["2023-04-30", 989.01, 3956.05],
-			["2023-05-31", 1021.98, 4978.03],
-			["2023-06-30", 989.01, 5967.04],
-			["2023-07-31", 1021.98, 6989.02],
-			["2023-08-31", 1021.98, 8011.0],
-			["2023-09-30", 989.01, 9000.01],
-			["2023-10-31", 1021.98, 10021.99],
-			["2023-11-30", 989.01, 11011.0],
-			["2023-12-31", 989.0, 12000.0],
-		]
-
-		schedules = [
-			[cstr(d.schedule_date), d.depreciation_amount, d.accumulated_depreciation_amount]
-			for d in asset.get("schedules")
+			for d in get_depr_schedule(asset.name, "Draft")
 		]
 
 		self.assertEqual(schedules, expected_schedules)
@@ -786,7 +835,7 @@ class TestDepreciationMethods(AssetSetup):
 
 		schedules = [
 			[cstr(d.schedule_date), d.depreciation_amount, d.accumulated_depreciation_amount]
-			for d in asset.get("schedules")
+			for d in get_depr_schedule(asset.name, "Draft")
 		]
 
 		self.assertEqual(schedules, expected_schedules)
@@ -811,7 +860,7 @@ class TestDepreciationMethods(AssetSetup):
 
 		schedules = [
 			[cstr(d.schedule_date), d.depreciation_amount, d.accumulated_depreciation_amount]
-			for d in asset.get("schedules")
+			for d in get_depr_schedule(asset.name, "Draft")
 		]
 
 		self.assertEqual(schedules, expected_schedules)
@@ -841,7 +890,7 @@ class TestDepreciationMethods(AssetSetup):
 				flt(d.depreciation_amount, 2),
 				flt(d.accumulated_depreciation_amount, 2),
 			]
-			for d in asset.get("schedules")
+			for d in get_depr_schedule(asset.name, "Draft")
 		]
 
 		self.assertEqual(schedules, expected_schedules)
@@ -873,7 +922,7 @@ class TestDepreciationMethods(AssetSetup):
 				flt(d.depreciation_amount, 2),
 				flt(d.accumulated_depreciation_amount, 2),
 			]
-			for d in asset.get("schedules")
+			for d in get_depr_schedule(asset.name, "Draft")
 		]
 
 		self.assertEqual(schedules, expected_schedules)
@@ -896,8 +945,8 @@ class TestDepreciationMethods(AssetSetup):
 		expected_schedules = [
 			["2030-12-31", 28630.14, 28630.14],
 			["2031-12-31", 35684.93, 64315.07],
-			["2032-12-31", 17842.47, 82157.54],
-			["2033-06-06", 5342.46, 87500.0],
+			["2032-12-31", 17842.46, 82157.53],
+			["2033-06-06", 5342.47, 87500.0],
 		]
 
 		schedules = [
@@ -906,7 +955,7 @@ class TestDepreciationMethods(AssetSetup):
 				flt(d.depreciation_amount, 2),
 				flt(d.accumulated_depreciation_amount, 2),
 			]
-			for d in asset.get("schedules")
+			for d in get_depr_schedule(asset.name, "Draft")
 		]
 
 		self.assertEqual(schedules, expected_schedules)
@@ -939,7 +988,7 @@ class TestDepreciationMethods(AssetSetup):
 				flt(d.depreciation_amount, 2),
 				flt(d.accumulated_depreciation_amount, 2),
 			]
-			for d in asset.get("schedules")
+			for d in get_depr_schedule(asset.name, "Draft")
 		]
 		self.assertEqual(schedules, expected_schedules)
 
@@ -962,7 +1011,7 @@ class TestDepreciationBasics(AssetSetup):
 			["2022-12-31", 30000, 90000],
 		]
 
-		for i, schedule in enumerate(asset.schedules):
+		for i, schedule in enumerate(get_depr_schedule(asset.name, "Active")):
 			self.assertEqual(getdate(expected_values[i][0]), schedule.schedule_date)
 			self.assertEqual(expected_values[i][1], schedule.depreciation_amount)
 			self.assertEqual(expected_values[i][2], schedule.accumulated_depreciation_amount)
@@ -985,16 +1034,13 @@ class TestDepreciationBasics(AssetSetup):
 			["2023-01-01", 15000, 90000],
 		]
 
-		for i, schedule in enumerate(asset.schedules):
+		for i, schedule in enumerate(get_depr_schedule(asset.name, "Active")):
 			self.assertEqual(getdate(expected_values[i][0]), schedule.schedule_date)
 			self.assertEqual(expected_values[i][1], schedule.depreciation_amount)
 			self.assertEqual(expected_values[i][2], schedule.accumulated_depreciation_amount)
 
 	def test_get_depreciation_amount(self):
 		"""Tests if get_depreciation_amount() returns the right value."""
-
-		from erpnext.assets.doctype.asset.asset import get_depreciation_amount
-
 		asset = create_asset(item_code="Macbook Pro", available_for_use_date="2019-12-31")
 
 		asset.calculate_depreciation = 1
@@ -1012,8 +1058,8 @@ class TestDepreciationBasics(AssetSetup):
 		depreciation_amount = get_depreciation_amount(asset, 100000, asset.finance_books[0])
 		self.assertEqual(depreciation_amount, 30000)
 
-	def test_make_depreciation_schedule(self):
-		"""Tests if make_depreciation_schedule() returns the right values."""
+	def test_make_depr_schedule(self):
+		"""Tests if make_depr_schedule() returns the right values."""
 
 		asset = create_asset(
 			item_code="Macbook Pro",
@@ -1028,7 +1074,7 @@ class TestDepreciationBasics(AssetSetup):
 
 		expected_values = [["2020-12-31", 30000.0], ["2021-12-31", 30000.0], ["2022-12-31", 30000.0]]
 
-		for i, schedule in enumerate(asset.schedules):
+		for i, schedule in enumerate(get_depr_schedule(asset.name, "Draft")):
 			self.assertEqual(getdate(expected_values[i][0]), schedule.schedule_date)
 			self.assertEqual(expected_values[i][1], schedule.depreciation_amount)
 
@@ -1048,7 +1094,7 @@ class TestDepreciationBasics(AssetSetup):
 
 		expected_values = [30000.0, 60000.0, 90000.0]
 
-		for i, schedule in enumerate(asset.schedules):
+		for i, schedule in enumerate(get_depr_schedule(asset.name, "Draft")):
 			self.assertEqual(expected_values[i], schedule.accumulated_depreciation_amount)
 
 	def test_check_is_pro_rata(self):
@@ -1068,7 +1114,7 @@ class TestDepreciationBasics(AssetSetup):
 			},
 		)
 
-		has_pro_rata = asset.check_is_pro_rata(asset.finance_books[0])
+		has_pro_rata = _check_is_pro_rata(asset, asset.finance_books[0])
 		self.assertFalse(has_pro_rata)
 
 		asset.finance_books = []
@@ -1083,7 +1129,7 @@ class TestDepreciationBasics(AssetSetup):
 			},
 		)
 
-		has_pro_rata = asset.check_is_pro_rata(asset.finance_books[0])
+		has_pro_rata = _check_is_pro_rata(asset, asset.finance_books[0])
 		self.assertTrue(has_pro_rata)
 
 	def test_expected_value_after_useful_life_greater_than_purchase_amount(self):
@@ -1228,9 +1274,11 @@ class TestDepreciationBasics(AssetSetup):
 		post_depreciation_entries(date="2021-06-01")
 		asset.load_from_db()
 
-		self.assertTrue(asset.schedules[0].journal_entry)
-		self.assertFalse(asset.schedules[1].journal_entry)
-		self.assertFalse(asset.schedules[2].journal_entry)
+		depr_schedule = get_depr_schedule(asset.name, "Active")
+
+		self.assertTrue(depr_schedule[0].journal_entry)
+		self.assertFalse(depr_schedule[1].journal_entry)
+		self.assertFalse(depr_schedule[2].journal_entry)
 
 	def test_depr_entry_posting_when_depr_expense_account_is_an_expense_account(self):
 		"""Tests if the Depreciation Expense Account gets debited and the Accumulated Depreciation Account gets credited when the former's an Expense Account."""
@@ -1249,7 +1297,7 @@ class TestDepreciationBasics(AssetSetup):
 		post_depreciation_entries(date="2021-06-01")
 		asset.load_from_db()
 
-		je = frappe.get_doc("Journal Entry", asset.schedules[0].journal_entry)
+		je = frappe.get_doc("Journal Entry", get_depr_schedule(asset.name, "Active")[0].journal_entry)
 		accounting_entries = [
 			{"account": entry.account, "debit": entry.debit, "credit": entry.credit}
 			for entry in je.accounts
@@ -1285,7 +1333,7 @@ class TestDepreciationBasics(AssetSetup):
 		post_depreciation_entries(date="2021-06-01")
 		asset.load_from_db()
 
-		je = frappe.get_doc("Journal Entry", asset.schedules[0].journal_entry)
+		je = frappe.get_doc("Journal Entry", get_depr_schedule(asset.name, "Active")[0].journal_entry)
 		accounting_entries = [
 			{"account": entry.account, "debit": entry.debit, "credit": entry.credit}
 			for entry in je.accounts
@@ -1304,8 +1352,8 @@ class TestDepreciationBasics(AssetSetup):
 		depr_expense_account.parent_account = "Expenses - _TC"
 		depr_expense_account.save()
 
-	def test_clear_depreciation_schedule(self):
-		"""Tests if clear_depreciation_schedule() works as expected."""
+	def test_clear_depr_schedule(self):
+		"""Tests if clear_depr_schedule() works as expected."""
 
 		asset = create_asset(
 			item_code="Macbook Pro",
@@ -1321,11 +1369,13 @@ class TestDepreciationBasics(AssetSetup):
 		post_depreciation_entries(date="2021-06-01")
 		asset.load_from_db()
 
-		asset.clear_depreciation_schedule()
+		asset_depr_schedule_doc = get_asset_depr_schedule_doc(asset.name, "Active")
 
-		self.assertEqual(len(asset.schedules), 1)
+		asset_depr_schedule_doc.clear_depr_schedule()
 
-	def test_clear_depreciation_schedule_for_multiple_finance_books(self):
+		self.assertEqual(len(asset_depr_schedule_doc.get("depreciation_schedule")), 1)
+
+	def test_clear_depr_schedule_for_multiple_finance_books(self):
 		asset = create_asset(item_code="Macbook Pro", available_for_use_date="2019-12-31", do_not_save=1)
 
 		asset.calculate_depreciation = 1
@@ -1367,15 +1417,23 @@ class TestDepreciationBasics(AssetSetup):
 		post_depreciation_entries(date="2020-04-01")
 		asset.load_from_db()
 
-		asset.clear_depreciation_schedule()
+		asset_depr_schedule_doc_1 = get_asset_depr_schedule_doc(
+			asset.name, "Active", "Test Finance Book 1"
+		)
+		asset_depr_schedule_doc_1.clear_depr_schedule()
+		self.assertEqual(len(asset_depr_schedule_doc_1.get("depreciation_schedule")), 3)
 
-		self.assertEqual(len(asset.schedules), 6)
+		asset_depr_schedule_doc_2 = get_asset_depr_schedule_doc(
+			asset.name, "Active", "Test Finance Book 2"
+		)
+		asset_depr_schedule_doc_2.clear_depr_schedule()
+		self.assertEqual(len(asset_depr_schedule_doc_2.get("depreciation_schedule")), 3)
 
-		for schedule in asset.schedules:
-			if schedule.idx <= 3:
-				self.assertEqual(schedule.finance_book_id, "1")
-			else:
-				self.assertEqual(schedule.finance_book_id, "2")
+		asset_depr_schedule_doc_3 = get_asset_depr_schedule_doc(
+			asset.name, "Active", "Test Finance Book 3"
+		)
+		asset_depr_schedule_doc_3.clear_depr_schedule()
+		self.assertEqual(len(asset_depr_schedule_doc_3.get("depreciation_schedule")), 0)
 
 	def test_depreciation_schedules_are_set_up_for_multiple_finance_books(self):
 		asset = create_asset(item_code="Macbook Pro", available_for_use_date="2019-12-31", do_not_save=1)
@@ -1405,13 +1463,15 @@ class TestDepreciationBasics(AssetSetup):
 		)
 		asset.save()
 
-		self.assertEqual(len(asset.schedules), 9)
+		asset_depr_schedule_doc_1 = get_asset_depr_schedule_doc(
+			asset.name, "Draft", "Test Finance Book 1"
+		)
+		self.assertEqual(len(asset_depr_schedule_doc_1.get("depreciation_schedule")), 3)
 
-		for schedule in asset.schedules:
-			if schedule.idx <= 3:
-				self.assertEqual(schedule.finance_book_id, 1)
-			else:
-				self.assertEqual(schedule.finance_book_id, 2)
+		asset_depr_schedule_doc_2 = get_asset_depr_schedule_doc(
+			asset.name, "Draft", "Test Finance Book 2"
+		)
+		self.assertEqual(len(asset_depr_schedule_doc_2.get("depreciation_schedule")), 6)
 
 	def test_depreciation_entry_cancellation(self):
 		asset = create_asset(
@@ -1431,12 +1491,12 @@ class TestDepreciationBasics(AssetSetup):
 		asset.load_from_db()
 
 		# cancel depreciation entry
-		depr_entry = asset.get("schedules")[0].journal_entry
+		depr_entry = get_depr_schedule(asset.name, "Active")[0].journal_entry
 		self.assertTrue(depr_entry)
+
 		frappe.get_doc("Journal Entry", depr_entry).cancel()
 
-		asset.load_from_db()
-		depr_entry = asset.get("schedules")[0].journal_entry
+		depr_entry = get_depr_schedule(asset.name, "Active")[0].journal_entry
 		self.assertFalse(depr_entry)
 
 	def test_asset_expected_value_after_useful_life(self):
@@ -1451,7 +1511,7 @@ class TestDepreciationBasics(AssetSetup):
 		)
 
 		accumulated_depreciation_after_full_schedule = max(
-			d.accumulated_depreciation_amount for d in asset.get("schedules")
+			d.accumulated_depreciation_amount for d in get_depr_schedule(asset.name, "Draft")
 		)
 
 		asset_value_after_full_schedule = flt(asset.gross_purchase_amount) - flt(
@@ -1482,7 +1542,7 @@ class TestDepreciationBasics(AssetSetup):
 		asset.load_from_db()
 
 		# check depreciation entry series
-		self.assertEqual(asset.get("schedules")[0].journal_entry[:4], "DEPR")
+		self.assertEqual(get_depr_schedule(asset.name, "Active")[0].journal_entry[:4], "DEPR")
 
 		expected_gle = (
 			("_Test Accumulated Depreciations - _TC", 0.0, 30000.0),
@@ -1552,7 +1612,7 @@ class TestDepreciationBasics(AssetSetup):
 			"2020-07-15",
 		]
 
-		for i, schedule in enumerate(asset.schedules):
+		for i, schedule in enumerate(get_depr_schedule(asset.name, "Active")):
 			self.assertEqual(getdate(expected_dates[i]), getdate(schedule.schedule_date))
 
 	def test_manual_depreciation_for_existing_asset(self):
@@ -1686,6 +1746,7 @@ def create_asset(**args):
 			"location": args.location or "Test Location",
 			"asset_owner": args.asset_owner or "Company",
 			"is_existing_asset": args.is_existing_asset or 1,
+			"is_composite_asset": args.is_composite_asset or 0,
 			"asset_quantity": args.get("asset_quantity") or 1,
 			"depr_entry_posting_status": args.depr_entry_posting_status or "",
 		}
@@ -1701,7 +1762,7 @@ def create_asset(**args):
 				"total_number_of_depreciations": args.total_number_of_depreciations or 5,
 				"expected_value_after_useful_life": args.expected_value_after_useful_life or 0,
 				"depreciation_start_date": args.depreciation_start_date,
-				"daily_depreciation": args.daily_depreciation or 0,
+				"daily_prorata_based": args.daily_prorata_based or 0,
 			},
 		)
 
@@ -1782,7 +1843,7 @@ def set_depreciation_settings_in_company(company=None):
 	company.save()
 
 	# Enable booking asset depreciation entry automatically
-	frappe.db.set_value("Accounts Settings", None, "book_asset_depreciation_entry_automatically", 1)
+	frappe.db.set_single_value("Accounts Settings", "book_asset_depreciation_entry_automatically", 1)
 
 
 def enable_cwip_accounting(asset_category, enable=1):

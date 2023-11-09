@@ -15,14 +15,14 @@ frappe.query_reports["Gross Profit"] = {
 			"fieldname": "from_date",
 			"label": __("From Date"),
 			"fieldtype": "Date",
-			"default": frappe.defaults.get_user_default("year_start_date"),
+			"default": erpnext.utils.get_fiscal_year(frappe.datetime.get_today(), true)[1],
 			"reqd": 1
 		},
 		{
 			"fieldname": "to_date",
 			"label": __("To Date"),
 			"fieldtype": "Date",
-			"default": frappe.defaults.get_user_default("year_end_date"),
+			"default": erpnext.utils.get_fiscal_year(frappe.datetime.get_today(), true)[2],
 			"reqd": 1
 		},
 		{
@@ -49,6 +49,20 @@ frappe.query_reports["Gross Profit"] = {
 			"label": __("Sales Person"),
 			"fieldtype": "Link",
 			"options": "Sales Person"
+		},
+		{
+			"fieldname": "warehouse",
+			"label": __("Warehouse"),
+			"fieldtype": "Link",
+			"options": "Warehouse",
+			"get_query": function () {
+				var company = frappe.query_report.get_filter_value('company');
+				return {
+					filters: [
+						["Warehouse", "company", "=", company]
+					]
+				};
+			},
 		},
 	],
 	"tree": true,

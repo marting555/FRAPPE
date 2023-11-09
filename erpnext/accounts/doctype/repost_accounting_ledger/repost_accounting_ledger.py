@@ -10,9 +10,12 @@ from frappe.utils.data import comma_and
 class RepostAccountingLedger(Document):
 	def __init__(self, *args, **kwargs):
 		super(RepostAccountingLedger, self).__init__(*args, **kwargs)
-		self._allowed_types = set(
-			["Purchase Invoice", "Sales Invoice", "Payment Entry", "Journal Entry"]
-		)
+		self._allowed_types = [
+			x.document_type
+			for x in frappe.db.get_all(
+				"Repost Allowed Types", filters={"allowed": True}, fields=["distinct(document_type)"]
+			)
+		]
 
 	def validate(self):
 		self.validate_vouchers()
@@ -21,29 +24,8 @@ class RepostAccountingLedger(Document):
 
 	def validate_for_deferred_accounting(self):
 		sales_docs = [x.voucher_no for x in self.vouchers if x.voucher_type == "Sales Invoice"]
-		docs_with_deferred_revenue = frappe.db.get_all(
-			"Sales Invoice Item",
-			filters={"parent": ["in", sales_docs], "docstatus": 1, "enable_deferred_revenue": True},
-			fields=["parent"],
-			as_list=1,
-		)
-
 		purchase_docs = [x.voucher_no for x in self.vouchers if x.voucher_type == "Purchase Invoice"]
-		docs_with_deferred_expense = frappe.db.get_all(
-			"Purchase Invoice Item",
-			filters={"parent": ["in", purchase_docs], "docstatus": 1, "enable_deferred_expense": 1},
-			fields=["parent"],
-			as_list=1,
-		)
-
-		if docs_with_deferred_revenue or docs_with_deferred_expense:
-			frappe.throw(
-				_("Documents: {0} have deferred revenue/expense enabled for them. Cannot repost.").format(
-					frappe.bold(
-						comma_and([x[0] for x in docs_with_deferred_expense + docs_with_deferred_revenue])
-					)
-				)
-			)
+		validate_docs_for_deferred_accounting(sales_docs, purchase_docs)
 
 	def validate_for_closed_fiscal_year(self):
 		if self.vouchers:
@@ -139,14 +121,17 @@ class RepostAccountingLedger(Document):
 		return rendered_page
 
 	def on_submit(self):
-		job_name = "repost_accounting_ledger_" + self.name
-		frappe.enqueue(
-			method="erpnext.accounts.doctype.repost_accounting_ledger.repost_accounting_ledger.start_repost",
-			account_repost_doc=self.name,
-			is_async=True,
-			job_name=job_name,
-		)
-		frappe.msgprint(_("Repost has started in the background"))
+		if len(self.vouchers) > 1:
+			job_name = "repost_accounting_ledger_" + self.name
+			frappe.enqueue(
+				method="erpnext.accounts.doctype.repost_accounting_ledger.repost_accounting_ledger.start_repost",
+				account_repost_doc=self.name,
+				is_async=True,
+				job_name=job_name,
+			)
+			frappe.msgprint(_("Repost has started in the background"))
+		else:
+			start_repost(self.name)
 
 
 @frappe.whitelist()
@@ -175,9 +160,47 @@ def start_repost(account_repost_doc=str) -> None:
 					doc.docstatus = 1
 					doc.make_gl_entries()
 
-				elif doc.doctype in ["Payment Entry", "Journal Entry"]:
+				elif doc.doctype in ["Payment Entry", "Journal Entry", "Expense Claim"]:
 					if not repost_doc.delete_cancelled_entries:
 						doc.make_gl_entries(1)
 					doc.make_gl_entries()
 
 				frappe.db.commit()
+
+
+def validate_docs_for_deferred_accounting(sales_docs, purchase_docs):
+	docs_with_deferred_revenue = frappe.db.get_all(
+		"Sales Invoice Item",
+		filters={"parent": ["in", sales_docs], "docstatus": 1, "enable_deferred_revenue": True},
+		fields=["parent"],
+		as_list=1,
+	)
+
+	docs_with_deferred_expense = frappe.db.get_all(
+		"Purchase Invoice Item",
+		filters={"parent": ["in", purchase_docs], "docstatus": 1, "enable_deferred_expense": 1},
+		fields=["parent"],
+		as_list=1,
+	)
+
+	if docs_with_deferred_revenue or docs_with_deferred_expense:
+		frappe.throw(
+			_("Documents: {0} have deferred revenue/expense enabled for them. Cannot repost.").format(
+				frappe.bold(comma_and([x[0] for x in docs_with_deferred_expense + docs_with_deferred_revenue]))
+			)
+		)
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def get_repost_allowed_types(doctype, txt, searchfield, start, page_len, filters):
+	filters = {"allowed": True}
+
+	if txt:
+		filters.update({"document_type": ("like", f"%{txt}%")})
+
+	if allowed_types := frappe.db.get_all(
+		"Repost Allowed Types", filters=filters, fields=["distinct(document_type)"], as_list=1
+	):
+		return allowed_types
+	return []

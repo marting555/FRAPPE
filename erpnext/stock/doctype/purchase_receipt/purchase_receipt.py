@@ -118,9 +118,7 @@ class PurchaseReceipt(BuyingController):
 		self.validate_posting_time()
 		super(PurchaseReceipt, self).validate()
 
-		if self._action == "submit":
-			self.make_batches("warehouse")
-		else:
+		if self._action != "submit":
 			self.set_status()
 
 		self.po_required()
@@ -263,14 +261,10 @@ class PurchaseReceipt(BuyingController):
 		# because updating ordered qty, reserved_qty_for_subcontract in bin
 		# depends upon updated ordered qty in PO
 		self.update_stock_ledger()
-
-		from erpnext.stock.doctype.serial_no.serial_no import update_serial_nos_after_submit
-
-		update_serial_nos_after_submit(self, "items")
-
 		self.make_gl_entries()
 		self.repost_future_sle_and_gle()
 		self.set_consumed_qty_in_subcontract_order()
+		self.reserve_stock_for_sales_order()
 
 	def check_next_docstatus(self):
 		submit_rv = frappe.db.sql(
@@ -304,7 +298,12 @@ class PurchaseReceipt(BuyingController):
 		self.update_stock_ledger()
 		self.make_gl_entries_on_cancel()
 		self.repost_future_sle_and_gle()
-		self.ignore_linked_doctypes = ("GL Entry", "Stock Ledger Entry", "Repost Item Valuation")
+		self.ignore_linked_doctypes = (
+			"GL Entry",
+			"Stock Ledger Entry",
+			"Repost Item Valuation",
+			"Serial and Batch Bundle",
+		)
 		self.delete_auto_created_batches()
 		self.set_consumed_qty_in_subcontract_order()
 
@@ -316,6 +315,7 @@ class PurchaseReceipt(BuyingController):
 		self.make_item_gl_entries(gl_entries, warehouse_account=warehouse_account)
 		self.make_tax_gl_entries(gl_entries)
 		self.get_asset_gl_entry(gl_entries)
+		update_regional_gl_entries(gl_entries, self)
 
 		return process_gl_map(gl_entries)
 
@@ -341,7 +341,7 @@ class PurchaseReceipt(BuyingController):
 		exchange_rate_map, net_rate_map = get_purchase_document_details(self)
 
 		for d in self.get("items"):
-			if d.item_code in stock_items and flt(d.valuation_rate) and flt(d.qty):
+			if d.item_code in stock_items and flt(d.qty) and (flt(d.valuation_rate) or self.is_return):
 				if warehouse_account.get(d.warehouse):
 					stock_value_diff = frappe.db.get_value(
 						"Stock Ledger Entry",
@@ -562,11 +562,10 @@ class PurchaseReceipt(BuyingController):
 							item=d,
 						)
 
-				elif (
-					d.warehouse not in warehouse_with_no_account
-					or d.rejected_warehouse not in warehouse_with_no_account
+				elif (d.warehouse and d.warehouse not in warehouse_with_no_account) or (
+					d.rejected_warehouse and d.rejected_warehouse not in warehouse_with_no_account
 				):
-					warehouse_with_no_account.append(d.warehouse)
+					warehouse_with_no_account.append(d.warehouse or d.rejected_warehouse)
 			elif (
 				d.item_code not in stock_items
 				and not d.is_fixed_asset
@@ -823,16 +822,45 @@ class PurchaseReceipt(BuyingController):
 				po_details.append(d.purchase_order_item)
 
 		if po_details:
-			updated_pr += update_billed_amount_based_on_po(po_details, update_modified)
+			updated_pr += update_billed_amount_based_on_po(po_details, update_modified, self)
 
 		for pr in set(updated_pr):
 			pr_doc = self if (pr == self.name) else frappe.get_doc("Purchase Receipt", pr)
 			update_billing_percentage(pr_doc, update_modified=update_modified)
 
-		self.load_from_db()
+	def reserve_stock_for_sales_order(self):
+		if self.is_return or not cint(
+			frappe.db.get_single_value("Stock Settings", "auto_reserve_stock_for_sales_order_on_purchase")
+		):
+			return
+
+		self.reload()  # reload to get the Serial and Batch Bundle Details
+
+		so_items_details_map = {}
+		for item in self.items:
+			if item.sales_order and item.sales_order_item:
+				item_details = {
+					"name": item.sales_order_item,
+					"item_code": item.item_code,
+					"warehouse": item.warehouse,
+					"qty_to_reserve": item.stock_qty,
+					"from_voucher_no": item.parent,
+					"from_voucher_detail_no": item.name,
+					"serial_and_batch_bundle": item.serial_and_batch_bundle,
+				}
+				so_items_details_map.setdefault(item.sales_order, []).append(item_details)
+
+		if so_items_details_map:
+			for so, items_details in so_items_details_map.items():
+				so_doc = frappe.get_doc("Sales Order", so)
+				so_doc.create_stock_reservation_entries(
+					items_details=items_details,
+					from_voucher_type="Purchase Receipt",
+					notify=True,
+				)
 
 
-def update_billed_amount_based_on_po(po_details, update_modified=True):
+def update_billed_amount_based_on_po(po_details, update_modified=True, pr_doc=None):
 	po_billed_amt_details = get_billed_amount_against_po(po_details)
 
 	# Get all Purchase Receipt Item rows against the Purchase Order Items
@@ -861,13 +889,19 @@ def update_billed_amount_based_on_po(po_details, update_modified=True):
 		po_billed_amt_details[pr_item.purchase_order_item] = billed_against_po
 
 		if pr_item.billed_amt != billed_amt_agianst_pr:
-			frappe.db.set_value(
-				"Purchase Receipt Item",
-				pr_item.name,
-				"billed_amt",
-				billed_amt_agianst_pr,
-				update_modified=update_modified,
-			)
+			# update existing doc if possible
+			if pr_doc and pr_item.parent == pr_doc.name:
+				pr_item = next((item for item in pr_doc.items if item.name == pr_item.name), None)
+				pr_item.db_set("billed_amt", billed_amt_agianst_pr, update_modified=update_modified)
+
+			else:
+				frappe.db.set_value(
+					"Purchase Receipt Item",
+					pr_item.name,
+					"billed_amt",
+					billed_amt_agianst_pr,
+					update_modified=update_modified,
+				)
 
 			updated_pr.append(pr_item.parent)
 
@@ -943,9 +977,6 @@ def get_billed_amount_against_po(po_items):
 
 
 def update_billing_percentage(pr_doc, update_modified=True, adjust_incoming_rate=False):
-	# Reload as billed amount was set in db directly
-	pr_doc.load_from_db()
-
 	# Update Billing % based on pending accepted qty
 	total_amount, total_billed_amount = 0, 0
 	item_wise_returned_qty = get_item_wise_returned_qty(pr_doc)
@@ -958,6 +989,10 @@ def update_billing_percentage(pr_doc, update_modified=True, adjust_incoming_rate
 
 		total_amount += total_billable_amount
 		total_billed_amount += flt(item.billed_amt)
+
+		if pr_doc.get("is_return") and not total_amount and total_billed_amount:
+			total_amount = total_billed_amount
+
 		if adjust_incoming_rate:
 			adjusted_amt = 0.0
 			if item.billed_amt and item.amount:
@@ -967,7 +1002,6 @@ def update_billing_percentage(pr_doc, update_modified=True, adjust_incoming_rate
 
 	percent_billed = round(100 * (total_billed_amount / (total_amount or 1)), 6)
 	pr_doc.db_set("per_billed", percent_billed)
-	pr_doc.load_from_db()
 
 	if update_modified:
 		pr_doc.set_status(update=True)
@@ -1089,6 +1123,7 @@ def make_purchase_invoice(source_name, target_doc=None):
 					"is_fixed_asset": "is_fixed_asset",
 					"asset_location": "asset_location",
 					"asset_category": "asset_category",
+					"wip_composite_asset": "wip_composite_asset",
 				},
 				"postprocess": update_item,
 				"filter": lambda d: get_pending_qty(d)[0] <= 0
@@ -1137,6 +1172,13 @@ def get_returned_qty_map(purchase_receipt):
 	)
 
 	return returned_qty_map
+
+
+@frappe.whitelist()
+def make_purchase_return_against_rejected_warehouse(source_name):
+	from erpnext.controllers.sales_and_purchase_return import make_return_doc
+
+	return make_return_doc("Purchase Receipt", source_name, return_against_rejected_qty=True)
 
 
 @frappe.whitelist()
@@ -1246,3 +1288,8 @@ def get_item_account_wise_additional_cost(purchase_document):
 
 def on_doctype_update():
 	frappe.db.add_index("Purchase Receipt", ["supplier", "is_return", "return_against"])
+
+
+@erpnext.allow_regional
+def update_regional_gl_entries(gl_list, doc):
+	return

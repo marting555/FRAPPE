@@ -293,6 +293,7 @@ def get_conditions(filters):
 		("from_date", " and `tabPurchase Invoice`.posting_date>=%(from_date)s"),
 		("to_date", " and `tabPurchase Invoice`.posting_date<=%(to_date)s"),
 		("mode_of_payment", " and ifnull(mode_of_payment, '') = %(mode_of_payment)s"),
+		("item_group", " and ifnull(`tabPurchase Invoice Item`.item_group, '') = %(item_group)s"),
 	):
 		if filters.get(opts[0]):
 			conditions += opts[1]
@@ -309,7 +310,8 @@ def get_conditions(filters):
 
 def get_items(filters, additional_query_columns):
 	conditions = get_conditions(filters)
-
+	if additional_query_columns:
+		additional_query_columns = "," + ",".join(additional_query_columns)
 	return frappe.db.sql(
 		"""
 		select

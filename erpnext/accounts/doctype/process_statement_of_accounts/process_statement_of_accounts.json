@@ -30,10 +30,12 @@
   "fetch_customers",
   "column_break_6",
   "primary_mandatory",
+  "show_net_values_in_party_account",
   "column_break_17",
   "customers",
   "preferences",
   "orientation",
+  "include_break",
   "include_ageing",
   "ageing_based_on",
   "section_break_14",
@@ -411,5 +413,6 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "track_changes": 1
 }

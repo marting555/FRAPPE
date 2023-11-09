@@ -22,7 +22,6 @@
   "allow_alternative_item",
   "is_stock_item",
   "has_variants",
-  "include_item_in_manufacturing",
   "opening_stock",
   "valuation_rate",
   "standard_rate",
@@ -111,13 +110,13 @@
   "quality_inspection_template",
   "inspection_required_before_delivery",
   "manufacturing",
+  "include_item_in_manufacturing",
   "is_sub_contracted_item",
   "default_bom",
   "column_break_74",
   "customer_code",
   "default_item_manufacturer",
   "default_manufacturer_part_no",
-  "published_in_website",
   "total_projected_qty"
  ],
  "fields": [
@@ -816,14 +815,6 @@
    "read_only": 1
   },
   {
-   "default": "0",
-   "depends_on": "published_in_website",
-   "fieldname": "published_in_website",
-   "fieldtype": "Check",
-   "label": "Published in Website",
-   "read_only": 1
-  },
-  {
    "default": "1",
    "fieldname": "grant_commission",
    "fieldtype": "Check",
@@ -956,7 +947,7 @@
    "export": 1,
    "print": 1,
    "report": 1,
-   "role": "All",
+   "role": "Desk User",
    "select": 1,
    "share": 1
   }

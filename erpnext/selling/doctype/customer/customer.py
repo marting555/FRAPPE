@@ -11,25 +11,18 @@ from frappe.contacts.address_and_contact import (
 	delete_contact_and_address,
 	load_address_and_contact,
 )
-from frappe.desk.reportview import build_match_conditions, get_filters_cond
 from frappe.model.mapper import get_mapped_doc
 from frappe.model.naming import set_name_by_naming_series, set_name_from_naming_options
-from frappe.model.rename_doc import update_linked_doctypes
+from frappe.model.utils.rename_doc import update_linked_doctypes
 from frappe.utils import cint, cstr, flt, get_formatted_email, today
 from frappe.utils.user import get_users_with_role
 
-from erpnext.accounts.party import (  # noqa
-	get_dashboard_info,
-	get_timeline_data,
-	validate_party_accounts,
-)
+from erpnext.accounts.party import get_dashboard_info, validate_party_accounts  # noqa
+from erpnext.controllers.website_list_for_contact import add_role_for_portal_user
 from erpnext.utilities.transaction_base import TransactionBase
 
 
 class Customer(TransactionBase):
-	def get_feed(self):
-		return self.customer_name
-
 	def onload(self):
 		"""Load address and contacts in `__onload`"""
 		load_address_and_contact(self)
@@ -86,6 +79,7 @@ class Customer(TransactionBase):
 		self.check_customer_group_change()
 		self.validate_default_bank_account()
 		self.validate_internal_customer()
+		self.add_role_for_user()
 
 		# set loyalty program tier
 		if frappe.db.exists("Customer", self.name):
@@ -173,6 +167,10 @@ class Customer(TransactionBase):
 			self.link_lead_address_and_contact()
 
 		self.update_customer_groups()
+
+	def add_role_for_user(self):
+		for portal_user in self.portal_users:
+			add_role_for_portal_user(portal_user, "Customer")
 
 	def update_customer_groups(self):
 		ignore_doctypes = ["Lead", "Opportunity", "POS Profile", "Tax Rule", "Pricing Rule"]
@@ -448,50 +446,6 @@ def get_nested_links(link_doctype, link_name, ignore_permissions=False):
 	return links
 
 
-@frappe.whitelist()
-@frappe.validate_and_sanitize_search_inputs
-def get_customer_list(doctype, txt, searchfield, start, page_len, filters=None):
-	from frappe.utils.deprecations import deprecation_warning
-
-	from erpnext.controllers.queries import get_fields
-
-	deprecation_warning(
-		"`get_customer_list` is deprecated and will be removed in version 15. Use `erpnext.controllers.queries.customer_query` instead."
-	)
-
-	fields = ["name", "customer_name", "customer_group", "territory"]
-
-	if frappe.db.get_default("cust_master_name") == "Customer Name":
-		fields = ["name", "customer_group", "territory"]
-
-	fields = get_fields("Customer", fields)
-
-	match_conditions = build_match_conditions("Customer")
-	match_conditions = "and {}".format(match_conditions) if match_conditions else ""
-
-	if filters:
-		filter_conditions = get_filters_cond(doctype, filters, [])
-		match_conditions += "{}".format(filter_conditions)
-
-	return frappe.db.sql(
-		"""
-		select %s
-		from `tabCustomer`
-		where docstatus < 2
-			and (%s like %s or customer_name like %s)
-			{match_conditions}
-		order by
-			case when name like %s then 0 else 1 end,
-			case when customer_name like %s then 0 else 1 end,
-			name, customer_name limit %s, %s
-		""".format(
-			match_conditions=match_conditions
-		)
-		% (", ".join(fields), searchfield, "%s", "%s", "%s", "%s", "%s", "%s"),
-		("%%%s%%" % txt, "%%%s%%" % txt, "%%%s%%" % txt, "%%%s%%" % txt, start, page_len),
-	)
-
-
 def check_credit_limit(customer, company, ignore_outstanding_sales_order=False, extra_amount=0):
 	credit_limit = get_credit_limit(customer, company)
 	if not credit_limit:
@@ -502,11 +456,11 @@ def check_credit_limit(customer, company, ignore_outstanding_sales_order=False, 
 		customer_outstanding += flt(extra_amount)
 
 	if credit_limit > 0 and flt(customer_outstanding) > credit_limit:
-		msgprint(
-			_("Credit limit has been crossed for customer {0} ({1}/{2})").format(
-				customer, customer_outstanding, credit_limit
-			)
+		message = _("Credit limit has been crossed for customer {0} ({1}/{2})").format(
+			customer, customer_outstanding, credit_limit
 		)
+
+		message += "<br><br>"
 
 		# If not authorized person raise exception
 		credit_controller_role = frappe.db.get_single_value("Accounts Settings", "credit_controller")
@@ -528,7 +482,7 @@ def check_credit_limit(customer, company, ignore_outstanding_sales_order=False, 
 				"<li>".join(credit_controller_users_formatted)
 			)
 
-			message = _(
+			message += _(
 				"Please contact any of the following users to extend the credit limits for {0}: {1}"
 			).format(customer, user_list)
 
@@ -536,7 +490,7 @@ def check_credit_limit(customer, company, ignore_outstanding_sales_order=False, 
 			# prompt them to send out an email to the controller users
 			frappe.msgprint(
 				message,
-				title="Notify",
+				title=_("Credit Limit Crossed"),
 				raise_exception=1,
 				primary_action={
 					"label": "Send Email",
@@ -567,7 +521,6 @@ def get_customer_outstanding(
 	customer, company, ignore_outstanding_sales_order=False, cost_center=None
 ):
 	# Outstanding based on GL Entries
-
 	cond = ""
 	if cost_center:
 		lft, rgt = frappe.get_cached_value("Cost Center", cost_center, ["lft", "rgt"])

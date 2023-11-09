@@ -179,6 +179,7 @@ def get_balance_on(
 	in_account_currency=True,
 	cost_center=None,
 	ignore_account_permission=False,
+	account_type=None,
 ):
 	if not account and frappe.form_dict.get("account"):
 		account = frappe.form_dict.get("account")
@@ -254,6 +255,21 @@ def get_balance_on(
 		else:
 			cond.append("""gle.account = %s """ % (frappe.db.escape(account, percent=False),))
 
+	if account_type:
+		accounts = frappe.db.get_all(
+			"Account",
+			filters={"company": company, "account_type": account_type, "is_group": 0},
+			pluck="name",
+			order_by="lft",
+		)
+
+		cond.append(
+			"""
+			gle.account in (%s)
+		"""
+			% (", ".join([frappe.db.escape(account) for account in accounts]))
+		)
+
 	if party_type and party:
 		cond.append(
 			"""gle.party_type = %s and gle.party = %s """
@@ -263,7 +279,8 @@ def get_balance_on(
 	if company:
 		cond.append("""gle.company = %s """ % (frappe.db.escape(company, percent=False)))
 
-	if account or (party_type and party):
+	if account or (party_type and party) or account_type:
+
 		if in_account_currency:
 			select_field = "sum(debit_in_account_currency) - sum(credit_in_account_currency)"
 		else:
@@ -276,7 +293,6 @@ def get_balance_on(
 				select_field, " and ".join(cond)
 			)
 		)[0][0]
-
 		# if bal is None, return 0
 		return flt(bal)
 
@@ -480,6 +496,8 @@ def reconcile_against_document(args, skip_ref_details_update_for_pe=False):  # n
 			update_voucher_outstanding(
 				entry.against_voucher_type, entry.against_voucher, entry.account, entry.party_type, entry.party
 			)
+			if voucher_type == "Payment Entry":
+				doc.make_advance_gl_entries(entry.against_voucher_type, entry.against_voucher)
 
 		frappe.flags.ignore_party_validation = False
 
@@ -495,50 +513,53 @@ def check_if_advance_entry_modified(args):
 
 	ret = None
 	if args.voucher_type == "Journal Entry":
-		ret = frappe.db.sql(
-			"""
-			select t2.{dr_or_cr} from `tabJournal Entry` t1, `tabJournal Entry Account` t2
-			where t1.name = t2.parent and t2.account = %(account)s
-			and t2.party_type = %(party_type)s and t2.party = %(party)s
-			and (t2.reference_type is null or t2.reference_type in ('', 'Sales Order', 'Purchase Order'))
-			and t1.name = %(voucher_no)s and t2.name = %(voucher_detail_no)s
-			and t1.docstatus=1 """.format(
-				dr_or_cr=args.get("dr_or_cr")
-			),
-			args,
+		journal_entry = frappe.qb.DocType("Journal Entry")
+		journal_acc = frappe.qb.DocType("Journal Entry Account")
+
+		q = (
+			frappe.qb.from_(journal_entry)
+			.inner_join(journal_acc)
+			.on(journal_entry.name == journal_acc.parent)
+			.select(journal_acc[args.get("dr_or_cr")])
+			.where(
+				(journal_acc.account == args.get("account"))
+				& ((journal_acc.party_type == args.get("party_type")))
+				& ((journal_acc.party == args.get("party")))
+				& (
+					(journal_acc.reference_type.isnull())
+					| (journal_acc.reference_type.isin(["", "Sales Order", "Purchase Order"]))
+				)
+				& ((journal_entry.name == args.get("voucher_no")))
+				& ((journal_acc.name == args.get("voucher_detail_no")))
+				& ((journal_entry.docstatus == 1))
+			)
 		)
+
 	else:
-		party_account_field = (
-			"paid_from" if erpnext.get_party_account_type(args.party_type) == "Receivable" else "paid_to"
+		payment_entry = frappe.qb.DocType("Payment Entry")
+		payment_ref = frappe.qb.DocType("Payment Entry Reference")
+
+		q = (
+			frappe.qb.from_(payment_entry)
+			.select(payment_entry.name)
+			.where(payment_entry.name == args.get("voucher_no"))
+			.where(payment_entry.docstatus == 1)
+			.where(payment_entry.party_type == args.get("party_type"))
+			.where(payment_entry.party == args.get("party"))
 		)
 
 		if args.voucher_detail_no:
-			ret = frappe.db.sql(
-				"""select t1.name
-				from `tabPayment Entry` t1, `tabPayment Entry Reference` t2
-				where
-					t1.name = t2.parent and t1.docstatus = 1
-					and t1.name = %(voucher_no)s and t2.name = %(voucher_detail_no)s
-					and t1.party_type = %(party_type)s and t1.party = %(party)s and t1.{0} = %(account)s
-					and t2.reference_doctype in ('', 'Sales Order', 'Purchase Order')
-					and t2.allocated_amount = %(unreconciled_amount)s
-			""".format(
-					party_account_field
-				),
-				args,
+			q = (
+				q.inner_join(payment_ref)
+				.on(payment_entry.name == payment_ref.parent)
+				.where(payment_ref.name == args.get("voucher_detail_no"))
+				.where(payment_ref.reference_doctype.isin(("", "Sales Order", "Purchase Order")))
+				.where(payment_ref.allocated_amount == args.get("unreconciled_amount"))
 			)
 		else:
-			ret = frappe.db.sql(
-				"""select name from `tabPayment Entry`
-				where
-					name = %(voucher_no)s and docstatus = 1
-					and party_type = %(party_type)s and party = %(party)s and {0} = %(account)s
-					and unallocated_amount = %(unreconciled_amount)s
-			""".format(
-					party_account_field
-				),
-				args,
-			)
+			q = q.where(payment_entry.unallocated_amount == args.get("unreconciled_amount"))
+
+	ret = q.run(as_dict=True)
 
 	if not ret:
 		throw(_("""Payment Entry has been modified after you pulled it. Please pull it again."""))
@@ -625,6 +646,7 @@ def update_reference_in_payment_entry(
 		"allocated_amount": d.allocated_amount,
 		"exchange_rate": d.exchange_rate if d.exchange_gain_loss else payment_entry.get_exchange_rate(),
 		"exchange_gain_loss": d.exchange_gain_loss,  # only populated from invoice in case of advance allocation
+		"account": d.account,
 	}
 
 	if d.voucher_detail_no:
@@ -663,7 +685,9 @@ def update_reference_in_payment_entry(
 		payment_entry.save(ignore_permissions=True)
 
 
-def cancel_exchange_gain_loss_journal(parent_doc: dict | object) -> None:
+def cancel_exchange_gain_loss_journal(
+	parent_doc: dict | object, referenced_dt: str = None, referenced_dn: str = None
+) -> None:
 	"""
 	Cancel Exchange Gain/Loss for Sales/Purchase Invoice, if they have any.
 	"""
@@ -690,80 +714,152 @@ def cancel_exchange_gain_loss_journal(parent_doc: dict | object) -> None:
 				as_list=1,
 			)
 			for doc in gain_loss_journals:
-				frappe.get_doc("Journal Entry", doc[0]).cancel()
+				gain_loss_je = frappe.get_doc("Journal Entry", doc[0])
+				if referenced_dt and referenced_dn:
+					references = [(x.reference_type, x.reference_name) for x in gain_loss_je.accounts]
+					if (
+						len(references) == 2
+						and (referenced_dt, referenced_dn) in references
+						and (parent_doc.doctype, parent_doc.name) in references
+					):
+						# only cancel JE generated against parent_doc and referenced_dn
+						gain_loss_je.cancel()
+				else:
+					gain_loss_je.cancel()
 
 
-def unlink_ref_doc_from_payment_entries(ref_doc):
-	remove_ref_doc_link_from_jv(ref_doc.doctype, ref_doc.name)
-	remove_ref_doc_link_from_pe(ref_doc.doctype, ref_doc.name)
-
-	frappe.db.sql(
-		"""update `tabGL Entry`
-		set against_voucher_type=null, against_voucher=null,
-		modified=%s, modified_by=%s
-		where against_voucher_type=%s and against_voucher=%s
-		and voucher_no != ifnull(against_voucher, '')""",
-		(now(), frappe.session.user, ref_doc.doctype, ref_doc.name),
+def update_accounting_ledgers_after_reference_removal(
+	ref_type: str = None, ref_no: str = None, payment_name: str = None
+):
+	# General Ledger
+	gle = qb.DocType("GL Entry")
+	gle_update_query = (
+		qb.update(gle)
+		.set(gle.against_voucher_type, None)
+		.set(gle.against_voucher, None)
+		.set(gle.modified, now())
+		.set(gle.modified_by, frappe.session.user)
+		.where((gle.against_voucher_type == ref_type) & (gle.against_voucher == ref_no))
 	)
 
+	if payment_name:
+		gle_update_query = gle_update_query.where(gle.voucher_no == payment_name)
+	gle_update_query.run()
+
+	# Payment Ledger
 	ple = qb.DocType("Payment Ledger Entry")
+	ple_update_query = (
+		qb.update(ple)
+		.set(ple.against_voucher_type, ple.voucher_type)
+		.set(ple.against_voucher_no, ple.voucher_no)
+		.set(ple.modified, now())
+		.set(ple.modified_by, frappe.session.user)
+		.where(
+			(ple.against_voucher_type == ref_type)
+			& (ple.against_voucher_no == ref_no)
+			& (ple.delinked == 0)
+		)
+	)
 
-	qb.update(ple).set(ple.against_voucher_type, ple.voucher_type).set(
-		ple.against_voucher_no, ple.voucher_no
-	).set(ple.modified, now()).set(ple.modified_by, frappe.session.user).where(
-		(ple.against_voucher_type == ref_doc.doctype)
-		& (ple.against_voucher_no == ref_doc.name)
-		& (ple.delinked == 0)
-	).run()
+	if payment_name:
+		ple_update_query = ple_update_query.where(ple.voucher_no == payment_name)
+	ple_update_query.run()
 
+
+def remove_ref_from_advance_section(ref_doc: object = None):
+	# TODO: this might need some testing
 	if ref_doc.doctype in ("Sales Invoice", "Purchase Invoice"):
 		ref_doc.set("advances", [])
-
-		frappe.db.sql(
-			"""delete from `tab{0} Advance` where parent = %s""".format(ref_doc.doctype), ref_doc.name
-		)
+		adv_type = qb.DocType(f"{ref_doc.doctype} Advance")
+		qb.from_(adv_type).delete().where(adv_type.parent == ref_doc.name).run()
 
 
-def remove_ref_doc_link_from_jv(ref_type, ref_no):
-	linked_jv = frappe.db.sql_list(
-		"""select parent from `tabJournal Entry Account`
-		where reference_type=%s and reference_name=%s and docstatus < 2""",
-		(ref_type, ref_no),
+def unlink_ref_doc_from_payment_entries(ref_doc: object = None, payment_name: str = None):
+	remove_ref_doc_link_from_jv(ref_doc.doctype, ref_doc.name, payment_name)
+	remove_ref_doc_link_from_pe(ref_doc.doctype, ref_doc.name, payment_name)
+	update_accounting_ledgers_after_reference_removal(ref_doc.doctype, ref_doc.name, payment_name)
+	remove_ref_from_advance_section(ref_doc)
+
+
+def remove_ref_doc_link_from_jv(
+	ref_type: str = None, ref_no: str = None, payment_name: str = None
+):
+	jea = qb.DocType("Journal Entry Account")
+
+	linked_jv = (
+		qb.from_(jea)
+		.select(jea.parent)
+		.where((jea.reference_type == ref_type) & (jea.reference_name == ref_no) & (jea.docstatus.lt(2)))
+		.run(as_list=1)
 	)
+	linked_jv = convert_to_list(linked_jv)
+	# remove reference only from specified payment
+	linked_jv = [x for x in linked_jv if x == payment_name] if payment_name else linked_jv
 
 	if linked_jv:
-		frappe.db.sql(
-			"""update `tabJournal Entry Account`
-			set reference_type=null, reference_name = null,
-			modified=%s, modified_by=%s
-			where reference_type=%s and reference_name=%s
-			and docstatus < 2""",
-			(now(), frappe.session.user, ref_type, ref_no),
+		update_query = (
+			qb.update(jea)
+			.set(jea.reference_type, None)
+			.set(jea.reference_name, None)
+			.set(jea.modified, now())
+			.set(jea.modified_by, frappe.session.user)
+			.where((jea.reference_type == ref_type) & (jea.reference_name == ref_no))
 		)
+
+		if payment_name:
+			update_query = update_query.where(jea.parent == payment_name)
+
+		update_query.run()
 
 		frappe.msgprint(_("Journal Entries {0} are un-linked").format("\n".join(linked_jv)))
 
 
-def remove_ref_doc_link_from_pe(ref_type, ref_no):
-	linked_pe = frappe.db.sql_list(
-		"""select parent from `tabPayment Entry Reference`
-		where reference_doctype=%s and reference_name=%s and docstatus < 2""",
-		(ref_type, ref_no),
+def convert_to_list(result):
+	"""
+	Convert tuple to list
+	"""
+	return [x[0] for x in result]
+
+
+def remove_ref_doc_link_from_pe(
+	ref_type: str = None, ref_no: str = None, payment_name: str = None
+):
+	per = qb.DocType("Payment Entry Reference")
+	pay = qb.DocType("Payment Entry")
+
+	linked_pe = (
+		qb.from_(per)
+		.select(per.parent)
+		.where(
+			(per.reference_doctype == ref_type) & (per.reference_name == ref_no) & (per.docstatus.lt(2))
+		)
+		.run(as_list=1)
 	)
+	linked_pe = convert_to_list(linked_pe)
+	# remove reference only from specified payment
+	linked_pe = [x for x in linked_pe if x == payment_name] if payment_name else linked_pe
 
 	if linked_pe:
-		frappe.db.sql(
-			"""update `tabPayment Entry Reference`
-			set allocated_amount=0, modified=%s, modified_by=%s
-			where reference_doctype=%s and reference_name=%s
-			and docstatus < 2""",
-			(now(), frappe.session.user, ref_type, ref_no),
+		update_query = (
+			qb.update(per)
+			.set(per.allocated_amount, 0)
+			.set(per.modified, now())
+			.set(per.modified_by, frappe.session.user)
+			.where(
+				(per.docstatus.lt(2) & (per.reference_doctype == ref_type) & (per.reference_name == ref_no))
+			)
 		)
+
+		if payment_name:
+			update_query = update_query.where(per.parent == payment_name)
+
+		update_query.run()
 
 		for pe in linked_pe:
 			try:
 				pe_doc = frappe.get_doc("Payment Entry", pe)
 				pe_doc.set_amounts()
+				pe_doc.make_advance_gl_entries(against_voucher_type=ref_type, against_voucher=ref_no, cancel=1)
 				pe_doc.clear_unallocated_reference_document_rows()
 				pe_doc.validate_payment_type_with_outstanding()
 			except Exception as e:
@@ -772,19 +868,13 @@ def remove_ref_doc_link_from_pe(ref_type, ref_no):
 				msg += _("Please cancel payment entry manually first")
 				frappe.throw(msg, exc=PaymentEntryUnlinkError, title=_("Payment Unlink Error"))
 
-			frappe.db.sql(
-				"""update `tabPayment Entry` set total_allocated_amount=%s,
-				base_total_allocated_amount=%s, unallocated_amount=%s, modified=%s, modified_by=%s
-				where name=%s""",
-				(
-					pe_doc.total_allocated_amount,
-					pe_doc.base_total_allocated_amount,
-					pe_doc.unallocated_amount,
-					now(),
-					frappe.session.user,
-					pe,
-				),
-			)
+			qb.update(pay).set(pay.total_allocated_amount, pe_doc.total_allocated_amount).set(
+				pay.base_total_allocated_amount, pe_doc.base_total_allocated_amount
+			).set(pay.unallocated_amount, pe_doc.unallocated_amount).set(pay.modified, now()).set(
+				pay.modified_by, frappe.session.user
+			).where(
+				pay.name == pe
+			).run()
 
 		frappe.msgprint(_("Payment Entries {0} are un-linked").format("\n".join(linked_pe)))
 
@@ -961,6 +1051,7 @@ def get_outstanding_invoices(
 							"outstanding_amount": outstanding_amount,
 							"due_date": d.due_date,
 							"currency": d.currency,
+							"account": d.account,
 						}
 					)
 				)
@@ -1045,7 +1136,7 @@ def get_account_balances(accounts, company):
 def create_payment_gateway_account(gateway, payment_channel="Email"):
 	from erpnext.setup.setup_wizard.operations.install_fixtures import create_bank_account
 
-	company = frappe.db.get_value("Global Defaults", None, "default_company")
+	company = frappe.get_cached_value("Global Defaults", "Global Defaults", "default_company")
 	if not company:
 		return
 
@@ -1149,12 +1240,17 @@ def get_autoname_with_number(number_value, doc_title, company):
 
 def parse_naming_series_variable(doc, variable):
 	if variable == "FY":
-		date = doc.get("posting_date") or doc.get("transaction_date") or getdate()
-		return get_fiscal_year(date=date, company=doc.get("company"))[0]
+		if doc:
+			date = doc.get("posting_date") or doc.get("transaction_date")
+			company = doc.get("company")
+		else:
+			date = getdate()
+			company = None
+		return get_fiscal_year(date=date, company=company)[0]
 
 
 @frappe.whitelist()
-def get_coa(doctype, parent, is_root, chart=None):
+def get_coa(doctype, parent, is_root=None, chart=None):
 	from erpnext.accounts.doctype.account.chart_of_accounts.chart_of_accounts import (
 		build_tree_from_json,
 	)
@@ -1549,6 +1645,7 @@ def get_payment_ledger_entries(gl_entries, cancel=0):
 					due_date=gle.due_date,
 					voucher_type=gle.voucher_type,
 					voucher_no=gle.voucher_no,
+					voucher_detail_no=gle.voucher_detail_no,
 					against_voucher_type=gle.against_voucher_type
 					if gle.against_voucher_type
 					else gle.voucher_type,
@@ -1570,7 +1667,7 @@ def get_payment_ledger_entries(gl_entries, cancel=0):
 
 
 def create_payment_ledger_entry(
-	gl_entries, cancel=0, adv_adj=0, update_outstanding="Yes", from_repost=0
+	gl_entries, cancel=0, adv_adj=0, update_outstanding="Yes", from_repost=0, partial_cancel=False
 ):
 	if gl_entries:
 		ple_map = get_payment_ledger_entries(gl_entries, cancel=cancel)
@@ -1580,7 +1677,7 @@ def create_payment_ledger_entry(
 			ple = frappe.get_doc(entry)
 
 			if cancel:
-				delink_original_entry(ple)
+				delink_original_entry(ple, partial_cancel=partial_cancel)
 
 			ple.flags.ignore_permissions = 1
 			ple.flags.adv_adj = adv_adj
@@ -1627,7 +1724,7 @@ def update_voucher_outstanding(voucher_type, voucher_no, account, party_type, pa
 		ref_doc.set_status(update=True)
 
 
-def delink_original_entry(pl_entry):
+def delink_original_entry(pl_entry, partial_cancel=False):
 	if pl_entry:
 		ple = qb.DocType("Payment Ledger Entry")
 		query = (
@@ -1647,6 +1744,10 @@ def delink_original_entry(pl_entry):
 				& (ple.against_voucher_no == pl_entry.against_voucher_no)
 			)
 		)
+
+		if partial_cancel:
+			query = query.where(ple.voucher_detail_no == pl_entry.voucher_detail_no)
+
 		query.run()
 
 

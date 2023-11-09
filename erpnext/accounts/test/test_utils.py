@@ -10,6 +10,7 @@ from erpnext.accounts.utils import (
 	get_future_stock_vouchers,
 	get_voucherwise_gl_entries,
 	sort_stock_vouchers_by_posting_date,
+	update_reference_in_payment_entry,
 )
 from erpnext.stock.doctype.item.test_item import make_item
 from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt

@@ -89,7 +89,6 @@ class BankTransaction(StatusUpdater):
 		    - 0 > a: Error: already over-allocated
 		- clear means: set the latest transaction date as clearance date
 		"""
-		gl_bank_account = frappe.db.get_value("Bank Account", self.bank_account, "account")
 		remaining_amount = self.unallocated_amount
 		for payment_entry in self.payment_entries:
 			if payment_entry.allocated_amount == 0.0:
@@ -343,14 +342,7 @@ def get_paid_amount(payment_entry, currency, gl_bank_account):
 
 
 def set_voucher_clearance(doctype, docname, clearance_date, self):
-	if doctype in [
-		"Payment Entry",
-		"Journal Entry",
-		"Purchase Invoice",
-		"Expense Claim",
-		"Loan Repayment",
-		"Loan Disbursement",
-	]:
+	if doctype in get_doctypes_for_bank_reconciliation():
 		if (
 			doctype == "Payment Entry"
 			and frappe.db.get_value("Payment Entry", docname, "payment_type") == "Internal Transfer"

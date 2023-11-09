@@ -19,7 +19,7 @@ from erpnext.accounts.utils import (
 	get_outstanding_invoices,
 	reconcile_against_document,
 )
-from erpnext.controllers.accounts_controller import get_advance_payment_entries
+from erpnext.controllers.accounts_controller import get_advance_payment_entries_for_regional
 
 
 class PaymentReconciliation(Document):
@@ -57,15 +57,31 @@ class PaymentReconciliation(Document):
 		self.add_payment_entries(non_reconciled_payments)
 
 	def get_payment_entries(self):
-		order_doctype = "Sales Order" if self.party_type == "Customer" else "Purchase Order"
-		condition = self.get_conditions(get_payments=True)
-		if self.payment_name:
-			condition += "name like '%%{0}%%'".format(self.payment_name)
+		if self.default_advance_account:
+			party_account = [self.receivable_payable_account, self.default_advance_account]
+		else:
+			party_account = [self.receivable_payable_account]
 
-		payment_entries = get_advance_payment_entries(
+		order_doctype = "Sales Order" if self.party_type == "Customer" else "Purchase Order"
+		condition = frappe._dict(
+			{
+				"company": self.get("company"),
+				"get_payments": True,
+				"cost_center": self.get("cost_center"),
+				"from_payment_date": self.get("from_payment_date"),
+				"to_payment_date": self.get("to_payment_date"),
+				"maximum_payment_amount": self.get("maximum_payment_amount"),
+				"minimum_payment_amount": self.get("minimum_payment_amount"),
+			}
+		)
+
+		if self.payment_name:
+			condition.update({"name": self.payment_name})
+
+		payment_entries = get_advance_payment_entries_for_regional(
 			self.party_type,
 			self.party,
-			self.receivable_payable_account,
+			party_account,
 			order_doctype,
 			against_all_orders=True,
 			limit=self.payment_limit,
@@ -93,6 +109,8 @@ class PaymentReconciliation(Document):
 			"t2.against_account like %(bank_cash_account)s" if self.bank_cash_account else "1=1"
 		)
 
+		limit = f"limit {self.payment_limit}" if self.payment_limit else " "
+
 		# nosemgrep
 		journal_entries = frappe.db.sql(
 			"""
@@ -116,11 +134,13 @@ class PaymentReconciliation(Document):
 					ELSE {bank_account_condition}
 				END)
 			order by t1.posting_date
+			{limit}
 			""".format(
 				**{
 					"dr_or_cr": dr_or_cr,
 					"bank_account_condition": bank_account_condition,
 					"condition": condition,
+					"limit": limit,
 				}
 			),
 			{
@@ -146,7 +166,7 @@ class PaymentReconciliation(Document):
 		if self.payment_name:
 			conditions.append(doc.name.like(f"%{self.payment_name}%"))
 
-		self.return_invoices = (
+		self.return_invoices_query = (
 			qb.from_(doc)
 			.select(
 				ConstantColumn(voucher_type).as_("voucher_type"),
@@ -154,8 +174,11 @@ class PaymentReconciliation(Document):
 				doc.return_against,
 			)
 			.where(Criterion.all(conditions))
-			.run(as_dict=True)
 		)
+		if self.payment_limit:
+			self.return_invoices_query = self.return_invoices_query.limit(self.payment_limit)
+
+		self.return_invoices = self.return_invoices_query.run(as_dict=True)
 
 	def get_dr_or_cr_notes(self):
 
@@ -170,15 +193,12 @@ class PaymentReconciliation(Document):
 		self.common_filter_conditions.append(ple.account == self.receivable_payable_account)
 
 		self.get_return_invoices()
-		return_invoices = [
-			x for x in self.return_invoices if x.return_against == None or x.return_against == ""
-		]
 
 		outstanding_dr_or_cr = []
-		if return_invoices:
+		if self.return_invoices:
 			ple_query = QueryPaymentLedger()
 			return_outstanding = ple_query.get_voucher_outstandings(
-				vouchers=return_invoices,
+				vouchers=self.return_invoices,
 				common_filter=self.common_filter_conditions,
 				posting_date=self.ple_posting_date_filter,
 				min_outstanding=-(self.minimum_payment_amount) if self.minimum_payment_amount else None,
@@ -350,6 +370,7 @@ class PaymentReconciliation(Document):
 		)
 
 	def reconcile_allocations(self, skip_ref_details_update_for_pe=False):
+		adjust_allocations_for_taxes(self)
 		dr_or_cr = (
 			"credit_in_account_currency"
 			if erpnext.get_party_account_type(self.party_type) == "Receivable"
@@ -594,8 +615,8 @@ def reconcile_dr_cr_note(dr_cr_notes, company):
 						"reference_type": inv.against_voucher_type,
 						"reference_name": inv.against_voucher,
 						"cost_center": inv.cost_center or erpnext.get_default_cost_center(company),
-						"user_remark": f"{fmt_money(flt(inv.allocated_amount), currency=company_currency)} against {inv.against_voucher}",
 						"exchange_rate": inv.exchange_rate,
+						"user_remark": f"{fmt_money(flt(inv.allocated_amount), currency=company_currency)} against {inv.against_voucher}",
 					},
 					{
 						"account": inv.account,
@@ -609,18 +630,18 @@ def reconcile_dr_cr_note(dr_cr_notes, company):
 						"reference_type": inv.voucher_type,
 						"reference_name": inv.voucher_no,
 						"cost_center": inv.cost_center or erpnext.get_default_cost_center(company),
-						"user_remark": f"{fmt_money(flt(inv.allocated_amount), currency=company_currency)} from {inv.voucher_no}",
 						"exchange_rate": inv.exchange_rate,
+						"user_remark": f"{fmt_money(flt(inv.allocated_amount), currency=company_currency)} from {inv.voucher_no}",
 					},
 				],
 			}
 		)
 
 		jv.flags.ignore_mandatory = True
-		jv.flags.skip_remarks_creation = True
 		jv.flags.ignore_exchange_rate = True
-		jv.is_system_generated = True
 		jv.remark = None
+		jv.flags.skip_remarks_creation = True
+		jv.is_system_generated = True
 		jv.submit()
 
 		if inv.difference_amount != 0:
@@ -650,3 +671,8 @@ def reconcile_dr_cr_note(dr_cr_notes, company):
 				None,
 				inv.cost_center,
 			)
+
+
+@erpnext.allow_regional
+def adjust_allocations_for_taxes(doc):
+	pass

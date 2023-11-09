@@ -163,6 +163,9 @@ def get_gl_entries(filters, accounting_dimensions):
 	select_fields = """, debit, credit, debit_in_account_currency,
 		credit_in_account_currency """
 
+	if filters.get("show_remarks"):
+		select_fields += """,remarks"""
+
 	order_by_statement = "order by posting_date, account, creation"
 
 	if filters.get("include_dimensions"):
@@ -174,7 +177,7 @@ def get_gl_entries(filters, accounting_dimensions):
 		order_by_statement = "order by account, posting_date, creation"
 
 	if filters.get("include_default_book_entries"):
-		filters["company_fb"] = frappe.db.get_value(
+		filters["company_fb"] = frappe.get_cached_value(
 			"Company", filters.get("company"), "default_finance_book"
 		)
 
@@ -182,19 +185,26 @@ def get_gl_entries(filters, accounting_dimensions):
 	if accounting_dimensions:
 		dimension_fields = ", ".join(accounting_dimensions) + ","
 
+	transaction_currency_fields = ""
+	if filters.get("add_values_in_transaction_currency"):
+		transaction_currency_fields = (
+			"debit_in_transaction_currency, credit_in_transaction_currency, transaction_currency,"
+		)
+
 	gl_entries = frappe.db.sql(
 		"""
 		select
 			name as gl_entry, posting_date, account, party_type, party,
 			voucher_type, voucher_no, {dimension_fields}
-			cost_center, project,
+			cost_center, project, {transaction_currency_fields}
 			against_voucher_type, against_voucher, account_currency,
-			remarks, against, is_opening, creation {select_fields}
+			against, is_opening, creation {select_fields}
 		from `tabGL Entry`
 		where company=%(company)s {conditions}
 		{order_by_statement}
 	""".format(
 			dimension_fields=dimension_fields,
+			transaction_currency_fields=transaction_currency_fields,
 			select_fields=select_fields,
 			conditions=get_conditions(filters),
 			order_by_statement=order_by_statement,
@@ -295,9 +305,11 @@ def get_accounts_with_children(accounts):
 
 	all_accounts = []
 	for d in accounts:
-		if frappe.db.exists("Account", d):
-			lft, rgt = frappe.db.get_value("Account", d, ["lft", "rgt"])
-			children = frappe.get_all("Account", filters={"lft": [">=", lft], "rgt": ["<=", rgt]})
+		account = frappe.get_cached_doc("Account", d)
+		if account:
+			children = frappe.get_all(
+				"Account", filters={"lft": [">=", account.lft], "rgt": ["<=", account.rgt]}
+			)
 			all_accounts += [c.name for c in children]
 		else:
 			frappe.throw(_("Account: {0} does not exist").format(d))
@@ -425,6 +437,7 @@ def get_accountwise_gle(filters, accounting_dimensions, gl_entries, gle_map):
 
 	for gle in gl_entries:
 		group_by_value = gle.get(group_by)
+		gle.voucher_type = _(gle.voucher_type)
 
 		if gle.posting_date < from_date or (cstr(gle.is_opening) == "Yes" and not show_opening_entries):
 			if not group_by_voucher_consolidated:
@@ -559,6 +572,34 @@ def get_columns(filters):
 			"fieldtype": "Float",
 			"width": 130,
 		},
+	]
+
+	if filters.get("add_values_in_transaction_currency"):
+		columns += [
+			{
+				"label": _("Debit (Transaction)"),
+				"fieldname": "debit_in_transaction_currency",
+				"fieldtype": "Currency",
+				"width": 130,
+				"options": "transaction_currency",
+			},
+			{
+				"label": _("Credit (Transaction)"),
+				"fieldname": "credit_in_transaction_currency",
+				"fieldtype": "Currency",
+				"width": 130,
+				"options": "transaction_currency",
+			},
+			{
+				"label": "Transaction Currency",
+				"fieldname": "transaction_currency",
+				"fieldtype": "Link",
+				"options": "Currency",
+				"width": 70,
+			},
+		]
+
+	columns += [
 		{"label": _("Voucher Type"), "fieldname": "voucher_type", "width": 120},
 		{
 			"label": _("Voucher No"),
@@ -593,8 +634,10 @@ def get_columns(filters):
 				"width": 100,
 			},
 			{"label": _("Supplier Invoice No"), "fieldname": "bill_no", "fieldtype": "Data", "width": 100},
-			{"label": _("Remarks"), "fieldname": "remarks", "width": 400},
 		]
 	)
+
+	if filters.get("show_remarks"):
+		columns.extend([{"label": _("Remarks"), "fieldname": "remarks", "width": 400}])
 
 	return columns

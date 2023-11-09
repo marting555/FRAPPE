@@ -7,7 +7,7 @@ import frappe
 from frappe import _
 from frappe.desk.doctype.tag.tag import add_tag
 from frappe.model.document import Document
-from frappe.utils import add_months, formatdate, getdate, today
+from frappe.utils import add_months, formatdate, getdate, sbool, today
 from plaid.errors import ItemError
 
 from erpnext.accounts.doctype.journal_entry.journal_entry import get_default_bank_cash_account
@@ -161,7 +161,6 @@ def add_account_subtype(account_subtype):
 		frappe.throw(frappe.get_traceback())
 
 
-@frappe.whitelist()
 def sync_transactions(bank, bank_account):
 	"""Sync transactions based on the last integration date as the start date, after sync is completed
 	add the transaction date of the oldest transaction as the last integration date."""
@@ -238,22 +237,22 @@ def new_bank_transaction(transaction):
 		deposit = abs(amount)
 		withdrawal = 0.0
 
-	status = "Pending" if transaction["pending"] == "True" else "Settled"
-
 	tags = []
-	try:
-		tags += transaction["category"]
-		tags += [f'Plaid Cat. {transaction["category_id"]}']
-	except KeyError:
-		pass
+	if transaction["category"]:
+		try:
+			tags += transaction["category"]
+			tags += [f'Plaid Cat. {transaction["category_id"]}']
+		except KeyError:
+			pass
 
-	if not frappe.db.exists("Bank Transaction", dict(transaction_id=transaction["transaction_id"])):
+	if not frappe.db.exists(
+		"Bank Transaction", dict(transaction_id=transaction["transaction_id"])
+	) and not sbool(transaction["pending"]):
 		try:
 			new_transaction = frappe.get_doc(
 				{
 					"doctype": "Bank Transaction",
 					"date": getdate(transaction["date"]),
-					"status": status,
 					"bank_account": bank_account,
 					"deposit": deposit,
 					"withdrawal": withdrawal,

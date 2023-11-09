@@ -99,9 +99,8 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 			# Add all amount columns
 			for k in list(self.party_total[d.party]):
-				if k not in ["currency", "sales_person"]:
-
-					self.party_total[d.party][k] += d.get(k, 0.0)
+				if isinstance(self.party_total[d.party][k], float):
+					self.party_total[d.party][k] += d.get(k) or 0.0
 
 			# set territory, customer_group, sales person etc
 			self.set_party_details(d)
@@ -124,6 +123,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 					"total_due": 0.0,
 					"future_amount": 0.0,
 					"sales_person": [],
+					"party_type": row.party_type,
 				}
 			),
 		)
@@ -133,10 +133,12 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 		for key in ("territory", "customer_group", "supplier_group"):
 			if row.get(key):
-				self.party_total[row.party][key] = row.get(key)
-
+				self.party_total[row.party][key] = row.get(key, "")
 		if row.sales_person:
-			self.party_total[row.party].sales_person.append(row.sales_person)
+			self.party_total[row.party].sales_person.append(row.get("sales_person", ""))
+
+		if self.filters.sales_partner:
+			self.party_total[row.party]["default_sales_partner"] = row.get("default_sales_partner", "")
 
 		if self.filters.sales_partner:
 			self.party_total[row.party]["default_sales_partner"] = row.get("default_sales_partner")

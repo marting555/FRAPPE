@@ -113,6 +113,27 @@ $.extend(erpnext.utils, {
 		}
 	},
 
+	view_serial_batch_nos: function(frm) {
+		if (!frm.doc?.items) {
+			return;
+		}
+
+		let bundle_ids = frm.doc.items.filter(d => d.serial_and_batch_bundle);
+
+		if (bundle_ids?.length) {
+			frm.add_custom_button(__('Serial / Batch Nos'), () => {
+				frappe.route_options = {
+					"voucher_no": frm.doc.name,
+					"voucher_type": frm.doc.doctype,
+					"from_date": frm.doc.posting_date || frm.doc.transaction_date,
+					"to_date": frm.doc.posting_date || frm.doc.transaction_date,
+					"company": frm.doc.company,
+				};
+				frappe.set_route("query-report", "Serial and Batch Summary");
+			}, __('View'));
+		}
+	},
+
 	add_indicator_for_multicompany: function(frm, info) {
 		frm.dashboard.stats_area.show();
 		frm.dashboard.stats_area_row.addClass('flex');
@@ -351,7 +372,39 @@ $.extend(erpnext.utils, {
 
 	},
 
-	get_fiscal_year: function(date) {
+	pick_serial_and_batch_bundle(frm, cdt, cdn, type_of_transaction, warehouse_field) {
+		let item_row = frappe.get_doc(cdt, cdn);
+		item_row.type_of_transaction = type_of_transaction;
+
+		frappe.db.get_value("Item", item_row.item_code, ["has_batch_no", "has_serial_no"])
+			.then((r) => {
+				item_row.has_batch_no = r.message.has_batch_no;
+				item_row.has_serial_no = r.message.has_serial_no;
+
+				frappe.require("assets/erpnext/js/utils/serial_no_batch_selector.js", function() {
+					new erpnext.SerialBatchPackageSelector(frm, item_row, (r) => {
+						if (r) {
+							let update_values = {
+								"serial_and_batch_bundle": r.name,
+								"qty": Math.abs(r.total_qty)
+							}
+
+							if (!warehouse_field) {
+								warehouse_field = "warehouse";
+							}
+
+							if (r.warehouse) {
+								update_values[warehouse_field] = r.warehouse;
+							}
+
+							frappe.model.set_value(item_row.doctype, item_row.name, update_values);
+						}
+					});
+				});
+		});
+	},
+
+	get_fiscal_year: function(date, with_dates=false) {
 		if(!date) {
 			date = frappe.datetime.get_today();
 		}
@@ -365,7 +418,10 @@ $.extend(erpnext.utils, {
 			async: false,
 			callback: function(r) {
 				if (r.message) {
-					fiscal_year = r.message[0];
+					if (with_dates)
+						fiscal_year = r.message;
+					else
+						fiscal_year = r.message[0];
 				}
 			}
 		});
@@ -515,6 +571,7 @@ erpnext.utils.update_child_items = function(opts) {
 	const cannot_add_row = (typeof opts.cannot_add_row === 'undefined') ? true : opts.cannot_add_row;
 	const child_docname = (typeof opts.cannot_add_row === 'undefined') ? "items" : opts.child_docname;
 	const child_meta = frappe.get_meta(`${frm.doc.doctype} Item`);
+	const has_reserved_stock = opts.has_reserved_stock ? true : false;
 	const get_precision = (fieldname) => child_meta.fields.find(f => f.fieldname == fieldname).precision;
 
 	this.data = frm.doc[opts.child_docname].map((d) => {
@@ -527,7 +584,9 @@ erpnext.utils.update_child_items = function(opts) {
 			"conversion_factor": d.conversion_factor,
 			"qty": d.qty,
 			"rate": d.rate,
-			"uom": d.uom
+			"uom": d.uom,
+			"fg_item": d.fg_item,
+			"fg_item_qty": d.fg_item_qty,
 		}
 	});
 
@@ -626,7 +685,38 @@ erpnext.utils.update_child_items = function(opts) {
 		})
 	}
 
-	new frappe.ui.Dialog({
+	if (frm.doc.doctype == 'Purchase Order' && frm.doc.is_subcontracted && !frm.doc.is_old_subcontracting_flow) {
+		fields.push({
+			fieldtype:'Link',
+			fieldname:'fg_item',
+			options: 'Item',
+			reqd: 1,
+			in_list_view: 0,
+			read_only: 0,
+			disabled: 0,
+			label: __('Finished Good Item'),
+			get_query: () => {
+				return {
+					filters: {
+						'is_stock_item': 1,
+						'is_sub_contracted_item': 1,
+						'default_bom': ['!=', '']
+					}
+				}
+			},
+		}, {
+			fieldtype:'Float',
+			fieldname:'fg_item_qty',
+			reqd: 1,
+			default: 0,
+			read_only: 0,
+			in_list_view: 0,
+			label: __('Finished Good Item Qty'),
+			precision: get_precision('fg_item_qty')
+		})
+	}
+
+	let dialog = new frappe.ui.Dialog({
 		title: __("Update Items"),
 		size: "extra-large",
 		fields: [
@@ -645,6 +735,17 @@ erpnext.utils.update_child_items = function(opts) {
 			},
 		],
 		primary_action: function() {
+			if (frm.doctype == "Sales Order" && has_reserved_stock) {
+				this.hide();
+				frappe.confirm(
+					__('The reserved stock will be released when you update items. Are you certain you wish to proceed?'),
+					() => this.update_items(),
+				)
+			} else {
+				this.update_items();
+			}
+		},
+		update_items: function() {
 			const trans_items = this.get_values()["trans_items"].filter((item) => !!item.item_code);
 			frappe.call({
 				method: 'erpnext.controllers.accounts_controller.update_child_qty_rate',
@@ -663,8 +764,13 @@ erpnext.utils.update_child_items = function(opts) {
 			refresh_field("items");
 		},
 		primary_action_label: __('Update')
-	}).show();
+	})
+
+	dialog.show();
 }
+
+
+
 
 erpnext.utils.map_current_doc = function(opts) {
 	function _map() {
@@ -732,6 +838,8 @@ erpnext.utils.map_current_doc = function(opts) {
 				"target_doc": cur_frm.doc,
 				"args": opts.args
 			},
+			freeze: true,
+			freeze_message: __("Mapping {0} ...", [opts.source_doctype]),
 			callback: function(r) {
 				if(!r.exc) {
 					var doc = frappe.model.sync(r.message);

@@ -60,7 +60,6 @@
    "fieldname": "subject",
    "fieldtype": "Data",
    "in_global_search": 1,
-   "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Subject",
    "reqd": 1,
@@ -140,7 +139,6 @@
    "fieldname": "parent_task",
    "fieldtype": "Link",
    "ignore_user_permissions": 1,
-   "in_list_view": 1,
    "label": "Parent Task",
    "options": "Task",
    "search_index": 1
@@ -243,7 +241,7 @@
   {
    "fieldname": "act_start_date",
    "fieldtype": "Date",
-   "label": "Actual Start Date (via Time Sheet)",
+   "label": "Actual Start Date (via Timesheet)",
    "oldfieldname": "act_start_date",
    "oldfieldtype": "Date",
    "read_only": 1
@@ -251,7 +249,7 @@
   {
    "fieldname": "actual_time",
    "fieldtype": "Float",
-   "label": "Actual Time (in Hours via Time Sheet)",
+   "label": "Actual Time in Hours (via Timesheet)",
    "read_only": 1
   },
   {
@@ -261,7 +259,7 @@
   {
    "fieldname": "act_end_date",
    "fieldtype": "Date",
-   "label": "Actual End Date (via Time Sheet)",
+   "label": "Actual End Date (via Timesheet)",
    "oldfieldname": "act_end_date",
    "oldfieldtype": "Date",
    "read_only": 1
@@ -275,7 +273,7 @@
   {
    "fieldname": "total_costing_amount",
    "fieldtype": "Currency",
-   "label": "Total Costing Amount (via Time Sheet)",
+   "label": "Total Costing Amount (via Timesheet)",
    "oldfieldname": "actual_budget",
    "oldfieldtype": "Currency",
    "options": "Company:company:default_currency",
@@ -288,7 +286,7 @@
   {
    "fieldname": "total_billing_amount",
    "fieldtype": "Currency",
-   "label": "Total Billing Amount (via Time Sheet)",
+   "label": "Total Billable Amount (via Timesheet)",
    "read_only": 1
   },
   {
@@ -398,7 +396,7 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 5,
- "modified": "2023-09-06 13:52:05.861175",
+ "modified": "2023-09-28 13:52:05.861175",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Task",

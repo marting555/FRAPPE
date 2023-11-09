@@ -217,9 +217,9 @@
    "label": "Party Name/Account Holder (Bank Statement)"
   },
   {
-    "fieldname": "bank_party_iban",
-    "fieldtype": "Data",
-    "label": "Party IBAN (Bank Statement)"
+   "fieldname": "bank_party_iban",
+   "fieldtype": "Data",
+   "label": "Party IBAN (Bank Statement)"
   },
   {
    "fieldname": "bank_party_account_number",

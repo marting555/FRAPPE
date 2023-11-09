@@ -11,6 +11,9 @@ from frappe.utils import cint, cstr, flt, formatdate, get_link_to_form, getdate,
 import erpnext
 from erpnext.accounts.deferred_revenue import validate_service_stop_date
 from erpnext.accounts.doctype.gl_entry.gl_entry import update_outstanding_amt
+from erpnext.accounts.doctype.repost_accounting_ledger.repost_accounting_ledger import (
+	validate_docs_for_deferred_accounting,
+)
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import (
 	check_if_return_invoice_linked_with_payment_entry,
 	get_total_in_party_account_currency,
@@ -102,9 +105,6 @@ class PurchaseInvoice(BuyingController):
 		# validate service stop date to lie in between start and end date
 		validate_service_stop_date(self)
 
-		if self._action == "submit" and self.update_stock:
-			self.make_batches("warehouse")
-
 		self.validate_release_date()
 		self.check_conversion_rate()
 		self.validate_credit_to_acc()
@@ -154,8 +154,8 @@ class PurchaseInvoice(BuyingController):
 	def set_missing_values(self, for_validate=False):
 		if not self.credit_to:
 			self.credit_to = get_party_account("Supplier", self.supplier, self.company)
-			self.party_account_currency = frappe.db.get_value(
-				"Account", self.credit_to, "account_currency", cache=True
+			self.party_account_currency = frappe.get_cached_value(
+				"Account", self.credit_to, "account_currency"
 			)
 		if not self.due_date:
 			self.due_date = get_due_date(
@@ -176,7 +176,7 @@ class PurchaseInvoice(BuyingController):
 			if not self.credit_to:
 				self.raise_missing_debit_credit_account_error("Supplier", self.supplier)
 
-		account = frappe.db.get_value(
+		account = frappe.get_cached_value(
 			"Account", self.credit_to, ["account_type", "report_type", "account_currency"], as_dict=True
 		)
 
@@ -487,6 +487,11 @@ class PurchaseInvoice(BuyingController):
 						_("Stock cannot be updated against Purchase Receipt {0}").format(item.purchase_receipt)
 					)
 
+	def validate_for_repost(self):
+		self.validate_write_off_account()
+		self.validate_expense_account()
+		validate_docs_for_deferred_accounting([], [self.name])
+
 	def on_submit(self):
 		super(PurchaseInvoice, self).on_submit()
 
@@ -513,10 +518,6 @@ class PurchaseInvoice(BuyingController):
 			if self.is_old_subcontracting_flow:
 				self.set_consumed_qty_in_subcontract_order()
 
-			from erpnext.stock.doctype.serial_no.serial_no import update_serial_nos_after_submit
-
-			update_serial_nos_after_submit(self, "items")
-
 		# this sequence because outstanding may get -negative
 		self.make_gl_entries()
 
@@ -528,6 +529,19 @@ class PurchaseInvoice(BuyingController):
 		self.update_advance_tax_references()
 
 		self.process_common_party_accounting()
+
+	def on_update_after_submit(self):
+		if hasattr(self, "repost_required"):
+			fields_to_check = [
+				"cash_bank_account",
+				"write_off_account",
+				"unrealized_profit_loss_account",
+			]
+			child_tables = {"items": ("expense_account",), "taxes": ("account_head",)}
+			self.needs_repost = self.check_if_fields_updated(fields_to_check, child_tables)
+			if self.needs_repost:
+				self.validate_for_repost()
+				self.db_set("repost_required", self.needs_repost)
 
 	def make_gl_entries(self, gl_entries=None, from_repost=False):
 		if not gl_entries:
@@ -635,9 +649,7 @@ class PurchaseInvoice(BuyingController):
 						"credit_in_account_currency": base_grand_total
 						if self.party_account_currency == self.company_currency
 						else grand_total,
-						"against_voucher": self.return_against
-						if cint(self.is_return) and self.return_against
-						else self.name,
+						"against_voucher": self.name,
 						"against_voucher_type": self.doctype,
 						"project": self.project,
 						"cost_center": self.cost_center,
@@ -677,7 +689,7 @@ class PurchaseInvoice(BuyingController):
 		exchange_rate_map, net_rate_map = get_purchase_document_details(self)
 
 		provisional_accounting_for_non_stock_items = cint(
-			frappe.db.get_value(
+			frappe.get_cached_value(
 				"Company", self.company, "enable_provisional_accounting_for_non_stock_items"
 			)
 		)
@@ -987,7 +999,7 @@ class PurchaseInvoice(BuyingController):
 				asset_amount = flt(item.net_amount) + flt(item.item_tax_amount / self.conversion_rate)
 				base_asset_amount = flt(item.base_net_amount + item.item_tax_amount)
 
-				item_exp_acc_type = frappe.db.get_value("Account", item.expense_account, "account_type")
+				item_exp_acc_type = frappe.get_cached_value("Account", item.expense_account, "account_type")
 				if not item.expense_account or item_exp_acc_type not in [
 					"Asset Received But Not Billed",
 					"Fixed Asset",
@@ -1054,7 +1066,7 @@ class PurchaseInvoice(BuyingController):
 								"debit_in_account_currency": (
 									base_asset_amount if cwip_account_currency == self.company_currency else asset_amount
 								),
-								"cost_center": self.cost_center,
+								"cost_center": item.cost_center or self.cost_center,
 								"project": item.project or self.project,
 							},
 							item=item,
@@ -1435,6 +1447,7 @@ class PurchaseInvoice(BuyingController):
 			"Repost Accounting Ledger Items",
 			"Payment Ledger Entry",
 			"Tax Withheld Vouchers",
+			"Serial and Batch Bundle",
 		)
 		self.update_advance_tax_references(cancel=1)
 
@@ -1659,12 +1672,8 @@ class PurchaseInvoice(BuyingController):
 				elif outstanding_amount > 0 and getdate(self.due_date) >= getdate():
 					self.status = "Unpaid"
 				# Check if outstanding amount is 0 due to debit note issued against invoice
-				elif (
-					outstanding_amount <= 0
-					and self.is_return == 0
-					and frappe.db.get_value(
-						"Purchase Invoice", {"is_return": 1, "return_against": self.name, "docstatus": 1}
-					)
+				elif self.is_return == 0 and frappe.db.get_value(
+					"Purchase Invoice", {"is_return": 1, "return_against": self.name, "docstatus": 1}
 				):
 					self.status = "Debit Note Issued"
 				elif self.is_return == 1:
@@ -1828,6 +1837,7 @@ def make_purchase_receipt(source_name, target_doc=None):
 					"po_detail": "purchase_order_item",
 					"material_request": "material_request",
 					"material_request_item": "material_request_item",
+					"wip_composite_asset": "wip_composite_asset",
 				},
 				"postprocess": update_item,
 				"condition": lambda doc: abs(doc.received_qty) < abs(doc.qty),

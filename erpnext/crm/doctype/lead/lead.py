@@ -17,9 +17,6 @@ from erpnext.crm.utils import CRMNote, copy_comments, link_communications, link_
 
 
 class Lead(SellingController, CRMNote):
-	def get_feed(self):
-		return "{0}: {1}".format(_(self.status), self.lead_name)
-
 	def onload(self):
 		customer = frappe.db.get_value("Customer", {"lead_name": self.name})
 		self.get("__onload").is_customer = customer
@@ -382,7 +379,7 @@ def get_lead_details(lead, posting_date=None, company=None):
 		}
 	)
 
-	set_address_details(out, lead, "Lead")
+	set_address_details(out, lead, "Lead", company=company)
 
 	taxes_and_charges = set_taxes(
 		None,
@@ -435,6 +432,7 @@ def get_lead_with_phone_number(number):
 		"Lead",
 		or_filters={
 			"phone": ["like", "%{}".format(number)],
+			"whatsapp_no": ["like", "%{}".format(number)],
 			"mobile_no": ["like", "%{}".format(number)],
 		},
 		limit=1,

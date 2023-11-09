@@ -26,6 +26,7 @@
   "is_return",
   "return_against",
   "update_billed_amount_in_sales_order",
+  "update_billed_amount_in_delivery_note",
   "is_debit_note",
   "amended_from",
   "accounting_dimensions_section",
@@ -194,6 +195,7 @@
   "select_print_heading",
   "language",
   "subscription_section",
+  "subscription",
   "from_date",
   "auto_repeat",
   "column_break_140",
@@ -521,6 +523,7 @@
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Mobile No",
+   "options": "Phone",
    "read_only": 1
   },
   {
@@ -2018,6 +2021,12 @@
    "read_only": 1
   },
   {
+   "fieldname": "subscription",
+   "fieldtype": "Link",
+   "label": "Subscription",
+   "options": "Subscription"
+  },
+  {
    "default": "0",
    "depends_on": "eval: doc.apply_discount_on == \"Grand Total\"",
    "fieldname": "is_cash_or_non_trade_discount",
@@ -2112,6 +2121,15 @@
    "width": "50%"
   },
   {
+   "default": "0",
+   "fieldname": "repost_required",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Repost Required",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
    "fieldname": "incoterm",
    "fieldtype": "Link",
    "label": "Incoterm",
@@ -2125,14 +2143,6 @@
   },
   {
    "default": "0",
-   "fieldname": "repost_required",
-   "fieldtype": "Check",
-   "hidden": 1,
-   "label": "Repost Required",
-   "no_copy": 1,
-   "read_only": 1
-  },
-  {
    "depends_on": "allocate_advances_automatically",
    "description": "Advance payments allocated against orders will only be fetched",
    "fieldname": "only_include_allocated_payments",
@@ -2144,6 +2154,13 @@
    "fieldname": "use_company_roundoff_cost_center",
    "fieldtype": "Check",
    "label": "Use Company default Cost Center for Round off"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval: doc.is_return",
+   "fieldname": "update_billed_amount_in_delivery_note",
+   "fieldtype": "Check",
+   "label": "Update Billed Amount in Delivery Note"
   }
  ],
  "icon": "fa fa-file-text",
@@ -2156,7 +2173,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2023-06-19 16:02:05.309332",
+ "modified": "2023-11-03 14:39:38.012346",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

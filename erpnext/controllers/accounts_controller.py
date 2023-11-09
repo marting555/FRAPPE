@@ -7,11 +7,13 @@ import json
 import frappe
 from frappe import _, bold, qb, throw
 from frappe.model.workflow import get_workflow_name, is_transition_condition_satisfied
+from frappe.query_builder.custom import ConstantColumn
 from frappe.query_builder.functions import Abs, Sum
 from frappe.utils import (
 	add_days,
 	add_months,
 	cint,
+	comma_and,
 	flt,
 	fmt_money,
 	formatdate,
@@ -180,6 +182,17 @@ class AccountsController(TransactionBase):
 		self.validate_party_account_currency()
 
 		if self.doctype in ["Purchase Invoice", "Sales Invoice"]:
+			if invalid_advances := [
+				x for x in self.advances if not x.reference_type or not x.reference_name
+			]:
+				frappe.throw(
+					_(
+						"Rows: {0} in {1} section are Invalid. Reference Name should point to a valid Payment Entry or Journal Entry."
+					).format(
+						frappe.bold(comma_and([x.idx for x in invalid_advances])), frappe.bold(_("Advance Payments"))
+					)
+				)
+
 			pos_check_field = "is_pos" if self.doctype == "Sales Invoice" else "is_paid"
 			if cint(self.allocate_advances_automatically) and not cint(self.get(pos_check_field)):
 				self.set_advances()
@@ -211,12 +224,70 @@ class AccountsController(TransactionBase):
 	def before_cancel(self):
 		validate_einvoice_fields(self)
 
+	def _remove_references_in_unreconcile(self):
+		upe = frappe.qb.DocType("Unreconcile Payment Entries")
+		rows = (
+			frappe.qb.from_(upe)
+			.select(upe.name, upe.parent)
+			.where((upe.reference_doctype == self.doctype) & (upe.reference_name == self.name))
+			.run(as_dict=True)
+		)
+
+		if rows:
+			references_map = frappe._dict()
+			for x in rows:
+				references_map.setdefault(x.parent, []).append(x.name)
+
+			for doc, rows in references_map.items():
+				unreconcile_doc = frappe.get_doc("Unreconcile Payments", doc)
+				for row in rows:
+					unreconcile_doc.remove(unreconcile_doc.get("allocations", {"name": row})[0])
+
+				unreconcile_doc.flags.ignore_validate_update_after_submit = True
+				unreconcile_doc.flags.ignore_links = True
+				unreconcile_doc.save(ignore_permissions=True)
+
+		# delete docs upon parent doc deletion
+		unreconcile_docs = frappe.db.get_all("Unreconcile Payments", filters={"voucher_no": self.name})
+		for x in unreconcile_docs:
+			_doc = frappe.get_doc("Unreconcile Payments", x.name)
+			if _doc.docstatus == 1:
+				_doc.cancel()
+			_doc.delete()
+
+	def _remove_references_in_repost_doctypes(self):
+		repost_doctypes = ["Repost Payment Ledger Items", "Repost Accounting Ledger Items"]
+
+		for _doctype in repost_doctypes:
+			dt = frappe.qb.DocType(_doctype)
+			rows = (
+				frappe.qb.from_(dt)
+				.select(dt.name, dt.parent, dt.parenttype)
+				.where((dt.voucher_type == self.doctype) & (dt.voucher_no == self.name))
+				.run(as_dict=True)
+			)
+
+			if rows:
+				references_map = frappe._dict()
+				for x in rows:
+					references_map.setdefault((x.parenttype, x.parent), []).append(x.name)
+
+				for doc, rows in references_map.items():
+					repost_doc = frappe.get_doc(doc[0], doc[1])
+
+					for row in rows:
+						if _doctype == "Repost Payment Ledger Items":
+							repost_doc.remove(repost_doc.get("repost_vouchers", {"name": row})[0])
+						else:
+							repost_doc.remove(repost_doc.get("vouchers", {"name": row})[0])
+
+					repost_doc.flags.ignore_validate_update_after_submit = True
+					repost_doc.flags.ignore_links = True
+					repost_doc.save(ignore_permissions=True)
+
 	def on_trash(self):
-		# delete references in 'Repost Payment Ledger'
-		rpi = frappe.qb.DocType("Repost Payment Ledger Items")
-		frappe.qb.from_(rpi).delete().where(
-			(rpi.voucher_type == self.doctype) & (rpi.voucher_no == self.name)
-		).run()
+		self._remove_references_in_repost_doctypes()
+		self._remove_references_in_unreconcile()
 
 		# delete sl and gl entries on deletion of transaction
 		if frappe.db.get_single_value("Accounts Settings", "delete_linked_ledger_entries"):
@@ -513,6 +584,17 @@ class AccountsController(TransactionBase):
 					self.currency, self.company_currency, transaction_date, args
 				)
 
+			if (
+				self.currency
+				and buying_or_selling == "Buying"
+				and frappe.db.get_single_value("Buying Settings", "use_transaction_date_exchange_rate")
+				and self.doctype == "Purchase Invoice"
+			):
+				self.use_transaction_date_exchange_rate = True
+				self.conversion_rate = get_exchange_rate(
+					self.currency, self.company_currency, transaction_date, args
+				)
+
 	def set_missing_item_details(self, for_validate=False):
 		"""set missing item values"""
 		from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
@@ -765,6 +847,7 @@ class AccountsController(TransactionBase):
 				"party": None,
 				"project": self.get("project"),
 				"post_net_value": args.get("post_net_value"),
+				"voucher_detail_no": args.get("voucher_detail_no"),
 			}
 		)
 
@@ -804,7 +887,27 @@ class AccountsController(TransactionBase):
 				gl_dict, account_currency, self.get("conversion_rate"), self.company_currency
 			)
 
+		# Update details in transaction currency
+		gl_dict.update(
+			{
+				"transaction_currency": self.get("currency") or self.company_currency,
+				"transaction_exchange_rate": self.get("conversion_rate", 1),
+				"debit_in_transaction_currency": self.get_value_in_transaction_currency(
+					account_currency, args, "debit"
+				),
+				"credit_in_transaction_currency": self.get_value_in_transaction_currency(
+					account_currency, args, "credit"
+				),
+			}
+		)
+
 		return gl_dict
+
+	def get_value_in_transaction_currency(self, account_currency, args, field):
+		if account_currency == self.get("currency"):
+			return args.get(field + "_in_account_currency")
+		else:
+			return flt(args.get(field, 0) / self.get("conversion_rate", 1))
 
 	def validate_qty_is_not_zero(self):
 		if self.doctype != "Purchase Receipt":
@@ -870,7 +973,6 @@ class AccountsController(TransactionBase):
 				amount = self.get("base_rounded_total") or self.base_grand_total
 			else:
 				amount = self.get("rounded_total") or self.grand_total
-
 			allocated_amount = min(amount - advance_allocated, d.amount)
 			advance_allocated += flt(allocated_amount)
 
@@ -884,24 +986,30 @@ class AccountsController(TransactionBase):
 				"allocated_amount": allocated_amount,
 				"ref_exchange_rate": flt(d.exchange_rate),  # exchange_rate of advance entry
 			}
+			if d.get("paid_from"):
+				advance_row["account"] = d.paid_from
+			if d.get("paid_to"):
+				advance_row["account"] = d.paid_to
 
 			self.append("advances", advance_row)
 
 	def get_advance_entries(self, include_unallocated=True):
 		if self.doctype == "Sales Invoice":
-			party_account = self.debit_to
 			party_type = "Customer"
 			party = self.customer
 			amount_field = "credit_in_account_currency"
 			order_field = "sales_order"
 			order_doctype = "Sales Order"
 		else:
-			party_account = self.credit_to
 			party_type = "Supplier"
 			party = self.supplier
 			amount_field = "debit_in_account_currency"
 			order_field = "purchase_order"
 			order_doctype = "Purchase Order"
+
+		party_account = get_party_account(
+			party_type, party=party, company=self.company, include_advance=True
+		)
 
 		order_list = list(set(d.get(order_field) for d in self.get("items") if d.get(order_field)))
 
@@ -909,7 +1017,7 @@ class AccountsController(TransactionBase):
 			party_type, party, party_account, amount_field, order_doctype, order_list, include_unallocated
 		)
 
-		payment_entries = get_advance_payment_entries(
+		payment_entries = get_advance_payment_entries_for_regional(
 			party_type, party, party_account, order_doctype, order_list, include_unallocated
 		)
 
@@ -969,6 +1077,33 @@ class AccountsController(TransactionBase):
 				difference = base_allocated_amount_in_ref_rate - base_allocated_amount_in_inv_rate
 
 				d.exchange_gain_loss = difference
+
+	def make_precision_loss_gl_entry(self, gl_entries):
+		round_off_account, round_off_cost_center = get_round_off_account_and_cost_center(
+			self.company, "Purchase Invoice", self.name, self.use_company_roundoff_cost_center
+		)
+
+		precision_loss = self.get("base_net_total") - flt(
+			self.get("net_total") * self.conversion_rate, self.precision("net_total")
+		)
+
+		credit_or_debit = "credit" if self.doctype == "Purchase Invoice" else "debit"
+		against = self.supplier if self.doctype == "Purchase Invoice" else self.customer
+
+		if precision_loss:
+			gl_entries.append(
+				self.get_gl_dict(
+					{
+						"account": round_off_account,
+						"against": against,
+						credit_or_debit: precision_loss,
+						"cost_center": round_off_cost_center
+						if self.use_company_roundoff_cost_center
+						else self.cost_center or round_off_cost_center,
+						"remarks": _("Net total calculation precision loss"),
+					}
+				)
+			)
 
 	def gain_loss_journal_already_booked(
 		self,
@@ -1147,33 +1282,6 @@ class AccountsController(TransactionBase):
 								get_link_to_form("Journal Entry", je)
 							)
 						)
-
-	def make_precision_loss_gl_entry(self, gl_entries):
-		round_off_account, round_off_cost_center = get_round_off_account_and_cost_center(
-			self.company, "Purchase Invoice", self.name, self.use_company_roundoff_cost_center
-		)
-
-		precision_loss = self.get("base_net_total") - flt(
-			self.get("net_total") * self.conversion_rate, self.precision("net_total")
-		)
-
-		credit_or_debit = "credit" if self.doctype == "Purchase Invoice" else "debit"
-		against = self.supplier if self.doctype == "Purchase Invoice" else self.customer
-
-		if precision_loss:
-			gl_entries.append(
-				self.get_gl_dict(
-					{
-						"account": round_off_account,
-						"against": against,
-						credit_or_debit: precision_loss,
-						"cost_center": round_off_cost_center
-						if self.use_company_roundoff_cost_center
-						else self.cost_center or round_off_cost_center,
-						"remarks": _("Net total calculation precision loss"),
-					}
-				)
-			)
 
 	def update_against_document_in_jv(self):
 		"""
@@ -1406,7 +1514,7 @@ class AccountsController(TransactionBase):
 						"account": self.additional_discount_account,
 						"against": supplier_or_customer,
 						dr_or_cr: self.base_discount_amount,
-						"cost_center": self.cost_center,
+						"cost_center": self.cost_center or erpnext.get_default_cost_center(self.company),
 					},
 					item=self,
 				)
@@ -2126,6 +2234,46 @@ class AccountsController(TransactionBase):
 				_("Select finance book for the item {0} at row {1}").format(item.item_code, item.idx)
 			)
 
+	def check_if_fields_updated(self, fields_to_check, child_tables):
+		# Check if any field affecting accounting entry is altered
+		doc_before_update = self.get_doc_before_save()
+		accounting_dimensions = get_accounting_dimensions() + ["cost_center", "project"]
+
+		# Check if opening entry check updated
+		needs_repost = doc_before_update.get("is_opening") != self.is_opening
+
+		if not needs_repost:
+			# Parent Level Accounts excluding party account
+			fields_to_check += accounting_dimensions
+			for field in fields_to_check:
+				if doc_before_update.get(field) != self.get(field):
+					needs_repost = 1
+					break
+
+			if not needs_repost:
+				# Check for child tables
+				for table in child_tables:
+					needs_repost = check_if_child_table_updated(
+						doc_before_update.get(table), self.get(table), child_tables[table]
+					)
+					if needs_repost:
+						break
+
+		return needs_repost
+
+	@frappe.whitelist()
+	def repost_accounting_entries(self):
+		if self.repost_required:
+			repost_ledger = frappe.new_doc("Repost Accounting Ledger")
+			repost_ledger.company = self.company
+			repost_ledger.append("vouchers", {"voucher_type": self.doctype, "voucher_no": self.name})
+			repost_ledger.flags.ignore_permissions = True
+			repost_ledger.insert()
+			repost_ledger.submit()
+			self.db_set("repost_required", 0)
+		else:
+			frappe.throw(_("No updates pending for reposting"))
+
 
 @frappe.whitelist()
 def get_tax_rate(account_head):
@@ -2307,46 +2455,52 @@ def get_advance_journal_entries(
 	order_list,
 	include_unallocated=True,
 ):
-	dr_or_cr = (
-		"credit_in_account_currency" if party_type == "Customer" else "debit_in_account_currency"
+	journal_entry = frappe.qb.DocType("Journal Entry")
+	journal_acc = frappe.qb.DocType("Journal Entry Account")
+	q = (
+		frappe.qb.from_(journal_entry)
+		.inner_join(journal_acc)
+		.on(journal_entry.name == journal_acc.parent)
+		.select(
+			ConstantColumn("Journal Entry").as_("reference_type"),
+			(journal_entry.name).as_("reference_name"),
+			(journal_entry.remark).as_("remarks"),
+			(journal_acc[amount_field]).as_("amount"),
+			(journal_acc.name).as_("reference_row"),
+			(journal_acc.reference_name).as_("against_order"),
+			(journal_acc.exchange_rate),
+		)
+		.where(
+			journal_acc.account.isin(party_account)
+			& (journal_acc.party_type == party_type)
+			& (journal_acc.party == party)
+			& (journal_acc.is_advance == "Yes")
+			& (journal_entry.docstatus == 1)
+		)
 	)
+	if party_type == "Customer":
+		q = q.where(journal_acc.credit_in_account_currency > 0)
 
-	conditions = []
+	else:
+		q = q.where(journal_acc.debit_in_account_currency > 0)
+
 	if include_unallocated:
-		conditions.append("ifnull(t2.reference_name, '')=''")
+		q = q.where((journal_acc.reference_name.isnull()) | (journal_acc.reference_name == ""))
 
 	if order_list:
-		order_condition = ", ".join(["%s"] * len(order_list))
-		conditions.append(
-			" (t2.reference_type = '{0}' and ifnull(t2.reference_name, '') in ({1}))".format(
-				order_doctype, order_condition
-			)
+		q = q.where(
+			(journal_acc.reference_type == order_doctype) & ((journal_acc.reference_type).isin(order_list))
 		)
 
-	reference_condition = " and (" + " or ".join(conditions) + ")" if conditions else ""
+	q = q.orderby(journal_entry.posting_date)
 
-	# nosemgrep
-	journal_entries = frappe.db.sql(
-		"""
-		select
-			'Journal Entry' as reference_type, t1.name as reference_name,
-			t1.remark as remarks, t2.{0} as amount, t2.name as reference_row,
-			t2.reference_name as against_order, t2.exchange_rate
-		from
-			`tabJournal Entry` t1, `tabJournal Entry Account` t2
-		where
-			t1.name = t2.parent and t2.account = %s
-			and t2.party_type = %s and t2.party = %s
-			and t2.is_advance = 'Yes' and t1.docstatus = 1
-			and {1} > 0 {2}
-		order by t1.posting_date""".format(
-			amount_field, dr_or_cr, reference_condition
-		),
-		[party_account, party_type, party] + order_list,
-		as_dict=1,
-	)
-
+	journal_entries = q.run(as_dict=True)
 	return list(journal_entries)
+
+
+@erpnext.allow_regional
+def get_advance_payment_entries_for_regional(*args, **kwargs):
+	return get_advance_payment_entries(*args, **kwargs)
 
 
 def get_advance_payment_entries(
@@ -2360,73 +2514,135 @@ def get_advance_payment_entries(
 	limit=None,
 	condition=None,
 ):
-	party_account_field = "paid_from" if party_type == "Customer" else "paid_to"
-	currency_field = (
-		"paid_from_account_currency" if party_type == "Customer" else "paid_to_account_currency"
-	)
-	payment_type = "Receive" if party_type == "Customer" else "Pay"
-	exchange_rate_field = (
-		"source_exchange_rate" if payment_type == "Receive" else "target_exchange_rate"
-	)
 
-	payment_entries_against_order, unallocated_payment_entries = [], []
-	limit_cond = "limit %s" % limit if limit else ""
+	payment_entries = []
+	payment_entry = frappe.qb.DocType("Payment Entry")
 
 	if order_list or against_all_orders:
+		q = get_common_query(
+			party_type,
+			party,
+			party_account,
+			limit,
+			condition,
+		)
+		payment_ref = frappe.qb.DocType("Payment Entry Reference")
+
+		q = q.inner_join(payment_ref).on(payment_entry.name == payment_ref.parent)
+		q = q.select(
+			(payment_ref.allocated_amount).as_("amount"),
+			(payment_ref.name).as_("reference_row"),
+			(payment_ref.reference_name).as_("against_order"),
+		)
+
+		q = q.where(payment_ref.reference_doctype == order_doctype)
 		if order_list:
-			reference_condition = " and t2.reference_name in ({0})".format(
-				", ".join(["%s"] * len(order_list))
+			q = q.where(payment_ref.reference_name.isin(order_list))
+
+		allocated = list(q.run(as_dict=True))
+		payment_entries += allocated
+	if include_unallocated:
+		q = get_common_query(
+			party_type,
+			party,
+			party_account,
+			limit,
+			condition,
+		)
+		q = q.select((payment_entry.unallocated_amount).as_("amount"))
+		q = q.where(payment_entry.unallocated_amount > 0)
+
+		unallocated = list(q.run(as_dict=True))
+		payment_entries += unallocated
+	return payment_entries
+
+
+def get_common_query(
+	party_type,
+	party,
+	party_account,
+	limit,
+	condition,
+):
+	account_type = frappe.db.get_value("Party Type", party_type, "account_type")
+	payment_type = "Receive" if account_type == "Receivable" else "Pay"
+	payment_entry = frappe.qb.DocType("Payment Entry")
+
+	q = (
+		frappe.qb.from_(payment_entry)
+		.select(
+			ConstantColumn("Payment Entry").as_("reference_type"),
+			(payment_entry.name).as_("reference_name"),
+			payment_entry.posting_date,
+			(payment_entry.remarks).as_("remarks"),
+		)
+		.where(payment_entry.payment_type == payment_type)
+		.where(payment_entry.party_type == party_type)
+		.where(payment_entry.party == party)
+		.where(payment_entry.docstatus == 1)
+	)
+
+	if payment_type == "Receive":
+		q = q.select((payment_entry.paid_from_account_currency).as_("currency"))
+		q = q.select(payment_entry.paid_from)
+		q = q.where(payment_entry.paid_from.isin(party_account))
+	else:
+		q = q.select((payment_entry.paid_to_account_currency).as_("currency"))
+		q = q.select(payment_entry.paid_to)
+		q = q.where(payment_entry.paid_to.isin(party_account))
+
+	if payment_type == "Receive":
+		q = q.select((payment_entry.source_exchange_rate).as_("exchange_rate"))
+	else:
+		q = q.select((payment_entry.target_exchange_rate).as_("exchange_rate"))
+
+	if condition:
+		if condition.get("name", None):
+			q = q.where(payment_entry.name.like(f"%{condition.get('name')}%"))
+
+		q = q.where(payment_entry.company == condition["company"])
+		q = (
+			q.where(payment_entry.posting_date >= condition["from_payment_date"])
+			if condition.get("from_payment_date")
+			else q
+		)
+		q = (
+			q.where(payment_entry.posting_date <= condition["to_payment_date"])
+			if condition.get("to_payment_date")
+			else q
+		)
+		if condition.get("get_payments") == True:
+			q = (
+				q.where(payment_entry.cost_center == condition["cost_center"])
+				if condition.get("cost_center")
+				else q
+			)
+			q = (
+				q.where(payment_entry.unallocated_amount >= condition["minimum_payment_amount"])
+				if condition.get("minimum_payment_amount")
+				else q
+			)
+			q = (
+				q.where(payment_entry.unallocated_amount <= condition["maximum_payment_amount"])
+				if condition.get("maximum_payment_amount")
+				else q
 			)
 		else:
-			reference_condition = ""
-			order_list = []
+			q = (
+				q.where(payment_entry.total_debit >= condition["minimum_payment_amount"])
+				if condition.get("minimum_payment_amount")
+				else q
+			)
+			q = (
+				q.where(payment_entry.total_debit <= condition["maximum_payment_amount"])
+				if condition.get("maximum_payment_amount")
+				else q
+			)
 
-		if not condition:
-			condition = ""
+	q = q.orderby(payment_entry.posting_date)
+	q = q.limit(limit) if limit else q
 
-		payment_entries_against_order = frappe.db.sql(
-			"""
-			select
-				'Payment Entry' as reference_type, t1.name as reference_name,
-				t1.remarks, t2.allocated_amount as amount, t2.name as reference_row,
-				t2.reference_name as against_order, t1.posting_date,
-				t1.{0} as currency, t1.{5} as exchange_rate
-			from `tabPayment Entry` t1, `tabPayment Entry Reference` t2
-			where
-				t1.name = t2.parent and t1.{1} = %s and t1.payment_type = %s
-				and t1.party_type = %s and t1.party = %s and t1.docstatus = 1
-				and t2.reference_doctype = %s {2} {3}
-			order by t1.posting_date {4}
-		""".format(
-				currency_field,
-				party_account_field,
-				reference_condition,
-				condition,
-				limit_cond,
-				exchange_rate_field,
-			),
-			[party_account, payment_type, party_type, party, order_doctype] + order_list,
-			as_dict=1,
-		)
-
-	if include_unallocated:
-		unallocated_payment_entries = frappe.db.sql(
-			"""
-				select 'Payment Entry' as reference_type, name as reference_name, posting_date,
-				remarks, unallocated_amount as amount, {2} as exchange_rate, {3} as currency
-				from `tabPayment Entry`
-				where
-					{0} = %s and party_type = %s and party = %s and payment_type = %s
-					and docstatus = 1 and unallocated_amount > 0 {condition}
-				order by posting_date {1}
-			""".format(
-				party_account_field, limit_cond, exchange_rate_field, currency_field, condition=condition or ""
-			),
-			(party_account, party_type, party, payment_type),
-			as_dict=1,
-		)
-
-	return list(payment_entries_against_order) + list(unallocated_payment_entries)
+	return q
 
 
 def update_invoice_status():
@@ -2623,7 +2839,7 @@ def set_order_defaults(
 	Returns a Sales/Purchase Order Item child item containing the default values
 	"""
 	p_doc = frappe.get_doc(parent_doctype, parent_doctype_name)
-	child_item = frappe.new_doc(child_doctype, p_doc, child_docname)
+	child_item = frappe.new_doc(child_doctype, parent_doc=p_doc, parentfield=child_docname)
 	item = frappe.get_doc("Item", trans_item.get("item_code"))
 
 	for field in ("item_code", "item_name", "description", "item_group"):
@@ -2821,6 +3037,27 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 
 		return update_supplied_items
 
+	def validate_fg_item_for_subcontracting(new_data, is_new):
+		if is_new:
+			if not new_data.get("fg_item"):
+				frappe.throw(
+					_("Finished Good Item is not specified for service item {0}").format(new_data["item_code"])
+				)
+			else:
+				is_sub_contracted_item, default_bom = frappe.db.get_value(
+					"Item", new_data["fg_item"], ["is_sub_contracted_item", "default_bom"]
+				)
+
+				if not is_sub_contracted_item:
+					frappe.throw(
+						_("Finished Good Item {0} must be a sub-contracted item").format(new_data["fg_item"])
+					)
+				elif not default_bom:
+					frappe.throw(_("Default BOM not found for FG Item {0}").format(new_data["fg_item"]))
+
+		if not new_data.get("fg_item_qty"):
+			frappe.throw(_("Finished Good Item {0} Qty can not be zero").format(new_data["fg_item"]))
+
 	data = json.loads(trans_items)
 
 	any_qty_changed = False  # updated to true if any item's qty changes
@@ -2852,6 +3089,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 
 			prev_rate, new_rate = flt(child_item.get("rate")), flt(d.get("rate"))
 			prev_qty, new_qty = flt(child_item.get("qty")), flt(d.get("qty"))
+			prev_fg_qty, new_fg_qty = flt(child_item.get("fg_item_qty")), flt(d.get("fg_item_qty"))
 			prev_con_fac, new_con_fac = flt(child_item.get("conversion_factor")), flt(
 				d.get("conversion_factor")
 			)
@@ -2864,6 +3102,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 
 			rate_unchanged = prev_rate == new_rate
 			qty_unchanged = prev_qty == new_qty
+			fg_qty_unchanged = prev_fg_qty == new_fg_qty
 			uom_unchanged = prev_uom == new_uom
 			conversion_factor_unchanged = prev_con_fac == new_con_fac
 			any_conversion_factor_changed |= not conversion_factor_unchanged
@@ -2873,6 +3112,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 			if (
 				rate_unchanged
 				and qty_unchanged
+				and fg_qty_unchanged
 				and conversion_factor_unchanged
 				and uom_unchanged
 				and date_unchanged
@@ -2882,6 +3122,17 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		validate_quantity(child_item, d)
 		if flt(child_item.get("qty")) != flt(d.get("qty")):
 			any_qty_changed = True
+
+		if (
+			parent.doctype == "Purchase Order"
+			and parent.is_subcontracted
+			and not parent.is_old_subcontracting_flow
+		):
+			validate_fg_item_for_subcontracting(d, new_child_flag)
+			child_item.fg_item_qty = flt(d["fg_item_qty"])
+
+			if new_child_flag:
+				child_item.fg_item = d["fg_item"]
 
 		child_item.qty = flt(d.get("qty"))
 		rate_precision = child_item.precision("rate") or 2
@@ -2986,11 +3237,20 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 		parent.update_ordered_qty()
 		parent.update_ordered_and_reserved_qty()
 		parent.update_receiving_percentage()
-		if parent.is_old_subcontracting_flow:
-			if should_update_supplied_items(parent):
-				parent.update_reserved_qty_for_subcontract()
-				parent.create_raw_materials_supplied()
-			parent.save()
+
+		if parent.is_subcontracted:
+			if parent.is_old_subcontracting_flow:
+				if should_update_supplied_items(parent):
+					parent.update_reserved_qty_for_subcontract()
+					parent.create_raw_materials_supplied()
+				parent.save()
+			else:
+				if not parent.can_update_items():
+					frappe.throw(
+						_(
+							"Items cannot be updated as Subcontracting Order is created against the Purchase Order {0}."
+						).format(frappe.bold(parent.name))
+					)
 	else:  # Sales Order
 		parent.validate_warehouse()
 		parent.update_reserved_qty()
@@ -3004,6 +3264,36 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 	parent.update_blanket_order()
 	parent.update_billing_percentage()
 	parent.set_status()
+
+	# Cancel and Recreate Stock Reservation Entries.
+	if parent_doctype == "Sales Order":
+		from erpnext.stock.doctype.stock_reservation_entry.stock_reservation_entry import (
+			cancel_stock_reservation_entries,
+			has_reserved_stock,
+		)
+
+		if has_reserved_stock(parent.doctype, parent.name):
+			cancel_stock_reservation_entries(parent.doctype, parent.name)
+
+			if parent.per_picked == 0:
+				parent.create_stock_reservation_entries()
+
+
+def check_if_child_table_updated(
+	child_table_before_update, child_table_after_update, fields_to_check
+):
+	accounting_dimensions = get_accounting_dimensions() + ["cost_center", "project"]
+	# Check if any field affecting accounting entry is altered
+	for index, item in enumerate(child_table_after_update):
+		for field in fields_to_check:
+			if child_table_before_update[index].get(field) != item.get(field):
+				return True
+
+		for dimension in accounting_dimensions:
+			if child_table_before_update[index].get(dimension) != item.get(dimension):
+				return True
+
+	return False
 
 
 @erpnext.allow_regional

@@ -524,7 +524,7 @@ class GrossProfitGenerator(object):
 						invoice_portion = 100
 					elif row.invoice_portion:
 						invoice_portion = row.invoice_portion
-					else:
+					elif row.payment_amount:
 						invoice_portion = row.payment_amount * 100 / row.base_net_amount
 
 					if i == 0:
@@ -544,6 +544,8 @@ class GrossProfitGenerator(object):
 						new_row.qty += flt(row.qty)
 						new_row.buying_amount += flt(row.buying_amount, self.currency_precision)
 						new_row.base_amount += flt(row.base_amount, self.currency_precision)
+						if self.filters.get("group_by") == "Sales Person":
+							new_row.allocated_amount += flt(row.allocated_amount, self.currency_precision)
 				new_row = self.set_average_rate(new_row)
 				self.grouped_data.append(new_row)
 
@@ -703,6 +705,9 @@ class GrossProfitGenerator(object):
 				}
 			)
 
+			if row.serial_and_batch_bundle:
+				args.update({"serial_and_batch_bundle": row.serial_and_batch_bundle})
+
 			average_buying_rate = get_incoming_rate(args)
 			self.average_buying_rate[item_code] = flt(average_buying_rate)
 
@@ -783,6 +788,13 @@ class GrossProfitGenerator(object):
 		if self.filters.get("item_code"):
 			conditions += " and `tabSales Invoice Item`.item_code = %(item_code)s"
 
+		if self.filters.get("warehouse"):
+			warehouse_details = frappe.db.get_value(
+				"Warehouse", self.filters.get("warehouse"), ["lft", "rgt"], as_dict=1
+			)
+			if warehouse_details:
+				conditions += f" and `tabSales Invoice Item`.warehouse in (select name from `tabWarehouse` wh where wh.lft >= {warehouse_details.lft} and wh.rgt <= {warehouse_details.rgt} and warehouse = wh.name)"
+
 		self.si_list = frappe.db.sql(
 			"""
 			select
@@ -798,7 +810,7 @@ class GrossProfitGenerator(object):
 				`tabSales Invoice Item`.delivery_note, `tabSales Invoice Item`.stock_qty as qty,
 				`tabSales Invoice Item`.base_net_rate, `tabSales Invoice Item`.base_net_amount,
 				`tabSales Invoice Item`.name as "item_row", `tabSales Invoice`.is_return,
-				`tabSales Invoice Item`.cost_center
+				`tabSales Invoice Item`.cost_center, `tabSales Invoice Item`.serial_and_batch_bundle
 				{sales_person_cols}
 				{payment_term_cols}
 			from

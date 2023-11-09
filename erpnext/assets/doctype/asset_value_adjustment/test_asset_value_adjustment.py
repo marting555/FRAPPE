@@ -9,6 +9,9 @@ from frappe.utils import add_days, cstr, get_last_day, getdate, nowdate
 from erpnext.assets.doctype.asset.asset import get_asset_value_after_depreciation
 from erpnext.assets.doctype.asset.depreciation import post_depreciation_entries
 from erpnext.assets.doctype.asset.test_asset import create_asset_data
+from erpnext.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
+	get_asset_depr_schedule_doc,
+)
 from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 
 
@@ -53,10 +56,9 @@ class TestAssetValueAdjustment(unittest.TestCase):
 		asset_name = frappe.db.get_value("Asset", {"purchase_receipt": pr.name}, "name")
 		asset_doc = frappe.get_doc("Asset", asset_name)
 		asset_doc.calculate_depreciation = 1
-
 		asset_doc.available_for_use_date = "2023-01-15"
 		asset_doc.purchase_date = "2023-01-15"
-		asset_doc.calculate_depreciation = 1
+
 		asset_doc.append(
 			"finance_books",
 			{
@@ -69,9 +71,13 @@ class TestAssetValueAdjustment(unittest.TestCase):
 		)
 		asset_doc.submit()
 
+		first_asset_depr_schedule = get_asset_depr_schedule_doc(asset_doc.name, "Active")
+		self.assertEquals(first_asset_depr_schedule.status, "Active")
+
 		post_depreciation_entries(getdate("2023-08-21"))
 
 		current_value = get_asset_value_after_depreciation(asset_doc.name)
+
 		adj_doc = make_asset_value_adjustment(
 			asset=asset_doc.name,
 			current_asset_value=current_value,
@@ -80,7 +86,11 @@ class TestAssetValueAdjustment(unittest.TestCase):
 		)
 		adj_doc.submit()
 
-		asset_doc.reload()
+		first_asset_depr_schedule.load_from_db()
+
+		second_asset_depr_schedule = get_asset_depr_schedule_doc(asset_doc.name, "Active")
+		self.assertEquals(second_asset_depr_schedule.status, "Active")
+		self.assertEquals(first_asset_depr_schedule.status, "Cancelled")
 
 		expected_gle = (
 			("_Test Accumulated Depreciations - _TC", 0.0, 4625.29),
@@ -114,7 +124,7 @@ class TestAssetValueAdjustment(unittest.TestCase):
 
 		schedules = [
 			[cstr(d.schedule_date), d.depreciation_amount, d.accumulated_depreciation_amount]
-			for d in asset_doc.get("schedules")
+			for d in second_asset_depr_schedule.get("depreciation_schedule")
 		]
 
 		self.assertEqual(schedules, expected_schedules)
