@@ -13,6 +13,7 @@
   },
   "devDependencies": {},
   "dependencies": {
+    "@tvsgroup/erp-calendar": "^0.0.3",
     "onscan.js": "^1.5.2"
   }
 }
