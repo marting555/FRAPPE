@@ -49,6 +49,23 @@ frappe.ui.form.on("Project", {
 				filters: filters
 			};
 		});
+
+		frm.set_query('quotation', function() {
+			var filters = [
+				['status', '=', 'Open']
+			]
+
+			return {
+				filters,
+			}
+		})
+
+		frm.set_query('sales_invoice', function() {
+			const filters = [
+				['status','=','Unpaid']
+			]
+			return { filters }
+		})
 	},
 
 	refresh: function (frm) {
