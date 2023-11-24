@@ -34,6 +34,8 @@
     "customer_details",
     "customer",
     "column_break_14",
+    "sales_invoice",
+    "quotation",
     "sales_order",
     "vehicle_details",
     "plate",
@@ -311,6 +313,18 @@
       "fieldtype": "Link",
       "label": "Sales Order",
       "options": "Sales Order"
+    },
+    {
+      "fieldname": "sales_invoice",
+      "fieldtype": "Link",
+      "label": "Sales Invoice",
+      "options": "Sales Invoice"
+    },
+    {
+      "fieldname": "quotation",
+      "fieldtype":"Link",
+      "label": "Quotation",
+      "options": "Quotation"
     },
     {
       "collapsible": 1,
