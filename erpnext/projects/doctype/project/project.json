@@ -14,18 +14,20 @@
     "callback_date",
     "callback_time",
     "status",
+    "is_loan_car",
+    "loan_car",
     "payment_status",
     "project_type",
     "column_break_5",
     "project_template",
+    "parts_status",
+    "software_status",
     "expected_start_date",
     "expected_end_date",
     "priority",
     "department",
     "project_mechanic",
     "project_diagnozer",
-    "parts_status",
-    "software_status",
     "is_active",
     "percent_complete_method",
     "percent_complete",
@@ -118,10 +120,30 @@
       "in_standard_filter": 1,
       "label": "Status",
       "no_copy": 1,
+      "in_list_view": 1,
       "oldfieldname": "status",
       "oldfieldtype": "Select",
       "options": "In queue\nIn parking\nPre-diagnose\nDiagnosed\nQuoted\nQuote approved\nRepair ready\nQuick-tested\nFully-tested/adapted\nQuality check approved\nInvoice paid\nCancelled\nIn pause\nNo response from customer\nRequest a callback\nRemote diagnose",
       "search_index": 1
+    },
+    {
+      "default": "No",
+      "fieldname": "is_loan_car",
+      "fieldtype": "Select",
+      "in_standard_filter": 1,
+      "label": "Is loan car",
+      "no_copy": 1,
+      "in_list_view": 1,
+      "options": "No\nYes\nLoaned car\nCar returned",
+      "search_index": 1
+    },
+    {
+      "default": "",
+      "description": null,
+      "fieldname": "loan_car",
+      "fieldtype": "Text Editor",
+      "label": "Loan car",
+      "in_list_view": 1
     },
     {
       "fieldname": "queue_position",
@@ -174,6 +196,26 @@
       "fieldtype": "Column Break"
     },
     {
+      "fieldname": "parts_status",
+      "fieldtype": "Select",
+      "in_standard_filter": 1,
+      "label": "Parts Status",
+      "oldfieldname": "parts_status",
+      "in_list_view": 1,
+      "oldfieldtype": "Select",
+      "options": "\nWaiting for parts\nParts are ready for pickup\nParts have been picked up"
+    },
+    {
+      "fieldname": "software_status",
+      "fieldtype": "Select",
+      "in_standard_filter": 1,
+      "label": "Software Status",
+      "oldfieldname": "software_status",
+      "in_list_view": 1,
+      "oldfieldtype": "Select",
+      "options": "\nSoftware request\nSoftware is ready for use\nSoftware has been attached"
+    },
+    {
       "allow_in_quick_entry": 1,
       "fieldname": "project_template",
       "fieldtype": "Link",
@@ -205,26 +247,6 @@
       "oldfieldname": "priority",
       "oldfieldtype": "Select",
       "options": "Medium\nLow\nHigh"
-    },
-    {
-      "fieldname": "parts_status",
-      "fieldtype": "Select",
-      "in_standard_filter": 1,
-      "label": "Parts Status",
-      "oldfieldname": "parts_status",
-      "in_list_view": 1,
-      "oldfieldtype": "Select",
-      "options": "\nWaiting for parts\nParts are ready for pickup\nParts have been picked up"
-    },
-    {
-      "fieldname": "software_status",
-      "fieldtype": "Select",
-      "in_standard_filter": 1,
-      "label": "Software Status",
-      "oldfieldname": "software_status",
-      "in_list_view": 1,
-      "oldfieldtype": "Select",
-      "options": "\nSoftware request\nSoftware is ready for use\nSoftware has been attached"
     },
     {
       "fieldname": "department",
