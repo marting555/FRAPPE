@@ -24,6 +24,8 @@
     "software_status",
     "expected_start_date",
     "expected_end_date",
+    "remote_diagnostic_date",
+    "remote_diagnostic_time",
     "priority",
     "department",
     "project_mechanic",
@@ -240,6 +242,24 @@
       "label": "Expected End Date",
       "oldfieldname": "completion_date",
       "oldfieldtype": "Date"
+    },
+    {
+      "bold": 1,
+      "fieldname": "remote_diagnostic_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "label": "Remote Diagnostic Date",
+      "oldfieldname": "completion_date",
+      "oldfieldtype": "Date"
+    },
+    {
+      "fieldname": "remote_diagnostic_time",
+      "fieldtype": "Select",
+      "in_standard_filter": 1,
+      "label": "Remote Diagnostic Time",
+      "oldfieldname": "priority",
+      "oldfieldtype": "Select",
+      "options": "14:00-15:00"
     },
     {
       "fieldname": "priority",
