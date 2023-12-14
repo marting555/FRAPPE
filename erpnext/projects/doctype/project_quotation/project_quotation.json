@@ -1,0 +1,67 @@
+{
+ "actions": [],
+ "autoname": "field:quotation",
+ "creation": "2023-12-12 21:46:24.248515",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "quotation",
+  "status",
+  "valid_till",
+  "date",
+  "transaction_date"
+ ],
+ "fields": [
+  {
+   "fieldname": "quotation",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Quotation",
+   "options": "Quotation",
+   "unique": 1
+  },
+  {
+   "fetch_from": "quotation.status",
+   "fetch_if_empty": 1,
+   "fieldname": "status",
+   "fieldtype": "Read Only",
+   "in_list_view": 1,
+   "label": "Status"
+  },
+  {
+   "fetch_from": "quotation.transaction_date",
+   "fetch_if_empty": 1,
+   "fieldname": "transaction_date",
+   "fieldtype": "Read Only",
+   "in_list_view": 1,
+   "label": "Date"
+  },
+  {
+   "fetch_from": "quotation.grand_total",
+   "fieldname": "grand_total",
+   "fieldtype": "Read Only",
+   "in_list_view": 1,
+   "label": "Total"
+  },
+  {
+   "fetch_from": "quotation.valid_till",
+   "fieldname": "valid_till",
+   "fieldtype": "Read Only",
+   "label": "Valid Till"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2023-12-13 17:28:44.559475",
+ "modified_by": "Administrator",
+ "module": "Projects",
+ "name": "Project Quotation",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

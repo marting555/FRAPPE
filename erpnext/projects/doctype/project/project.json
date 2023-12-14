@@ -5,8 +5,8 @@
   "autoname": "naming_series:",
   "creation": "2013-03-07 11:55:07",
   "doctype": "DocType",
-  "document_type": "Setup",
   "engine": "InnoDB",
+  "editable_grid": 1,
   "field_order": [
     "naming_series",
     "project_name",
@@ -34,10 +34,8 @@
     "percent_complete_method",
     "percent_complete",
     "customer_details",
+    "quotations",
     "customer",
-    "column_break_14",
-    "sales_invoice",
-    "quotation",
     "sales_order",
     "vehicle_details",
     "plate",
@@ -175,7 +173,7 @@
       "fieldtype": "Select",
       "in_list_view": 1,
       "no_copy": 1,
-      "options": "No\nAwaiting approval quotation\nQuotation approved\nInvoice send awaiting payment\nPayment ready."
+      "options": "No\nAwaiting approval quotation\nQuotation approved\nQuotation Declined\nInvoice send awaiting payment\nPayment ready."
     },
     {
       "fieldname": "project_type",
@@ -306,12 +304,17 @@
       "options": "User"
     },
     {
-      "collapsible": 1,
       "fieldname": "customer_details",
       "fieldtype": "Section Break",
-      "label": "Customer",
+      "label": "Quotation",
       "oldfieldtype": "Section Break",
       "options": "fa fa-user"
+    },
+    {
+      "fieldname": "quotations",
+      "fieldtype": "Table",
+      "options": "Project Quotation",
+      "label": "Quotation"
     },
     {
       "fieldname": "customer",
@@ -325,10 +328,6 @@
       "search_index": 1
     },
     {
-      "fieldname": "column_break_14",
-      "fieldtype": "Column Break"
-    },
-    {
       "fieldname": "sales_order",
       "fieldtype": "Link",
       "label": "Sales Order",
@@ -339,12 +338,6 @@
       "fieldtype": "Link",
       "label": "Sales Invoice",
       "options": "Sales Invoice"
-    },
-    {
-      "fieldname": "quotation",
-      "fieldtype":"Link",
-      "label": "Quotation",
-      "options": "Quotation"
     },
     {
       "collapsible": 1,

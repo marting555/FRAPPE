@@ -50,9 +50,9 @@ frappe.ui.form.on("Project", {
 			};
 		});
 
-		frm.set_query('quotation', function() {
+		frm.set_query('quotations', function() {
 			var filters = [
-				['status', '=', 'Open']
+				['status', '=', 'Draft']
 			]
 
 			return {
