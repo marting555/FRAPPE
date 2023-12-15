@@ -125,7 +125,7 @@
       "in_list_view": 1,
       "oldfieldname": "status",
       "oldfieldtype": "Select",
-      "options": "In queue\nIn parking\nPre-diagnose\nDiagnosed\nQuoted\nQuote approved\nRepair ready\nQuick-tested\nFully-tested/adapted\nQuality check approved\nInvoice paid\nCancelled\nIn pause\nNo response from customer\nRequest a callback\nRemote diagnose",
+      "options": "In queue\nIn parking\nPre-diagnose\nDiagnosed\nQuoted\nQuote approved\nRepair ready\nQuick-tested\nFully-tested/adapted\nQuality check approved\nInvoice paid\nCancelled\nIn pause\nNo response from customer\nRequest a callback\nRemote diagnose\nSoft. showroom\nSoft. internally\nSoft. ready / send invoice\nSoft. invoice paid",
       "search_index": 1
     },
     {
