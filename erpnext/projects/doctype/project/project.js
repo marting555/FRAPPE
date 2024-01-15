@@ -77,6 +77,13 @@ frappe.ui.form.on("Project", {
 			frm.trigger('show_dashboard');
 		}
 		frm.trigger("set_custom_buttons");
+		listener = navigation.addEventListener("navigate", (event) => {
+			const { url } = event.destination
+			if(url.includes('new-quotation') || url.includes('new-sales-invoice')){
+				localStorage.setItem('customer',  frm.doc.customer)
+			}
+			event.stopImmediatePropagation();
+		})
 	},
 
 	set_custom_buttons: function(frm) {

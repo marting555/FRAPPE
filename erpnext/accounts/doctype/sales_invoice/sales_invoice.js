@@ -993,6 +993,13 @@ frappe.ui.form.on('Sales Invoice', {
 		if (frm.doc.is_debit_note) {
 			frm.set_df_property('return_against', 'label', __('Adjustment Against'));
 		}
+
+		if (frm.is_new()){
+			const customer = localStorage.getItem('customer')
+			frm.set_value({
+				customer
+			})
+		}
 	},
 
 	create_invoice_discounting: function(frm) {
