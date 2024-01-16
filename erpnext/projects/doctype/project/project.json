@@ -104,7 +104,8 @@
     "day_to_send",
     "weekly_time_to_send",
     "column_break_45",
-    "message"
+    "message",
+    "parking_date"
   ],
   "fields": [
     {
@@ -753,6 +754,14 @@
       "print_hide": 1,
       "reqd": 1,
       "set_only_once": 1
+    },
+    {
+      "fieldname": "parking_date",
+      "fieldtype": "Data",
+      "label": "Parking Date",
+      "oldfieldtype": "Data",
+      "in_list_view": 1,
+      "in_standard_filter": 1
     }
   ],
   "icon": "fa fa-puzzle-piece",

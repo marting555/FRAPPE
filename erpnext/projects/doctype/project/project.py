@@ -666,6 +666,8 @@ def set_project_status(project, status):
 	"""
 	set status for project and all related tasks
 	"""
+	print("=======> status: ", status)
+	print("=======> project ", project)
 	if not status in ("Completed", "Cancelled"):
 		frappe.throw(_("Status must be Cancelled or Completed"))
 
