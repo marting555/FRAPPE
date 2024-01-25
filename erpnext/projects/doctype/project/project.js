@@ -84,6 +84,27 @@ frappe.ui.form.on("Project", {
 			}
 			event.stopImmediatePropagation();
 		})
+
+		let store_autosave = localStorage.getItem("autosave")
+		if(store_autosave){
+			store_autosave = JSON.parse(store_autosave)
+			if(!store_autosave.is_saved){
+				const url = window.location.href.split("/app/")
+				if(url.length > 0 && url[1] === "project/"+store_autosave.from_name){	
+					setTimeout(()=>{
+						frm.save();
+						localStorage.removeItem("autosave")
+						frappe.show_alert({
+							message:__('New invoice or quotation was created and added to the project. Autosaving'),
+							indicator:'green'
+						}, 10);
+					},1500)
+				}
+			}else{
+				localStorage.removeItem("autosave")
+			} 
+		}
+
 	},
 
 	set_custom_buttons: function(frm) {
