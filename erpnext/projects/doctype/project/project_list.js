@@ -8,19 +8,30 @@ frappe.listview_settings['Project'] = {
 			return [__(doc.status), frappe.utils.guess_colour(doc.status), "status,=," + doc.status];
 		}
 	},
-	before_render: async () => {
-		const page = frappe.pages['List/Project/List'].page;
+	async before_render(){
 		const { auto_move_paused }  = await frappe.db.get_doc('Queue Settings')
-
-		page.add_menu_item(__(`Queue line move is ${auto_move_paused? 'Paused' : 'Runing'} <br> "Click to change"`), () => {		
-			frappe.confirm(__(`Please consfirm you want to <b>${auto_move_paused? 'Unpause': 'Pause'}</b> the queue auto move.`), () => {
+		const exists = document.querySelector("#page-List\\/Project\\/List > div.page-head.flex > div > div > div.flex.col.page-actions.justify-content-end #queue-freeze")
+		if (!exists){
+			const container = document.querySelector('#page-List\\/Project\\/List > div.page-head.flex > div > div > div.flex.col.page-actions.justify-content-end')
+			const input = document.createElement('input')
+			const label = document.createElement('label')
+			label.setAttribute('style', 'margin: 0')
+			label.setAttribute('id', 'queue-freeze')
+			label.innerText = ' freeze queue positions '
+			label.appendChild(input)
+			input.setAttribute('type', 'checkbox')
+			if (auto_move_paused) {
+				input.setAttribute('checked', 'checked')
+			}
+			container.prepend(label);
+			input.addEventListener('change', (event) => {
 				frappe.db.set_value('Queue Settings', 'Queue Settings','auto_move_paused', auto_move_paused? 0 : 1)
-				location.reload()
+				.then(()=> {
+					frappe.msgprint(__('Status updated successfully'));
+				})
 			})
-		})
+		}
 	}
-
-	
 };
 
 const el = document.createElement('erp-calendar')

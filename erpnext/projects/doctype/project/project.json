@@ -33,12 +33,11 @@
   "is_active",
   "percent_complete_method",
   "percent_complete",
+  "done",
   "customer_details",
   "quotations",
   "customer",
   "sales_order",
-  "project_invoice",
-  "sales_invoice",
   "vehicle_details",
   "plate",
   "vin",
@@ -108,7 +107,7 @@
   "column_break_45",
   "message",
   "parking_date",
-  "assistant_confirmed"
+  "sales_invoice"
  ],
  "fields": [
   {
@@ -332,12 +331,6 @@
    "fieldtype": "Link",
    "label": "Sales Order",
    "options": "Sales Order"
-  },
-  {
-   "fieldname": "project_invoice",
-   "fieldtype": "Table",
-   "label": "Invoice",
-   "options": "Project Invoice"
   },
   {
    "fieldname": "sales_invoice",
@@ -766,17 +759,16 @@
    "oldfieldtype": "Data"
   },
   {
-    "fieldname": "assistant_confirmed",
-    "fieldtype": "Check",
-    "default": "0",
-    "in_list_view": 1,
-    "in_standard_filter": 1,
-    "label": "Assistant Confirmed"
-   },
-  {
    "fieldname": "vin",
    "fieldtype": "Data",
    "label": "VIN"
+  },
+  {
+   "default": "0",
+   "description": "This option prevents this job card move the queue line (when complete).",
+   "fieldname": "done",
+   "fieldtype": "Check",
+   "label": "freeze queue position"
   }
  ],
  "icon": "fa fa-puzzle-piece",
@@ -784,7 +776,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-01-19 21:36:59.732110",
+ "modified": "2024-02-01 03:15:59.469467",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
