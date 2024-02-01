@@ -13,5 +13,11 @@ frappe.listview_settings['Job Card'] = {
 		const color = status_colors[status] || "blue";
 
 		return [__(status), color, `status,=,${status}`];
+	},
+	before_render: function() {
+		console.log(frappe);
+		const page = frappe.pages['List/Project/List'].page;
+		console.log(page);
+		page.add_menu_item('.|.', () => console.log('hola'))
 	}
 };

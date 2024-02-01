@@ -7,8 +7,37 @@ frappe.listview_settings['Project'] = {
 		} else {
 			return [__(doc.status), frappe.utils.guess_colour(doc.status), "status,=," + doc.status];
 		}
+	},
+	async before_render(){
+		const { auto_move_paused }  = await frappe.db.get_doc('Queue Settings')
+		setTimeout(() => {
+			const exists = document.querySelector("#page-List\\/Project\\/List > div.page-head.flex > div > div > div.flex.col.page-actions.justify-content-end #queue-freeze")
+			console.log({exists})
+			if (!exists){
+				const container = document.querySelector('#page-List\\/Project\\/List > div.page-head.flex > div > div > div.flex.col.page-actions.justify-content-end')
+				console.log({container})
+				const input = document.createElement('input')
+				const label = document.createElement('label')
+				label.setAttribute('style', 'margin: 0')
+				label.setAttribute('id', 'queue-freeze')
+				label.innerText = ' freeze queue positions '
+				label.appendChild(input)
+				input.setAttribute('type', 'checkbox')
+				if (auto_move_paused) {
+					input.setAttribute('checked', 'checked')
+				}
+				container.prepend(label);
+				input.addEventListener('change', (event) => {
+					frappe.db.set_value('Queue Settings', 'Queue Settings','auto_move_paused', auto_move_paused? 0 : 1)
+					.then(()=> {
+						frappe.msgprint(__('Status updated successfully'));
+					})
+				})
+			}
+		}, 1500)
 	}
 };
+
 const el = document.createElement('erp-calendar')
 el.setAttribute('url', location.origin);
 const add = () => {
