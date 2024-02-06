@@ -38,6 +38,8 @@
   "quotations",
   "customer",
   "sales_order",
+  "project_invoice",
+  "sales_invoice",
   "vehicle_details",
   "plate",
   "vin",
@@ -107,8 +109,7 @@
   "column_break_45",
   "message",
   "parking_date",
-  "assistant_confirmed",
-  "sales_invoice"
+  "assistant_confirmed"
  ],
  "fields": [
   {
@@ -332,6 +333,12 @@
    "fieldtype": "Link",
    "label": "Sales Order",
    "options": "Sales Order"
+  },
+  {
+   "fieldname": "project_invoice",
+   "fieldtype": "Table",
+   "label": "Invoice",
+   "options": "Project Invoice"
   },
   {
    "fieldname": "sales_invoice",
