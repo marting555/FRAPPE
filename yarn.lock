@@ -74,10 +74,10 @@
   resolved "https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.4.15.tgz"
   integrity sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg==
 
-"@tvsgroup/erp-calendar@^0.0.7":
-  version "0.0.7"
-  resolved "https://registry.npmjs.org/@tvsgroup/erp-calendar/-/erp-calendar-0.0.7.tgz"
-  integrity sha512-nUeww2tVj1ZX7Sn3e2TxgoVM0a6gSPRLmiKe59LpTF/bdCaBfg5V+ZOesT3vBj+N8hvfXyJGvRBX8IT9XVeogg==
+"@tvsgroup/erp-calendar@0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@tvsgroup/erp-calendar/-/erp-calendar-0.1.0.tgz#f7cb09c0e6639fe195ad8a6b517046cfb4bc66ff"
+  integrity sha512-QYVAU/5m9a6bcLHWnSdS0wBJj0O9srMMXI+DC4sFuFsTRpiqp3sIrgtVvIwwh0mzaxssF0wsTVUvgJkN69udxw==
   dependencies:
     "@fullcalendar/core" "^6.1.9"
     "@fullcalendar/daygrid" "^6.1.9"

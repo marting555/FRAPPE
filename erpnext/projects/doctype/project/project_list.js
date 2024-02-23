@@ -40,6 +40,7 @@ frappe.listview_settings['Project'] = {
 
 const el = document.createElement('erp-calendar')
 el.setAttribute('url', location.origin);
+el.setAttribute('aws_url', 'https://aqj25mte0g.execute-api.us-east-1.amazonaws.com')
 const add = () => {
 	if(!document.querySelector('erp-calendar')){
 		frappe.require('erp-calendar.bundle.js').then(() => {
