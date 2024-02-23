@@ -17,6 +17,7 @@
   "customer_type",
   "customer_group",
   "phone_number",
+  "is_phone_number_verified",
   "column_break0",
   "territory",
   "gender",
@@ -192,6 +193,14 @@
     "reqd": 1,
     "in_standard_filter": 1
   },
+  {
+    "default": "0",
+    "fieldname": "is_phone_number_verified",
+    "fieldtype": "Check",
+    "label": "Is Phone Number Verified",
+    "in_standard_filter": 1,
+    "in_list_view": 1
+   },
   {
    "fieldname": "territory",
    "fieldtype": "Link",

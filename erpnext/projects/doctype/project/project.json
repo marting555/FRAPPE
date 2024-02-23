@@ -39,6 +39,8 @@
   "quotations",
   "customer",
   "sales_order",
+  "project_invoice",
+  "sales_invoice",
   "vehicle_details",
   "plate",
   "vin",
@@ -108,7 +110,8 @@
   "column_break_45",
   "message",
   "parking_date",
-  "sales_invoice"
+  "assistant_confirmed",
+  "bring_car_date"
  ],
  "fields": [
   {
@@ -129,7 +132,7 @@
    "no_copy": 1,
    "oldfieldname": "status",
    "oldfieldtype": "Select",
-   "options": "In queue\nIn parking\nPre-diagnose\nDiagnosed\nQuoted\nQuote approved\nRepair ready\nQuick-tested\nFully-tested/adapted\nQuality check approved\nInvoice paid\nCancelled\nIn pause\nNo response from customer\nRequest a callback\nRemote diagnose\nSoft. showroom\nSoft. internally\nSoft. ready / send invoice\nSoft. invoice paid",
+   "options": "In queue\nIn parking\nPre-diagnose\nDiagnosed\nQuoted\nQuote approved\nIn repair\nRepair ready\nFully-tested/adapted\nQuality check approved\nInvoice paid\nAwaiting pickup\nCompleted\nCancelled\nIn pause\nNo response from customer\nRequest a callback\nRemote diagnose\nSoft. showroom\nSoft. internally",
    "search_index": 1
   },
   {
@@ -332,6 +335,12 @@
    "fieldtype": "Link",
    "label": "Sales Order",
    "options": "Sales Order"
+  },
+  {
+   "fieldname": "project_invoice",
+   "fieldtype": "Table",
+   "label": "Invoice",
+   "options": "Project Invoice"
   },
   {
    "fieldname": "sales_invoice",
@@ -759,6 +768,21 @@
    "label": "Parking Date",
    "oldfieldtype": "Data"
   },
+  {
+    "fieldname": "assistant_confirmed",
+    "fieldtype": "Check",
+    "default": "0",
+    "in_list_view": 1,
+    "in_standard_filter": 1,
+    "label": "Assistant Confirmed"
+   },
+   {
+    "fieldname": "bring_car_date",
+    "fieldtype": "Data",
+    "in_list_view": 1,
+    "label": "Bring Car Date",
+    "default": ""
+   },
   {
    "fieldname": "vin",
    "fieldtype": "Data",
