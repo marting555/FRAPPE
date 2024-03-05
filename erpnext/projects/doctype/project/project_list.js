@@ -38,9 +38,12 @@ frappe.listview_settings['Project'] = {
 	}
 };
 
-const el = document.createElement('erp-calendar')
-el.setAttribute('url', location.origin);
-const add = () => {
+const installErpCalendar = async () => {
+	const el = document.createElement('erp-calendar')
+	const {aws_url} = await frappe.db.get_doc('Whatsapp Config')
+	console.log(aws_url)
+	el.setAttribute('url', location.origin);
+	el.setAttribute('aws_url', aws_url)
 	if(!document.querySelector('erp-calendar')){
 		frappe.require('erp-calendar.bundle.js').then(() => {
 			document.querySelector('body').appendChild(el)
@@ -48,9 +51,10 @@ const add = () => {
 	}
 }
 
-navigation.addEventListener("navigatesuccess", () => {
+
+navigation.addEventListener("navigatesuccess", async () => {
 	if (/\/project\.*/.test(location.pathname)){
-		add()
+		await installErpCalendar()
 	} else {
 		document.querySelector('erp-calendar')?.remove()
 	}

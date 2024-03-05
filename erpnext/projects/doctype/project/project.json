@@ -33,6 +33,7 @@
   "is_active",
   "percent_complete_method",
   "percent_complete",
+  "appointment_date",
   "done",
   "customer_details",
   "quotations",
@@ -793,6 +794,13 @@
    "fieldname": "done",
    "fieldtype": "Check",
    "label": "freeze queue position"
+  },
+  {
+   "fieldname": "appointment_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Appointment date"
   }
  ],
  "icon": "fa fa-puzzle-piece",
@@ -800,7 +808,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-02-01 03:15:59.469467",
+ "modified": "2024-02-23 15:50:16.391909",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
