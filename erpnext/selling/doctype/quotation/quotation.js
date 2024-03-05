@@ -52,7 +52,6 @@ frappe.ui.form.on('Quotation', {
 
 	refresh: function(frm) {
 		const customer = localStorage.getItem('customer')
-		console.log(customer)
 		if (customer){
 			frm.set_value({
 				party_name: customer

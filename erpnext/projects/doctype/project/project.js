@@ -85,6 +85,16 @@ frappe.ui.form.on("Project", {
 			event.stopImmediatePropagation();
 		})
 
+		const allow_create_items = () => {
+			const store_permissions = localStorage.getItem("permissions")
+			if(store_permissions){
+				const permissions = JSON.parse(store_permissions)
+				localStorage.setItem("permissions", JSON.stringify({...permissions, create_product: true}))
+			}else{
+				localStorage.setItem("permissions", JSON.stringify({create_product: true}))
+			}
+		}
+
 		let store_autosave = localStorage.getItem("autosave")
 		if(store_autosave){
 			store_autosave = JSON.parse(store_autosave)
@@ -94,6 +104,7 @@ frappe.ui.form.on("Project", {
 					setTimeout(()=>{
 						frm.save();
 						localStorage.removeItem("autosave")
+						allow_create_items()
 						frappe.show_alert({
 							message:__('New invoice or quotation was created and added to the project. Autosaving'),
 							indicator:'green'
@@ -102,7 +113,10 @@ frappe.ui.form.on("Project", {
 				}
 			}else{
 				localStorage.removeItem("autosave")
+				allow_create_items()
 			} 
+		}else{
+			allow_create_items()
 		}
 
 	},
