@@ -15,9 +15,7 @@ frappe.listview_settings['Job Card'] = {
 		return [__(status), color, `status,=,${status}`];
 	},
 	before_render: function() {
-		console.log(frappe);
 		const page = frappe.pages['List/Project/List'].page;
-		console.log(page);
-		page.add_menu_item('.|.', () => console.log('hola'))
+		page.add_menu_item('.|.', () => console.log(''))
 	}
 };
