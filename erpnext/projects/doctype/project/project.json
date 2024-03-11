@@ -132,7 +132,7 @@
    "no_copy": 1,
    "oldfieldname": "status",
    "oldfieldtype": "Select",
-   "options": "In queue\nIn parking\nPre-diagnose\nDiagnosed\nQuoted\nQuote approved\nIn repair\nRepair ready\nFully-tested/adapted\nQuality check approved\nInvoice paid\nAwaiting pickup\nCompleted\nCancelled\nIn pause\nNo response from customer\nRequest a callback\nRemote diagnose\nSoft. showroom\nSoft. internally",
+   "options": "In queue\nIn parking\nPre-diagnose\nDiagnosed\nQuoted\nQuote approved\nIn repair\nQuality check approved\nFully-tested/adapted\nReady / send invoice\nInvoice paid\nAwaiting pickup\nCompleted\nCancelled\nIn pause\nNo response from customer\nRequest a callback\nRemote diagnose\nSoft. showroom\nSoft. internally",
    "search_index": 1
   },
   {
@@ -769,20 +769,19 @@
    "oldfieldtype": "Data"
   },
   {
-    "fieldname": "assistant_confirmed",
-    "fieldtype": "Check",
-    "default": "0",
-    "in_list_view": 1,
-    "in_standard_filter": 1,
-    "label": "Assistant Confirmed"
-   },
-   {
-    "fieldname": "bring_car_date",
-    "fieldtype": "Data",
-    "in_list_view": 1,
-    "label": "Bring Car Date",
-    "default": ""
-   },
+   "default": "0",
+   "fieldname": "assistant_confirmed",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Assistant Confirmed"
+  },
+  {
+   "fieldname": "bring_car_date",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Bring Car Date"
+  },
   {
    "fieldname": "vin",
    "fieldtype": "Data",
@@ -808,7 +807,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-02-23 15:50:16.391909",
+ "modified": "2024-03-07 18:01:34.649439",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
