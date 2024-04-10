@@ -12,7 +12,7 @@ app_logo_url = "/assets/erpnext/images/erpnext-logo.svg"
 
 develop_version = "14.x.x-develop"
 
-app_include_js = "erpnext.bundle.js"
+app_include_js = ["erpnext.bundle.js", "erp-calendar.bundle.js"]
 app_include_css = "erpnext.bundle.css"
 web_include_js = "erpnext-web.bundle.js"
 web_include_css = "erpnext-web.bundle.css"
