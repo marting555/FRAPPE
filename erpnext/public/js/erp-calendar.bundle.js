@@ -13,5 +13,4 @@ import "@tvsgroup/erp-calendar";
         el._instance.exposed.setFrappe(frappe)
       }, 100);
     }
-  
 })()
