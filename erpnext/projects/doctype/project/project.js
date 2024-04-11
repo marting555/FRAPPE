@@ -73,18 +73,16 @@ frappe.ui.form.on("Project", {
 			frm.web_link && frm.web_link.remove();
 		} else {
 			frm.add_web_link("/projects?project=" + encodeURIComponent(frm.doc.name));
-
 			frm.trigger('show_dashboard');
 		}
 		frm.trigger("set_custom_buttons");
 		listener = navigation.addEventListener("navigate", (event) => {
 			const { url } = event.destination
 			if(url.includes('new-quotation') || url.includes('new-sales-invoice')){
-				localStorage.setItem('customer',  frm.doc.customer)
+				localStorage.setItem("customer",  frm.doc.customer)
 			}
 			event.stopImmediatePropagation();
 		})
-
 		let store_autosave = localStorage.getItem("autosave")
 		if(store_autosave){
 			store_autosave = JSON.parse(store_autosave)
@@ -94,6 +92,7 @@ frappe.ui.form.on("Project", {
 					setTimeout(()=>{
 						frm.save();
 						localStorage.removeItem("autosave")
+						localStorage.removeItem("customer")
 						frappe.show_alert({
 							message:__('New invoice or quotation was created and added to the project. Autosaving'),
 							indicator:'green'
@@ -102,9 +101,13 @@ frappe.ui.form.on("Project", {
 				}
 			}else{
 				localStorage.removeItem("autosave")
+				localStorage.removeItem("customer")
 			} 
 		}
-
+	},
+	after_save: function(frm){
+		localStorage.removeItem("autosave")
+		localStorage.removeItem("customer")
 	},
 
 	set_custom_buttons: function(frm) {

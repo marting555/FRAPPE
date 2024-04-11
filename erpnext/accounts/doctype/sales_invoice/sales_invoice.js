@@ -995,7 +995,7 @@ frappe.ui.form.on('Sales Invoice', {
 		}
 
 		if (frm.is_new()){
-			const customer = localStorage.getItem('customer')
+			const customer = localStorage.getItem("customer")
 			frm.set_value({
 				customer
 			})
