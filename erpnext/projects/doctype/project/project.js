@@ -68,7 +68,7 @@ frappe.ui.form.on("Project", {
 		})
 	},
 
-	refresh: function (frm) {
+	refresh: async function (frm) {
 		if (frm.doc.__islocal) {
 			frm.web_link && frm.web_link.remove();
 		} else {
@@ -103,6 +103,49 @@ frappe.ui.form.on("Project", {
 				localStorage.removeItem("autosave")
 				localStorage.removeItem("customer")
 			} 
+		}
+
+		if (!frm.is_new()){
+			const {0: {name: conversation_id}} = await frappe.db.get_list('Conversation',{
+				filters: [['from', '=', frm.doc.custom_customers_phone_number]],
+				fields: ["*"]
+			})
+	
+			if(document.querySelector('#chat-container')){
+				document.querySelector('#chat-container').remove()
+			}
+
+			const chatContainer = document.createElement('div')
+		
+			frm.add_custom_button('Toogle whatsapp', () => {
+				if(chatContainer.style.display === 'none'){
+					chatContainer.style.display = 'block';
+				} else {
+					chatContainer.style.display = 'none';
+				}
+				
+			}, null, false ).addClass("btn-default");
+	
+			chatContainer.id = 'chat-container'
+			const chat = document.createElement('erp-chat')
+			chat.setAttribute('conversation-id', conversation_id)
+			const section = document.querySelector('#page-Project > div.container.page-body > div.page-wrapper > div > div.row.layout-main')
+			
+			const {aws_url} = await frappe.db.get_doc('Whatsapp Config')
+			chat.setAttribute('url', aws_url)
+			chat.setAttribute('user-name', frappe.user.full_name())
+			
+			frappe.realtime.on(`msg-${frm.doc.name}`, (data) => {
+				chat._instance.exposed.addMessage(data); 
+			})
+			frappe.require('erp-whatsapp-chat.bundle.js')
+				.then(() => {
+					chatContainer.appendChild(chat)
+					section.appendChild(chatContainer)
+					setTimeout(() => {
+						chat._instance.exposed.clear()
+					}, 100);
+				})
 		}
 	},
 	after_save: function(frm){
