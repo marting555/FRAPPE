@@ -104,16 +104,16 @@ frappe.ui.form.on("Project", {
 				localStorage.removeItem("customer")
 			} 
 		}
+		console.log("refresh called");
+		if(document.querySelector('#chat-container')){
+			document.querySelector('#chat-container').remove()
+		}
 
 		if (!frm.is_new()){
 			const {0: {name: conversation_id}} = await frappe.db.get_list('Conversation',{
 				filters: [['from', '=', frm.doc.custom_customers_phone_number]],
 				fields: ["*"]
 			})
-	
-			if(document.querySelector('#chat-container')){
-				document.querySelector('#chat-container').remove()
-			}
 
 			const chatContainer = document.createElement('div')
 		
@@ -249,3 +249,4 @@ function open_form(frm, doctype, child_doctype, parentfield) {
 	});
 
 }
+
