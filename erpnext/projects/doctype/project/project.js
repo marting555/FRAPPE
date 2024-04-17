@@ -104,19 +104,23 @@ frappe.ui.form.on("Project", {
 				localStorage.removeItem("customer")
 			} 
 		}
-		console.log("refresh called");
 		if(document.querySelector('#chat-container')){
 			document.querySelector('#chat-container').remove()
 		}
 
 		if (!frm.is_new()){
-			const {0: {name: conversation_id}} = await frappe.db.get_list('Conversation',{
+			const data = await frappe.db.get_list('Conversation',{
 				filters: [['from', '=', frm.doc.custom_customers_phone_number]],
 				fields: ["*"]
-			})
+			});
+			let conversation_id;
+			if (data.length > 0) {
+				conversation_id = data[0].name;
+			} else {
+				return
+			}
 
 			const chatContainer = document.createElement('div')
-		
 			frm.add_custom_button('Toogle whatsapp', () => {
 				if(chatContainer.style.display === 'none'){
 					chatContainer.style.display = 'block';
