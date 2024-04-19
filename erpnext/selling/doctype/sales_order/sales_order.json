@@ -15,6 +15,7 @@
   "naming_series",
   "customer",
   "customer_name",
+  "notes",
   "tax_id",
   "order_type",
   "column_break_7",
@@ -223,6 +224,11 @@
    "reqd": 1,
    "search_index": 1
   },
+  {
+    "fieldname": "notes",
+    "fieldtype": "Text Editor",
+    "label": "Notes"
+   },
   {
    "bold": 1,
    "fetch_from": "customer.customer_name",

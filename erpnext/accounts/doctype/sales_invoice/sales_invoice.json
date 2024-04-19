@@ -11,6 +11,7 @@
   "naming_series",
   "customer",
   "customer_name",
+  "notes",
   "tax_id",
   "company",
   "company_tax_id",
@@ -278,6 +279,11 @@
    "oldfieldtype": "Data",
    "read_only": 1
   },
+  {
+    "fieldname": "notes",
+    "fieldtype": "Text Editor",
+    "label": "Notes"
+   },
   {
    "fieldname": "tax_id",
    "fieldtype": "Data",

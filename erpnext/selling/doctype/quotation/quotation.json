@@ -15,6 +15,7 @@
   "quotation_to",
   "party_name",
   "customer_name",
+  "notes",
   "column_break_7",
   "transaction_date",
   "valid_till",
@@ -75,6 +76,7 @@
   "additional_discount_percentage",
   "discount_amount",
   "referral_sales_partner",
+  "section_break_99",
   "sec_tax_breakup",
   "other_charges_calculation",
   "bundle_items_section",
@@ -172,6 +174,11 @@
    "print_hide": 1,
    "reqd": 1
   },
+  {
+    "fieldname": "notes",
+    "fieldtype": "Text Editor",
+    "label": "Notes"
+   },
   {
    "bold": 1,
    "fieldname": "party_name",
@@ -641,6 +648,12 @@
    "options": "currency",
    "print_hide": 1
   },
+  {
+    "collapsible": 1,
+    "fieldname": "section_break_99",
+    "fieldtype": "Section Break",
+    "label": "Notes"
+   },
   {
    "fieldname": "totals",
    "fieldtype": "Section Break",
