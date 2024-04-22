@@ -282,7 +282,8 @@
   {
     "fieldname": "notes",
     "fieldtype": "Text Editor",
-    "label": "Notes"
+    "label": "Notes",
+    "in_list_view": 1
    },
   {
    "fieldname": "tax_id",
