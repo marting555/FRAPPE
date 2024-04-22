@@ -108,49 +108,8 @@ frappe.ui.form.on("Project", {
 			document.querySelector('#chat-container').remove()
 		}
 
-		if (!frm.is_new()){
-			const data = await frappe.db.get_list('Conversation',{
-				filters: [['from', '=', frm.doc.custom_customers_phone_number]],
-				fields: ["*"]
-			});
-			let conversation_id;
-			if (data.length > 0) {
-				conversation_id = data[0].name;
-			} else {
-				return
-			}
-
-			const chatContainer = document.createElement('div')
-			frm.add_custom_button('Toogle whatsapp', () => {
-				if(chatContainer.style.display === 'none'){
-					chatContainer.style.display = 'block';
-				} else {
-					chatContainer.style.display = 'none';
-				}
-				
-			}, null, false ).addClass("btn-default");
-	
-			chatContainer.id = 'chat-container'
-			const chat = document.createElement('erp-chat')
-			chat.setAttribute('conversation-id', conversation_id)
-			const section = document.querySelector('#page-Project > div.container.page-body > div.page-wrapper > div > div.row.layout-main')
-			
-			const {aws_url} = await frappe.db.get_doc('Whatsapp Config')
-			chat.setAttribute('url', aws_url)
-			chat.setAttribute('user-name', frappe.user.full_name())
-			
-			frappe.realtime.on(`msg-${frm.doc.name}`, (data) => {
-				chat._instance.exposed.addMessage(data); 
-			})
-			frappe.require('erp-whatsapp-chat.bundle.js')
-				.then(() => {
-					chatContainer.appendChild(chat)
-					section.appendChild(chatContainer)
-					setTimeout(() => {
-						chat._instance.exposed.clear()
-					}, 100);
-				})
-		}
+		console.log('refresh called')
+		installChat(frm);
 	},
 	after_save: function(frm){
 		localStorage.removeItem("autosave")
@@ -235,6 +194,56 @@ frappe.ui.form.on("Project", {
 	},
 
 });
+
+let instaling = false;
+async function installChat(frm) {
+	console.log('instaling chat', !frm.is_new(), {instaling})
+	if(instaling) return;
+	instaling = true;
+	if (!frm.is_new()){
+		const {0: {name: conversation_id} = [{}]} = await frappe.db.get_list('Conversation',{
+			filters: [['from', '=', frm.doc.custom_customers_phone_number]],
+			fields: ["*"]
+		});
+		
+		if(!conversation_id) {
+			instaling = false;
+			return;
+		};
+
+		const chatContainer = document.createElement('div')
+		frm.add_custom_button('Toogle whatsapp', () => {
+			if(chatContainer.style.display === 'none'){
+				chatContainer.style.display = 'block';
+			} else {
+				chatContainer.style.display = 'none';
+			}
+			
+		}, null, false ).addClass("btn-default");
+
+		chatContainer.id = 'chat-container'
+		const chat = document.createElement('erp-chat')
+		chat.setAttribute('conversation-id', conversation_id)
+		const section = document.querySelector('#page-Project > div.container.page-body > div.page-wrapper > div > div.row.layout-main')
+		
+		const {aws_url} = await frappe.db.get_doc('Whatsapp Config')
+		chat.setAttribute('url', aws_url)
+		chat.setAttribute('user-name', frappe.user.full_name())
+		
+		frappe.realtime.on(`msg-${frm.doc.name}`, (data) => {
+			chat._instance.exposed.addMessage(data); 
+		})
+		frappe.require('erp-whatsapp-chat.bundle.js')
+			.then(() => {
+				chatContainer.appendChild(chat)
+				section.appendChild(chatContainer)
+				setTimeout(() => {
+					chat._instance.exposed.clear()
+				}, 100);
+			})
+	}
+	instaling = false;
+}
 
 function open_form(frm, doctype, child_doctype, parentfield) {
 	frappe.model.with_doctype(doctype, () => {
