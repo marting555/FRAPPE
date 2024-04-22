@@ -2,6 +2,7 @@
 // License: GNU General Public License v3. See license.txt
 frappe.ui.form.on("Project", {
 	setup(frm) {
+		frm.page.container.addClass("full-width");
 		frm.make_methods = {
 			'Timesheet': () => {
 				open_form(frm, "Timesheet", "Timesheet Detail", "time_logs");
