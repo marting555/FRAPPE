@@ -80,6 +80,7 @@ frappe.ui.form.on("Project", {
 			const { url } = event.destination
 			if(url.includes('new-quotation') || url.includes('new-sales-invoice')){
 				localStorage.setItem("customer",  frm.doc.customer)
+				localStorage.setItem("mileage", frm.doc.client_mileage_state)
 			}
 			event.stopImmediatePropagation();
 		})
@@ -93,6 +94,7 @@ frappe.ui.form.on("Project", {
 						frm.save();
 						localStorage.removeItem("autosave")
 						localStorage.removeItem("customer")
+						localStorage.removeItem("client_mileage_state")
 						frappe.show_alert({
 							message:__('New invoice or quotation was created and added to the project. Autosaving'),
 							indicator:'green'

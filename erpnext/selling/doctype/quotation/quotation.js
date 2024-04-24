@@ -52,9 +52,15 @@ frappe.ui.form.on('Quotation', {
 
 	refresh: function(frm) {
 		const customer = localStorage.getItem("customer")
+		const mileage = localStorage.getItem("mileage")
 		if (customer){
 			frm.set_value({
 				party_name: customer
+			})
+		}
+		if (mileage) {
+			frm.set_value({
+				mileage
 			})
 		}
 		frm.trigger("set_label");
