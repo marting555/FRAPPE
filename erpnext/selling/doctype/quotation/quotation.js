@@ -7,6 +7,11 @@ erpnext.pre_sales.set_as_lost("Quotation");
 erpnext.sales_common.setup_selling_controller();
 
 frappe.ui.form.on('Quotation', {
+
+	on_hide: function(){
+		localStorage.removeItem("customer")
+		localStorage.removeItem("mileage")
+	},
 	setup: function(frm) {
 		frm.custom_make_buttons = {
 			'Sales Order': 'Sales Order'
@@ -51,18 +56,21 @@ frappe.ui.form.on('Quotation', {
 	},
 
 	refresh: function(frm) {
-		const customer = localStorage.getItem("customer")
-		const mileage = localStorage.getItem("mileage")
-		if (customer){
-			frm.set_value({
-				party_name: customer
-			})
+		if(frm.is_new()){
+			const customer = localStorage.getItem("customer")
+			const mileage = localStorage.getItem("mileage")
+			if (customer){
+				frm.set_value({
+					party_name: customer
+				})
+			}
+			if (mileage) {
+				frm.set_value({
+					mileage
+				})
+			}
 		}
-		if (mileage) {
-			frm.set_value({
-				mileage
-			})
-		}
+		
 		frm.trigger("set_label");
 		frm.trigger("set_dynamic_field_label");
 
@@ -86,6 +94,10 @@ frappe.ui.form.on('Quotation', {
 
 	set_label: function(frm) {
 		frm.fields_dict.customer_address.set_label(__(frm.doc.quotation_to + " Address"));
+	},
+
+	after_save(){
+		
 	}
 });
 

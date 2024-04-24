@@ -68,6 +68,10 @@ frappe.ui.form.on("Project", {
 		})
 	},
 
+	on_hide(...args) {
+		console.log('on Leave project', args)
+	},
+
 	refresh: async function (frm) {
 		if (frm.doc.__islocal) {
 			frm.web_link && frm.web_link.remove();
@@ -93,33 +97,21 @@ frappe.ui.form.on("Project", {
 					setTimeout(()=>{
 						frm.save();
 						localStorage.removeItem("autosave")
-						localStorage.removeItem("customer")
-						localStorage.removeItem("client_mileage_state")
 						frappe.show_alert({
 							message:__('New invoice or quotation was created and added to the project. Autosaving'),
 							indicator:'green'
 						}, 10);
 					},1500)
 				}
-			}else{
-				localStorage.removeItem("autosave")
-				localStorage.removeItem("customer")
 			} 
 		}
 		if(document.querySelector('#chat-container')){
 			document.querySelector('#chat-container').remove()
 		}
-
-		console.log('refresh called')
 		installChat(frm);
 	},
 	after_save: function(frm){
 		localStorage.removeItem("autosave")
-		localStorage.removeItem("customer")
-	},
-
-	set_custom_buttons: function(frm) {
-		
 	},
 
 	create_duplicate: function(frm) {
