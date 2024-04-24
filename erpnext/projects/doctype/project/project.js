@@ -2,7 +2,6 @@
 // License: GNU General Public License v3. See license.txt
 frappe.ui.form.on("Project", {
 	setup(frm) {
-		frm.page.container.addClass("full-width");
 		frm.make_methods = {
 			'Timesheet': () => {
 				open_form(frm, "Timesheet", "Timesheet Detail", "time_logs");
@@ -118,55 +117,7 @@ frappe.ui.form.on("Project", {
 	},
 
 	set_custom_buttons: function(frm) {
-		if (!frm.is_new()) {
-			frm.add_custom_button(__('Duplicate Project with Tasks'), () => {
-				frm.events.create_duplicate(frm);
-			}, __("Actions"));
-
-			frm.trigger("set_project_status_button");
-
-
-			if (frappe.model.can_read("Task")) {
-				frm.add_custom_button(__("Gantt Chart"), function () {
-					frappe.route_options = {
-						"project": frm.doc.name
-					};
-					frappe.set_route("List", "Task", "Gantt");
-				}, __("View"));
-
-				frm.add_custom_button(__("Kanban Board"), () => {
-					frappe.call('erpnext.projects.doctype.project.project.create_kanban_board_if_not_exists', {
-						project: frm.doc.name
-					}).then(() => {
-						frappe.set_route('List', 'Task', 'Kanban', frm.doc.project_name);
-					});
-				}, __("View"));
-			}
-		}
-
-
-	},
-
-	set_project_status_button: function(frm) {
-		frm.add_custom_button(__('Set Project Status'), () => {
-			let d = new frappe.ui.Dialog({
-				"title": __("Set Project Status"),
-				"fields": [
-					{
-						"fieldname": "status",
-						"fieldtype": "Select",
-						"label": "Status",
-						"reqd": 1,
-						"options": "Completed\nCancelled",
-					},
-				],
-				primary_action: function() {
-					frm.events.set_status(frm, d.get_values().status);
-					d.hide();
-				},
-				primary_action_label: __("Set Project Status")
-			}).show();
-		}, __("Actions"));
+		
 	},
 
 	create_duplicate: function(frm) {
@@ -198,7 +149,7 @@ frappe.ui.form.on("Project", {
 
 let instaling = false;
 async function installChat(frm) {
-	console.log('instaling chat', !frm.is_new(), {instaling})
+	frm.page.container.removeClass("full-width");
 	if(instaling) return;
 	instaling = true;
 	if (!frm.is_new()){
@@ -213,14 +164,19 @@ async function installChat(frm) {
 		};
 
 		const chatContainer = document.createElement('div')
-		frm.add_custom_button('Toogle whatsapp', () => {
+
+		const button = document.createElement('button')
+		button.classList.add('btn','btn-default','ellipsis')
+		button.textContent = 'Toggle WhatsApp'
+		button.addEventListener('click', ()=>{
 			if(chatContainer.style.display === 'none'){
 				chatContainer.style.display = 'block';
 			} else {
 				chatContainer.style.display = 'none';
 			}
-			
-		}, null, false ).addClass("btn-default");
+		})
+		document.querySelector('#custom_actions')
+			.appendChild(button)
 
 		chatContainer.id = 'chat-container'
 		const chat = document.createElement('erp-chat')
@@ -242,6 +198,9 @@ async function installChat(frm) {
 					chat._instance.exposed.clear()
 				}, 100);
 			})
+
+
+		frm.page.container.addClass("full-width");
 	}
 	instaling = false;
 }

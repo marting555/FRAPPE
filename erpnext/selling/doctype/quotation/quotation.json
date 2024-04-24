@@ -19,6 +19,7 @@
   "column_break_7",
   "transaction_date",
   "valid_till",
+  "mileage",
   "column_break1",
   "status",
   "order_type",
@@ -76,7 +77,6 @@
   "additional_discount_percentage",
   "discount_amount",
   "referral_sales_partner",
-  "section_break_99",
   "sec_tax_breakup",
   "other_charges_calculation",
   "bundle_items_section",
@@ -650,12 +650,6 @@
    "print_hide": 1
   },
   {
-    "collapsible": 1,
-    "fieldname": "section_break_99",
-    "fieldtype": "Section Break",
-    "label": "Notes"
-   },
-  {
    "fieldname": "totals",
    "fieldtype": "Section Break",
    "label": "Totals",
@@ -903,6 +897,7 @@
    "width": "50%"
   },
   {
+   "allow_on_submit": 1,
    "default": "Draft",
    "fieldname": "status",
    "fieldtype": "Select",
@@ -913,8 +908,7 @@
    "oldfieldtype": "Select",
    "options": "Draft\nOpen\nApproved\nDeclined\nReplied\nPartially Ordered\nOrdered\nLost\nCancelled\nExpired",
    "print_hide": 1,
-   "reqd": 1,
-   "allow_on_submit": 1
+   "reqd": 1
   },
   {
    "fieldname": "enq_det",
@@ -1081,13 +1075,22 @@
    "fieldname": "named_place",
    "fieldtype": "Data",
    "label": "Named Place"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "mileage",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Mileage"
   }
  ],
  "icon": "fa fa-shopping-cart",
  "idx": 82,
  "is_submittable": 1,
  "links": [],
- "modified": "2023-06-03 16:21:04.980033",
+ "modified": "2024-04-24 16:48:26.304821",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Quotation",
