@@ -68,10 +68,6 @@ frappe.ui.form.on("Project", {
 		})
 	},
 
-	on_hide(...args) {
-		console.log('on Leave project', args)
-	},
-
 	refresh: async function (frm) {
 		if (frm.doc.__islocal) {
 			frm.web_link && frm.web_link.remove();
@@ -169,6 +165,9 @@ async function installChat(frm) {
 				chatContainer.style.display = 'none';
 			}
 		})
+		
+		document.querySelector('#custom_actions')
+			.innerHTML = '';
 		document.querySelector('#custom_actions')
 			.appendChild(button)
 
