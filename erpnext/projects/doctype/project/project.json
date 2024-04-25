@@ -38,6 +38,7 @@
   "customer_details",
   "quotations",
   "customer",
+  "team_viewer_id",
   "sales_order",
   "project_invoice",
   "sales_invoice",
@@ -525,8 +526,15 @@
   {
    "fieldname": "client_mileage_state",
    "fieldtype": "Data",
-   "label": "Current mileage state"
+   "label": "Current mileage state",
+   "in_list_view": 1
   },
+  {
+    "fieldname": "team_viewer_id",
+    "fieldtype": "Data",
+    "label": "Teamviewer ID",
+    "in_list_view": 1
+   },
   {
    "collapsible": 1,
    "fieldname": "section_break2",
@@ -785,7 +793,8 @@
   {
    "fieldname": "vin",
    "fieldtype": "Data",
-   "label": "VIN"
+   "label": "VIN",
+   "in_list_view": 1
   },
   {
    "default": "0",
