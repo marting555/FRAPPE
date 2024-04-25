@@ -180,7 +180,7 @@ async function installChat(frm) {
 		chat.setAttribute('url', aws_url)
 		chat.setAttribute('user-name', frappe.user.full_name())
 		
-		frappe.realtime.on(`msg-${frm.doc.name}`, (data) => {
+		frappe.realtime.on(`msg-${conversation_id}`, (data) => {
 			chat._instance.exposed.addMessage(data); 
 		})
 		frappe.require('erp-whatsapp-chat.bundle.js')
