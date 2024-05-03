@@ -105,6 +105,7 @@ frappe.ui.form.on("Project", {
 			document.querySelector('#chat-container').remove()
 		}
 		installChat(frm);
+		installQuotationItems(frm)
 	},
 	after_save: function(frm){
 		localStorage.removeItem("autosave")
@@ -196,6 +197,21 @@ async function installChat(frm) {
 		frm.page.container.addClass("full-width");
 	}
 	instaling = false;
+}
+let is_quotation_installed = false
+function installQuotationItems(frm){
+	if(is_quotation_installed) return;
+	is_quotation_installed = true;
+	frappe.require("erp-quotation-items.bundle.js").then(()=>{
+		const element = document.createElement("erp-quotation-items")
+		element.style.width = '100%';
+		const container = document.querySelector('div[data-fieldname="customer_details"]')
+		container.appendChild(element)
+		setTimeout(() => {
+			element._instance.exposed.setFrappe(frappe)
+			element._instance.exposed.setProjectName(frm.doc.name)
+		}, 100);
+	})
 }
 
 function open_form(frm, doctype, child_doctype, parentfield) {

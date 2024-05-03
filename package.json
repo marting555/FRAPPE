@@ -11,9 +11,9 @@
   "bugs": {
     "url": "https://github.com/frappe/erpnext/issues"
   },
-  "devDependencies": {},
   "dependencies": {
     "@tvsgroup/erp-calendar": "0.1.9",
+    "@tvsgroup/erp-quotation-items": "^0.0.8",
     "onscan.js": "^1.5.2"
   }
 }
