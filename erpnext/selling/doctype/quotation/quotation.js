@@ -56,6 +56,10 @@ frappe.ui.form.on('Quotation', {
 	},
 
 	refresh: function(frm) {
+		const autosave_store = localStorage.getItem("autosave")
+		if(!autosave_store){
+			localStorage.removeItem("customer")
+		}
 		if(frm.is_new()){
 			const customer = localStorage.getItem("customer")
 			const mileage = localStorage.getItem("mileage")

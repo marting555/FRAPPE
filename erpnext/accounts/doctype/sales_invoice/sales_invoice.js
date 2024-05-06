@@ -58,6 +58,10 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends e
 	}
 
 	refresh(doc, dt, dn) {
+		const autosave_store = localStorage.getItem("autosave")
+		if(!autosave_store){
+			localStorage.removeItem("customer")
+		}
 		const me = this;
 		super.refresh();
 		if(cur_frm.msgbox && cur_frm.msgbox.$wrapper.is(":visible")) {

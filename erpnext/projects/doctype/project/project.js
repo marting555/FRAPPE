@@ -84,7 +84,7 @@ frappe.ui.form.on("Project", {
 			}
 			event.stopImmediatePropagation();
 		})
-		let store_autosave = localStorage.getItem("autosave")
+		const store_autosave = localStorage.getItem("autosave")
 		if(store_autosave){
 			store_autosave = JSON.parse(store_autosave)
 			if(!store_autosave.is_saved){
@@ -109,8 +109,14 @@ frappe.ui.form.on("Project", {
 	},
 	after_save: function(frm){
 		localStorage.removeItem("autosave")
+		localStorage.removeItem("customer")
+		localStorage.removeItem("mileage")
 	},
-
+	on_hide: function(){
+		localStorage.removeItem("autosave")
+		localStorage.removeItem("customer")
+		localStorage.removeItem("mileage")
+	},	
 	create_duplicate: function(frm) {
 		return new Promise(resolve => {
 			frappe.prompt('Project Name', (data) => {
@@ -200,6 +206,7 @@ async function installChat(frm) {
 }
 let is_quotation_installed = false
 function installQuotationItems(frm){
+	if(frm.is_new()) return
 	if(is_quotation_installed) return;
 	is_quotation_installed = true;
 	frappe.require("erp-quotation-items.bundle.js").then(()=>{
