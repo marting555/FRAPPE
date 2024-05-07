@@ -36,11 +36,13 @@
   "appointment_date",
   "done",
   "customer_details",
+  "column_break_ucta",
   "quotations",
-  "customer",
-  "team_viewer_id",
-  "sales_order",
   "project_invoice",
+  "column_break_tlak",
+  "customer",
+  "sales_order",
+  "team_viewer_id",
   "sales_invoice",
   "vehicle_details",
   "plate",
@@ -308,6 +310,7 @@
    "options": "User"
   },
   {
+   "columns": 2,
    "fieldname": "customer_details",
    "fieldtype": "Section Break",
    "label": "Quotation",
@@ -317,6 +320,7 @@
   {
    "fieldname": "quotations",
    "fieldtype": "Table",
+   "ignore_user_permissions": 1,
    "label": "Quotation",
    "options": "Project Quotation"
   },
@@ -526,15 +530,15 @@
   {
    "fieldname": "client_mileage_state",
    "fieldtype": "Data",
-   "label": "Current mileage state",
-   "in_list_view": 1
+   "in_list_view": 1,
+   "label": "Current mileage state"
   },
   {
-    "fieldname": "team_viewer_id",
-    "fieldtype": "Data",
-    "label": "Teamviewer ID",
-    "in_list_view": 1
-   },
+   "fieldname": "team_viewer_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Teamviewer ID"
+  },
   {
    "collapsible": 1,
    "fieldname": "section_break2",
@@ -793,8 +797,8 @@
   {
    "fieldname": "vin",
    "fieldtype": "Data",
-   "label": "VIN",
-   "in_list_view": 1
+   "in_list_view": 1,
+   "label": "VIN"
   },
   {
    "default": "0",
@@ -809,6 +813,14 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Appointment date"
+  },
+  {
+   "fieldname": "column_break_ucta",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_tlak",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-puzzle-piece",
@@ -816,7 +828,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-03-07 18:01:34.649439",
+ "modified": "2024-05-06 23:02:52.885678",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
@@ -831,6 +843,7 @@
    "read": 1,
    "report": 1,
    "role": "Projects User",
+   "select": 1,
    "share": 1,
    "write": 1
   },
@@ -849,6 +862,20 @@
    "read": 1,
    "report": 1,
    "role": "Projects Manager",
+   "select": 1,
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "select": 1,
    "share": 1,
    "write": 1
   }

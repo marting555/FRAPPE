@@ -76,15 +76,7 @@ frappe.ui.form.on("Project", {
 			frm.trigger('show_dashboard');
 		}
 		frm.trigger("set_custom_buttons");
-		listener = navigation.addEventListener("navigate", (event) => {
-			const { url } = event.destination
-			if(url.includes('new-quotation') || url.includes('new-sales-invoice')){
-				localStorage.setItem("customer",  frm.doc.customer)
-				localStorage.setItem("mileage", frm.doc.client_mileage_state)
-			}
-			event.stopImmediatePropagation();
-		})
-		const store_autosave = localStorage.getItem("autosave")
+		let store_autosave = localStorage.getItem("autosave")
 		if(store_autosave){
 			store_autosave = JSON.parse(store_autosave)
 			if(!store_autosave.is_saved){
@@ -108,11 +100,6 @@ frappe.ui.form.on("Project", {
 		installQuotationItems(frm)
 	},
 	after_save: function(frm){
-		localStorage.removeItem("autosave")
-		localStorage.removeItem("customer")
-		localStorage.removeItem("mileage")
-	},
-	on_hide: function(){
 		localStorage.removeItem("autosave")
 		localStorage.removeItem("customer")
 		localStorage.removeItem("mileage")
