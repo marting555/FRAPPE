@@ -10,8 +10,8 @@
   "title",
   "naming_series",
   "customer",
+  "mileage",
   "customer_name",
-  "notes",
   "tax_id",
   "company",
   "company_tax_id",
@@ -70,15 +70,16 @@
   "section_break_40",
   "taxes",
   "section_break_43",
-  "base_total_taxes_and_charges",
-  "column_break_47",
   "total_taxes_and_charges",
+  "column_break_47",
+  "base_total_taxes_and_charges",
   "totals",
-  "base_grand_total",
-  "base_rounding_adjustment",
-  "base_rounded_total",
-  "base_in_words",
+  "notes",
   "column_break5",
+  "base_in_words",
+  "base_rounded_total",
+  "base_rounding_adjustment",
+  "base_grand_total",
   "grand_total",
   "rounding_adjustment",
   "use_company_roundoff_cost_center",
@@ -280,16 +281,16 @@
    "read_only": 1
   },
   {
-    "fieldname": "notes",
-    "oldfieldname": "notes",
-    "fieldtype": "Text Editor",
-    "label": "Notes",
-    "in_list_view": 1,
-    "allow_on_submit": 1,
-    "hide_days": 1,
-    "hide_seconds": 1,
-    "in_global_search": 1
-   },
+   "allow_on_submit": 1,
+   "fieldname": "notes",
+   "fieldtype": "Text Editor",
+   "hide_days": 1,
+   "hide_seconds": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "label": "Notes",
+   "oldfieldname": "notes"
+  },
   {
    "fieldname": "tax_id",
    "fieldtype": "Data",
@@ -1134,7 +1135,7 @@
    "fieldtype": "Section Break",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Totals",
+   "label": "Totals / Notes",
    "oldfieldtype": "Section Break",
    "options": "fa fa-money",
    "print_hide": 1
@@ -2173,6 +2174,11 @@
    "fieldname": "update_billed_amount_in_delivery_note",
    "fieldtype": "Check",
    "label": "Update Billed Amount in Delivery Note"
+  },
+  {
+   "fieldname": "mileage",
+   "fieldtype": "Data",
+   "label": "Mileage"
   }
  ],
  "icon": "fa fa-file-text",
@@ -2185,7 +2191,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2023-11-03 14:39:38.012346",
+ "modified": "2024-04-26 21:46:42.976420",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",
