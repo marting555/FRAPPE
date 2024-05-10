@@ -11,7 +11,9 @@
   "sales_invoice",
   "status",
   "transaction_date",
-  "grand_total"
+  "grand_total",
+  "payment_id",
+  "payment_gateway"
  ],
  "fields": [
   {
@@ -48,7 +50,19 @@
    "fieldtype": "Read Only",
    "in_list_view": 1,
    "label": "Total"
-  }
+  },
+  {
+    "fieldname": "payment_id",
+    "fieldtype": "Data",
+    "in_list_view": 1,
+    "label": "Payment ID"
+   },
+   {
+    "fieldname": "payment_gateway",
+    "fieldtype": "Data",
+    "in_list_view": 1,
+    "label": "Payment Gateway"
+   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,

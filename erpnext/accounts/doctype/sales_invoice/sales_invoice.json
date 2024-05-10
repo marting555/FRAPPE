@@ -34,6 +34,8 @@
   "cost_center",
   "dimension_col_break",
   "project",
+  "payment_id",
+  "payment_gateway",
   "currency_and_price_list",
   "currency",
   "conversion_rate",
@@ -236,6 +238,18 @@
    "no_copy": 1,
    "print_hide": 1
   },
+  {
+    "fieldname": "payment_id",
+    "fieldtype": "Data",
+    "in_list_view": 1,
+    "label": "Payment ID"
+   },
+   {
+    "fieldname": "payment_gateway",
+    "fieldtype": "Data",
+    "in_list_view": 1,
+    "label": "Payment Gateway"
+   },
   {
    "bold": 1,
    "fieldname": "naming_series",

@@ -14,7 +14,7 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@fullcalendar/core@^6.1.9", "@fullcalendar/core@~6.1.11", "@fullcalendar/core@~6.1.9":
+"@fullcalendar/core@^6.1.9":
   version "6.1.11"
   resolved "https://registry.npmjs.org/@fullcalendar/core/-/core-6.1.11.tgz"
   integrity sha512-TjG7c8sUz+Vkui2FyCNJ+xqyu0nq653Ibe99A66LoW95oBo6tVhhKIaG1Wh0GVKymYiqAQN/OEdYTuj4ay27kA==
@@ -122,13 +122,6 @@
     pinia "^2.1.7"
     ts-node "^10.9.2"
     vue "^3.4.21"
-
-"@types/node@*":
-  version "20.12.8"
-  resolved "https://registry.npmjs.org/@types/node/-/node-20.12.8.tgz"
-  integrity sha512-NU0rJLJnshZWdE/097cdCBbyW1h4hEg0xpovcoAQYHl8dnEyp/NAOiE45pvc+Bd1Dt+2r94v2eGFpQJ4R7g+2w==
-  dependencies:
-    undici-types "~5.26.4"
 
 "@vue/compiler-core@3.4.26":
   version "3.4.26"
@@ -346,16 +339,6 @@ ts-node@^10.9.2:
     v8-compile-cache-lib "^3.0.1"
     yn "3.1.1"
 
-typescript@*, typescript@>=2.7, typescript@>=4.4.4:
-  version "5.4.5"
-  resolved "https://registry.npmjs.org/typescript/-/typescript-5.4.5.tgz"
-  integrity sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==
-
-undici-types@~5.26.4:
-  version "5.26.5"
-  resolved "https://registry.npmjs.org/undici-types/-/undici-types-5.26.5.tgz"
-  integrity sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==
-
 v8-compile-cache-lib@^3.0.1:
   version "3.0.1"
   resolved "https://registry.npmjs.org/v8-compile-cache-lib/-/v8-compile-cache-lib-3.0.1.tgz"
@@ -366,7 +349,7 @@ vue-demi@>=0.14.5:
   resolved "https://registry.npmjs.org/vue-demi/-/vue-demi-0.14.6.tgz"
   integrity sha512-8QA7wrYSHKaYgUxDA5ZC24w+eHm3sYCbp0EzcDwKqN3p6HqtTCGR/GVsPyZW92unff4UlcSh++lmqDWN3ZIq4w==
 
-"vue@^2.6.14 || ^3.3.0", "vue@^3.0.0-0 || ^2.6.0", vue@^3.0.11, vue@^3.3.4, vue@^3.4.21, vue@3.4.26:
+vue@^3.3.4, vue@^3.4.21:
   version "3.4.26"
   resolved "https://registry.npmjs.org/vue/-/vue-3.4.26.tgz"
   integrity sha512-bUIq/p+VB+0xrJubaemrfhk1/FiW9iX+pDV+62I/XJ6EkspAO9/DXEjbDFoe8pIfOZBqfk45i9BMc41ptP/uRg==
