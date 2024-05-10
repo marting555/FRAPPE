@@ -69,6 +69,7 @@ frappe.ui.form.on("Project", {
 	},
 
 	refresh: async function (frm) {
+		console.log("enter refresh")
 		if (frm.doc.__islocal) {
 			frm.web_link && frm.web_link.remove();
 		} else {
@@ -191,22 +192,36 @@ async function installChat(frm) {
 	}
 	instaling = false;
 }
-let is_quotation_installed = false
-function installQuotationItems(frm){
-	if(frm.is_new()) return
-	if(is_quotation_installed) return;
-	is_quotation_installed = true;
-	frappe.require("erp-quotation-items.bundle.js").then(()=>{
-		const element = document.createElement("erp-quotation-items")
-		element.style.width = '100%';
-		const container = document.querySelector('div[data-fieldname="customer_details"]')
-		container.appendChild(element)
+
+let is_quotation_installed = false;
+function installQuotationItems(frm) {
+    if (frm.is_new()) return;
+    if (is_quotation_installed) return;
+    const container = document.querySelector('div[data-fieldname="customer_details"]');
+    if (!container) {
+        console.error("Container not found");
+        return;
+    }
+    const existingComponent = container.querySelector("erp-quotation-items");
+    if (existingComponent) {
+        container.removeChild(existingComponent);
+    }
+    is_quotation_installed = true;
+    frappe.require("erp-quotation-items.bundle.js").then(() => {
+        const element = document.createElement("erp-quotation-items");
+        element.style.width = '100%';
+        container.appendChild(element);
 		setTimeout(() => {
 			element._instance.exposed.setFrappe(frappe)
 			element._instance.exposed.setProjectName(frm.doc.name)
+			is_quotation_installed = false;
 		}, 100);
-	})
+    }).catch((err) => {
+        console.error("Error loading erp-quotation-items", err);
+        is_quotation_installed = false;
+    });
 }
+
 
 function open_form(frm, doctype, child_doctype, parentfield) {
 	frappe.model.with_doctype(doctype, () => {
