@@ -69,7 +69,6 @@ frappe.ui.form.on("Project", {
 	},
 
 	refresh: async function (frm) {
-		console.log("enter refresh")
 		if (frm.doc.__islocal) {
 			frm.web_link && frm.web_link.remove();
 		} else {
@@ -98,7 +97,7 @@ frappe.ui.form.on("Project", {
 			document.querySelector('#chat-container').remove()
 		}
 		installChat(frm);
-		installQuotationItems(frm)
+		setTimeout(()=> installQuotationItems(frm), 1500)
 	},
 	after_save: function(frm){
 		localStorage.removeItem("autosave")
@@ -195,19 +194,25 @@ async function installChat(frm) {
 
 let is_quotation_installed = false;
 function installQuotationItems(frm) {
-    if (frm.is_new()) return;
+    console.log("call function");
+	if (frm.is_new()) return;
+	console.log("is not new")
     if (is_quotation_installed) return;
+	console.log("is not installed")
     const container = document.querySelector('div[data-fieldname="customer_details"]');
     if (!container) {
         console.error("Container not found");
         return;
     }
+	console.log("container exist")
     const existingComponent = container.querySelector("erp-quotation-items");
     if (existingComponent) {
+		console.log("remove child")
         container.removeChild(existingComponent);
     }
     is_quotation_installed = true;
     frappe.require("erp-quotation-items.bundle.js").then(() => {
+		console.log("installing component")
         const element = document.createElement("erp-quotation-items");
         element.style.width = '100%';
         container.appendChild(element);
