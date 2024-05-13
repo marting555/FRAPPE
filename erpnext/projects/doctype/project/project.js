@@ -92,9 +92,9 @@ frappe.ui.form.on("Project", {
 						installQuotationItems(frm)
 					},1500)
 				}
-			} else{
-				installQuotationItems(frm)
 			}
+		}else{
+			installQuotationItems(frm)
 		}
 		if(document.querySelector('#chat-container')){
 			document.querySelector('#chat-container').remove()
