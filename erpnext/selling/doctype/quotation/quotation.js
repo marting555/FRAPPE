@@ -55,11 +55,14 @@ frappe.ui.form.on('Quotation', {
 			const autosave_store = localStorage.getItem("autosave")
 			if(!autosave_store){
 				localStorage.removeItem("customer")
+				localStorage.removeItem("mileage")
+				localStorage.removeItem("plate")
 			}
 		},500)
 		if(frm.is_new()){
 			const customer = localStorage.getItem("customer")
 			const mileage = localStorage.getItem("mileage")
+			const plate = localStorage.getItem("plate")
 			if (customer){
 				frm.set_value({
 					party_name: customer
@@ -70,8 +73,13 @@ frappe.ui.form.on('Quotation', {
 					mileage
 				})
 			}
+			if(plate){
+				frm.set_value({plate})
+			}
 		}else {
 			localStorage.removeItem("customer")
+			localStorage.removeItem("mileage")
+			localStorage.removeItem("plate")
 		}
 		
 		frm.trigger("set_label");
@@ -101,6 +109,8 @@ frappe.ui.form.on('Quotation', {
 
 	after_save(){
 		localStorage.removeItem("customer")
+			localStorage.removeItem("mileage")
+			localStorage.removeItem("plate")
 	}
 });
 
