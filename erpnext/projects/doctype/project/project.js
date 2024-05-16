@@ -140,12 +140,12 @@ async function installChat(frm) {
 	if(instaling) return;
 	instaling = true;
 	if (!frm.is_new()){
-		const {0: {name: conversation_id} = [{}]} = await frappe.db.get_list('Conversation',{
+		const {0: conversation = [null]} = await frappe.db.get_list('Conversation',{
 			filters: [['from', '=', frm.doc.custom_customers_phone_number]],
 			fields: ["*"]
 		});
 		
-		if(!conversation_id) {
+		if(!conversation) {
 			instaling = false;
 			return;
 		};
@@ -170,14 +170,13 @@ async function installChat(frm) {
 
 		chatContainer.id = 'chat-container'
 		const chat = document.createElement('erp-chat')
-		chat.setAttribute('conversation-id', conversation_id)
 		const section = document.querySelector('#page-Project > div.container.page-body > div.page-wrapper > div > div.row.layout-main')
 		
 		const {aws_url} = await frappe.db.get_doc('Whatsapp Config')
 		chat.setAttribute('url', aws_url)
 		chat.setAttribute('user-name', frappe.user.full_name())
 		
-		frappe.realtime.on(`msg-${conversation_id}`, (data) => {
+		frappe.realtime.on(`msg-${conversation.name}`, (data) => {
 			chat._instance.exposed.addMessage(data); 
 		})
 		frappe.require('erp-whatsapp-chat.bundle.js')
@@ -185,7 +184,8 @@ async function installChat(frm) {
 				chatContainer.appendChild(chat)
 				section.appendChild(chatContainer)
 				setTimeout(() => {
-					chat._instance.exposed.clear()
+					chat._instance.exposed.setFrappe(frappe)
+          chat._instance.exposed.setConversation(conversation)
 				}, 100);
 			})
 
