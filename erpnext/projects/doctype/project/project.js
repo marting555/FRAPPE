@@ -140,15 +140,19 @@ async function installChat(frm) {
 	if(instaling) return;
 	instaling = true;
 	if (!frm.is_new()){
-		const {0: conversation = [null]} = await frappe.db.get_list('Conversation',{
+		const {0: conversation} = await frappe.db.get_list('Conversation',{
 			filters: [['from', '=', frm.doc.custom_customers_phone_number]],
 			fields: ["*"]
 		});
+
+		console.log(conversation)
 		
 		if(!conversation) {
 			instaling = false;
 			return;
 		};
+
+		
 
 		const chatContainer = document.createElement('div')
 
