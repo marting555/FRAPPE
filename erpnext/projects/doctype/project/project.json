@@ -143,7 +143,6 @@
    "fieldname": "is_loan_car",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Is loan car",
    "no_copy": 1,
    "options": "No\nYes\nLoaned car\nCar returned",
@@ -187,7 +186,6 @@
    "fieldname": "project_type",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Project Type",
    "oldfieldname": "project_type",
    "oldfieldtype": "Data",
@@ -209,7 +207,6 @@
    "fieldname": "parts_status",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Parts Status",
    "oldfieldname": "parts_status",
    "oldfieldtype": "Select",
@@ -219,7 +216,6 @@
    "fieldname": "software_status",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Software Status",
    "oldfieldname": "software_status",
    "oldfieldtype": "Select",
@@ -259,16 +255,18 @@
    "oldfieldtype": "Date"
   },
   {
+   "fetch_if_empty": 1,
    "fieldname": "remote_diagnostic_time",
    "fieldtype": "Select",
-   "in_standard_filter": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
    "label": "Remote Diagnostic Time",
    "options": "\n14:00-15:00"
   },
   {
    "fieldname": "priority",
    "fieldtype": "Select",
-   "in_standard_filter": 1,
+   "in_list_view": 1,
    "label": "Priority",
    "oldfieldname": "priority",
    "oldfieldtype": "Select",
@@ -776,7 +774,6 @@
    "fieldname": "parking_date",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Parking Date",
    "oldfieldtype": "Data"
   },
@@ -785,7 +782,6 @@
    "fieldname": "assistant_confirmed",
    "fieldtype": "Check",
    "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Assistant Confirmed"
   },
   {
@@ -811,7 +807,6 @@
    "fieldname": "appointment_date",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Appointment date"
   },
   {
@@ -828,7 +823,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-05-06 23:02:52.885678",
+ "modified": "2024-05-16 19:22:19.811478",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
