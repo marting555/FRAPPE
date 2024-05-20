@@ -210,7 +210,7 @@
    "label": "Parts Status",
    "oldfieldname": "parts_status",
    "oldfieldtype": "Select",
-   "options": "\nWaiting for parts\nParts are ready for pickup\nParts have been picked up"
+   "options": "\nNew request\nProcessing order\nQuality control\nReady for pickup\nIn Transit\nDelivered\nCore return pending\nCore return completed\nWarranty return\nAftersales support\nQuoted\nCompleted order\nCancelled order\nCompleted support\nCompleted warranty return"
   },
   {
    "fieldname": "software_status",
@@ -250,7 +250,8 @@
    "fieldname": "remote_diagnostic_date",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "Remote Diagnostic Date",
+   "description": "Remote Diagnostic Date",
+   "label":"R.D Date",
    "oldfieldname": "completion_date",
    "oldfieldtype": "Date"
   },
@@ -260,7 +261,8 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "in_preview": 1,
-   "label": "Remote Diagnostic Time",
+   "label": "R.D Time",
+   "description": "Remote Diagnostic Time",
    "options": "\n14:00-15:00"
   },
   {

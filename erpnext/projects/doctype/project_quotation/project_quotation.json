@@ -10,7 +10,8 @@
   "status",
   "valid_till",
   "date",
-  "transaction_date"
+  "transaction_date",
+  "auto_approve"
  ],
  "fields": [
   {
@@ -29,6 +30,15 @@
    "in_list_view": 1,
    "label": "Status"
   },
+  {
+    "fetch_from": "quotation.auto_approve",
+    "fetch_if_empty": 1,
+    "default": 0,
+    "fieldname": "auto_approve",
+    "fieldtype": "Read Only",
+    "in_list_view": 1,
+    "label": "Don't wait for acceptance"
+   },
   {
    "fetch_from": "quotation.transaction_date",
    "fetch_if_empty": 1,

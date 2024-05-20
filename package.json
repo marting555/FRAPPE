@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@tvsgroup/erp-calendar": "0.1.9",
-    "@tvsgroup/erp-quotation-items": "^0.0.11",
+    "@tvsgroup/erp-quotation-items": "^0.0.13",
     "onscan.js": "^1.5.2"
   }
 }
