@@ -210,7 +210,7 @@
    "label": "Parts Status",
    "oldfieldname": "parts_status",
    "oldfieldtype": "Select",
-   "options": "\nNew request\nProcessing order\nQuality control\nReady for pickup\nIn Transit\nDelivered\nCore return pending\nCore return completed\nWarranty return\nAftersales support\nQuoted\nCompleted order\nCancelled order\nCompleted support\nCompleted warranty return"
+   "options": "\nNew request\nNew order\nProcessing order\nQuality control\nReady for pickup\nIn Transit\nDelivered\nCore return pending\nCore return completed\nWarranty return\nAftersales support\nQuoted\nCompleted order\nCancelled order\nCompleted support\nCompleted warranty return"
   },
   {
    "fieldname": "software_status",
