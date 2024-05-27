@@ -1,0 +1,37 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-05-27 17:41:43.214744",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "oe",
+  "brand"
+ ],
+ "fields": [
+  {
+   "fieldname": "oe",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "OE"
+  },
+  {
+   "fieldname": "brand",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Brand"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-05-27 17:47:42.548169",
+ "modified_by": "Administrator",
+ "module": "Stock",
+ "name": "Item OE",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
