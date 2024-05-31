@@ -1,0 +1,44 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-05-29 21:20:38.347686",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item_name",
+  "price"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item name",
+   "options": "Item"
+  },
+  {
+   "bold": 1,
+   "fetch_from": "item_name.standard_rate",
+   "fieldname": "price",
+   "fieldtype": "Currency",
+   "ignore_user_permissions": 1,
+   "in_list_view": 1,
+   "label": "Standar Rate",
+   "non_negative": 1,
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-05-29 21:37:27.727441",
+ "modified_by": "Administrator",
+ "module": "Stock",
+ "name": "Items Relate",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
