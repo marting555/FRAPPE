@@ -177,11 +177,11 @@
    "reqd": 1
   },
   {
-    "fieldname": "notes",
-    "fieldtype": "Text Editor",
-    "label": "Notes",
-    "in_list_view": 1
-   },
+   "fieldname": "notes",
+   "fieldtype": "Text Editor",
+   "in_list_view": 1,
+   "label": "Notes"
+  },
   {
    "bold": 1,
    "fieldname": "party_name",
@@ -1088,30 +1088,27 @@
    "label": "Mileage"
   },
   {
-    "fieldname": "plate",
-    "fieldtype": "Data",
-    "label": "Licence plate",
-    "in_list_view": 1,
-    "allow_on_submit": 1,
-    "in_preview": 1,
-    "in_standard_filter": 1
-   },
-   {
-    "default": "0",
-    "fieldtype": "Check",
-    "fieldname": "auto_approve",
-    "label": "Don't wait for acceptance",
-    "in_list_view": 1,
-    "allow_on_submit": 1,
-    "in_preview": 1,
-    "in_standard_filter": 1
-   }
+   "allow_on_submit": 1,
+   "fieldname": "plate",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Licence plate"
+  },
+  {
+   "default": "0",
+   "fieldname": "auto_approve",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Don't wait for acceptance"
+  }
  ],
  "icon": "fa fa-shopping-cart",
  "idx": 82,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-04-24 16:48:26.304821",
+ "modified": "2024-06-10 17:40:21.466476",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Quotation",

@@ -1,0 +1,64 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-06-06 19:57:59.021852",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "tvs_pn",
+  "category",
+  "description",
+  "requirements",
+  "price",
+  "external_notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "tvs_pn",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "TVS PN",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Data",
+   "label": "Category",
+   "reqd": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "label": "Description"
+  },
+  {
+   "fieldname": "requirements",
+   "fieldtype": "Data",
+   "label": "Requirements"
+  },
+  {
+   "fieldname": "price",
+   "fieldtype": "Data",
+   "label": "Price"
+  },
+  {
+   "fieldname": "external_notes",
+   "fieldtype": "Data",
+   "label": "External Notes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-06-06 20:00:51.443822",
+ "modified_by": "Administrator",
+ "module": "Stock",
+ "name": "Core Charge Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
