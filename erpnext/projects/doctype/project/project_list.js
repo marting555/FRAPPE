@@ -18,7 +18,7 @@ frappe.listview_settings['Project'] = {
 				const label = document.createElement('label')
 				label.setAttribute('style', 'margin: 0')
 				label.setAttribute('id', 'queue-freeze')
-				label.innerText = ' freeze queue positions '
+				label.innerText = 'freeze queue positions'
 				label.appendChild(input)
 				input.setAttribute('type', 'checkbox')
 				if (auto_move_paused) {

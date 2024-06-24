@@ -5,7 +5,8 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "auto_move_paused"
+  "auto_move_paused",
+  "aws_url"
  ],
  "fields": [
   {
@@ -13,12 +14,17 @@
    "fieldname": "auto_move_paused",
    "fieldtype": "Check",
    "label": "Pause move queue line on complete job card."
+  },
+  {
+   "fieldname": "aws_url",
+   "fieldtype": "Data",
+   "label": "aws url"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-03-06 19:48:39.306193",
+ "modified": "2024-06-24 17:40:45.695112",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Queue Settings",
