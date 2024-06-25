@@ -28,7 +28,25 @@ frappe.listview_settings['Project'] = {
 				input.addEventListener('change', (event) => {
 					frappe.db.set_value('Queue Settings', 'Queue Settings','auto_move_paused', auto_move_paused? 0 : 1)
 					.then(()=> {
-						frappe.msgprint(__('Status updated successfully'));
+						const isChecked = event.target.checked;
+						if(isChecked){
+							frappe.warn('Status updated successfully', 'Would you like to send a WhatsApp message to notify the clients in the queue?',
+								async () => {
+										const {aws_url} = await frappe.db.get_doc('Queue Settings')
+										return frappe.call({
+											method: "frappe.desk.doctype.kanban_board.kanban_board.call_freeze_queue_position_message",
+											args: {aws_url: aws_url},
+											callback: (result) => {
+												console.log("message queue position freeze sent: ",result);
+											},
+										});
+								},
+								'Yes',
+								true // Sets dialog as minimizable
+							)
+						}else{
+							frappe.msgprint(__('Status updated successfully'));
+						}
 					})
 				})
 			}
