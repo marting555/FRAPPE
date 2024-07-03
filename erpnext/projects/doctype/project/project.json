@@ -10,6 +10,7 @@
  "field_order": [
   "naming_series",
   "project_name",
+  "description_title",
   "queue_position",
   "callback_date",
   "callback_time",
@@ -125,6 +126,12 @@
    "reqd": 1,
    "unique": 1
   },
+  {
+    "fieldname": "description_title",
+    "fieldtype": "Data",
+    "label": "Description Title",
+    "oldfieldtype": "Data"
+   },
   {
    "default": "",
    "fieldname": "status",
