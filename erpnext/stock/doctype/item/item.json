@@ -987,7 +987,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Condition",
-   "options": "NEW\nREBUILD",
+   "options": "NEW\nREBUILD\nCOMBO",
    "reqd": 1
   },
   {
