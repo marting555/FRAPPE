@@ -8,11 +8,8 @@
  "engine": "InnoDB",
  "field_order": [
   "tvs_pn",
-  "category",
-  "description",
   "requirements",
-  "price",
-  "external_notes"
+  "price"
  ],
  "fields": [
   {
@@ -25,36 +22,22 @@
    "search_index": 1
   },
   {
-   "fieldname": "category",
-   "fieldtype": "Data",
-   "label": "Category",
-   "reqd": 1
-  },
-  {
-   "fieldname": "description",
-   "fieldtype": "Data",
-   "label": "Description"
-  },
-  {
+   "fetch_from": "tvs_pn.requirements",
    "fieldname": "requirements",
    "fieldtype": "Data",
    "label": "Requirements"
   },
   {
+   "fetch_from": "tvs_pn.price",
    "fieldname": "price",
    "fieldtype": "Data",
    "label": "Price"
-  },
-  {
-   "fieldname": "external_notes",
-   "fieldtype": "Data",
-   "label": "External Notes"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-07-08 16:45:42.064334",
+ "modified": "2024-07-08 18:23:32.403468",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Core Charge Item",
