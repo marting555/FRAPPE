@@ -61,6 +61,7 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 	for_validate = process_string_args(for_validate)
 	overwrite_warehouse = process_string_args(overwrite_warehouse)
 	item = frappe.get_cached_doc("Item", args.item_code)
+	print("------------------> item ", item)
 	validate_item_details(args, item)
 
 	if isinstance(doc, str):
@@ -73,6 +74,7 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 			args["bill_date"] = doc.get("bill_date")
 
 	out = get_basic_details(args, item, overwrite_warehouse)
+	print("------------------> basic details ", out)
 
 	get_item_tax_template(args, item, out)
 	out["item_tax_rate"] = get_item_tax_map(
@@ -86,6 +88,7 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 	get_party_item_code(args, item, out)
 
 	set_valuation_rate(out, args)
+	print("----------------------> set_valuation_rate ", out)
 
 	update_party_blanket_order(args, out)
 
@@ -124,6 +127,7 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 			args[key] = value
 
 	data = get_pricing_rule_for_item(args, doc=doc, for_validate=for_validate)
+	print("------------------> price rule for item ", data)
 
 	out.update(data)
 
@@ -151,8 +155,8 @@ def remove_standard_fields(details):
 def set_valuation_rate(out, args):
 	if frappe.db.exists("Product Bundle", args.item_code, cache=True):
 		valuation_rate = 0.0
+		rate = 0.0
 		bundled_items = frappe.get_doc("Product Bundle", args.item_code)
-
 		for bundle_item in bundled_items.items:
 			valuation_rate += flt(
 				get_valuation_rate(bundle_item.item_code, args.company, out.get("warehouse")).get(
@@ -160,9 +164,8 @@ def set_valuation_rate(out, args):
 				)
 				* bundle_item.qty
 			)
-
-		out.update({"valuation_rate": valuation_rate})
-
+			rate += bundle_item.rate * bundle_item.qty
+		out.update({"valuation_rate": valuation_rate, "is_product_bundle": True})
 	else:
 		out.update(get_valuation_rate(args.item_code, args.company, out.get("warehouse")))
 
@@ -784,6 +787,42 @@ def get_default_supplier(args, item, item_group, brand):
 
 
 def get_price_list_rate(args, item_doc, out=None):
+	"""
+    :param args: {
+        "item_code": str,
+        "barcode": str or None,
+        "batch_no": str or None,
+        "warehouse": str,
+        "customer": str,
+        "currency": str,
+        "update_stock": int,
+        "conversion_rate": float,
+        "price_list": str,
+        "price_list_currency": str,
+        "plc_conversion_rate": float,
+        "company": str,
+        "is_pos": int,
+        "is_return": int,
+        "ignore_pricing_rule": int,
+        "doctype": str,
+        "name": str,
+        "qty": int,
+        "net_rate": float,
+        "stock_qty": float,
+        "conversion_factor": float,
+        "weight_per_unit": float,
+        "uom": str,
+        "weight_uom": str,
+        "manufacturer": str or None,
+        "stock_uom": str,
+        "pos_profile": str,
+        "cost_center": str,
+        "tax_category": str,
+        "child_docname": str,
+        "transaction_type": str,
+        "transaction_date": str,
+    }
+    """
 	if out is None:
 		out = frappe._dict()
 
@@ -799,15 +838,16 @@ def get_price_list_rate(args, item_doc, out=None):
 		if meta.get_field("currency"):
 			validate_conversion_rate(args, meta)
 
+		print("------------> get_price_list_rate ", args, item_doc.name,out)
 		price_list_rate = get_price_list_rate_for(args, item_doc.name)
-
 		# variant
 		if price_list_rate is None and item_doc.variant_of:
 			price_list_rate = get_price_list_rate_for(args, item_doc.variant_of)
 
+		print("------------> doctype ", args.get("doctype"))
 		# insert in database
 		if price_list_rate is None:
-			if args.price_list and args.rate:
+			if args.price_list and args.rate and args.doctype not in ["Quotation", "Sales Order", "Delivery Note", "Sales Invoice"]:
 				insert_item_price(args)
 			return out
 
@@ -1212,7 +1252,6 @@ def apply_price_list(args, as_doc=False):
 	        }
 	"""
 	args = process_args(args)
-
 	parent = get_price_list_currency_and_exchange_rate(args)
 	args.update(parent)
 
@@ -1229,7 +1268,7 @@ def apply_price_list(args, as_doc=False):
 			children.append(item_details)
 
 	if as_doc:
-		args.price_list_currency = (parent.price_list_currency,)
+		args.price_list_currency = (parent.price_list_currency)
 		args.plc_conversion_rate = parent.plc_conversion_rate
 		if args.get("items"):
 			for i, item in enumerate(args.get("items")):
@@ -1244,10 +1283,10 @@ def apply_price_list(args, as_doc=False):
 
 
 def apply_price_list_on_item(args):
+	print("-----------------> apply_price_list_on_item ", args)
 	item_doc = frappe.db.get_value("Item", args.item_code, ["name", "variant_of"], as_dict=1)
 	item_details = get_price_list_rate(args, item_doc)
 	item_details.update(get_pricing_rule_for_item(args))
-
 	return item_details
 
 

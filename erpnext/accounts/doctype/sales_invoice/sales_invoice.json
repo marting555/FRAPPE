@@ -20,6 +20,8 @@
   "posting_time",
   "set_posting_time",
   "due_date",
+  "licence_plate",
+  "description_title",
   "column_break_14",
   "is_pos",
   "pos_profile",
@@ -109,10 +111,8 @@
   "timesheets",
   "section_break_104",
   "total_billing_hours",
-  "description_title",
   "column_break_106",
   "total_billing_amount",
-  "licence_plate",
   "payments_tab",
   "payments_section",
   "cash_bank_account",
@@ -2223,7 +2223,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2024-07-03 20:49:20.257607",
+ "modified": "2024-07-16 17:32:11.735764",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

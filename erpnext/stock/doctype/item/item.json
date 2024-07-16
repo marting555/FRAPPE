@@ -987,7 +987,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Condition",
-   "options": "NEW\nREBUILD\nCOMBO",
+   "options": "NEW\nREBUILD",
    "reqd": 1
   },
   {
@@ -1074,7 +1074,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "make_attachments_public": 1,
- "modified": "2024-06-07 20:44:29.737816",
+ "modified": "2024-07-11 18:59:14.011948",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",

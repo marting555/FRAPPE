@@ -21,6 +21,7 @@
   "valid_till",
   "plate",
   "mileage",
+  "description_title",
   "auto_approve",
   "column_break1",
   "status",
@@ -1102,13 +1103,21 @@
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Don't wait for acceptance"
+  },
+  {
+   "fieldname": "description_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Description Title"
   }
  ],
  "icon": "fa fa-shopping-cart",
  "idx": 82,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-06-10 17:40:21.466476",
+ "modified": "2024-07-16 17:44:49.944074",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Quotation",
