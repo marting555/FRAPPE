@@ -998,13 +998,42 @@ frappe.ui.form.on('Sales Invoice', {
 			frm.set_df_property('return_against', 'label', __('Adjustment Against'));
 		}
 
-		if (frm.is_new()){
-			const customer = localStorage.getItem("customer")
-			if(customer){
-				frm.set_value({
-					customer
-				})	
+
+		setTimeout(()=> {
+			const autosave_store = localStorage.getItem("autosave")
+			if(!autosave_store){
+				localStorage.removeItem("customer")
+				localStorage.removeItem("mileage")
+				localStorage.removeItem("plate")
+				localStorage.removeItem("description_title")
 			}
+		},500)
+		if(frm.is_new()){
+			const customer = localStorage.getItem("customer")
+			const mileage = localStorage.getItem("mileage")
+			const plate = localStorage.getItem("plate")
+			const description_title = localStorage.getItem("description_title")
+			if (customer){
+				frm.set_value({
+					customer: customer
+				})
+			}
+			if (mileage) {
+				frm.set_value({
+					mileage
+				})
+			}
+			if(plate){
+				frm.set_value({licence_plate: plate})
+			}
+			if(description_title){
+				frm.set_value({description_title})
+			}
+		}else {
+			localStorage.removeItem("customer")
+			localStorage.removeItem("mileage")
+			localStorage.removeItem("plate")
+			localStorage.removeItem("description_title")
 		}
 	},
 
