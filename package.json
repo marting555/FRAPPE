@@ -12,11 +12,7 @@
     "url": "https://github.com/frappe/erpnext/issues"
   },
   "dependencies": {
-<<<<<<< HEAD
     "@tvsgroup/erp-calendar": "0.2.8",
-=======
-    "@tvsgroup/erp-calendar": "0.2.7",
->>>>>>> 9c849806a028489605da8fbd6f5386e3614a3a4e
     "@tvsgroup/erp-quotation-items": "^0.0.13",
     "onscan.js": "^1.5.2"
   }
