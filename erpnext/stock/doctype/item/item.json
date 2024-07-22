@@ -18,30 +18,47 @@
   "item_group",
   "stock_uom",
   "oe_ref",
+  "item_category",
+  "sub_category_name",
+  "tvs_pn",
+  "condition",
+  "oe_pn",
+  "oem_pn",
+  "supplier",
+  "alternatives",
+  "core_charge",
   "column_break0",
   "disabled",
   "allow_alternative_item",
   "is_stock_item",
   "has_variants",
-  "opening_stock",
-  "valuation_rate",
-  "standard_rate",
   "is_fixed_asset",
   "auto_create_assets",
   "is_grouped_asset",
+  "opening_stock",
+  "valuation_rate",
+  "standard_rate",
   "asset_category",
   "asset_naming_series",
   "over_delivery_receipt_allowance",
   "over_billing_allowance",
+  "brand",
+  "purchase_pn",
+  "purchase_info",
+  "ean",
+  "location",
   "image",
   "section_break_exip",
   "item_relate",
+  "column_break_zfcf",
+  "required_parts",
+  "oe__oem_section",
+  "column_break_lpsm",
+  "oe_refs",
+  "column_break_vjnc",
+  "oem_refs",
   "section_break_11",
   "description",
-  "brand",
-  "oe__oem_section",
-  "oe_refs",
-  "oem_refs",
   "dashboard_tab",
   "inventory_section",
   "inventory_settings_section",
@@ -137,7 +154,12 @@
    "bold": 1,
    "fieldname": "item_code",
    "fieldtype": "Data",
+   "ignore_user_permissions": 1,
+   "in_filter": 1,
    "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Item Code",
    "oldfieldname": "item_code",
    "oldfieldtype": "Data",
@@ -161,7 +183,12 @@
    "bold": 1,
    "fieldname": "item_name",
    "fieldtype": "Data",
+   "ignore_user_permissions": 1,
+   "in_filter": 1,
    "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Item Name",
    "oldfieldname": "item_name",
    "oldfieldtype": "Data",
@@ -235,7 +262,7 @@
    "depends_on": "is_stock_item",
    "fieldname": "valuation_rate",
    "fieldtype": "Currency",
-   "label": "Valuation Rate"
+   "label": "Retail price"
   },
   {
    "bold": 1,
@@ -287,7 +314,8 @@
    "oldfieldname": "brand",
    "oldfieldtype": "Link",
    "options": "Brand",
-   "print_hide": 1
+   "print_hide": 1,
+   "reqd": 1
   },
   {
    "fieldname": "description",
@@ -888,12 +916,14 @@
    "label": "Deferred Accounting"
   },
   {
+   "columns": 1,
    "fieldname": "oe_refs",
    "fieldtype": "Table",
    "label": "OE Refs",
    "options": "Item OE"
   },
   {
+   "columns": 2,
    "fieldname": "oem_refs",
    "fieldtype": "Table",
    "label": "OEM Refs",
@@ -902,13 +932,16 @@
   {
    "fieldname": "oe_ref",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "OE Ref"
   },
   {
+   "columns": 2,
    "fieldname": "section_break_exip",
    "fieldtype": "Section Break"
   },
   {
+   "columns": 1,
    "fieldname": "item_relate",
    "fieldtype": "Table",
    "label": "Addditional parts",
@@ -917,6 +950,122 @@
   {
    "fieldname": "oe__oem_section",
    "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "item_category",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Category",
+   "options": "Item Category",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sub_category_name",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Sub category name",
+   "options": "Item SubCategory",
+   "reqd": 1
+  },
+  {
+   "fieldname": "tvs_pn",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "TVS PN"
+  },
+  {
+   "default": "NEW",
+   "fieldname": "condition",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Condition",
+   "options": "NEW\nREBUILD",
+   "reqd": 1
+  },
+  {
+   "fieldname": "oe_pn",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "OE PN"
+  },
+  {
+   "fieldname": "oem_pn",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "OEM PN"
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Supplier",
+   "options": "Supplier",
+   "reqd": 1
+  },
+  {
+   "fieldname": "purchase_pn",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Purchase PN"
+  },
+  {
+   "fieldname": "purchase_info",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Purchase info"
+  },
+  {
+   "fieldname": "alternatives",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "alternatives"
+  },
+  {
+   "fieldname": "ean",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "EAN"
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Link",
+   "label": "Location",
+   "options": "Location"
+  },
+  {
+   "allow_bulk_edit": 1,
+   "fieldname": "core_charge",
+   "fieldtype": "Table",
+   "label": "Core charge",
+   "options": "Core Charge Item"
+  },
+  {
+   "columns": 2,
+   "fieldname": "column_break_lpsm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_vjnc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 2,
+   "fieldname": "required_parts",
+   "fieldtype": "Table",
+   "label": "Requrired parts",
+   "options": "Items Relate"
+  },
+  {
+   "fieldname": "column_break_zfcf",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-tag",
@@ -925,7 +1074,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "make_attachments_public": 1,
- "modified": "2024-05-29 21:55:19.605239",
+ "modified": "2024-07-11 18:59:14.011948",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",

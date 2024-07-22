@@ -20,6 +20,8 @@
   "posting_time",
   "set_posting_time",
   "due_date",
+  "licence_plate",
+  "description_title",
   "column_break_14",
   "is_pos",
   "pos_profile",
@@ -240,17 +242,17 @@
    "print_hide": 1
   },
   {
-    "fieldname": "payment_id",
-    "fieldtype": "Data",
-    "in_list_view": 1,
-    "label": "Payment ID"
-   },
-   {
-    "fieldname": "payment_gateway",
-    "fieldtype": "Data",
-    "in_list_view": 1,
-    "label": "Payment Gateway"
-   },
+   "fieldname": "payment_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Payment ID"
+  },
+  {
+   "fieldname": "payment_gateway",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Payment Gateway"
+  },
   {
    "bold": 1,
    "fieldname": "naming_series",
@@ -2190,9 +2192,25 @@
    "label": "Update Billed Amount in Delivery Note"
   },
   {
+   "fetch_from": "project.client_mileage_state",
    "fieldname": "mileage",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Mileage"
+  },
+  {
+   "fetch_from": "project.description_title",
+   "fieldname": "description_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Description title"
+  },
+  {
+   "fetch_from": "project.plate",
+   "fieldname": "licence_plate",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Licence plate"
   }
  ],
  "icon": "fa fa-file-text",
@@ -2205,7 +2223,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2024-04-26 21:46:42.976420",
+ "modified": "2024-07-16 17:32:11.735764",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

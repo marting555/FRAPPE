@@ -106,6 +106,7 @@ frappe.ui.form.on("Project", {
 		localStorage.removeItem("customer")
 		localStorage.removeItem("mileage")
 		localStorage.removeItem("plate")
+		localStorage.removeItem("description_title")
 	},	
 	create_duplicate: function(frm) {
 		return new Promise(resolve => {
