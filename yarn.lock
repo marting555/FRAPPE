@@ -98,10 +98,10 @@
   resolved "https://registry.npmjs.org/@tsconfig/node16/-/node16-1.0.4.tgz"
   integrity sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==
 
-"@tvsgroup/erp-calendar@0.2.4":
-  version "0.2.4"
-  resolved "https://registry.yarnpkg.com/@tvsgroup/erp-calendar/-/erp-calendar-0.2.4.tgz#dcef322a055435060cf7a260f2d1ba9de264d7ec"
-  integrity sha512-4RGV/jhCHY0lRGMvGWVhaZEBduriPSi8kLlFuRSMiOUpSoDDnton0XQdO846bsmHVbh/fxv/Nhq+/kFRm/jGNQ==
+"@tvsgroup/erp-calendar@0.2.8":
+  version "0.2.8"
+  resolved "https://registry.yarnpkg.com/@tvsgroup/erp-calendar/-/erp-calendar-0.2.8.tgz#281342b82391d26454d6b7fe4af52ab3c82cecf0"
+  integrity sha512-9AI6FQztq6l+Q2skwFQ89LKs+RdC3n88WyvBXDi7jbNj2TBz9OQGFgsegvy2NDiDtfBFooE86aG1H1Itm6/FSg==
   dependencies:
     "@fullcalendar/core" "^6.1.9"
     "@fullcalendar/daygrid" "^6.1.9"
