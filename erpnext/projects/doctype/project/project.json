@@ -115,7 +115,8 @@
   "message",
   "parking_date",
   "assistant_confirmed",
-  "bring_car_date"
+  "bring_car_date",
+  "status_modified"
  ],
  "fields": [
   {
@@ -127,13 +128,12 @@
    "unique": 1
   },
   {
-    "fieldname": "description_title",
-    "fieldtype": "Data",
-    "label": "Description Title",
-    "oldfieldtype": "Data"
-   },
+   "fieldname": "description_title",
+   "fieldtype": "Data",
+   "label": "Description Title",
+   "oldfieldtype": "Data"
+  },
   {
-   "default": "",
    "fieldname": "status",
    "fieldtype": "Select",
    "in_list_view": 1,
@@ -254,22 +254,22 @@
   },
   {
    "bold": 1,
+   "description": "Remote Diagnostic Date",
    "fieldname": "remote_diagnostic_date",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "description": "Remote Diagnostic Date",
-   "label":"R.D Date",
+   "label": "R.D Date",
    "oldfieldname": "completion_date",
    "oldfieldtype": "Date"
   },
   {
+   "description": "Remote Diagnostic Time",
    "fetch_if_empty": 1,
    "fieldname": "remote_diagnostic_time",
    "fieldtype": "Select",
    "in_list_view": 1,
    "in_preview": 1,
    "label": "R.D Time",
-   "description": "Remote Diagnostic Time",
    "options": "\n14:00-15:00"
   },
   {
@@ -825,6 +825,13 @@
   {
    "fieldname": "column_break_tlak",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status_modified",
+   "fieldtype": "Date",
+   "hidden": 1,
+   "in_list_view": 1,
+   "label": "status_modified"
   }
  ],
  "icon": "fa fa-puzzle-piece",
@@ -832,7 +839,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-05-16 19:22:19.811478",
+ "modified": "2024-07-23 17:39:12.867080",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
