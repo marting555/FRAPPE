@@ -18,7 +18,6 @@
   "is_loan_car",
   "loan_car",
   "payment_status",
-  "project_type",
   "column_break_5",
   "project_template",
   "parts_status",
@@ -52,6 +51,8 @@
   "model",
   "hp_kw",
   "engine_liters",
+  "type_of_job",
+  "clutch",
   "column_break_15",
   "engine_code",
   "dsg_model",
@@ -59,6 +60,9 @@
   "ecu_number",
   "dsg_gearbox",
   "mechatronic",
+  "project_type",
+  "project_description",
+  "flywheel",
   "section_break18",
   "actual_ecu_number",
   "actual_ecu_software_version",
@@ -154,6 +158,33 @@
    "no_copy": 1,
    "options": "No\nYes\nLoaned car\nCar returned",
    "search_index": 1
+  },
+  {
+   "fieldname": "type_of_job",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Type of job",
+   "no_copy": 1,
+   "options": "DSG Diagnose\nDSG reparatie\nReparatie overig\nSoftware\nParts",
+   "search_index": 1
+  },
+  {
+   "fieldname": "project_description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Project Description"
+  },
+  {
+   "fieldname": "clutch",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Clutch"
+  },
+  {
+   "fieldname": "flywheel",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Flywheel"
   },
   {
    "fieldname": "loan_car",
@@ -839,7 +870,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-07-23 17:39:12.867080",
+ "modified": "2024-07-31 22:37:12.530819",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
