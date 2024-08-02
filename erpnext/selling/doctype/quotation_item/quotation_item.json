@@ -8,6 +8,7 @@
  "field_order": [
   "item_code",
   "customer_item_code",
+  "tvs_pn",
   "col_break1",
   "item_name",
   "section_break_5",
@@ -88,6 +89,8 @@
    "fieldtype": "Link",
    "in_global_search": 1,
    "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Item Code",
    "oldfieldname": "item_code",
    "oldfieldtype": "Link",
@@ -562,12 +565,12 @@
   {
    "fieldname": "brand",
    "fieldtype": "Link",
-   "hidden": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
    "label": "Brand",
    "oldfieldname": "brand",
    "oldfieldtype": "Link",
    "options": "Brand",
-   "print_hide": 1,
    "print_width": "150px",
    "read_only": 1,
    "width": "150px"
@@ -671,12 +674,17 @@
    "label": "Has Alternative Item",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "tvs_pn",
+   "fieldtype": "Data",
+   "label": "TVS PN"
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-04-29 23:06:53.982692",
+ "modified": "2024-08-02 20:42:11.277936",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Quotation Item",
