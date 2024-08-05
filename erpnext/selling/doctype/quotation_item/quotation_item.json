@@ -676,9 +676,10 @@
    "read_only": 1
   },
   {
-   "fieldname": "tvs_pn",
-   "fieldtype": "Data",
-   "label": "TVS PN"
+    "fetch_from": "item_code.tvs_pn",
+    "fieldname": "tvs_pn",
+    "fieldtype": "Data",
+    "label": "TVS PN"
   }
  ],
  "idx": 1,
