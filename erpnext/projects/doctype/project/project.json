@@ -18,6 +18,8 @@
   "is_loan_car",
   "loan_car",
   "payment_status",
+  "language",
+  "has_dongle",
   "column_break_5",
   "project_template",
   "parts_status",
@@ -174,6 +176,19 @@
    "in_list_view": 1,
    "label": "Project Description"
   },
+  {
+    "fieldname": "language",
+    "fieldtype": "Data",
+    "in_list_view": 1,
+    "label": "Language"
+   },
+   {
+    "fieldname": "has_dongle",
+    "default": "0",
+    "fieldtype": "Check",
+    "in_list_view": 1,
+    "label": "Has dongle"
+   },
   {
    "fieldname": "clutch",
    "fieldtype": "Data",
