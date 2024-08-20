@@ -7,13 +7,13 @@
  "engine": "InnoDB",
  "field_order": [
   "title",
+  "income_account",
   "items"
  ],
  "fields": [
   {
    "allow_bulk_edit": 1,
    "bold": 1,
-   "default": "null",
    "fieldname": "items",
    "fieldtype": "Table",
    "ignore_user_permissions": 1,
@@ -32,11 +32,19 @@
    "label": "Name",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "fieldname": "income_account",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Income Account",
+   "options": "Account",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-08-20 19:10:05.714173",
+ "modified": "2024-08-20 22:33:09.154911",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Quotation Templates",

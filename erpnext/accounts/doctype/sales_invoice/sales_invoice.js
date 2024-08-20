@@ -1008,6 +1008,41 @@ frappe.ui.form.on('Sales Invoice', {
 				localStorage.removeItem("description_title")
 			}
 		},500)
+
+		frm.fields_dict.quotation_template.$input.on('awesomplete-select', function(e) {
+            const selected_value = e.originalEvent.text.value;
+            console.log('Template selected invoices:', selected_value);
+
+            frappe.call({
+                method: "frappe.desk.form.load.getdoc",
+                args: {
+                    doctype: "Quotation Templates",
+					name: selected_value,
+                    fields: ["*"]
+                },
+                callback: function(r) {
+                    if (r && r.docs && r.docs.length > 0) {
+						const template_details = r.docs[0];
+						const items = template_details.items.map((item) => {
+							return {
+								uom: item.uom ?? "Nos",
+								income_account: template_details.income_account ?? "Stripe - T",
+								item_code: item.item_code,
+								item_name: item.item_name,
+								description: item.description,
+								qty: item.qty,
+								rate: item.rate,
+								amount: item.rate * item.qty
+							};
+						});
+						frm.set_value('items', items);
+					} else {
+						console.log('No template found with the selected name.');
+					}
+                }
+            });
+        });
+
 		if(frm.is_new()){
 			const customer = localStorage.getItem("customer")
 			const mileage = localStorage.getItem("mileage")

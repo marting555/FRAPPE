@@ -21,6 +21,7 @@
   "set_posting_time",
   "due_date",
   "licence_plate",
+  "quotation_template",
   "description_title",
   "column_break_14",
   "is_pos",
@@ -2211,7 +2212,17 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Licence plate"
-  }
+  },
+  {
+    "fieldname": "quotation_template",
+    "fieldtype": "Link",
+    "label": "Quotation Template",
+    "options": "Quotation Templates",
+    "print_hide": 1,
+    "in_list_view": 1,
+    "in_preview": 1,
+    "in_standard_filter": 1
+   }
  ],
  "icon": "fa fa-file-text",
  "idx": 181,

@@ -7,13 +7,14 @@
  "field_order": [
   "qty",
   "item_code",
-  "item_name",
   "description",
   "rate",
+  "item_name",
   "amount"
  ],
  "fields": [
   {
+   "columns": 1,
    "fieldname": "qty",
    "fieldtype": "Data",
    "in_filter": 1,
@@ -41,22 +42,31 @@
    "width": "150px"
   },
   {
-   "fetch_from": "item_code.description",
-   "fieldname": "description",
-   "fieldtype": "Data",
-   "label": "Description"
-  },
-  {
-   "fetch_from": "item_code.valuation_rate",
-   "fieldname": "rate",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Rate",
-   "options": "currency",
-   "reqd": 1
-  },
-  {
+    "columns": 3,
+    "fetch_from": "item_code.description",
+    "fieldname": "description",
+    "fieldtype": "Data",
+    "label": "Description"
+   },
+   {
     "columns": 2,
+    "fetch_from": "item_code.valuation_rate",
+    "fieldname": "rate",
+    "fieldtype": "Currency",
+    "in_list_view": 1,
+    "label": "Rate",
+    "options": "currency",
+    "reqd": 1
+   },
+  {
+   "fetch_from": "item_code.stock_uom",
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "options": "UOM",
+   "label": "UOM",
+   "read_only": 1
+  },
+  {
     "fieldname": "amount",
     "fieldtype": "Currency",
     "in_list_view": 1,
@@ -64,9 +74,7 @@
     "oldfieldname": "export_amount",
     "oldfieldtype": "Currency",
     "options": "currency",
-    "print_width": "100px",
-    "read_only": 1,
-    "width": "100px"
+    "read_only": 1
    },
   {
    "fetch_from": "item_code.item_name",

@@ -63,8 +63,6 @@ frappe.ui.form.on('Quotation', {
 
 		frm.fields_dict.quotation_template.$input.on('awesomplete-select', function(e) {
             const selected_value = e.originalEvent.text.value;
-            console.log('Template selected:', selected_value);
-
             frappe.call({
                 method: "frappe.desk.form.load.getdoc",
                 args: {
