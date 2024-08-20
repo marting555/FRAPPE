@@ -82,7 +82,7 @@ frappe.ui.form.on('Quotation', {
 								description: item.description,
 								qty: item.qty,
 								rate: item.rate,
-								amount: item.amount
+								amount: item.rate * item.qty
 							};
 						});
 						frm.set_value('items', items);
