@@ -23,6 +23,7 @@
   "mileage",
   "description_title",
   "auto_approve",
+  "quotation_template",
   "column_break1",
   "status",
   "order_type",
@@ -1111,13 +1112,23 @@
    "in_preview": 1,
    "in_standard_filter": 1,
    "label": "Description Title"
+  },
+  {
+   "fieldname": "quotation_template",
+   "fieldtype": "Link",
+   "label": "Quotation Template",
+   "options": "Quotation Templates",
+   "print_hide": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1
   }
  ],
  "icon": "fa fa-shopping-cart",
  "idx": 82,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-07-16 17:44:49.944074",
+ "modified": "2024-08-19 21:19:26.260190",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Quotation",
