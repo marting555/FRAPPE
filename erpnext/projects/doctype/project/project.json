@@ -185,8 +185,8 @@
    "label": "Language"
   },
   {
-   "default": "0",
    "fieldname": "has_dongle",
+   "default": "0",
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Has dongle"
