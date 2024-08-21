@@ -67,6 +67,7 @@ frappe.ui.form.on("Project", {
 			return { filters }
 		})
 
+		frappe.realtime.off("docinfo_update");
 		frappe.realtime.on('docinfo_update', (data) => {
 			if (data.key === "attachment_logs") {
 				insertCarousel(frm)
