@@ -1011,7 +1011,6 @@ frappe.ui.form.on('Sales Invoice', {
 
 		frm.fields_dict.quotation_template.$input.on('awesomplete-select', function(e) {
             const selected_value = e.originalEvent.text.value;
-            console.log('Template selected invoices:', selected_value);
 
             frappe.call({
                 method: "frappe.desk.form.load.getdoc",

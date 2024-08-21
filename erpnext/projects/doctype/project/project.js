@@ -145,8 +145,6 @@ async function installChat(frm) {
 			filters: [['from', '=', frm.doc.custom_customers_phone_number]],
 			fields: ["*"]
 		});
-
-		console.log(conversation)
 		
 		if(!conversation) {
 			instaling = false;

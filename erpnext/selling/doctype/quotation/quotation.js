@@ -74,6 +74,7 @@ frappe.ui.form.on('Quotation', {
                     if (r && r.docs && r.docs.length > 0) {
 						const template_details = r.docs[0];
 						const items = template_details.items.map((item) => {
+							console.log("======> item ", item)
 							return {
 								item_code: item.item_code,
 								item_name: item.item_name,
