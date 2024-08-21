@@ -604,7 +604,8 @@
   {
    "fieldname": "diagnose_result",
    "fieldtype": "Text Editor",
-   "label": "Diagnose result"
+   "label": "Diagnose result",
+   "default":"<p>[Naam] op [datum]:</p><p>Kilomerstand:</p><p>Foutcodes:</p><ul><li>Motor:</li><li>DSG:</li><li>ABS:</li></ul><p>Opgemerkte klachten:</p><ul><li></li><li></li><li></li></ul><p>Diagnose data bijzonderheden:</p><ul><li></li><li></li><li></li></ul><p>Reparatie advies:</p><ul><li></li><li></li><li></li></ul>"
   },
   {
    "collapsible": 1,
