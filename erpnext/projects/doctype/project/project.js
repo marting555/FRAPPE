@@ -262,7 +262,7 @@ async function insertCarousel(frm) {
 					['attached_to_name', 'in', frm.doc.name],
 					['attached_to_doctype', '=', "Project"]
 				],
-				fields: ["file_url"],
+				fields: ["file_url", "file_type"],
 				limit: 10
 			}).then((attachments) => {
 				const tracker = document.querySelector('.glider-track')
@@ -304,40 +304,79 @@ async function insertCarousel(frm) {
 				}
 
 				if (attachments && attachments.length > 0 && glider) {
-					container.style = 'height: auto;'
+					container.style = 'height: auto;overflow:hidden;'
 
 					for (const attachment of attachments) {
-						const img = document.createElement('img')
-						img.setAttribute('src', attachment.file_url)
-						img.addEventListener('touchstart', (e) => handleTouchStart(e, attachment.file_url))
-						img.addEventListener('touchend', handleTouchEnd)
-						glider.addItem(img)
+						const el = createAttachmentElement(attachment)
+						if (el) {
+							setListeners(el, attachment)
+							glider.addItem(el)
+						}
 					}
 
 				} else {
-					container.style = 'height: 0;'
+					container.style = 'height: 0;overflow:hidden;'
 					console.log('No attachments found for this project.');
 				}
 			})
-		}, 2000)// if this time is less than 2 sec it'll be render a wrong carousel
+		}, 3000)// if this time is less than 3 sec it'll be render a wrong carousel
 	})
 }
 
-function handleTouchStart(e, url) {
+function setListeners(el, attachment) {
+	let element = el
+
+	if(attachment.file_type === "MOV" || attachment.file_type === "MP4") return null
+	if (attachment.file_type === 'PDF' || attachment.file_url === 'TXT') {
+		element = el.querySelector('#touch-overlay')
+	}
+	element.addEventListener('touchstart', (e) => handleTouchStart(e, attachment))
+	element.addEventListener('touchend', handleTouchEnd)
+
+}
+
+function createAttachmentElement(attachment) {
+	let el;
+
+	switch(attachment.file_type){
+		case "PDF":
+		case "TXT":
+			el = document.createElement('div')
+			el.style = `width: 100%;overflow: hidden; position: relative;`
+			el.innerHTML = `<iframe src="${attachment.file_url}" frameborder="0" class="glider-iframe"></iframe> <div id="touch-overlay"></div>`
+			break;
+		case "MOV":
+			case "MP4":
+			el = document.createElement('video')
+			el.className = 'video-container'
+			el.setAttribute('controls', 'true')
+			el.setAttribute('src',attachment.file_url)
+			break;
+		default:
+			el = document.createElement('img')
+			el.setAttribute('src', attachment.file_url)
+	}
+
+	return el
+}
+
+
+function handleTouchStart(e, attachment) {
 	touchTimeout = setTimeout(() => {
-		const imageContainer = document.querySelector('#selected-attachment')
-		const img = imageContainer.querySelector('img')
-		img.setAttribute('src', url)
-		img.addEventListener('touchend', handleTouchEnd)
-		imageContainer.removeAttribute('hidden')
+		const attachmentContainer = document.querySelector('#selected-attachment')
+		const el = createAttachmentElement(attachment)
+		attachmentContainer.addEventListener('touchend', handleTouchEnd)
+		attachmentContainer.appendChild(el)
+		attachmentContainer.removeAttribute('hidden')
 	}, 1000)
 }
 
 function handleTouchEnd(e) {
 	clearTimeout(touchTimeout)
-	const imageContainer = document.querySelector('#selected-attachment')
-	if (imageContainer) {
-		imageContainer.setAttribute('hidden', "true")
+	const attachmentContainer = document.querySelector('#selected-attachment')
+	if (attachmentContainer) {
+		attachmentContainer.innerHTML = ``
+		attachmentContainer.setAttribute('hidden', "true")
 	}
 }
 
