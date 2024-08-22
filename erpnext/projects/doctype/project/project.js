@@ -262,7 +262,7 @@ async function insertCarousel(frm) {
 					['attached_to_name', 'in', frm.doc.name],
 					['attached_to_doctype', '=', "Project"]
 				],
-				fields: ["file_url"],
+				fields: ["file_url", "file_type"],
 				limit: 10
 			}).then((attachments) => {
 				const tracker = document.querySelector('.glider-track')
@@ -325,6 +325,8 @@ async function insertCarousel(frm) {
 
 function setListeners(el, attachment) {
 	let element = el
+
+	if(attachment.file_type === "MOV" || attachment.file_type === "MP4") return null
 	if (attachment.file_type === 'PDF' || attachment.file_url === 'TXT') {
 		element = el.querySelector('#touch-overlay')
 	}
@@ -335,14 +337,26 @@ function setListeners(el, attachment) {
 
 function createAttachmentElement(attachment) {
 	let el;
-	if (attachment.file_type === "PDF" || attachment.file_type === "TXT") {
-		el = document.createElement('div')
-		el.style = `width: 100%;overflow: hidden; position: relative;`
-		el.innerHTML = `<iframe src="${attachment.file_url}" frameborder="0" class="glider-iframe"></iframe> <div id="touch-overlay"></div>`
-	} else {
-		el = document.createElement('img')
-		el.setAttribute('src', attachment.file_url)
+
+	switch(attachment.file_type){
+		case "PDF":
+		case "TXT":
+			el = document.createElement('div')
+			el.style = `width: 100%;overflow: hidden; position: relative;`
+			el.innerHTML = `<iframe src="${attachment.file_url}" frameborder="0" class="glider-iframe"></iframe> <div id="touch-overlay"></div>`
+			break;
+		case "MOV":
+			case "MP4":
+			el = document.createElement('video')
+			el.className = 'video-container'
+			el.setAttribute('controls', 'true')
+			el.setAttribute('src',attachment.file_url)
+			break;
+		default:
+			el = document.createElement('img')
+			el.setAttribute('src', attachment.file_url)
 	}
+
 	return el
 }
 
