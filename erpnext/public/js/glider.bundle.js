@@ -6,7 +6,7 @@ import 'glider-js';
   const imageContainer = document.createElement('div')
 
   el.className = 'glider-contain'
-  el.style = 'width: 90% !important;'
+  el.style = 'width: 90% !important;height: 0;overflow:hidden;'
   el.innerHTML = `
 			<div class="glider"></div>
 			<button aria-label="Previous" class="glider-prev">«</button>
@@ -16,7 +16,6 @@ import 'glider-js';
   imageContainer.className = 'selected-attachment'
   imageContainer.setAttribute('id', 'selected-attachment')
   imageContainer.setAttribute('hidden', 'true')
-  imageContainer.innerHTML = `<img src="" />`
 
   container.append(el, imageContainer)
 })()
