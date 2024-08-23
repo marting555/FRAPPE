@@ -105,6 +105,8 @@
   "gross_margin",
   "column_break_37",
   "per_gross_margin",
+  "attachments",
+  "html_hckl",
   "monitor_progress",
   "collect_progress",
   "holiday_list",
@@ -871,6 +873,15 @@
    "hidden": 1,
    "in_list_view": 1,
    "label": "status_modified"
+  },
+  {
+   "fieldname": "attachments",
+   "fieldtype": "Section Break",
+   "label": "Attachments"
+  },
+  {
+   "fieldname": "html_hckl",
+   "fieldtype": "HTML"
   }
  ],
  "icon": "fa fa-puzzle-piece",

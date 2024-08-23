@@ -66,6 +66,13 @@ frappe.ui.form.on("Project", {
 			]
 			return { filters }
 		})
+
+		frappe.realtime.off("docinfo_update");
+		frappe.realtime.on('docinfo_update', (data) => {
+			if (data.key === "attachment_logs") {
+				insertCarousel(frm)
+			}
+		})
 	},
 
 	refresh: async function (frm) {
@@ -100,6 +107,7 @@ frappe.ui.form.on("Project", {
 			document.querySelector('#chat-container').remove()
 		}
 		installChat(frm);
+		insertCarousel(frm)
 	},
 	after_save: function(frm){
 		localStorage.removeItem("autosave")
@@ -243,5 +251,132 @@ function open_form(frm, doctype, child_doctype, parentfield) {
 		frappe.ui.form.make_quick_entry(doctype, null, null, new_doc);
 	});
 
+}
+
+let touchTimeout;
+async function insertCarousel(frm) {
+	frappe.require('glider.bundle.js', () => {
+		setTimeout(() => {
+			frappe.db.get_list("File", {
+				filters: [
+					['attached_to_name', 'in', frm.doc.name],
+					['attached_to_doctype', '=', "Project"]
+				],
+				fields: ["file_url", "file_type"],
+				limit: 10
+			}).then((attachments) => {
+				const tracker = document.querySelector('.glider-track')
+				const container = document.querySelector('.glider-contain')
+				const gliderEl = document.querySelector('.glider')
+
+				const glider = new Glider(gliderEl, {
+					slidesToShow: 1,
+					draggable: true,
+					dots: '.dots',
+					arrows: {
+						prev: '.glider-prev',
+						next: '.glider-next'
+					},
+					responsive: [
+						{
+							breakpoint: 600,
+							settings: {
+								slidesToShow: 2,
+								slidesToScroll: 2,
+								duration: 0.25
+							}
+						}, {
+							breakpoint: 1024,
+							settings: {
+								slidesToShow: 5,
+								slidesToScroll: 5,
+								duration: 0.25
+							}
+						}
+					]
+				})
+
+				//remove all items
+				if (tracker && glider) {
+					for (let index = 0; index < tracker.childElementCount; index++) {
+						glider.removeItem(index)
+					}
+				}
+
+				if (attachments && attachments.length > 0 && glider) {
+					container.style = 'height: auto;overflow:hidden;'
+
+					for (const attachment of attachments) {
+						const el = createAttachmentElement(attachment)
+						if (el) {
+							setListeners(el, attachment)
+							glider.addItem(el)
+						}
+					}
+
+				} else {
+					container.style = 'height: 0;overflow:hidden;'
+					console.log('No attachments found for this project.');
+				}
+			})
+		}, 3000)// if this time is less than 3 sec it'll be render a wrong carousel
+	})
+}
+
+function setListeners(el, attachment) {
+	let element = el
+
+	if(attachment.file_type === "MOV" || attachment.file_type === "MP4") return null
+	if (attachment.file_type === 'PDF' || attachment.file_url === 'TXT') {
+		element = el.querySelector('#touch-overlay')
+	}
+	element.addEventListener('touchstart', (e) => handleTouchStart(e, attachment))
+	element.addEventListener('touchend', handleTouchEnd)
+
+}
+
+function createAttachmentElement(attachment) {
+	let el;
+
+	switch(attachment.file_type){
+		case "PDF":
+		case "TXT":
+			el = document.createElement('div')
+			el.style = `width: 100%;overflow: hidden; position: relative;`
+			el.innerHTML = `<iframe src="${attachment.file_url}" frameborder="0" class="glider-iframe"></iframe> <div id="touch-overlay"></div>`
+			break;
+		case "MOV":
+			case "MP4":
+			el = document.createElement('video')
+			el.className = 'video-container'
+			el.setAttribute('controls', 'true')
+			el.setAttribute('src',attachment.file_url)
+			break;
+		default:
+			el = document.createElement('img')
+			el.setAttribute('src', attachment.file_url)
+	}
+
+	return el
+}
+
+
+function handleTouchStart(e, attachment) {
+	touchTimeout = setTimeout(() => {
+		const attachmentContainer = document.querySelector('#selected-attachment')
+		const el = createAttachmentElement(attachment)
+		attachmentContainer.addEventListener('touchend', handleTouchEnd)
+		attachmentContainer.appendChild(el)
+		attachmentContainer.removeAttribute('hidden')
+	}, 1000)
+}
+
+function handleTouchEnd(e) {
+	clearTimeout(touchTimeout)
+	const attachmentContainer = document.querySelector('#selected-attachment')
+	if (attachmentContainer) {
+		attachmentContainer.innerHTML = ``
+		attachmentContainer.setAttribute('hidden', "true")
+	}
 }
 
