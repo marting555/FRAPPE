@@ -208,31 +208,56 @@ async function installChat(frm) {
 
 let is_quotation_installed = false;
 function installQuotationItems(frm) {
-	if (frm.is_new()) return;
+    if (frm.is_new()) return;
     if (is_quotation_installed) return;
-    const container = document.querySelector('div[data-fieldname="customer_details"]');
+    
+    const container = document.querySelector('div[data-fieldname="customer_details"] .section-body');
     if (!container) {
         return;
     }
+    
+    // Eliminar el componente existente si está presente
     const existingComponent = container.querySelector("erp-quotation-items");
     if (existingComponent) {
         container.removeChild(existingComponent);
     }
+    
     is_quotation_installed = true;
+    
+    // Crear un contenedor adicional para manejar el desbordamiento
+    const wrapper = document.createElement("div");
+    wrapper.style.width = '100%';  // Ajusta al tamaño del contenedor
+    wrapper.style.overflow = 'auto';  // Permite el scroll si es necesario
+    
     frappe.require("erp-quotation-items.bundle.js").then(() => {
         const element = document.createElement("erp-quotation-items");
-        element.style.width = '100%';
-        container.appendChild(element);
-		setTimeout(() => {
-			element._instance.exposed.setFrappe(frappe)
-			element._instance.exposed.setProjectName(frm.doc.name)
-			is_quotation_installed = false;
-		}, 100);
+        element.style.width = '100%';  // Asegura que el componente no exceda el contenedor
+        element.style.maxWidth = '100%';  // Evita que el componente se expanda más allá del contenedor
+        element.style.boxSizing = 'border-box';  // Incluye padding y border en el ancho total
+        element.style.display = 'block';  // Asegura que el componente se comporte como un bloque
+        
+        // Añadir el componente al contenedor wrapper
+        wrapper.appendChild(element);
+        container.appendChild(wrapper);
+        
+        // Forzar un redibujado del contenedor
+        container.style.overflow = 'hidden';  // Establecer overflow a hidden
+        container.offsetHeight;  // Forzar un reflujo
+        container.style.overflow = 'auto';  // Restaurar overflow a auto
+        
+        setTimeout(() => {
+            element._instance.exposed.setFrappe(frappe);
+            element._instance.exposed.setProjectName(frm.doc.name);
+			element._instance.exposed.setUserSession(frappe.session)
+            is_quotation_installed = false;
+        }, 100);
     }).catch((err) => {
         console.error("Error loading erp-quotation-items", err);
         is_quotation_installed = false;
     });
 }
+
+
 
 
 function open_form(frm, doctype, child_doctype, parentfield) {

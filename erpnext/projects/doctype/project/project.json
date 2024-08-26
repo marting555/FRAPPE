@@ -38,9 +38,7 @@
   "appointment_date",
   "done",
   "customer_details",
-  "column_break_ucta",
   "project_invoice",
-  "column_break_tlak",
   "customer",
   "sales_order",
   "team_viewer_id",
@@ -105,8 +103,6 @@
   "gross_margin",
   "column_break_37",
   "per_gross_margin",
-  "attachments",
-  "html_hckl",
   "monitor_progress",
   "collect_progress",
   "holiday_list",
@@ -364,7 +360,7 @@
    "options": "User"
   },
   {
-   "columns": 2,
+   "collapsible": 1,
    "fieldname": "customer_details",
    "fieldtype": "Section Break",
    "label": "Quotation",
@@ -860,28 +856,11 @@
    "label": "Appointment date"
   },
   {
-   "fieldname": "column_break_ucta",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_tlak",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "status_modified",
    "fieldtype": "Date",
    "hidden": 1,
    "in_list_view": 1,
    "label": "status_modified"
-  },
-  {
-   "fieldname": "attachments",
-   "fieldtype": "Section Break",
-   "label": "Attachments"
-  },
-  {
-   "fieldname": "html_hckl",
-   "fieldtype": "HTML"
   }
  ],
  "icon": "fa fa-puzzle-piece",
@@ -889,7 +868,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-08-21 23:25:48.212997",
+ "modified": "2024-08-26 21:04:53.886530",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
