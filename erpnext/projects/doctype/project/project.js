@@ -96,16 +96,17 @@ frappe.ui.form.on("Project", {
 							message:__('New invoice or quotation was created and added to the project. Autosaving'),
 							indicator:'green'
 						}, 10);
-						installQuotationItems(frm)
+						// installQuotationItems(frm)
 					},1500)
 				}
 			}
 		}else{
-			installQuotationItems(frm)
+			// installQuotationItems(frm)
 		}
 		if(document.querySelector('#chat-container')){
 			document.querySelector('#chat-container').remove()
 		}
+		installQuotationItems(frm)
 		installChat(frm);
 		insertCarousel(frm)
 	},
@@ -212,6 +213,7 @@ function installQuotationItems(frm) {
     if (is_quotation_installed) return;
     
     const container = document.querySelector('div[data-fieldname="customer_details"]');
+	console.log("container quotation items ",container)
     if (!container) {
         return;
     }
@@ -256,9 +258,6 @@ function installQuotationItems(frm) {
         is_quotation_installed = false;
     });
 }
-
-
-
 
 function open_form(frm, doctype, child_doctype, parentfield) {
 	frappe.model.with_doctype(doctype, () => {
