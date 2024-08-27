@@ -194,7 +194,7 @@ function installQuotationItems(frm) {
     if (frm.is_new()) return;
     if (is_quotation_installed) return;
     
-    const container = document.querySelector('div[data-fieldname="customer_details"] .section-body' );
+    const container = document.querySelector('div[data-fieldname="customer_details"] .section-body');
     if (!container) {
         return;
     }

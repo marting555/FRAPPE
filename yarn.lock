@@ -114,10 +114,10 @@
     pinia "^2.1.7"
     vue "^3.3.4"
 
-"@tvsgroup/erp-quotation-items@0.1.5":
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/@tvsgroup/erp-quotation-items/-/erp-quotation-items-0.1.5.tgz#4411fb8283603f2d431d2f373da5d5ce2d465ae9"
-  integrity sha512-yHPFU7OSgLKKsXfSx0Gu5q4VNFheWs4O+2ngT1Y7dk/LCgFsMNNYnKH+9LOXU6RNL/gUJnLqXRrsj73mRC+rCg==
+"@tvsgroup/erp-quotation-items@0.1.7":
+  version "0.1.7"
+  resolved "https://registry.yarnpkg.com/@tvsgroup/erp-quotation-items/-/erp-quotation-items-0.1.7.tgz#91f865ce51d7a2a31cca4bbea0385e1a4be868f7"
+  integrity sha512-+KrDZtDMtAuP9X0WBYBmO99snk9nyvo2Fk7nkKaof4PTuh2LykjAVRyhJtB92VXRXG5U89BqWyfkl9a/Ic9oaA==
   dependencies:
     pinia "^2.1.7"
     ts-node "^10.9.2"
