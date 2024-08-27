@@ -51,73 +51,35 @@ frappe.ui.form.on('Quotation', {
 	},
 
 	refresh: function(frm) {
-		setTimeout(()=> {
-			const autosave_store = localStorage.getItem("autosave")
-			if(!autosave_store){
-				localStorage.removeItem("customer")
-				localStorage.removeItem("mileage")
-				localStorage.removeItem("plate")
-				localStorage.removeItem("description_title")
-			}
-		},500)
-
-		frm.fields_dict.quotation_template.$input.on('awesomplete-select', function(e) {
+				frm.fields_dict.quotation_template.$input.on('awesomplete-select', function(e) {
             const selected_value = e.originalEvent.text.value;
             frappe.call({
                 method: "frappe.desk.form.load.getdoc",
                 args: {
                     doctype: "Quotation Templates",
-					name: selected_value,
+										name: selected_value,
                     fields: ["*"]
                 },
                 callback: function(r) {
                     if (r && r.docs && r.docs.length > 0) {
-						const template_details = r.docs[0];
-						const items = template_details.items.map((item) => {
-							return {
-								item_code: item.item_code,
-								item_name: item.item_name,
-								description: item.description,
-								qty: item.qty,
-								rate: item.rate,
-								amount: item.rate * item.qty
-							};
-						});
-						frm.set_value('items', items);
-					} else {
-						console.log('No template found with the selected name.');
-					}
+											const template_details = r.docs[0];
+											const items = template_details.items.map((item) => {
+												return {
+													item_code: item.item_code,
+													item_name: item.item_name,
+													description: item.description,
+													qty: item.qty,
+													rate: item.rate,
+													amount: item.rate * item.qty
+												};
+											});
+											frm.set_value('items', items);
+										} else {
+											console.log('No template found with the selected name.');
+										}
                 }
             });
         });
-
-		if(frm.is_new()){
-			const customer = localStorage.getItem("customer")
-			const mileage = localStorage.getItem("mileage")
-			const plate = localStorage.getItem("plate")
-			const description_title = localStorage.getItem("description_title")
-			if (customer){
-				frm.set_value({
-					party_name: customer
-				})
-			}
-			if (mileage) {
-				frm.set_value({
-					mileage
-				})
-			}
-			if(plate){
-				frm.set_value({plate})
-			}
-			if(description_title){
-				frm.set_value({description_title})
-			}
-		}else {
-			localStorage.removeItem("customer")
-			localStorage.removeItem("mileage")
-			localStorage.removeItem("plate")
-			localStorage.removeItem("description_title")
-		}
 		
 		frm.trigger("set_label");
 		frm.trigger("set_dynamic_field_label");
@@ -143,13 +105,6 @@ frappe.ui.form.on('Quotation', {
 	set_label: function(frm) {
 		frm.fields_dict.customer_address.set_label(__(frm.doc.quotation_to + " Address"));
 	},
-
-	after_save(){
-		localStorage.removeItem("customer")
-		localStorage.removeItem("mileage")
-		localStorage.removeItem("plate")
-		localStorage.removeItem("description_title")
-	}
 });
 
 erpnext.selling.QuotationController = class QuotationController extends erpnext.selling.SellingController {

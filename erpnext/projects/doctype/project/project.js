@@ -82,41 +82,23 @@ frappe.ui.form.on("Project", {
 			frm.add_web_link("/projects?project=" + encodeURIComponent(frm.doc.name));
 			frm.trigger('show_dashboard');
 		}
-		frm.trigger("set_custom_buttons");
-		let store_autosave = localStorage.getItem("autosave")
-		if(store_autosave){
-			store_autosave = JSON.parse(store_autosave)
-			if(!store_autosave.is_saved){
-				const url = window.location.href.split("/app/")
-				if(url.length > 0 && url[1] === "project/"+store_autosave.from_name){	
-					setTimeout(()=>{
-						frm.save();
-						localStorage.removeItem("autosave")
-						frappe.show_alert({
-							message:__('New invoice or quotation was created and added to the project. Autosaving'),
-							indicator:'green'
-						}, 10);
-						// installQuotationItems(frm)
-					},1500)
-				}
-			}
-		}else{
-			// installQuotationItems(frm)
-		}
-		if(document.querySelector('#chat-container')){
-			document.querySelector('#chat-container').remove()
-		}
+		
 		installQuotationItems(frm)
 		installChat(frm);
-		insertCarousel(frm)
+		insertCarousel(frm);
+
+		if (!frm.is_new()) {
+			frm.add_custom_button(__("Create quotation"),  async () => {
+				let new_doc = await frappe.model.get_new_doc("Quotation");
+				new_doc.quotation_to = 'Customer';
+				new_doc.party_name = frm.doc.customer;
+				new_doc.project_name = frm.doc.name;
+				frappe.ui.form.make_quick_entry('Quotation', null, null, new_doc);
+			})
+		}
+
+		frm.trigger("set_custom_buttons");
 	},
-	after_save: function(frm){
-		localStorage.removeItem("autosave")
-		localStorage.removeItem("customer")
-		localStorage.removeItem("mileage")
-		localStorage.removeItem("plate")
-		localStorage.removeItem("description_title")
-	},	
 	create_duplicate: function(frm) {
 		return new Promise(resolve => {
 			frappe.prompt('Project Name', (data) => {
@@ -146,6 +128,9 @@ frappe.ui.form.on("Project", {
 
 let instaling = false;
 async function installChat(frm) {
+	if (document.querySelector('#chat-container')){
+		document.querySelector('#chat-container').remove();
+	}
 	frm.page.container.removeClass("full-width");
 	if(instaling) return;
 	instaling = true;
@@ -159,9 +144,6 @@ async function installChat(frm) {
 			instaling = false;
 			return;
 		};
-
-		
-
 		const chatContainer = document.createElement('div')
 
 		const button = document.createElement('button')
