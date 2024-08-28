@@ -85,8 +85,12 @@ frappe.ui.form.on("Project", {
 
 		if (!frm.is_new()) {
 			frm.add_custom_button(__("Create quotation"),  async () => {
-				frappe.new_doc("Quotation", {
+				const doc = await frappe.model.get_new_doc('Quotation');
+				doc.party_name = frm.doc.customer;
+				frappe.new_doc('Quotation', {
 					project_name: frm.doc.name,
+					party_name: frm.doc.customer,
+					quotation_to: 'Customer'
 				});
 			})
 		}
