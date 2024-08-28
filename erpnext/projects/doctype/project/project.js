@@ -274,6 +274,8 @@ async function insertCarousel(frm) {
 				const container = document.querySelector('.glider-contain')
 				const gliderEl = document.querySelector('.glider')
 
+				if(!gliderEl) return null
+
 				const glider = new Glider(gliderEl, {
 					slidesToShow: 1,
 					draggable: true,

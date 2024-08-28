@@ -2,6 +2,9 @@ import 'glider-js';
 
 (async () => {
   const container = document.querySelector('[data-fieldname=attachments] form')
+
+  if(!container) return null;
+
   const el = document.createElement('div')
   const imageContainer = document.createElement('div')
 
