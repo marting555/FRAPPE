@@ -78,6 +78,8 @@
   "client_mileage_state",
   "section_break2",
   "diagnose_result",
+  "attachments",
+  "html_pybn",
   "section_break_18",
   "actual_start_date",
   "actual_time",
@@ -861,6 +863,15 @@
    "hidden": 1,
    "in_list_view": 1,
    "label": "status_modified"
+  },
+  {
+   "fieldname": "attachments",
+   "fieldtype": "Section Break",
+   "label": "Attachments"
+  },
+  {
+   "fieldname": "html_pybn",
+   "fieldtype": "HTML"
   }
  ],
  "icon": "fa fa-puzzle-piece",
@@ -868,7 +879,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-08-26 21:04:53.886530",
+ "modified": "2024-08-28 19:15:59.477374",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
