@@ -82,20 +82,18 @@ frappe.ui.form.on("Project", {
 			frm.add_web_link("/projects?project=" + encodeURIComponent(frm.doc.name));
 			frm.trigger('show_dashboard');
 		}
+
+		if (!frm.is_new()) {
+			frm.add_custom_button(__("Create quotation"),  async () => {
+				frappe.new_doc("Quotation", {
+					project_name: frm.doc.name,
+				});
+			})
+		}
 		
 		installQuotationItems(frm)
 		installChat(frm);
 		insertCarousel(frm);
-
-		if (!frm.is_new()) {
-			frm.add_custom_button(__("Create quotation"),  async () => {
-				let new_doc = await frappe.model.get_new_doc("Quotation");
-				new_doc.quotation_to = 'Customer';
-				new_doc.party_name = frm.doc.customer;
-				new_doc.project_name = frm.doc.name;
-				frappe.ui.form.make_quick_entry('Quotation', null, null, new_doc);
-			})
-		}
 
 		frm.trigger("set_custom_buttons");
 	},
