@@ -51,36 +51,6 @@ frappe.ui.form.on('Quotation', {
 	},
 
 	refresh: function(frm) {
-				frm.fields_dict.quotation_template.$input.on('awesomplete-select', function(e) {
-            const selected_value = e.originalEvent.text.value;
-            frappe.call({
-                method: "frappe.desk.form.load.getdoc",
-                args: {
-                    doctype: "Quotation Templates",
-										name: selected_value,
-                    fields: ["*"]
-                },
-                callback: function(r) {
-                    if (r && r.docs && r.docs.length > 0) {
-											const template_details = r.docs[0];
-											const items = template_details.items.map((item) => {
-												return {
-													item_code: item.item_code,
-													item_name: item.item_name,
-													description: item.description,
-													qty: item.qty,
-													rate: item.rate,
-													amount: item.rate * item.qty
-												};
-											});
-											frm.set_value('items', items);
-										} else {
-											console.log('No template found with the selected name.');
-										}
-                }
-            });
-        });
-		
 		frm.trigger("set_label");
 		frm.trigger("set_dynamic_field_label");
 
@@ -111,6 +81,26 @@ erpnext.selling.QuotationController = class QuotationController extends erpnext.
 	onload(doc, dt, dn) {
 		super.onload(doc, dt, dn);
 	}
+	quotation_template() {
+		console.log("quotation_template", this.frm.doc.quotation_template);
+		if (this.frm.doc.quotation_template) {
+			frappe.db.get_doc("Quotation Templates", this.frm.doc.quotation_template).then((doc) => {
+				const items = doc.items.map((item) => {
+					return {
+						item_code: item.item_code,
+						item_name: item.item_name,
+						description: item.description,
+						qty: item.qty,
+						rate: item.rate,
+						amount: item.rate * item.qty
+					};
+				});
+				this.frm.set_value('items', items);
+				this.apply_price_list();
+			})
+		}
+	}
+
 	party_name() {
 		var me = this;
 		erpnext.utils.get_party_details(this.frm, null, null, function() {
@@ -191,7 +181,6 @@ erpnext.selling.QuotationController = class QuotationController extends erpnext.
 		}
 
 		this.toggle_reqd_lead_customer();
-
 	}
 
 	make_sales_order() {
