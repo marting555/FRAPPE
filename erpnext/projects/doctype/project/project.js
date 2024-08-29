@@ -95,8 +95,8 @@ frappe.ui.form.on("Project", {
 			})
 		}
 		
-		installQuotationItems(frm)
 		installChat(frm);
+		installQuotationItems(frm)
 		insertCarousel(frm);
 
 		frm.trigger("set_custom_buttons");
@@ -204,7 +204,7 @@ function installQuotationItems(frm) {
     // Eliminar el componente existente si está presente
     const existingComponent = container.querySelector("erp-quotation-items");
     if (existingComponent) {
-        container.removeChild(existingComponent);
+        existingComponent.remove();
     }
     
     is_quotation_installed = true;
