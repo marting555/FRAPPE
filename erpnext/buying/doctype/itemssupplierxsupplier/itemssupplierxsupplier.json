@@ -1,0 +1,39 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "hash",
+ "creation": "2024-07-08 16:59:09.889923",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_odfy",
+  "names"
+ ],
+ "fields": [
+  {
+   "fieldname": "names",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Names",
+   "options": "ItemsSupplier"
+  },
+  {
+   "fieldname": "section_break_odfy",
+   "fieldtype": "Section Break"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-07-08 17:03:08.621529",
+ "modified_by": "Administrator",
+ "module": "Buying",
+ "name": "ItemsSupplierXSupplier",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
