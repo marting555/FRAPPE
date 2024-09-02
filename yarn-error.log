@@ -14,7 +14,7 @@ Platform:
   linux x64
 
 Trace: 
-  Error: EACCES: permission denied, unlink '/home/erpuser/frappe-bench/apps/erpnext/node_modules/@babel/helper-validator-identifier/LICENSE'
+  Error: EACCES: permission denied, unlink '/home/erpuser/frappe-bench/apps/erpnext/node_modules/@babel/helper-string-parser/LICENSE'
 
 npm manifest: 
   {
@@ -31,7 +31,7 @@ npm manifest:
       "url": "https://github.com/frappe/erpnext/issues"
     },
     "dependencies": {
-      "@tvsgroup/erp-calendar": "^0.5.3",
+      "@tvsgroup/erp-calendar": "^0.5.7",
       "@tvsgroup/erp-quotation-items": "0.1.7",
       "glider-js": "^1.7.9",
       "onscan.js": "^1.5.2"
@@ -163,10 +163,10 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/@tsconfig/node16/-/node16-1.0.4.tgz#0b92dcc0cc1c81f6f306a381f28e31b1a56536e9"
     integrity sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==
   
-  "@tvsgroup/erp-calendar@^0.5.3":
-    version "0.5.3"
-    resolved "https://registry.yarnpkg.com/@tvsgroup/erp-calendar/-/erp-calendar-0.5.3.tgz#9cb077b988d1b13591ac4c1a5604b58bc1082fe0"
-    integrity sha512-GsI4zwfXpkUcFaYJU4IwkHpMCUBRiRb5BjJklrodpNxOaoHXM3VyRIz6qFRcKxE9fKFiTmhE3Umv8OMvTXeVNg==
+  "@tvsgroup/erp-calendar@^0.5.7":
+    version "0.5.7"
+    resolved "https://registry.yarnpkg.com/@tvsgroup/erp-calendar/-/erp-calendar-0.5.7.tgz#c5b64154dea49b8e12d9612d8576db6da32d344e"
+    integrity sha512-xhFED402OmeWcrv80MXAxFamZhlzgokrpc6mWsiqnVbQifvq+RG+htNmAuuPa4JOhdxLkbhvpidx0al2PR6VEQ==
     dependencies:
       "@fullcalendar/core" "^6.1.9"
       "@fullcalendar/daygrid" "^6.1.9"
