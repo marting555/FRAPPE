@@ -58,10 +58,6 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends e
 	}
 
 	refresh(doc, dt, dn) {
-		const autosave_store = localStorage.getItem("autosave")
-		if(!autosave_store){
-			localStorage.removeItem("customer")
-		}
 		const me = this;
 		super.refresh();
 		if(cur_frm.msgbox && cur_frm.msgbox.$wrapper.is(":visible")) {
@@ -998,17 +994,6 @@ frappe.ui.form.on('Sales Invoice', {
 			frm.set_df_property('return_against', 'label', __('Adjustment Against'));
 		}
 
-
-		setTimeout(()=> {
-			const autosave_store = localStorage.getItem("autosave")
-			if(!autosave_store){
-				localStorage.removeItem("customer")
-				localStorage.removeItem("mileage")
-				localStorage.removeItem("plate")
-				localStorage.removeItem("description_title")
-			}
-		},500)
-
 		frm.fields_dict.quotation_template.$input.on('awesomplete-select', function(e) {
             const selected_value = e.originalEvent.text.value;
             frappe.call({
@@ -1040,34 +1025,6 @@ frappe.ui.form.on('Sales Invoice', {
                 }
             });
         });
-
-		if(frm.is_new()){
-			const customer = localStorage.getItem("customer")
-			const mileage = localStorage.getItem("mileage")
-			const plate = localStorage.getItem("plate")
-			const description_title = localStorage.getItem("description_title")
-			if (customer){
-				frm.set_value({
-					customer: customer
-				})
-			}
-			if (mileage) {
-				frm.set_value({
-					mileage
-				})
-			}
-			if(plate){
-				frm.set_value({licence_plate: plate})
-			}
-			if(description_title){
-				frm.set_value({description_title})
-			}
-		}else {
-			localStorage.removeItem("customer")
-			localStorage.removeItem("mileage")
-			localStorage.removeItem("plate")
-			localStorage.removeItem("description_title")
-		}
 	},
 
 	create_invoice_discounting: function(frm) {
