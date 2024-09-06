@@ -23,6 +23,7 @@
   "column_break_5",
   "project_template",
   "parts_status",
+  "car_driving",
   "software_status",
   "expected_start_date",
   "expected_end_date",
@@ -188,6 +189,13 @@
    "in_list_view": 1,
    "label": "Has dongle"
   },
+  {
+    "default": "0",
+    "fieldname": "car_driving",
+    "fieldtype": "Check",
+    "in_list_view": 1,
+    "label": "Car Driving"
+   },
   {
    "fieldname": "clutch",
    "fieldtype": "Data",
