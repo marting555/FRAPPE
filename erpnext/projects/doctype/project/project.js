@@ -98,6 +98,7 @@ frappe.ui.form.on("Project", {
 		installChat(frm);
 		installQuotationItems(frm)
 		insertCarousel(frm);
+    insertVinSearchButton(frm)
 
 		frm.trigger("set_custom_buttons");
 	},
@@ -389,3 +390,132 @@ function handleTouchEnd(e) {
 	}
 }
 
+async function insertVinSearchButton(frm) {
+  const container = document.querySelector('div[data-fieldname="vin"] .form-group .clearfix');
+
+  if (!container) {
+    return;
+  }
+
+  let vin = "";
+  let initialVin="";
+  let endpoint;
+
+  if (frm.doc.vin) {
+    vin = frm.doc.vin.trim()
+    initialVin = frm.doc.vin.trim()
+  }
+
+  const { vin_search_url } = await frappe.db.get_doc('Vin Search')
+  const vin_field_input = document.querySelector('div[data-fieldname="vin"] .form-group .control-input-wrapper .control-input input');
+ 
+  vin_field_input.addEventListener('input', function() {
+    vin = vin_field_input.value
+  });
+
+
+  if (!document.getElementById('vinSearch')) {
+    const button = document.createElement('button');
+    button.id = 'vinSearch';
+    button.style.border = 'none';
+    button.style.background = 'black';
+    button.style.padding = '2px';
+    button.style.color = "white"
+    button.style.borderRadius = "5px"
+    button.style.position = "relative"
+
+    const tooltip = document.createElement('span');
+    tooltip.textContent = "Vin Search";
+    tooltip.style.fontSize = "12px";
+    tooltip.style.backgroundColor = "#171717";
+    tooltip.style.color = "white";
+    tooltip.style.padding = "4px";
+    tooltip.style.borderRadius = "4px";
+    tooltip.style.opacity = '0';
+    tooltip.style.transition = 'opacity 0.3s';
+    tooltip.style.position = 'absolute';
+    tooltip.style.marginLeft = '4px';
+
+    const iconSpan = document.createElement('span');
+    iconSpan.innerHTML = `
+   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><g fill="none" fill-rule="evenodd">
+    <path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M10.5 4a6.5 6.5 0 1 0 0 13a6.5 6.5 0 0 0 0-13M2 10.5a8.5 8.5 0 1 1 15.176 5.262l3.652 3.652a1 1 0 0 1-1.414 1.414l-3.652-3.652A8.5 8.5 0 0 1 2 10.5M9.5 7a1 1 0 0 1 1-1a4.5 4.5 0 0 1 4.5 4.5a1 1 0 1 1-2 0A2.5 2.5 0 0 0 10.5 8a1 1 0 0 1-1-1"/></g>
+   </svg>
+  `;
+
+    button.addEventListener('mouseover', () => {
+      tooltip.style.visibility = 'visible';
+      tooltip.style.opacity = '1';
+    });
+
+    button.addEventListener('mouseout', () => {
+      tooltip.style.visibility = 'hidden';
+      tooltip.style.opacity = '0';
+    });
+
+    button.addEventListener('click', function () {
+      endpoint = `${vin_search_url}/${vin}`
+
+      const options = {
+        method: 'GET',
+      };
+ 
+      fetch(endpoint, options)
+        .then(response => response.json())
+        .then(data => {
+           if(data.hasOwnProperty("errors")){
+            vin_field_input.value = initialVin
+   
+            frappe.msgprint({
+              title: __('Error'),
+              indicator: 'red',
+              message: __(`${data.errors}`)
+            });  
+          }else {
+            const {
+              vehicle_identification_no,
+              model,
+              make,
+              engine_liters,
+              engine_code,
+              dsg,
+              dsg_code,
+              ecu_code,
+              parts
+            } = data
+
+            const partsObject = {};
+            initialVin = vehicle_identification_no
+
+            parts.forEach(part => {
+              partsObject[part.name] = part.partNumber;
+            });
+
+            frm.set_value({
+              vin:vehicle_identification_no,
+              model,
+              brand: make,
+              engine_liters,
+              engine_code,
+              dsg_model: dsg.join(", "),
+              dsg_code,
+              ecu_number: ecu_code,
+              dsg_gearbox: partsObject["gearbox"] ?? "",
+              mechatronic: partsObject["mechatronic"] ?? "",
+              flywheel: partsObject["flywheel"] ?? "",
+              clutch: partsObject["clutch"] ?? "",
+            }).then(() => {
+              frm.save();
+            })
+          }  
+        }).catch(error => {
+          vin_field_input.value = initialVin
+          frappe.throw(__('Error', error));
+       });
+    });
+
+    button.appendChild(iconSpan);
+    container.appendChild(button);
+    container.appendChild(tooltip);
+  }
+}
