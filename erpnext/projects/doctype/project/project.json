@@ -24,6 +24,7 @@
   "project_template",
   "parts_status",
   "car_driving",
+  "test_drive_terms_and_conditions",
   "software_status",
   "expected_start_date",
   "expected_end_date",
@@ -880,6 +881,13 @@
   {
    "fieldname": "html_pybn",
    "fieldtype": "HTML"
+  },
+  {
+   "default": "0",
+   "fieldname": "test_drive_terms_and_conditions",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Test drive terms and conditions"
   }
  ],
  "icon": "fa fa-puzzle-piece",
@@ -887,7 +895,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-08-28 19:15:59.477374",
+ "modified": "2024-09-19 15:57:25.222917",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
