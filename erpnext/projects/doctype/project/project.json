@@ -78,6 +78,8 @@
   "client_dsg_state",
   "column_break_17",
   "client_mileage_state",
+  "client_notes_section",
+  "client_notes",
   "section_break2",
   "diagnose_result",
   "attachments",
@@ -99,7 +101,7 @@
   "total_consumed_material_cost",
   "cost_center",
   "section_break0",
-  "notes",
+  "internal_notes",
   "users_section",
   "users",
   "copied_from",
@@ -123,7 +125,8 @@
   "parking_date",
   "assistant_confirmed",
   "bring_car_date",
-  "status_modified"
+  "status_modified",
+  "amended_from"
  ],
  "fields": [
   {
@@ -191,12 +194,12 @@
    "label": "Has dongle"
   },
   {
-    "default": "0",
-    "fieldname": "car_driving",
-    "fieldtype": "Check",
-    "in_list_view": 1,
-    "label": "Car Driving"
-   },
+   "default": "0",
+   "fieldname": "car_driving",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Car Driving"
+  },
   {
    "fieldname": "clutch",
    "fieldtype": "Data",
@@ -531,16 +534,9 @@
    "collapsible": 1,
    "fieldname": "section_break0",
    "fieldtype": "Section Break",
-   "label": "Notes",
+   "label": "Internal Notes",
    "oldfieldtype": "Section Break",
    "options": "fa fa-list"
-  },
-  {
-   "fieldname": "notes",
-   "fieldtype": "Text Editor",
-   "label": "Notes",
-   "oldfieldname": "notes",
-   "oldfieldtype": "Text Editor"
   },
   {
    "collapsible": 1,
@@ -601,7 +597,7 @@
    "options": "fa fa-list"
   },
   {
-   "default": "<p>[Naam] op [datum]:</p><p>Kilometerstand:</p><p>Foutcodes:</p><ul><li>Motor:</li><li>DSG:</li><li>ABS:</li></ul><p>Opgemerkte klachten:</p><ul><li></li><li></li><li></li></ul><p>Diagnose data bijzonderheden:</p><ul><li></li><li></li><li></li></ul><p>Reparatie advies:</p><ul><li></li><li></li><li></li></ul>",
+   "default": "<p>[Naam] op [datum]:</p><p>test:</p><p>Foutcodes:</p><ul><li>Motor:</li><li>DSG:</li><li>ABS:</li></ul><p>Opgemerkte klachten:</p><ul><li></li><li></li><li></li></ul><p>Diagnose data bijzonderheden:</p><ul><li></li><li></li><li></li></ul><p>Reparatie advies:</p><ul><li></li><li></li><li></li></ul>",
    "fieldname": "diagnose_result",
    "fieldtype": "Text Editor",
    "label": "Diagnose result"
@@ -888,6 +884,37 @@
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Test drive terms and conditions"
+<<<<<<< HEAD
+=======
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Project",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "internal_notes",
+   "fieldtype": "Text Editor",
+   "label": "Notes",
+   "oldfieldname": "notes",
+   "oldfieldtype": "Text Editor"
+  },
+  {
+   "fieldname": "client_notes",
+   "fieldtype": "Text Editor",
+   "label": "Notes"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "client_notes_section",
+   "fieldtype": "Section Break",
+   "label": "Client Notes"
+>>>>>>> 64ff84e (feat(project): internal notes adjusted and client notes added)
   }
  ],
  "icon": "fa fa-puzzle-piece",
@@ -895,7 +922,11 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
+<<<<<<< HEAD
  "modified": "2024-09-19 15:57:25.222917",
+=======
+ "modified": "2024-09-23 21:03:53.247415",
+>>>>>>> 64ff84e (feat(project): internal notes adjusted and client notes added)
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
