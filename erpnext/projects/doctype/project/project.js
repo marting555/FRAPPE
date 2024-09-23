@@ -465,7 +465,8 @@ async function insertVinSearchButton(frm) {
         .then(data => {
            if(data.hasOwnProperty("errors")){
             vin_field_input.value = initialVin
-   
+            vin = initialVin
+            
             frappe.msgprint({
               title: __('Error'),
               indicator: 'red',
