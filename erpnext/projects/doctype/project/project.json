@@ -100,6 +100,7 @@
   "cost_center",
   "section_break0",
   "notes",
+  "internal_notes",
   "users_section",
   "users",
   "copied_from",
@@ -538,10 +539,13 @@
   {
    "fieldname": "notes",
    "fieldtype": "Text Editor",
-   "label": "Notes",
-   "oldfieldname": "notes",
-   "oldfieldtype": "Text Editor"
+   "label": "Client Notes"
   },
+  {
+    "fieldname": "internal_notes",
+    "fieldtype": "Text Editor",
+    "label": "Internal Notes"
+   },
   {
    "collapsible": 1,
    "fieldname": "section_break1",
