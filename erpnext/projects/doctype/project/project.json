@@ -894,6 +894,7 @@
    "default": "0",
    "fieldname": "dongle_tested",
    "fieldtype": "Check",
+   "in_list_view": 1,
    "label": "Dongle tested"
   }
  ],
