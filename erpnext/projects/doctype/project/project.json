@@ -20,6 +20,7 @@
   "payment_status",
   "language",
   "has_dongle",
+  "dongle_tested",
   "column_break_5",
   "project_template",
   "parts_status",
@@ -192,12 +193,12 @@
    "label": "Has dongle"
   },
   {
-    "default": "0",
-    "fieldname": "car_driving",
-    "fieldtype": "Check",
-    "in_list_view": 1,
-    "label": "Car Driving"
-   },
+   "default": "0",
+   "fieldname": "car_driving",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Car Driving"
+  },
   {
    "fieldname": "clutch",
    "fieldtype": "Data",
@@ -892,6 +893,13 @@
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Test drive terms and conditions"
+  },
+  {
+   "default": "0",
+   "fieldname": "dongle_tested",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Dongle tested"
   }
  ],
  "icon": "fa fa-puzzle-piece",
@@ -899,7 +907,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-09-19 15:57:25.222917",
+ "modified": "2024-09-25 02:10:55.946400",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
