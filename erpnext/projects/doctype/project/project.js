@@ -501,7 +501,7 @@ async function insertVinSearchButton(frm) {
               dsg_model: dsg.join(", "),
               dsg_code,
               ecu_number: ecu_code,
-              dsg_gearbox: partsObject["gearbox"] ?? partsObject["peed dual clutch gearbox"] ?? "",
+              dsg_gearbox: partsObject["gearbox"] ?? partsObject["speed dual clutch gearbox"] ?? "",
               mechatronic: partsObject["mechatronic"] ?? partsObject["mechatronic with software"] ?? "",
               flywheel: partsObject["flywheel"] ?? "",
               clutch: partsObject["clutch"] ?? partsObject["repair set for multi-coupling"] ?? "",
