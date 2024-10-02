@@ -13,12 +13,8 @@
   "is_standard",
   "module",
   "section_break_lvdn",
+  "bound_code_lists",
   "template",
-  "submit_section",
-  "submit_url",
-  "column_break_wxst",
-  "keyfile",
-  "certfile",
   "validation_section",
   "validation",
   "schema"
@@ -89,32 +85,10 @@
    "options": "XML"
   },
   {
-   "fieldname": "submit_section",
-   "fieldtype": "Section Break",
-   "label": "Sign & Submit"
-  },
-  {
-   "depends_on": "is_standard",
-   "fieldname": "submit_url",
-   "fieldtype": "Data",
-   "label": "Submit URL",
-   "options": "URL"
-  },
-  {
-   "fieldname": "column_break_wxst",
-   "fieldtype": "Column Break"
-  },
-  {
-   "depends_on": "is_standard",
-   "fieldname": "keyfile",
-   "fieldtype": "Attach",
-   "label": "Keyfile"
-  },
-  {
-   "depends_on": "is_standard",
-   "fieldname": "certfile",
-   "fieldtype": "Attach",
-   "label": "Certfile"
+   "fieldname": "bound_code_lists",
+   "fieldtype": "Table",
+   "label": "Bound Code Lists",
+   "options": "Bound EDI Template Code Lists"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -124,7 +98,7 @@
    "link_fieldname": "edi"
   }
  ],
- "modified": "2024-09-30 06:22:46.920583",
+ "modified": "2024-10-02 14:58:05.760230",
  "modified_by": "Administrator",
  "module": "EDI",
  "name": "EDI Template",

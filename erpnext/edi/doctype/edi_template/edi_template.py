@@ -232,14 +232,16 @@ class EDITemplate(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		from erpnext.edi.doctype.bound_edi_template_code_lists.bound_edi_template_code_lists import (
+			BoundEDITemplateCodeLists,
+		)
+
+		bound_code_lists: DF.Table[BoundEDITemplateCodeLists]
 		bound_doctype: DF.Link
-		certfile: DF.Attach | None
 		is_standard: DF.Check
-		keyfile: DF.Attach | None
 		module: DF.Link | None
 		schema: DF.Code | None
 		status: DF.Literal["Draft", "Validation", "Production"]
-		submit_url: DF.Data | None
 		template: DF.Code | None
 		validation: DF.Code | None
 	# end: auto-generated types
