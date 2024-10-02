@@ -12,8 +12,11 @@
   "column_break_stvp",
   "is_standard",
   "module",
-  "section_break_lvdn",
+  "section_break_rxld",
+  "bindings_column",
   "bound_code_lists",
+  "bound_common_codes",
+  "section_break_lvdn",
   "template",
   "validation_section",
   "validation",
@@ -85,10 +88,27 @@
    "options": "XML"
   },
   {
+   "description": "They are available under their alias in the rendering and parsing context.",
    "fieldname": "bound_code_lists",
    "fieldtype": "Table",
    "label": "Bound Code Lists",
    "options": "Bound EDI Template Code Lists"
+  },
+  {
+   "fieldname": "section_break_rxld",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "bindings_column",
+   "fieldtype": "Column Break",
+   "label": "Bindings"
+  },
+  {
+   "description": "Each link to a bound document will be replaced by an instance of this common code in the rendering context.",
+   "fieldname": "bound_common_codes",
+   "fieldtype": "Table",
+   "label": "Bound Common Codes",
+   "options": "Bound EDI Template Common Codes"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -98,7 +118,7 @@
    "link_fieldname": "edi"
   }
  ],
- "modified": "2024-10-02 14:58:05.760230",
+ "modified": "2024-10-02 15:41:46.771215",
  "modified_by": "Administrator",
  "module": "EDI",
  "name": "EDI Template",

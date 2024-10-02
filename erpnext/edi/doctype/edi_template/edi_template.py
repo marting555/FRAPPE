@@ -235,8 +235,12 @@ class EDITemplate(Document):
 		from erpnext.edi.doctype.bound_edi_template_code_lists.bound_edi_template_code_lists import (
 			BoundEDITemplateCodeLists,
 		)
+		from erpnext.edi.doctype.bound_edi_template_common_codes.bound_edi_template_common_codes import (
+			BoundEDITemplateCommonCodes,
+		)
 
 		bound_code_lists: DF.Table[BoundEDITemplateCodeLists]
+		bound_common_codes: DF.Table[BoundEDITemplateCommonCodes]
 		bound_doctype: DF.Link
 		is_standard: DF.Check
 		module: DF.Link | None
