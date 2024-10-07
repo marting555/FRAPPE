@@ -93,12 +93,85 @@ frappe.ui.form.on("Project", {
 					quotation_to: 'Customer'
 				});
 			})
+			frm.add_custom_button(__("Customer info"),  async () => {
+				const customer = await frappe.db.get_doc('Customer', frm.doc.customer)
+				const linked_contacts_and_addresses = await frappe.db.get_list(
+					"Address",
+					{
+						filters:[
+							["disabled", "=", 0],
+							["address_type", "in", ["Billing", "Shipping"]],
+							["Dynamic Link", "link_doctype", "=", "Customer"],
+							["Dynamic Link", "link_name", "=", `${frm.doc.customer}`], 
+							["Dynamic Link", "parenttype", "=", "Address"]
+						],
+						fields:["address_line1", "address_line2", "country", "city", "pincode", "state", "address_type"]
+					}
+				);
+				
+				
+				let billingAddress = null;
+				let shippingAddress = null;
+				
+				// Find the first Billing and Shipping address
+				for (let address of linked_contacts_and_addresses) {
+					if (address.address_type === 'Billing' && !billingAddress) {
+						billingAddress = address;
+					} else if (address.address_type === 'Shipping' && !shippingAddress) {
+						shippingAddress = address;
+					}
+				
+					// Exit the loop if both addresses are found
+					if (billingAddress && shippingAddress) {
+						break;
+					}
+				}
+				
+				let addresses_info = '';
+				if (billingAddress) {
+					addresses_info += `
+						<br><b>Address Type: Billing</b><br>
+						Address Line 1: ${billingAddress.address_line1}<br>
+						Address Line 2: ${billingAddress.address_line2 || 'N/A'}<br>
+						Country: ${billingAddress.country}<br>
+						City: ${billingAddress.city}<br>
+						Postal Code: ${billingAddress.pincode || 'N/A'}<br>
+						State/Province: ${billingAddress.state}<br>
+					`;
+				}
+				
+				if (shippingAddress) {
+					addresses_info += `
+						<br><b>Address Type: Shipping</b><br>
+						Address Line 1: ${shippingAddress.address_line1}<br>
+						Address Line 2: ${shippingAddress.address_line2 || 'N/A'}<br>
+						Country: ${shippingAddress.country}<br>
+						City: ${shippingAddress.city}<br>
+						Postal Code: ${shippingAddress.pincode || 'N/A'}<br>
+						State/Province: ${shippingAddress.state}<br>
+					`;
+				}
+				
+				frappe.msgprint({
+					title: __('Customer Information'),
+					indicator: 'green',
+					message: __(
+						`Name: ${customer.name}<br>` +
+						`Phone: ${customer.phone_number | customer.mobile_no | custom_phone_number}<br>` +
+						`Email: ${customer.email_id}<br><br>` +
+						`Addresses: ${addresses_info || 'No addresses found'}`
+					)
+				});
+				
+				
+				
+			})
 		}
 		
 		installChat(frm);
 		installQuotationItems(frm)
 		insertCarousel(frm);
-    insertVinSearchButton(frm)
+    	insertVinSearchButton(frm)
 
 		frm.trigger("set_custom_buttons");
 	},
