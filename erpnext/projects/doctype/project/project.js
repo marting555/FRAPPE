@@ -157,7 +157,7 @@ frappe.ui.form.on("Project", {
 					indicator: 'green',
 					message: __(
 						`Name: ${customer.name}<br>` +
-						`Phone: ${customer.phone_number | customer.mobile_no | custom_phone_number}<br>` +
+						`Phone: ${customer.phone_number | customer.mobile_no }<br>` +
 						`Email: ${customer.email_id}<br><br>` +
 						`Addresses: ${addresses_info || 'No addresses found'}`
 					)
