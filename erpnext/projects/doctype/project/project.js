@@ -156,15 +156,12 @@ frappe.ui.form.on("Project", {
 					title: __('Customer Information'),
 					indicator: 'green',
 					message: __(
-						`Name: ${customer.name}<br>` +
-						`Phone: ${customer.phone_number | customer.mobile_no }<br>` +
-						`Email: ${customer.email_id}<br><br>` +
+						`Name: ${customer.name || 'No name provided'}<br>` +
+						`Phone: ${customer.phone_number || customer.mobile_no || 'No phone number provided'}<br>` +
+						`Email: ${customer.email_id || 'No email provided'}<br><br>` +
 						`Addresses: ${addresses_info || 'No addresses found'}`
 					)
 				});
-				
-				
-				
 			})
 		}
 		
