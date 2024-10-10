@@ -31,5 +31,6 @@ import "./utils/sales_common.js";
 import "./controllers/buying.js";
 import "./utils/demo.js";
 import "./financial_statements.js";
+import "./web_components_container.js"
 
 // import { sum } from 'frappe/public/utils/util.js'

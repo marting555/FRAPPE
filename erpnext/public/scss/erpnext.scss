@@ -544,3 +544,40 @@ body[data-route="pos"] {
 		object-fit:contain;
 	}
 }
+
+#show-icons {
+	position: fixed;
+	bottom: 1.2rem;
+	right: 9.5rem;
+	width: 30px;
+	height: 30px;
+	cursor: pointer;
+	background: none;
+	border: none;
+
+	#tools-icon {
+		display: none;
+	}
+
+	&.close-icon-container{
+		right: 1rem !important;
+		width: 30px;
+		height: 30px;
+		border: 1px solid rgb(31, 41, 55);
+		bottom: 1rem;
+
+
+		&:hover{
+			background-color: gray;
+		}
+
+
+		#close-icon {
+			display: none;
+		}
+
+		#tools-icon {
+			display: block;
+		}
+	}
+}
