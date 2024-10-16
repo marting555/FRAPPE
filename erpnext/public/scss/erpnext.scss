@@ -584,3 +584,8 @@ body[data-route="pos"] {
 		}
 	}
 }
+@media (max-width: 767px) {
+    .zoom-container {
+        display: none;
+    }
+}
