@@ -81,6 +81,7 @@
   "client_mileage_state",
   "section_break2",
   "diagnose_result",
+  "price_agreement",
   "attachments",
   "html_pybn",
   "section_break_18",
@@ -543,10 +544,10 @@
    "label": "Client Notes"
   },
   {
-    "fieldname": "internal_notes",
-    "fieldtype": "Text Editor",
-    "label": "Internal Notes"
-   },
+   "fieldname": "internal_notes",
+   "fieldtype": "Text Editor",
+   "label": "Internal Notes"
+  },
   {
    "collapsible": 1,
    "fieldname": "section_break1",
@@ -900,6 +901,12 @@
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Dongle tested"
+  },
+  {
+   "fieldname": "price_agreement",
+   "fieldtype": "Currency",
+   "label": "Price agreement",
+   "options": "Company:company:default_currency"
   }
  ],
  "icon": "fa fa-puzzle-piece",
@@ -907,7 +914,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-09-25 02:10:55.946400",
+ "modified": "2024-10-16 22:25:05.505580",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
