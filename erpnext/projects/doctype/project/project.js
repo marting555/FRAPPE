@@ -506,6 +506,10 @@ async function insertVinSearchButton(frm) {
     tooltip.style.position = 'absolute';
     tooltip.style.marginLeft = '4px';
 
+		const spinner = document.createElement('div')
+		spinner.setAttribute('hidden', 'true')
+		spinner.classList = 'vin-search-spinner'
+
     const iconSpan = document.createElement('span');
     iconSpan.innerHTML = `
    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><g fill="none" fill-rule="evenodd">
@@ -524,6 +528,8 @@ async function insertVinSearchButton(frm) {
     });
 
     button.addEventListener('click', function () {
+			button.setAttribute('hidden', 'true')
+			spinner.removeAttribute('hidden')
       endpoint = `${vin_search_url}/${vin}`
 
       const options = {
@@ -582,11 +588,15 @@ async function insertVinSearchButton(frm) {
         }).catch(error => {
           vin_field_input.value = initialVin
           frappe.throw(__('Error', error));
-       });
+       }).finally(() => {
+				button.removeAttribute('hidden')
+				spinner.setAttribute('hidden', 'true')
+			});
     });
 
     button.appendChild(iconSpan);
     container.appendChild(button);
     container.appendChild(tooltip);
+		container.appendChild(spinner);
   }
 }
