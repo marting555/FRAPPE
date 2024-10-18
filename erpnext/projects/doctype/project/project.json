@@ -39,6 +39,7 @@
   "percent_complete_method",
   "percent_complete",
   "appointment_date",
+  "appointment_time",
   "done",
   "customer_details",
   "project_invoice",
@@ -870,7 +871,7 @@
    "fieldname": "appointment_date",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "Appointment date"
+   "label": "Fixed appointment date"
   },
   {
    "fieldname": "status_modified",
@@ -907,6 +908,15 @@
    "fieldtype": "Currency",
    "label": "Price agreement",
    "options": "Company:company:default_currency"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "appointment_time",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "label": "Fixed appointment time",
+   "options": "\n9:00-9:30\n9:30-10:00\n10:00-10:30\n10:30-11:00\n11:00-11:30\n11:30-12:00\n12:00-12:30\n12:30-13:00\n13:00-13:30\n13:30-14:00\n14:00-14:30\n14:30-15:00\n15:00-15:30\n15:30-16:00\n16:00-16:30\n16:30-17:00\n17:00-17:30\n17:30-18:00"
   }
  ],
  "icon": "fa fa-puzzle-piece",
@@ -914,7 +924,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-10-16 22:25:05.505580",
+ "modified": "2024-10-18 16:38:26.199781",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
