@@ -20,43 +20,36 @@
   "oe_ref",
   "item_category",
   "sub_category_name",
-  "tvs_pn",
   "condition",
+  "brand",
+  "supplier",
+  "required",
+  "tvs_pn",
   "oe_pn",
   "oem_pn",
-  "supplier",
-  "alternatives",
-  "core_charge",
   "column_break0",
-  "disabled",
-  "allow_alternative_item",
-  "is_stock_item",
-  "has_variants",
-  "is_fixed_asset",
-  "auto_create_assets",
-  "is_grouped_asset",
   "opening_stock",
   "valuation_rate",
   "standard_rate",
-  "asset_category",
-  "asset_naming_series",
-  "over_delivery_receipt_allowance",
-  "over_billing_allowance",
-  "brand",
   "purchase_pn",
   "purchase_info",
   "ean",
   "location",
+  "over_billing_allowance",
+  "asset_category",
+  "asset_naming_series",
+  "over_delivery_receipt_allowance",
+  "alternatives",
+  "disabled",
+  "is_stock_item",
+  "has_variants",
+  "auto_create_assets",
+  "is_fixed_asset",
+  "is_grouped_asset",
+  "allow_alternative_item",
   "image",
-  "section_break_exip",
-  "item_relate",
-  "column_break_zfcf",
-  "required_parts",
-  "oe__oem_section",
-  "column_break_lpsm",
-  "oe_refs",
-  "column_break_vjnc",
-  "oem_refs",
+  "sub_items_list",
+  "subitems_list",
   "section_break_11",
   "description",
   "dashboard_tab",
@@ -916,40 +909,10 @@
    "label": "Deferred Accounting"
   },
   {
-   "columns": 1,
-   "fieldname": "oe_refs",
-   "fieldtype": "Table",
-   "label": "OE Refs",
-   "options": "Item OE"
-  },
-  {
-   "columns": 2,
-   "fieldname": "oem_refs",
-   "fieldtype": "Table",
-   "label": "OEM Refs",
-   "options": "Item OEM"
-  },
-  {
    "fieldname": "oe_ref",
    "fieldtype": "Data",
    "hidden": 1,
    "label": "OE Ref"
-  },
-  {
-   "columns": 2,
-   "fieldname": "section_break_exip",
-   "fieldtype": "Section Break"
-  },
-  {
-   "columns": 1,
-   "fieldname": "item_relate",
-   "fieldtype": "Table",
-   "label": "Addditional parts",
-   "options": "Items Relate"
-  },
-  {
-   "fieldname": "oe__oem_section",
-   "fieldtype": "Section Break"
   },
   {
    "fieldname": "item_category",
@@ -1041,31 +1004,22 @@
    "options": "Location"
   },
   {
-   "allow_bulk_edit": 1,
-   "fieldname": "core_charge",
+   "default": "0",
+   "fieldname": "required",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Required?"
+  },
+  {
+   "fieldname": "sub_items_list",
+   "fieldtype": "Section Break",
+   "label": "Sub Items"
+  },
+  {
+   "fieldname": "subitems_list",
    "fieldtype": "Table",
-   "label": "Core charge",
-   "options": "Core Charge Item"
-  },
-  {
-   "columns": 2,
-   "fieldname": "column_break_lpsm",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_vjnc",
-   "fieldtype": "Column Break"
-  },
-  {
-   "columns": 2,
-   "fieldname": "required_parts",
-   "fieldtype": "Table",
-   "label": "Requrired parts",
+   "label": "Items list",
    "options": "Items Relate"
-  },
-  {
-   "fieldname": "column_break_zfcf",
-   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-tag",
@@ -1074,7 +1028,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "make_attachments_public": 1,
- "modified": "2024-07-11 18:59:14.011948",
+ "modified": "2024-10-17 19:11:10.217099",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
