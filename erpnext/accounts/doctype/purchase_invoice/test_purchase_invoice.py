@@ -2187,7 +2187,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				self.assertEqual(row.rejected_serial_no, serial_nos[2])
 
 	def test_make_pr_and_pi_from_po(self):
-		from erpnext.assets.doctype.asset.test_asset import create_asset_category
+		from assets.assets.doctype.asset.test_asset import create_asset_category
 
 		if not frappe.db.exists("Asset Category", "Computers"):
 			create_asset_category()

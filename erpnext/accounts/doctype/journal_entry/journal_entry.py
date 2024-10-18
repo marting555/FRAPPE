@@ -28,9 +28,6 @@ from erpnext.accounts.utils import (
 	get_stock_accounts,
 	get_stock_and_account_balance,
 )
-from erpnext.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
-	get_depr_schedule,
-)
 from erpnext.controllers.accounts_controller import AccountsController
 
 
@@ -189,10 +186,8 @@ class JournalEntry(AccountsController):
 		self.check_credit_limit()
 		self.make_gl_entries()
 		self.update_advance_paid()
-		self.update_asset_value()
 		self.update_inter_company_jv()
 		self.update_invoice_discounting()
-		self.update_booked_depreciation()
 
 	def on_update_after_submit(self):
 		self.needs_repost = self.check_if_fields_updated(fields_to_check=[], child_tables={"accounts": []})
@@ -217,11 +212,8 @@ class JournalEntry(AccountsController):
 		self.make_gl_entries(1)
 		self.update_advance_paid()
 		self.unlink_advance_entry_reference()
-		self.unlink_asset_reference()
 		self.unlink_inter_company_jv()
-		self.unlink_asset_adjustment_entry()
 		self.update_invoice_discounting()
-		self.update_booked_depreciation(1)
 
 	def get_title(self):
 		return self.pay_to_recd_from or self.accounts[0].account
@@ -355,34 +347,6 @@ class JournalEntry(AccountsController):
 		for d in to_remove:
 			self.remove(d)
 
-	def update_asset_value(self):
-		if self.flags.planned_depr_entry or self.voucher_type != "Depreciation Entry":
-			return
-
-		for d in self.get("accounts"):
-			if (
-				d.reference_type == "Asset"
-				and d.reference_name
-				and d.account_type == "Depreciation"
-				and d.debit
-			):
-				asset = frappe.get_doc("Asset", d.reference_name)
-
-				if asset.calculate_depreciation:
-					fb_idx = 1
-					if self.finance_book:
-						for fb_row in asset.get("finance_books"):
-							if fb_row.finance_book == self.finance_book:
-								fb_idx = fb_row.idx
-								break
-					fb_row = asset.get("finance_books")[fb_idx - 1]
-					fb_row.value_after_depreciation -= d.debit
-					fb_row.db_update()
-				else:
-					asset.db_set("value_after_depreciation", asset.value_after_depreciation - d.debit)
-
-				asset.set_status()
-
 	def update_inter_company_jv(self):
 		if self.voucher_type == "Inter Company Journal Entry" and self.inter_company_journal_entry_reference:
 			frappe.db.set_value(
@@ -436,25 +400,6 @@ class JournalEntry(AccountsController):
 			if status:
 				inv_disc_doc.set_status(status=status)
 
-	def update_booked_depreciation(self, cancel=0):
-		for d in self.get("accounts"):
-			if (
-				self.voucher_type == "Depreciation Entry"
-				and d.reference_type == "Asset"
-				and d.reference_name
-				and frappe.get_cached_value("Account", d.account, "root_type") == "Expense"
-				and d.debit
-			):
-				asset = frappe.get_doc("Asset", d.reference_name)
-				for fb_row in asset.get("finance_books"):
-					if fb_row.finance_book == self.finance_book:
-						if cancel:
-							fb_row.total_number_of_booked_depreciations -= 1
-						else:
-							fb_row.total_number_of_booked_depreciations += 1
-						fb_row.db_update()
-						break
-
 	def unlink_advance_entry_reference(self):
 		for d in self.get("accounts"):
 			if d.is_advance == "Yes" and d.reference_type in ("Sales Invoice", "Purchase Invoice"):
@@ -464,58 +409,6 @@ class JournalEntry(AccountsController):
 				d.reference_name = ""
 				d.db_update()
 
-	def unlink_asset_reference(self):
-		for d in self.get("accounts"):
-			if (
-				self.voucher_type == "Depreciation Entry"
-				and d.reference_type == "Asset"
-				and d.reference_name
-				and frappe.get_cached_value("Account", d.account, "root_type") == "Expense"
-				and d.debit
-			):
-				asset = frappe.get_doc("Asset", d.reference_name)
-
-				if asset.calculate_depreciation:
-					je_found = False
-
-					for fb_row in asset.get("finance_books"):
-						if je_found:
-							break
-
-						depr_schedule = get_depr_schedule(asset.name, "Active", fb_row.finance_book)
-
-						for s in depr_schedule or []:
-							if s.journal_entry == self.name:
-								s.db_set("journal_entry", None)
-
-								fb_row.value_after_depreciation += d.debit
-								fb_row.db_update()
-
-								je_found = True
-								break
-					if not je_found:
-						fb_idx = 1
-						if self.finance_book:
-							for fb_row in asset.get("finance_books"):
-								if fb_row.finance_book == self.finance_book:
-									fb_idx = fb_row.idx
-									break
-
-						fb_row = asset.get("finance_books")[fb_idx - 1]
-						fb_row.value_after_depreciation += d.debit
-						fb_row.db_update()
-				else:
-					asset.db_set("value_after_depreciation", asset.value_after_depreciation + d.debit)
-				asset.set_status()
-			elif self.voucher_type == "Journal Entry" and d.reference_type == "Asset" and d.reference_name:
-				journal_entry_for_scrap = frappe.db.get_value(
-					"Asset", d.reference_name, "journal_entry_for_scrap"
-				)
-
-				if journal_entry_for_scrap == self.name:
-					frappe.throw(
-						_("Journal Entry for Asset scrapping cannot be cancelled. Please restore the Asset.")
-					)
 
 	def unlink_inter_company_jv(self):
 		if self.voucher_type == "Inter Company Journal Entry" and self.inter_company_journal_entry_reference:
@@ -527,12 +420,6 @@ class JournalEntry(AccountsController):
 			)
 			frappe.db.set_value("Journal Entry", self.name, "inter_company_journal_entry_reference", "")
 
-	def unlink_asset_adjustment_entry(self):
-		frappe.db.sql(
-			""" update `tabAsset Value Adjustment`
-			set journal_entry = null where journal_entry = %s""",
-			self.name,
-		)
 
 	def validate_party(self):
 		for d in self.get("accounts"):
