@@ -82,7 +82,6 @@ erpnext.selling.QuotationController = class QuotationController extends erpnext.
 		super.onload(doc, dt, dn);
 	}
 	quotation_template() {
-		console.log("quotation_template", this.frm.doc.quotation_template);
 		if (this.frm.doc.quotation_template) {
 			frappe.db.get_doc("Quotation Templates", this.frm.doc.quotation_template).then((doc) => {
 				const items = doc.items.map((item) => {
