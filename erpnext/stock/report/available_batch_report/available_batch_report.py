@@ -107,7 +107,7 @@ def get_batchwise_data_from_stock_ledger(filters):
 			Sum(table.actual_qty).as_("balance_qty"),
 		)
 		.where(table.is_cancelled == 0)
-		.groupby(table.batch_no, table.item_code, table.warehouse)
+		.groupby(table.batch_no, table.item_code, table.warehouse, batch.expiry_date, batch.item_name)
 	)
 
 	query = get_query_based_on_filters(query, batch, table, filters)
@@ -138,7 +138,7 @@ def get_batchwise_data_from_serial_batch_bundle(batchwise_data, filters):
 			Sum(ch_table.qty).as_("balance_qty"),
 		)
 		.where((table.is_cancelled == 0) & (table.docstatus == 1))
-		.groupby(ch_table.batch_no, table.item_code, ch_table.warehouse)
+		.groupby(ch_table.batch_no, table.item_code, ch_table.warehouse, table.warehouse, batch.expiry_date, batch.item_name)
 	)
 
 	query = get_query_based_on_filters(query, batch, table, filters)
