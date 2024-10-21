@@ -5,7 +5,6 @@ import frappe
 from frappe import _, qb, query_builder
 from frappe.query_builder import Criterion, functions
 from frappe.utils.dateutils import getdate
-from pypika import functions
 
 
 def get_columns():
