@@ -5,6 +5,7 @@ import frappe
 from frappe import _, qb, query_builder
 from frappe.query_builder import Criterion, functions
 from frappe.utils.dateutils import getdate
+from pypika import functions
 
 
 def get_columns():
@@ -184,8 +185,12 @@ def get_so_with_invoices(filters):
 	filter_criterions = build_filter_criterions(filters)
 
 	datediff = query_builder.CustomFunction("DATEDIFF", ["cur_date", "due_date"])
-	ifelse = query_builder.CustomFunction("IF", ["condition", "then", "else"])
-
+	case_statement = f"""
+		CASE
+			WHEN "tabPayment Schedule".due_date < CURRENT_DATE THEN 'Overdue'
+			ELSE 'Unpaid'
+		END AS status
+		"""
 	query_so = (
 		qb.from_(so)
 		.join(soi)
@@ -197,7 +202,7 @@ def get_so_with_invoices(filters):
 		.select(
 			so.customer,
 			so.transaction_date.as_("submitted"),
-			ifelse(datediff(ps.due_date, functions.CurDate()) < 0, "Overdue", "Unpaid").as_("status"),
+			case_statement,
 			ps.payment_term,
 			ps.description,
 			ps.due_date,
@@ -214,7 +219,6 @@ def get_so_with_invoices(filters):
 		.where(Criterion.all(filter_criterions))
 		.orderby(so.name, so.transaction_date, ps.due_date)
 	)
-
 	sorders = query_so.run(as_dict=True)
 
 	invoices = []
