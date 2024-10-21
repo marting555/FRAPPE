@@ -54,7 +54,7 @@ def get_total_stock(filters):
 		query = query.select(wh.company).groupby(wh.company)
 
 	query = query.select(item.item_code, item.description, Sum(bin.actual_qty).as_("actual_qty")).groupby(
-		item.item_code
+		item.item_code, item.description
 	)
 
 	return query.run()
