@@ -318,6 +318,9 @@ doc_events = {
 		"validate": [
 			"erpnext.support.doctype.service_level_agreement.service_level_agreement.apply",
 			"erpnext.setup.doctype.transaction_deletion_record.transaction_deletion_record.check_for_running_deletion_job",
+			"erpnext.accounts.doctype.gl_closing.gl_closing.validate_account_link_or_child_table",
+
+		
 		],
 	},
 	tuple(period_closing_doctypes): {
@@ -644,3 +647,6 @@ default_log_clearing_doctypes = {
 export_python_type_annotations = True
 
 fields_for_group_similar_items = ["qty", "amount"]
+
+after_migrate = "erpnext.accounts.install.after_migrate"
+
