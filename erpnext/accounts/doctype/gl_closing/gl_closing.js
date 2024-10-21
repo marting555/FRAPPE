@@ -9,10 +9,14 @@
 
 frappe.ui.form.on("GL Closing", {
     refresh: function(frm) {
-        console.log("hellooooooooooooo")
-        fetch_accounts(frm);  
-        
+        if(frm.is_new()) {
+            fetch_accounts(frm); 
+            console.log("hellooooooooooooo")
+
+        }
     },
+    before_save:function(frm) {
+    }
 });
 
 function fetch_accounts(frm) {
