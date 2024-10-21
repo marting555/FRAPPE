@@ -8,7 +8,6 @@ Manufacturing
 Stock
 Support
 Utilities
-Assets
 Portal
 Maintenance
 Regional
