@@ -74,7 +74,7 @@ def get_data(filters):
 			`tabOpportunity`.party_name,
 			`tabOpportunity`.customer_name,
 			`tabOpportunity`.opportunity_type,
-			GROUP_CONCAT(`tabOpportunity Lost Reason Detail`.lost_reason separator ', ') lost_reason,
+			string_agg(`tabOpportunity Lost Reason Detail`.lost_reason, ', ') lost_reason,
 			`tabOpportunity`.sales_stage,
 			`tabOpportunity`.territory
 		FROM
