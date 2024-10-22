@@ -783,10 +783,9 @@ def get_dashboard_info(party_type, party, loyalty_program=None):
 	)
 
 	loyalty_point_details = []
-
 	if party_type == "Customer":
-		loyalty_point_details = frappe._dict(
-			frappe.get_all(
+		loyalty_point_details = frappe._dict({
+			d[0]: d[1] for d in frappe.get_all(
 				"Loyalty Point Entry",
 				filters={
 					"customer": party,
@@ -796,7 +795,7 @@ def get_dashboard_info(party_type, party, loyalty_program=None):
 				fields=["company", "sum(loyalty_points) as loyalty_points"],
 				as_list=1,
 			)
-		)
+	})
 
 	company_wise_billing_this_year = frappe._dict()
 
@@ -830,6 +829,7 @@ def get_dashboard_info(party_type, party, loyalty_program=None):
 
 		if loyalty_point_details:
 			loyalty_points = loyalty_point_details.get(d.company)
+
 
 		info = {}
 		info["billing_this_year"] = flt(billing_this_year) if billing_this_year else 0
