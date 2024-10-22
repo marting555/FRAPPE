@@ -29,7 +29,6 @@ def get_columns(filters, trans):
 			+ period_cols
 			+ [_("Total(Qty)") + ":Float:120", _("Total(Amt)") + ":Currency:120"]
 		)
-
 	conditions = {
 		"based_on_select": based_on_details["based_on_select"],
 		"period_wise_select": period_select,
@@ -369,7 +368,7 @@ def based_wise_columns_query(based_on, trans):
 			"Territory:Link/Territory:120",
 		]
 		based_on_details["based_on_select"] = "t1.customer_name, t1.territory, "
-		based_on_details["based_on_group_by"] = "t1.party_name" if trans == "Quotation" else "t1.customer_name , t1.territory"
+		based_on_details["based_on_group_by"] = "t1.party_name, t1.customer_name , t1.territory" if trans == "Quotation" else "t1.customer_name , t1.territory"
 		based_on_details["addl_tables"] = ""
 
 	elif based_on == "Customer Group":
