@@ -11,8 +11,7 @@ from frappe.desk.reportview import get_filters_cond, get_match_cond
 from frappe.query_builder import Criterion, CustomFunction
 from frappe.query_builder.functions import Concat, Locate, Sum
 from frappe.utils import nowdate, today, unique
-from pypika import Order
-
+from pypika import Case, Order
 import erpnext
 from erpnext.stock.get_item_details import _get_item_tax_template
 
@@ -271,7 +270,6 @@ def get_project_name(doctype, txt, searchfield, start, page_len, filters):
 	proj = qb.DocType("Project")
 	qb_filter_and_conditions = []
 	qb_filter_or_conditions = []
-	ifelse = CustomFunction("IF", ["condition", "then", "else"])
 
 	if filters and filters.get("customer"):
 		qb_filter_and_conditions.append(
@@ -300,8 +298,12 @@ def get_project_name(doctype, txt, searchfield, start, page_len, filters):
 
 	# ordering
 	if txt:
-		# project_name containing search string 'txt' will be given higher precedence
-		q = q.orderby(ifelse(Locate(txt, proj.project_name) > 0, Locate(txt, proj.project_name), 99999))
+		# Using CASE for compatibility with both PostgreSQL and MariaDB
+		q = q.orderby(
+			Case()
+				.when(proj.project_name.like(f"%{txt}%"), Locate(txt, proj.project_name))
+				.else_(99999)
+		)
 	q = q.orderby(proj.idx, order=Order.desc).orderby(proj.name)
 
 	if page_len:
@@ -309,6 +311,7 @@ def get_project_name(doctype, txt, searchfield, start, page_len, filters):
 
 	if start:
 		q = q.offset(start)
+
 	return q.run()
 
 
