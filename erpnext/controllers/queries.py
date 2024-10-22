@@ -11,8 +11,7 @@ from frappe.desk.reportview import get_filters_cond, get_match_cond
 from frappe.query_builder import Criterion, CustomFunction
 from frappe.query_builder.functions import Concat, Locate, Sum
 from frappe.utils import nowdate, today, unique
-from pypika import Order
-
+from pypika import Case, Order
 import erpnext
 from erpnext.stock.get_item_details import _get_item_tax_template
 
@@ -271,12 +270,13 @@ def get_project_name(doctype, txt, searchfield, start, page_len, filters):
 	proj = qb.DocType("Project")
 	qb_filter_and_conditions = []
 	qb_filter_or_conditions = []
-	ifelse = CustomFunction("IF", ["condition", "then", "else"])
 
-	if filters and filters.get("customer"):
-		qb_filter_and_conditions.append(
-			(proj.customer == filters.get("customer")) | proj.customer.isnull() | proj.customer == ""
-		)
+	# Apply filters for customer and company if present
+	if filters:
+		if filters.get("customer"):
+			qb_filter_and_conditions.append(proj.customer == filters.get("customer"))
+		if filters.get("company"):
+			qb_filter_and_conditions.append(proj.company == filters.get("company"))
 
 	qb_filter_and_conditions.append(proj.status.notin(["Completed", "Cancelled"]))
 
@@ -287,30 +287,36 @@ def get_project_name(doctype, txt, searchfield, start, page_len, filters):
 		q = q.select(proj[x])
 
 	# don't consider 'customer' and 'status' fields for pattern search, as they must be exactly matched
-	searchfields = [
-		x for x in frappe.get_meta(doctype).get_search_fields() if x not in ["customer", "status"]
-	]
+	searchfields = [x for x in frappe.get_meta(doctype).get_search_fields() if x not in ["customer", "status"]]
 
 	# pattern search
 	if txt:
 		for x in searchfields:
 			qb_filter_or_conditions.append(proj[x].like(f"%{txt}%"))
 
-	q = q.where(Criterion.all(qb_filter_and_conditions)).where(Criterion.any(qb_filter_or_conditions))
+		q = q.where(Criterion.any(qb_filter_or_conditions))
 
-	# ordering
+	# Apply filter conditions and ordering
+	q = q.where(Criterion.all(qb_filter_and_conditions))
+
+	# Use PostgreSQL compatible CASE WHEN for ordering instead of IF
 	if txt:
-		# project_name containing search string 'txt' will be given higher precedence
-		q = q.orderby(ifelse(Locate(txt, proj.project_name) > 0, Locate(txt, proj.project_name), 99999))
+		q = q.orderby(
+			Case()
+			.when(Locate(txt, proj.project_name) > 0, Locate(txt, proj.project_name))
+			.else_(99999)
+		)
+
 	q = q.orderby(proj.idx, order=Order.desc).orderby(proj.name)
 
+	# Apply pagination
 	if page_len:
 		q = q.limit(page_len)
 
 	if start:
 		q = q.offset(start)
-	return q.run()
 
+	return q.run()
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
