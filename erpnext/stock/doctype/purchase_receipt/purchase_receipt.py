@@ -239,7 +239,6 @@ class PurchaseReceipt(BuyingController):
 		self.validate_items_quality_inspection()
 		self.validate_with_previous_doc()
 		self.validate_uom_is_integer()
-		self.validate_cwip_accounts()
 		self.validate_provisional_expense_account()
 
 		self.check_on_hold_or_closed_status()
@@ -255,19 +254,6 @@ class PurchaseReceipt(BuyingController):
 	def validate_uom_is_integer(self):
 		super().validate_uom_is_integer("uom", ["qty", "received_qty"], "Purchase Receipt Item")
 		super().validate_uom_is_integer("stock_uom", "stock_qty", "Purchase Receipt Item")
-
-	def validate_cwip_accounts(self):
-		for item in self.get("items"):
-			if item.is_fixed_asset and is_cwip_accounting_enabled(item.asset_category):
-				# check cwip accounts before making auto assets
-				# Improves UX by not giving messages of "Assets Created" before throwing error of not finding arbnb account
-				self.get_company_default("asset_received_but_not_billed")
-				get_asset_account(
-					"capital_work_in_progress_account",
-					asset_category=item.asset_category,
-					company=self.company,
-				)
-				break
 
 	def validate_provisional_expense_account(self):
 		provisional_accounting_for_non_stock_items = cint(
