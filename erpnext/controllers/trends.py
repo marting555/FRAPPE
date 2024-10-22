@@ -103,7 +103,7 @@ def get_data(filters, conditions):
 			""" select {} from `tab{}` t1, `tab{} Item` t2 {}
 					where t2.parent = t1.name and t1.company = {} and {} between {} and {} and
 					t1.docstatus = 1 {} {}
-					group by {}
+					group by {},{},{}
 				""".format(
 				query_details,
 				conditions["trans"],
@@ -116,6 +116,8 @@ def get_data(filters, conditions):
 				conditions.get("addl_tables_relational_cond"),
 				cond,
 				conditions["group_by"],
+				"t1.customer_name",
+				"t1.territory"
 			),
 			(filters.get("company"), year_start_date, year_end_date),
 			as_list=1,
@@ -228,7 +230,7 @@ def get_data(filters, conditions):
 				AND {} BETWEEN {} AND {}
 				AND t1.docstatus = 1
 				{} {}
-				group by {}
+				group by {},{},{}
 			"""
 			.format(
 				query_details,
@@ -242,6 +244,8 @@ def get_data(filters, conditions):
 				cond,
 				conditions.get("addl_tables_relational_cond", ""),
 				conditions["group_by"],
+				"t1.customer_name",
+				"t1.territory"
 			),
 			(filters.get("company"), year_start_date, year_end_date),
 			as_list=1,
