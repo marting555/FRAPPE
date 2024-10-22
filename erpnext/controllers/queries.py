@@ -430,7 +430,13 @@ def get_batches_from_stock_ledger_entries(searchfields, txt, filters, start=0, p
 			& (batch_table.disabled == 0)
 			& (stock_ledger_entry.batch_no.isnotnull())
 		)
-		.groupby(stock_ledger_entry.batch_no, stock_ledger_entry.warehouse)
+		.groupby(
+			stock_ledger_entry.batch_no,
+			stock_ledger_entry.warehouse,
+			batch_table.manufacturing_date,
+			batch_table.expiry_date,
+			batch_table.name
+		)
 		.having(Sum(stock_ledger_entry.actual_qty) != 0)
 		.offset(start)
 		.limit(page_len)
@@ -481,7 +487,13 @@ def get_batches_from_serial_and_batch_bundle(searchfields, txt, filters, start=0
 			& (batch_table.disabled == 0)
 			& (stock_ledger_entry.serial_and_batch_bundle.isnotnull())
 		)
-		.groupby(bundle.batch_no, bundle.warehouse)
+		.groupby(
+			bundle.batch_no,
+			bundle.warehouse,
+			batch_table.manufacturing_date,
+			batch_table.expiry_date,
+			batch_table.name
+		)
 		.having(Sum(bundle.qty) != 0)
 		.offset(start)
 		.limit(page_len)
