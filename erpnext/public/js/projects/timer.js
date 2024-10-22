@@ -18,12 +18,12 @@ erpnext.timesheet.timer = function (frm, row, timestamp = 0) {
 				label: __("Task"), 
 				fieldname: "task", 
 				options: "Task",
-				get_query: function () { // Add the get_query function here
-					let project = dialog.get_value("project"); // Get the selected project from the dialog
+				get_query: function () {
+					let project = dialog.get_value("project");
 					return {
 						filters: {
-							project: project, // Filter by the selected project
-							status: ["!=", "Cancelled"], // Exclude cancelled tasks
+							project: project,
+							status: ["!=", "Cancelled"],
 						},
 					};
 				}
@@ -163,7 +163,6 @@ erpnext.timesheet.control_timer = function (frm, dialog, row, timestamp = 0) {
 		var minutes = Math.floor((increment - hours * 3600) / 60);
 		var seconds = increment - hours * 3600 - minutes * 60;
 
-		// If modal is closed by clicking anywhere outside, reset the timer
 		if (!$(".modal-dialog").is(":visible")) {
 			reset();
 		}
