@@ -12,12 +12,31 @@ erpnext.timesheet.timer = function (frm, row, timestamp = 0) {
 				options: "Activity Type",
 			},
 			{ fieldtype: "Link", label: __("Project"), fieldname: "project", options: "Project" },
-			{ fieldtype: "Link", label: __("Task"), fieldname: "task", options: "Task" },
+			
+			{ 
+				fieldtype: "Link", 
+				label: __("Task"), 
+				fieldname: "task", 
+				options: "Task",
+				get_query: function () { // Add the get_query function here
+					let project = dialog.get_value("project"); // Get the selected project from the dialog
+					return {
+						filters: {
+							project: project, // Filter by the selected project
+							status: ["!=", "Cancelled"], // Exclude cancelled tasks
+						},
+					};
+				}
+			},
 			{ fieldtype: "Float", label: __("Expected Hrs"), fieldname: "expected_hours" },
 			{ fieldtype: "Section Break" },
 			{ fieldtype: "HTML", fieldname: "timer_html" },
+			
 		],
+		
 	});
+
+	let parent_project = frm.doc.parent_project || "";
 
 	if (row) {
 		dialog.set_values({
@@ -26,7 +45,13 @@ erpnext.timesheet.timer = function (frm, row, timestamp = 0) {
 			task: row.task,
 			expected_hours: row.expected_hours,
 		});
+	} else {
+		dialog.set_values({
+			project: parent_project, 
+		});
 	}
+
+
 	dialog.get_field("timer_html").$wrapper.append(get_timer_html());
 	function get_timer_html() {
 		return `
