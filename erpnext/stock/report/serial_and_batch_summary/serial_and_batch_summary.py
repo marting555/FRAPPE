@@ -178,13 +178,14 @@ def get_voucher_type(doctype, txt, searchfield, start, page_len, filters):
 		"DocField",
 		filters={"fieldname": "serial_and_batch_bundle"},
 		fields=["distinct parent as parent"],
+		order_by="parent",
 	)
 
 	query_filters = {"options": ["in", [d.parent for d in child_doctypes]]}
 	if txt:
 		query_filters["parent"] = ["like", f"%{txt}%"]
 
-	return frappe.get_all("DocField", filters=query_filters, fields=["distinct parent"], as_list=True)
+	return frappe.get_all("DocField", filters=query_filters, fields=["distinct parent"],order_by="parent", as_list=True)
 
 
 @frappe.whitelist()
@@ -194,15 +195,15 @@ def get_serial_nos(doctype, txt, searchfield, start, page_len, filters):
 
 	if txt:
 		query_filters["serial_no"] = ["like", f"%{txt}%"]
-
+	
 	if filters.get("voucher_no"):
 		serial_batch_bundle = frappe.get_cached_value(
 			"Serial and Batch Bundle",
 			{"voucher_no": ("in", filters.get("voucher_no")), "docstatus": 1, "is_cancelled": 0},
 			"name",
 		)
-
-		query_filters["parent"] = serial_batch_bundle
+		if isinstance(serial_batch_bundle, list):
+			query_filters["parent"] = ["in", serial_batch_bundle]  
 		if not txt:
 			query_filters["serial_no"] = ("is", "set")
 
@@ -229,8 +230,10 @@ def get_batch_nos(doctype, txt, searchfield, start, page_len, filters):
 			{"voucher_no": ("in", filters.get("voucher_no")), "docstatus": 1, "is_cancelled": 0},
 			"name",
 		)
-
-		query_filters["parent"] = serial_batch_bundle
+		
+		if isinstance(serial_batch_bundle, list):
+			query_filters["parent"] = ["in", serial_batch_bundle]  
+		
 		if not txt:
 			query_filters["batch_no"] = ("is", "set")
 
