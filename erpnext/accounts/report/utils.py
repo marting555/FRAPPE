@@ -255,7 +255,7 @@ def get_journal_entries(filters, args):
 		)
 		.orderby(je.posting_date, je.name, order=Order.desc)
 	)
-	query = apply_common_conditions(filters, query, doctype="Journal Entry", payments=True)
+	query = apply_common_conditions(filters, query, doctype="Journal Entry", child_doctype="Journal Entry Account", payments=True)
 
 	journal_entries = query.run(as_dict=True)
 	return journal_entries
@@ -297,7 +297,6 @@ def apply_common_conditions(filters, query, doctype, child_doctype=None, payment
 		child_doc = frappe.qb.DocType(child_doctype)
 
 	join_required = False
-
 	if filters.get("company"):
 		query = query.where(parent_doc.company == filters.company)
 	if filters.get("from_date"):
@@ -305,7 +304,10 @@ def apply_common_conditions(filters, query, doctype, child_doctype=None, payment
 	if filters.get("to_date"):
 		query = query.where(parent_doc.posting_date <= filters.to_date)
 
-	if payments:
+	if payments and doctype == "Journal Entry":
+		if filters.get("cost_center"):
+			query = query.where(child_doc.cost_center == filters.cost_center)
+	elif payments and doctype != "Journal Entry":
 		if filters.get("cost_center"):
 			query = query.where(parent_doc.cost_center == filters.cost_center)
 	else:
