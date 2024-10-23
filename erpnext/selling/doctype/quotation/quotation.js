@@ -383,3 +383,10 @@ frappe.ui.form.on("Quotation Item", "stock_balance", function(frm, cdt, cdn) {
 	frappe.route_options = {"item_code": d.item_code};
 	frappe.set_route("query-report", "Stock Balance");
 })
+
+frappe.ui.form.on('Quotation Item', {
+	item_code: function(frm, cdt, cdn) {
+        let row = locals[cdt][cdn];
+        console.log("Quotation Item ítem modificado:", row.item_code);
+    }
+});

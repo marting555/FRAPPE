@@ -142,21 +142,18 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 
 	out = remove_standard_fields(out)
 
-	try:
+	if out.get("is_product_bundle"):
 		searcher = (
-			ProductBundleTemplate()
-			.set_item_code(args.item_code)
-			.validate()                  
-			.searchProductBundle()                    
-		)
+				ProductBundleTemplate()
+				.set_item_code(args.item_code)
+				.validate()     
+				.searchProductBundle()
+			)
+		if searcher is not None:
+			out.product_bundle_items = searcher["subitems_list"]
+		else:
+			out.product_bundle_items = []
 
-	except ValueError as e:
-		print(f"Error: {e}")
-
-	if searcher is not None:
-		out.product_bundle_items = searcher["subitems_list"]
-
- 
 	return out
 
 
