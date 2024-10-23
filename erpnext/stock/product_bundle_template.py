@@ -3,11 +3,18 @@ import frappe
 class ProductBundleTemplate:
     def __init__(self):
         self.item_code = None
+        self.price_list = "Standard Selling"
 
     def set_item_code(self, item_code):
         if not item_code or item_code.strip() == "":
             return self  
         self.item_code = item_code
+        return self
+    
+    def set_price_list(self, price_list):
+        if not price_list or price_list.strip() == "":
+            price_list = "Standard Selling"
+        self.price_list = price_list
         return self
 
     def validate(self):
@@ -16,10 +23,11 @@ class ProductBundleTemplate:
         return self
     
     def searchProductBundle(self):
-        item = frappe.get_doc("Item", self.item_code)
-        print(item)
-        item_details = frappe.get_doc("Product Bundle", self.item_code)
-        if not item_details or not hasattr(item_details, 'name'):
+        try:
+            item_details = frappe.get_doc("Product Bundle", self.item_code)
+            if not item_details:
+                return None
+        except Exception:    
             return None
 
         subitems_list = getattr(item_details, 'items', [])
@@ -34,9 +42,18 @@ class ProductBundleTemplate:
 
     def get_item_price(self, item_details):
         try:
-            price_list_rate = frappe.db.get_value("Item Price", {"item_code": item_details.get('item_code')}, "price_list_rate")
+            print("get_item_price: ", item_details.__dict__)
+
+            price_list_rate = frappe.db.get_value(
+                "Item Price", 
+                {
+                    "item_code": item_details.get('item_code'), 
+                    "price_list": self.price_list
+                },
+                "price_list_rate"
+            )
             if price_list_rate is None:
-                price_list_rate = 0
+                price_list_rate = item_details.get('rate')
         except Exception:
             price_list_rate = 0
 
@@ -82,16 +99,17 @@ class ProductBundleTemplate:
             
             sub_items = []
             for item in items:
+                code = item.get("item_code", "")
                 sub_items.append({
-                    "item_code": item.get("item_code", ""),
-                    "description": item.get("description", ""),
+                    "item_code": code,
+                    "description": item.get("description", code),
                     "stock_uom": item.get("stock_uom", ""),
                     "stock_uom_qty": item.get("qty_unit_measure", 0),
                     "price": self.get_item_price(item),
-                    "options": item.get("options", {}),
+                    "options": item.get("options", ""),
                     "qty": item.get("qty", 0),
                     "tvs_pn": item.get("tvs_pn", ""),
-                    "rate": item.get("rate", 0)
+                    "rate": self.get_item_price(item),
                 })
             return sub_items
         except Exception:

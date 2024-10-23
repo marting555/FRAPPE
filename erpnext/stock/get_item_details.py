@@ -74,7 +74,6 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 			args["bill_date"] = doc.get("bill_date")
 
 	out = get_basic_details(args, item, overwrite_warehouse)
-	print("-----> basic details: ", out)
 
 	get_item_tax_template(args, item, out)
 	out["item_tax_rate"] = get_item_tax_map(
@@ -146,6 +145,7 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 		searcher = (
 				ProductBundleTemplate()
 				.set_item_code(args.item_code)
+				.set_price_list(args.price_list)
 				.validate()     
 				.searchProductBundle()
 			)

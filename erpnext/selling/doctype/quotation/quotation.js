@@ -384,9 +384,57 @@ frappe.ui.form.on("Quotation Item", "stock_balance", function(frm, cdt, cdn) {
 	frappe.set_route("query-report", "Stock Balance");
 })
 
+
 frappe.ui.form.on('Quotation Item', {
-	item_code: function(frm, cdt, cdn) {
-        let row = locals[cdt][cdn];
-        console.log("Quotation Item ítem modificado:", row.item_code);
+    item_code: function(frm, cdt, cdn) {
+        let row = locals[cdt][cdn];  // current row
+        let concatenated_description = '';
+
+        if (row.is_product_bundle) {
+            row.product_bundle_items.forEach(bundleItem => {
+                
+                if (bundleItem.description_visible) {
+                    concatenated_description += (bundleItem.description || '') + '\n';
+                }
+
+                bundleItem.sub_items.forEach(subItem => {
+                    frm.add_child('items', {
+                        item_code: subItem.item_code,
+                        description: subItem.description,
+                        qty: subItem.qty,
+                        rate: subItem.price,
+                        uom: row.uom,
+                        stock_uom: row.stock_uom,
+                        parent: row.parent,
+                        parentfield: "items",
+                        parenttype: "Quotation"
+                    });
+                });
+            });
+
+            frm.refresh_field('items');
+
+            setTimeout(() => {
+                row.description = concatenated_description.trim();
+
+                let all_items = frm.doc.items.map(item => {
+                    if (item.name === row.name) {
+                        item.description = concatenated_description.trim();
+                    }
+                    return item;
+                });
+
+                frm.set_value('items', all_items);
+                frm.refresh_field('items');
+
+                console.log("Extended description updated for item:", row.name);
+            }, 1000);
+        }
+
+        console.log("Item added:", row);
     }
 });
+
+
+
+
