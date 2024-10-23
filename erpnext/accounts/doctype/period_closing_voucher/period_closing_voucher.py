@@ -370,6 +370,8 @@ class PeriodClosingVoucher(AccountsController):
 		for dimension in qb_dimension_fields:
 			query = query.groupby(gl_entry[dimension])
 
+		query = query.groupby(gl_entry.account, gl_entry.account_currency)	
+
 		return query.run(as_dict=1)
 
 
