@@ -391,10 +391,11 @@ frappe.ui.form.on('Quotation Item', {
         let concatenated_description = '';
 
         if (row.is_product_bundle) {
+
             row.product_bundle_items.forEach(bundleItem => {
                 
                 if (bundleItem.description_visible) {
-                    concatenated_description += (bundleItem.description || '') + '\n';
+                    concatenated_description += (bundleItem.description || '') + ' ';
                 }
 
                 bundleItem.sub_items.forEach(subItem => {
@@ -412,22 +413,30 @@ frappe.ui.form.on('Quotation Item', {
                 });
             });
 
-            frm.refresh_field('items');
-
             setTimeout(() => {
                 row.description = concatenated_description.trim();
 
                 let all_items = frm.doc.items.map(item => {
+					console.log(item)
                     if (item.name === row.name) {
                         item.description = concatenated_description.trim();
                     }
+					
+					item.rate = row.product_bundle_items.reduce((total, bundleItem) => {
+                        return total + bundleItem.sub_items.reduce((subTotal, subItem) => {
+                            return subTotal + (subItem.qty * subItem.price);
+                        }, 0);
+                    }, 0);
+
                     return item;
                 });
 
                 frm.set_value('items', all_items);
                 frm.refresh_field('items');
+				
+				frm.trigger('calculate_taxes_and_totals')
+                frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
 
-                console.log("Extended description updated for item:", row.name);
             }, 1000);
         }
 
