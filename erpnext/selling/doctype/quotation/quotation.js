@@ -394,12 +394,15 @@ frappe.ui.form.on('Quotation Item', {
 
             row.product_bundle_items.forEach(bundleItem => {
                 
-                if (bundleItem.description_visible) {
-                    concatenated_description += (bundleItem.description || '') + ' ';
-                }
+				let visibleDescriptions = row.product_bundle_items
+				.filter(bundleItem => bundleItem.description_visible)
+				.map(bundleItem => bundleItem.description || '');
+			
+				concatenated_description = visibleDescriptions.join(', ').trim();
 
                 bundleItem.sub_items.forEach(subItem => {
                     frm.add_child('items', {
+						item_name: subItem.item_code,
                         item_code: subItem.item_code,
                         description: subItem.description,
                         qty: subItem.qty,
@@ -414,11 +417,11 @@ frappe.ui.form.on('Quotation Item', {
             });
 
             setTimeout(() => {
-                row.description = concatenated_description.trim();
+                row.description = concatenated_description;
 				console.log('items: ',JSON.stringify(frm.doc.items), null, 2);
                 let all_items = frm.doc.items.map(item => {
                     if (item.name === row.name) {
-                        item.description = concatenated_description.trim();
+                        item.description = concatenated_description;
                     }
 					
 					if (item.product_bundle_items && item.product_bundle_items.length > 0) {
