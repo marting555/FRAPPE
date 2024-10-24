@@ -110,6 +110,12 @@ def get_items_for_reorder() -> dict[str, list]:
 	reorder_table = frappe.qb.DocType("Item Reorder")
 	item_table = frappe.qb.DocType("Item")
 
+	# handling error of date range in postgres
+	if frappe.db.db_type == "mariadb":
+		end_of_life_condition = item_table.end_of_life == "0000-00-00"
+	elif frappe.db.db_type == "postgres":
+		end_of_life_condition = item_table.end_of_life == "1900-01-01"
+
 	query = (
 		frappe.qb.from_(reorder_table)
 		.inner_join(item_table)
@@ -136,7 +142,7 @@ def get_items_for_reorder() -> dict[str, list]:
 			& (
 				(item_table.end_of_life.isnull())
 				| (item_table.end_of_life > nowdate())
-				| (item_table.end_of_life == "0000-00-00")
+				| end_of_life_condition
 			)
 		)
 	)
@@ -154,6 +160,12 @@ def get_items_for_reorder() -> dict[str, list]:
 def get_reorder_levels_for_variants(itemwise_reorder):
 	item_table = frappe.qb.DocType("Item")
 
+	# handling error of date range in postgres
+	if frappe.db.db_type == "mariadb":
+		end_of_life_condition = item_table.end_of_life == "0000-00-00"
+	elif frappe.db.db_type == "postgres":
+		end_of_life_condition = item_table.end_of_life == "1900-01-01"
+
 	query = (
 		frappe.qb.from_(item_table)
 		.select(
@@ -166,7 +178,7 @@ def get_reorder_levels_for_variants(itemwise_reorder):
 			& (
 				(item_table.end_of_life.isnull())
 				| (item_table.end_of_life > nowdate())
-				| (item_table.end_of_life == "0000-00-00")
+				| end_of_life_condition
 			)
 			& (item_table.variant_of.notnull())
 		)

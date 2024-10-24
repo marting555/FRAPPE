@@ -451,6 +451,12 @@ def get_actual_expense(args):
 	budget_against_field = args.get("budget_against_field")
 	condition1 = " and gle.posting_date <= %(month_end_date)s" if args.get("month_end_date") else ""
 
+	# Check if the doctype is a tree and set args.is_tree accordingly
+	if frappe.get_meta(args.budget_against_doctype).is_tree:
+		args.is_tree = True
+	else:
+		args.is_tree = False
+
 	if args.is_tree:
 		lft_rgt = frappe.db.get_value(
 			args.budget_against_doctype, args.get(budget_against_field), ["lft", "rgt"], as_dict=1
