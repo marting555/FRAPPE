@@ -1041,13 +1041,9 @@ def get_valuation_rate(data):
 		.join(wh_table)
 		.on(bin_table.warehouse == wh_table.name)
 		.select(
-			Case()
-			.when(
-				Count(bin_table.name) > 0, IfNull(Sum(bin_table.stock_value) / Sum(bin_table.actual_qty), 0.0)
+			Sum(bin_table.stock_value).as_("stock_value"),
+			Sum(bin_table.actual_qty).as_("actual_qty")
 			)
-			.else_(None)
-			.as_("valuation_rate")
-		)
 		.where((bin_table.item_code == item_code) & (wh_table.company == company))
 	)
 
@@ -1056,10 +1052,14 @@ def get_valuation_rate(data):
 
 	item_valuation = item_valuation.run(as_dict=True)[0]
 
-	valuation_rate = item_valuation.get("valuation_rate")
+	stock_value = item_valuation.get("stock_value")
+	actual_qty = item_valuation.get("actual_qty")
+	if actual_qty and actual_qty > 0:
+		valuation_rate = flt(stock_value) / flt(actual_qty)
+	else:
+		valuation_rate = 0.0
 
-	if (valuation_rate is not None) and valuation_rate <= 0:
-		# Explicit null value check. If None, Bins don't exist, neither does SLE
+	if not valuation_rate:
 		sle = frappe.qb.DocType("Stock Ledger Entry")
 		last_val_rate = (
 			frappe.qb.from_(sle)
@@ -1069,6 +1069,7 @@ def get_valuation_rate(data):
 			.orderby(sle.creation, order=frappe.qb.desc)
 			.limit(1)
 		).run(as_dict=True)
+
 
 		valuation_rate = flt(last_val_rate[0].get("valuation_rate")) if last_val_rate else 0
 
