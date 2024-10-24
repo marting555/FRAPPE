@@ -415,18 +415,19 @@ frappe.ui.form.on('Quotation Item', {
 
             setTimeout(() => {
                 row.description = concatenated_description.trim();
-
+				console.log('items: ',JSON.stringify(frm.doc.items), null, 2);
                 let all_items = frm.doc.items.map(item => {
-					console.log(item)
                     if (item.name === row.name) {
                         item.description = concatenated_description.trim();
                     }
 					
-					item.rate = row.product_bundle_items.reduce((total, bundleItem) => {
-                        return total + bundleItem.sub_items.reduce((subTotal, subItem) => {
-                            return subTotal + (subItem.qty * subItem.price);
-                        }, 0);
-                    }, 0);
+					if (item.product_bundle_items && item.product_bundle_items.length > 0) {
+						item.rate = item.product_bundle_items.reduce((total, bundleItem) => {
+							return total + (bundleItem.qty * bundleItem.price);
+						}, 0);
+					} else {
+						item.rate = item.rate || 0;
+					}
 
                     return item;
                 });
