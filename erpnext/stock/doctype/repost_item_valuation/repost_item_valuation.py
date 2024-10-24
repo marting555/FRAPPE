@@ -237,16 +237,17 @@ class RepostItemValuation(Document):
 
 		frappe.db.sql(
 			"""
-			update `tabRepost Item Valuation`
-			set status = 'Skipped'
+			UPDATE `tabRepost Item Valuation`
+			SET status = 'Skipped'
 			WHERE item_code = %(item_code)s
-				and warehouse = %(warehouse)s
-				and name != %(name)s
-				and TIMESTAMP(posting_date, posting_time) > TIMESTAMP(%(posting_date)s, %(posting_time)s)
-				and docstatus = 1
-				and status = 'Queued'
-				and based_on = 'Item and Warehouse'
-				""",
+				AND warehouse = %(warehouse)s
+				AND name != %(name)s
+				AND posting_date > %(posting_date)s
+				AND posting_time > %(posting_time)s
+				AND docstatus = 1
+				AND status = 'Queued'
+				AND based_on = 'Item and Warehouse'
+			""",
 			filters,
 		)
 
@@ -451,9 +452,13 @@ def repost_entries():
 
 def get_repost_item_valuation_entries():
 	return frappe.db.sql(
-		""" SELECT name from `tabRepost Item Valuation`
-		WHERE status in ('Queued', 'In Progress') and creation <= %s and docstatus = 1
-		ORDER BY timestamp(posting_date, posting_time) asc, creation asc, status asc
+		"""
+		SELECT name
+		FROM `tabRepost Item Valuation`
+		WHERE status in ('Queued', 'In Progress')
+			AND creation <= %s
+			AND docstatus = 1
+		ORDER BY posting_date asc, posting_time asc, creation asc, status asc
 	""",
 		now(),
 		as_dict=1,

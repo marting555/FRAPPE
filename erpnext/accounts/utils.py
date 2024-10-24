@@ -1391,13 +1391,15 @@ def get_future_stock_vouchers(posting_date, posting_time, for_warehouses=None, f
 		values.append(company)
 
 	future_stock_vouchers = frappe.db.sql(
-		f"""select distinct sle.voucher_type, sle.voucher_no
-		from `tabStock Ledger Entry` sle
-		where
-			timestamp(sle.posting_date, sle.posting_time) >= timestamp(%s, %s)
-			and is_cancelled = 0
+		f"""
+		SELECT distinct sle.voucher_type, sle.voucher_no
+		FROM `tabStock Ledger Entry` sle
+		WHERE sle.posting_date >= %s
+			AND sle.posting_time >= %s
+			AND is_cancelled = 0
 			{condition}
-		order by timestamp(sle.posting_date, sle.posting_time) asc, creation asc for update""",
+		ORDER BY sle.posting_date asc, sle.posting_time asc, creation asc for update
+		""",
 		tuple([posting_date, posting_time, *values]),
 		as_dict=True,
 	)
