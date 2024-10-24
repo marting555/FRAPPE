@@ -356,7 +356,11 @@ def apply_conditions(query, si, sii, filters, additional_conditions=None):
 		sales_invoice = frappe.db.get_all(
 			"Sales Invoice Payment", {"mode_of_payment": filters.get("mode_of_payment")}, pluck="parent"
 		)
-		query = query.where(si.name.isin(sales_invoice))
+		
+		if sales_invoice:
+			query = query.where(si.name.isin(sales_invoice))
+		else:
+			query = query.where(si.name == '')
 
 	if filters.get("warehouse"):
 		if frappe.db.get_value("Warehouse", filters.get("warehouse"), "is_group"):
