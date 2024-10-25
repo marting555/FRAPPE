@@ -47,7 +47,7 @@ def get_item_list(wo_list, filters):
 						& (bom_item.item_code == wo_item_details.item_code)
 						& (bom.name == wo_details.bom_no)
 					)
-					.groupby(bom_item.item_code)
+					.groupby(bom_item.item_code, bin.actual_qty, bom.quantity, bom_item.stock_qty)
 				).run(as_dict=1)
 
 				stock_qty = 0
