@@ -387,67 +387,145 @@ frappe.ui.form.on("Quotation Item", "stock_balance", function(frm, cdt, cdn) {
 
 frappe.ui.form.on('Quotation Item', {
     item_code: function(frm, cdt, cdn) {
-        let row = locals[cdt][cdn];  // current row
+        let row = locals[cdt][cdn];
         let concatenated_description = '';
 
         if (row.is_product_bundle) {
-
             row.product_bundle_items.forEach(bundleItem => {
                 
-				let visibleDescriptions = row.product_bundle_items
-				.filter(bundleItem => bundleItem.description_visible)
-				.map(bundleItem => bundleItem.description || '');
-			
-				concatenated_description = visibleDescriptions.join(', ').trim();
+                let visibleDescriptions = row.product_bundle_items
+                    .filter(bundleItem => bundleItem.description_visible)
+                    .map(bundleItem => bundleItem.description || '');
+                
+                concatenated_description = visibleDescriptions.join(', ').trim();
 
                 bundleItem.sub_items.forEach(subItem => {
-                    frm.add_child('items', {
-						item_name: subItem.item_code,
-                        item_code: subItem.item_code,
-                        description: subItem.description,
-                        qty: subItem.qty,
-                        rate: subItem.price,
-                        uom: row.uom,
-                        stock_uom: row.stock_uom,
-                        parent: row.parent,
-                        parentfield: "items",
-                        parenttype: "Quotation"
-                    });
+                    let exists = frm.doc.items.some(item => item.item_code === subItem.item_code);
+                    if (!exists) {
+                        frm.add_child('items', {
+                            item_name: subItem.item_code,
+                            item_code: subItem.item_code,
+                            description: subItem.description,
+                            qty: subItem.qty,
+                            rate: subItem.price,
+                            uom: row.uom,
+                            stock_uom: row.stock_uom,
+                            parent: row.parent,
+                            parentfield: "items",
+                            parenttype: "Quotation"
+                        });
+                    }
                 });
             });
 
             setTimeout(() => {
                 row.description = concatenated_description;
-				console.log('items: ',JSON.stringify(frm.doc.items), null, 2);
                 let all_items = frm.doc.items.map(item => {
                     if (item.name === row.name) {
                         item.description = concatenated_description;
                     }
-					
-					if (item.product_bundle_items && item.product_bundle_items.length > 0) {
-						item.rate = item.product_bundle_items.reduce((total, bundleItem) => {
-							return total + (bundleItem.qty * bundleItem.price);
-						}, 0);
-					} else {
-						item.rate = item.rate || 0;
-					}
+                    
+                    if (item.product_bundle_items && item.product_bundle_items.length > 0) {
+                        item.rate = item.product_bundle_items.reduce((total, bundleItem) => {
+                            let bundleItemTotal = bundleItem.description_visible ? (bundleItem.qty * bundleItem.price) : 0;
+                            return total + bundleItemTotal;
+                        }, 0);
+                    } else {
+                        item.rate = item.rate || 0;
+                    }
 
                     return item;
                 });
 
                 frm.set_value('items', all_items);
                 frm.refresh_field('items');
-				
-				frm.trigger('calculate_taxes_and_totals')
+                
+                frm.trigger('calculate_taxes_and_totals');
                 frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
-
             }, 1000);
         }
-
-        console.log("Item added:", row);
     }
 });
 
+frappe.ui.form.on('Quotation', {
+    selling_price_list: function(frm) {
+       if (!frm.doc.items.length || (frm.doc.items.length > 0 && !frm.doc.items[0].item_code)) {
+          return;
+       }
+ 
+       const item_codes_to_send = [];
+ 
+       frm.doc.items.forEach(item => {
+          if (item.is_product_bundle) {
+             item.product_bundle_items.forEach(bundleItem => {
+                if (bundleItem.description_visible) {
+                   item_codes_to_send.push(bundleItem.item_code);
+                   bundleItem.sub_items.forEach(subItem => {
+                      let exists = frm.doc.items.some(docItem => docItem.item_code === subItem.item_code);
+                      if (!exists) {
+                         item_codes_to_send.push(subItem.item_code);
+                      }
+                   });
+                }
+             });
+          } else {
+             item_codes_to_send.push(item.item_code);
+          }
+       });
+ 
+       console.log("======> item codes to send: ", item_codes_to_send);
+
+       const new_selling_price_list = frm.doc.selling_price_list;
+       frappe.call({
+          method: "erpnext.stock.get_item_details.get_item_product_bundle_template",
+          args: {
+             args: {
+               item_codes: item_codes_to_send,
+               selling_price_list: new_selling_price_list
+            }
+          },
+          callback: function(r) {
+             if (r.message) {
+                let updated_prices = r.message;
+
+                frm.doc.items.forEach(item => {
+                    if (item.is_product_bundle) {
+                        let new_rate = 0;
+
+                        item.product_bundle_items.forEach(bundleItem => {
+                            if (updated_prices[bundleItem.item_code]) {
+                                bundleItem.price = updated_prices[bundleItem.item_code];
+                                if (bundleItem.description_visible) {
+                                    new_rate += bundleItem.qty * bundleItem.price;
+                                }
+                            }
+
+                            bundleItem.sub_items.forEach(subItem => {
+                                let exists = frm.doc.items.some(docItem => docItem.item_code === subItem.item_code);
+                                if (!exists && updated_prices[subItem.item_code]) {
+                                    subItem.price = updated_prices[subItem.item_code];
+                                    new_rate += subItem.qty * subItem.price;
+                                }
+                            });
+                        });
+
+                        item.rate = new_rate;
+                    } else if (updated_prices[item.item_code]) {
+                        item.rate = updated_prices[item.item_code];
+                    }
+                });
+
+                frm.refresh_field('items');
+				frm.trigger('calculate_taxes_and_totals');
+                frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+             }
+          }
+       });
+    }
+});
+
+
+ 
 
 
 

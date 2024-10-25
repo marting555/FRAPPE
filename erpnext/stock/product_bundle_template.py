@@ -35,6 +35,7 @@ class ProductBundleTemplate:
         if not isinstance(subitems_list, list):
             return None
         return {
+            "is_product_bundle": 1,
             "item_code": item_details.name,
             "description": item_details.description,
             "subitems_list": self.get_sub_items(subitems_list)
@@ -42,7 +43,7 @@ class ProductBundleTemplate:
 
     def get_item_price(self, item_details):
         try:
-            print("get_item_price: ", item_details.__dict__)
+            # print("get_item_price: ", item_details.__dict__)
 
             price_list_rate = frappe.db.get_value(
                 "Item Price", 
@@ -53,7 +54,7 @@ class ProductBundleTemplate:
                 "price_list_rate"
             )
             if price_list_rate is None:
-                price_list_rate = item_details.get('rate')
+                price_list_rate = item_details.get('standard_rate') # valuation_rate
         except Exception:
             price_list_rate = 0
 

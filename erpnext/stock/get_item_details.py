@@ -1448,3 +1448,25 @@ def get_blanket_order_details(args):
 		blanket_order_details = blanket_order_details[0] if blanket_order_details else ""
 
 	return blanket_order_details
+
+@frappe.whitelist()
+def get_item_product_bundle_template(args):
+
+    if isinstance(args, str):
+        import json
+        args = json.loads(args)
+
+    item_codes = args.get("item_codes", [])
+    selling_price_list = args.get("selling_price_list", "")
+
+    searcher = ProductBundleTemplate().set_price_list(selling_price_list)
+    item_prices = {}
+
+    for item_code in item_codes:
+        searcher.set_item_code(item_code)
+        item_details = frappe.get_doc("Item", item_code)
+        item_price = searcher.get_item_price(item_details)
+        item_prices[item_code] = item_price  
+
+    return item_prices
+
