@@ -122,7 +122,7 @@ def get_bom_data(filters):
 			IfNull(Sum(bin.actual_qty), 0).as_("actual_qty"),
 		)
 		.where((bom_item.parent == filters.get("bom")) & (bom_item.parenttype == "BOM"))
-		.groupby(bom_item.item_code)
+		.groupby(bom_item.item_code, bom_item.description, bom_item.qty_consumed_per_unit)
 	)
 
 	if filters.get("warehouse"):
