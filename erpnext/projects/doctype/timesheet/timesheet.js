@@ -258,6 +258,9 @@ frappe.ui.form.on("Timesheet", {
 
 	parent_project: function (frm) {
 		set_project_in_timelog(frm);
+		frappe.db.get_value("Project", frm.doc.parent_project, "customer", (r) => {
+			frm.set_value("customer",r.customer);
+		});
 	},
 });
 
