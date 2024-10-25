@@ -83,9 +83,6 @@
   "column_break_40",
   "allow_zero_valuation_rate",
   "return_qty_from_rejected_warehouse",
-  "is_fixed_asset",
-  "asset_location",
-  "asset_category",
   "schedule_date",
   "quality_inspection",
   "material_request_item",
@@ -121,7 +118,6 @@
   "accounting_details_section",
   "expense_account",
   "item_tax_rate",
-  "wip_composite_asset",
   "column_break_102",
   "provisional_expense_account",
   "accounting_dimensions_section",
@@ -535,16 +531,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "0",
-   "fieldname": "is_fixed_asset",
-   "fieldtype": "Check",
-   "hidden": 1,
-   "label": "Is Fixed Asset",
-   "no_copy": 1,
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
    "fieldname": "purchase_order",
    "fieldtype": "Link",
    "label": "Purchase Order",
@@ -816,22 +802,6 @@
    "label": "Manufacturer Part Number"
   },
   {
-   "depends_on": "is_fixed_asset",
-   "fieldname": "asset_location",
-   "fieldtype": "Link",
-   "label": "Asset Location",
-   "options": "Location"
-  },
-  {
-   "depends_on": "is_fixed_asset",
-   "fetch_from": "item_code.asset_category",
-   "fieldname": "asset_category",
-   "fieldtype": "Link",
-   "label": "Asset Category",
-   "options": "Asset Category",
-   "read_only": 1
-  },
-  {
    "depends_on": "eval:parent.is_internal_supplier",
    "fieldname": "from_warehouse",
    "fieldtype": "Link",
@@ -1067,12 +1037,6 @@
    "fieldname": "add_serial_batch_bundle",
    "fieldtype": "Button",
    "label": "Add Serial / Batch No"
-  },
-  {
-   "fieldname": "wip_composite_asset",
-   "fieldtype": "Link",
-   "label": "WIP Composite Asset",
-   "options": "Asset"
   },
   {
    "fieldname": "sales_order",
