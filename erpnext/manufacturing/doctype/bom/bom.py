@@ -1435,10 +1435,11 @@ def item_query(doctype, txt, searchfield, start, page_len, filters):
 			or_cond_filters[s_field] = ("like", f"%{txt}%")
 
 		barcodes = frappe.get_all(
-			"Item Barcode",
-			fields=["distinct parent as item_code"],
-			filters={"barcode": ("like", f"%{txt}%")},
-		)
+    "Item Barcode",
+    fields=["distinct parent as item_code", "modified"],
+    filters={"barcode": ("like", f"%{txt}%")},
+    order_by="modified DESC"
+)
 
 		barcodes = [d.item_code for d in barcodes]
 		if barcodes:
