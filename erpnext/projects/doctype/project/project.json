@@ -172,7 +172,7 @@
    "in_list_view": 1,
    "label": "Type of job",
    "no_copy": 1,
-   "options": "DSG Diagnose\nDSG reparatie\nReparatie overig\nSoftware\nParts",
+   "options": "Diagnose\nReparatie\nOilewissel\nOverig\nSoftware\nParts",
    "search_index": 1
   },
   {
@@ -924,7 +924,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-10-18 16:38:26.199781",
+ "modified": "2024-10-25 20:19:55.855749",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
