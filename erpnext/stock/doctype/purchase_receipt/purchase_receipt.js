@@ -39,12 +39,6 @@ frappe.ui.form.on("Purchase Receipt", {
 			};
 		});
 
-		frm.set_query("wip_composite_asset", "items", function () {
-			return {
-				filters: { is_composite_asset: 1, docstatus: 0 },
-			};
-		});
-
 		frm.set_query("taxes_and_charges", function () {
 			return {
 				filters: { company: frm.doc.company },
@@ -195,28 +189,6 @@ erpnext.stock.PurchaseReceiptController = class PurchaseReceiptController extend
 			this.show_stock_ledger();
 			//removed for temporary
 			this.show_general_ledger();
-
-			this.frm.add_custom_button(
-				__("Asset"),
-				function () {
-					frappe.route_options = {
-						purchase_receipt: me.frm.doc.name,
-					};
-					frappe.set_route("List", "Asset");
-				},
-				__("View")
-			);
-
-			this.frm.add_custom_button(
-				__("Asset Movement"),
-				function () {
-					frappe.route_options = {
-						reference_name: me.frm.doc.name,
-					};
-					frappe.set_route("List", "Asset Movement");
-				},
-				__("View")
-			);
 		}
 
 		if (!this.frm.doc.is_return && this.frm.doc.status != "Closed") {
