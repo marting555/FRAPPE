@@ -714,17 +714,8 @@ frappe.ui.form.on('Stock Entry', {
 	}
 });
 
-<<<<<<< HEAD
-frappe.ui.form.on('Stock Entry Detail', {
-	qty: function(frm, cdt, cdn) {
-		frm.events.set_serial_no(frm, cdt, cdn, () => {
-			frm.events.set_basic_rate(frm, cdt, cdn);
-		});
-	},
 
-	conversion_factor: function(frm, cdt, cdn) {
-=======
-frappe.ui.form.on("Stock Entry Detail", {
+frappe.ui.form.on('Stock Entry Detail', {
 	set_basic_rate_manually(frm, cdt, cdn) {
 		let row = locals[cdt][cdn];
 		frm.fields_dict.items.grid.update_docfield_property(
@@ -734,8 +725,13 @@ frappe.ui.form.on("Stock Entry Detail", {
 		);
 	},
 
-	qty(frm, cdt, cdn) {
->>>>>>> 5a967bc868 (fix: basic rate not editable in Stock Entry Detail (#43837))
+	qty: function(frm, cdt, cdn) {
+		frm.events.set_serial_no(frm, cdt, cdn, () => {
+			frm.events.set_basic_rate(frm, cdt, cdn);
+		});
+	},
+
+	conversion_factor: function(frm, cdt, cdn) {
 		frm.events.set_basic_rate(frm, cdt, cdn);
 	},
 
