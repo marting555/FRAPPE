@@ -257,15 +257,10 @@ frappe.ui.form.on("Request for Quotation",{
 			});
 		};
 
-<<<<<<< HEAD
-		dialog.fields_dict.note.$wrapper.append(`<p class="small text-muted">This is a preview of the email to be sent. A PDF of the document will
-			automatically be attached with the email.</p>`);
-=======
 		const msg = __(
 			"This is a preview of the email to be sent. A PDF of the document will automatically be attached with the email."
 		);
 		dialog.fields_dict.note.$wrapper.append(`<p class="small text-muted">${msg}</p>`);
->>>>>>> 1d40e3dbe3 (fix(RFQ): make strings translatable (#43843))
 
 		dialog.show();
 	}
