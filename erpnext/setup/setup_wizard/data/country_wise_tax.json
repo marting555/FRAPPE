@@ -4207,9 +4207,131 @@
 	},
 
 	"Thailand": {
-		"Thailand Tax": {
-			"account_name": "VAT",
-			"tax_rate": 7.00
+		"tax_categories": [
+			"Sales",
+			"Purchase"
+		],
+		"chart_of_accounts": {
+			"*": {
+				"sales_tax_templates": [
+					{
+						"title": "Output Tax",
+						"is_default": 0,
+						"taxes": [
+							{
+								"account_head": {
+									"account_name": "Output Tax",
+									"root_type": "Liability",
+									"tax_rate": 7.00
+								},
+								"description": "Output Tax 7%",
+								"rate": 7.00
+							}
+						]
+					},
+					{
+						"title": "Undue Output Tax",
+						"is_default": 0,
+						"taxes": [
+							{
+								"account_head": {
+									"account_name": "Undue Output Tax",
+									"root_type": "Liability",
+									"tax_rate": 7.00
+								},
+								"description": "Undue Output Tax 7%",
+								"rate": 7.00
+							}
+						]
+					}
+				],
+				"purchase_tax_templates": [
+					{
+						"title": "Input Tax",
+						"is_default": 0,
+						"taxes": [
+							{
+								"account_head": {
+									"account_name": "Input Tax",
+									"root_type": "Asset",
+									"tax_rate": 7.00
+								},
+								"description": "Input Tax 7%",
+								"rate": 7.00
+							}
+						]
+					},
+					{
+						"title": "Undue Input Tax",
+						"is_default": 0,
+						"taxes": [
+							{
+								"account_head": {
+									"account_name": "Undue Input Tax",
+									"root_type": "Asset",
+									"tax_rate": 7.00
+								},
+								"description": "Undue Input Tax 7%",
+								"rate": 7.00
+							}
+						]
+					}
+				],
+				"item_tax_templates": [
+					{
+						"title": "Output tax",
+						"taxes": [
+							{
+								"tax_type": {
+									"account_name": "Output Tax",
+									"root_type": "Liability",
+									"tax_rate": 7.00
+								},
+								"tax_rate": 7.00
+							}
+						]
+					},
+					{
+						"title": "Undue Output tax",
+						"taxes": [
+							{
+								"tax_type": {
+									"account_name": "Undue Output Tax",
+									"root_type": "Liability",
+									"tax_rate": 7.00
+								},
+								"tax_rate": 7.00
+							}
+						]
+					},
+					{
+						"title": "Input tax",
+						"taxes": [
+							{
+								"tax_type": {
+									"account_name": "Input Tax",
+									"root_type": "Asset",
+									"tax_rate": 7.00
+								},
+								"tax_rate": 7.00
+							}
+						]
+					},
+					{
+						"title": "Undue Input tax",
+						"taxes": [
+							{
+								"tax_type": {
+									"account_name": "Undue Input Tax",
+									"root_type": "Asset",
+									"tax_rate": 7.00
+								},
+								"tax_rate": 7.00
+							}
+						]
+					}
+				]
+			}
 		}
 	},
 
