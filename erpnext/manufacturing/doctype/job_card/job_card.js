@@ -110,6 +110,131 @@ frappe.ui.form.on("Job Card", {
 				}
 			});
 		}
+<<<<<<< HEAD
+=======
+
+		let sbb_field = frm.get_docfield("serial_and_batch_bundle");
+		if (sbb_field) {
+			sbb_field.get_route_options_for_new_doc = () => {
+				return {
+					item_code: frm.doc.production_item,
+					warehouse: frm.doc.wip_warehouse,
+					voucher_type: frm.doc.doctype,
+				};
+			};
+		}
+	},
+
+	complete_job_card(frm) {
+		let fields = [
+			{
+				fieldtype: "Float",
+				label: __("Completed Quantity"),
+				fieldname: "qty",
+				reqd: 1,
+				default: frm.doc.for_quantity - frm.doc.manufactured_qty,
+			},
+			{
+				fieldtype: "Datetime",
+				label: __("End Time"),
+				fieldname: "end_time",
+				default: frappe.datetime.now_datetime(),
+			},
+		];
+
+		frappe.prompt(
+			fields,
+			(data) => {
+				if (data.qty <= 0) {
+					frappe.throw(__("Quantity should be greater than 0"));
+				}
+
+				frm.call({
+					method: "complete_job_card",
+					doc: frm.doc,
+					args: {
+						qty: data.qty,
+						end_time: data.end_time,
+					},
+					callback: function (r) {
+						frm.reload_doc();
+					},
+				});
+			},
+			__("Enter Value"),
+			__("Update"),
+			__("Set Finished Good Quantity")
+		);
+	},
+
+	make_subcontracting_po(frm) {
+		if (frm.doc.docstatus === 1 && frm.doc.for_quantity > frm.doc.manufactured_qty) {
+			frm.add_custom_button(__("Make Subcontracting PO"), () => {
+				frappe.model.open_mapped_doc({
+					method: "erpnext.manufacturing.doctype.job_card.job_card.make_subcontracting_po",
+					frm: frm,
+				});
+			}).addClass("btn-primary");
+		}
+	},
+
+	start_timer(frm, start_time, employees) {
+		frm.call({
+			method: "start_timer",
+			doc: frm.doc,
+			args: {
+				start_time: start_time,
+				employees: employees,
+			},
+			callback: function (r) {
+				frm.reload_doc();
+				frm.trigger("make_dashboard");
+			},
+		});
+	},
+
+	make_finished_good(frm) {
+		let fields = [
+			{
+				fieldtype: "Float",
+				label: __("Completed Quantity"),
+				fieldname: "qty",
+				reqd: 1,
+				default: frm.doc.for_quantity - frm.doc.manufactured_qty,
+			},
+			{
+				fieldtype: "Datetime",
+				label: __("End Time"),
+				fieldname: "end_time",
+				default: frappe.datetime.now_datetime(),
+			},
+		];
+
+		frappe.prompt(
+			fields,
+			(data) => {
+				if (data.qty <= 0) {
+					frappe.throw(__("Quantity should be greater than 0"));
+				}
+
+				frm.call({
+					method: "make_finished_good",
+					doc: frm.doc,
+					args: {
+						qty: data.qty,
+						end_time: data.end_time,
+					},
+					callback: function (r) {
+						var doc = frappe.model.sync(r.message);
+						frappe.set_route("Form", doc[0].doctype, doc[0].name);
+					},
+				});
+			},
+			__("Enter Value"),
+			__("Update"),
+			__("Set Finished Good Quantity")
+		);
+>>>>>>> 0a70be5b99 (fix: work order finish button not showing (#43875))
 	},
 
 	setup_quality_inspection: function (frm) {
