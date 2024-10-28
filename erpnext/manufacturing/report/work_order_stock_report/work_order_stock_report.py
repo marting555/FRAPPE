@@ -48,7 +48,7 @@ def get_item_list(wo_list, filters):
 					.where(
 						(bom.name == bom_item.parent)
 						& (bom_item.item_code == wo_item_details.item_code)
-						& (bom.name == wo_details.bom_no) 
+						& (bom.name == wo_details.bom_no)
 					)
 					.groupby(bom_item.item_code, bin.actual_qty, bom.quantity, bom_item.stock_qty)
 				).run(as_dict=1)
@@ -67,7 +67,7 @@ def get_item_list(wo_list, filters):
 					build = "Y"
 				else:
 					build = "N"
-				
+
 				row = frappe._dict(
 					{
 						"work_order": wo_details.name,
