@@ -205,18 +205,20 @@ frappe.ui.form.on("Sales Order", {
 		}
 		erpnext.queries.setup_queries(frm, "Warehouse", function () {
 			return {
-				filters: [["Warehouse", "company", "in", ["", cstr(frm.doc.company)]]],
+				filters: {
+					company:frm.doc.company,
+				},
 			};
 		});
 
 		frm.set_query("warehouse", "items", function (doc, cdt, cdn) {
 			let row = locals[cdt][cdn];
 			let query = {
-				filters: [["Warehouse", "company", "in", ["", cstr(frm.doc.company)]]],
+				filters: {company:frm.doc.company},
 			};
 			if (row.item_code) {
 				query.query = "erpnext.controllers.queries.warehouse_query";
-				query.filters.push(["Bin", "item_code", "=", row.item_code]);
+				query.filters.item_code =  row.item_code;
 			}
 			return query;
 		});
