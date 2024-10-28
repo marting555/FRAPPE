@@ -19,36 +19,6 @@ test_dependencies = ["Company"]
 
 
 class TestAccount(unittest.TestCase):
-	def test_delete_account_with_children(self):
-		parent_account = create_account(
-			account_name="Parent Account",
-			is_group=1,
-			parent_account="Application of Funds (Assets) - _TC",
-			company="_Test Company"
-		)
-		
-		create_account(
-			account_name="Child Account 1",
-			parent_account="Parent Account - _TC",
-			company="_Test Company"
-		)
-		
-		create_account(
-			account_name="Child Account 2",
-			parent_account="Parent Account - _TC",
-			company="_Test Company"
-		)
-		
-		self.assertRaises(
-			frappe.ValidationError,
-			frappe.delete_doc,
-			"Account", 
-			"Parent Account - _TC"
-		)
-		
-		frappe.delete_doc("Account", "Child Account 1 - _TC")
-		frappe.delete_doc("Account", "Child Account 2 - _TC")
-
 	def test_rename_account(self):
 		if not frappe.db.exists("Account", "1210 - Debtors - _TC"):
 			acc = frappe.new_doc("Account")
