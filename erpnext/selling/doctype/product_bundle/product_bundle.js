@@ -35,7 +35,7 @@ frappe.ui.form.on("Product Bundle", {
                             parent: frm.doc.name,
                             parentfield: "items", 
                             parenttype: "Product Bundle",
-                            qty: 1,
+                            qty: item.qty,
                             rate: 0,
                             tvs_pn: ''
                         };

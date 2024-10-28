@@ -4,6 +4,7 @@
 
 import json
 
+from erpnext.stock.product_bundle_template import ProductBundleTemplate
 import frappe
 from frappe import _, throw
 from frappe.model import child_table_fields, default_fields
@@ -22,6 +23,7 @@ from erpnext.setup.utils import get_exchange_rate
 from erpnext.stock.doctype.item.item import get_item_defaults, get_uom_conv_factor
 from erpnext.stock.doctype.item_manufacturer.item_manufacturer import get_item_manufacturer_part_no
 from erpnext.stock.doctype.price_list.price_list import get_price_list_details
+
 
 sales_doctypes = ["Quotation", "Sales Order", "Delivery Note", "Sales Invoice", "POS Invoice"]
 purchase_doctypes = [
@@ -56,12 +58,10 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 	        "set_warehouse": ""
 	}
 	"""
-
 	args = process_args(args)
 	for_validate = process_string_args(for_validate)
 	overwrite_warehouse = process_string_args(overwrite_warehouse)
 	item = frappe.get_cached_doc("Item", args.item_code)
-	print("------------------> item ", item)
 	validate_item_details(args, item)
 
 	if isinstance(doc, str):
@@ -74,7 +74,6 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 			args["bill_date"] = doc.get("bill_date")
 
 	out = get_basic_details(args, item, overwrite_warehouse)
-	print("------------------> basic details ", out)
 
 	get_item_tax_template(args, item, out)
 	out["item_tax_rate"] = get_item_tax_map(
@@ -88,7 +87,6 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 	get_party_item_code(args, item, out)
 
 	set_valuation_rate(out, args)
-	print("----------------------> set_valuation_rate ", out)
 
 	update_party_blanket_order(args, out)
 
@@ -127,7 +125,6 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 			args[key] = value
 
 	data = get_pricing_rule_for_item(args, doc=doc, for_validate=for_validate)
-	print("------------------> price rule for item ", data)
 
 	out.update(data)
 
@@ -143,6 +140,20 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 		out.amount = flt(args.qty) * flt(out.rate)
 
 	out = remove_standard_fields(out)
+
+	if out.get("is_product_bundle"):
+		searcher = (
+				ProductBundleTemplate()
+				.set_item_code(args.item_code)
+				.set_price_list(args.price_list)
+				.validate()     
+				.searchProductBundle()
+			)
+		if searcher is not None:
+			out.product_bundle_items = searcher["subitems_list"]
+		else:
+			out.product_bundle_items = []
+
 	return out
 
 
@@ -320,7 +331,7 @@ def get_basic_details(args, item, overwrite_warehouse=True):
 		"Batch", args.get("batch_no"), "item"
 	):
 		args["batch_no"] = ""
-
+   
 	out = frappe._dict(
 		{
 			"item_code": item.name,
@@ -838,13 +849,11 @@ def get_price_list_rate(args, item_doc, out=None):
 		if meta.get_field("currency"):
 			validate_conversion_rate(args, meta)
 
-		print("------------> get_price_list_rate ", args, item_doc.name,out)
 		price_list_rate = get_price_list_rate_for(args, item_doc.name)
 		# variant
 		if price_list_rate is None and item_doc.variant_of:
 			price_list_rate = get_price_list_rate_for(args, item_doc.variant_of)
 
-		print("------------> doctype ", args.get("doctype"))
 		# insert in database
 		if price_list_rate is None:
 			if args.price_list and args.rate and args.doctype not in ["Quotation", "Sales Order", "Delivery Note", "Sales Invoice"]:
@@ -1283,7 +1292,6 @@ def apply_price_list(args, as_doc=False):
 
 
 def apply_price_list_on_item(args):
-	print("-----------------> apply_price_list_on_item ", args)
 	item_doc = frappe.db.get_value("Item", args.item_code, ["name", "variant_of"], as_dict=1)
 	item_details = get_price_list_rate(args, item_doc)
 	item_details.update(get_pricing_rule_for_item(args))
@@ -1440,3 +1448,25 @@ def get_blanket_order_details(args):
 		blanket_order_details = blanket_order_details[0] if blanket_order_details else ""
 
 	return blanket_order_details
+
+@frappe.whitelist()
+def get_item_product_bundle_template(args):
+
+    if isinstance(args, str):
+        import json
+        args = json.loads(args)
+
+    item_codes = args.get("item_codes", [])
+    selling_price_list = args.get("selling_price_list", "")
+
+    searcher = ProductBundleTemplate().set_price_list(selling_price_list)
+    item_prices = {}
+
+    for item_code in item_codes:
+        searcher.set_item_code(item_code)
+        item_details = frappe.get_doc("Item", item_code)
+        item_price = searcher.get_item_price(item_details)
+        item_prices[item_code] = item_price  
+
+    return item_prices
+
