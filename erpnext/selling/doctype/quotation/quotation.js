@@ -472,8 +472,6 @@ frappe.ui.form.on('Quotation', {
              item_codes_to_send.push(item.item_code);
           }
        });
- 
-       console.log("======> item codes to send: ", item_codes_to_send);
 
        const new_selling_price_list = frm.doc.selling_price_list;
        frappe.call({
