@@ -539,7 +539,7 @@ class PaymentReconciliation(Document):
 		self.validate_allocation()
 		self.reconcile_allocations()
 		msgprint(_("Successfully Reconciled"))
-
+		self.create_pay_rec_records()
 		self.get_unreconciled_entries()
 
 	def get_payment_details(self, row, dr_or_cr):
@@ -733,6 +733,36 @@ class PaymentReconciliation(Document):
 			conditions.append(je.total_debit.lte(self.maximum_payment_amount))
 
 		return conditions
+
+	def create_pay_rec_records(self):
+		"""
+		if reconciliation is succesfull then creating Payment Reconciliation Record
+		for storing the transactions which are created from payment reconciliation
+		"""
+
+		fields_to_include = [
+			"reference_type", "reference_name", "reference_row", "invoice_type",
+			"invoice_number", "allocated_amount", "unreconciled_amount", "amount",
+			"is_advance", "difference_amount", "gain_loss_posting_date",
+			"difference_account", "exchange_rate", "currency", "cost_center"
+		]
+
+		pay_rec = frappe.new_doc("Payment Reconciliation Record")
+		pay_rec.company = self.company
+		pay_rec.party_type = self.party_type
+		pay_rec.party = self.party
+		pay_rec.receivable_payable_account = self.receivable_payable_account
+		pay_rec.default_advance_account = self.default_advance_account
+
+		if self.allocation:
+			for allocation in self.allocation:
+				allocation_data = {field: allocation.get(field) for field in fields_to_include}
+				pay_rec.append("allocation", allocation_data)
+
+		# Save and submit the document
+		pay_rec.flags.ignore_permissions = True
+		pay_rec.save()
+		pay_rec.submit()
 
 
 def reconcile_dr_cr_note(dr_cr_notes, company, active_dimensions=None):
