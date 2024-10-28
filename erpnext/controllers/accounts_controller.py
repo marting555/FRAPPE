@@ -3308,6 +3308,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 	parent.validate_uom_is_integer("uom", "qty")
 	parent.validate_uom_is_integer("stock_uom", "stock_qty")
 
+
 def check_if_child_table_updated(child_table_before_update, child_table_after_update, fields_to_check):
 	accounting_dimensions = [*get_accounting_dimensions(), "cost_center", "project"]
 	# Check if any field affecting accounting entry is altered
