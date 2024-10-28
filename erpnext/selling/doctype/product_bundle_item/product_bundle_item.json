@@ -8,7 +8,6 @@
   "item_code",
   "qty",
   "description",
-  "rate",
   "tvs_pn",
   "description_visible"
  ],
@@ -43,15 +42,6 @@
    "oldfieldname": "description",
    "oldfieldtype": "Text",
    "print_width": "300px"
-  },
-  {
-   "fetch_from": "item_code.valuation_rate",
-   "fieldname": "rate",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Rate",
-   "oldfieldname": "rate",
-   "oldfieldtype": "Currency"
   },
   {
    "fetch_from": "item_code.tvs_pn",
