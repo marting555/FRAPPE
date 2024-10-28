@@ -205,7 +205,9 @@ frappe.ui.form.on("Sales Order", {
 		}
 		erpnext.queries.setup_queries(frm, "Warehouse", function () {
 			return {
-				filters: [["Warehouse", "company", "in", ["", cstr(frm.doc.company)]]],
+				filters: {
+					company:frm.doc.company,
+				},
 			};
 		});
 
