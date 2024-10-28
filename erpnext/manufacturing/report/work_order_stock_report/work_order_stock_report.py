@@ -25,10 +25,13 @@ def get_item_list(wo_list, filters):
 
 		# Add a row for each item/qty
 		for wo_details in wo_list:
+			condition_filter={"parent": wo_details.name}
+			if filters:
+				condition_filter['source_warehouse'] = filters.warehouse
 			desc = frappe.db.get_value("BOM", wo_details.bom_no, "description")
 
 			for wo_item_details in frappe.db.get_values(
-				"Work Order Item", {"parent": wo_details.name}, ["item_code", "source_warehouse"], as_dict=1
+				"Work Order Item", condition_filter, ["item_code", "source_warehouse"], as_dict=1
 			):
 				item_list = (
 					frappe.qb.from_(bom)
