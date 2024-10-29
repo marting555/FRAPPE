@@ -659,24 +659,24 @@ def get_filtered_dimensions(doctype, txt, searchfield, start, page_len, filters,
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
 def get_expense_account(doctype, txt, searchfield, start, page_len, filters):
-	from erpnext.controllers.queries import get_match_cond
+    from erpnext.controllers.queries import get_match_cond
 
-	if not filters:
-		filters = {}
+    if not filters:
+        filters = {}
 
-	doctype = "Account"
-	condition = ""
-	if filters.get("company"):
-		condition += "and tabAccount.company = %(company)s"
+    condition = ""
+    if filters.get("company"):
+        condition += " AND account.company = %(company)s"
 
-	return frappe.db.sql(
-		f"""select tabAccount.name from `tabAccount`
-		where (tabAccount.report_type = "Profit and Loss"
-				or tabAccount.account_type in ("Expense Account", "Fixed Asset", "Temporary", "Asset Received But Not Billed", "Capital Work in Progress"))
-			and tabAccount.is_group=0
-			and tabAccount.docstatus!=2
-			and tabAccount.{searchfield} LIKE %(txt)s
-			{condition} {get_match_cond(doctype)}""",
+    return frappe.db.sql(
+		f"""SELECT account.name 
+			FROM tabAccount AS account
+			WHERE (account.report_type = 'Profit and Loss'
+					OR account.account_type IN ('Expense Account', 'Fixed Asset', 'Temporary', 'Asset Received But Not Billed', 'Capital Work in Progress'))
+				AND account.is_group = 0
+				AND account.docstatus != 2
+				AND account.{searchfield} LIKE %(txt)s
+				{condition} {get_match_cond('Account')}""",
 		{"company": filters.get("company", ""), "txt": "%" + txt + "%"},
 	)
 
