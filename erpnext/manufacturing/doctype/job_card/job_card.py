@@ -747,6 +747,24 @@ class JobCard(Document):
 		if doc.transfer_material_against == "Work Order" or doc.skip_transfer:
 			return
 
+		if self.items:
+			# sum of 'For Quantity' of Stock Entries against JC
+			self.transferred_qty = (
+				frappe.db.get_value(
+					"Stock Entry",
+					{
+						"job_card": self.name,
+						"work_order": self.work_order,
+						"docstatus": 1,
+						"purpose": "Material Transfer for Manufacture",
+					},
+					"sum(fg_completed_qty)",
+				)
+				or 0
+			)
+
+		self.db_set("transferred_qty", self.transferred_qty)
+
 		qty = 0
 		if self.work_order:
 			if doc.transfer_material_against == "Job Card" and not doc.skip_transfer:
