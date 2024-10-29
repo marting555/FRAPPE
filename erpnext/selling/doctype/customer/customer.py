@@ -36,10 +36,7 @@ class Customer(TransactionBase):
 			AllowedToTransactWith,
 		)
 		from erpnext.accounts.doctype.party_account.party_account import PartyAccount
-		from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import (
-			CustomerCreditLimit,
-		)
-		from erpnext.selling.doctype.sales_team.sales_team import SalesTeam
+		from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import CustomerCreditLimit
 		from erpnext.utilities.doctype.portal_user.portal_user import PortalUser
 
 		account_manager: DF.Link | None
@@ -79,7 +76,6 @@ class Customer(TransactionBase):
 		primary_address: DF.Text | None
 		prospect_name: DF.Link | None
 		represents_company: DF.Link | None
-		sales_team: DF.Table[SalesTeam]
 		salutation: DF.Link | None
 		so_required: DF.Check
 		tax_category: DF.Link | None
@@ -111,7 +107,7 @@ class Customer(TransactionBase):
 		if frappe.db.get_value("Customer", self.customer_name) and not frappe.flags.in_import:
 			count = frappe.db.sql(
 				"""
-				SELECT COALESCE(MAX(CAST(SPLIT_PART(name, ' - ', 2) AS INTEGER)), 0) 
+				SELECT COALESCE(MAX(CAST(SPLIT_PART(name, ' - ', 2) AS INTEGER)), 0)
 				FROM tabCustomer
 				WHERE name LIKE %s
 				""",

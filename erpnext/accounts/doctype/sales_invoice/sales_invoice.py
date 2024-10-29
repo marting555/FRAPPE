@@ -3,6 +3,15 @@
 
 
 import frappe
+from assets.assets.doctype.asset.depreciation import (
+	depreciate_asset,
+	get_disposal_account_and_cost_center,
+	get_gl_entries_on_asset_disposal,
+	get_gl_entries_on_asset_regain,
+	reset_depreciation_schedule,
+	reverse_depreciation_entry_made_after_disposal,
+)
+from assets.assets.doctype.asset_activity.asset_activity import add_asset_activity
 from frappe import _, msgprint, throw
 from frappe.contacts.doctype.address.address import get_address_display
 from frappe.model.mapper import get_mapped_doc
@@ -25,15 +34,6 @@ from erpnext.accounts.doctype.tax_withholding_category.tax_withholding_category 
 from erpnext.accounts.general_ledger import get_round_off_account_and_cost_center
 from erpnext.accounts.party import get_due_date, get_party_account, get_party_details
 from erpnext.accounts.utils import cancel_exchange_gain_loss_journal, get_account_currency
-from assets.assets.doctype.asset.depreciation import (
-	depreciate_asset,
-	get_disposal_account_and_cost_center,
-	get_gl_entries_on_asset_disposal,
-	get_gl_entries_on_asset_regain,
-	reset_depreciation_schedule,
-	reverse_depreciation_entry_made_after_disposal,
-)
-from assets.assets.doctype.asset_activity.asset_activity import add_asset_activity
 from erpnext.controllers.accounts_controller import validate_account_head
 from erpnext.controllers.selling_controller import SellingController
 from erpnext.projects.doctype.timesheet.timesheet import get_projectwise_timesheet_data
@@ -64,7 +64,6 @@ class SalesInvoice(SellingController):
 		from erpnext.accounts.doctype.sales_taxes_and_charges.sales_taxes_and_charges import (
 			SalesTaxesandCharges,
 		)
-		from erpnext.selling.doctype.sales_team.sales_team import SalesTeam
 		from erpnext.stock.doctype.packed_item.packed_item import PackedItem
 
 		account_for_change_amount: DF.Link | None
@@ -75,7 +74,6 @@ class SalesInvoice(SellingController):
 		against_income_account: DF.SmallText | None
 		allocate_advances_automatically: DF.Check
 		amended_from: DF.Link | None
-		amount_eligible_for_commission: DF.Currency
 		apply_discount_on: DF.Literal["", "Grand Total", "Net Total"]
 		auto_repeat: DF.Link | None
 		base_change_amount: DF.Currency
@@ -92,7 +90,6 @@ class SalesInvoice(SellingController):
 		campaign: DF.Link | None
 		cash_bank_account: DF.Link | None
 		change_amount: DF.Currency
-		commission_rate: DF.Float
 		company: DF.Link
 		company_address: DF.Link | None
 		company_address_display: DF.SmallText | None
@@ -165,8 +162,6 @@ class SalesInvoice(SellingController):
 		return_against: DF.Link | None
 		rounded_total: DF.Currency
 		rounding_adjustment: DF.Currency
-		sales_partner: DF.Link | None
-		sales_team: DF.Table[SalesTeam]
 		scan_barcode: DF.Data | None
 		select_print_heading: DF.Link | None
 		selling_price_list: DF.Link
@@ -208,7 +203,6 @@ class SalesInvoice(SellingController):
 		total_advance: DF.Currency
 		total_billing_amount: DF.Currency
 		total_billing_hours: DF.Float
-		total_commission: DF.Currency
 		total_net_weight: DF.Float
 		total_qty: DF.Float
 		total_taxes_and_charges: DF.Currency

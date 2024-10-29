@@ -135,14 +135,6 @@
   "po_no",
   "column_break_17",
   "po_date",
-  "sales_team_section_break",
-  "sales_partner",
-  "amount_eligible_for_commission",
-  "column_break7",
-  "commission_rate",
-  "total_commission",
-  "section_break1",
-  "sales_team",
   "subscription_section",
   "auto_repeat",
   "printing_details",
@@ -1151,73 +1143,6 @@
    "read_only": 1
   },
   {
-   "collapsible": 1,
-   "collapsible_depends_on": "total_commission",
-   "fieldname": "sales_team_section_break",
-   "fieldtype": "Section Break",
-   "label": "Commission",
-   "oldfieldtype": "Section Break",
-   "options": "fa fa-group",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "sales_partner",
-   "fieldtype": "Link",
-   "label": "Sales Partner",
-   "oldfieldname": "sales_partner",
-   "oldfieldtype": "Link",
-   "options": "Sales Partner",
-   "print_hide": 1,
-   "print_width": "150px",
-   "width": "150px"
-  },
-  {
-   "fieldname": "column_break7",
-   "fieldtype": "Column Break",
-   "print_hide": 1,
-   "print_width": "50%",
-   "width": "50%"
-  },
-  {
-   "fetch_from": "sales_partner.commission_rate",
-   "fetch_if_empty": 1,
-   "fieldname": "commission_rate",
-   "fieldtype": "Float",
-   "label": "Commission Rate (%)",
-   "oldfieldname": "commission_rate",
-   "oldfieldtype": "Currency",
-   "print_hide": 1,
-   "print_width": "100px",
-   "width": "100px"
-  },
-  {
-   "fieldname": "total_commission",
-   "fieldtype": "Currency",
-   "label": "Total Commission",
-   "oldfieldname": "total_commission",
-   "oldfieldtype": "Currency",
-   "options": "Company:company:default_currency",
-   "print_hide": 1
-  },
-  {
-   "collapsible": 1,
-   "collapsible_depends_on": "sales_team",
-   "fieldname": "section_break1",
-   "fieldtype": "Section Break",
-   "label": "Sales Team",
-   "print_hide": 1
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "sales_team",
-   "fieldtype": "Table",
-   "label": "Sales Team",
-   "oldfieldname": "sales_team",
-   "oldfieldtype": "Table",
-   "options": "Sales Team",
-   "print_hide": 1
-  },
-  {
    "fieldname": "pick_list",
    "fieldtype": "Link",
    "hidden": 1,
@@ -1292,12 +1217,6 @@
    "fieldtype": "Small Text",
    "label": "Dispatch Address",
    "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "amount_eligible_for_commission",
-   "fieldtype": "Currency",
-   "label": "Amount Eligible for Commission",
    "read_only": 1
   },
   {
@@ -1397,7 +1316,7 @@
  "idx": 146,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-03-20 16:05:02.854990",
+ "modified": "2024-10-24 11:56:29.224353",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note",
