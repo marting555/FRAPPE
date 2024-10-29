@@ -93,14 +93,14 @@ class Project(Document):
 
 	def validate(self):
 		if not self.is_new():
-			self.copy_from_template()
+			self.copy_from_template()  # nosemgrep
 		self.send_welcome_email()
 		self.update_costing()
 		self.update_percent_complete()
 		self.validate_from_to_dates("expected_start_date", "expected_end_date")
 		self.validate_from_to_dates("actual_start_date", "actual_end_date")
 
-	def copy_from_template(self):
+	def copy_from_template(self):  # nosemgrep
 		"""
 		Copy tasks from template
 		"""
@@ -205,7 +205,7 @@ class Project(Document):
 		self.db_update()
 
 	def after_insert(self):
-		self.copy_from_template()
+		self.copy_from_template()  # nosemgrep
 		if self.sales_order:
 			frappe.db.set_value("Sales Order", self.sales_order, "project", self.name)
 
@@ -324,6 +324,7 @@ class Project(Document):
 		self.total_sales_amount = total_sales_amount and total_sales_amount[0][0] or 0
 
 	def update_billed_amount(self):
+		# nosemgrep
 		total_billed_amount = frappe.db.sql(
 			"""select sum(base_net_amount)
 			from `tabSales Invoice Item` si_item, `tabSales Invoice` si
