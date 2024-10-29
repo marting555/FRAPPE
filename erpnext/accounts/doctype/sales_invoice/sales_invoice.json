@@ -181,14 +181,6 @@
   "column_break8",
   "unrealized_profit_loss_account",
   "against_income_account",
-  "sales_team_section_break",
-  "sales_partner",
-  "amount_eligible_for_commission",
-  "column_break10",
-  "commission_rate",
-  "total_commission",
-  "section_break2",
-  "sales_team",
   "edit_printing_settings",
   "letter_head",
   "group_same_items",
@@ -1755,83 +1747,6 @@
   },
   {
    "collapsible": 1,
-   "collapsible_depends_on": "sales_partner",
-   "fieldname": "sales_team_section_break",
-   "fieldtype": "Section Break",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Commission",
-   "oldfieldtype": "Section Break",
-   "options": "fa fa-group",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "sales_partner",
-   "fieldtype": "Link",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Sales Partner",
-   "oldfieldname": "sales_partner",
-   "oldfieldtype": "Link",
-   "options": "Sales Partner",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "column_break10",
-   "fieldtype": "Column Break",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "oldfieldtype": "Column Break",
-   "print_hide": 1,
-   "width": "50%"
-  },
-  {
-   "fetch_from": "sales_partner.commission_rate",
-   "fetch_if_empty": 1,
-   "fieldname": "commission_rate",
-   "fieldtype": "Float",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Commission Rate (%)",
-   "oldfieldname": "commission_rate",
-   "oldfieldtype": "Currency",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "total_commission",
-   "fieldtype": "Currency",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Total Commission",
-   "oldfieldname": "total_commission",
-   "oldfieldtype": "Currency",
-   "options": "Company:company:default_currency",
-   "print_hide": 1
-  },
-  {
-   "collapsible": 1,
-   "collapsible_depends_on": "sales_team",
-   "fieldname": "section_break2",
-   "fieldtype": "Section Break",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Sales Team",
-   "print_hide": 1
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "sales_team",
-   "fieldtype": "Table",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Sales Contributions and Incentives",
-   "oldfieldname": "sales_team",
-   "oldfieldtype": "Table",
-   "options": "Sales Team",
-   "print_hide": 1
-  },
-  {
-   "collapsible": 1,
    "fieldname": "subscription_section",
    "fieldtype": "Section Break",
    "hide_days": 1,
@@ -2019,12 +1934,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "amount_eligible_for_commission",
-   "fieldtype": "Currency",
-   "label": "Amount Eligible for Commission",
-   "read_only": 1
-  },
-  {
    "fieldname": "subscription",
    "fieldtype": "Link",
    "label": "Subscription",
@@ -2178,7 +2087,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2024-07-18 15:30:39.428519",
+ "modified": "2024-10-24 15:22:46.774215",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

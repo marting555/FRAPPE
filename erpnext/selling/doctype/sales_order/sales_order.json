@@ -131,14 +131,7 @@
   "per_billed",
   "per_picked",
   "billing_status",
-  "sales_team_section_break",
   "sales_partner",
-  "column_break7",
-  "amount_eligible_for_commission",
-  "commission_rate",
-  "total_commission",
-  "section_break1",
-  "sales_team",
   "loyalty_points_redemption",
   "loyalty_points",
   "column_break_116",
@@ -1340,18 +1333,6 @@
    "print_hide": 1
   },
   {
-   "collapsible": 1,
-   "collapsible_depends_on": "commission_rate",
-   "fieldname": "sales_team_section_break",
-   "fieldtype": "Section Break",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Commission",
-   "oldfieldtype": "Section Break",
-   "options": "fa fa-group",
-   "print_hide": 1
-  },
-  {
    "fieldname": "sales_partner",
    "fieldtype": "Link",
    "hide_days": 1,
@@ -1362,60 +1343,6 @@
    "options": "Sales Partner",
    "print_hide": 1,
    "width": "150px"
-  },
-  {
-   "fieldname": "column_break7",
-   "fieldtype": "Column Break",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "print_hide": 1,
-   "width": "50%"
-  },
-  {
-   "fetch_from": "sales_partner.commission_rate",
-   "fetch_if_empty": 1,
-   "fieldname": "commission_rate",
-   "fieldtype": "Float",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Commission Rate",
-   "oldfieldname": "commission_rate",
-   "oldfieldtype": "Currency",
-   "print_hide": 1,
-   "width": "100px"
-  },
-  {
-   "fieldname": "total_commission",
-   "fieldtype": "Currency",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Total Commission",
-   "oldfieldname": "total_commission",
-   "oldfieldtype": "Currency",
-   "options": "Company:company:default_currency",
-   "print_hide": 1
-  },
-  {
-   "collapsible": 1,
-   "collapsible_depends_on": "sales_team",
-   "fieldname": "section_break1",
-   "fieldtype": "Section Break",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Sales Team",
-   "print_hide": 1
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "sales_team",
-   "fieldtype": "Table",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Sales Team",
-   "oldfieldname": "sales_team",
-   "oldfieldtype": "Table",
-   "options": "Sales Team",
-   "print_hide": 1
   },
   {
    "allow_on_submit": 1,
@@ -1530,13 +1457,6 @@
    "read_only": 1
   },
   {
-   "allow_on_submit": 1,
-   "fieldname": "amount_eligible_for_commission",
-   "fieldtype": "Currency",
-   "label": "Amount Eligible for Commission",
-   "read_only": 1
-  },
-  {
    "fieldname": "per_picked",
    "fieldtype": "Percent",
    "label": "% Picked",
@@ -1646,7 +1566,7 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-05-23 16:35:54.905804",
+ "modified": "2024-10-23 14:06:52.931205",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
