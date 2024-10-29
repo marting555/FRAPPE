@@ -53,6 +53,10 @@
   "subitems_list",
   "section_break_11",
   "description",
+  "interna_external_notes",
+  "internal_notes",
+  "column_break_usnh",
+  "external_notes",
   "dashboard_tab",
   "inventory_section",
   "inventory_settings_section",
@@ -1027,6 +1031,26 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Qty unit of measure"
+  },
+  {
+   "columns": 2,
+   "fieldname": "interna_external_notes",
+   "fieldtype": "Section Break",
+   "label": "Internal and external notes"
+  },
+  {
+   "fieldname": "internal_notes",
+   "fieldtype": "Text Editor",
+   "label": "Internal notes"
+  },
+  {
+   "fieldname": "external_notes",
+   "fieldtype": "Text Editor",
+   "label": "External notes"
+  },
+  {
+   "fieldname": "column_break_usnh",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-tag",
@@ -1035,7 +1059,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "make_attachments_public": 1,
- "modified": "2024-10-18 22:05:31.780794",
+ "modified": "2024-10-29 14:45:39.348334",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
