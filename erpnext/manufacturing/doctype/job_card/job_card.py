@@ -747,89 +747,21 @@ class JobCard(Document):
 		if doc.transfer_material_against == "Work Order" or doc.skip_transfer:
 			return
 
-<<<<<<< HEAD
-		if self.items:
-			# sum of 'For Quantity' of Stock Entries against JC
-			self.transferred_qty = (
-				frappe.db.get_value(
-					"Stock Entry",
-					{
-						"job_card": self.name,
-						"work_order": self.work_order,
-						"docstatus": 1,
-						"purpose": "Material Transfer for Manufacture",
-					},
-					"sum(fg_completed_qty)",
-				)
-				or 0
-			)
-
-		self.db_set("transferred_qty", self.transferred_qty)
-
 		qty = 0
 		if self.work_order:
-			doc = frappe.get_doc("Work Order", self.work_order)
 			if doc.transfer_material_against == "Job Card" and not doc.skip_transfer:
-				completed = True
+				min_qty = []
 				for d in doc.operations:
-					if d.status != "Completed":
-						completed = False
+					if d.completed_qty:
+						min_qty.append(d.completed_qty)
+					else:
+						min_qty = []
 						break
 
-				if completed:
-					job_cards = frappe.get_all(
-						"Job Card",
-						filters={"work_order": self.work_order, "docstatus": ("!=", 2)},
-						fields="sum(transferred_qty) as qty",
-						group_by="operation_id",
-					)
+				if min_qty:
+					qty = min(min_qty)
 
-					if job_cards:
-						qty = min(d.qty for d in job_cards)
-=======
-		query = (
-			frappe.qb.from_(stock_entry)
-			.select(Sum(stock_entry.fg_completed_qty))
-			.where(
-				(stock_entry.job_card == self.name)
-				& (stock_entry.docstatus == 1)
-				& (stock_entry.purpose == "Material Transfer for Manufacture")
-			)
-			.groupby(stock_entry.job_card)
-		)
-
-		query = query.run()
-		qty = 0
-
-		if query and query[0][0]:
-			qty = flt(query[0][0])
-
-		self.db_set("transferred_qty", qty)
-		self.set_status(update_status)
-
-		if self.work_order and not frappe.get_cached_value(
-			"Work Order", self.work_order, "track_semi_finished_goods"
-		):
-			self.set_transferred_qty_in_work_order()
-
-	def set_transferred_qty_in_work_order(self):
-		doc = frappe.get_doc("Work Order", self.work_order)
-
-		qty = 0.0
-		if doc.transfer_material_against == "Job Card" and not doc.skip_transfer:
-			min_qty = []
-			for d in doc.operations:
-				if d.completed_qty:
-					min_qty.append(d.completed_qty)
-				else:
-					min_qty = []
-					break
-
-			if min_qty:
-				qty = min(min_qty)
->>>>>>> 0a70be5b99 (fix: work order finish button not showing (#43875))
-
-			doc.db_set("material_transferred_for_manufacturing", qty)
+				doc.db_set("material_transferred_for_manufacturing", qty)
 
 		self.set_status(update_status)
 
