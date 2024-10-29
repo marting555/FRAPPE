@@ -91,6 +91,17 @@ def search_by_term(search_term, warehouse, price_list):
 
 	return {"items": [item]}
 
+def validate_result_items(result, pos_profile):
+	pos_item_groups = frappe.db.get_all("POS Item Group", {"parent": pos_profile}, pluck= "item_group")
+	if result.get("items"):
+		for i, item in enumerate(result.get("items")):
+			item_group1, lft1, rgt1 = frappe.db.get_value("Item Group", frappe.db.get_value("Item", item.get("item_code"), "item_group"), ["name", "lft", "rgt"])
+			if not(item_group1 in pos_item_groups):
+				for pos_item_group in pos_item_groups:
+					item_group2, lft2, rgt2 = frappe.db.get_value("Item Group", pos_item_group,["name", "lft", "rgt"])
+					if not (lft1 >= lft2 and rgt1 <= rgt2):
+						result.get("items").pop(i)
+	return result
 
 @frappe.whitelist()
 def get_items(start, page_length, price_list, item_group, pos_profile, search_term=""):
@@ -103,6 +114,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 	if search_term:
 		result = search_by_term(search_term, warehouse, price_list) or []
 		if result:
+			validate_result_items(result, pos_profile)
 			return result
 
 	if not frappe.db.exists("Item Group", item_group):
