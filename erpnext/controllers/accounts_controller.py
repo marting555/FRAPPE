@@ -395,12 +395,15 @@ class AccountsController(TransactionBase):
 	def validate_return_against_account(self):
 		if self.doctype in ["Sales Invoice", "Purchase Invoice"] and self.is_return and self.return_against:
 			cr_dr_account_field = "debit_to" if self.doctype == "Sales Invoice" else "credit_to"
-			cr_dr_account_label = "Debit To" if self.doctype == "Sales Invoice" else "Credit To"
-			cr_dr_account = self.get(cr_dr_account_field)
-			if frappe.get_value(self.doctype, self.return_against, cr_dr_account_field) != cr_dr_account:
+			original_account = frappe.get_value(self.doctype, self.return_against, cr_dr_account_field)
+			if original_account != self.get(cr_dr_account_field):
 				frappe.throw(
-					_("'{0}' account: '{1}' should match the Return Against Invoice").format(
-						frappe.bold(cr_dr_account_label), frappe.bold(cr_dr_account)
+					_(
+						"Please set {0} to {1}, the same account that was used in the original invoice {2}."
+					).format(
+						frappe.bold(_(self.meta.get_label(cr_dr_account_field), context=self.doctype)),
+						frappe.bold(original_account),
+						frappe.bold(self.return_against),
 					)
 				)
 
@@ -450,6 +453,11 @@ class AccountsController(TransactionBase):
 					)
 
 	def validate_invoice_documents_schedule(self):
+		if self.is_return:
+			self.payment_terms_template = ""
+			self.payment_schedule = []
+			return
+
 		self.validate_payment_schedule_dates()
 		self.set_due_date()
 		self.set_payment_schedule()
@@ -464,7 +472,7 @@ class AccountsController(TransactionBase):
 		self.validate_payment_schedule_amount()
 
 	def validate_all_documents_schedule(self):
-		if self.doctype in ("Sales Invoice", "Purchase Invoice") and not self.is_return:
+		if self.doctype in ("Sales Invoice", "Purchase Invoice"):
 			self.validate_invoice_documents_schedule()
 		elif self.doctype in ("Quotation", "Purchase Order", "Sales Order"):
 			self.validate_non_invoice_documents_schedule()
@@ -1068,6 +1076,13 @@ class AccountsController(TransactionBase):
 			"Stock Entry": "stock_entry_type",
 			"Asset Capitalization": "entry_type",
 		}
+
+		for method_name in frappe.get_hooks("voucher_subtypes"):
+			voucher_subtype = frappe.get_attr(method_name)(self)
+
+			if voucher_subtype:
+				return voucher_subtype
+
 		if self.doctype in voucher_subtypes:
 			return self.get(voucher_subtypes[self.doctype])
 		elif self.doctype == "Purchase Receipt" and self.is_return:
@@ -1078,6 +1093,7 @@ class AccountsController(TransactionBase):
 			return "Credit Note"
 		elif (self.doctype == "Purchase Invoice" and self.is_return) or self.doctype == "Sales Invoice":
 			return "Debit Note"
+
 		return self.doctype
 
 	def get_value_in_transaction_currency(self, account_currency, gl_dict, field):
@@ -2643,21 +2659,21 @@ def validate_taxes_and_charges(tax):
 		tax.rate = None
 
 
-def validate_account_head(idx, account, company, context=""):
-	account_company = frappe.get_cached_value("Account", account, "company")
-	is_group = frappe.get_cached_value("Account", account, "is_group")
-
-	if account_company != company:
+def validate_account_head(idx: int, account: str, company: str, context: str | None = None) -> None:
+	"""Throw a ValidationError if the account belongs to a different company or is a group account."""
+	if company != frappe.get_cached_value("Account", account, "company"):
 		frappe.throw(
-			_("Row {0}: {3} Account {1} does not belong to Company {2}").format(
-				idx, frappe.bold(account), frappe.bold(company), context
+			_("Row {0}: The {3} Account {1} does not belong to the company {2}").format(
+				idx, frappe.bold(account), frappe.bold(company), context or ""
 			),
 			title=_("Invalid Account"),
 		)
 
-	if is_group:
+	if frappe.get_cached_value("Account", account, "is_group"):
 		frappe.throw(
-			_("Row {0}: Account {1} is a Group Account").format(idx, frappe.bold(account)),
+			_(
+				"You selected the account group {1} as {2} Account in row {0}. Please select a single account."
+			).format(idx, frappe.bold(account), context or ""),
 			title=_("Invalid Account"),
 		)
 
@@ -3542,6 +3558,9 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 	parent.update_blanket_order()
 	parent.update_billing_percentage()
 	parent.set_status()
+
+	parent.validate_uom_is_integer("uom", "qty")
+	parent.validate_uom_is_integer("stock_uom", "stock_qty")
 
 	# Cancel and Recreate Stock Reservation Entries.
 	if parent_doctype == "Sales Order":

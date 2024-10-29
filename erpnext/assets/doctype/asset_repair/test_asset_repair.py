@@ -1,9 +1,9 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
-
 import unittest
 
 import frappe
+from frappe.tests import IntegrationTestCase
 from frappe.utils import flt, nowdate, nowtime, today
 
 from erpnext.assets.doctype.asset.asset import (
@@ -25,9 +25,10 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 )
 
 
-class TestAssetRepair(unittest.TestCase):
+class TestAssetRepair(IntegrationTestCase):
 	@classmethod
 	def setUpClass(cls):
+		super().setUpClass()
 		set_depreciation_settings_in_company()
 		create_asset_data()
 		create_item("_Test Stock Item")
@@ -90,7 +91,7 @@ class TestAssetRepair(unittest.TestCase):
 	def test_serialized_item_consumption(self):
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_serialized_item
 
-		stock_entry = make_serialized_item()
+		stock_entry = make_serialized_item(self)
 		bundle_id = stock_entry.get("items")[0].serial_and_batch_bundle
 		serial_nos = get_serial_nos_from_bundle(bundle_id)
 		serial_no = serial_nos[0]
