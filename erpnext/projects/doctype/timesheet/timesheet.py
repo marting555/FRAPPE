@@ -153,18 +153,19 @@ class Timesheet(Document):
 			if data.task and data.task not in tasks:
 				task = frappe.get_doc("Task", data.task)
 				task.update_time_and_costing()
-				time_logs_completed = all(tl.completed for tl in self.time_logs if tl.task == task.name)
-
-				if time_logs_completed:
-					task.status = "Completed"
-				else:
-					task.status = "Working"
+				task.status = self.get_task_status(data.task)
 				task.save()
 				tasks.append(data.task)
 
 			elif data.project and data.project not in projects:
 				frappe.get_doc("Project", data.project).update_project()
 				projects.append(data.project)
+
+	def get_task_status(self, task: str):
+		if all(tl.completed for tl in self.time_logs if tl.task == task):
+			return "Completed"
+		else:
+			return "Working"
 
 	def validate_dates(self):
 		for time_log in self.time_logs:
