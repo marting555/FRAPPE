@@ -697,7 +697,7 @@ class TestSubcontractingOrder(IntegrationTestCase):
 		item_code = "Subcontracted Item SA9"
 		raw_materials = ["Subcontracted SRM Item 9"]
 		if not frappe.db.exists("BOM", {"item": item_code}):
-			make_bom(item=item_code, raw_materials=raw_materials, rate=100, quantity=1.04)
+			make_bom(item=item_code, raw_materials=raw_materials, rate=100, rm_qty=1.04)
 
 		service_items = [
 			{
@@ -713,7 +713,7 @@ class TestSubcontractingOrder(IntegrationTestCase):
 		sco = get_subcontracting_order(service_items=service_items)
 		sco.reload()
 
-		self.assertEqual(sco.required_items[0].required_qty, 210.1482)
+		self.assertEqual(sco.supplied_items[0].required_qty, 210.149)
 
 
 def create_subcontracting_order(**args):
