@@ -1362,7 +1362,7 @@ def sort_stock_vouchers_by_posting_date(stock_vouchers: list[tuple[str, str]]) -
 		frappe.qb.from_(sle)
 		.select(sle.voucher_type, sle.voucher_no, sle.posting_date, sle.posting_time, sle.creation)
 		.where((sle.is_cancelled == 0) & (sle.voucher_no.isin(voucher_nos)))
-		.groupby(sle.voucher_type, sle.voucher_no)
+		.groupby(sle.voucher_type, sle.voucher_no, sle.posting_date, sle.posting_time, sle.creation, sle.posting_datetime)
 		.orderby(sle.posting_datetime)
 		.orderby(sle.creation)
 	).run(as_dict=True)
@@ -1392,13 +1392,19 @@ def get_future_stock_vouchers(posting_date, posting_time, for_warehouses=None, f
 
 	future_stock_vouchers = frappe.db.sql(
 		f"""
-		SELECT distinct sle.voucher_type, sle.voucher_no
-		FROM `tabStock Ledger Entry` sle
+		WITH distinct_rows AS (
+		SELECT DISTINCT ON (sle.voucher_type, sle.voucher_no)
+			sle.voucher_type, sle.voucher_no, sle.posting_date, sle.posting_time, sle.creation
+		FROM "tabStock Ledger Entry" sle
 		WHERE sle.posting_date >= %s
 			AND sle.posting_time >= %s
 			AND is_cancelled = 0
 			{condition}
-		ORDER BY sle.posting_date asc, sle.posting_time asc, creation asc for update
+		ORDER BY sle.voucher_type, sle.voucher_no, sle.posting_date ASC, sle.posting_time ASC, sle.creation ASC
+		)
+		SELECT *
+		FROM distinct_rows
+		FOR UPDATE;
 		""",
 		tuple([posting_date, posting_time, *values]),
 		as_dict=True,
