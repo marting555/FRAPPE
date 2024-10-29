@@ -928,11 +928,7 @@
  "idx": 1,
  "istable": 1,
  "links": [],
-<<<<<<< HEAD
- "modified": "2024-05-23 16:36:18.970862",
-=======
  "modified": "2024-10-28 15:06:40.980995",
->>>>>>> 0bba6442c0 (fix: Calculate gross margin on update of project costing from invoices (#43876))
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice Item",
