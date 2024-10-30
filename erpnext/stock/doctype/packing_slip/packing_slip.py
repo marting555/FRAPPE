@@ -220,10 +220,21 @@ def item_details(doctype, txt, searchfield, start, page_len, filters):
 	from erpnext.controllers.queries import get_match_cond
 
 	return frappe.db.sql(
-		"""select name, item_name, description from `tabItem`
-				where name in ( select item_code FROM `tabDelivery Note Item`
-	 						where parent= {})
-	 			and {} like "{}" {}
-	 			limit  {} offset {} """.format("%s", searchfield, "%s", get_match_cond(doctype), "%s", "%s"),
-		((filters or {}).get("delivery_note"), "%%%s%%" % txt, page_len, start),
+		"""
+		SELECT name, item_name, description
+		FROM `tabItem`
+		WHERE name in (
+					SELECT item_code
+					FROM `tabDelivery Note Item`
+					WHERE parent = %s
+				)
+			AND {0} LIKE %s {1}
+		LIMIT %s OFFSET %s
+		""".format(searchfield, get_match_cond(doctype)),
+		(
+			(filters or {}).get("delivery_note"),
+			f"%{txt}%",
+			page_len,
+			start,
+		)
 	)
