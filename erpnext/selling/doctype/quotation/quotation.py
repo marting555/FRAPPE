@@ -348,12 +348,15 @@ def make_sales_order(source_name: str, target_doc=None):
 
 def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	customer = _make_customer(source_name, ignore_permissions)
-	items = frappe.db.get_all(
-		"Sales Order Item",
-		{"prevdoc_docname": source_name, "docstatus": 1},
-		["item_code", "sum(qty)"],
-		group_by="item_code",
-		as_list=1,
+	items = frappe.db.sql(
+		"""
+		SELECT item_code, SUM(qty) 
+		FROM "tabSales Order Item" 
+		WHERE prevdoc_docname = %s AND docstatus = 1 
+		GROUP BY item_code
+		""",
+		(source_name,),
+		as_list=True
 	)
 	ordered_items = frappe._dict()
 	for item in items:
