@@ -584,20 +584,25 @@ def get_income_account(doctype, txt, searchfield, start, page_len, filters):
 	doctype = "Account"
 	condition = ""
 	if filters.get("company"):
-		condition += "and tabAccount.company = %(company)s"
+		condition += " AND account.company = %(company)s"
 
-	condition += f"and tabAccount.disabled = {filters.get('disabled', 0)}"
+	condition += " AND account.disabled = %(disabled)s"
 
 	return frappe.db.sql(
-		f"""select tabAccount.name from `tabAccount`
-			where (tabAccount.report_type = "Profit and Loss"
-					or tabAccount.account_type in ("Income Account", "Temporary"))
-				and tabAccount.is_group=0
-				and tabAccount.`{searchfield}` LIKE %(txt)s
+		f"""SELECT account.name 
+			FROM tabAccount AS account
+			WHERE (account.report_type = 'Profit and Loss'
+					OR account.account_type IN ('Income Account', 'Temporary'))
+				AND account.is_group = 0
+				AND account.{searchfield} LIKE %(txt)s
 				{condition} {get_match_cond(doctype)}
-			order by idx desc, name""",
-		{"txt": "%" + txt + "%", "company": filters.get("company", "")},
-	)
+			ORDER BY account.idx DESC, account.name""",
+		{
+			"txt": "%" + txt + "%",
+			"company": filters.get("company", ""),
+			"disabled": filters.get("disabled", 0),
+		},
+)
 
 
 @frappe.whitelist()
