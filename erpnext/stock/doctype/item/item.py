@@ -1092,15 +1092,22 @@ def get_timeline_data(doctype: str, name: str) -> dict[int, int]:
     one_year_ago = datetime.now() - timedelta(days=365)
     
     sle = frappe.qb.DocType("Stock Ledger Entry")
+    result = frappe.db.sql(
+		"""
+		SELECT EXTRACT(EPOCH FROM posting_date) AS posting_date_unix,
+			COUNT(*) AS item_count
+		FROM `tabStock Ledger Entry`
+		WHERE item_code = %s
+		AND posting_date > %s
+		GROUP BY posting_date
+		""",
+    (name, one_year_ago),
+    as_dict=True
+	)
 
-    return dict(
-        frappe.qb.from_(sle)
-        .select(UnixTimestamp(sle.posting_date), Count("*"))
-        .where(sle.item_code == name)
-        .where(sle.posting_date > one_year_ago)  # Use the calculated date here
-        .groupby(sle.posting_date)
-        .run()
-    )
+    result_dict = {int(row['posting_date_unix']): row['item_count'] for row in result}
+
+    return result_dict
 
 def validate_end_of_life(item_code, end_of_life=None, disabled=None):
 	if (not end_of_life) or (disabled is None):
