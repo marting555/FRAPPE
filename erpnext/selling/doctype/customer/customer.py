@@ -152,6 +152,10 @@ class Customer(TransactionBase):
 			if self.loyalty_program == customer.loyalty_program and not self.loyalty_program_tier:
 				self.loyalty_program_tier = customer.loyalty_program_tier
 
+		# Ensure sales_team is initialized as an empty list if it’s None
+		if not hasattr(self, 'sales_team') or self.sales_team is None:
+			self.sales_team = []
+			
 		if self.sales_team:
 			if sum(member.allocated_percentage or 0 for member in self.sales_team) != 100:
 				frappe.throw(_("Total contribution percentage should be equal to 100"))
