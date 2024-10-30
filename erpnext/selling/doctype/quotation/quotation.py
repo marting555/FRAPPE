@@ -349,15 +349,17 @@ def make_sales_order(source_name: str, target_doc=None):
 def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	customer = _make_customer(source_name, ignore_permissions)
 	ordered_items = frappe._dict(
-		frappe.db.get_all(
-			"Sales Order Item",
-			{"prevdoc_docname": source_name, "docstatus": 1},
-			["item_code", "sum(qty)"],
-			group_by="item_code",
-			as_list=1,
-		)
+		frappe.db.sql(
+		"""
+		SELECT item_code, SUM(qty)
+		FROM "tabSales Order Item"
+		WHERE prevdoc_docname = %s AND docstatus = 1
+		GROUP BY item_code
+		""",
+		(source_name,),
+		as_list=True
 	)
-
+) 
 	selected_rows = [x.get("name") for x in frappe.flags.get("args", {}).get("selected_items", [])]
 
 	def set_missing_values(source, target):
