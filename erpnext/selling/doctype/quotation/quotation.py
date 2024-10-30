@@ -360,11 +360,6 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		as_list=True
 	)
 ) 
-	for item in ordered_items:
-		if len(item) == 2:  # Ensure there are exactly two elements (item_code, sum_qty)
-			item_code, qty = item  # Unpack the item
-			ordered_items[item_code] = qty
-
 	selected_rows = [x.get("name") for x in frappe.flags.get("args", {}).get("selected_items", [])]
 
 	def set_missing_values(source, target):
