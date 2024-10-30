@@ -155,7 +155,6 @@ def _get_party_details(
 	if not party_details.get("currency"):
 		party_details["currency"] = currency
 
-	# sales team
 	if party_type == "Customer":
 		party_details["sales_team"] = [
 			{
@@ -163,10 +162,9 @@ def _get_party_details(
 				"allocated_percentage": d.allocated_percentage or None,
 				"commission_rate": d.commission_rate,
 			}
-			for d in party.get("sales_team")
+			for d in (party.get("sales_team") or []) 
 		]
 
-	# supplier tax withholding category
 	if party_type == "Supplier" and party:
 		party_details["supplier_tds"] = frappe.get_value(party_type, party.name, "tax_withholding_category")
 
@@ -174,7 +172,6 @@ def _get_party_details(
 		party_details["tax_category"] = frappe.get_value("POS Profile", pos_profile, "tax_category")
 
 	return party_details
-
 
 def set_address_details(
 	party_details,
