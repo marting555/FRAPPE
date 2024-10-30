@@ -1969,10 +1969,10 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi.submit()
 
 		expected_gle = [
-			["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate(), branch2.branch],
 			["Creditors - _TC", 0.0, 1000, nowdate(), branch1.branch],
 			["Offsetting - _TC", 1000, 0.0, nowdate(), branch1.branch],
 			["Offsetting - _TC", 0.0, 1000, nowdate(), branch2.branch],
+			["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate(), branch2.branch]
 		]
 
 		check_gl_entries(
@@ -2325,12 +2325,14 @@ def check_gl_entries(
 		.orderby(gl.posting_date, gl.account, gl.creation)
 	)
 
+	
 	if additional_columns:
 		for col in additional_columns:
 			query = query.select(gl[col])
 
 	gl_entries = query.run(as_dict=True)
 
+	print(gl_entries)
 	for i, gle in enumerate(gl_entries):
 		doc.assertEqual(expected_gle[i][0], gle.account)
 		doc.assertEqual(expected_gle[i][1], gle.debit)
