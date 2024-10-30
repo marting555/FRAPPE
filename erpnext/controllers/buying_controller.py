@@ -216,7 +216,7 @@ class BuyingController(SubcontractingController):
 				group by cost_center""",
 				(d.name, self.name),
 			)
-			
+
 			if lc_voucher_data:
 				d.landed_cost_voucher_amount = lc_voucher_data[0][0] or 0.0
 				if not d.cost_center and lc_voucher_data[0][1]:
@@ -827,8 +827,13 @@ class BuyingController(SubcontractingController):
 				"asset_quantity": asset_quantity,
 				"purchase_receipt": self.name if self.doctype == "Purchase Receipt" else None,
 				"purchase_invoice": self.name if self.doctype == "Purchase Invoice" else None,
+				"cost_center": row.cost_center,
 			}
 		)
+		fields = frappe.get_list("Accounting Dimension", pluck="fieldname")
+		for field in fields:
+			if hasattr(self, field):
+				setattr(asset, field, getattr(self, field))
 
 		asset.flags.ignore_validate = True
 		asset.flags.ignore_mandatory = True

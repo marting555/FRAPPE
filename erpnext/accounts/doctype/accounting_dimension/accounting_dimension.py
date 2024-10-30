@@ -55,7 +55,7 @@ class AccountingDimension(Document):
 		exists = frappe.db.get_value("Accounting Dimension", {"document_type": self.document_type}, ["name"])
 
 		if exists and self.is_new():
-			frappe.throw(_("Document Type already used as a dimension"))
+			frappe.throw(_("Document Type {0} already used as a dimension").format(self.document_type))
 
 		if not self.is_new():
 			self.validate_document_type_change()
@@ -111,34 +111,68 @@ def make_dimension_in_accounting_doctypes(doc, doclist=None):
 	repostable_doctypes = get_allowed_types_from_settings()
 
 	for doctype in doclist:
-		if (doc_count + 1) % 2 == 0:
-			insert_after_field = "dimension_col_break"
-		else:
-			insert_after_field = "accounting_dimensions_section"
-
-		df = {
-			"fieldname": doc.fieldname,
-			"label": doc.label,
-			"fieldtype": "Link",
-			"options": doc.document_type,
-			"insert_after": insert_after_field,
-			"owner": "Administrator",
-			"allow_on_submit": 1 if doctype in repostable_doctypes else 0,
-		}
-
 		meta = frappe.get_meta(doctype, cached=False)
 		fieldnames = [d.fieldname for d in meta.get("fields")]
 
-		if df["fieldname"] not in fieldnames:
-			if doctype == "Budget":
-				add_dimension_to_budget_doctype(df.copy(), doc)
-			else:
-				create_custom_field(doctype, df, ignore_validate=True)
+		if (doc_count + 1) % 2 == 0:
+			insert_after_source_field = "source_dimension_col_break"
+			insert_after_target_field = "target_dimension_col_break"
+			insert_after_default_field = "dimension_col_break"
+		else:
+			insert_after_source_field = "accounting_dimension_source_section"
+			insert_after_target_field = "accounting_dimension_target_section"
+			insert_after_default_field = "accounting_dimensions_section"
+
+		if doctype == "Asset Movement Item":
+			source_df = {
+				"fieldname": "source_" + doc.fieldname,
+				"label": "Source " + doc.label,
+				"fieldtype": "Link",
+				"options": doc.document_type,
+				"insert_after": insert_after_source_field,
+				"owner": "Administrator",
+				"allow_on_submit": 1 if doctype in repostable_doctypes else 0,
+				"read_only": 1,
+			}
+			target_df = {
+				"fieldname": "target_" + doc.fieldname,
+				"label": "Target " + doc.label,
+				"fieldtype": "Link",
+				"options": doc.document_type,
+				"insert_after": insert_after_target_field,
+				"owner": "Administrator",
+				"allow_on_submit": 1 if doctype in repostable_doctypes else 0,
+			}
+
+			add_custom_field_if_not_exists(doctype, source_df, fieldnames)
+			add_custom_field_if_not_exists(doctype, target_df, fieldnames)
+		else:
+			df = {
+				"fieldname": doc.fieldname,
+				"label": doc.label,
+				"fieldtype": "Link",
+				"options": doc.document_type,
+				"insert_after": insert_after_default_field,
+				"owner": "Administrator",
+				"allow_on_submit": 1 if doctype in repostable_doctypes else 0,
+			}
+
+			if df["fieldname"] not in fieldnames:
+				if doctype == "Budget":
+					add_dimension_to_budget_doctype(df.copy(), doc)
+				else:
+					create_custom_field(doctype, df, ignore_validate=True)
 
 		count += 1
 
 		frappe.publish_progress(count * 100 / len(doclist), title=_("Creating Dimensions..."))
 		frappe.clear_cache(doctype=doctype)
+
+
+def add_custom_field_if_not_exists(doctype, field_dict, fieldnames):
+	"""Helper to add a custom field if it does not already exist"""
+	if field_dict["fieldname"] not in fieldnames:
+		create_custom_field(doctype, field_dict, ignore_validate=True)
 
 
 def add_dimension_to_budget_doctype(df, doc):
@@ -179,9 +213,9 @@ def delete_accounting_dimension(doc):
 	frappe.db.sql(
 		"""
 		DELETE FROM `tabCustom Field`
-		WHERE fieldname = {}
-		AND dt IN ({})""".format("%s", ", ".join(["%s"] * len(doclist))),  # nosec
-		tuple([doc.fieldname, *doclist]),
+		WHERE fieldname IN (%s, %s, %s)
+		AND dt IN ({})""".format(", ".join(["%s"] * len(doclist))),  # nosec
+		tuple([doc.fieldname, "source_" + doc.fieldname, "target_" + doc.fieldname, *doclist]),
 	)
 
 	frappe.db.sql(
@@ -216,21 +250,27 @@ def disable_dimension(doc):
 def toggle_disabling(doc):
 	doc = json.loads(doc)
 
-	if doc.get("disabled"):
-		df = {"read_only": 1}
-	else:
-		df = {"read_only": 0}
+	df = {"read_only": 1 if doc.get("disabled") else 0}
 
 	doclist = get_doctypes_with_dimensions()
+	fieldname = doc.get("fieldname")
 
 	for doctype in doclist:
-		field = frappe.db.get_value("Custom Field", {"dt": doctype, "fieldname": doc.get("fieldname")})
-		if field:
-			custom_field = frappe.get_doc("Custom Field", field)
-			custom_field.update(df)
-			custom_field.save()
+		update_custom_field(doctype, fieldname, df)
+
+		if doctype == "Asset Movement Item":
+			update_custom_field(doctype, f"source_{fieldname}", df)
+			update_custom_field(doctype, f"target_{fieldname}", df)
 
 		frappe.clear_cache(doctype=doctype)
+
+
+def update_custom_field(doctype, fieldname, df):
+	field = frappe.db.get_value("Custom Field", {"dt": doctype, "fieldname": fieldname})
+	if field:
+		custom_field = frappe.get_doc("Custom Field", field)
+		custom_field.update(df)
+		custom_field.save()
 
 
 def get_doctypes_with_dimensions():

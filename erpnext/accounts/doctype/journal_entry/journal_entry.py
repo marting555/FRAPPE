@@ -188,6 +188,7 @@ class JournalEntry(AccountsController):
 		self.update_advance_paid()
 		self.update_inter_company_jv()
 		self.update_invoice_discounting()
+		self.unlink_asset_movement_entry()
 
 	def on_update_after_submit(self):
 		self.needs_repost = self.check_if_fields_updated(fields_to_check=[], child_tables={"accounts": []})
@@ -409,7 +410,6 @@ class JournalEntry(AccountsController):
 				d.reference_name = ""
 				d.db_update()
 
-
 	def unlink_inter_company_jv(self):
 		if self.voucher_type == "Inter Company Journal Entry" and self.inter_company_journal_entry_reference:
 			frappe.db.set_value(
@@ -420,6 +420,12 @@ class JournalEntry(AccountsController):
 			)
 			frappe.db.set_value("Journal Entry", self.name, "inter_company_journal_entry_reference", "")
 
+	def unlink_asset_movement_entry(self):
+		frappe.db.sql(
+			""" update `tabAsset Movement`
+			set journal_entry = null where journal_entry = %s""",
+			self.name,
+		)
 
 	def validate_party(self):
 		for d in self.get("accounts"):
