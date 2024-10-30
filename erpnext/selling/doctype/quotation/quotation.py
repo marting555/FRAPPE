@@ -348,15 +348,18 @@ def make_sales_order(source_name: str, target_doc=None):
 
 def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	customer = _make_customer(source_name, ignore_permissions)
-	ordered_items = frappe._dict(
-		frappe.db.get_all(
-			"Sales Order Item",
-			{"prevdoc_docname": source_name, "docstatus": 1},
-			["item_code", "sum(qty)"],
-			group_by="item_code",
-			as_list=1,
-		)
+	items = frappe.db.get_all(
+		"Sales Order Item",
+		{"prevdoc_docname": source_name, "docstatus": 1},
+		["item_code", "sum(qty)"],
+		group_by="item_code",
+		as_list=1,
 	)
+	ordered_items = frappe._dict()
+	for item in items:
+		if len(item) == 2:  # Ensure there are exactly two elements (item_code, sum_qty)
+			item_code, qty = item  # Unpack the item
+			ordered_items[item_code] = qty
 
 	selected_rows = [x.get("name") for x in frappe.flags.get("args", {}).get("selected_items", [])]
 
