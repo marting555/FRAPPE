@@ -389,7 +389,8 @@ frappe.ui.form.on('Quotation Item', {
     item_code: function(frm, cdt, cdn) {
         let row = locals[cdt][cdn];
         let concatenated_description = '';
-
+		let confirmItems = [];
+        
         if (row.is_product_bundle) {
             row.product_bundle_items.forEach(bundleItem => {
                 
@@ -402,18 +403,23 @@ frappe.ui.form.on('Quotation Item', {
                 bundleItem.sub_items.forEach(subItem => {
                     let exists = frm.doc.items.some(item => item.item_code === subItem.item_code);
                     if (!exists) {
-                        frm.add_child('items', {
-                            item_name: subItem.item_code,
-                            item_code: subItem.item_code,
-                            description: subItem.description,
-                            qty: subItem.qty,
-                            rate: subItem.price,
-                            uom: row.uom,
-                            stock_uom: row.stock_uom,
-                            parent: row.parent,
-                            parentfield: "items",
-                            parenttype: "Quotation"
-                        });
+
+						if (subItem.options && subItem.options == "Recommended additional") {
+							confirmItems.push(subItem);
+						} else {
+							frm.add_child('items', {
+								item_name: subItem.item_code,
+								item_code: subItem.item_code,
+								description: subItem.description,
+								qty: subItem.qty,
+								rate: subItem.price,
+								uom: row.uom,
+								stock_uom: row.stock_uom,
+								parent: row.parent,
+								parentfield: "items",
+								parenttype: "Quotation"
+							});
+						}
                     }
                 });
             });
@@ -442,10 +448,48 @@ frappe.ui.form.on('Quotation Item', {
                 
                 frm.trigger('calculate_taxes_and_totals');
                 frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+
+				if (confirmItems.length > 0) {
+					let dialog = new frappe.ui.Dialog({
+						title: __("Confirm Additional Items"),
+						fields: confirmItems.map(item => ({
+							label: item.item_code,
+							fieldname: item.item_code,
+							fieldtype: 'Check',
+							default: 0
+						})),
+						primary_action_label: __("Add Selected Items"),
+						primary_action(values) {
+							confirmItems.forEach(item => {
+								if (values[item.item_code]) {
+									frm.add_child('items', {
+										item_name: item.item_code,
+										item_code: item.item_code,
+										description: item.description,
+										qty: item.qty,
+										rate: item.price,
+										uom: row.uom,
+										stock_uom: row.stock_uom,
+										parent: row.parent,
+										parentfield: "items",
+										parenttype: "Quotation"
+									});
+								}
+							});
+							dialog.hide();
+							frm.refresh_field('items');
+							  
+							frm.trigger('calculate_taxes_and_totals');
+							frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+						}
+					});
+					dialog.show();
+				}
             }, 1000);
         }
     }
 });
+
 
 frappe.ui.form.on('Quotation', {
     selling_price_list: function(frm) {
