@@ -824,14 +824,26 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 
 		gl_entries = frappe.db.sql(
-			"""select account, account_currency, sum(debit) as debit,
-				sum(credit) as credit, debit_in_account_currency, credit_in_account_currency
-			from `tabGL Entry` where voucher_type='Purchase Invoice' and voucher_no=%s
-			group by account, voucher_no order by account asc;""",
-			pi.name,
+			"""SELECT 
+				account, 
+				ARRAY_AGG(account_currency) AS account_currency,
+				SUM(debit) AS debit,
+				SUM(credit) AS credit, 
+				SUM(debit_in_account_currency) AS debit_in_account_currency, 
+				SUM(credit_in_account_currency) AS credit_in_account_currency
+			FROM 
+				`tabGL Entry` 
+			WHERE 
+				voucher_type = 'Purchase Invoice' 
+				AND voucher_no = %s
+			GROUP BY 
+				account, 
+				voucher_no 
+			ORDER BY 
+				account ASC;""",
+			(pi.name,),
 			as_dict=1,
 		)
-
 		stock_in_hand_account = get_inventory_account(pi.company, pi.get("items")[0].warehouse)
 		self.assertTrue(gl_entries)
 
