@@ -1751,18 +1751,18 @@ class TestPurchaseReceipt(FrappeTestCase):
 			},
 			fieldname=["credit"],
 		)
-		stock_diff = frappe.db.get_value(
+		stock_diff = frappe.db.get_all(
 			"Stock Ledger Entry",
-			{
+			filters= {
 				"voucher_type": "Purchase Receipt",
 				"voucher_no": pr.name,
 				"is_cancelled": 0,
 			},
-			fieldname=["sum(stock_value_difference)"],
-		)
+			fields=["SUM(stock_value_difference) as stock_value_difference"],
+		)[0]
 
 		# Value of Stock Account should be equal to the sum of Stock Value Difference
-		self.assertEqual(stock_account_value, stock_diff)
+		self.assertEqual(stock_account_value, stock_diff['stock_value_difference'])
 
 	def test_internal_pr_reference(self):
 		item = make_item(properties={"is_stock_item": 1, "valuation_rate": 100})
