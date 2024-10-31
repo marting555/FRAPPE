@@ -2325,14 +2325,12 @@ def check_gl_entries(
 		.orderby(gl.posting_date, gl.account, gl.creation)
 	)
 
-	
 	if additional_columns:
 		for col in additional_columns:
 			query = query.select(gl[col])
 
 	gl_entries = query.run(as_dict=True)
 
-	print(gl_entries)
 	for i, gle in enumerate(gl_entries):
 		doc.assertEqual(expected_gle[i][0], gle.account)
 		doc.assertEqual(expected_gle[i][1], gle.debit)
