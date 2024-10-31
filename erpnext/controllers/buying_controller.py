@@ -832,8 +832,9 @@ class BuyingController(SubcontractingController):
 		)
 		fields = frappe.get_list("Accounting Dimension", pluck="fieldname")
 		for field in fields:
-			if hasattr(self, field):
-				setattr(asset, field, getattr(self, field))
+			if field != "location":
+				if hasattr(self, field):
+					setattr(asset, field, getattr(self, field))
 
 		asset.flags.ignore_validate = True
 		asset.flags.ignore_mandatory = True
