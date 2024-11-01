@@ -514,7 +514,7 @@ frappe.ui.form.on('Quotation Item', {
 										</tr>
 									</tbody>
 								</table>
-								<p> Select the recommended items you want to add. </p>
+								<p> <strong>${__("Recommended Additional Items")}</strong> </p>
 								`
 							},
 							...confirmItems.map(item => ({
