@@ -454,43 +454,109 @@ frappe.ui.form.on('Quotation Item', {
                 frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
 
                 if (confirmItems.length > 0) {
-                    let dialog = new frappe.ui.Dialog({
-                        title: __("Confirm Additional Items"),
-                        fields: confirmItems.map(item => ({
-                            label: item.item_code,
-                            fieldname: item.item_code,
-                            fieldtype: 'Check',
-                            default: 0
-                        })),
-                        primary_action_label: __("Add Selected Items"),
-                        primary_action(values) {
-                            confirmItems.forEach(item => {
-                                if (values[item.item_code]) {
-                                    frm.add_child('items', {
-                                        item_name: item.item_code,
-                                        item_code: item.item_code,
-                                        description: item.description,
-                                        qty: item.qty,
-                                        rate: item.price,
-                                        uom: row.uom,
-                                        stock_uom: row.stock_uom,
-                                        parent: row.parent,
-                                        parentfield: "items",
-                                        parenttype: "Quotation"
-                                    });
-                                }
-                            });
-                            dialog.hide();
-                            frm.refresh_field('items');
-                            frm.trigger('calculate_taxes_and_totals');
-                            frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
-                        },
-                    });
+					let dialog = new frappe.ui.Dialog({
+						title: __("Confirm Additional Items"),
+						fields: [
+							{
+								fieldtype: 'HTML',
+								fieldname: 'summary_table',
+								options: `<table class="table table-bordered">
+									<thead>
+										<tr>
+											<th>${__("Quantity")}</th>
+											<th>${__("Item Code")}</th>
+											<th>${__("Description")}</th>
+											<th>${__("Rate (EUR)")}</th>
+											<th>${__("Amount (EUR)")}</th>
+										</tr>
+									</thead>
+									<tbody>
+										${row.product_bundle_items.map((bundleItem) => {
+											// Calcular subtotal del bundle
+											const bundleAmount = bundleItem.qty * bundleItem.price;
+											let rows = `
+												<tr>
+													<td>${bundleItem.qty}</td>
+													<td>${bundleItem.item_code}</td>
+													<td>${bundleItem.description}</td>
+													<td>${format_currency(bundleItem.price)}</td>
+													<td>${format_currency(bundleAmount)}</td>
+												</tr>
+											`;
+					
+											// Agregar subitems
+											rows += bundleItem.sub_items
+												.filter(subItem => subItem.options !== "Recommended additional") // Excluir opcionales
+												.map(subItem => {
+													const subItemAmount = subItem.qty * subItem.price;
+													return `
+														<tr>
+															<td>${subItem.qty}</td>
+															<td>${subItem.item_code}</td>
+															<td>${subItem.description}</td>
+															<td>${format_currency(subItem.price)}</td>
+															<td>${format_currency(subItemAmount)}</td>
+														</tr>
+													`;
+												}).join('');
+					
+											return rows;
+										}).join('')}
+										<tr>
+											<td colspan="4"><strong>${__("Total")}</strong></td>
+											<td><strong>${format_currency(row.product_bundle_items.reduce((total, bundleItem) => {
+												const bundleSubtotal = bundleItem.qty * (bundleItem.price || 0);
+												const subItemsTotal = bundleItem.sub_items
+													.filter(subItem => subItem.options !== "Recommended additional") // Excluir opcionales
+													.reduce((subTotal, subItem) => subTotal + (subItem.qty * (subItem.price || 0)), 0);
+												return total + bundleSubtotal + subItemsTotal;
+											}, 0))}</strong></td>
+										</tr>
+									</tbody>
+								</table>
+								<p> Select the recommended items you want to add. </p>
+								`
+							},
+							...confirmItems.map(item => ({
+								label: item.item_code,
+								fieldname: item.item_code,
+								fieldtype: 'Check',
+								default: 0
+							}))
+						],
+						primary_action_label: __("Add Selected Items"),
+						primary_action(values) {
+							confirmItems.forEach(item => {
+								if (values[item.item_code]) {
+									frm.add_child('items', {
+										item_name: item.item_code,
+										item_code: item.item_code,
+										description: item.description,
+										qty: item.qty,
+										rate: item.price,
+										uom: row.uom,
+										stock_uom: row.stock_uom,
+										parent: row.parent,
+										parentfield: "items",
+										parenttype: "Quotation"
+									});
+								}
+							});
+							dialog.hide();
+							frm.refresh_field('items');
+							frm.trigger('calculate_taxes_and_totals');
+							frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+						},
+					});
+					
 					dialog.$wrapper.modal({
 						backdrop: "static",
 						keyboard: false,
+						size: "1024px"
 					});
 					dialog.show();
+					dialog.$wrapper.find('.modal-dialog').css("max-width", "1024px");
+					dialog.$wrapper.find('.modal-dialog').css("width", "1024px");										
                 }
             }, 1000);
         }
