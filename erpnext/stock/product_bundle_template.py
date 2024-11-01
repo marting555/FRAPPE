@@ -111,6 +111,7 @@ class ProductBundleTemplate:
                     "qty": item.get("qty", 0),
                     "tvs_pn": item.get("tvs_pn", ""),
                     "rate": self.get_item_price(item),
+                    "_parent": self.item_code
                 })
             return sub_items
         except Exception:
