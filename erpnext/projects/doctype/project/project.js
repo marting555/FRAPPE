@@ -249,6 +249,9 @@ function showConfirmationDialog(frm, quotations) {
         }
     });
 
+	dialog.$wrapper.find('.modal-header .modal-actions').hide();
+	dialog.$wrapper.modal({ backdrop: 'static', keyboard: false })
+
     dialog.show();
 }
 
