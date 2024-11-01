@@ -1,3 +1,4 @@
+from os import name
 import frappe
 
 class ProductBundleTemplate:
@@ -38,13 +39,13 @@ class ProductBundleTemplate:
             "is_product_bundle": 1,
             "item_code": item_details.name,
             "description": item_details.description,
-            "subitems_list": self.get_sub_items(subitems_list)
+            "subitems_list": self.get_sub_items(subitems_list, item_details.name),
+            "name": item_details.name
         }
 
     def get_item_price(self, item_details):
         try:
-            # print("get_item_price: ", item_details.__dict__)
-
+             # print("get_item_price: ", item_details.__dict__)
             price_list_rate = frappe.db.get_value(
                 "Item Price", 
                 {
@@ -54,24 +55,26 @@ class ProductBundleTemplate:
                 "price_list_rate"
             )
             if price_list_rate is None:
-                price_list_rate = item_details.get('standard_rate') # valuation_rate
+                price_list_rate = item_details.get('standard_rate')  # valuation_rate
         except Exception:
             price_list_rate = 0
 
         return price_list_rate
     
-    def get_sub_items(self, subitems_list):
+    def get_sub_items(self, subitems_list, product_bundle_name):
         array_subitems = []
         
         if not subitems_list or not isinstance(subitems_list, list):
             return array_subitems
         for item in subitems_list:
             try:
+                name = item.get("name")
                 item_code = item.get("item_code", None)
                 description = item.get("description", "No description available")
                 description_visible = item.get("description_visible", "No UOM specified")
-                qty = item.get("qty", 0)
+                qty = int(item.get("qty", 0))
             except AttributeError:
+                name = None
                 item_code = None
                 description = "No description available"
                 description_visible = "No UOM specified"
@@ -86,32 +89,34 @@ class ProductBundleTemplate:
                 "description_visible": description_visible,
                 "qty": qty,
                 "price": self.get_item_price(item),
-                "sub_items": self.get_product_bundle_sub_items(item_code)
+                "sub_items": self.get_product_bundle_sub_items(item_code, product_bundle_name, item.get("name")),
+                "_parent": product_bundle_name,  # Referencia al Product Bundle principal
+                "name": item.get("name")
             })
             
         return array_subitems
     
-    def get_product_bundle_sub_items(self, item_code):
+    def get_product_bundle_sub_items(self, item_code, product_bundle_name, parent_item_name):
         try:
             item = frappe.get_doc("Item", item_code)
             items = item.get("subitems_list", [])
             if not items or not isinstance(items, list):
                 return []
-            
             sub_items = []
-            for item in items:
-                code = item.get("item_code", "")
+            for sub_item in items:
+                code = sub_item.get("item_code", "")
                 sub_items.append({
                     "item_code": code,
-                    "description": item.get("description", code),
-                    "stock_uom": item.get("stock_uom", ""),
-                    "stock_uom_qty": item.get("qty_unit_measure", 0),
-                    "price": self.get_item_price(item),
-                    "options": item.get("options", ""),
-                    "qty": item.get("qty", 0),
-                    "tvs_pn": item.get("tvs_pn", ""),
-                    "rate": self.get_item_price(item),
-                    "_parent": self.item_code
+                    "description": sub_item.get("description", code),
+                    "stock_uom": sub_item.get("stock_uom", ""),
+                    "stock_uom_qty": sub_item.get("qty_unit_measure", 0),
+                    "price": self.get_item_price(sub_item),
+                    "options": sub_item.get("options", ""),
+                    "qty": int(sub_item.get("qty", 0)),
+                    "tvs_pn": sub_item.get("tvs_pn", ""),
+                    "rate": self.get_item_price(sub_item),
+                    "_parent": parent_item_name,  # Referencia al item padre inmediato
+                    "_product_bundle": product_bundle_name  # Referencia al Product Bundle principal
                 })
             return sub_items
         except Exception:

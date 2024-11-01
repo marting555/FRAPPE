@@ -401,23 +401,31 @@ frappe.ui.form.on('Quotation Item', {
                 concatenated_description = visibleDescriptions.join(', ').trim();
 
                 bundleItem.sub_items.forEach(subItem => {
-                    if (subItem.options && subItem.options == "Recommended additional") {
-                        confirmItems.push(subItem);
-                    } else {
-                        let child = frm.add_child('items', {
-                            item_name: subItem.item_code,
-                            item_code: subItem.item_code,
-                            description: subItem.description,
-                            qty: subItem.qty * row.qty,
-                            rate: subItem.price,
-                            uom: row.uom,
-                            stock_uom: row.stock_uom,
-                            parent: row.parent,
-                            parentfield: "items",
-                            parenttype: "Quotation"
-                        });
-                        subItem._parent = row.name;
-                    }
+					let exists = frm.doc.items.some(item => item.item_code === subItem.item_code);
+                    if (!exists) {
+						subItem.qty = bundleItem.qty * subItem.qty;
+
+						if (subItem.options && subItem.options == "Recommended additional") {
+							confirmItems.push({
+								...subItem,
+								_parent: row.item_code
+							});
+						} else {
+							frm.add_child('items', {
+								item_name: subItem.item_code,
+								item_code: subItem.item_code,
+								description: subItem.description,
+								qty: subItem.qty,
+								rate: subItem.price,
+								uom: row.uom,
+								stock_uom: row.stock_uom,
+								_parent: row.item_code,
+								parentfield: "items",
+								parenttype: "Quotation"
+							});
+							subItem._parent = row.item_code;
+						}
+					}
                 });
             });
 
@@ -442,7 +450,6 @@ frappe.ui.form.on('Quotation Item', {
 
                 frm.set_value('items', all_items);
                 frm.refresh_field('items');
-                
                 frm.trigger('calculate_taxes_and_totals');
                 frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
 
@@ -475,7 +482,6 @@ frappe.ui.form.on('Quotation Item', {
                             });
                             dialog.hide();
                             frm.refresh_field('items');
-                              
                             frm.trigger('calculate_taxes_and_totals');
                             frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
                         },
@@ -490,19 +496,21 @@ frappe.ui.form.on('Quotation Item', {
         }
     },
     
-    qty: function(frm, cdt, cdn) {
-        let row = locals[cdt][cdn];
-        if (row.is_product_bundle) {
-            frm.doc.items.forEach(item => {
-				console.log(item, " - ", row.name)
-                if (item._parent === item_code) {
-					console.log("item code ",item.item_code, "row item code",row.item_code , "row qty",row.qty)
-                    item.qty = item.qty / row.qty * row.qty;
-                }
-            });
-            frm.refresh_field('items');
-        }
+qty: function(frm, cdt, cdn) {
+    let row = locals[cdt][cdn];
+    if (row.is_product_bundle) {
+        frm.doc.items.
+		filter(item => !item.is_product_bundle)
+		.forEach(item => {
+            if (item._parent === row.item_code) {
+                item.qty = row.qty * item.qty;
+                frm.refresh_field('items');
+            }
+        });
+        frm.trigger('calculate_taxes_and_totals');
     }
+}
+
 });
 
 
