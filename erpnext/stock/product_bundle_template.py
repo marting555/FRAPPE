@@ -1,3 +1,4 @@
+from decimal import Decimal
 from os import name
 import frappe
 
@@ -72,7 +73,7 @@ class ProductBundleTemplate:
                 item_code = item.get("item_code", None)
                 description = item.get("description", "No description available")
                 description_visible = item.get("description_visible", "No UOM specified")
-                qty = int(item.get("qty", 0))
+                qty = Decimal(item.get("qty", 0))
             except AttributeError:
                 name = None
                 item_code = None
@@ -112,7 +113,7 @@ class ProductBundleTemplate:
                     "stock_uom_qty": sub_item.get("qty_unit_measure", 0),
                     "price": self.get_item_price(sub_item),
                     "options": sub_item.get("options", ""),
-                    "qty": int(sub_item.get("qty", 0)),
+                    "qty": Decimal(sub_item.get("qty", 0)),
                     "tvs_pn": sub_item.get("tvs_pn", ""),
                     "rate": self.get_item_price(sub_item),
                     "_parent": parent_item_name,  # Referencia al item padre inmediato
