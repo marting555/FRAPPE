@@ -472,7 +472,7 @@ frappe.ui.form.on('Quotation Item', {
 									</thead>
 									<tbody>
 										${row.product_bundle_items.map((bundleItem) => {
-											// Calcular subtotal del bundle
+											
 											const bundleAmount = bundleItem.qty * bundleItem.price;
 											let rows = `
 												<tr>
@@ -483,15 +483,17 @@ frappe.ui.form.on('Quotation Item', {
 													<td>${format_currency(bundleAmount)}</td>
 												</tr>
 											`;
-					
-											// Agregar subitems
+							
+											
 											rows += bundleItem.sub_items
-												.filter(subItem => subItem.options !== "Recommended additional") // Excluir opcionales
+												.filter(subItem => subItem.options !== "Recommended additional") 
 												.map(subItem => {
-													const subItemAmount = subItem.qty * subItem.price;
+													
+													const subItemQty = bundleItem.qty * subItem.qty;
+													const subItemAmount = subItemQty * subItem.price;
 													return `
 														<tr>
-															<td>${subItem.qty}</td>
+															<td>${subItemQty}</td>
 															<td>${subItem.item_code}</td>
 															<td>${subItem.description}</td>
 															<td>${format_currency(subItem.price)}</td>
@@ -499,7 +501,7 @@ frappe.ui.form.on('Quotation Item', {
 														</tr>
 													`;
 												}).join('');
-					
+							
 											return rows;
 										}).join('')}
 										<tr>
@@ -507,14 +509,17 @@ frappe.ui.form.on('Quotation Item', {
 											<td><strong>${format_currency(row.product_bundle_items.reduce((total, bundleItem) => {
 												const bundleSubtotal = bundleItem.qty * (bundleItem.price || 0);
 												const subItemsTotal = bundleItem.sub_items
-													.filter(subItem => subItem.options !== "Recommended additional") // Excluir opcionales
-													.reduce((subTotal, subItem) => subTotal + (subItem.qty * (subItem.price || 0)), 0);
+													.filter(subItem => subItem.options !== "Recommended additional") 
+													.reduce((subTotal, subItem) => {
+														const subItemQty = bundleItem.qty * subItem.qty;
+														return subTotal + (subItemQty * (subItem.price || 0));
+													}, 0);
 												return total + bundleSubtotal + subItemsTotal;
 											}, 0))}</strong></td>
 										</tr>
 									</tbody>
 								</table>
-								<p> <strong>${__("Recommended Additional Items")}</strong> </p>
+								<p> <strong>${__("Recommended Additional Items")}:</strong> </p>
 								`
 							},
 							...confirmItems.map(item => ({
@@ -548,6 +553,7 @@ frappe.ui.form.on('Quotation Item', {
 							frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
 						},
 					});
+					
 					
 					dialog.$wrapper.modal({
 						backdrop: "static",
