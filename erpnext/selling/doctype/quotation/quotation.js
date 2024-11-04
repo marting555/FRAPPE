@@ -384,275 +384,375 @@ frappe.ui.form.on("Quotation Item", "stock_balance", function(frm, cdt, cdn) {
 	frappe.set_route("query-report", "Stock Balance");
 })
 
-
+//---------------------------------- Quotation on item code change and qty change
 frappe.ui.form.on('Quotation Item', {
     item_code: function(frm, cdt, cdn) {
-        let row = locals[cdt][cdn];
-        let concatenated_description = '';
-        let confirmItems = [];
+        const row = locals[cdt][cdn];
+
+		const exist = validateItemsNotExist(frm, row.item_code, row);
+		if (exist) {
+			frappe.msgprint(__("Product bundle {0} already exists in the quotation. Please remove it before adding a new item.", [row.item_code]));
+			return;
+		}
+
+        const confirmItems = [];
+        let concatenatedDescription = '';
+
+        initializeLocalStorage(row);
 
         if (row.is_product_bundle) {
-            row.product_bundle_items.forEach(bundleItem => {
-                let visibleDescriptions = row.product_bundle_items
-                    .filter(bundleItem => bundleItem.description_visible)
-                    .map(bundleItem => bundleItem.description || '');
-                
-                concatenated_description = visibleDescriptions.join(', ').trim();
+            storeOriginalQuantities(row);
+        }
+
+        if (row.is_product_bundle) {
+            processProductBundle(frm, row, confirmItems, concatenatedDescription);
+        }
+    },
+
+    qty: function(frm, cdt, cdn) {
+        const row = locals[cdt][cdn];
+		const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
+        const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
+
+        if (row.is_product_bundle) {
+            updateSubItemQuantities(frm, row, originalQuantities);
+        }
+    }   
+});
+
+function validateItemsNotExist(frm, item_code, current_row) {
+    return frm.doc.items.some(item => {
+        return item.item_code === item_code && item.is_product_bundle && item.name !== current_row.name;
+    });
+}
+	
+
+function initializeLocalStorage(row) {
+	const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
+    if (!localStorage.getItem(storage_name)) {
+        localStorage.setItem(storage_name, JSON.stringify({}));
+	}
+}
+
+function storeOriginalQuantities(row) {
+	const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
+    const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
+    originalQuantities[row.item_code] = {
+        qty: row.qty,
+        product_bundle_items: row.product_bundle_items.map(bundleItem => ({
+            item_code: bundleItem.item_code,
+            qty: bundleItem.qty,
+            sub_items: bundleItem.sub_items.map(subItem => ({
+                item_code: subItem.item_code,
+                qty: subItem.qty
+            }))
+        }))
+    };
+    localStorage.setItem(storage_name, JSON.stringify(originalQuantities));
+}
+
+function processProductBundle(frm, row, confirmItems, concatenatedDescription) {
+    row.product_bundle_items.forEach(bundleItem => {
+        const visibleDescriptions = row.product_bundle_items
+            .filter(item => item.description_visible)
+            .map(item => item.description || '');
+
+        concatenatedDescription = visibleDescriptions.join(', ').trim();
+
+        bundleItem.sub_items.forEach(subItem => {
+                subItem.qty *= bundleItem.qty;
+
+                if (subItem.options === "Recommended additional") {
+                    confirmItems.push({ ...subItem, _parent: subItem._product_bundle });
+                } else {
+                    addSubItemToQuotation(frm, subItem, row);
+                }
+        });
+    });
+
+    updateRowDescription(frm, row, concatenatedDescription);
+    showDialog(frm, row, confirmItems);
+}
+
+function addSubItemToQuotation(frm, subItem, row) {
+    frm.add_child('items', {
+        item_name: subItem.item_code,
+        item_code: subItem.item_code,
+        description: subItem.description,
+		weight_per_unit: row.weight_per_unit,
+        qty: subItem.qty,
+        rate: subItem.price,
+        uom: row.uom,
+        stock_uom: row.stock_uom,
+        _parent: row.item_code,
+        parentfield: "items",
+        parenttype: "Quotation"
+    });
+}
+
+function updateRowDescription(frm, row, concatenatedDescription) {
+    // setTimeout(() => {
+        row.description = concatenatedDescription;
+        const allItems = frm.doc.items.map(item => updateItemRate(item, row));
+        frm.set_value('items', allItems);
+        frm.refresh_field('items');
+        frm.trigger('calculate_taxes_and_totals');
+        frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+    // }, 1000);
+}
+
+function updateItemRate(item, row) {
+    if (item.name === row.name) {
+        item.description = row.description;
+    }
+
+    if (item.product_bundle_items?.length > 0) {
+        item.rate = item.product_bundle_items.reduce((total, bundleItem) => {
+            return total + (bundleItem.description_visible ? (bundleItem.qty * bundleItem.price) : 0);
+        }, 0);
+    } else {
+        item.rate = item.rate || 0;
+    }
+    return item;
+}
+
+function showDialog(frm, row, confirmItems) {
+    const dialog = new frappe.ui.Dialog({
+        title: __(row.item_code),
+        fields: createDialogFields(row, confirmItems),
+        primary_action_label: __("Add Selected Items"),
+        secondary_action_label: __("Cancel"),
+        primary_action(values) {
+            addSelectedItemsToQuotation(frm, values, confirmItems, row);
+            dialog.hide();
+        },
+        secondary_action() {
+            dialog.hide();
+        }
+    });
+
+    dialog.$wrapper.modal({
+        backdrop: "static",
+        keyboard: false,
+        size: "1024px"
+    });
+    dialog.show();
+    dialog.$wrapper.find('.modal-dialog').css("max-width", "1024px").css("width", "1024px");
+}
+
+function createDialogFields(row, confirmItems) {
+    const tableOptions = createSummaryTable(row);
+    const fields = [{
+        fieldtype: 'HTML',
+        fieldname: 'summary_table',
+        options: tableOptions
+    }];
+    confirmItems.forEach(item => {
+        fields.push({
+            label: item.item_code,
+            fieldname: item.item_code,
+            fieldtype: 'Check',
+            default: 0
+        });
+    });
+    return fields;
+}
+
+function createSummaryTable(row) {
+    const tableHeader = `
+        <thead>
+            <tr>
+                <th>${__("Quantity")}</th>
+                <th>${__("Item Code")}</th>
+                <th>${__("Description")}</th>
+                <th>${__("Rate (EUR)")}</th>
+                <th>${__("Amount (EUR)")}</th>
+            </tr>
+        </thead>
+    `;
+    const tableBody = row.product_bundle_items.map(bundleItem => createBundleItemRow(bundleItem)).join('');
+
+    const totalRow = `
+        <tr>
+            <td colspan="4"><strong>${__("Total")}</strong></td>
+            <td><strong>${format_currency(calculateTotal(row))}</strong></td>
+        </tr>
+    `;
+
+    return `<table class="table table-bordered">${tableHeader}<tbody>${tableBody}${totalRow}</tbody></table>
+            <p><strong>${__("Recommended Additional Items")}:</strong></p>`;
+}
+
+function createBundleItemRow(bundleItem) {
+    const bundleAmount = bundleItem.qty * bundleItem.price;
+    let rows = `
+        <tr>
+            <td>${bundleItem.qty}</td>
+            <td>${bundleItem.item_code}</td>
+            <td>${bundleItem.description}</td>
+            <td>${format_currency(bundleItem.price)}</td>
+            <td>${format_currency(bundleAmount)}</td>
+        </tr>
+    `;
+    rows += bundleItem.sub_items
+        .filter(subItem => subItem.options !== "Recommended additional")
+        .map(subItem => createSubItemRow(bundleItem, subItem)).join('');
+    return rows;
+}
+
+function createSubItemRow(bundleItem, subItem) {
+    const subItemQty = bundleItem.qty * subItem.qty;
+    const subItemAmount = subItemQty * subItem.price;
+    return `
+        <tr>
+            <td>${subItemQty}</td>
+            <td>${subItem.item_code}</td>
+            <td>${subItem.description}</td>
+            <td>${format_currency(subItem.price)}</td>
+            <td>${format_currency(subItemAmount)}</td>
+        </tr>
+    `;
+}
+
+function calculateTotal(row) {
+    return row.product_bundle_items.reduce((total, bundleItem) => {
+        const bundleSubtotal = bundleItem.qty * (bundleItem.price || 0);
+        const subItemsTotal = bundleItem.sub_items
+            .filter(subItem => subItem.options !== "Recommended additional")
+            .reduce((subTotal, subItem) => {
+                const subItemQty = bundleItem.qty * subItem.qty;
+                return subTotal + (subItemQty * (subItem.price || 0));
+            }, 0);
+        return total + bundleSubtotal + subItemsTotal;
+    }, 0);
+}
+
+function addSelectedItemsToQuotation(frm, values, confirmItems, row) {
+    confirmItems.forEach(item => {
+        if (values[item.item_code]) {
+            frm.add_child('items', {
+                item_name: item.item_code,
+                item_code: item.item_code,
+                description: item.description,
+                qty: item.qty,
+                rate: item.price,
+                uom: row.uom,
+                stock_uom: row.stock_uom,
+                parent: row.parent,
+				_parent: item._parent,
+				_product_bundle: item._product_bundle,
+                parentfield: "items",
+                parenttype: "Quotation",
+				weight_per_unit: row.weight_per_unit
+            });
+        }
+    });
+    frm.refresh_field('items');
+    frm.trigger('calculate_taxes_and_totals');
+    frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+}
+
+function updateSubItemQuantities(frm, row, originalQuantities) {
+    const storage = originalQuantities[row.item_code];
+    const nuevaQtyProductBundle = row.qty;
+    frm.doc.items.forEach(item => {
+        if (item._parent === row.item_code) {
+            storage.product_bundle_items.forEach(bundleItem => {
+                bundleItem.sub_items.forEach(subItem => {
+                    if (subItem.item_code === item.item_code) {
+                        const updatedQty = (subItem.qty * bundleItem.qty) * nuevaQtyProductBundle;
+                        frappe.model.set_value(item.doctype, item.name, 'qty', updatedQty);
+                    }
+                });
+            });
+        }
+    });
+    frm.refresh_field('items');
+    frm.trigger('calculate_taxes_and_totals');
+    frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+}
+
+//---------------------------------- Quotation on selling price list change
+frappe.ui.form.on('Quotation', {
+    selling_price_list: function(frm) {
+        if (!frm.doc.items.length || (frm.doc.items.length > 0 && !frm.doc.items[0].item_code)) {
+            return;
+        }
+
+        const itemCodesToSend = collectItemCodes(frm);
+
+        const newSellingPriceList = frm.doc.selling_price_list;
+        frappe.call({
+            method: "erpnext.stock.get_item_details.get_item_product_bundle_template",
+            args: {
+                args: {
+                    item_codes: itemCodesToSend,
+                    selling_price_list: newSellingPriceList
+                }
+            },
+            callback: function(r) {
+                if (r.message) {
+                    updateItemRates(frm, r.message);
+                }
+            }
+        });
+    }
+});
+
+function collectItemCodes(frm) {
+    const itemCodesToSend = [];
+
+    frm.doc.items.forEach(item => {
+        if (item.is_product_bundle) {
+            item.product_bundle_items.forEach(bundleItem => {
+                if (bundleItem.description_visible) {
+                    itemCodesToSend.push(bundleItem.item_code);
+                    bundleItem.sub_items.forEach(subItem => {
+                        if (!frm.doc.items.some(docItem => docItem.item_code === subItem.item_code)) {
+                            itemCodesToSend.push(subItem.item_code);
+                        }
+                    });
+                }
+            });
+        } else {
+            itemCodesToSend.push(item.item_code);
+        }
+    });
+
+    return itemCodesToSend;
+}
+
+function updateItemRates(frm, updatedPrices) {
+    frm.doc.items.forEach(item => {
+        if (item.is_product_bundle) {
+            let newRate = 0;
+
+            item.product_bundle_items.forEach(bundleItem => {
+                if (updatedPrices[bundleItem.item_code]) {
+                    bundleItem.price = updatedPrices[bundleItem.item_code];
+                    if (bundleItem.description_visible) {
+                        newRate += bundleItem.qty * bundleItem.price;
+                    }
+                }
 
                 bundleItem.sub_items.forEach(subItem => {
-                    let exists = frm.doc.items.some(item => item.item_code === subItem.item_code);
-                    if (!exists) {
-                        subItem.qty = bundleItem.qty * subItem.qty;
-
-                        if (subItem.options && subItem.options === "Recommended additional") {
-                            confirmItems.push({
-                                ...subItem,
-                                _parent: row.item_code
-                            });
-                        } else {
-                            frm.add_child('items', {
-                                item_name: subItem.item_code,
-                                item_code: subItem.item_code,
-                                description: subItem.description,
-                                qty: subItem.qty,
-                                rate: subItem.price,
-                                uom: row.uom,
-                                stock_uom: row.stock_uom,
-                                _parent: row.item_code,
-                                parentfield: "items",
-                                parenttype: "Quotation"
-                            });
-                            subItem._parent = row.item_code;
-                        }
+                    if (!frm.doc.items.some(docItem => docItem.item_code === subItem.item_code) && updatedPrices[subItem.item_code]) {
+                        subItem.price = updatedPrices[subItem.item_code];
+                        newRate += subItem.qty * subItem.price;
                     }
                 });
             });
 
-            setTimeout(() => {
-                row.description = concatenated_description;
-                let all_items = frm.doc.items.map(item => {
-                    if (item.name === row.name) {
-                        item.description = concatenated_description;
-                    }
-                    
-                    if (item.product_bundle_items && item.product_bundle_items.length > 0) {
-                        item.rate = item.product_bundle_items.reduce((total, bundleItem) => {
-                            let bundleItemTotal = bundleItem.description_visible ? (bundleItem.qty * bundleItem.price) : 0;
-                            return total + bundleItemTotal;
-                        }, 0);
-                    } else {
-                        item.rate = item.rate || 0;
-                    }
-
-                    return item;
-                });
-
-                frm.set_value('items', all_items);
-                frm.refresh_field('items');
-                frm.trigger('calculate_taxes_and_totals');
-                frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
-
-                let dialog = new frappe.ui.Dialog({
-                    title: __(row.item_code),
-                    fields: [
-                        {
-                            fieldtype: 'HTML',
-                            fieldname: 'summary_table',
-                            options: `<table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>${__("Quantity")}</th>
-                                        <th>${__("Item Code")}</th>
-                                        <th>${__("Description")}</th>
-                                        <th>${__("Rate (EUR)")}</th>
-                                        <th>${__("Amount (EUR)")}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${row.product_bundle_items.map((bundleItem) => {
-                                        const bundleAmount = bundleItem.qty * bundleItem.price;
-                                        let rows = `
-                                            <tr>
-                                                <td>${bundleItem.qty}</td>
-                                                <td>${bundleItem.item_code}</td>
-                                                <td>${bundleItem.description}</td>
-                                                <td>${format_currency(bundleItem.price)}</td>
-                                                <td>${format_currency(bundleAmount)}</td>
-                                            </tr>
-                                        `;
-                                        rows += bundleItem.sub_items
-                                            .filter(subItem => subItem.options !== "Recommended additional") 
-                                            .map(subItem => {
-                                                const subItemQty = bundleItem.qty * subItem.qty;
-                                                const subItemAmount = subItemQty * subItem.price;
-                                                return `
-                                                    <tr>
-                                                        <td>${subItemQty}</td>
-                                                        <td>${subItem.item_code}</td>
-                                                        <td>${subItem.description}</td>
-                                                        <td>${format_currency(subItem.price)}</td>
-                                                        <td>${format_currency(subItemAmount)}</td>
-                                                    </tr>
-                                                `;
-                                            }).join('');
-                                        return rows;
-                                    }).join('')}
-                                    <tr>
-                                        <td colspan="4"><strong>${__("Total")}</strong></td>
-                                        <td><strong>${format_currency(row.product_bundle_items.reduce((total, bundleItem) => {
-                                            const bundleSubtotal = bundleItem.qty * (bundleItem.price || 0);
-                                            const subItemsTotal = bundleItem.sub_items
-                                                .filter(subItem => subItem.options !== "Recommended additional") 
-                                                .reduce((subTotal, subItem) => {
-                                                    const subItemQty = bundleItem.qty * subItem.qty;
-                                                    return subTotal + (subItemQty * (subItem.price || 0));
-                                                }, 0);
-                                            return total + bundleSubtotal + subItemsTotal;
-                                        }, 0))}</strong></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <p> <strong>${__("Recommended Additional Items")}:</strong> </p>
-                            `
-                        },
-                        ...confirmItems.map(item => ({
-                            label: item.item_code,
-                            fieldname: item.item_code,
-                            fieldtype: 'Check',
-                            default: 0
-                        }))
-                    ],
-                    primary_action_label: __("Add Selected Items"),
-                    primary_action(values) {
-                        confirmItems.forEach(item => {
-                            if (values[item.item_code]) {
-                                frm.add_child('items', {
-                                    item_name: item.item_code,
-                                    item_code: item.item_code,
-                                    description: item.description,
-                                    qty: item.qty,
-                                    rate: item.price,
-                                    uom: row.uom,
-                                    stock_uom: row.stock_uom,
-                                    parent: row.parent,
-                                    parentfield: "items",
-                                    parenttype: "Quotation"
-                                });
-                            }
-                        });
-                        dialog.hide();
-                        frm.refresh_field('items');
-                        frm.trigger('calculate_taxes_and_totals');
-                        frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
-                    },
-                });
-                
-                dialog.$wrapper.modal({
-                    backdrop: "static",
-                    keyboard: false,
-                    size: "1024px"
-                });
-                dialog.show();
-                dialog.$wrapper.find('.modal-dialog').css("max-width", "1024px");
-                dialog.$wrapper.find('.modal-dialog').css("width", "1024px");										
-            }, 1000);
+            item.rate = newRate;
+        } else if (updatedPrices[item.item_code]) {
+            item.rate = updatedPrices[item.item_code];
         }
-    },
-    
-    qty: function(frm, cdt, cdn) {
-        let row = locals[cdt][cdn];
-        if (row.is_product_bundle) {
-            frm.doc.items
-                .filter(item => !item.is_product_bundle)
-                .forEach(item => {
-                    if (item._parent === row.item_code) {
-                        item.qty = row.qty * item.qty;
-                        frm.refresh_field('items');
-                    }
-                });
-            frm.trigger('calculate_taxes_and_totals');
-            frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
-        }
-    }
-});
+    });
 
-
-
-
-frappe.ui.form.on('Quotation', {
-    selling_price_list: function(frm) {
-       if (!frm.doc.items.length || (frm.doc.items.length > 0 && !frm.doc.items[0].item_code)) {
-          return;
-       }
- 
-       const item_codes_to_send = [];
- 
-       frm.doc.items.forEach(item => {
-          if (item.is_product_bundle) {
-             item.product_bundle_items.forEach(bundleItem => {
-                if (bundleItem.description_visible) {
-                   item_codes_to_send.push(bundleItem.item_code);
-                   bundleItem.sub_items.forEach(subItem => {
-                      let exists = frm.doc.items.some(docItem => docItem.item_code === subItem.item_code);
-                      if (!exists) {
-                         item_codes_to_send.push(subItem.item_code);
-                      }
-                   });
-                }
-             });
-          } else {
-             item_codes_to_send.push(item.item_code);
-          }
-       });
-
-       const new_selling_price_list = frm.doc.selling_price_list;
-       frappe.call({
-          method: "erpnext.stock.get_item_details.get_item_product_bundle_template",
-          args: {
-             args: {
-               item_codes: item_codes_to_send,
-               selling_price_list: new_selling_price_list
-            }
-          },
-          callback: function(r) {
-             if (r.message) {
-                let updated_prices = r.message;
-
-                frm.doc.items.forEach(item => {
-                    if (item.is_product_bundle) {
-                        let new_rate = 0;
-
-                        item.product_bundle_items.forEach(bundleItem => {
-                            if (updated_prices[bundleItem.item_code]) {
-                                bundleItem.price = updated_prices[bundleItem.item_code];
-                                if (bundleItem.description_visible) {
-                                    new_rate += bundleItem.qty * bundleItem.price;
-                                }
-                            }
-
-                            bundleItem.sub_items.forEach(subItem => {
-                                let exists = frm.doc.items.some(docItem => docItem.item_code === subItem.item_code);
-                                if (!exists && updated_prices[subItem.item_code]) {
-                                    subItem.price = updated_prices[subItem.item_code];
-                                    new_rate += subItem.qty * subItem.price;
-                                }
-                            });
-                        });
-
-                        item.rate = new_rate;
-                    } else if (updated_prices[item.item_code]) {
-                        item.rate = updated_prices[item.item_code];
-                    }
-                });
-
-                frm.refresh_field('items');
-				frm.trigger('calculate_taxes_and_totals');
-                frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
-             }
-          }
-       });
-    }
-});
+    frm.refresh_field('items');
+    frm.trigger('calculate_taxes_and_totals');
+    frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+}
 
 
  
