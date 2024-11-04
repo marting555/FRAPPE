@@ -391,6 +391,27 @@ frappe.ui.form.on('Quotation Item', {
         let concatenated_description = '';
         let confirmItems = [];
 
+		if (!localStorage.getItem('Quotation:OriginalQuantities')) {
+            localStorage.setItem('Quotation:OriginalQuantities', JSON.stringify({}));
+        }
+        let originalQuantities = JSON.parse(localStorage.getItem('Quotation:OriginalQuantities'));
+
+        if (row.is_product_bundle) {
+            originalQuantities[row.item_code] = {
+                qty: row.qty,
+                product_bundle_items: row.product_bundle_items.map(bundleItem => ({
+                    item_code: bundleItem.item_code,
+                    qty: bundleItem.qty,
+                    sub_items: bundleItem.sub_items.map(subItem => ({
+                        item_code: subItem.item_code,
+                        qty: subItem.qty
+                    }))
+                }))
+            };
+            localStorage.setItem('Quotation:OriginalQuantities', JSON.stringify(originalQuantities));
+        }
+
+
         if (row.is_product_bundle) {
             row.product_bundle_items.forEach(bundleItem => {
                 let visibleDescriptions = row.product_bundle_items
@@ -523,6 +544,7 @@ frappe.ui.form.on('Quotation Item', {
                         }))
                     ],
                     primary_action_label: __("Add Selected Items"),
+					secondary_action_label: __("Cancel"),
                     primary_action(values) {
                         confirmItems.forEach(item => {
                             if (values[item.item_code]) {
@@ -545,6 +567,9 @@ frappe.ui.form.on('Quotation Item', {
                         frm.trigger('calculate_taxes_and_totals');
                         frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
                     },
+					secondary_action() {
+						dialog.hide();
+					}
                 });
                 
                 dialog.$wrapper.modal({
@@ -559,21 +584,31 @@ frappe.ui.form.on('Quotation Item', {
         }
     },
     
-    qty: function(frm, cdt, cdn) {
-        let row = locals[cdt][cdn];
-        if (row.is_product_bundle) {
-            frm.doc.items
-                .filter(item => !item.is_product_bundle)
-                .forEach(item => {
-                    if (item._parent === row.item_code) {
-                        item.qty = row.qty * item.qty;
-                        frm.refresh_field('items');
-                    }
-                });
-            frm.trigger('calculate_taxes_and_totals');
-            frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
-        }
-    }
+	qty: function(frm, cdt, cdn) {
+		let row = locals[cdt][cdn];
+		let originalQuantities = JSON.parse(localStorage.getItem('Quotation:OriginalQuantities'));
+	
+		if (row.is_product_bundle) {
+			let storage = originalQuantities[row.item_code];
+			let nuevaQtyProductBundle = row.qty;
+			frm.doc.items.forEach(item => {
+				if (item._parent === row.item_code) {
+					storage.product_bundle_items.forEach((bundleItem) => {
+						bundleItem.sub_items.forEach((subItem) => {
+							if (subItem.item_code === item.item_code) {
+								let updatedQty = (subItem.qty * bundleItem.qty) * nuevaQtyProductBundle;
+								frappe.model.set_value(item.doctype, item.name, 'qty', updatedQty);
+							}
+						});
+					});
+				}
+			});
+			frm.refresh_field('items');
+			frm.trigger('calculate_taxes_and_totals');
+			frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+		}
+	}	
+		
 });
 
 
