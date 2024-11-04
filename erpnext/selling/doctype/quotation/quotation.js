@@ -491,14 +491,14 @@ function addSubItemToQuotation(frm, subItem, row) {
 }
 
 function updateRowDescription(frm, row, concatenatedDescription) {
-    // setTimeout(() => {
+    setTimeout(() => {
         row.description = concatenatedDescription;
         const allItems = frm.doc.items.map(item => updateItemRate(item, row));
         frm.set_value('items', allItems);
         frm.refresh_field('items');
         frm.trigger('calculate_taxes_and_totals');
         frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
-    // }, 1000);
+    }, 1000);
 }
 
 function updateItemRate(item, row) {
