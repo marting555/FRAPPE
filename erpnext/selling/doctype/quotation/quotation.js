@@ -601,11 +601,10 @@ function createBundleItemRow(bundleItem) {
 }
 
 function createSubItemRow(bundleItem, subItem) {
-    const subItemQty = bundleItem.qty * subItem.qty;
-    const subItemAmount = subItemQty * subItem.price;
+    const subItemAmount = subItem.qty * subItem.price;
     return `
         <tr>
-            <td>${subItemQty}</td>
+            <td>${subItem.qty}</td>
             <td>${subItem.item_code}</td>
             <td>${subItem.description}</td>
             <td>${format_currency(subItem.price)}</td>
@@ -620,8 +619,7 @@ function calculateTotal(row) {
         const subItemsTotal = bundleItem.sub_items
             .filter(subItem => subItem.options !== "Recommended additional")
             .reduce((subTotal, subItem) => {
-                const subItemQty = bundleItem.qty * subItem.qty;
-                return subTotal + (subItemQty * (subItem.price || 0));
+                return subTotal + (subItem.qty * (subItem.price || 0));
             }, 0);
         return total + bundleSubtotal + subItemsTotal;
     }, 0);
