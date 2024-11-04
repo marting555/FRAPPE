@@ -388,10 +388,17 @@ frappe.ui.form.on("Quotation Item", "stock_balance", function(frm, cdt, cdn) {
 frappe.ui.form.on('Quotation Item', {
     item_code: function(frm, cdt, cdn) {
         const row = locals[cdt][cdn];
+
+		const exist = validateItemsNotExist(frm, row.item_code, row);
+		if (exist) {
+			frappe.msgprint(__("Product bundle {0} already exists in the quotation. Please remove it before adding a new item.", [row.item_code]));
+			return;
+		}
+
         const confirmItems = [];
         let concatenatedDescription = '';
 
-        initializeLocalStorage();
+        initializeLocalStorage(row);
 
         if (row.is_product_bundle) {
             storeOriginalQuantities(row);
@@ -404,7 +411,8 @@ frappe.ui.form.on('Quotation Item', {
 
     qty: function(frm, cdt, cdn) {
         const row = locals[cdt][cdn];
-        const originalQuantities = JSON.parse(localStorage.getItem('Quotation:OriginalQuantities'));
+		const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
+        const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
 
         if (row.is_product_bundle) {
             updateSubItemQuantities(frm, row, originalQuantities);
@@ -412,14 +420,23 @@ frappe.ui.form.on('Quotation Item', {
     }   
 });
 
-function initializeLocalStorage() {
-    if (!localStorage.getItem('Quotation:OriginalQuantities')) {
-        localStorage.setItem('Quotation:OriginalQuantities', JSON.stringify({}));
-    }
+function validateItemsNotExist(frm, item_code, current_row) {
+    return frm.doc.items.some(item => {
+        return item.item_code === item_code && item.is_product_bundle && item.name !== current_row.name;
+    });
+}
+	
+
+function initializeLocalStorage(row) {
+	const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
+    if (!localStorage.getItem(storage_name)) {
+        localStorage.setItem(storage_name, JSON.stringify({}));
+	}
 }
 
 function storeOriginalQuantities(row) {
-    const originalQuantities = JSON.parse(localStorage.getItem('Quotation:OriginalQuantities'));
+	const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
+    const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
     originalQuantities[row.item_code] = {
         qty: row.qty,
         product_bundle_items: row.product_bundle_items.map(bundleItem => ({
@@ -431,7 +448,7 @@ function storeOriginalQuantities(row) {
             }))
         }))
     };
-    localStorage.setItem('Quotation:OriginalQuantities', JSON.stringify(originalQuantities));
+    localStorage.setItem(storage_name, JSON.stringify(originalQuantities));
 }
 
 function processProductBundle(frm, row, confirmItems, concatenatedDescription) {
@@ -443,16 +460,13 @@ function processProductBundle(frm, row, confirmItems, concatenatedDescription) {
         concatenatedDescription = visibleDescriptions.join(', ').trim();
 
         bundleItem.sub_items.forEach(subItem => {
-            const exists = frm.doc.items.some(item => item.item_code === subItem.item_code);
-            if (!exists) {
-                subItem.qty *= bundleItem.qty; // Update qty based on bundle qty
+                subItem.qty *= bundleItem.qty;
 
                 if (subItem.options === "Recommended additional") {
                     confirmItems.push({ ...subItem, _parent: subItem._product_bundle });
                 } else {
                     addSubItemToQuotation(frm, subItem, row);
                 }
-            }
         });
     });
 
@@ -465,6 +479,7 @@ function addSubItemToQuotation(frm, subItem, row) {
         item_name: subItem.item_code,
         item_code: subItem.item_code,
         description: subItem.description,
+		weight_per_unit: row.weight_per_unit,
         qty: subItem.qty,
         rate: subItem.price,
         uom: row.uom,
