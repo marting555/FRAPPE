@@ -384,7 +384,7 @@ frappe.ui.form.on("Quotation Item", "stock_balance", function(frm, cdt, cdn) {
 	frappe.set_route("query-report", "Stock Balance");
 })
 
-
+//---------------------------------- Quotation on item code change and qty change
 frappe.ui.form.on('Quotation Item', {
     item_code: function(frm, cdt, cdn) {
         const row = locals[cdt][cdn];
@@ -448,7 +448,7 @@ function processProductBundle(frm, row, confirmItems, concatenatedDescription) {
                 subItem.qty *= bundleItem.qty; // Update qty based on bundle qty
 
                 if (subItem.options === "Recommended additional") {
-                    confirmItems.push({ ...subItem, _parent: row.item_code });
+                    confirmItems.push({ ...subItem, _parent: subItem._product_bundle });
                 } else {
                     addSubItemToQuotation(frm, subItem, row);
                 }
@@ -476,14 +476,14 @@ function addSubItemToQuotation(frm, subItem, row) {
 }
 
 function updateRowDescription(frm, row, concatenatedDescription) {
-    setTimeout(() => {
+    // setTimeout(() => {
         row.description = concatenatedDescription;
         const allItems = frm.doc.items.map(item => updateItemRate(item, row));
         frm.set_value('items', allItems);
         frm.refresh_field('items');
         frm.trigger('calculate_taxes_and_totals');
         frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
-    }, 1000);
+    // }, 1000);
 }
 
 function updateItemRate(item, row) {
@@ -624,8 +624,11 @@ function addSelectedItemsToQuotation(frm, values, confirmItems, row) {
                 uom: row.uom,
                 stock_uom: row.stock_uom,
                 parent: row.parent,
+				_parent: item._parent,
+				_product_bundle: item._product_bundle,
                 parentfield: "items",
-                parenttype: "Quotation"
+                parenttype: "Quotation",
+				weight_per_unit: row.weight_per_unit
             });
         }
     });
@@ -654,7 +657,7 @@ function updateSubItemQuantities(frm, row, originalQuantities) {
     frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
 }
 
-// Quotation on selling price list change
+//---------------------------------- Quotation on selling price list change
 frappe.ui.form.on('Quotation', {
     selling_price_list: function(frm) {
         if (!frm.doc.items.length || (frm.doc.items.length > 0 && !frm.doc.items[0].item_code)) {
