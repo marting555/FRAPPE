@@ -28,6 +28,10 @@ class CommonCode(Document):
 		title: DF.Data
 	# end: auto-generated types
 
+	def before_validate(self):
+		if self.title and len(self.title) > 140:
+			self.title = self.title[:139] + "…"
+
 	def validate(self):
 		self.validate_distinct_references()
 
