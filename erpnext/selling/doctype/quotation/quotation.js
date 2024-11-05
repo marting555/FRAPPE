@@ -505,16 +505,14 @@ function updateItemRate(item, row) {
     if (item.name === row.name) {
         item.description = row.description;
     }
+    item.rate = item.product_bundle_items?.reduce((total, bundleItem) => 
+        total + (bundleItem.qty * bundleItem.price), 0) || item.rate || 0;
 
-    if (item.product_bundle_items?.length > 0) {
-        item.rate = item.product_bundle_items.reduce((total, bundleItem) => {
-            return total + (bundleItem.description_visible ? (bundleItem.qty * bundleItem.price) : 0);
-        }, 0);
-    } else {
-        item.rate = item.rate || 0;
-    }
     return item;
 }
+
+
+
 
 function showDialog(frm, row, confirmItems) {
     const dialog = new frappe.ui.Dialog({
