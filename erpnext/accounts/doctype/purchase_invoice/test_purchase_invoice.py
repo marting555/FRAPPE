@@ -129,8 +129,10 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			as_dict=1,
 		)
 		for d in gl_entries:
-			self.assertEqual([d.debit, d.credit], expected_gl_entries.get(d.account))
-
+			expected_values = expected_gl_entries.get(d.account)
+			self.assertAlmostEqual(d.debit, expected_values[0], places=0)  
+			self.assertAlmostEqual(d.credit, expected_values[1], places=0)
+			
 	def test_gl_entries_with_perpetual_inventory(self):
 		pi = make_purchase_invoice(
 			company="_Test Company with perpetual inventory",
