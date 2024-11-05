@@ -2012,10 +2012,17 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			price_list_rate=1000,
 			qty=1,
 		)
-		expected_gle = [
-			["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate()],
+		if frappe.db.db_type=='postgres':
+			expected_gle = [
 			["Creditors - _TC", 0.0, 1000, nowdate()],
+			["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate()]
 		]
+		else:
+
+			expected_gle = [
+				["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate()],
+				["Creditors - _TC", 0.0, 1000, nowdate()],
+			]
 		check_gl_entries(self, pi.name, expected_gle, nowdate())
 
 		pi.items[0].expense_account = "Service - _TC"
