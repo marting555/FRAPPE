@@ -2144,6 +2144,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 	make_mapped_payment_entry(args) {
 		var me = this;
 		args = args || { "dt": this.frm.doc.doctype, "dn": this.frm.doc.name };
+		
 		return frappe.call({
 			method: me.get_method_for_payment(),
 			args: args,
@@ -2156,16 +2157,23 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 
 	prompt_user_for_reference_date(){
 		let me = this;
-		frappe.prompt({
+		frappe.prompt([{
 			label: __("Cheque/Reference Date"),
 			fieldname: "reference_date",
 			fieldtype: "Date",
 			reqd: 1,
-		}, (values) => {
+		},
+		{
+			label: __("Amount to be Paid"),
+			fieldname: "amount_to_be_paid",
+			fieldtype: "Float",
+			reqd: 1
+		}], (values) => {
 			let args = {
 				"dt": me.frm.doc.doctype,
 				"dn": me.frm.doc.name,
-				"reference_date": values.reference_date
+				"reference_date": values.reference_date,
+				"amount_to_be_paid": values.amount_to_be_paid,
 			}
 			me.make_mapped_payment_entry(args);
 		},
@@ -2176,13 +2184,13 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 
 	has_discount_in_schedule() {
 		let is_eligible = in_list(
-			["Sales Order", "Sales Invoice", "Purchase Order", "Purchase Invoice"],
-			this.frm.doctype
+		  ["Sales Order", "Sales Invoice", "Purchase Order", "Purchase Invoice"],
+		  this.frm.doctype
 		);
-		let has_payment_schedule = this.frm.doc.payment_schedule && this.frm.doc.payment_schedule.length;
-		if(!is_eligible || !has_payment_schedule) return false;
-
-		let has_discount = this.frm.doc.payment_schedule.some(row => row.discount);
+		let has_payment_discount_term = this.frm.doc.payment_discount_terms && this.frm.doc.payment_discount_terms.length;
+		if (!is_eligible || !has_payment_discount_term)
+		  return false;
+		let has_discount = this.frm.doc.payment_discount_terms.some((row) => row.discount);
 		return has_discount;
 	}
 
