@@ -1751,18 +1751,18 @@ class TestPurchaseReceipt(FrappeTestCase):
 			},
 			fieldname=["credit"],
 		)
-		stock_diff = frappe.db.get_value(
+		stock_diff = frappe.db.get_all(
 			"Stock Ledger Entry",
-			{
+			filters= {
 				"voucher_type": "Purchase Receipt",
 				"voucher_no": pr.name,
 				"is_cancelled": 0,
 			},
-			fieldname=["sum(stock_value_difference)"],
-		)
+			fields=["SUM(stock_value_difference) as stock_value_difference"],
+		)[0]
 
 		# Value of Stock Account should be equal to the sum of Stock Value Difference
-		self.assertEqual(stock_account_value, stock_diff)
+		self.assertEqual(stock_account_value, stock_diff['stock_value_difference'])
 
 	def test_internal_pr_reference(self):
 		item = make_item(properties={"is_stock_item": 1, "valuation_rate": 100})
@@ -2087,9 +2087,9 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(flt(pr.total * pr.conversion_rate, 2), flt(pr.base_total, 2))
 
 		# Test - 2: Sum of Debit or Credit should be equal to Purchase Receipt Base Total
-		amount = frappe.db.get_value("GL Entry", {"docstatus": 1, "voucher_no": pr.name}, ["sum(debit)"])
+		amount = frappe.db.get_all("GL Entry", {"docstatus": 1, "voucher_no": pr.name}, ["sum(debit) as debit"])[0]
 		expected_amount = pr.base_total
-		self.assertEqual(amount, expected_amount)
+		self.assertEqual(amount['debit'], expected_amount)
 
 		company.enable_provisional_accounting_for_non_stock_items = 0
 		company.save()
@@ -2963,12 +2963,20 @@ class TestPurchaseReceipt(FrappeTestCase):
 
 		gl_entries = get_gl_entries("Purchase Receipt", pr.name, skip_cancelled=True, as_dict=False)
 		warehouse_account = get_warehouse_account_map("_Test Company")
-		expected_gle = (
+		if frappe.db.db_type == "postgres":
+			expected_gle = (
+			(warehouse_account[pr.items[0].warehouse]["account"], 14000, 0, "Main - _TC"),
 			("Stock Received But Not Billed - _TC", 0, 10000, "Main - _TC"),
 			("Freight and Forwarding Charges - _TC", 0, 2000, "Main - _TC"),
 			("Expenses Included In Valuation - _TC", 0, 2000, "Main - _TC"),
-			(warehouse_account[pr.items[0].warehouse]["account"], 14000, 0, "Main - _TC"),
-		)
+			)
+		else:
+			expected_gle = (
+				("Stock Received But Not Billed - _TC", 0, 10000, "Main - _TC"),
+				("Freight and Forwarding Charges - _TC", 0, 2000, "Main - _TC"),
+				("Expenses Included In Valuation - _TC", 0, 2000, "Main - _TC"),
+				(warehouse_account[pr.items[0].warehouse]["account"], 14000, 0, "Main - _TC"),
+			)
 		self.assertSequenceEqual(expected_gle, gl_entries)
 		frappe.local.enable_perpetual_inventory["_Test Company"] = old_perpetual_inventory
 
