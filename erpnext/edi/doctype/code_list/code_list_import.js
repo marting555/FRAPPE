@@ -20,7 +20,8 @@ erpnext.edi.import_genericode = function (listview_or_form) {
 };
 
 function show_column_selection_dialog(context) {
-	let title_description = __("If source has no separate title column: use code column as title.");
+	let title_description = __("If there is no title column, use the code column for the title.");
+	let default_title = get_default(context.columns, ["name", "Name", "code-name", "scheme-name"]);
 	let fields = [
 		{
 			fieldtype: "HTML",
@@ -48,8 +49,8 @@ function show_column_selection_dialog(context) {
 			fieldtype: "Select",
 			reqd: 1,
 			options: context.columns,
-			default: context.columns.includes("name") ? "name" : null,
-			description: context.columns.includes("name") ? null : title_description,
+			default: default_title,
+			description: default_title ? null : title_description,
 		},
 		{
 			fieldname: "code_column",
@@ -57,11 +58,7 @@ function show_column_selection_dialog(context) {
 			fieldtype: "Select",
 			options: context.columns,
 			reqd: 1,
-			default: context.columns.includes("code")
-				? "code"
-				: context.columns.includes("value")
-				? "value"
-				: null,
+			default: get_default(context.columns, ["code", "Code", "value"]),
 		},
 		{
 			fieldname: "filters_column",
@@ -76,7 +73,13 @@ function show_column_selection_dialog(context) {
 			label: __("as Description"),
 			fieldtype: "Select",
 			options: [null].concat(context.columns),
-			default: context.columns.includes("description") ? "description" : null,
+			default: get_default(context.columns, [
+				"description",
+				"Description",
+				"remark",
+				__("description"),
+				__("Description"),
+			]),
 		});
 	}
 
@@ -150,6 +153,13 @@ function show_column_selection_dialog(context) {
 
 	d.show();
 	update_preview(d, context);
+}
+
+/**
+ * Return the first key from the keys array that is found in the columns array.
+ */
+function get_default(columns, keys) {
+	return keys.find((key) => columns.includes(key));
 }
 
 function update_preview(dialog, context) {
