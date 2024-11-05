@@ -152,6 +152,8 @@
   "billing_address_display",
   "terms_tab",
   "payment_schedule_section",
+  "payment_term",
+  "payment_discount_terms",
   "payment_terms_template",
   "ignore_default_payment_terms_template",
   "payment_schedule",
@@ -1624,13 +1626,24 @@
    "fieldname": "update_outstanding_for_self",
    "fieldtype": "Check",
    "label": "Update Outstanding for Self"
+  },
+  {
+   "fieldname": "payment_term",
+   "fieldtype": "Link",
+   "label": "Payment Term",
+   "options": "Payment Term"
+  },
+  {
+   "fieldname": "payment_discount_terms",
+   "fieldtype": "Table",
+   "options": "Discount Terms"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 204,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-07-25 19:42:36.931278",
+ "modified": "2024-11-05 16:09:42.417227",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice",
