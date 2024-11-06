@@ -100,13 +100,16 @@
             <Nome>{{ doc.customer_data.first_name }}</Nome>
             <Cognome>{{ doc.customer_data.last_name }}</Cognome>
           </Anagrafica>
-        {%- else %}
+        {%- else %}         
           <IdFiscaleIVA>
             <IdPaese>{{ doc.customer_address_data.country_code }}</IdPaese>
             <IdCodice>{{ doc.tax_id | replace("IT","") }}</IdCodice>
           </IdFiscaleIVA>
-          {%- if doc.customer_data.fiscal_code %}
-          <CodiceFiscale>{{ doc.customer_data.fiscal_code }}</CodiceFiscale>
+            {%- if doc.customer_address_data.fiscal_code %}
+              <CodiceFiscale>{{ doc.customer_address_data.fiscal_code }}</CodiceFiscale>
+            {%- else %}
+              <CodiceFiscale>{{ doc.customer_data.fiscal_code }}</CodiceFiscale>
+            {%- endif %}
           {%- endif %}
           <Anagrafica>
             <Denominazione>{{ doc.customer_name }}</Denominazione>
