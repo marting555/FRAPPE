@@ -2229,7 +2229,7 @@ def get_reference_details(
 def get_payment_entry(
 	dt,
 	dn,
-	amount_to_be_paid = 0,
+	amount_to_be_paid = None,
 	party_amount=None,
 	bank_account=None,
 	bank_amount=None,
@@ -2245,6 +2245,8 @@ def get_payment_entry(
 	if not party_type:
 		party_type = set_party_type(dt)
 
+	if amount_to_be_paid and float(amount_to_be_paid) < 1:
+		frappe.throw("Invalid Amount")
 
 	party_account = set_party_account(dt, dn, doc, party_type)
 	party_account_currency = set_party_account_currency(dt, party_account, doc)
