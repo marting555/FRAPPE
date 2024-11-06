@@ -234,7 +234,7 @@ function showConfirmationDialog(frm, quotations) {
 			{
                 fieldtype: 'HTML',
                 options: `
-					<p>Are you sure you want to proceed? The following quotations will not be included in the invoice</p>
+					<p>Are you sure you want to proceed? The quotations listed will not be included in the invoice</p>
                 `
             }
         ],
