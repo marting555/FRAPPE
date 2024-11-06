@@ -74,7 +74,7 @@
   }
  ],
  "links": [],
- "modified": "2024-11-06 07:44:44.171196",
+ "modified": "2024-11-06 07:46:17.175687",
  "modified_by": "Administrator",
  "module": "EDI",
  "name": "Common Code",
@@ -94,6 +94,7 @@
    "write": 1
   }
  ],
+ "search_fields": "common_code,description",
  "show_title_field_in_link": 1,
  "sort_field": "creation",
  "sort_order": "DESC",
