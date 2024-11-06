@@ -2229,7 +2229,7 @@ def get_reference_details(
 def get_payment_entry(
 	dt,
 	dn,
-	amount_to_be_paid = None,
+	amount_to_be_paid = 0,
 	party_amount=None,
 	bank_account=None,
 	bank_amount=None,
