@@ -417,6 +417,21 @@ def make_custom_fields(update=True):
 				insert_after="tax_id",
 				print_hide=1,
 			),
+			dict(
+				fieldname="recipient_code",
+				label="Recipient Code",
+				fieldtype="Data",
+				insert_after="fiscal_code",
+				print_hide=1,
+				default="0000000",
+			),
+			dict(
+				fieldname="pec",
+				label="Recipient PEC",
+				fieldtype="Data",
+				insert_after="recipient_code",
+				print_hide=1,
+			),
 		],
 		"Purchase Invoice": [
 			dict(
