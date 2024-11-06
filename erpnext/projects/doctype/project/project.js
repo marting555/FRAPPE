@@ -196,8 +196,64 @@ frappe.ui.form.on("Project", {
 			});
 		});
 	},
+	status: async function(frm) {
+        let new_value = frm.doc.status;
 
+		if(new_value !== "Quality check approved") return 
+
+		const quotations = await frappe.db.get_list("Quotation", {
+			filters: [
+				['project_name', '=', frm.docname],
+				['status', "!=", "Approved"]
+			],
+			fields: ["name", "status"]
+		})
+
+		if(!quotations?.length) return
+
+		showConfirmationDialog(frm, quotations)
+	}
 });
+
+function showConfirmationDialog(frm, quotations) {
+    const dialog = new frappe.ui.Dialog({
+        title: 'Confirm',
+        fields: [
+			{
+                fieldtype: 'HTML',
+                options: `<p>Client <a href="/app/customer/${frm.doc.customer}"><strong>${frm.doc.customer}</strong></a> with project <strong>${frm.docname}</strong> has the following quotation pending approval:</p> `
+            },
+            {
+                fieldtype: 'HTML',
+                options: `
+					<ul>
+                    ${quotations.map(quotation => `<li><strong>Quotation:</strong> <a href="/app/quotation/${quotation.name}" target="__blank">${quotation.name}</a>, <strong>Status:</strong> ${quotation.status}.</li>\n`)}
+					</ul> 
+                `
+            },
+			{
+                fieldtype: 'HTML',
+                options: `
+					<p>Are you sure you want to proceed? The quotations listed will not be included in the invoice</p>
+                `
+            }
+        ],
+        primary_action_label: 'Confirm',
+        primary_action: function() {
+            dialog.hide();
+        },
+		secondary_action_label: 'Cancel',
+        secondary_action: function() {
+            frm.undo_manager.undo();
+            dialog.hide();
+        }
+    });
+
+	dialog.$wrapper.find('.modal-header .modal-actions').hide();
+	dialog.$wrapper.modal({ backdrop: 'static', keyboard: false })
+
+    dialog.show();
+}
 
 let instaling = false;
 async function installChat(frm) {
