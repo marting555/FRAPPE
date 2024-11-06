@@ -402,6 +402,21 @@ def make_custom_fields(update=True):
 				insert_after="state",
 				print_hide=1,
 			),
+			dict(
+				fieldname="destination_code",
+				label="Destination Code",
+				fieldtype="Data",
+				insert_after="company",
+				print_hide=1,
+				read_only=1,
+			),
+			dict(
+				fieldname="fiscal_code",
+				label="Fiscal Code",
+				fieldtype="Data",
+				insert_after="tax_id",
+				print_hide=1,
+			),
 		],
 		"Purchase Invoice": [
 			dict(
