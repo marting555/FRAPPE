@@ -312,6 +312,10 @@ period_closing_doctypes = [
 	"Stock Reconciliation",
 	"Subcontracting Receipt",
 ]
+# 
+
+# apps/erpnext/erpnext/accounts/doctype/zero_budget/zero_budget.py
+
 
 doc_events = {
 	"*": {
@@ -323,6 +327,24 @@ doc_events = {
 		
 		],
 	},
+	"Project": {
+        "on_update": "erpnext.public.is_wbs.on_update",
+	},
+	
+    "Material Request": {
+        "on_submit": "erpnext.public.material_request.on_submit",
+		"before_submit" : "erpnext.public.material_request.before_submit"
+    },
+	"Purchase Order": {
+        "on_submit": "erpnext.public.purchase_order.on_submit",
+    },
+	"Purchase Invoice": {
+        "on_submit": "erpnext.public.purchase_invoice.on_submit",
+    },
+
+
+
+
 	tuple(period_closing_doctypes): {
 		"validate": "erpnext.accounts.doctype.accounting_period.accounting_period.validate_accounting_period_on_doc_save",
 	},
@@ -650,3 +672,8 @@ fields_for_group_similar_items = ["qty", "amount"]
 
 after_migrate = "erpnext.accounts.install.after_migrate"
 
+# doc_events = {
+#     "Project": {
+#         "after_save": "erpnext.public.is_wbs.after_save"
+#     }
+# }

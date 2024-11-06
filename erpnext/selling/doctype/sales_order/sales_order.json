@@ -163,7 +163,8 @@
   "inter_company_order_reference",
   "campaign",
   "party_account_currency",
-  "connections_tab"
+  "connections_tab",
+  "gl_closing"
  ],
  "fields": [
   {
@@ -1640,13 +1641,19 @@
    "no_copy": 1,
    "print_hide": 1,
    "report_hide": 1
+  },
+  {
+   "fieldname": "gl_closing",
+   "fieldtype": "Link",
+   "label": "GL Closing",
+   "options": "GL Closing"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-05-23 16:35:54.905804",
+ "modified": "2024-10-24 10:55:37.587048",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
