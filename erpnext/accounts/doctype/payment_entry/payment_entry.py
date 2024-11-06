@@ -2245,8 +2245,6 @@ def get_payment_entry(
 	if not party_type:
 		party_type = set_party_type(dt)
 
-	if float(amount_to_be_paid) < 1:
-		frappe.throw("Invalid Amount")
 
 	party_account = set_party_account(dt, dn, doc, party_type)
 	party_account_currency = set_party_account_currency(dt, party_account, doc)
