@@ -6,6 +6,8 @@
  "engine": "InnoDB",
  "field_order": [
   "product_bundle_template_name",
+  "category",
+  "description",
   "product_bundle_template_items"
  ],
  "fields": [
@@ -24,11 +26,21 @@
    "label": "Items",
    "options": "Product Bundle Template Item",
    "reqd": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Data",
+   "label": "Category"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "label": "Description"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-10-21 18:47:31.606499",
+ "modified": "2024-11-06 19:16:27.391947",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Product Bundle Template",
