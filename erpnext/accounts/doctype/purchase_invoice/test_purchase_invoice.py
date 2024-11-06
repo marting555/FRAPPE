@@ -179,7 +179,6 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 	def test_purchase_invoice_for_blocked_supplier(self):
 		supplier = frappe.get_doc("Supplier", "_Test Supplier")
 		supplier.on_hold = 1
-		supplier.hold_type='Invoices'
 		supplier.save()
 
 		self.assertRaises(frappe.ValidationError, make_purchase_invoice)
