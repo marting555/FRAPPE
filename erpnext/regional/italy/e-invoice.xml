@@ -51,7 +51,11 @@
       </IdTrasmittente>
       <ProgressivoInvio>{{ doc.progressive_number }}</ProgressivoInvio>
       <FormatoTrasmissione>{{ doc.transmission_format_code }}</FormatoTrasmissione>
+      {%- if doc.customer_address_data.recipient_code %}
+      <CodiceDestinatario>{{ doc.customer_address_data.recipient_code }}</CodiceDestinatario>
+      {%- else %}
       <CodiceDestinatario>{{ doc.customer_data.recipient_code }}</CodiceDestinatario>
+      {%- endif %}
       {% if doc.company_data.phone or doc.company_data.email -%}
       <ContattiTrasmittente>
         {% if doc.company_data.phone -%}<Telefono>{{ doc.company_data.phone }}</Telefono>{%- endif %}
