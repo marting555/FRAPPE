@@ -1104,23 +1104,32 @@ class PaymentEntry(AccountsController):
 
 	def set_unallocated_amount(self):
 		self.unallocated_amount = 0
-		if self.party:
-			total_deductions = sum(flt(d.amount) for d in self.get("deductions"))
-			included_taxes = self.get_included_taxes()
-			if self.payment_type == "Receive" and self.base_total_allocated_amount < (
-				self.base_paid_amount + total_deductions
-			):
-				self.unallocated_amount = (
-					self.base_paid_amount + total_deductions - self.base_total_allocated_amount
-				) / self.source_exchange_rate
-				self.unallocated_amount -= included_taxes
-			elif self.payment_type == "Pay" and self.base_total_allocated_amount < (
-				self.base_received_amount - total_deductions
-			):
-				self.unallocated_amount = (
-					self.base_received_amount - total_deductions - self.base_total_allocated_amount
-				) / self.target_exchange_rate
-				self.unallocated_amount -= included_taxes
+		if not self.party:
+			return
+
+		deductions_to_consider = sum(
+			flt(d.amount) for d in self.get("deductions") if not d.is_exchange_gain_loss
+		)
+		included_taxes = self.get_included_taxes()
+
+		if self.payment_type == "Receive" and self.base_total_allocated_amount < (
+			self.base_paid_amount + deductions_to_consider
+		):
+			self.unallocated_amount = (
+				self.base_paid_amount
+				+ deductions_to_consider
+				- self.base_total_allocated_amount
+				- included_taxes
+			) / self.source_exchange_rate
+		elif self.payment_type == "Pay" and self.base_total_allocated_amount < (
+			self.base_received_amount - deductions_to_consider
+		):
+			self.unallocated_amount = (
+				self.base_received_amount
+				- deductions_to_consider
+				- self.base_total_allocated_amount
+				- included_taxes
+			) / self.target_exchange_rate
 
 	def set_difference_amount(self):
 		base_unallocated_amount = flt(self.unallocated_amount) * (
@@ -1148,11 +1157,13 @@ class PaymentEntry(AccountsController):
 	def get_included_taxes(self):
 		included_taxes = 0
 		for tax in self.get("taxes"):
-			if tax.included_in_paid_amount:
-				if tax.add_deduct_tax == "Add":
-					included_taxes += tax.base_tax_amount
-				else:
-					included_taxes -= tax.base_tax_amount
+			if not tax.included_in_paid_amount:
+				continue
+
+			if tax.add_deduct_tax == "Add":
+				included_taxes += tax.base_tax_amount
+			else:
+				included_taxes -= tax.base_tax_amount
 
 		return included_taxes
 

@@ -1109,35 +1109,34 @@ frappe.ui.form.on("Payment Entry", {
 	},
 
 	set_unallocated_amount: function (frm) {
-		var unallocated_amount = 0;
-		var total_deductions = frappe.utils.sum(
-			$.map(frm.doc.deductions || [], function (d) {
-				return flt(d.amount);
-			})
-		);
+		let unallocated_amount = 0;
+		let deductions_to_consider = 0;
 
-		// TODO: ignore exchange rate row in deductions
-		// TODO: get only inclusive taxes
+		for (const row of frm.doc.deductions || []) {
+			if (!row.is_exchange_gain_loss) deductions_to_consider += flt(row.amount);
+		}
+		const included_taxes = get_included_taxes(frm);
+
 		if (frm.doc.party) {
 			if (
 				frm.doc.payment_type == "Receive" &&
-				frm.doc.base_total_allocated_amount < frm.doc.base_paid_amount + total_deductions
+				frm.doc.base_total_allocated_amount < frm.doc.base_paid_amount + deductions_to_consider
 			) {
 				unallocated_amount =
 					(frm.doc.base_paid_amount +
-						total_deductions -
+						deductions_to_consider -
 						frm.doc.base_total_allocated_amount -
-						flt(frm.doc.base_total_taxes_and_charges)) /
+						included_taxes) /
 					frm.doc.source_exchange_rate;
 			} else if (
 				frm.doc.payment_type == "Pay" &&
-				frm.doc.base_total_allocated_amount < frm.doc.base_received_amount - total_deductions
+				frm.doc.base_total_allocated_amount < frm.doc.base_received_amount - deductions_to_consider
 			) {
 				unallocated_amount =
 					(frm.doc.base_received_amount -
-						total_deductions -
+						deductions_to_consider -
 						frm.doc.base_total_allocated_amount -
-						flt(frm.doc.base_total_taxes_and_charges)) /
+						included_taxes) /
 					frm.doc.target_exchange_rate;
 			}
 		}
@@ -1775,3 +1774,18 @@ frappe.ui.form.on("Payment Entry Deduction", {
 		frm.events.set_unallocated_amount(frm);
 	},
 });
+
+function get_included_taxes(frm) {
+	let included_taxes = 0;
+	for (const tax of frm.doc.taxes) {
+		if (!tax.included_in_paid_amount) continue;
+
+		if (tax.add_deduct_tax == "Add") {
+			included_taxes += tax.base_tax_amount;
+		} else {
+			included_taxes -= tax.base_tax_amount;
+		}
+	}
+
+	return included_taxes;
+}
