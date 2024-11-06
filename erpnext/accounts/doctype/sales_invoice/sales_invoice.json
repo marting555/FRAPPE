@@ -163,6 +163,8 @@
   "company_address_display",
   "terms_tab",
   "payment_schedule_section",
+  "payment_term",
+  "payment_discount_terms",
   "ignore_default_payment_terms_template",
   "payment_terms_template",
   "payment_schedule",
@@ -2075,6 +2077,18 @@
    "label": "Update Outstanding for Self",
    "no_copy": 1,
    "print_hide": 1
+  },
+  {
+   "fieldname": "payment_term",
+   "fieldtype": "Link",
+   "label": "Payment Term",
+   "options": "Payment Term"
+  },
+  {
+   "fieldname": "payment_discount_terms",
+   "fieldtype": "Table",
+   "label": "Payment Discount Terms",
+   "options": "Discount Terms"
   }
  ],
  "icon": "fa fa-file-text",
@@ -2087,7 +2101,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2024-10-24 15:22:46.774215",
+ "modified": "2024-10-31 13:07:06.470425",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

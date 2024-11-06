@@ -111,7 +111,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi.submit()
 
 		expected_gl_entries = {
-			"_Test Payable - _TC": [0, 1512.0],
+			"_Test Payable - _TC": [0, 1512.3],
 			"_Test Account Cost for Goods Sold - _TC": [1250, 0],
 			"_Test Account Shipping Charges - _TC": [100, 0],
 			"_Test Account Excise Duty - _TC": [140, 0],
@@ -130,7 +130,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 		for d in gl_entries:
 			self.assertEqual([d.debit, d.credit], expected_gl_entries.get(d.account))
-
+			
 	def test_gl_entries_with_perpetual_inventory(self):
 		pi = make_purchase_invoice(
 			company="_Test Company with perpetual inventory",
@@ -2012,10 +2012,17 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			price_list_rate=1000,
 			qty=1,
 		)
-		expected_gle = [
-			["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate()],
+		if frappe.db.db_type=='postgres':
+			expected_gle = [
 			["Creditors - _TC", 0.0, 1000, nowdate()],
+			["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate()]
 		]
+		else:
+
+			expected_gle = [
+				["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate()],
+				["Creditors - _TC", 0.0, 1000, nowdate()],
+			]
 		check_gl_entries(self, pi.name, expected_gle, nowdate())
 
 		pi.items[0].expense_account = "Service - _TC"

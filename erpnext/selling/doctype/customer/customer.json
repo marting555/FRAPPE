@@ -72,11 +72,6 @@
   "loyalty_program",
   "column_break_54",
   "loyalty_program_tier",
-  "sales_team_tab",
-  "sales_team_section",
-  "default_sales_partner",
-  "column_break_66",
-  "default_commission_rate",
   "settings_tab",
   "so_required",
   "dn_required",
@@ -411,28 +406,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "default_sales_partner",
-   "fieldtype": "Link",
-   "ignore_user_permissions": 1,
-   "label": "Sales Partner",
-   "oldfieldname": "default_sales_partner",
-   "oldfieldtype": "Link",
-   "options": "Sales Partner"
-  },
-  {
-   "fieldname": "default_commission_rate",
-   "fieldtype": "Float",
-   "label": "Commission Rate",
-   "oldfieldname": "default_commission_rate",
-   "oldfieldtype": "Currency"
-  },
-  {
-   "collapsible": 1,
-   "collapsible_depends_on": "sales_team",
-   "fieldname": "sales_team_section",
-   "fieldtype": "Section Break"
-  },
-  {
    "fieldname": "customer_pos_id",
    "fieldtype": "Data",
    "label": "Customer POS id",
@@ -487,19 +460,6 @@
    "fieldname": "settings_tab",
    "fieldtype": "Tab Break",
    "label": "Settings"
-  },
-  {
-   "collapsible": 1,
-   "collapsible_depends_on": "default_sales_partner",
-   "fieldname": "sales_team_tab",
-   "fieldtype": "Tab Break",
-   "label": "Sales Team",
-   "oldfieldtype": "Section Break",
-   "options": "fa fa-group"
-  },
-  {
-   "fieldname": "column_break_66",
-   "fieldtype": "Column Break"
   },
   {
    "fieldname": "column_break_21",
@@ -585,7 +545,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2024-10-24 14:58:09.280756",
+ "modified": "2024-10-31 15:48:48.554945",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
