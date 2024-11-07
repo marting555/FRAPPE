@@ -20,6 +20,7 @@ class CodeList(Document):
 		from frappe.types import DF
 
 		canonical_uri: DF.Data | None
+		default_common_code: DF.Link | None
 		description: DF.SmallText | None
 		publisher: DF.Data | None
 		publisher_id: DF.Data | None
@@ -33,6 +34,8 @@ class CodeList(Document):
 			self.__delete_linked_docs()
 
 	def __delete_linked_docs(self):
+		self.db_set("default_common_code", None)
+
 		linked_docs = frappe.get_all(
 			"Common Code",
 			filters={"code_list": self.name},
@@ -49,6 +52,14 @@ class CodeList(Document):
 	def get_docnames_for(self, doctype: str, code: str) -> tuple[str]:
 		"""Get the mapped docnames for a doctype and code"""
 		return get_docnames_for(self.name, doctype, code)
+
+	def get_default_code(self) -> str | None:
+		"""Get the default common code for this code list"""
+		return (
+			frappe.db.get_value("Common Code", self.default_common_code, "common_code")
+			if self.default_common_code
+			else None
+		)
 
 	def from_genericode(self, root: "Element"):
 		"""Extract Code List details from genericode XML"""
@@ -106,3 +117,9 @@ def get_docnames_for(code_list: str, doctype: str, code: str) -> tuple[str]:
 	).run()
 
 	return tuple(d[0] for d in docnames) if docnames else ()
+
+
+def get_default_code(code_list: str) -> str | None:
+	"""Return the default common code for a given code list"""
+	code_id = frappe.db.get_value("Code List", code_list, "default_common_code")
+	return frappe.db.get_value("Common Code", code_id, "common_code") if code_id else None

@@ -37,5 +37,13 @@ frappe.ui.form.on("Code List", {
 				}
 			);
 		};
+
+		frm.set_query("default_common_code", function (doc) {
+			return {
+				filters: {
+					code_list: doc.name,
+				},
+			};
+		});
 	},
 });

@@ -10,6 +10,7 @@
   "title",
   "canonical_uri",
   "url",
+  "default_common_code",
   "column_break_nkls",
   "version",
   "publisher",
@@ -66,6 +67,13 @@
    "fieldtype": "Data",
    "label": "URL",
    "options": "URL"
+  },
+  {
+   "description": "This value shall be used when no matching Common Code for a record is found.",
+   "fieldname": "default_common_code",
+   "fieldtype": "Link",
+   "label": "Default Common Code",
+   "options": "Common Code"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -75,7 +83,7 @@
    "link_fieldname": "code_list"
   }
  ],
- "modified": "2024-10-01 12:32:27.990888",
+ "modified": "2024-11-06 18:56:23.177120",
  "modified_by": "Administrator",
  "module": "EDI",
  "name": "Code List",
