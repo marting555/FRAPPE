@@ -779,6 +779,8 @@ class PurchaseInvoice(BuyingController):
 
 		self.process_common_party_accounting()
 
+		increment_actual_overall_budget(self)
+
 	def on_update_after_submit(self):
 		fields_to_check = [
 			"cash_bank_account",
@@ -1979,3 +1981,10 @@ def make_purchase_receipt(source_name, target_doc=None):
 	)
 
 	return doc
+
+def increment_actual_overall_budget(self):
+	total = self.grand_total
+	for budget in self.items:
+		doc = frappe.get_doc("Work Breakdown Structure",budget.work_breakdown_structure)
+		doc.actual_overall_budget += total
+		doc.save()

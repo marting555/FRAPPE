@@ -157,12 +157,16 @@ class MaterialRequest(BuyingController):
 			"Budget", {"applicable_on_material_request": 1, "docstatus": 1}
 		):
 			self.validate_budget()
+		#increment overall budget
+		increment_committed_overall_budget(self)
 
 	def before_save(self):
 		self.set_status(update=True)
 
 	def before_submit(self):
 		self.set_status(update=True)
+		# create new budgte entry
+		create_budget_entry(self)
 
 	def before_cancel(self):
 		# if MRQ is already closed, no point saving the document
@@ -813,3 +817,27 @@ def make_in_transit_stock_entry(source_name, in_transit_warehouse):
 		row.t_warehouse = in_transit_warehouse
 
 	return ste_doc
+
+
+def increment_committed_overall_budget(self):
+	total = self.custom_total
+	for budget in self.items:
+		doc = frappe.get_doc("Work Breakdown Structure",budget.work_breakdown_structure)
+		doc.committed_overall_budget += total
+		doc.save()
+
+def create_budget_entry(self):
+	data_from = frappe.new_doc("Budget Entry")
+	for budget in self.items:
+		data_from = frappe.new_doc("Budget Entry")
+		data_from.voucher_type = self.doctype
+		data_from.project = budget.project
+		data_from.company = self.company
+		data_from.posting_date = self.transaction_date
+		data_from.document_date = self.transaction_date
+		data_from.wbs = budget.work_breakdown_structure
+		data_from.wbs_name = budget.wbs_name
+		data_from.voucher_no = self.name
+		data_from.committed_overall_debit = self.custom_total
+		data_from.insert()
+
