@@ -9,7 +9,15 @@ app_license = "GNU General Public License (v3)"
 source_link = "https://github.com/frappe/erpnext"
 app_logo_url = "/assets/erpnext/images/erpnext-logo.svg"
 
-
+fixtures =[
+    {"dt":"Custom Field","filters":[
+        [
+            "module","=","Stock"
+		]
+	]
+        
+	}
+]
 add_to_apps_screen = [
 	{
 		"name": "erpnext",
@@ -331,16 +339,16 @@ doc_events = {
         "on_update": "erpnext.public.is_wbs.on_update",
 	},
 	
-    "Material Request": {
-        "on_submit": "erpnext.public.material_request.on_submit",
-		"before_submit" : "erpnext.public.material_request.before_submit"
-    },
-	"Purchase Order": {
-        "on_submit": "erpnext.public.purchase_order.on_submit",
-    },
-	"Purchase Invoice": {
-        "on_submit": "erpnext.public.purchase_invoice.on_submit",
-    },
+    # "Material Request": {
+    #     "on_submit": "erpnext.public.material_request.on_submit",
+	# 	"before_submit" : "erpnext.public.material_request.before_submit"
+    # },
+	# "Purchase Order": {
+    #     "on_submit": "erpnext.public.purchase_order.on_submit",
+    # },
+	# "Purchase Invoice": {
+    #     "on_submit": "erpnext.public.purchase_invoice.on_submit",
+    # },
 
 
 

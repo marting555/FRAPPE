@@ -483,6 +483,8 @@ class PurchaseOrder(BuyingController):
 
 		self.auto_create_subcontracting_order()
 
+		update_commited_and_actual_overall_budget(self)
+
 	def on_cancel(self):
 		self.ignore_linked_doctypes = (
 			"GL Entry",
@@ -933,3 +935,12 @@ def is_subcontracting_order_created(po_name) -> bool:
 		if frappe.db.exists("Subcontracting Order", {"purchase_order": po_name, "docstatus": ["=", 1]})
 		else False
 	)
+
+
+def update_commited_and_actual_overall_budget(self):
+    total = self.grand_total
+    for budget in self.items:
+        doc = frappe.get_doc("Work Breakdown Structure",budget.work_breakdown_structure)
+        doc.committed_overall_budget += total
+        doc.actual_overall_budget += total
+        doc.save()
