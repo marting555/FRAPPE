@@ -201,6 +201,8 @@ frappe.ui.form.on("Project", {
 
 		if(new_value !== "Quality check approved") return 
 
+		const incomplete_requirements = frm.doc.requirements.filter(requirement => !requirement.completed)
+
 		const quotations = await frappe.db.get_list("Quotation", {
 			filters: [
 				['project_name', '=', frm.docname],
@@ -209,35 +211,16 @@ frappe.ui.form.on("Project", {
 			fields: ["name", "status"]
 		})
 
-		if(!quotations?.length) return
+		if(!quotations?.length && !incomplete_requirements.length) return
 
-		showConfirmationDialog(frm, quotations)
+		showConfirmationDialog(frm, quotations, incomplete_requirements)
 	}
 });
 
-function showConfirmationDialog(frm, quotations) {
+function showConfirmationDialog(frm, quotations, incomplete_requirements) {
     const dialog = new frappe.ui.Dialog({
         title: 'Confirm',
-        fields: [
-			{
-                fieldtype: 'HTML',
-                options: `<p>Client <a href="/app/customer/${frm.doc.customer}"><strong>${frm.doc.customer}</strong></a> with project <strong>${frm.docname}</strong> has the following quotation pending approval:</p> `
-            },
-            {
-                fieldtype: 'HTML',
-                options: `
-					<ul>
-                    ${quotations.map(quotation => `<li><strong>Quotation:</strong> <a href="/app/quotation/${quotation.name}" target="__blank">${quotation.name}</a>, <strong>Status:</strong> ${quotation.status}.</li>\n`)}
-					</ul> 
-                `
-            },
-			{
-                fieldtype: 'HTML',
-                options: `
-					<p>Are you sure you want to proceed? The quotations listed will not be included in the invoice</p>
-                `
-            }
-        ],
+        fields: buildFields(frm, quotations, incomplete_requirements),
         primary_action_label: 'Confirm',
         primary_action: function() {
             dialog.hide();
@@ -253,6 +236,61 @@ function showConfirmationDialog(frm, quotations) {
 	dialog.$wrapper.modal({ backdrop: 'static', keyboard: false })
 
     dialog.show();
+}
+
+function buildFields(frm, quotations, incomplete_requirements){
+	const quotation_fields = [
+		{
+			fieldtype: 'HTML',
+			options: `<h3>Pending Quotations</h3> `
+		},
+		{
+			fieldtype: 'HTML',
+			options: `<p>Client <a href="/app/customer/${frm.doc.customer}"><strong>${frm.doc.customer}</strong></a> with project <strong>${frm.docname}</strong> has the following quotation pending approval:</p> `
+		},
+		{
+			fieldtype: 'HTML',
+			options: `
+				<ul style="border-bottom: 1px solid black;padding-bottom:1rem;">
+				${quotations.map(quotation => `<li><strong>Quotation:</strong> <a href="/app/quotation/${quotation.name}" target="__blank">${quotation.name}</a>, <strong>Status:</strong> ${quotation.status}.</li>\n`)}
+				</ul> 
+			`
+		}
+	]
+	const requirements_fields = [	
+		{
+			fieldtype: 'HTML',
+			options: `<h3>Incomplete Client Requirements</h3> `
+		},
+		{
+			fieldtype: 'HTML',
+			options: `
+				<ul>
+				${incomplete_requirements.map(item => `<li><strong>Requirement:</strong> ${item.requirement}</li>\n`)}
+				</ul> 
+			`
+		},
+	]
+	const question_field = {
+		fieldtype: 'HTML',
+		options: `
+			<p>Are you sure you want to proceed? ${quotations.length ? "The quotations listed will not be included in the invoice" : ""}</p>
+		`
+	}
+
+	let fields = []
+
+	if(quotations.length){
+		fields.push(...quotation_fields)
+	}
+
+	if(incomplete_requirements.length){
+		fields.push(...requirements_fields)
+	}
+
+	fields.push(question_field)
+
+	return fields
 }
 
 let instaling = false;
