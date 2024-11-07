@@ -8,13 +8,17 @@
  "engine": "InnoDB",
  "field_order": [
   "bound_doctype",
-  "status",
   "column_break_stvp",
   "is_standard",
   "module",
+  "section_break_wpws",
+  "inbound_column",
+  "api_endpoint",
+  "outound_column",
+  "status",
+  "condition",
   "section_break_rxld",
   "bindings_column",
-  "bound_code_lists",
   "bound_common_codes",
   "section_break_lvdn",
   "template",
@@ -38,11 +42,12 @@
    "options": "Jinja"
   },
   {
+   "description": "Only \"Staging\" & \"Production\" states will be operational.",
    "fieldname": "status",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Status",
-   "options": "Draft\nValidation\nProduction",
+   "options": "Draft\nStaging\nProduction\nObsolete",
    "reqd": 1
   },
   {
@@ -88,13 +93,6 @@
    "options": "XML"
   },
   {
-   "description": "They are available under their alias in the rendering and parsing context.",
-   "fieldname": "bound_code_lists",
-   "fieldtype": "Table",
-   "label": "Bound Code Lists",
-   "options": "Bound EDI Template Code Lists"
-  },
-  {
    "fieldname": "section_break_rxld",
    "fieldtype": "Section Break"
   },
@@ -104,21 +102,50 @@
    "label": "Bindings"
   },
   {
-   "description": "Each link to a bound document will be replaced by an instance of this common code in the rendering context.",
+   "description": "Each link to a bound document will be complemented by an instance of this common code under the given attribute name in the rendering context.",
    "fieldname": "bound_common_codes",
    "fieldtype": "Table",
    "label": "Bound Common Codes",
    "options": "Bound EDI Template Common Codes"
+  },
+  {
+   "depends_on": "is_standard",
+   "description": "The available context is: <code>{ doc: ..., status: ..., method: ...}</code>.<br><ul><li><code>status</code> refers to this template's status</li>\n<li><code>method</code> is the hook which triggered the evaluation, e.g. <code>\"on_submit\"</code></li>\n</ul>",
+   "fieldname": "condition",
+   "fieldtype": "Code",
+   "label": "Condition",
+   "max_height": "100px",
+   "options": "Python"
+  },
+  {
+   "fieldname": "section_break_wpws",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "inbound_column",
+   "fieldtype": "Column Break",
+   "label": "Inbound"
+  },
+  {
+   "fieldname": "outound_column",
+   "fieldtype": "Column Break",
+   "label": "Outound"
+  },
+  {
+   "fieldname": "api_endpoint",
+   "fieldtype": "Link",
+   "label": "API Endpoint",
+   "link_filters": "[[\"Server Script\", \"script_type\", \"=\", \"API\"]]",
+   "options": "Server Script"
   }
  ],
- "index_web_pages_for_search": 1,
  "links": [
   {
    "link_doctype": "EDI Log",
    "link_fieldname": "edi"
   }
  ],
- "modified": "2024-10-02 15:41:46.771215",
+ "modified": "2024-11-05 18:27:41.392538",
  "modified_by": "Administrator",
  "module": "EDI",
  "name": "EDI Template",
@@ -147,11 +174,15 @@
   },
   {
    "color": "Pink",
-   "title": "Validation"
+   "title": "Staging"
   },
   {
    "color": "Blue",
    "title": "Production"
+  },
+  {
+   "color": "Gray",
+   "title": "Obsolete"
   }
  ],
  "track_changes": 1

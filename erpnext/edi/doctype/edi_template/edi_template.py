@@ -4,216 +4,21 @@
 import os
 
 import frappe
-from frappe.model.document import Document
+from frappe.model.document import Document, DocumentProxy
 from frappe.modules.utils import export_module_json, get_doc_module
-from lxml import etree
+from lxml import etree, objectify
 
 from erpnext.edi.doctype.edi_log.edi_log import EDILog
-
-SNIPPETS = dict()
-
-SNIPPETS[("context", "get_context")] = """
-import frappe
-from erpnext.edi.edi_template.edi_template import EDITemplate
-
-def get_context(self: EDITemplate, doc: "Document") -> None:
-	return {"doc": doc}
-"""
-
-SNIPPETS[("sign", "sign")] = """
-import frappe
-from lxml import etree
-from signxml import DigestAlgorithm
-from signxml.xades import (
-	XAdESSignaturePolicy,
-	XAdESSigner,
-)
-
-from frappe.model import Document
-
-from erpnext.edi.edi_template.edi_template import EDITemplate
-
-
-SIGNATURE_POLICY = XAdESSignaturePolicy(
-	DigestMethod=DigestAlgorithm.SHA256,
-	...
-)
-
-
-
-def sign(self: EDITemplate, render: str, doc: Document) -> str:
-	key_file_doc = frappe.get_doc("File", {"file_url": self.keyfile})
-	cert_file_doc = frappe.get_doc("File", {"file_url": self.certfile})
-
-	key_file_content = key_file_doc.get_content()
-	cert_file_content = cert_file_doc.get_content()
-
-	signer = XAdESSIgner(
-		signature_policy=SIGNATURE_POLICY,
-		...
-	)
-	return etree.tostring(
-		signer.sign(etree.XML(render)), key=key_file_content, cert=cert_file_content),
-		pretty_print=True,
-		xml_declaration=True,
-	).decode()
-
-"""
-
-SNIPPETS[("validate", "get_validation")] = """
-from lxml import etree
-
-import frappe
-from frappe import _
-
-from erpnext.edi.edi_template.edi_template import EDITemplate
-
-def get_validation(self: EDITemplate, render: str) -> None:
-
-	class MyExtElement(etree.XSLTExtension):
-		def execute(self, context, self_node, input_node, output_parent):
-			...
-
-	transform = etree.XSLT(self.validation, extensions={
-		("textns", "ext"): MyExtElement(),
-	})
-	result = transform(etree.XML(render))
-	if not True:
-		frappe.throw(_("I failed"))
-"""
-
-SNIPPETS[("parse", "get_parsed")] = """
-from lxml import etree
-from lxml import objectify
-
-import frappe
-from frappe import _
-
-from erpnext.edi.edi_template.edi_template import EDITemplate
-
-def get_parsed(self: EDITemplate, render: str) -> None:
-	schema = None
-	if self.schema:
-		schema = etree.XMLSchema(self.schema)
-	parser = objectify.makeparser(schema=schema)
-	try:
-		src = objectify.fromstring(render, parser)
-	except etree.XMLSytaxError:
-		frappe.throw(_("Invalid Schema"))
-
-	doc = frappe.new_doc(self.bound_doctype)
-	...
-	return doc
-"""
-
-SNIPPETS[("submit", "submit")] = """
-import xmlsec
-import zeep
-from lxml import etree
-from zeep.cache import Base
-from zeep.plugins import HistoryPlugin
-from zeep.transports import Transport
-from zeep.wsse import utils
-from zeep.wsse.signature import BinarySignature
-
-
-from frappe.model import Document
-
-from erpnext.edi.edi_template.edi_template import EDITemplate
-
-
-class FrappeCache(Base):
-	def __init__(self, timeout=3600):
-		self._timeout = timeout
-
-	def add(self, url, content):
-		frappe.cache().set_value(
-			key=f"edi|{url}",
-			val=content,
-			expires_in_sec=self._timeout
-		)
-
-	def get(self, url):
-		if cached_data := frappe.cache().get_value(f"edi|{url}"):
-			return cached_data
-		return None
-
-
-def submit(self: EDITemplate, render: str, doc: Document) -> None:
-	key_file_doc = frappe.get_doc("File", {"file_url": self.keyfile})
-	cert_file_doc = frappe.get_doc("File", {"file_url": self.certfile})
-
-	key_file = key_file_doc.get_full_path()
-	cert_file = cert_file_doc.get_full_path()
-
-	history = HistoryPlugin()
-	plugins = set(
-		...
-	)
-
-	client = Client(
-		self.submit_url,
-		transport=Transport(
-			cache=FrappeCache(),
-			...
-		),
-		wsse=BinarySignature(
-			key_file=key_file,
-			certfile=cert_file,
-			signature_method=xmlsec.Transform.RSA_SHA256,
-			digest_method=xmlsec.Transform.SHA256,
-		),
-		plugins=(*plugins, history),
-	)
-
-	response = client.service.DoSomething(
-		...
-	)
-
-	def is_ok(resp):
-		...
-
-	def needs_retry(resp):
-		...
-
-	def process(history):
-		return {
-			"request_header": history.last_sent["headers"],
-			"request": etree.tostring(history.last_sent["envelope"], encoding="unicode", pretty_print=True),
-			"response_header": history.last_received["headers"],
-			"response": etree.tostring(history.last_received["envelope"], encoding="unicode", pretty_print=True),
-		}
-
-	req = etree.tostring(history.last_sent, encoding="unicode", pretty_print=True)
-	resp = etree.tostring(history.last_received, encoding="unicode", pretty_print=True)
-
-	if is_ok(repsonse):
-		self.write_log(doc, status="Success", **process(history))
-		doc.db_set(
-			...
-		)
-		...
-	elif needs_retry(response):
-		self.write_log(doc, status="Queued", **process(history))
-	else:
-		self.write_log(doc, status="Error", **process(history))
-		doc.log_error("EDI submittion failed", frappe.utils.get_url_to_form(log.doctype, log.docname))
-		doc.db_set(
-			...
-		)
-		...
-"""
 
 
 def use_module_if_standard(func):
 	def wrapper(self, *args, **kwargs):
 		if self.is_standard:
-			module_name = "{app}.{module}.{doctype}.{name}".format(
-				app=frappe.local.module_app[frappe.scrub(self.module)],
-				doctype=frappe.scrub(self.boun_doctype),
-				module=frappe.scrub(self.module),
-				name=frappe.scrub(self.name),
-			)
+			app = frappe.local.module_app[frappe.scrub(self.module)]
+			doctype = frappe.scrub(self.doctype)
+			module = frappe.scrub(self.module)
+			name = frappe.scrub(self.name)
+			module_name = f"{app}.{module}.{doctype}.{name}"
 			module = frappe.get_module(module_name)
 			if hasattr(module, func.__name__):
 				module_func = getattr(module, func.__name__)
@@ -232,49 +37,87 @@ class EDITemplate(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		from erpnext.edi.doctype.bound_edi_template_code_lists.bound_edi_template_code_lists import (
-			BoundEDITemplateCodeLists,
-		)
 		from erpnext.edi.doctype.bound_edi_template_common_codes.bound_edi_template_common_codes import (
 			BoundEDITemplateCommonCodes,
 		)
 
-		bound_code_lists: DF.Table[BoundEDITemplateCodeLists]
+		api_endpoint: DF.Link | None
 		bound_common_codes: DF.Table[BoundEDITemplateCommonCodes]
 		bound_doctype: DF.Link
+		condition: DF.Code | None
 		is_standard: DF.Check
 		module: DF.Link | None
 		schema: DF.Code | None
-		status: DF.Literal["Draft", "Validation", "Production"]
+		status: DF.Literal["Draft", "Staging", "Production", "Obsolete"]
 		template: DF.Code | None
 		validation: DF.Code | None
 	# end: auto-generated types
 
-	@use_module_if_standard
-	def get_context(self, doc: Document) -> dict:
-		return {"doc": doc}
+	def get_edi_template_proxy_class(template):
+		class EDITemplateDocumentProxy(DocumentProxy):
+			def __init__(self, *args, **kwargs):
+				self._bound_common_codes = {
+					doctype: {
+						item.reference_name: item
+						for item in template.bound_common_codes
+						if item.reference_doctype == doctype
+					}
+					for doctype in set(item.reference_doctype for item in template.bound_common_codes)
+				}
+
+			def __getattr__(self, attr):
+				value = super().__getattr__(attr)
+				if isinstance(value, type(self)):
+					if bcc := self._bound_common_codes.get(value.doctype, {}).get(value.name):
+						value[bcc.attribute_name] = EDITemplateDocumentProxy("Common Code", bcc.common_code)
+						return value
+				if attr == "additional_data" and isinstance(value, str):
+					# Parse XML stored in additional_data
+					return objectify.fromstring(value)
+				return value
+
+		return EDITemplateDocumentProxy
+
+	def evaluate_condition(self, doc, method):
+		if not self.condition:
+			return True
+		try:
+			context = {"doc": doc, "method": method}  # limited context for perforance reasons
+			return frappe.safe_eval(self.condition, None, context)
+		except Exception as e:
+			self.log_error(f"Error evaluating condition: {e!s}")
+		return False
 
 	@use_module_if_standard
-	def get_validation(self, render: str) -> None:
+	def get_context(self, doc: Document, method: str) -> dict:
+		return {"doc": doc, "method": method}
+
+	@use_module_if_standard
+	def get_validation(self, data: str) -> None:
 		pass
 
 	@use_module_if_standard
-	def sign(self, render: str, doc: Document) -> str:
-		return render
+	def sign(self, data: str, doc: Document) -> str:
+		return data
 
-	def get_render(self, doc: Document) -> str:
-		context = self.get_context(doc)
-		render = frappe.render_template(self.template, context)
+	@use_module_if_standard
+	def attach(self, data: str, doc: Document) -> str:
+		pass
+
+	def get_render(self, doc: Document, method: str) -> str:
+		context = self.get_context(doc, method)
+		proxy_class = self.get_edi_template_proxy_class()
+		render = frappe.render_template(self.template, context=context, document_proxy_class=proxy_class)
 		signed = self.sign(render, doc)
 		self.get_validation(signed)
 		return signed
 
 	@use_module_if_standard
-	def get_parsed(self, render: str) -> Document | None:
+	def get_parsed(self, data: str) -> Document | None:
 		pass
 
 	@use_module_if_standard
-	def submit(self, render: str, doc: Document) -> None:
+	def submit(self, data: str, doc: Document) -> None:
 		pass
 
 	def write_log(
@@ -306,13 +149,57 @@ class EDITemplate(Document):
 		if not path:
 			return
 		path = os.path.dirname(path)
+		snippets_dir = os.path.join(os.path.dirname(__file__), "snippets")
 		if (init := os.path.join(path, "__init__.py")) and os.path.getsize(init) == 0:
 			with open(init, "w") as f:
-				for file, function in SNIPPETS.keys():
-					f.write(f"from .{file} import {function}\n")
+				f.write("# hooks used by this edi_template\n\n")
+				for snippet_file in os.listdir(snippets_dir):
+					if snippet_file.endswith(".py"):
+						module_name = os.path.splitext(snippet_file)[0]
+						f.write(f"from .{module_name} import *\n")
 
-		for (file, _function), content in SNIPPETS.items():
-			file_path = os.path.join(path, f"{file}.py")
-			if not os.path.exists(file_path):
-				with open(file_path, "w") as f:
-					f.write(content)
+		for snippet_file in os.listdir(snippets_dir):
+			if snippet_file.endswith(".py"):
+				source_path = os.path.join(snippets_dir, snippet_file)
+				dest_path = os.path.join(path, snippet_file)
+
+			if not os.path.exists(dest_path):
+				with open(source_path) as source, open(dest_path, "w") as dest:
+					dest.write(source.read())
+
+
+def _process(template, doc, method=None):
+	render = template.get_render(doc, method)
+	template.attach(render)
+	# template.submit(render)
+
+
+def process(doc, method=None):
+	"""
+	# hooks.py
+
+	Example:
+	        doc_events = {
+	            "Your Bound DocType": {
+	                "on_submit": "erpnext.edi.doctype.edi_template.edi_template.process"
+	            }
+	        }
+	"""
+	edi_templates = frappe.get_all(
+		"EDI Template",
+		filters={"bound_doctype": doc.doctype, "status": ["in", ["Staging", "Production"]]},
+		pluck="name",
+	)
+
+	for name in edi_templates:
+		template = frappe.get_doc("EDI Template", name)
+		if template.evaluate_condition(doc, method):
+			_process(template, doc, method)
+
+
+@frappe.whitelist()
+def manual_process(template: str, doc: str):
+	"""Development utility; invoked from buttons in bound_doctype.js"""
+	template = frappe.get_doc("EDI Template", template)
+	doc = frappe.get_doc(template.bound_doctype, doc)
+	_process(template, doc, "manual")

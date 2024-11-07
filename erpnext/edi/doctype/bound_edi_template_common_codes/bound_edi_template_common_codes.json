@@ -6,9 +6,10 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "common_code",
   "reference_doctype",
-  "reference_name"
+  "reference_name",
+  "attribute_name",
+  "common_code"
  ],
  "fields": [
   {
@@ -16,27 +17,37 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Common Code",
-   "options": "Common Code"
+   "options": "Common Code",
+   "reqd": 1
   },
   {
    "fieldname": "reference_doctype",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Reference Doctype",
-   "options": "DocType"
+   "options": "DocType",
+   "reqd": 1
   },
   {
    "fieldname": "reference_name",
    "fieldtype": "Dynamic Link",
    "in_list_view": 1,
    "label": "Reference Name",
-   "options": "reference_doctype"
+   "options": "reference_doctype",
+   "reqd": 1
+  },
+  {
+   "fieldname": "attribute_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Attribute Name",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-10-02 15:39:32.095646",
+ "modified": "2024-10-29 10:46:03.806399",
  "modified_by": "Administrator",
  "module": "EDI",
  "name": "Bound EDI Template Common Codes",

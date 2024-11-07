@@ -14,12 +14,13 @@ class BoundEDITemplateCommonCodes(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		common_code: DF.Link | None
+		attribute_name: DF.Data
+		common_code: DF.Link
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data
-		reference_doctype: DF.Link | None
-		reference_name: DF.DynamicLink | None
+		reference_doctype: DF.Link
+		reference_name: DF.DynamicLink
 	# end: auto-generated types
 
 	pass
