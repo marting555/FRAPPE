@@ -316,11 +316,6 @@ frappe.ui.form.on("Payment Entry", {
 			"write_off_difference_amount",
 			frm.doc.difference_amount && frm.doc.party && frm.doc.total_allocated_amount > party_amount
 		);
-
-		frm.toggle_display(
-			"set_exchange_gain_loss",
-			frm.doc.paid_amount && frm.doc.received_amount && frm.doc.difference_amount
-		);
 	},
 
 	set_dynamic_labels: function (frm) {
@@ -1233,12 +1228,39 @@ frappe.ui.form.on("Payment Entry", {
 		frm.events.set_deductions_entry(frm, "write_off_account");
 	},
 
-	set_exchange_gain_loss: function (frm) {
-		frm.events.set_deductions_entry(frm, "exchange_gain_loss_account");
+	base_paid_amount: function (frm) {
+		frm.trigger("set_exchange_gain_loss");
 	},
 
-	set_deductions_entry: function (frm, account) {
-		if (frm.doc.difference_amount) {
+	base_received_amount: function (frm) {
+		frm.trigger("set_exchange_gain_loss");
+	},
+
+	set_exchange_gain_loss: function (frm) {
+		if (!frm.doc.base_paid_amount || !frm.doc.base_received_amount) return;
+
+		const exchange_gain_loss =
+			frm.doc.payment_type == "Receive"
+				? frm.doc.base_paid_amount - frm.doc.base_received_amount
+				: frm.doc.base_received_amount - frm.doc.base_paid_amount;
+
+		if (!exchange_gain_loss) frm.events.delete_exchange_gain_loss_entry(frm);
+		frm.events.set_deductions_entry(frm, "exchange_gain_loss_account", exchange_gain_loss);
+	},
+
+	delete_exchange_gain_loss_entry: function (frm) {
+		const exchange_gain_loss_row = $.map(frm.doc["deductions"] || [], function (t) {
+			if (!t.is_exchange_gain_loss) return null;
+			t.amount = 0;
+			return t;
+		});
+
+		if (exchange_gain_loss_row.length) {
+			frm.get_field("deductions").grid.grid_rows[exchange_gain_loss_row[0].idx - 1].remove();
+		}
+	},
+	set_deductions_entry: function (frm, account, exchange_gain_loss) {
+		if (frm.doc.difference_amount || exchange_gain_loss) {
 			frappe.call({
 				method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_company_defaults",
 				args: {
@@ -1257,7 +1279,7 @@ frappe.ui.form.on("Payment Entry", {
 
 						const add_deductions = (details) => {
 							let row = null;
-							if (!write_off_row.length && difference_amount) {
+							if (!write_off_row.length && (difference_amount || exchange_gain_loss)) {
 								row = frm.add_child("deductions");
 								row.account = details[account];
 								row.cost_center = details["cost_center"];
@@ -1266,7 +1288,12 @@ frappe.ui.form.on("Payment Entry", {
 							}
 
 							if (row) {
-								row.amount = flt(row.amount) + difference_amount;
+								if (account == "exchange_gain_loss_account") {
+									row.amount = flt(exchange_gain_loss);
+									row.is_exchange_gain_loss = 1;
+								} else {
+									row.amount = flt(row.amount) + difference_amount;
+								}
 							} else {
 								frappe.msgprint(__("No gain or loss in the exchange rate"));
 							}
@@ -1766,6 +1793,13 @@ frappe.ui.form.on("Advance Taxes and Charges", {
 });
 
 frappe.ui.form.on("Payment Entry Deduction", {
+	before_deductions_remove: function (doc, cdt, cdn) {
+		const row = frappe.get_doc(cdt, cdn);
+		if (row.is_exchange_gain_loss && row.amount) {
+			frappe.throw(__("Cannot delete Exchange Gain/Loss row"));
+		}
+	},
+
 	amount: function (frm) {
 		frm.events.set_unallocated_amount(frm);
 	},
