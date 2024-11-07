@@ -4,6 +4,7 @@
 import frappe
 from frappe.model.document import Document
 from frappe.utils import now
+from frappe import _
 
 class WBSBudget(Document):
 	# begin: auto-generated types
@@ -36,92 +37,127 @@ class WBSBudget(Document):
 		monthly_distribution: DF.Link | None
 		project: DF.Link | None
 		to_date: DF.Date | None
+		total_amount: DF.Float
 		wbs: DF.Link | None
 		wbs_budget_items: DF.Table[WBSBudgetItems]
 	# end: auto-generated types
 
+	def validate(self):
+		if self.total_amount and self.available_budget:
+			if self.total_amount > self.available_budget:
+				frappe.throw(_("Total amount cannot exceed the Available Budget."))
+
 	def on_submit(self):
+		total_budget_amount = 0
 		for item in self.accounts:
-			budget_entry = frappe.new_doc("Budget Entry")
-			budget_entry.name = self.name
-			budget_entry.project = self.project
-			budget_entry.company = self.company
-			# budget_entry.posting_date = self.posting_date
-			# budget_entry.document_datbudget_amounte = self.document_date
+			total_budget_amount += item.budget_amount
+			create_child_wbs_budget(self, item)
+			create_parent_wbs_budget(self, item)
+			credit_to_child_wbs(self,item)
 
-			if item.child_wbs:
-				budget_entry.wbs = item.child_wbs
-
-			if item.budget_amount:
-				budget_entry.overall_credit = item.budget_amount
-
-			wbs = frappe.get_doc("Work Breakdown Structure",item.child_wbs)
-			if wbs.wbs_name:
-				budget_entry.wbs_name = wbs.wbs_name
-
-			if wbs.wbs_level:
-				budget_entry.wbs_level = wbs.wbs_level
-			
-			budget_entry.voucher_no = self.name
-			budget_entry.voucher_type = "WBS Budget"
-			budget_entry.voucher_submit_date = now()
-
-			budget_entry.insert()
-			budget_entry.submit()
-
-		update_wbs(self)
+		debit_from_parent_wbs(self,total_budget_amount)
 
 	def on_cancel(self):
 		self.flags.ignore_links = True
 		print("on cancel")
 
 	def before_cancel(self):
-		create_cancelled_budget_entries(self)		
+		total_budget_amount = 0
+		for item in self.accounts:
+			total_budget_amount += item.budget_amount
+			create_cancelled_child_budget_entries(self,item)
+			create_cancelled_parent_budget_entries(self,item)
+			debit_from_child_wbs(self,item)	
 
-def update_wbs(self):
-	for row in self.accounts:
-		wbs = frappe.get_doc("Work Breakdown Structure",row.child_wbs)
-		if row.budget_amount:
-			wbs.overall_budget += row.budget_amount
-		wbs.save()
+		credit_to_parent_wbs(self,total_budget_amount)
 
-def create_cancelled_budget_entries(self):
-	for item in self.accounts:
-		budget_entry = frappe.new_doc("Budget Entry")
-		budget_entry.name = self.name
-		budget_entry.project = self.project
-		budget_entry.company = self.company
-		# budget_entry.posting_date = self.posting_date
-		# budget_entry.document_datbudget_amounte = self.document_date
 
-		if item.child_wbs:
-			budget_entry.wbs = item.child_wbs
+def credit_to_child_wbs(self,item):
+	wbs = frappe.get_doc("Work Breakdown Structure",item.child_wbs)
+	if item.budget_amount:
+		wbs.overall_budget = wbs.overall_budget + item.budget_amount
+	wbs.save(ignore_permissions=True)
+	wbs.submit()  
 
-		if item.budget_amount:
-			budget_entry.overall_debit = item.budget_amount
+def debit_from_child_wbs(self,item):
+	wbs = frappe.get_doc("Work Breakdown Structure",item.child_wbs)
+	if item.budget_amount:
+		wbs.overall_budget = wbs.overall_budget - item.budget_amount
+	wbs.save(ignore_permissions=True)
+	wbs.submit()  
 
-		wbs = frappe.get_doc("Work Breakdown Structure",item.child_wbs)
-		if wbs.wbs_name:
-			budget_entry.wbs_name = wbs.wbs_name
+def create_cancelled_child_budget_entries(self,item):
+	budget_entry = frappe.new_doc("Budget Entry")
+	budget_entry.name = self.name
+	budget_entry.project = self.project
+	budget_entry.company = self.company
 
-		if wbs.wbs_level:
-			budget_entry.wbs_level = wbs.wbs_level
-		
-		budget_entry.voucher_no = self.name
-		budget_entry.voucher_type = "WBS Budget"
-		budget_entry.voucher_submit_date = now()
+	if item.child_wbs:
+		budget_entry.wbs = item.child_wbs
 
-		budget_entry.insert()
-		budget_entry.submit()
+	if item.budget_amount:
+		budget_entry.overall_debit = item.budget_amount
 
-	update_wbs_after_cancellation(self)
+	wbs = frappe.get_doc("Work Breakdown Structure",item.child_wbs)
+	if wbs.wbs_name:
+		budget_entry.wbs_name = wbs.wbs_name
 
-def update_wbs_after_cancellation(self):
-	for row in self.accounts:
-		wbs = frappe.get_doc("Work Breakdown Structure",row.child_wbs)
-		if row.budget_amount:
-			wbs.overall_budget -= row.budget_amount
-		wbs.save()
+	if wbs.wbs_level:
+		budget_entry.wbs_level = wbs.wbs_level
+	
+	budget_entry.voucher_no = self.name
+	budget_entry.voucher_type = "WBS Budget"
+	budget_entry.voucher_submit_date = now()
+
+	budget_entry.insert()
+	budget_entry.submit()
+
+# 	update_wbs_after_cancellation(self)
+
+# def update_wbs_after_cancellation(self):
+# 	for row in self.accounts:
+# 		wbs = frappe.get_doc("Work Breakdown Structure",row.child_wbs)
+# 		if row.budget_amount:
+# 			wbs.overall_budget -= row.budget_amount
+# 		wbs.save()
+
+def create_cancelled_parent_budget_entries(self,item):
+	budget_entry = frappe.new_doc("Budget Entry")
+	budget_entry.name = self.name
+	budget_entry.project = self.project
+	budget_entry.company = self.company
+
+	budget_entry.wbs = self.wbs
+
+	if item.budget_amount:
+		budget_entry.overall_credit = item.budget_amount
+
+	wbs = frappe.get_doc("Work Breakdown Structure",self.wbs)
+	if wbs.wbs_name:
+		budget_entry.wbs_name = wbs.wbs_name
+
+	if wbs.wbs_level:
+		budget_entry.wbs_level = wbs.wbs_level
+	
+	budget_entry.voucher_no = self.name
+	budget_entry.voucher_type = "WBS Budget"
+	budget_entry.voucher_submit_date = now()
+
+	budget_entry.insert()
+	budget_entry.submit()
+
+
+def debit_from_parent_wbs(self,total_budget_amount):
+	parent_wbs_account = frappe.get_doc("Work Breakdown Structure",self.wbs)
+	parent_wbs_account.overall_budget -= total_budget_amount
+	parent_wbs_account.save(ignore_permissions=True)
+	parent_wbs_account.submit()  
+
+def credit_to_parent_wbs(self,total_budget_amount):
+	parent_wbs_account = frappe.get_doc("Work Breakdown Structure",self.wbs)
+	parent_wbs_account.overall_budget += total_budget_amount
+	parent_wbs_account.save(ignore_permissions=True)
+	parent_wbs_account.submit()  
 
 @frappe.whitelist()
 def get_gl_accounts(wbs):
@@ -130,3 +166,55 @@ def get_gl_accounts(wbs):
 		fields=["name","gl_account"]
 	)
 	return child_wbs_records
+
+def create_child_wbs_budget(self, item):
+	budget_entry = frappe.new_doc("Budget Entry")
+	budget_entry.name = self.name
+	budget_entry.project = self.project
+	budget_entry.company = self.company
+
+	if item.child_wbs:
+		budget_entry.wbs = item.child_wbs
+
+	if item.budget_amount:
+		budget_entry.overall_credit = item.budget_amount
+
+	wbs = frappe.get_doc("Work Breakdown Structure",item.child_wbs)
+	if wbs.wbs_name:
+		budget_entry.wbs_name = wbs.wbs_name
+
+	if wbs.wbs_level:
+		budget_entry.wbs_level = wbs.wbs_level
+	
+	budget_entry.voucher_no = self.name
+	budget_entry.voucher_type = "WBS Budget"
+	budget_entry.voucher_submit_date = now()
+
+	budget_entry.insert()
+	budget_entry.submit()
+
+def create_parent_wbs_budget(self, item):
+	budget_entry = frappe.new_doc("Budget Entry")
+	budget_entry.name = self.name
+	budget_entry.project = self.project
+	budget_entry.company = self.company
+
+	if self.wbs:
+		budget_entry.wbs = self.wbs
+
+	if item.budget_amount:
+		budget_entry.overall_debit = item.budget_amount
+
+	wbs = frappe.get_doc("Work Breakdown Structure",self.wbs)
+	if wbs.wbs_name:
+		budget_entry.wbs_name = wbs.wbs_name
+
+	if wbs.wbs_level:
+		budget_entry.wbs_level = wbs.wbs_level
+	
+	budget_entry.voucher_no = self.name
+	budget_entry.voucher_type = "WBS Budget"
+	budget_entry.voucher_submit_date = now()
+
+	budget_entry.insert()
+	budget_entry.submit()

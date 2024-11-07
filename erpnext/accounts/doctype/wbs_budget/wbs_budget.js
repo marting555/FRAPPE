@@ -61,31 +61,12 @@ frappe.ui.form.on("WBS Budget", {
     wbs: function(frm) {
         frappe.db.get_value("Work Breakdown Structure",frm.doc.wbs, 'available_budget')
         .then(response => {
-                let available_budget = response.message.available_budget;
-                frm.set_value("available_budget",available_budget);
-                frm.refresh_field("available_budget");
-                console.log(response);
-            });
-        // Call the server method to get WBS data for the selected project
-    //     frappe.call({
-    //         method: "erpnext.accounts.doctype.zero_budget.zero_budget.work_breakdown_structure",
-    //         args: {
-    //             wbs: frm.doc.wbs
-    //         },
-    //         callback: function(r) {
-    //             if (r.message) {
-    //                 console.log(r.message,"Response")
-    //                 // frm.set_value("wbs_details", "");
-    //                 // let wbs_names = r.message.map(wbs => wbs.wbs).join(", ");
-
-    //                 // frm.set_value("wbs_details", wbs_names);
-    //             }
-    //         }
-    //     });
-    }
-    
-});
-frappe.ui.form.on("WBS Budget", {
+            let available_budget = response.message.available_budget;
+            frm.set_value("available_budget",available_budget);
+            frm.refresh_field("available_budget");
+            console.log(response);
+        });
+    },
     from_date: function(frm) {
         update_budget_items(frm);
     },
@@ -105,22 +86,34 @@ function update_budget_items(frm) {
         while (currentDate <= toDate) {
             const month = currentDate.toLocaleString('default', { month: 'long' });
             const year = currentDate.getFullYear();
-            
             budgetItems.push({ month: month, year: year });
-
-            // Move to the next month
             currentDate.setMonth(currentDate.getMonth() + 1);
         }
 
-        // Clear existing items and set the new ones
         frm.clear_table("wbs_budget_items");
         budgetItems.forEach(item => {
             const row = frm.add_child("wbs_budget_items");
             row.month = item.month;
             row.year = item.year;
         });
-
         frm.refresh_field("wbs_budget_items");
     }
 }
 
+frappe.ui.form.on("WBS Budget Items", {
+    amount: function(frm,cdt,cdn) {
+        calculate_total_amount(frm);
+    },
+    wbs_budget_items_remove: function(frm,cdt,cdn) {
+        calculate_total_amount(frm);
+    }
+});
+
+function calculate_total_amount(frm) {
+    let total_amount = 0;
+    frm.doc.wbs_budget_items.forEach(entry => {
+        total_amount += parseFloat(entry.amount) || 0;
+    });
+    frm.set_value("total_amount",total_amount);
+    frm.refresh_field("total_amount");
+}

@@ -21,6 +21,7 @@
   "from_date",
   "to_date",
   "wbs_budget_items",
+  "total_amount",
   "section_break_6",
   "applicable_on_material_request",
   "action_if_annual_budget_exceeded_on_mr",
@@ -241,6 +242,13 @@
    "fieldname": "available_budget",
    "fieldtype": "Currency",
    "label": "Available Budget"
+  },
+  {
+   "default": "0",
+   "fieldname": "total_amount",
+   "fieldtype": "Float",
+   "label": "Total Amount",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -248,10 +256,10 @@
  "links": [
   {
    "link_doctype": "Budget Entry",
-   "link_fieldname": "name"
+   "link_fieldname": "voucher_no"
   }
  ],
- "modified": "2024-11-06 16:31:28.609502",
+ "modified": "2024-11-07 18:33:50.595906",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "WBS Budget",
