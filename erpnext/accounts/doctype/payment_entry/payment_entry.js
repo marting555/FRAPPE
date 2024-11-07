@@ -1225,18 +1225,19 @@ frappe.ui.form.on("Payment Entry", {
 	},
 
 	write_off_difference_amount: function (frm) {
-		frm.events.set_deductions_entry(frm, "write_off_account");
+		frm.events.set_write_off_deduction_entry(frm, "write_off_account");
 	},
 
 	base_paid_amount: function (frm) {
-		frm.trigger("set_exchange_gain_loss");
+		frm.events.set_exchange_gain_loss_deduction_entry(frm);
 	},
 
 	base_received_amount: function (frm) {
-		frm.trigger("set_exchange_gain_loss");
+		frm.events.set_exchange_gain_loss_deduction_entry(frm);
 	},
 
-	set_exchange_gain_loss: function (frm) {
+	set_exchange_gain_loss_deduction_entry: async function (frm) {
+		await frappe.after_ajax();
 		if (!frm.doc.base_paid_amount || !frm.doc.base_received_amount) return;
 
 		const exchange_gain_loss =
@@ -1244,8 +1245,41 @@ frappe.ui.form.on("Payment Entry", {
 				? frm.doc.base_paid_amount - frm.doc.base_received_amount
 				: frm.doc.base_received_amount - frm.doc.base_paid_amount;
 
-		if (!exchange_gain_loss) frm.events.delete_exchange_gain_loss_entry(frm);
-		frm.events.set_deductions_entry(frm, "exchange_gain_loss_account", exchange_gain_loss);
+		if (!exchange_gain_loss) {
+			frm.events.delete_exchange_gain_loss_entry(frm);
+			return;
+		}
+
+		let exchange_gain_loss_row = $.map(frm.doc["deductions"] || [], function (t) {
+			if (!t.is_exchange_gain_loss) return null;
+			return t;
+		});
+
+		let row = null;
+		if (!exchange_gain_loss_row.length) {
+			const r = await get_company_defaults(frm.doc.company);
+			if (!r.message) return;
+
+			row = frm.add_child("deductions");
+			row.account = r.message["exchange_gain_loss_account"];
+			row.cost_center = r.message["cost_center"];
+			row.is_exchange_gain_loss = 1;
+		} else {
+			row = exchange_gain_loss_row[0];
+		}
+
+		row.amount = exchange_gain_loss;
+		if (!row.account) {
+			frappe.msgprint({
+				title: __("Missing Account"),
+				message: __("Please specify account for exchange gain or loss"),
+				indicator: "yellow",
+			});
+			frm.scroll_to_field("deductions");
+		}
+
+		refresh_field("deductions");
+		frm.events.set_unallocated_amount(frm);
 	},
 
 	delete_exchange_gain_loss_entry: function (frm) {
@@ -1259,75 +1293,62 @@ frappe.ui.form.on("Payment Entry", {
 			frm.get_field("deductions").grid.grid_rows[exchange_gain_loss_row[0].idx - 1].remove();
 		}
 	},
-	set_deductions_entry: function (frm, account, exchange_gain_loss) {
-		if (frm.doc.difference_amount || exchange_gain_loss) {
-			frappe.call({
-				method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_company_defaults",
-				args: {
-					company: frm.doc.company,
+
+	set_write_off_deduction_entry: async function (frm, account) {
+		if (!frm.doc.difference_amount) return;
+		await frappe.after_ajax();
+
+		const r = await get_company_defaults(frm.doc.company);
+		if (!r.message) return;
+
+		const write_off_row = $.map(frm.doc["deductions"] || [], function (t) {
+			return t.account == r.message[account] ? t : null;
+		});
+
+		const difference_amount = flt(frm.doc.difference_amount, precision("difference_amount"));
+
+		const add_deductions = (details) => {
+			let row = null;
+			if (!write_off_row.length && difference_amount) {
+				row = frm.add_child("deductions");
+				row.account = details[account];
+				row.cost_center = details["cost_center"];
+			} else {
+				row = write_off_row[0];
+			}
+
+			if (row) {
+				row.amount = flt(row.amount) + difference_amount;
+			} else {
+				frappe.msgprint(__("No gain or loss in the exchange rate"));
+			}
+			refresh_field("deductions");
+		};
+
+		if (!r.message[account]) {
+			frappe.prompt(
+				{
+					label: __("Please Specify Account"),
+					fieldname: account,
+					fieldtype: "Link",
+					options: "Account",
+					get_query: () => ({
+						filters: {
+							company: frm.doc.company,
+						},
+					}),
 				},
-				callback: function (r, rt) {
-					if (r.message) {
-						const write_off_row = $.map(frm.doc["deductions"] || [], function (t) {
-							return t.account == r.message[account] ? t : null;
-						});
-
-						const difference_amount = flt(
-							frm.doc.difference_amount,
-							precision("difference_amount")
-						);
-
-						const add_deductions = (details) => {
-							let row = null;
-							if (!write_off_row.length && (difference_amount || exchange_gain_loss)) {
-								row = frm.add_child("deductions");
-								row.account = details[account];
-								row.cost_center = details["cost_center"];
-							} else {
-								row = write_off_row[0];
-							}
-
-							if (row) {
-								if (account == "exchange_gain_loss_account") {
-									row.amount = flt(exchange_gain_loss);
-									row.is_exchange_gain_loss = 1;
-								} else {
-									row.amount = flt(row.amount) + difference_amount;
-								}
-							} else {
-								frappe.msgprint(__("No gain or loss in the exchange rate"));
-							}
-							refresh_field("deductions");
-						};
-
-						if (!r.message[account]) {
-							frappe.prompt(
-								{
-									label: __("Please Specify Account"),
-									fieldname: account,
-									fieldtype: "Link",
-									options: "Account",
-									get_query: () => ({
-										filters: {
-											company: frm.doc.company,
-										},
-									}),
-								},
-								(values) => {
-									const details = Object.assign({}, r.message, values);
-									add_deductions(details);
-								},
-								__(frappe.unscrub(account))
-							);
-						} else {
-							add_deductions(r.message);
-						}
-
-						frm.events.set_unallocated_amount(frm);
-					}
+				(values) => {
+					const details = Object.assign({}, r.message, values);
+					add_deductions(details);
 				},
-			});
+				__(frappe.unscrub(account))
+			);
+		} else {
+			add_deductions(r.message);
 		}
+
+		frm.events.set_unallocated_amount(frm);
 	},
 
 	bank_account: function (frm) {
@@ -1822,4 +1843,13 @@ function get_included_taxes(frm) {
 	}
 
 	return included_taxes;
+}
+
+function get_company_defaults(company) {
+	return frappe.call({
+		method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_company_defaults",
+		args: {
+			company: company,
+		},
+	});
 }
