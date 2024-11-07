@@ -171,11 +171,14 @@ class ExchangeRateRevaluation(Document):
 				accounts = [x[0] for x in res]
 
 			if accounts:
-				having_clause = (qb.Field("balance") != qb.Field("balance_in_account_currency")) & (
-					(qb.Field("balance_in_account_currency") != 0) | (qb.Field("balance") != 0)
+				gle = qb.DocType("GL Entry")
+				having_clause = (
+					(Sum(gle.debit) - Sum(gle.credit)) != (Sum(gle.debit_in_account_currency) - Sum(gle.credit_in_account_currency))
+				) & (
+					(Sum(gle.debit_in_account_currency) - Sum(gle.credit_in_account_currency) != 0) |
+					(Sum(gle.debit) - Sum(gle.credit) != 0)
 				)
 
-				gle = qb.DocType("GL Entry")
 
 				# conditions
 				conditions = []
@@ -195,21 +198,20 @@ class ExchangeRateRevaluation(Document):
 						gle.party_type,
 						gle.party,
 						gle.account_currency,
-						(Sum(gle.debit_in_account_currency) - Sum(gle.credit_in_account_currency)).as_(
-							"balance_in_account_currency"
-						),
+						(Sum(gle.debit_in_account_currency) - Sum(gle.credit_in_account_currency)).as_("balance_in_account_currency"),
 						(Sum(gle.debit) - Sum(gle.credit)).as_("balance"),
-						(Sum(gle.debit) - Sum(gle.credit) == 0)
-						^ (Sum(gle.debit_in_account_currency) - Sum(gle.credit_in_account_currency) == 0).as_(
-							"zero_balance"
-						),
+						(
+							((Sum(gle.debit) - Sum(gle.credit) == 0) & ~(Sum(gle.debit_in_account_currency) - Sum(gle.credit_in_account_currency) == 0)) |
+							(~(Sum(gle.debit) - Sum(gle.credit) == 0) & (Sum(gle.debit_in_account_currency) - Sum(gle.credit_in_account_currency) == 0))
+						).as_("zero_balance"),
 					)
 					.where(Criterion.all(conditions))
-					.groupby(gle.account, NullIf(gle.party_type, ""), NullIf(gle.party, ""))
+					.groupby(gle.account, gle.party_type, gle.party, gle.account_currency,)
 					.having(having_clause)
 					.orderby(gle.account)
 					.run(as_dict=True)
 				)
+
 
 				# round off balance based on currency precision
 				# and consider debit-credit difference allowance

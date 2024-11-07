@@ -5,7 +5,7 @@
 import frappe
 from frappe import qb
 from frappe.tests.utils import FrappeTestCase, change_settings
-from frappe.utils import add_days, flt, nowdate
+from frappe.utils import add_days, flt, nowdate, getdate
 
 from erpnext import get_default_cost_center
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
@@ -1845,6 +1845,177 @@ class TestPaymentReconciliation(FrappeTestCase):
 		self.assertEqual(len(pr.invoices), 1)
 		self.assertEqual(len(pr.payments), 1)
 
+	def test_pmt_recon_records_customer(self):
+		# create  payment reconciliation record for customer
+		doc = frappe.new_doc("Payment Reconciliation Record")
+		doc.company = self.company or "_Test Company"
+		doc.party_type = "Customer"
+		doc.party = self.customer or "_Test Customer"
+		doc.receivable_payable_account = get_party_account(doc.party_type, doc.party, doc.company)
+
+		# Create a new child entry for the allocation
+		allocation_entry = doc.append("allocation", {})
+		allocation_entry.reference_type = "Payment Entry"
+		allocation_entry.reference_name = create_payment_entry()
+		allocation_entry.invoice_type = "Sales Invoice"
+		allocation_entry.invoice_number = create_sales_invoice()
+		allocation_entry.allocated_amount = 1000
+		allocation_entry.difference_amount = 500
+		allocation_entry.difference_account = "Exchange Gain/Loss - _PR"
+		allocation_entry.exchange_rate = 1
+		allocation_entry.gain_loss_posting_date = getdate()
+		allocation_entry.cost_center = self.cost_center
+		doc.save(ignore_permissions=True)
+		doc.submit()
+
+		created_record = frappe.get_last_doc("Payment Reconciliation Record")
+
+		 # Assertions to ensure the record is created correctly
+		self.assertEqual(created_record.company, self.company or "_Test Company")
+		self.assertEqual(created_record.party_type, "Customer")
+		self.assertEqual(created_record.party, self.customer or "_Test Customer")
+		self.assertEqual(created_record.docstatus, 1)
+
+		# Verify the allocation data
+		self.assertEqual(len(created_record.allocation), 1)
+		allocation = created_record.allocation[0]
+		self.assertEqual(allocation.reference_type, "Payment Entry")
+		self.assertEqual(allocation.reference_name, allocation_entry.reference_name)
+		self.assertEqual(allocation.invoice_type, "Sales Invoice")
+		self.assertEqual(allocation.invoice_number, allocation_entry.invoice_number)
+		self.assertEqual(allocation.allocated_amount, 1000)
+		self.assertEqual(allocation.difference_amount, 500)
+		self.assertEqual(allocation.difference_account, "Exchange Gain/Loss - _PR")
+		self.assertEqual(allocation.exchange_rate, 1)
+		self.assertEqual(allocation.gain_loss_posting_date, getdate())
+		self.assertEqual(allocation.cost_center, self.cost_center)
+
+	def test_pmt_recon_records_supplier(self):
+		# create  payment reconciliation record for supplier
+		doc = frappe.new_doc("Payment Reconciliation Record")
+		doc.company = self.company or "_Test Company"
+		doc.party_type = "Supplier"
+		doc.party = make_supplier("_Test Supplier")
+		doc.receivable_payable_account = get_party_account(doc.party_type, doc.party, doc.company)
+
+		# Create a new child entry for the allocation
+		allocation_entry = doc.append("allocation", {})
+		allocation_entry.reference_type = "Payment Entry"
+		allocation_entry.reference_name = create_payment_entry()
+		allocation_entry.invoice_type = "Purchase Invoice"
+		allocation_entry.invoice_number = make_purchase_invoice()
+		allocation_entry.allocated_amount = 1000
+		allocation_entry.difference_amount = 500
+		allocation_entry.difference_account = "Exchange Gain/Loss - _PR"
+		allocation_entry.exchange_rate = 1
+		allocation_entry.gain_loss_posting_date = getdate()
+		allocation_entry.cost_center = self.cost_center
+		doc.save(ignore_permissions=True)
+		doc.submit()
+
+		created_record = frappe.get_last_doc("Payment Reconciliation Record")
+
+		# Assertions to ensure the record is created correctly
+		self.assertEqual(created_record.company, self.company or "_Test Company")
+		self.assertEqual(created_record.party_type, "Supplier")
+		self.assertEqual(created_record.party, doc.party)
+		self.assertEqual(created_record.docstatus, 1)
+
+		# Verify the allocation data
+		self.assertEqual(len(created_record.allocation), 1)
+		allocation = created_record.allocation[0]
+		self.assertEqual(allocation.reference_type, "Payment Entry")
+		self.assertEqual(allocation.reference_name, allocation_entry.reference_name)
+		self.assertEqual(allocation.invoice_type, "Purchase Invoice")
+		self.assertEqual(allocation.invoice_number, allocation_entry.invoice_number)
+		self.assertEqual(allocation.allocated_amount, 1000)
+		self.assertEqual(allocation.difference_amount, 500)
+		self.assertEqual(allocation.difference_account, "Exchange Gain/Loss - _PR")
+		self.assertEqual(allocation.exchange_rate, 1)
+		self.assertEqual(allocation.gain_loss_posting_date, getdate())
+		self.assertEqual(allocation.cost_center, self.cost_center)
+
+	def test_create_pay_rec_records_no_allocations_customer(self):
+		# Test creation of Payment Reconciliation Record when no allocations are provided for customer.
+		doc = frappe.new_doc("Payment Reconciliation Record")
+		doc.company = self.company or "_Test Company"
+		doc.party_type = "Customer"
+		doc.party = self.customer or "_Test Customer"
+		doc.receivable_payable_account = get_party_account(doc.party_type, doc.party, doc.company)
+		doc.save(ignore_permissions=True)
+		doc.submit()
+
+		created_record = frappe.get_last_doc("Payment Reconciliation Record")
+
+		self.assertEqual(created_record.company, self.company or "_Test Company")
+		self.assertEqual(created_record.party_type, "Customer")
+		self.assertEqual(created_record.party, self.customer or "_Test Customer")
+		self.assertEqual(created_record.docstatus, 1)
+		self.assertEqual(len(created_record.allocation), 0)
+
+	def test_pmt_recon_records_customer_muitiple_allocations(self):
+		# Test creation of Payment Reconciliation Record when multiple allocations are provided for customer.
+		doc = frappe.new_doc("Payment Reconciliation Record")
+		doc.company = self.company or "_Test Company"
+		doc.party_type = "Customer"
+		doc.party = self.customer or "_Test Customer"
+		doc.receivable_payable_account = get_party_account(doc.party_type, doc.party, doc.company)
+
+		# Add multiple allocations
+		allocations = [
+			{
+				"reference_type": "Payment Entry",
+				"reference_name": create_payment_entry(),
+				"invoice_type": "Sales Invoice",
+				"invoice_number": create_sales_invoice(),
+				"allocated_amount": 1000,
+				"difference_amount": 500,
+				"difference_account": "Exchange Gain/Loss - _PR",
+				"exchange_rate": 1,
+				"gain_loss_posting_date": getdate(),
+				"cost_center": self.cost_center
+			},
+			{
+				"reference_type": "Payment Entry",
+				"reference_name": create_payment_entry(),
+				"invoice_type": "Sales Invoice",
+				"invoice_number": create_sales_invoice(),
+				"allocated_amount": 2000,
+				"difference_amount": 300,
+				"difference_account": "Exchange Gain/Loss - _PR",
+				"exchange_rate": 1,
+				"gain_loss_posting_date": getdate(),
+				"cost_center": self.cost_center
+			}
+		]
+
+		for allocation_data in allocations:
+			allocation_entry = doc.append("allocation", {})
+			for key, value in allocation_data.items():
+				setattr(allocation_entry, key, value)
+
+		doc.save(ignore_permissions=True)
+		doc.submit()
+
+		created_record = frappe.get_last_doc("Payment Reconciliation Record")
+
+		# Assertions to ensure the record is created correctly
+		self.assertEqual(created_record.company, self.company or "_Test Company")
+		self.assertEqual(created_record.party_type, "Customer")
+		self.assertEqual(created_record.party, self.customer or "_Test Customer")
+		self.assertEqual(created_record.docstatus, 1)
+
+		# Verify the allocation data
+		self.assertEqual(len(created_record.allocation), 2)
+		for i, allocation in enumerate(created_record.allocation):
+			self.assertEqual(allocation.reference_type, allocations[i]["reference_type"])
+			self.assertEqual(allocation.invoice_type, allocations[i]["invoice_type"])
+			self.assertEqual(allocation.allocated_amount, allocations[i]["allocated_amount"])
+			self.assertEqual(allocation.difference_amount, allocations[i]["difference_amount"])
+			self.assertEqual(allocation.difference_account, allocations[i]["difference_account"])
+			self.assertEqual(allocation.exchange_rate, allocations[i]["exchange_rate"])
+			self.assertEqual(allocation.gain_loss_posting_date, allocations[i]["gain_loss_posting_date"])
+			self.assertEqual(allocation.cost_center, allocations[i]["cost_center"])
 
 def make_customer(customer_name, currency=None):
 	if not frappe.db.exists("Customer", customer_name):

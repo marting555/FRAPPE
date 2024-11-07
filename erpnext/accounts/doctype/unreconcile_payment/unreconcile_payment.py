@@ -63,7 +63,14 @@ class UnreconcilePayment(Document):
 				& (ple.voucher_no == self.voucher_no)
 				& (ple.voucher_no != ple.against_voucher_no)
 			)
-			.groupby(ple.against_voucher_type, ple.against_voucher_no)
+			.groupby(
+				ple.account, 
+				ple.party_type, 
+				ple.party, 
+				ple.against_voucher_type, 
+				ple.against_voucher_no, 
+				ple.account_currency
+			)
 			.run(as_dict=True)
 		)
 
@@ -87,7 +94,7 @@ class UnreconcilePayment(Document):
 			if doc.doctype in frappe.get_hooks("advance_payment_doctypes"):
 				doc.set_total_advance_paid()
 
-			frappe.db.set_value("Unreconcile Payment Entries", alloc.name, "unlinked", True)
+			frappe.db.set_value("Unreconcile Payment Entries", alloc.name, "unlinked", 1 if True else 0)
 
 
 @frappe.whitelist()

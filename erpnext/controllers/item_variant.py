@@ -199,27 +199,25 @@ def find_variant(template, args, variant_item_code=None):
 
 @frappe.whitelist()
 def create_variant(item, args, use_template_image=False):
-	use_template_image = frappe.parse_json(use_template_image)
-	if isinstance(args, str):
-		args = json.loads(args)
-
-	template = frappe.get_doc("Item", item)
-	variant = frappe.new_doc("Item")
-	variant.variant_based_on = "Item Attribute"
-	variant_attributes = []
-
-	for d in template.attributes:
-		variant_attributes.append({"attribute": d.attribute, "attribute_value": args.get(d.attribute)})
-
-	variant.set("attributes", variant_attributes)
-	copy_attributes_to_variant(template, variant)
-
-	if use_template_image and template.image:
-		variant.image = template.image
-
-	make_variant_item_code(template.item_code, template.item_name, variant)
-
-	return variant
+    use_template_image = frappe.parse_json(use_template_image)
+    if isinstance(args, str):
+        args = json.loads(args)
+    template = frappe.get_doc("Item", item)
+    variant = frappe.new_doc("Item")
+    variant.variant_based_on = "Item Attribute"
+    variant_attributes = []
+    for d in template.attributes:
+        # Cast numeric values to string to ensure compatibility with character varying type
+        attribute_value = args.get(d.attribute)
+        if isinstance(attribute_value, (int, float)):
+            attribute_value = str(attribute_value) 
+        variant_attributes.append({"attribute": d.attribute, "attribute_value": attribute_value})
+    variant.set("attributes", variant_attributes)
+    copy_attributes_to_variant(template, variant)
+    if use_template_image and template.image:
+        variant.image = template.image
+    make_variant_item_code(template.item_code, template.item_name, variant)    
+    return variant
 
 
 @frappe.whitelist()

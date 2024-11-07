@@ -9,7 +9,7 @@ import frappe
 from frappe import qb, scrub
 from frappe.desk.reportview import get_filters_cond, get_match_cond
 from frappe.query_builder import Criterion, CustomFunction
-from frappe.query_builder.functions import Concat, Locate, Sum
+from frappe.query_builder.functions import Concat, Locate, Sum, Cast
 from frappe.utils import nowdate, today, unique
 from pypika import Case, Order
 import erpnext
@@ -430,7 +430,13 @@ def get_batches_from_stock_ledger_entries(searchfields, txt, filters, start=0, p
 			& (batch_table.disabled == 0)
 			& (stock_ledger_entry.batch_no.isnotnull())
 		)
-		.groupby(stock_ledger_entry.batch_no, stock_ledger_entry.warehouse)
+		.groupby(
+			stock_ledger_entry.batch_no,
+			stock_ledger_entry.warehouse,
+			batch_table.manufacturing_date,
+			batch_table.expiry_date,
+			batch_table.name
+		)
 		.having(Sum(stock_ledger_entry.actual_qty) != 0)
 		.offset(start)
 		.limit(page_len)
@@ -481,7 +487,13 @@ def get_batches_from_serial_and_batch_bundle(searchfields, txt, filters, start=0
 			& (batch_table.disabled == 0)
 			& (stock_ledger_entry.serial_and_batch_bundle.isnotnull())
 		)
-		.groupby(bundle.batch_no, bundle.warehouse)
+		.groupby(
+			bundle.batch_no,
+			bundle.warehouse,
+			batch_table.manufacturing_date,
+			batch_table.expiry_date,
+			batch_table.name
+		)
 		.having(Sum(bundle.qty) != 0)
 		.offset(start)
 		.limit(page_len)
@@ -572,20 +584,25 @@ def get_income_account(doctype, txt, searchfield, start, page_len, filters):
 	doctype = "Account"
 	condition = ""
 	if filters.get("company"):
-		condition += "and tabAccount.company = %(company)s"
+		condition += " AND account.company = %(company)s"
 
-	condition += f"and tabAccount.disabled = {filters.get('disabled', 0)}"
+	condition += " AND account.disabled = %(disabled)s"
 
 	return frappe.db.sql(
-		f"""select tabAccount.name from `tabAccount`
-			where (tabAccount.report_type = "Profit and Loss"
-					or tabAccount.account_type in ("Income Account", "Temporary"))
-				and tabAccount.is_group=0
-				and tabAccount.`{searchfield}` LIKE %(txt)s
+		f"""SELECT account.name 
+			FROM tabAccount AS account
+			WHERE (account.report_type = 'Profit and Loss'
+					OR account.account_type IN ('Income Account', 'Temporary'))
+				AND account.is_group = 0
+				AND account.{searchfield} LIKE %(txt)s
 				{condition} {get_match_cond(doctype)}
-			order by idx desc, name""",
-		{"txt": "%" + txt + "%", "company": filters.get("company", "")},
-	)
+			ORDER BY account.idx DESC, account.name""",
+		{
+			"txt": "%" + txt + "%",
+			"company": filters.get("company", ""),
+			"disabled": filters.get("disabled", 0),
+		},
+)
 
 
 @frappe.whitelist()
@@ -647,24 +664,24 @@ def get_filtered_dimensions(doctype, txt, searchfield, start, page_len, filters,
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
 def get_expense_account(doctype, txt, searchfield, start, page_len, filters):
-	from erpnext.controllers.queries import get_match_cond
+    from erpnext.controllers.queries import get_match_cond
 
-	if not filters:
-		filters = {}
+    if not filters:
+        filters = {}
 
-	doctype = "Account"
-	condition = ""
-	if filters.get("company"):
-		condition += "and tabAccount.company = %(company)s"
+    condition = ""
+    if filters.get("company"):
+        condition += " AND account.company = %(company)s"
 
-	return frappe.db.sql(
-		f"""select tabAccount.name from `tabAccount`
-		where (tabAccount.report_type = "Profit and Loss"
-				or tabAccount.account_type in ("Expense Account", "Fixed Asset", "Temporary", "Asset Received But Not Billed", "Capital Work in Progress"))
-			and tabAccount.is_group=0
-			and tabAccount.docstatus!=2
-			and tabAccount.{searchfield} LIKE %(txt)s
-			{condition} {get_match_cond(doctype)}""",
+    return frappe.db.sql(
+		f"""SELECT account.name 
+			FROM tabAccount AS account
+			WHERE (account.report_type = 'Profit and Loss'
+					OR account.account_type IN ('Expense Account', 'Fixed Asset', 'Temporary', 'Asset Received But Not Billed', 'Capital Work in Progress'))
+				AND account.is_group = 0
+				AND account.docstatus != 2
+				AND account.{searchfield} LIKE %(txt)s
+				{condition} {get_match_cond('Account')}""",
 		{"company": filters.get("company", ""), "txt": "%" + txt + "%"},
 	)
 
@@ -877,7 +894,7 @@ def get_filtered_child_rows(doctype, txt, searchfield, start, page_len, filters)
 	if txt:
 		txt += "%"
 		query = query.where(
-			((table.idx.like(txt.replace("#", ""))) | (table.item_code.like(txt))) | (table.name.like(txt))
+			((Cast(table.idx, "text").like(txt.replace("#", ""))) | (table.item_code.like(txt))) | (table.name.like(txt))
 		)
 
 	return query.run(as_dict=False)

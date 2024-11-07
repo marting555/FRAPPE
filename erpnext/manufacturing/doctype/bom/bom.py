@@ -1041,13 +1041,9 @@ def get_valuation_rate(data):
 		.join(wh_table)
 		.on(bin_table.warehouse == wh_table.name)
 		.select(
-			Case()
-			.when(
-				Count(bin_table.name) > 0, IfNull(Sum(bin_table.stock_value) / Sum(bin_table.actual_qty), 0.0)
+			Sum(bin_table.stock_value).as_("stock_value"),
+			Sum(bin_table.actual_qty).as_("actual_qty")
 			)
-			.else_(None)
-			.as_("valuation_rate")
-		)
 		.where((bin_table.item_code == item_code) & (wh_table.company == company))
 	)
 
@@ -1056,10 +1052,14 @@ def get_valuation_rate(data):
 
 	item_valuation = item_valuation.run(as_dict=True)[0]
 
-	valuation_rate = item_valuation.get("valuation_rate")
+	stock_value = item_valuation.get("stock_value")
+	actual_qty = item_valuation.get("actual_qty")
+	if actual_qty and actual_qty > 0:
+		valuation_rate = flt(stock_value) / flt(actual_qty)
+	else:
+		valuation_rate = 0.0
 
-	if (valuation_rate is not None) and valuation_rate <= 0:
-		# Explicit null value check. If None, Bins don't exist, neither does SLE
+	if not valuation_rate:
 		sle = frappe.qb.DocType("Stock Ledger Entry")
 		last_val_rate = (
 			frappe.qb.from_(sle)
@@ -1069,6 +1069,7 @@ def get_valuation_rate(data):
 			.orderby(sle.creation, order=frappe.qb.desc)
 			.limit(1)
 		).run(as_dict=True)
+
 
 		valuation_rate = flt(last_val_rate[0].get("valuation_rate")) if last_val_rate else 0
 
@@ -1134,19 +1135,15 @@ def get_bom_items_as_dict(
                 item_default.default_warehouse,
                 item_default.expense_account,
                 item_default.buying_cost_center,
-                bom_item.source_warehouse,
-                bom_item.operation,
-                bom_item.include_item_in_manufacturing,
-                bom_item.description,
-                bom_item.sourced_by_supplier,
-				{rate_field}
+				{group_by_fields}
 				order by bom_item.idx"""
 
 	is_stock_item = 0 if include_non_stock_items else 1
 	if cint(fetch_exploded):
 		query = query.format(
 			table="BOM Explosion Item",
-			rate_field = """bom_item.rate""",
+			group_by_fields = """bom_item.source_warehouse, bom_item.operation, bom_item.include_item_in_manufacturing, bom_item.description,
+                bom_item.sourced_by_supplier""",
 			where_conditions="",
 			is_stock_item=is_stock_item,
 			qty_field="stock_qty",
@@ -1161,6 +1158,7 @@ def get_bom_items_as_dict(
 	elif fetch_scrap_items:
 		query = query.format(
 			table="BOM Scrap Item",
+			group_by_fields = """item.description""",
 			where_conditions="",
 			select_columns=", item.description",
 			is_stock_item=is_stock_item,
@@ -1171,7 +1169,8 @@ def get_bom_items_as_dict(
 	else:
 		query = query.format(
 			table="BOM Item",
-			rate_field = """bom_item.uom, bom_item.conversion_factor, bom_item.base_rate""",
+			group_by_fields = """bom_item.source_warehouse, bom_item.operation, bom_item.include_item_in_manufacturing, bom_item.uom, bom_item.conversion_factor, bom_item.description,
+                bom_item.sourced_by_supplier, bom_item.base_rate""",
 			where_conditions="",
 			is_stock_item=is_stock_item,
 			qty_field="stock_qty" if fetch_qty_in_stock_uom else "qty",
@@ -1179,7 +1178,7 @@ def get_bom_items_as_dict(
 				bom_item.operation, bom_item.include_item_in_manufacturing, bom_item.sourced_by_supplier,
 				bom_item.description, bom_item.base_rate as bom_rate""",
 		)
-		print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+		
 		items = frappe.db.sql(query, {"qty": qty, "bom": bom, "company": company}, as_dict=True)
 
 	for item in items:
@@ -1434,10 +1433,11 @@ def item_query(doctype, txt, searchfield, start, page_len, filters):
 			or_cond_filters[s_field] = ("like", f"%{txt}%")
 
 		barcodes = frappe.get_all(
-			"Item Barcode",
-			fields=["distinct parent as item_code"],
-			filters={"barcode": ("like", f"%{txt}%")},
-		)
+    "Item Barcode",
+    fields=["distinct parent as item_code", "modified"],
+    filters={"barcode": ("like", f"%{txt}%")},
+    order_by="modified DESC"
+)
 
 		barcodes = [d.item_code for d in barcodes]
 		if barcodes:

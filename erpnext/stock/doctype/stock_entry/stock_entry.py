@@ -2109,7 +2109,7 @@ class StockEntry(StockController):
 				& (job_card.work_order == self.work_order)
 				& (job_card.docstatus == 1)
 			)
-			.groupby(job_card_scrap_item.item_code)
+			.groupby(job_card_scrap_item.item_code, job_card_scrap_item.item_name, job_card_scrap_item.description, job_card_scrap_item.stock_uom)
 		).run(as_dict=1)
 
 		pending_qty = flt(self.get_completed_job_card_qty()) - flt(self.pro_doc.produced_qty)
@@ -2959,7 +2959,7 @@ def get_expired_batch_items():
 	where b.expiry_date <= %s
 	and b.expiry_date is not NULL
 	and b.batch_id = sle.batch_no and sle.is_cancelled = 0
-	group by sle.warehouse, sle.item_code, sle.batch_no""",
+	group by sle.warehouse, sle.item_code, sle.batch_no, b.item, sle.stock_uom""",
 		(nowdate()),
 		as_dict=1,
 	)

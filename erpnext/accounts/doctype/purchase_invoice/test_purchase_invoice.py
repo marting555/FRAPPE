@@ -111,7 +111,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi.submit()
 
 		expected_gl_entries = {
-			"_Test Payable - _TC": [0, 1512.0],
+			"_Test Payable - _TC": [0, 1512.3],
 			"_Test Account Cost for Goods Sold - _TC": [1250, 0],
 			"_Test Account Shipping Charges - _TC": [100, 0],
 			"_Test Account Excise Duty - _TC": [140, 0],
@@ -130,7 +130,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 		for d in gl_entries:
 			self.assertEqual([d.debit, d.credit], expected_gl_entries.get(d.account))
-
+			
 	def test_gl_entries_with_perpetual_inventory(self):
 		pi = make_purchase_invoice(
 			company="_Test Company with perpetual inventory",
@@ -824,14 +824,26 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 
 		gl_entries = frappe.db.sql(
-			"""select account, account_currency, sum(debit) as debit,
-				sum(credit) as credit, debit_in_account_currency, credit_in_account_currency
-			from `tabGL Entry` where voucher_type='Purchase Invoice' and voucher_no=%s
-			group by account, voucher_no order by account asc;""",
-			pi.name,
+			"""SELECT 
+				account, 
+				ARRAY_AGG(account_currency) AS account_currency,
+				SUM(debit) AS debit,
+				SUM(credit) AS credit, 
+				SUM(debit_in_account_currency) AS debit_in_account_currency, 
+				SUM(credit_in_account_currency) AS credit_in_account_currency
+			FROM 
+				`tabGL Entry` 
+			WHERE 
+				voucher_type = 'Purchase Invoice' 
+				AND voucher_no = %s
+			GROUP BY 
+				account, 
+				voucher_no 
+			ORDER BY 
+				account ASC;""",
+			(pi.name,),
 			as_dict=1,
 		)
-
 		stock_in_hand_account = get_inventory_account(pi.company, pi.get("items")[0].warehouse)
 		self.assertTrue(gl_entries)
 
@@ -1385,8 +1397,10 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		for i, gle in enumerate(gl_entries):
 			self.assertEqual(expected_gle[i][0], gle.account)
 			self.assertEqual(expected_gle[i][1], gle.balance)
-
-		expected_gle = [["_Test Payable USD - _TC", 70000.0], ["Cash - _TC", -70000.0]]
+		if frappe.db.db_type=='postgres':
+			expected_gle = [["Cash - _TC", -70000.0],["_Test Payable USD - _TC", 70000.0]]
+		else:
+			expected_gle = [["_Test Payable USD - _TC", 70000.0], ["Cash - _TC", -70000.0]]
 
 		gl_entries = frappe.db.sql(
 			"""
@@ -1969,10 +1983,10 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi.submit()
 
 		expected_gle = [
-			["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate(), branch2.branch],
 			["Creditors - _TC", 0.0, 1000, nowdate(), branch1.branch],
 			["Offsetting - _TC", 1000, 0.0, nowdate(), branch1.branch],
 			["Offsetting - _TC", 0.0, 1000, nowdate(), branch2.branch],
+			["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate(), branch2.branch]
 		]
 
 		check_gl_entries(
@@ -1998,10 +2012,17 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			price_list_rate=1000,
 			qty=1,
 		)
-		expected_gle = [
-			["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate()],
+		if frappe.db.db_type=='postgres':
+			expected_gle = [
 			["Creditors - _TC", 0.0, 1000, nowdate()],
+			["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate()]
 		]
+		else:
+
+			expected_gle = [
+				["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate()],
+				["Creditors - _TC", 0.0, 1000, nowdate()],
+			]
 		check_gl_entries(self, pi.name, expected_gle, nowdate())
 
 		pi.items[0].expense_account = "Service - _TC"

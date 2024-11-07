@@ -155,7 +155,6 @@ def _get_party_details(
 	if not party_details.get("currency"):
 		party_details["currency"] = currency
 
-	# sales team
 	if party_type == "Customer":
 		party_details["sales_team"] = [
 			{
@@ -163,10 +162,9 @@ def _get_party_details(
 				"allocated_percentage": d.allocated_percentage or None,
 				"commission_rate": d.commission_rate,
 			}
-			for d in party.get("sales_team")
+			for d in (party.get("sales_team") or []) 
 		]
 
-	# supplier tax withholding category
 	if party_type == "Supplier" and party:
 		party_details["supplier_tds"] = frappe.get_value(party_type, party.name, "tax_withholding_category")
 
@@ -174,7 +172,6 @@ def _get_party_details(
 		party_details["tax_category"] = frappe.get_value("POS Profile", pos_profile, "tax_category")
 
 	return party_details
-
 
 def set_address_details(
 	party_details,
@@ -783,10 +780,9 @@ def get_dashboard_info(party_type, party, loyalty_program=None):
 	)
 
 	loyalty_point_details = []
-
 	if party_type == "Customer":
-		loyalty_point_details = frappe._dict(
-			frappe.get_all(
+		loyalty_point_details = frappe._dict({
+			d[0]: d[1] for d in frappe.get_all(
 				"Loyalty Point Entry",
 				filters={
 					"customer": party,
@@ -796,7 +792,7 @@ def get_dashboard_info(party_type, party, loyalty_program=None):
 				fields=["company", "sum(loyalty_points) as loyalty_points"],
 				as_list=1,
 			)
-		)
+	})
 
 	company_wise_billing_this_year = frappe._dict()
 
@@ -830,6 +826,7 @@ def get_dashboard_info(party_type, party, loyalty_program=None):
 
 		if loyalty_point_details:
 			loyalty_points = loyalty_point_details.get(d.company)
+
 
 		info = {}
 		info["billing_this_year"] = flt(billing_this_year) if billing_this_year else 0

@@ -17,8 +17,6 @@ class PurchaseReceiptItem(Document):
 		allow_zero_valuation_rate: DF.Check
 		amount: DF.Currency
 		apply_tds: DF.Check
-		asset_category: DF.Link | None
-		asset_location: DF.Link | None
 		barcode: DF.Data | None
 		base_amount: DF.Currency
 		base_net_amount: DF.Currency
@@ -41,7 +39,6 @@ class PurchaseReceiptItem(Document):
 		has_item_scanned: DF.Check
 		image: DF.Attach | None
 		include_exploded_items: DF.Check
-		is_fixed_asset: DF.Check
 		is_free_item: DF.Check
 		item_code: DF.Link
 		item_group: DF.Link | None

@@ -30,17 +30,11 @@ class Customer(TransactionBase):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
-		from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import (
-			AllowedToTransactWith,
-		)
+		from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import AllowedToTransactWith
 		from erpnext.accounts.doctype.party_account.party_account import PartyAccount
-		from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import (
-			CustomerCreditLimit,
-		)
-		from erpnext.selling.doctype.sales_team.sales_team import SalesTeam
+		from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import CustomerCreditLimit
 		from erpnext.utilities.doctype.portal_user.portal_user import PortalUser
+		from frappe.types import DF
 
 		account_manager: DF.Link | None
 		accounts: DF.Table[PartyAccount]
@@ -54,10 +48,8 @@ class Customer(TransactionBase):
 		customer_primary_contact: DF.Link | None
 		customer_type: DF.Literal["Company", "Individual", "Partnership"]
 		default_bank_account: DF.Link | None
-		default_commission_rate: DF.Float
 		default_currency: DF.Link | None
 		default_price_list: DF.Link | None
-		default_sales_partner: DF.Link | None
 		disabled: DF.Check
 		dn_required: DF.Check
 		email_id: DF.ReadOnly | None
@@ -79,7 +71,6 @@ class Customer(TransactionBase):
 		primary_address: DF.Text | None
 		prospect_name: DF.Link | None
 		represents_company: DF.Link | None
-		sales_team: DF.Table[SalesTeam]
 		salutation: DF.Link | None
 		so_required: DF.Check
 		tax_category: DF.Link | None
@@ -111,7 +102,7 @@ class Customer(TransactionBase):
 		if frappe.db.get_value("Customer", self.customer_name) and not frappe.flags.in_import:
 			count = frappe.db.sql(
 				"""
-				SELECT COALESCE(MAX(CAST(SPLIT_PART(name, ' - ', 2) AS INTEGER)), 0) 
+				SELECT COALESCE(MAX(CAST(SPLIT_PART(name, ' - ', 2) AS INTEGER)), 0)
 				FROM tabCustomer
 				WHERE name LIKE %s
 				""",
@@ -156,6 +147,10 @@ class Customer(TransactionBase):
 			if self.loyalty_program == customer.loyalty_program and not self.loyalty_program_tier:
 				self.loyalty_program_tier = customer.loyalty_program_tier
 
+		# Ensure sales_team is initialized as an empty list if it’s None
+		if not hasattr(self, 'sales_team') or self.sales_team is None:
+			self.sales_team = []
+			
 		if self.sales_team:
 			if sum(member.allocated_percentage or 0 for member in self.sales_team) != 100:
 				frappe.throw(_("Total contribution percentage should be equal to 100"))

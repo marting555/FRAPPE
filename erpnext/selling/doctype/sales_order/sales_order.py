@@ -56,7 +56,6 @@ class SalesOrder(SellingController):
 		from erpnext.accounts.doctype.pricing_rule_detail.pricing_rule_detail import PricingRuleDetail
 		from erpnext.accounts.doctype.sales_taxes_and_charges.sales_taxes_and_charges import SalesTaxesandCharges
 		from erpnext.selling.doctype.sales_order_item.sales_order_item import SalesOrderItem
-		from erpnext.selling.doctype.sales_team.sales_team import SalesTeam
 		from erpnext.stock.doctype.packed_item.packed_item import PackedItem
 		from frappe.types import DF
 
@@ -64,7 +63,6 @@ class SalesOrder(SellingController):
 		address_display: DF.SmallText | None
 		advance_paid: DF.Currency
 		amended_from: DF.Link | None
-		amount_eligible_for_commission: DF.Currency
 		apply_discount_on: DF.Literal["", "Grand Total", "Net Total"]
 		auto_repeat: DF.Link | None
 		base_discount_amount: DF.Currency
@@ -77,7 +75,6 @@ class SalesOrder(SellingController):
 		base_total_taxes_and_charges: DF.Currency
 		billing_status: DF.Literal["Not Billed", "Fully Billed", "Partly Billed", "Closed"]
 		campaign: DF.Link | None
-		commission_rate: DF.Float
 		company: DF.Link
 		company_address: DF.Link | None
 		company_address_display: DF.SmallText | None
@@ -137,7 +134,6 @@ class SalesOrder(SellingController):
 		rounded_total: DF.Currency
 		rounding_adjustment: DF.Currency
 		sales_partner: DF.Link | None
-		sales_team: DF.Table[SalesTeam]
 		scan_barcode: DF.Data | None
 		select_print_heading: DF.Link | None
 		selling_price_list: DF.Link
@@ -158,7 +154,6 @@ class SalesOrder(SellingController):
 		title: DF.Data | None
 		to_date: DF.Date | None
 		total: DF.Currency
-		total_commission: DF.Currency
 		total_net_weight: DF.Float
 		total_qty: DF.Float
 		total_taxes_and_charges: DF.Currency
@@ -473,7 +468,7 @@ class SalesOrder(SellingController):
 
 	def check_modified_date(self):
 		mod_db = frappe.db.get_value("Sales Order", self.name, "modified")
-		date_diff = frappe.db.sql(f"select TIMEDIFF('{mod_db}', '{cstr(self.modified)}')")
+		date_diff = frappe.db.sql(f"select AGE('{mod_db}', '{cstr(self.modified)}')")
 		if date_diff and date_diff[0][0]:
 			frappe.throw(_("{0} {1} has been modified. Please refresh.").format(self.doctype, self.name))
 
