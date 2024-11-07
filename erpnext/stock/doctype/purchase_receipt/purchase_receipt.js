@@ -431,20 +431,28 @@ frappe.ui.form.on("Purchase Receipt Item", {
 			} else {
 				child.project_name = null;
 			}
-			frm.refresh_field('items');
+			let row = frm.fields_dict['items'].grid.get_row(cdn);
+            row.refresh_field('project_name');
 		})
 	},
 	work_breakdown_structure: function(frm,cdt,cdn) {
 		let child = locals[cdt][cdn];
-		frappe.db.get_value("Work Breakdown Structure", child.work_breakdown_structure, "wbs_name")
+		frappe.db.get_value("Work Breakdown Structure", child.work_breakdown_structure, ["wbs_name", 'locked'])
 		.then(response => {
 			if (response.message && response.message.wbs_name) {
 				let wbs_name = response.message.wbs_name;
-				child.wbs_name = wbs_name;
+				if (response.message.locked == 1) {
+					frappe.msgprint(__(`WBS "${child.work_breakdown_structure}" is locked`));
+					child.work_breakdown_structure = null;
+				} else {
+					child.wbs_name = wbs_name;
+				}
 			} else {
 				child.wbs_name = null;
 			}
-			frm.refresh_field('items');
+			let row = frm.fields_dict['items'].grid.get_row(cdn);
+			row.refresh_field('work_breakdown_structure')
+            row.refresh_field('wbs_name');
 		})
 	},
 });

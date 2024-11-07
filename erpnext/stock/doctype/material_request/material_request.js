@@ -552,18 +552,15 @@ frappe.ui.form.on("Material Request Item", {
 		})
 	},
 	work_breakdown_structure: function(frm,cdt,cdn) {
-		console.log("99")
 		let child = locals[cdt][cdn];
 		frappe.db.get_value("Work Breakdown Structure", child.work_breakdown_structure, ["wbs_name", 'locked'])
 		.then(response => {
-			console.log("Response : ",response)
 			if (response.message && response.message.wbs_name) {
 				let wbs_name = response.message.wbs_name;
 				if (response.message.locked == 1) {
 					frappe.msgprint(__(`WBS "${child.work_breakdown_structure}" is locked`));
 					child.work_breakdown_structure = null;
 				} else {
-					console.log("00000")
 					child.wbs_name = wbs_name;
 				}
 			} else {
