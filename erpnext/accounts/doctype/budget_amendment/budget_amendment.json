@@ -95,10 +95,10 @@
  "links": [
   {
    "link_doctype": "Budget Entry",
-   "link_fieldname": "name"
+   "link_fieldname": "voucher_no"
   }
  ],
- "modified": "2024-11-06 14:10:16.961613",
+ "modified": "2024-11-07 18:35:30.270115",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Budget Amendment",
