@@ -44,6 +44,7 @@ from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 	get_item_account_wise_additional_cost,
 	update_billed_amount_based_on_po,
 )
+from datetime import datetime
 
 
 class WarehouseMissingError(frappe.ValidationError):
@@ -2019,7 +2020,7 @@ def create_budget_entry(self):
 			data_from.voucher_type = self.doctype
 			data_from.project = budget.project
 			data_from.company = self.company
-			data_from.posting_date = self.posting_date
+			data_from.posting_date = datetime.now().strftime("%Y-%m-%d")
 			data_from.document_date = self.posting_date
 			data_from.wbs = budget.work_breakdown_structure
 			data_from.wbs_name = budget.wbs_name
@@ -2038,7 +2039,7 @@ def create_budget_entry_on_cancel(self):
 			data_from.voucher_type = self.doctype
 			data_from.project = budget.project
 			data_from.company = self.company
-			data_from.posting_date = self.posting_date
+			data_from.posting_date = datetime.now().strftime("%Y-%m-%d")
 			data_from.document_date = self.posting_date
 			data_from.wbs = budget.work_breakdown_structure
 			data_from.wbs_name = budget.wbs_name

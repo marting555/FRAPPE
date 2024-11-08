@@ -1,7 +1,8 @@
 // Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 // For license information, please see license.txt
 
-frappe.query_reports["Work Breakdown Structure"] = {
+
+frappe.query_reports["WBS Summary Report"] = {
 	"filters": [
 
 	],
@@ -10,3 +11,4 @@ frappe.query_reports["Work Breakdown Structure"] = {
 	"parent_field": "karigar",
 	"initial_depth": 0,
 };
+
