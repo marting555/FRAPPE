@@ -176,16 +176,31 @@ class WorkOrder(Document):
 		self.validate_operation_time()
 		self.status = self.get_status()
 		self.validate_workstation_type()
+		self.reset_use_multi_level_bom()
 
 		validate_uom_is_integer(self, "stock_uom", ["qty", "produced_qty"])
 
 		self.set_required_items(reset_only_qty=len(self.get("required_items")))
 
+	def reset_use_multi_level_bom(self):
+		if self.is_new():
+			return
+
+		before_save_obj = self.get_doc_before_save()
+		if before_save_obj.use_multi_level_bom != self.use_multi_level_bom:
+			self.get_items_and_operations_from_bom()
+
 	def validate_workstation_type(self):
+		if not self.docstatus.is_submitted():
+			return
+
 		for row in self.operations:
 			if not row.workstation and not row.workstation_type:
-				msg = f"Row {row.idx}: Workstation or Workstation Type is mandatory for an operation {row.operation}"
-				frappe.throw(_(msg))
+				frappe.throw(
+					_("Row {0}: Workstation or Workstation Type is mandatory for an operation {1}").format(
+						row.idx, row.operation
+					)
+				)
 
 	def validate_sales_order(self):
 		if self.sales_order:
@@ -543,7 +558,6 @@ class WorkOrder(Document):
 	def delete_auto_created_batch_and_serial_no(self):
 		for row in frappe.get_all("Serial No", filters={"work_order": self.name}):
 			frappe.delete_doc("Serial No", row.name)
-			self.db_set("serial_no", "")
 
 		for row in frappe.get_all("Batch", filters={"reference_name": self.name}):
 			frappe.delete_doc("Batch", row.name)
@@ -1398,7 +1412,7 @@ def set_work_order_ops(name):
 
 
 @frappe.whitelist()
-def make_stock_entry(work_order_id, purpose, qty=None):
+def make_stock_entry(work_order_id, purpose, qty=None, target_warehouse=None):
 	work_order = frappe.get_doc("Work Order", work_order_id)
 	if not frappe.db.get_value("Warehouse", work_order.wip_warehouse, "is_group"):
 		wip_warehouse = work_order.wip_warehouse
@@ -1428,9 +1442,16 @@ def make_stock_entry(work_order_id, purpose, qty=None):
 		stock_entry.to_warehouse = work_order.fg_warehouse
 		stock_entry.project = work_order.project
 
+	if purpose == "Disassemble":
+		stock_entry.from_warehouse = work_order.fg_warehouse
+		stock_entry.to_warehouse = target_warehouse or work_order.source_warehouse
+
 	stock_entry.set_stock_entry_type()
 	stock_entry.get_items()
-	stock_entry.set_serial_no_batch_for_finished_good()
+
+	if purpose != "Disassemble":
+		stock_entry.set_serial_no_batch_for_finished_good()
+
 	return stock_entry.as_dict()
 
 

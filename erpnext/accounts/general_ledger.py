@@ -7,7 +7,7 @@ import copy
 import frappe
 from frappe import _
 from frappe.model.meta import get_field_precision
-from frappe.utils import cint, flt, formatdate, getdate, now
+from frappe.utils import cint, flt, formatdate, get_link_to_form, getdate, now
 from frappe.utils.dashboard import cache_source
 
 import erpnext
@@ -38,13 +38,14 @@ def make_gl_entries(
 			validate_disabled_accounts(gl_map)
 			gl_map = process_gl_map(gl_map, merge_entries)
 			if gl_map and len(gl_map) > 1:
-				create_payment_ledger_entry(
-					gl_map,
-					cancel=0,
-					adv_adj=adv_adj,
-					update_outstanding=update_outstanding,
-					from_repost=from_repost,
-				)
+				if gl_map[0].voucher_type != "Period Closing Voucher":
+					create_payment_ledger_entry(
+						gl_map,
+						cancel=0,
+						adv_adj=adv_adj,
+						update_outstanding=update_outstanding,
+						from_repost=from_repost,
+					)
 				save_entries(gl_map, adv_adj, update_outstanding, from_repost)
 			# Post GL Map process there may no be any GL Entries
 			elif gl_map:
@@ -117,17 +118,16 @@ def get_accounting_dimensions_for_offsetting_entry(gl_map, company):
 def validate_disabled_accounts(gl_map):
 	accounts = [d.account for d in gl_map if d.account]
 
-	Account = frappe.qb.DocType("Account")
+	disabled_accounts = frappe.get_all(
+		"Account",
+		filters={"disabled": 1, "is_group": 0, "company": gl_map[0].company},
+		fields=["name"],
+	)
 
-	disabled_accounts = (
-		frappe.qb.from_(Account)
-		.where(Account.name.isin(accounts) & Account.disabled == 1)
-		.select(Account.name, Account.disabled)
-	).run(as_dict=True)
-
-	if disabled_accounts:
+	used_disabled_accounts = set(accounts).intersection(set([d.name for d in disabled_accounts]))
+	if used_disabled_accounts:
 		account_list = "<br>"
-		account_list += ", ".join([frappe.bold(d.name) for d in disabled_accounts])
+		account_list += ", ".join([frappe.bold(d) for d in used_disabled_accounts])
 		frappe.throw(
 			_("Cannot create accounting entries against disabled accounts: {0}").format(account_list),
 			title=_("Disabled Account Selected"),
@@ -180,50 +180,53 @@ def process_gl_map(gl_map, merge_entries=True, precision=None):
 
 
 def distribute_gl_based_on_cost_center_allocation(gl_map, precision=None):
-	cost_center_allocation = get_cost_center_allocation_data(gl_map[0]["company"], gl_map[0]["posting_date"])
-	if not cost_center_allocation:
-		return gl_map
-
 	new_gl_map = []
 	for d in gl_map:
 		cost_center = d.get("cost_center")
 
 		# Validate budget against main cost center
 		validate_expense_against_budget(d, expense_amount=flt(d.debit, precision) - flt(d.credit, precision))
-
-		if cost_center and cost_center_allocation.get(cost_center):
-			for sub_cost_center, percentage in cost_center_allocation.get(cost_center, {}).items():
-				gle = copy.deepcopy(d)
-				gle.cost_center = sub_cost_center
-				for field in ("debit", "credit", "debit_in_account_currency", "credit_in_account_currency"):
-					gle[field] = flt(flt(d.get(field)) * percentage / 100, precision)
-				new_gl_map.append(gle)
-		else:
+		cost_center_allocation = get_cost_center_allocation_data(
+			gl_map[0]["company"], gl_map[0]["posting_date"], cost_center
+		)
+		if not cost_center_allocation:
 			new_gl_map.append(d)
+			continue
+
+		for sub_cost_center, percentage in cost_center_allocation:
+			gle = copy.deepcopy(d)
+			gle.cost_center = sub_cost_center
+			for field in ("debit", "credit", "debit_in_account_currency", "credit_in_account_currency"):
+				gle[field] = flt(flt(d.get(field)) * percentage / 100, precision)
+			new_gl_map.append(gle)
 
 	return new_gl_map
 
 
-def get_cost_center_allocation_data(company, posting_date):
-	par = frappe.qb.DocType("Cost Center Allocation")
-	child = frappe.qb.DocType("Cost Center Allocation Percentage")
+def get_cost_center_allocation_data(company, posting_date, cost_center):
+	cost_center_allocation = frappe.db.get_value(
+		"Cost Center Allocation",
+		{
+			"docstatus": 1,
+			"company": company,
+			"valid_from": ("<=", posting_date),
+			"main_cost_center": cost_center,
+		},
+		pluck="name",
+		order_by="valid_from desc",
+	)
 
-	records = (
-		frappe.qb.from_(par)
-		.inner_join(child)
-		.on(par.name == child.parent)
-		.select(par.main_cost_center, child.cost_center, child.percentage)
-		.where(par.docstatus == 1)
-		.where(par.company == company)
-		.where(par.valid_from <= posting_date)
-		.orderby(par.valid_from, order=frappe.qb.desc)
-	).run(as_dict=True)
+	if not cost_center_allocation:
+		return []
 
-	cc_allocation = frappe._dict()
-	for d in records:
-		cc_allocation.setdefault(d.main_cost_center, frappe._dict()).setdefault(d.cost_center, d.percentage)
+	records = frappe.db.get_all(
+		"Cost Center Allocation Percentage",
+		{"parent": cost_center_allocation},
+		["cost_center", "percentage"],
+		as_list=True,
+	)
 
-	return cc_allocation
+	return records
 
 
 def merge_similar_entries(gl_map, precision=None):
@@ -491,16 +494,36 @@ def raise_debit_credit_not_equal_error(debit_credit_diff, voucher_type, voucher_
 	)
 
 
+def has_opening_entries(gl_map: list) -> bool:
+	for x in gl_map:
+		if x.is_opening == "Yes":
+			return True
+	return False
+
+
 def make_round_off_gle(gl_map, debit_credit_diff, precision):
-	round_off_account, round_off_cost_center = get_round_off_account_and_cost_center(
+	round_off_account, round_off_cost_center, round_off_for_opening = get_round_off_account_and_cost_center(
 		gl_map[0].company, gl_map[0].voucher_type, gl_map[0].voucher_no
 	)
 	round_off_gle = frappe._dict()
 	round_off_account_exists = False
+	has_opening_entry = has_opening_entries(gl_map)
+
+	if has_opening_entry:
+		if not round_off_for_opening:
+			frappe.throw(
+				_("Please set '{0}' in Company: {1}").format(
+					frappe.bold("Round Off for Opening"), get_link_to_form("Company", gl_map[0].company)
+				)
+			)
+
+		account = round_off_for_opening
+	else:
+		account = round_off_account
 
 	if gl_map[0].voucher_type != "Period Closing Voucher":
 		for d in gl_map:
-			if d.account == round_off_account:
+			if d.account == account:
 				round_off_gle = d
 				if d.debit:
 					debit_credit_diff -= flt(d.debit) - flt(d.credit)
@@ -518,7 +541,7 @@ def make_round_off_gle(gl_map, debit_credit_diff, precision):
 
 	round_off_gle.update(
 		{
-			"account": round_off_account,
+			"account": account,
 			"debit_in_account_currency": abs(debit_credit_diff) if debit_credit_diff < 0 else 0,
 			"credit_in_account_currency": debit_credit_diff if debit_credit_diff > 0 else 0,
 			"debit": abs(debit_credit_diff) if debit_credit_diff < 0 else 0,
@@ -531,6 +554,9 @@ def make_round_off_gle(gl_map, debit_credit_diff, precision):
 			"against_voucher": None,
 		}
 	)
+
+	if has_opening_entry:
+		round_off_gle.update({"is_opening": "Yes"})
 
 	update_accounting_dimensions(round_off_gle)
 	if not round_off_account_exists:
@@ -556,9 +582,9 @@ def update_accounting_dimensions(round_off_gle):
 
 
 def get_round_off_account_and_cost_center(company, voucher_type, voucher_no, use_company_default=False):
-	round_off_account, round_off_cost_center = frappe.get_cached_value(
-		"Company", company, ["round_off_account", "round_off_cost_center"]
-	) or [None, None]
+	round_off_account, round_off_cost_center, round_off_for_opening = frappe.get_cached_value(
+		"Company", company, ["round_off_account", "round_off_cost_center", "round_off_for_opening"]
+	) or [None, None, None]
 
 	# Use expense account as fallback
 	if not round_off_account:
@@ -573,12 +599,20 @@ def get_round_off_account_and_cost_center(company, voucher_type, voucher_no, use
 			round_off_cost_center = parent_cost_center
 
 	if not round_off_account:
-		frappe.throw(_("Please mention Round Off Account in Company"))
+		frappe.throw(
+			_("Please mention '{0}' in Company: {1}").format(
+				frappe.bold("Round Off Account"), get_link_to_form("Company", company)
+			)
+		)
 
 	if not round_off_cost_center:
-		frappe.throw(_("Please mention Round Off Cost Center in Company"))
+		frappe.throw(
+			_("Please mention '{0}' in Company: {1}").format(
+				frappe.bold("Round Off Cost Center"), get_link_to_form("Company", company)
+			)
+		)
 
-	return round_off_account, round_off_cost_center
+	return round_off_account, round_off_cost_center, round_off_for_opening
 
 
 def make_reverse_gl_entries(
@@ -707,7 +741,7 @@ def validate_against_pcv(is_opening, posting_date, company):
 		)
 
 	last_pcv_date = frappe.db.get_value(
-		"Period Closing Voucher", {"docstatus": 1, "company": company}, "max(posting_date)"
+		"Period Closing Voucher", {"docstatus": 1, "company": company}, "max(period_end_date)"
 	)
 
 	if last_pcv_date and getdate(posting_date) <= getdate(last_pcv_date):

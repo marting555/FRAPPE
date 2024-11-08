@@ -470,6 +470,16 @@ class SellingController(StockController):
 						raise_error_if_no_rate=False,
 					)
 
+				if (
+					not d.incoming_rate
+					and self.get("return_against")
+					and self.get("is_return")
+					and get_valuation_method(d.item_code) == "Moving Average"
+				):
+					d.incoming_rate = get_rate_for_return(
+						self.doctype, self.name, d.item_code, self.return_against, item_row=d
+					)
+
 				# For internal transfers use incoming rate as the valuation rate
 				if self.is_internal_transfer():
 					if self.doctype == "Delivery Note" or self.get("update_stock"):
@@ -637,7 +647,7 @@ class SellingController(StockController):
 		if self.doctype in ["Sales Order", "Quotation"]:
 			for item in self.items:
 				item.gross_profit = flt(
-					((item.base_rate - flt(item.valuation_rate)) * item.stock_qty),
+					((flt(item.stock_uom_rate) - flt(item.valuation_rate)) * item.stock_qty),
 					self.precision("amount", item),
 				)
 
@@ -694,7 +704,7 @@ class SellingController(StockController):
 			duplicate_items_msg = _("Item {0} entered multiple times.").format(frappe.bold(d.item_code))
 			duplicate_items_msg += "<br><br>"
 			duplicate_items_msg += _("Please enable {} in {} to allow same item in multiple rows").format(
-				frappe.bold("Allow Item to Be Added Multiple Times in a Transaction"),
+				frappe.bold(_("Allow Item to Be Added Multiple Times in a Transaction")),
 				get_link_to_form("Selling Settings", "Selling Settings"),
 			)
 			if frappe.db.get_value("Item", d.item_code, "is_stock_item") == 1:

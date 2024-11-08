@@ -97,16 +97,15 @@ class POSInvoiceMergeLog(Document):
 				return_against_status = frappe.db.get_value("POS Invoice", return_against, "status")
 				if return_against_status != "Consolidated":
 					# if return entry is not getting merged in the current pos closing and if it is not consolidated
-					bold_unconsolidated = frappe.bold("not Consolidated")
-					msg = _("Row #{}: Original Invoice {} of return invoice {} is {}.").format(
-						d.idx, bold_return_against, bold_pos_invoice, bold_unconsolidated
-					)
+					msg = _(
+						"Row #{}: The original Invoice {} of return invoice {} is not consolidated."
+					).format(d.idx, bold_return_against, bold_pos_invoice)
 					msg += " "
 					msg += _(
-						"Original invoice should be consolidated before or along with the return invoice."
+						"The original invoice should be consolidated before or along with the return invoice."
 					)
 					msg += "<br><br>"
-					msg += _("You can add original invoice {} manually to proceed.").format(
+					msg += _("You can add the original invoice {} manually to proceed.").format(
 						bold_return_against
 					)
 					frappe.throw(msg)
@@ -439,7 +438,9 @@ def split_invoices(invoices):
 			if not item.serial_no and not item.serial_and_batch_bundle:
 				continue
 
-			return_against_is_added = any(d for d in _invoices if d.pos_invoice == pos_invoice.return_against)
+			return_against_is_added = any(
+				d for d in _invoices if d and d[0].pos_invoice == pos_invoice.return_against
+			)
 			if return_against_is_added:
 				break
 
