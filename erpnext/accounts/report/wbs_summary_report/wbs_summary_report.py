@@ -14,7 +14,6 @@ def get_data():
             name AS name,
             project AS project_name,
             wbs_name AS wbs_name,
-            0 AS budget_period,
             overall_budget AS amt_allocated,
             assigned_overall_budget AS amt_utilized,
             (overall_budget - assigned_overall_budget) AS amt_balanced,
@@ -114,11 +113,6 @@ def get_columns():
 				"fieldname": "project_name",
 				"fieldtype": "Link",
 				"options": "Project",
-			},
-			{
-				"label": ("Budget Period"),
-				"fieldname": "budget_period",
-				"fieldtype": "Data",
 			},
 			{
 				"label": ("Allocated Amount"),
