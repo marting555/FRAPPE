@@ -233,6 +233,10 @@ class PurchaseInvoice(BuyingController):
 	def before_save(self):
 		if not self.on_hold:
 			self.release_date = ""
+	
+	def before_submit(self):
+		create_budget_entry(self)
+		
 
 	def invoice_is_blocked(self):
 		return self.on_hold and (not self.release_date or self.release_date > getdate(nowdate()))
@@ -244,6 +248,7 @@ class PurchaseInvoice(BuyingController):
 		self.validate_posting_time()
 
 		super().validate()
+
 
 		if not self.is_return:
 			self.po_required()
@@ -736,7 +741,8 @@ class PurchaseInvoice(BuyingController):
 		super().on_submit()
 
 		self.check_prev_docstatus()
-
+		increment_committed_overall_budget(self)
+		
 		if self.is_return and not self.update_billed_amount_in_purchase_order:
 			# NOTE status updating bypassed for is_return
 			self.status_updater = []
@@ -778,6 +784,12 @@ class PurchaseInvoice(BuyingController):
 		self.update_advance_tax_references()
 
 		self.process_common_party_accounting()
+
+		
+	
+	def before_cancel(self):
+		create_budget_entry_on_cancel(self)
+
 
 	def on_update_after_submit(self):
 		fields_to_check = [
@@ -1521,9 +1533,9 @@ class PurchaseInvoice(BuyingController):
 
 	def on_cancel(self):
 		check_if_return_invoice_linked_with_payment_entry(self)
-
+		self.flags.ignore_links = True
 		super().on_cancel()
-
+		decrement_committed_overall_budget(self)
 		self.check_on_hold_or_closed_status()
 
 		if self.is_return and not self.update_billed_amount_in_purchase_order:
@@ -1979,3 +1991,60 @@ def make_purchase_receipt(source_name, target_doc=None):
 	)
 
 	return doc
+
+
+def increment_committed_overall_budget(self):
+	if self.items:
+		for budget in self.items:
+			if budget.work_breakdown_structure is not None:
+				total = budget.amount
+				doc = frappe.get_doc("Work Breakdown Structure",budget.work_breakdown_structure)
+				doc.committed_overall_budget += total
+				doc.save()
+
+def decrement_committed_overall_budget(self):
+	if self.items:
+		for budget in self.items:
+			if budget.work_breakdown_structure is not None:
+				total = budget.amount
+				doc = frappe.get_doc("Work Breakdown Structure",budget.work_breakdown_structure)
+				doc.committed_overall_budget -= total
+				doc.save()
+
+def create_budget_entry(self):
+	for budget in self.items:
+		if budget.work_breakdown_structure is not None:
+			data_from = frappe.new_doc("Budget Entry")
+			wbs_level=frappe.get_doc('Work Breakdown Structure',budget.work_breakdown_structure)
+			data_from.voucher_type = self.doctype
+			data_from.project = budget.project
+			data_from.company = self.company
+			data_from.posting_date = self.posting_date
+			data_from.document_date = self.posting_date
+			data_from.wbs = budget.work_breakdown_structure
+			data_from.wbs_name = budget.wbs_name
+			data_from.voucher_no = self.name
+			data_from.overall_credit = budget.amount
+			data_from.wbs_level = wbs_level.wbs_level
+			data_from.insert()
+			data_from.submit()
+
+
+def create_budget_entry_on_cancel(self):
+	for budget in self.items:
+		if budget.work_breakdown_structure is not None:
+			data_from = frappe.new_doc("Budget Entry")
+			wbs_level=frappe.get_doc('Work Breakdown Structure',budget.work_breakdown_structure)
+			data_from.voucher_type = self.doctype
+			data_from.project = budget.project
+			data_from.company = self.company
+			data_from.posting_date = self.posting_date
+			data_from.document_date = self.posting_date
+			data_from.wbs = budget.work_breakdown_structure
+			data_from.wbs_name = budget.wbs_name
+			data_from.voucher_no = self.name
+			data_from.overall_debit = budget.amount
+			data_from.wbs_level = wbs_level.wbs_level
+			data_from.insert()
+			data_from.submit()
+

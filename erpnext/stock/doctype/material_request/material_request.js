@@ -57,7 +57,7 @@ frappe.ui.form.on("Material Request", {
 	onload: function (frm) {
 		// add item, if previous view was item
 		erpnext.utils.add_item(frm);
-
+		frm.savecancel = function(btn, callback, on_error){ console.log("jiiri");return frm._cancel(btn, callback, on_error, false);}
 		// set schedule_date
 		set_schedule_date(frm);
 

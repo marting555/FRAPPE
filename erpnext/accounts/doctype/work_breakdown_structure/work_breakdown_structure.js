@@ -66,6 +66,10 @@ frappe.ui.form.on("Work Breakdown Structure", {
         // calculate_assigned_budget(frm);
         // calculate_available_budget(frm);
 
+        // if (frm.doc.docstatus === 1 && !frm.fields_dict.allow_on_submit) {
+        //     frm.save_or_update();
+        // }
+
         frm.add_custom_button(__('Create Document'), function() {
             var dialog = new frappe.ui.Dialog({
                 title: __('Create New Document'),
