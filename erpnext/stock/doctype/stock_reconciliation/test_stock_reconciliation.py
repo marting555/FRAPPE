@@ -522,10 +522,10 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 		frappe.db.rollback()
 
 		# repost will make this test useless, qty should update in realtime without reposts
+		frappe.flags.dont_execute_stock_reposts = True
 		frappe.db.set_single_value(
 			"Stock Reposting Settings", "do_reposting_for_each_stock_transaction", 0
 		)
-		frappe.flags.dont_execute_stock_reposts = True
 
 		item_code = self.make_item().name
 		warehouse = "_Test Warehouse - _TC"
