@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2024-11-03 09:35+0000\n"
-"PO-Revision-Date: 2024-11-07 06:07\n"
+"PO-Revision-Date: 2024-11-08 07:09\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Turkish\n"
 "MIME-Version: 1.0\n"
@@ -3411,7 +3411,7 @@ msgstr "Avans Ödemesi"
 #. Name of a DocType
 #: erpnext/accounts/doctype/advance_payment_ledger_entry/advance_payment_ledger_entry.json
 msgid "Advance Payment Ledger Entry"
-msgstr ""
+msgstr "Peşin Ödeme Muhasebe Kaydı"
 
 #. Label of the advance_payment_status (Select) field in DocType 'Purchase
 #. Order'
@@ -20262,7 +20262,7 @@ msgstr "Bitmiş Ürün {0} Miktarı sıfır olamaz"
 
 #: erpnext/controllers/accounts_controller.py:3415
 msgid "Finished Good Item {0} must be a sub-contracted item"
-msgstr ""
+msgstr "Bitmiş Ürün {0} alt yüklenici ürünü olmalıdır"
 
 #. Label of the fg_item_qty (Float) field in DocType 'Purchase Order Item'
 #. Label of the finished_good_qty (Float) field in DocType 'Subcontracting BOM'
@@ -20318,7 +20318,7 @@ msgstr "Ürün"
 #. Label of the fg_based_section_section (Section Break) field in DocType 'BOM'
 #: erpnext/manufacturing/doctype/bom/bom.json
 msgid "Finished Goods Based Operating Cost"
-msgstr ""
+msgstr "Ürün Bazlı Operasyonel Maliyeti"
 
 #. Label of the fg_item (Link) field in DocType 'BOM Creator Item'
 #: erpnext/manufacturing/doctype/bom_creator_item/bom_creator_item.json
@@ -20823,17 +20823,17 @@ msgstr "Forum Mesajları"
 #. Label of the forum_url (Data) field in DocType 'Support Settings'
 #: erpnext/support/doctype/support_settings/support_settings.json
 msgid "Forum URL"
-msgstr ""
+msgstr "Forum URL'si"
 
 #. Title of an incoterm
 #: erpnext/setup/doctype/incoterm/incoterms.csv:4
 msgid "Free Alongside Ship"
-msgstr ""
+msgstr "Gemi Doğrultusunda Masrafsız"
 
 #. Title of an incoterm
 #: erpnext/setup/doctype/incoterm/incoterms.csv:3
 msgid "Free Carrier"
-msgstr ""
+msgstr "Bedelsiz Taşıma"
 
 #. Label of the free_item (Link) field in DocType 'Pricing Rule'
 #. Label of the section_break_6 (Section Break) field in DocType 'Promotional
@@ -20851,7 +20851,7 @@ msgstr "Ücretsiz Ürün Oranı"
 #. Title of an incoterm
 #: erpnext/setup/doctype/incoterm/incoterms.csv:5
 msgid "Free On Board"
-msgstr ""
+msgstr "Gemi Üstünde Teslim"
 
 #: erpnext/accounts/doctype/pricing_rule/pricing_rule.py:282
 msgid "Free item code is not selected"
@@ -41840,7 +41840,7 @@ msgstr "Mutabakat Girişleri"
 #: erpnext/accounts/doctype/payment_entry/payment_entry.json
 #: erpnext/setup/doctype/company/company.json
 msgid "Reconcile on Advance Payment Date"
-msgstr ""
+msgstr "Avans Ödeme Tarihinde Mutabakat Sağla"
 
 #: erpnext/public/js/bank_reconciliation_tool/dialog_manager.js:221
 msgid "Reconcile the Bank Transaction"
@@ -41858,7 +41858,7 @@ msgstr "Banka İşlemlerinin Mutabakatını Yapın"
 #: erpnext/accounts/doctype/process_payment_reconciliation_log/process_payment_reconciliation_log.json
 #: erpnext/accounts/doctype/process_payment_reconciliation_log_allocations/process_payment_reconciliation_log_allocations.json
 msgid "Reconciled"
-msgstr ""
+msgstr "Mutabık"
 
 #. Label of the reconciled_entries (Int) field in DocType 'Process Payment
 #. Reconciliation Log'
@@ -44271,7 +44271,7 @@ msgstr ""
 
 #: erpnext/buying/doctype/purchase_order/purchase_order.py:368
 msgid "Row #{0}: Finished Good Item {1} must be a sub-contracted item"
-msgstr ""
+msgstr "Satır #{0}: Bitmiş Ürün {1} bir alt yüklenici ürünü olmalıdır"
 
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:323
 msgid "Row #{0}: Finished Good must be {1}"
@@ -44279,7 +44279,7 @@ msgstr "Satır #{0}: Bitmiş Ürün {1} olmalıdır"
 
 #: erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.py:434
 msgid "Row #{0}: Finished Good reference is mandatory for Scrap Item {1}."
-msgstr ""
+msgstr "Satır #{0}: Hurda Ürün {1} için Bitmiş Ürün referansı zorunludur."
 
 #: erpnext/accounts/doctype/bank_clearance/bank_clearance.py:99
 msgid "Row #{0}: For {1} Clearance date {2} cannot be before Cheque Date {3}"
