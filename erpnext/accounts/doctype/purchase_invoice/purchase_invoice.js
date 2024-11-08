@@ -35,8 +35,6 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 
 	onload() {
 		super.onload();
-
-		// Ignore linked advances
 		this.frm.ignore_doctypes_on_cancel_all = [
 			"Journal Entry",
 			"Payment Entry",
@@ -663,6 +661,7 @@ frappe.ui.form.on("Purchase Invoice", {
 			frm.set_value("cash_bank_account", account);
 		});
 	},
+	
 
 	create_landed_cost_voucher: function (frm) {
 		let lcv = frappe.model.get_new_doc("Landed Cost Voucher");
@@ -705,6 +704,7 @@ frappe.ui.form.on("Purchase Invoice", {
 	},
 
 	onload: function (frm) {
+		frm.savecancel = function(btn, callback, on_error){ return frm._cancel(btn, callback, on_error, false);}
 		if (frm.doc.__onload && frm.is_new()) {
 			if (frm.doc.supplier) {
 				frm.doc.apply_tds = frm.doc.__onload.supplier_tds ? 1 : 0;
@@ -713,7 +713,6 @@ frappe.ui.form.on("Purchase Invoice", {
 				frm.set_df_property("apply_tds", "read_only", 1);
 			}
 		}
-
 		erpnext.queries.setup_queries(frm, "Warehouse", function () {
 			return erpnext.queries.warehouse(frm.doc);
 		});

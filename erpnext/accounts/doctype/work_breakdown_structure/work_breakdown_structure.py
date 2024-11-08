@@ -10,7 +10,7 @@ from frappe.query_builder.functions import Coalesce, Sum
 class WorkBreakdownStructure(Document):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
-
+     
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
@@ -36,6 +36,7 @@ class WorkBreakdownStructure(Document):
 		wbs_level: DF.Data | None
 		wbs_name: DF.Data
 	# end: auto-generated types
+   
 from frappe import qb
 from erpnext.accounts.report.financial_statements import sort_accounts
 

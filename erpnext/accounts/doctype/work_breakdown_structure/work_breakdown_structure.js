@@ -22,9 +22,9 @@ frappe.ui.form.on("Work Breakdown Structure", {
             };
         });
 
-        // Trigger budget calculations on form load
-        calculate_assigned_budget(frm);
-        calculate_available_budget(frm);
+        // // Trigger budget calculations on form load
+        // calculate_assigned_budget(frm);
+        // calculate_available_budget(frm);
     },
 
     project: function(frm) {
@@ -64,6 +64,10 @@ frappe.ui.form.on("Work Breakdown Structure", {
     refresh: function(frm) {
         calculate_assigned_budget(frm);
         calculate_available_budget(frm);
+
+        // if (frm.doc.docstatus === 1 && !frm.fields_dict.allow_on_submit) {
+        //     frm.save_or_update();
+        // }
 
         frm.add_custom_button(__('Create Document'), function() {
             var dialog = new frappe.ui.Dialog({
