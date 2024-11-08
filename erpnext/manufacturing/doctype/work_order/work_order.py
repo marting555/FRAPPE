@@ -1589,6 +1589,7 @@ def create_job_card(work_order, row, enable_capacity_planning=False, auto_create
 			"wip_warehouse": work_order.wip_warehouse,
 			"hour_rate": row.get("hour_rate"),
 			"serial_no": row.get("serial_no"),
+			"time_required": row.get("time_in_mins"),
 		}
 	)
 
