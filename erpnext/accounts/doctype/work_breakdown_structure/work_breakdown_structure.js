@@ -22,9 +22,9 @@ frappe.ui.form.on("Work Breakdown Structure", {
             };
         });
 
-        // Trigger budget calculations on form load
-        calculate_assigned_budget(frm);
-        calculate_available_budget(frm);
+        // // Trigger budget calculations on form load
+        // calculate_assigned_budget(frm);
+        // calculate_available_budget(frm);
     },
 
     project: function(frm) {

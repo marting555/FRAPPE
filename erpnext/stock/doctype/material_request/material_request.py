@@ -4,7 +4,7 @@
 # ERPNext - web based ERP (http://erpnext.com)
 # For license information, please see license.txt
 
-
+from datetime import datetime
 import json
 
 import frappe
@@ -848,7 +848,7 @@ def create_budget_entry(self):
 			data_from.voucher_type = self.doctype
 			data_from.project = budget.project
 			data_from.company = self.company
-			data_from.posting_date = self.transaction_date
+			data_from.posting_date = datetime.now().strftime("%Y-%m-%d")
 			data_from.document_date = self.transaction_date
 			data_from.wbs = budget.work_breakdown_structure
 			data_from.wbs_name = budget.wbs_name
@@ -867,7 +867,7 @@ def create_budget_entry_on_cancel(self):
 			data_from.voucher_type = self.doctype
 			data_from.project = budget.project
 			data_from.company = self.company
-			data_from.posting_date = self.transaction_date
+			data_from.posting_date = datetime.now().strftime("%Y-%m-%d")
 			data_from.document_date = self.transaction_date
 			data_from.wbs = budget.work_breakdown_structure
 			data_from.wbs_name = budget.wbs_name
