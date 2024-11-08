@@ -116,6 +116,7 @@ frappe.ui.form.on("Purchase Order", {
 
 	onload: function (frm) {
 		set_schedule_date(frm);
+		frm.savecancel = function(btn, callback, on_error){ console.log("jiiri");return frm._cancel(btn, callback, on_error, false);}
 		if (!frm.doc.transaction_date) {
 			frm.set_value("transaction_date", frappe.datetime.get_today());
 		}
