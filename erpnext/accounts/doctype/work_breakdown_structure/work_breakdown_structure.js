@@ -23,8 +23,8 @@ frappe.ui.form.on("Work Breakdown Structure", {
         });
 
         // Trigger budget calculations on form load
-        calculate_assigned_budget(frm);
-        calculate_available_budget(frm);
+        // calculate_assigned_budget(frm);
+        // calculate_available_budget(frm);
     },
 
     project: function(frm) {
@@ -62,8 +62,9 @@ frappe.ui.form.on("Work Breakdown Structure", {
     },
 
     refresh: function(frm) {
-        calculate_assigned_budget(frm);
-        calculate_available_budget(frm);
+        // if (frm.is_new())
+        // calculate_assigned_budget(frm);
+        // calculate_available_budget(frm);
 
         frm.add_custom_button(__('Create Document'), function() {
             var dialog = new frappe.ui.Dialog({

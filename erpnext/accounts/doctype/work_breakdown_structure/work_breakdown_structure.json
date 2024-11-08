@@ -67,6 +67,7 @@
    "default": "0",
    "fieldname": "locked",
    "fieldtype": "Check",
+   "in_list_view": 1,
    "label": "Locked"
   },
   {
@@ -180,7 +181,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-11-05 15:59:40.979977",
+ "modified": "2024-11-07 12:22:03.000841",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Work Breakdown Structure",

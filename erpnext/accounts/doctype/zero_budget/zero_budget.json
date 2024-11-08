@@ -81,10 +81,10 @@
  "links": [
   {
    "link_doctype": "Budget Entry",
-   "link_fieldname": "zero_budget"
+   "link_fieldname": "voucher_no"
   }
  ],
- "modified": "2024-11-05 12:20:25.136877",
+ "modified": "2024-11-07 18:34:43.613853",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Zero Budget",
