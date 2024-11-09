@@ -289,28 +289,6 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 				}
 			]);
 		}
-
-		if(this.frm.fields_dict['items'].grid.get_field('serial_and_batch_bundle')) {
-			let sbb_field = this.frm.get_docfield('items', 'serial_and_batch_bundle');
-			if (sbb_field) {
-				sbb_field.get_route_options_for_new_doc = (row) => {
-					return {
-						'item_code': row.doc.item_code,
-					}
-				};
-			}
-		}
-
-		if(this.frm.fields_dict['items'].grid.get_field('batch_no')) {
-			let batch_no_field = this.frm.get_docfield('items', 'batch_no');
-			if (batch_no_field) {
-				batch_no_field.get_route_options_for_new_doc = function(row) {
-					return {
-						'item': row.doc.item_code
-					}
-				};
-			}
-		}
 	}
 
 	is_return() {
@@ -375,7 +353,8 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 				recipient_id: me.frm.doc.contact_email,
 				payment_request_type: payment_request_type,
 				party_type: payment_request_type == 'Outward' ? "Supplier" : "Customer",
-				party: payment_request_type == 'Outward' ? me.frm.doc.supplier : me.frm.doc.customer
+				party: payment_request_type == 'Outward' ? me.frm.doc.supplier : me.frm.doc.customer,
+				party_name:payment_request_type == 'Outward' ? me.frm.doc.supplier_name : me.frm.doc.customer_name
 			},
 			callback: function(r) {
 				if(!r.exc){
@@ -408,6 +387,35 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		this.setup_quality_inspection();
 		this.validate_has_items();
 		erpnext.utils.view_serial_batch_nos(this.frm);
+		this.set_route_options_for_new_doc();
+	}
+
+	set_route_options_for_new_doc() {
+		// While creating the batch from the link field, copy item from line item to batch form
+
+		if(this.frm.fields_dict['items'].grid.get_field('batch_no')) {
+			let batch_no_field = this.frm.get_docfield('items', 'batch_no');
+			if (batch_no_field) {
+				batch_no_field.get_route_options_for_new_doc = function(row) {
+					return {
+						'item': row.doc.item_code
+					}
+				};
+			}
+		}
+
+		// While creating the SABB from the link field, copy item, doctype from line item to SABB form
+		if(this.frm.fields_dict['items'].grid.get_field('serial_and_batch_bundle')) {
+			let sbb_field = this.frm.get_docfield('items', 'serial_and_batch_bundle');
+			if (sbb_field) {
+				sbb_field.get_route_options_for_new_doc = (row) => {
+					return {
+						"item_code": row.doc.item_code,
+						"voucher_type": this.frm.doc.doctype,
+					}
+				};
+			}
+		}
 	}
 
 	scan_barcode() {
@@ -478,7 +486,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 	setup_sms() {
 		var me = this;
 		let blacklist = ['Purchase Invoice', 'BOM'];
-		if(this.frm.doc.docstatus===1 && !["Lost", "Stopped", "Closed"].includes(this.frm.doc.status)
+		if(frappe.boot.sms_gateway_enabled && this.frm.doc.docstatus===1 && !["Lost", "Stopped", "Closed"].includes(this.frm.doc.status)
 			&& !blacklist.includes(this.frm.doctype)) {
 			this.frm.page.add_menu_item(__('Send SMS'), function() { me.send_sms(); });
 		}
@@ -1287,6 +1295,10 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 				.filter(Boolean).length > 0;
 		} else if (this.frm.doc?.items) {
 			let first_row = this.frm.doc.items[0];
+			if (!first_row) {
+				return false
+			};
+
 			let mapped_rows = mappped_fields.filter(d => first_row[d])
 
 			return mapped_rows?.length > 0;
@@ -2447,7 +2459,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 	payment_terms_template() {
 		var me = this;
 		const doc = this.frm.doc;
-		if(doc.payment_terms_template && doc.doctype !== 'Delivery Note') {
+		if(doc.payment_terms_template && doc.doctype !== 'Delivery Note' && doc.is_return == 0) {
 			var posting_date = doc.posting_date || doc.transaction_date;
 			frappe.call({
 				method: "erpnext.controllers.accounts_controller.get_payment_terms",
