@@ -902,7 +902,7 @@ class PurchaseInvoice(BuyingController):
 			self.add_supplier_gl_entry(gl_entries, base_grand_total, grand_total)
 
 	def add_supplier_gl_entry(
-		self, gl_entries, base_grand_total, grand_total, against_account=None, remarks=None
+		self, gl_entries, base_grand_total, grand_total, against_account=None, remarks=None, skip_merge=False
 	):
 		against_voucher = self.name
 		if self.is_return and self.return_against and not self.update_outstanding_for_self:
@@ -923,6 +923,7 @@ class PurchaseInvoice(BuyingController):
 			"against_voucher_type": self.doctype,
 			"project": self.project,
 			"cost_center": self.cost_center,
+			"_skip_merge": skip_merge,
 		}
 
 		if remarks:
@@ -1446,6 +1447,7 @@ class PurchaseInvoice(BuyingController):
 				-tds_amount,
 				against_account=row.account_head,
 				remarks=_("TDS Deducted"),
+				skip_merge=True,
 			)
 
 	def make_payment_gl_entries(self, gl_entries):
