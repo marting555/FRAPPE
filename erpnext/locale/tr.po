@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2024-11-03 09:35+0000\n"
-"PO-Revision-Date: 2024-11-08 07:09\n"
+"PO-Revision-Date: 2024-11-09 07:15\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Turkish\n"
 "MIME-Version: 1.0\n"
@@ -28298,7 +28298,7 @@ msgstr "Tüm Kriterleri Yükle"
 
 #: erpnext/accounts/doctype/pos_closing_entry/pos_closing_entry.js:83
 msgid "Loading Invoices! Please Wait..."
-msgstr ""
+msgstr "Lütfen Bekleyin, Faturalar yükleniyor..."
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:290
 msgid "Loading import file..."
@@ -46656,7 +46656,7 @@ msgstr "Mutabakat yapılacak Banka Hesabını seçin."
 
 #: erpnext/manufacturing/doctype/operation/operation.js:25
 msgid "Select the Default Workstation where the Operation will be performed. This will be fetched in BOMs and Work Orders."
-msgstr ""
+msgstr "İşlemin gerçekleştirileceği Varsayılan İş İstasyonunu seçin. Ürün Ağaçları ve İş Emirlerinde geçerli olacaktır."
 
 #: erpnext/manufacturing/doctype/work_order/work_order.js:938
 msgid "Select the Item to be manufactured."
@@ -51757,12 +51757,12 @@ msgstr ""
 #. Label of the target_item_code (Link) field in DocType 'Asset Capitalization'
 #: erpnext/assets/doctype/asset_capitalization/asset_capitalization.json
 msgid "Target Item Code"
-msgstr ""
+msgstr "Hedef Ürün Kodu"
 
 #. Label of the target_item_name (Data) field in DocType 'Asset Capitalization'
 #: erpnext/assets/doctype/asset_capitalization/asset_capitalization.json
 msgid "Target Item Name"
-msgstr ""
+msgstr "Hedef Ürün Adı"
 
 #: erpnext/assets/doctype/asset_capitalization/asset_capitalization.py:195
 msgid "Target Item {0} is neither a Fixed Asset nor a Stock Item"
@@ -51912,7 +51912,7 @@ msgstr "Görev"
 #. Log'
 #: erpnext/assets/doctype/asset_maintenance_log/asset_maintenance_log.json
 msgid "Task Assignee Email"
-msgstr ""
+msgstr "Görev Atanan Kişinin E-postası"
 
 #. Option for the '% Complete Method' (Select) field in DocType 'Project'
 #: erpnext/projects/doctype/project/project.json
