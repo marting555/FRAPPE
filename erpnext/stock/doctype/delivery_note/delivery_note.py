@@ -48,14 +48,13 @@ class DeliveryNote(SellingController):
 		base_rounding_adjustment: DF.Currency
 		base_total: DF.Currency
 		base_total_taxes_and_charges: DF.Currency
-		campaign: DF.Link | None
 		commission_rate: DF.Float
 		company: DF.Link
 		company_address: DF.Link | None
 		company_address_display: DF.TextEditor | None
 		contact_display: DF.SmallText | None
 		contact_email: DF.Data | None
-		contact_mobile: DF.SmallText | None
+		contact_mobile: DF.Data | None
 		contact_person: DF.Link | None
 		conversion_rate: DF.Float
 		cost_center: DF.Link | None
@@ -121,7 +120,6 @@ class DeliveryNote(SellingController):
 		shipping_address: DF.TextEditor | None
 		shipping_address_name: DF.Link | None
 		shipping_rule: DF.Link | None
-		source: DF.Link | None
 		status: DF.Literal["", "Draft", "To Bill", "Completed", "Return Issued", "Cancelled", "Closed"]
 		tax_category: DF.Link | None
 		tax_id: DF.Data | None
@@ -138,6 +136,10 @@ class DeliveryNote(SellingController):
 		total_taxes_and_charges: DF.Currency
 		transporter: DF.Link | None
 		transporter_name: DF.Data | None
+		utm_campaign: DF.Link | None
+		utm_content: DF.Data | None
+		utm_medium: DF.Link | None
+		utm_source: DF.Link | None
 		vehicle_no: DF.Data | None
 	# end: auto-generated types
 
@@ -1021,7 +1023,6 @@ def make_sales_invoice(source_name, target_doc=None, args=None):
 					"parent": "delivery_note",
 					"so_detail": "so_detail",
 					"against_sales_order": "sales_order",
-					"serial_no": "serial_no",
 					"cost_center": "cost_center",
 				},
 				"postprocess": update_item,
@@ -1182,18 +1183,19 @@ def make_shipment(source_name, target_doc=None):
 		# As we are using session user details in the pickup_contact then pickup_contact_person will be session user
 		target.pickup_contact_person = frappe.session.user
 
-		contact = frappe.db.get_value(
-			"Contact", source.contact_person, ["email_id", "phone", "mobile_no"], as_dict=1
-		)
-		delivery_contact_display = f"{source.contact_display}"
-		if contact:
-			if contact.email_id:
-				delivery_contact_display += "<br>" + contact.email_id
-			if contact.phone:
-				delivery_contact_display += "<br>" + contact.phone
-			if contact.mobile_no and not contact.phone:
-				delivery_contact_display += "<br>" + contact.mobile_no
-		target.delivery_contact = delivery_contact_display
+		if source.contact_person:
+			contact = frappe.db.get_value(
+				"Contact", source.contact_person, ["email_id", "phone", "mobile_no"], as_dict=1
+			)
+			delivery_contact_display = f"{source.contact_display}"
+			if contact:
+				if contact.email_id:
+					delivery_contact_display += "<br>" + contact.email_id
+				if contact.phone:
+					delivery_contact_display += "<br>" + contact.phone
+				if contact.mobile_no and not contact.phone:
+					delivery_contact_display += "<br>" + contact.mobile_no
+			target.delivery_contact = delivery_contact_display
 
 		if source.shipping_address_name:
 			target.delivery_address_name = source.shipping_address_name

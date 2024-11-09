@@ -486,10 +486,14 @@ def reconcile_against_document(
 		doc = frappe.get_doc(voucher_type, voucher_no)
 		frappe.flags.ignore_party_validation = True
 
-		# For payments with `Advance` in separate account feature enabled, only new ledger entries are posted for each reference.
-		# No need to cancel/delete payment ledger entries
+		# When Advance is allocated from an Order to an Invoice
+		# whole ledger must be reposted
+		repost_whole_ledger = any([x.voucher_detail_no for x in entries])
 		if voucher_type == "Payment Entry" and doc.book_advance_payments_in_separate_party_account:
-			doc.make_advance_gl_entries(cancel=1)
+			if repost_whole_ledger:
+				doc.make_gl_entries(cancel=1)
+			else:
+				doc.make_advance_gl_entries(cancel=1)
 		else:
 			_delete_pl_entries(voucher_type, voucher_no)
 
@@ -523,9 +527,14 @@ def reconcile_against_document(
 		doc = frappe.get_doc(entry.voucher_type, entry.voucher_no)
 
 		if voucher_type == "Payment Entry" and doc.book_advance_payments_in_separate_party_account:
-			# both ledgers must be posted to for `Advance` in separate account feature
-			# TODO: find a more efficient way post only for the new linked vouchers
-			doc.make_advance_gl_entries()
+			# When Advance is allocated from an Order to an Invoice
+			# whole ledger must be reposted
+			if repost_whole_ledger:
+				doc.make_gl_entries()
+			else:
+				# both ledgers must be posted to for `Advance` in separate account feature
+				# TODO: find a more efficient way post only for the new linked vouchers
+				doc.make_advance_gl_entries()
 		else:
 			gl_map = doc.build_gl_map()
 			# Make sure there is no overallocation
@@ -685,6 +694,8 @@ def update_reference_in_journal_entry(d, journal_entry, do_not_save=False):
 
 	# will work as update after submit
 	journal_entry.flags.ignore_validate_update_after_submit = True
+	# Ledgers will be reposted by Reconciliation tool
+	journal_entry.flags.ignore_reposting_on_reconciliation = True
 	if not do_not_save:
 		journal_entry.save(ignore_permissions=True)
 
@@ -769,40 +780,74 @@ def cancel_exchange_gain_loss_journal(
 	Cancel Exchange Gain/Loss for Sales/Purchase Invoice, if they have any.
 	"""
 	if parent_doc.doctype in ["Sales Invoice", "Purchase Invoice", "Payment Entry", "Journal Entry"]:
-		journals = frappe.db.get_all(
-			"Journal Entry Account",
-			filters={
-				"reference_type": parent_doc.doctype,
-				"reference_name": parent_doc.name,
-				"docstatus": 1,
-			},
-			fields=["parent"],
-			as_list=1,
+		gain_loss_journals = get_linked_exchange_gain_loss_journal(
+			referenced_dt=parent_doc.doctype, referenced_dn=parent_doc.name, je_docstatus=1
 		)
-
-		if journals:
-			gain_loss_journals = frappe.db.get_all(
-				"Journal Entry",
-				filters={
-					"name": ["in", [x[0] for x in journals]],
-					"voucher_type": "Exchange Gain Or Loss",
-					"docstatus": 1,
-				},
-				as_list=1,
-			)
-			for doc in gain_loss_journals:
-				gain_loss_je = frappe.get_doc("Journal Entry", doc[0])
-				if referenced_dt and referenced_dn:
-					references = [(x.reference_type, x.reference_name) for x in gain_loss_je.accounts]
-					if (
-						len(references) == 2
-						and (referenced_dt, referenced_dn) in references
-						and (parent_doc.doctype, parent_doc.name) in references
-					):
-						# only cancel JE generated against parent_doc and referenced_dn
-						gain_loss_je.cancel()
-				else:
+		for doc in gain_loss_journals:
+			gain_loss_je = frappe.get_doc("Journal Entry", doc)
+			if referenced_dt and referenced_dn:
+				references = [(x.reference_type, x.reference_name) for x in gain_loss_je.accounts]
+				if (
+					len(references) == 2
+					and (referenced_dt, referenced_dn) in references
+					and (parent_doc.doctype, parent_doc.name) in references
+				):
+					# only cancel JE generated against parent_doc and referenced_dn
 					gain_loss_je.cancel()
+			else:
+				gain_loss_je.cancel()
+
+
+def delete_exchange_gain_loss_journal(
+	parent_doc: dict | object, referenced_dt: str | None = None, referenced_dn: str | None = None
+) -> None:
+	"""
+	Delete Exchange Gain/Loss for Sales/Purchase Invoice, if they have any.
+	"""
+	if parent_doc.doctype in ["Sales Invoice", "Purchase Invoice", "Payment Entry", "Journal Entry"]:
+		gain_loss_journals = get_linked_exchange_gain_loss_journal(
+			referenced_dt=parent_doc.doctype, referenced_dn=parent_doc.name, je_docstatus=2
+		)
+		for doc in gain_loss_journals:
+			gain_loss_je = frappe.get_doc("Journal Entry", doc)
+			if referenced_dt and referenced_dn:
+				references = [(x.reference_type, x.reference_name) for x in gain_loss_je.accounts]
+				if (
+					len(references) == 2
+					and (referenced_dt, referenced_dn) in references
+					and (parent_doc.doctype, parent_doc.name) in references
+				):
+					# only delete JE generated against parent_doc and referenced_dn
+					gain_loss_je.delete()
+			else:
+				gain_loss_je.delete()
+
+
+def get_linked_exchange_gain_loss_journal(referenced_dt: str, referenced_dn: str, je_docstatus: int) -> list:
+	"""
+	Get all the linked exchange gain/loss journal entries for a given document.
+	"""
+	gain_loss_journals = []
+	if journals := frappe.db.get_all(
+		"Journal Entry Account",
+		{
+			"reference_type": referenced_dt,
+			"reference_name": referenced_dn,
+			"docstatus": je_docstatus,
+		},
+		pluck="parent",
+	):
+		gain_loss_journals = frappe.db.get_all(
+			"Journal Entry",
+			{
+				"name": ["in", journals],
+				"voucher_type": "Exchange Gain Or Loss",
+				"is_system_generated": 1,
+				"docstatus": je_docstatus,
+			},
+			pluck="name",
+		)
+	return gain_loss_journals
 
 
 def cancel_common_party_journal(self):
@@ -1530,12 +1575,16 @@ def compare_existing_and_expected_gle(existing_gle, expected_gle, precision):
 	return matched
 
 
-def get_stock_accounts(company, voucher_type=None, voucher_no=None):
+def get_stock_accounts(company, voucher_type=None, voucher_no=None, accounts=None):
 	stock_accounts = [
 		d.name
 		for d in frappe.db.get_all("Account", {"account_type": "Stock", "company": company, "is_group": 0})
 	]
-	if voucher_type and voucher_no:
+
+	if accounts:
+		stock_accounts = [row.account for row in accounts if row.account in stock_accounts]
+
+	elif voucher_type and voucher_no:
 		if voucher_type == "Journal Entry":
 			stock_accounts = [
 				d.account
@@ -1948,6 +1997,7 @@ class QueryPaymentLedger:
 				ple.cost_center.as_("cost_center"),
 				Sum(ple.amount).as_("amount"),
 				Sum(ple.amount_in_account_currency).as_("amount_in_account_currency"),
+				ple.remarks,
 			)
 			.where(ple.delinked == 0)
 			.where(Criterion.all(filter_on_voucher_no))
@@ -2010,6 +2060,7 @@ class QueryPaymentLedger:
 				Table("vouchers").due_date,
 				Table("vouchers").currency,
 				Table("vouchers").cost_center.as_("cost_center"),
+				Table("vouchers").remarks,
 			)
 			.where(Criterion.all(filter_on_outstanding_amount))
 		)
