@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2024-11-03 09:35+0000\n"
-"PO-Revision-Date: 2024-11-09 07:15\n"
+"PO-Revision-Date: 2024-11-10 07:40\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Turkish\n"
 "MIME-Version: 1.0\n"
@@ -44935,7 +44935,7 @@ msgstr "Satır {0}: {1} {2} {3} ile eşleşmiyor"
 
 #: erpnext/stock/doctype/landed_cost_voucher/landed_cost_voucher.py:87
 msgid "Row {0}: {2} Item {1} does not exist in {2} {3}"
-msgstr ""
+msgstr "Satır {0}: {2} Öğe {1} {2} {3} içinde mevcut değil"
 
 #: erpnext/utilities/transaction_base.py:279
 msgid "Row {1}: Quantity ({0}) cannot be a fraction. To allow this, disable '{2}' in UOM {3}."
@@ -45076,7 +45076,7 @@ msgstr "Sipariş Toplam Miktar"
 
 #: erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts.html:16
 msgid "STATEMENT OF ACCOUNTS"
-msgstr ""
+msgstr "HESAP TABLOSU"
 
 #. Label of the swift_number (Read Only) field in DocType 'Payment Request'
 #: erpnext/accounts/doctype/payment_request/payment_request.json
@@ -45625,7 +45625,7 @@ msgstr "Ürün Grubuna göre Satış Ortağı Hedef Sapması"
 #. Name of a report
 #: erpnext/selling/report/sales_partner_target_variance_based_on_item_group/sales_partner_target_variance_based_on_item_group.json
 msgid "Sales Partner Target Variance based on Item Group"
-msgstr ""
+msgstr "Ürün Grubuna göre Satış Ortağı Hedef Varyansı"
 
 #. Name of a report
 #: erpnext/selling/report/sales_partner_transaction_summary/sales_partner_transaction_summary.json
@@ -45737,7 +45737,7 @@ msgstr "Satış Hattı Analitiği"
 
 #: erpnext/selling/page/sales_funnel/sales_funnel.js:154
 msgid "Sales Pipeline by Stage"
-msgstr ""
+msgstr "Aşamaya Göre Satış Süreci"
 
 #: erpnext/stock/report/item_prices/item_prices.py:58
 msgid "Sales Price List"
@@ -53976,7 +53976,7 @@ msgstr ""
 
 #: erpnext/projects/report/daily_timesheet_summary/daily_timesheet_summary.py:30
 msgid "To Datetime"
-msgstr ""
+msgstr "Hedef Tarih"
 
 #. Option for the 'Sales Order Status' (Select) field in DocType 'Production
 #. Plan'
