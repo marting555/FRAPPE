@@ -1,82 +1,143 @@
-<h2 class="text-center">{%= __("Statement of Account") %}</h2>
-<h4 class="text-center">
-	{% if (filters.party_name) { %}
-		{%= filters.party_name %}
-	{% } else if (filters.party && filters.party.length) { %}
-		{%= filters.party %}
-	{% } else if (filters.account) { %}
-		{%= filters.account %}
-	{% } %}
-</h4>
+<!-- 
+Modified on 24-10-2024
+-->
 
-<h6 class="text-center">
-	{% if (filters.tax_id) { %}
-	{%= __("Tax Id: ")%}	{%= filters.tax_id %}
-	{% } %}
-</h6>
+<style type="text/css">
+	@media print {
+		@page {
+			size: auto; /* auto is the initial value */
+			margin: 5mm 5mm 5mm 5mm; /* this affects the margin in the printer settings */
+		}
 
-<h5 class="text-center">
-	{%= frappe.datetime.str_to_user(filters.from_date) %}
-	{%= __("to") %}
-	{%= frappe.datetime.str_to_user(filters.to_date) %}
-</h5>
-<hr>
-<table class="table table-bordered">
-	<thead>
-		<tr>
-			<th style="width: 12%">{%= __("Date") %}</th>
-			<th style="width: 15%">{%= __("Reference") %}</th>
-			<th style="width: 25%">{%= __("Remarks") %}</th>
-			<th style="width: 15%">{%= __("Debit") %}</th>
-			<th style="width: 15%">{%= __("Credit") %}</th>
-			<th style="width: 18%">{%= __("Balance (Dr - Cr)") %}</th>
-		</tr>
-	</thead>
-	<tbody>
-		{% for(var i=0, l=data.length; i<l; i++) { %}
-			<tr>
-			{% if(data[i].posting_date) { %}
-				<td>{%= frappe.datetime.str_to_user(data[i].posting_date) %}</td>
-				<td>{%= data[i].voucher_type %}
-					<br>{%= data[i].voucher_no %}
-				</td>
-				{% var longest_word = cstr(data[i].remarks).split(" ").reduce((longest, word) => word.length > longest.length ? word : longest, ""); %}
-				<td {% if longest_word.length > 45 %} class="overflow-wrap-anywhere" {% endif %}>
-					<span>
-					{% if(!(filters.party || filters.account)) { %}
-						{%= data[i].party || data[i].account %}
-						<br>
-					{% } %}
+		.page-break {
+        	page-break-after: always;
+        	margin-top: 10mm; /* Adjusts the space after the page break */
+    }
+	
+		thead {
+			display: table-header-group;
+		}
+		
+    tfoot {
+			display: table-footer-group;
+		}
+	}
+	
+</style>
 
-					{% if(data[i].remarks) { %}
-						<br>{%= __("Remarks") %}: {%= data[i].remarks %}
-					{% } else if(data[i].bill_no) { %}
-						<br>{%= __("Supplier Invoice No") %}: {%= data[i].bill_no %}
-					{% } %}
-					</span>
-				</td>
-				<td style="text-align: right">
-					{%= format_currency(data[i].debit, filters.presentation_currency || data[i].account_currency) %}
-				</td>
-				<td style="text-align: right">
-					{%= format_currency(data[i].credit, filters.presentation_currency || data[i].account_currency) %}
-				</td>
-			{% } else { %}
-				<td></td>
-				<td></td>
-				<td><b>{%= frappe.format(data[i].account, {fieldtype: "Link"}) || "&nbsp;" %}</b></td>
-				<td style="text-align: right">
-					{%= data[i].account && format_currency(data[i].debit, filters.presentation_currency || data[i].account_currency) %}
-				</td>
-				<td style="text-align: right">
-					{%= data[i].account && format_currency(data[i].credit, filters.presentation_currency || data[i].account_currency) %}
-				</td>
-			{% } %}
-				<td style="text-align: right">
-					{%= format_currency(data[i].balance, filters.presentation_currency || data[i].account_currency) %}
-				</td>
+<br>
+<div style="font-size:12px; font-family:Arial">
+	<div>
+		<div style="text-align:center; font-size:15px; text-decoration:underline; ">
+			<b>
+				{%= __("A &nbsp;&nbsp;C &nbsp;&nbsp;C &nbsp;&nbsp;O &nbsp;&nbsp;U &nbsp;&nbsp;N &nbsp;&nbsp;T &nbsp;&nbsp;S &nbsp;&nbsp;&nbsp;&nbsp;- &nbsp;&nbsp;&nbsp;&nbsp;L &nbsp;&nbsp;E &nbsp;&nbsp;D &nbsp;&nbsp;G &nbsp;&nbsp;E &nbsp;&nbsp;R") %}<br>
+				{% if (filters.party_name) { %}
+					<br>{%= filters.party_name %}
+				{% } else if (filters.party && filters.party.length) { %}
+					<br>{%= filters.party %}
+				{% } else if (filters.account) { %}
+					<br>{%= filters.account %}
+				{% } else { %}
+					<br>{%= __("All Parties ") %}	
+				{% } %}
+			</b>
+		</div>
+		<div style="text-align:center; font-size:13px;">
+			<b>
+				{%= frappe.datetime.str_to_user(filters.from_date) %}
+				{%= __("to") %}
+				{%= frappe.datetime.str_to_user(filters.to_date) %}<br><br>
+			</b>
+		</div>
+	</div>
+
+	<table style="width:100%">
+		<thead>
+			<tr style="border-bottom: 2px solid black; border-top: 2px solid black; font-weight:bold">
+				<td style="border-right: 2px solid black; text-align: center; width: 12%">D A T E</td>
+				<td style="border-right: 2px solid black; text-align: center; width: 43%">P  A  R  T  I  C  U  L  A  R  S</td>
+				<td style="border-right: 2px solid black; text-align: center; width: 14%">D E B I T</td>
+				<td style="border-right: 2px solid black; text-align: center; width: 14%">C R E D I T</td>
+				<td style="text-align: center; width: 17%">B A L A N C E</td>
 			</tr>
-		{% } %}
-	</tbody>
-</table>
-<p class="text-right text-muted">Printed On {%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>
+		</thead>
+		<tbody>
+			{% for(var i=0, l=data.length; i<l; i++) { %}
+				<tr style="border-bottom: 1px solid black">
+					{% if(data[i].posting_date) { %}
+						<td style="text-align: center; border-right: 1px dotted black">
+							{%= frappe.datetime.str_to_user(data[i].posting_date) %}
+						</td>
+						<td style="border-right: 1px dotted black">
+							{%= data[i].voucher_type %} {%= data[i].voucher_no %}
+							{% if(!(filters.party || filters.account)) { %}
+								{%= data[i].party || data[i].account %}
+							{% } %}<br>
+							{% if(filters.show_remarks) { %}
+								{%= __("Remarks") %}: {%= data[i].remarks %}<br>
+								<!--{%= __("Against") %}: {%= data[i].against %}-->
+							{% } %}
+							{% if(data[i].bill_no) { %}
+								{%= __("Supplier Invoice No") %}: {%= data[i].bill_no %}
+							{% } %}
+						</td>
+						<td style="text-align: right; border-right: 1px dotted black">
+							{% if data[i].debit != 0 %}
+								{%= format_currency(data[i].debit, filters.presentation_currency) %}
+							{% } %}
+						</td>
+						<td style="text-align: right; border-right: 1px dotted black">
+							{% if data[i].credit != 0 %}
+								{%= format_currency(data[i].credit, filters.presentation_currency) %}
+							{% } %}
+						</td>
+					{% } else { %}
+						<td style="text-align: center; border-right: 1px dotted black">
+							{% if(i == 0) { %}
+								{%= frappe.datetime.str_to_user(filters.from_date) %}
+							{% } %}
+						</td>
+						<td style="border-right: 1px dotted black"><b>
+							{% if(i == l-2) { %}
+								{%= "Current Total" %}
+							{% } else { %}
+								{% if(i == l-1) { %}
+									{%= "Grand Total [ Opening+Current Total ] " %}
+								{% } else { %}
+									{%= frappe.format(data[i].account, {fieldtype: "Link"}) || "&nbsp;" %}
+								{% } %}
+							{% } %}</b>
+						</td>
+						<td style="text-align: right; border-right: 1px dotted black">
+							{% if(i != 0){ %}
+								{% if(i != l-1){ %}
+									{%= data[i].account && format_currency(data[i].debit, filters.presentation_currency) %}
+								{% } %}
+							{% } %}
+						</td>
+						<td style="text-align: right; border-right: 1px dotted black">
+							{% if(i != 0){ %}
+								{% if(i != l-1){ %}
+									{%= data[i].account && format_currency(data[i].credit, filters.presentation_currency) %}
+								{% } %}
+							{% } %}
+						</td>
+					{% } %}
+						{% if(i == l-1) { %}
+							<td style="text-align: right; font-weight:bold;">
+								{%= format_currency(data[i].balance, filters.presentation_currency) %}
+								{% if(data[i].balance < 0) { %}Cr{% } %}
+								{% if(data[i].balance > 0) { %}Dr{% } %}
+							</td>
+						{% } else { %}
+							{% if(i != l-2) { %}
+								<td style="text-align: right">
+									{%= format_currency(data[i].balance, filters.presentation_currency) %}{% } %}
+								</td>
+						{% } %}
+				</tr>
+			{% endfor%}
+		</tbody>
+	</table>
+	<p class="text-right text-muted">Printed On {%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>
+</div>
