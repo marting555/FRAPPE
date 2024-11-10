@@ -12,6 +12,7 @@ from frappe import _, msgprint
 from frappe.model.mapper import get_mapped_doc
 from frappe.query_builder.functions import Sum
 from frappe.utils import cint, cstr, flt, get_link_to_form, getdate, new_line_sep, nowdate
+from datetime import datetime
 
 from erpnext.buying.utils import check_on_hold_or_closed_status, validate_for_items
 from erpnext.controllers.buying_controller import BuyingController
@@ -173,18 +174,23 @@ class MaterialRequest(BuyingController):
 			"Budget", {"applicable_on_material_request": 1, "docstatus": 1}
 		):
 			self.validate_budget()
+		#increment overall budget
+		increment_committed_overall_budget(self)
 
 	def before_save(self):
 		self.set_status(update=True)
 
 	def before_submit(self):
 		self.set_status(update=True)
+		# create new budgte entry
+		create_budget_entry(self)
 
 	def before_cancel(self):
 		# if MRQ is already closed, no point saving the document
 		check_on_hold_or_closed_status(self.doctype, self.name)
-
+		
 		self.set_status(update=True, status="Cancelled")
+		create_budget_entry_on_cancel(self)
 
 	def check_modified_date(self):
 		mod_db = frappe.db.sql("""select modified from `tabMaterial Request` where name = %s""", self.name)
@@ -225,8 +231,10 @@ class MaterialRequest(BuyingController):
 				)
 
 	def on_cancel(self):
+		self.flags.ignore_links = True
 		self.update_requested_qty_in_production_plan()
 		self.update_requested_qty()
+		decrement_committed_overall_budget(self)
 
 	def get_mr_items_ordered_qty(self, mr_items):
 		mr_items_ordered_qty = {}
@@ -829,3 +837,61 @@ def make_in_transit_stock_entry(source_name, in_transit_warehouse):
 		row.t_warehouse = in_transit_warehouse
 
 	return ste_doc
+
+
+def increment_committed_overall_budget(self):
+	for budget in self.items:
+		if budget.work_breakdown_structure is not None:
+			total = budget.amount
+			doc = frappe.get_doc("Work Breakdown Structure",budget.work_breakdown_structure)
+			doc.committed_overall_budget += total
+			doc.save()
+		
+
+def decrement_committed_overall_budget(self):
+	for budget in self.items:
+		if budget.work_breakdown_structure is not None:
+			total = budget.amount
+			doc = frappe.get_doc("Work Breakdown Structure",budget.work_breakdown_structure)
+			doc.committed_overall_budget -= total
+			doc.save()
+		
+
+def create_budget_entry(self):
+	for budget in self.items:
+		if budget.work_breakdown_structure is not None:
+			data_from = frappe.new_doc("Budget Entry")
+			wbs_level=frappe.get_doc('Work Breakdown Structure',budget.work_breakdown_structure)
+			data_from.voucher_type = self.doctype
+			data_from.project = budget.project
+			data_from.company = self.company
+			data_from.posting_date = datetime.now().strftime("%Y-%m-%d")
+			data_from.document_date = self.transaction_date
+			data_from.wbs = budget.work_breakdown_structure
+			data_from.wbs_name = budget.wbs_name
+			data_from.voucher_no = self.name
+			data_from.overall_credit = budget.amount
+			data_from.wbs_level = wbs_level.wbs_level
+			data_from.insert()
+			data_from.submit()
+
+
+def create_budget_entry_on_cancel(self):
+	for budget in self.items:
+		if budget.work_breakdown_structure is not None:
+			data_from = frappe.new_doc("Budget Entry")
+			wbs_level=frappe.get_doc('Work Breakdown Structure',budget.work_breakdown_structure)
+			data_from.voucher_type = self.doctype
+			data_from.project = budget.project
+			data_from.company = self.company
+			data_from.posting_date = datetime.now().strftime("%Y-%m-%d")
+			data_from.document_date = self.transaction_date
+			data_from.wbs = budget.work_breakdown_structure
+			data_from.wbs_name = budget.wbs_name
+			data_from.voucher_no = self.name
+			data_from.overall_debit = budget.amount
+			data_from.wbs_level = wbs_level.wbs_level
+			data_from.insert()
+			data_from.submit()
+		
+
