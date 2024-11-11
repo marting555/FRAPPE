@@ -222,10 +222,11 @@ class PurchaseOrder(BuyingController):
 		self.reset_default_field_value("set_warehouse", "items", "warehouse")
 
 	def before_cancel(self):
-		create_budget_entry_on_cancel(self)
+		update_committed_overall_budget(self,"Cancel")
 
 	def before_submit(self):
-		create_budget_entry(self)
+		pass
+		# create_budget_entry(self)
 	
 		
 	def validate_with_previous_doc(self):
@@ -489,7 +490,7 @@ class PurchaseOrder(BuyingController):
 		update_linked_doc(self.doctype, self.name, self.inter_company_order_reference)
 
 		self.auto_create_subcontracting_order()
-		increment_committed_overall_budget(self)
+		update_committed_overall_budget(self,"Submit")
 
 		
 
@@ -998,3 +999,154 @@ def create_budget_entry_on_cancel(self):
 			data_from.wbs_level = wbs_level.wbs_level
 			data_from.insert()
 			data_from.submit()
+
+def update_committed_overall_budget(self,event):
+	wbs_dict = []
+	wbs_list = []
+	for i in self.items:
+		if i.get("work_breakdown_structure") not in wbs_list:
+			wbs_list.append(i.get("work_breakdown_structure"))
+	if wbs_list:
+		for i in wbs_list:
+			wbs_dict.append(
+				{
+					"wbs_id": i,
+					"credit": 0.0,
+					"debit": 0.0,
+					"txn_date": "",
+					"document_date": "",
+					"voucher_creation_date": "",
+					"submit_date": "",
+					"project": "",
+					"voucher_name": "",
+					"voucher_type": "",
+				}
+			)
+	for i in self.items:
+		po_amt = i.get("net_amount")
+
+		if i.get("work_breakdown_structure") and not i.get("material_request_item"):
+			for j in wbs_dict:
+				if i.get("work_breakdown_structure") == j.get("wbs_id"):
+					wbs_name,wbs_level = frappe.db.get_value("Work Breakdown Structure",i.get("work_breakdown_structure"),['wbs_name','wbs_level'])
+					j.update(
+						{
+							"credit": j.get("credit") + i.get("net_amount"),
+							"txn_date": self.transaction_date,
+							"document_date": self.transaction_date,
+							"voucher_creation_date": self.creation,
+							"project": i.get("project"),
+							"voucher_type": self.doctype,
+							"voucher_name": self.name,
+							"wbs_name": wbs_name,
+							"wbs_level": wbs_level
+						}
+					)
+			po_amt = i.get("net_amount")
+			wbs = frappe.get_doc("Work Breakdown Structure", i.get("work_breakdown_structure"))
+			if event == "Submit":
+				
+				wbs.committed_overall_budget = wbs.committed_overall_budget + po_amt
+	
+				wbs.assigned_overall_budget = wbs.actual_overall_budget + wbs.committed_overall_budget
+				wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
+				if wbs.locked:
+					frappe.throw(
+						"Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs.name)
+					)
+			elif "event" == "Cancel":
+				wbs.committed_overall_budget = wbs.committed_overall_budget - po_amt
+
+				wbs.assigned_overall_budget = wbs.actual_overall_budget + wbs.committed_overall_budget
+				wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
+				if wbs.locked:
+					frappe.throw(
+						"Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs.name)
+					)
+			wbs.save(ignore_permissions=True)
+
+		elif i.get("work_breakdown_structure") and i.get("material_request_item"):
+			po_amt = i.get("net_amount")
+			mri = frappe.qb.DocType("Material Request Item")
+			query = (
+				frappe.qb.from_(mri)
+				.select(mri.amount,mri.qty,mri.ordered_qty,mri.rate)
+				.where(mri.name == i.get("material_request_item"))
+			)
+			mr_details = query.run(as_dict=True)
+			
+			if mr_details:
+
+				if mr_details[0].get("qty") == i.get("qty"):
+						
+					debit_amt = i.get("qty") * mr_details[0].get("rate")
+					for j in wbs_dict:
+						if i.get("work_breakdown_structure") == j.get("wbs_id"):
+							wbs_name,wbs_level = frappe.db.get_value("Work Breakdown Structure",i.get("work_breakdown_structure"),['wbs_name','wbs_level'])
+							j.update(
+								{
+									"credit": j.get("credit") + po_amt,
+									"debit": j.get("debit") + debit_amt,
+									"txn_date": self.transaction_date,
+									"document_date": self.transaction_date,
+									"voucher_creation_date": self.creation,
+									"project": i.get("project"),
+									"voucher_type": self.doctype,
+									"voucher_name": self.name,
+									"wbs_name": wbs_name,
+									"wbs_level": wbs_level
+								}
+							)
+					wbs = frappe.get_doc("Work Breakdown Structure",i.get("work_breakdown_structure"))
+					if event == "Submit":
+						wbs.committed_overall_budget = (
+							wbs.committed_overall_budget + po_amt - mr_details[0].get("amount")
+						)
+						wbs.assigned_overall_budget = wbs.actual_overall_budget + wbs.committed_overall_budget
+						wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
+						if wbs.locked:
+							frappe.throw(
+								"Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs.name)
+							)
+						wbs.save(ignore_permissions=True)
+					elif event == "Cancel":
+						wbs.committed_overall_budget = (
+							wbs.committed_overall_budget - po_amt + mr_details[0].get("amount")
+						)
+
+						wbs.assigned_overall_budget = wbs.actual_overall_budget + wbs.committed_overall_budget
+						wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
+						if wbs.locked:
+							frappe.throw(
+								"Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs.name)
+							)
+					wbs.save(ignore_permissions=True)
+	
+	if wbs_dict:
+		for i in wbs_dict:
+			create_budget_entry(self,i, event, self.company)
+
+
+def create_budget_entry(self,data, event, company):
+	if data.get("credit") > 0.0 and data.get("wbs_id"):
+		bgt_ent = frappe.new_doc("Budget Entry")
+		bgt_ent.project = data.get("project")
+		bgt_ent.wbs = data.get("wbs_id")
+		bgt_ent.posting_date = data.get("document_date")
+		bgt_ent.voucher_submit_date = data.get("voucher_creation_date")
+		bgt_ent.submit_date = data.get("submit_date")
+		bgt_ent.company = company
+		bgt_ent.wbs_name = data.get("wbs_name")
+		bgt_ent.wbs_level = data.get("wbs_level")
+		if event == "Submit":
+			bgt_ent.committed_overall_credit = data.get("credit")
+			if data.get("debit") > 0.0:
+				bgt_ent.committed_overall_debit = data.get("debit")
+		elif event == "Cancel":
+			bgt_ent.committed_overall_debit = data.get("credit")
+			if data.get("debit") > 0.0:
+				bgt_ent.committed_overall_credit = data.get("debit")
+		bgt_ent.voucher_type = "Purchase Order"
+		bgt_ent.voucher_no = self.name
+		bgt_ent.save(ignore_permissions=True)
+		bgt_ent.submit()

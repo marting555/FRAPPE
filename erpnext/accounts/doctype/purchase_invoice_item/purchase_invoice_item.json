@@ -982,18 +982,20 @@
   {
    "fieldname": "project_name",
    "fieldtype": "Data",
-   "label": "Project Name"
+   "label": "Project Name",
+   "read_only": 1
   },
   {
    "fieldname": "wbs_name",
    "fieldtype": "Data",
-   "label": "WBS Name"
+   "label": "WBS Name",
+   "read_only": 1
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-11-04 16:38:50.921342",
+ "modified": "2024-11-10 22:36:33.008331",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice Item",

@@ -2013,18 +2013,33 @@ def update_actual_overall_budget(self,event):
 			if i.get("work_breakdown_structure") and not i.get("po_detail") and not i.get("pr_detail"):
 				for j in wbs_dict:
 					if i.get("work_breakdown_structure") == j.get("wbs_id"):
+						wbs_name,wbs_level = frappe.db.get_value("Work Breakdown Structure",i.get("work_breakdown_structure"),['wbs_name','wbs_level'])
 						j.update({
 							"credit":j.get("credit") + i.get("net_amount"),
 							"txn_date":self.posting_date,
 							"project":i.get("project"),
 							"voucher_type":self.doctype,
-							"voucher_name":self.name
+							"voucher_name":self.name,
+							"wbs_name": wbs_name,
+							"wbs_level": wbs_level
 						})
 				wbs_curr_doc = frappe.get_doc("Work Breakdown Structure",i.get("work_breakdown_structure"))
 				if event == "Submit":
 					wbs_curr_doc.actual_overall_budget = wbs_curr_doc.actual_overall_budget + pi_amt
+					wbs_curr_doc.assigned_overall_budget = wbs_curr_doc.actual_overall_budget + wbs_curr_doc.committed_overall_budget
+					wbs_curr_doc.available_budget = wbs_curr_doc.overall_budget - wbs_curr_doc.assigned_overall_budget
+					if wbs_curr_doc.locked:
+						frappe.throw(
+							"Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs_curr_doc.name)
+						)
 				elif event == "Cancel":
 					wbs_curr_doc.actual_overall_budget = wbs_curr_doc.actual_overall_budget - pi_amt
+					wbs_curr_doc.assigned_overall_budget = wbs_curr_doc.actual_overall_budget + wbs_curr_doc.committed_overall_budget
+					wbs_curr_doc.available_budget = wbs_curr_doc.overall_budget - wbs_curr_doc.assigned_overall_budget
+					if wbs_curr_doc.locked:
+						frappe.throw(
+							"Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs_curr_doc.name)
+						)
 				wbs_curr_doc.save(ignore_permissions=True)
 			elif i.get("work_breakdown_structure") and i.get("po_detail") and not i.get("pr_detail"):
 				poi = frappe.qb.DocType("Purchase Order Item")
@@ -2044,6 +2059,7 @@ def update_actual_overall_budget(self,event):
 						debit_amt = i.get('qty') * po_details[0].get("rate")
 						for j in wbs_dict:
 							if i.get("work_breakdown_structure") == j.get("wbs_id"):
+								wbs_name,wbs_level = frappe.db.get_value("Work Breakdown Structure",i.get("work_breakdown_structure"),['wbs_name','wbs_level'])
 								j.update({
 									"credit":j.get("credit") + pi_amt,
 									"debit_po":j.get("debit_po") + debit_amt,
@@ -2051,14 +2067,30 @@ def update_actual_overall_budget(self,event):
 									"project":i.get("project"),
 									"voucher_type":self.doctype,
 									"voucher_name":self.name,
+									"wbs_name": wbs_name,
+									"wbs_level": wbs_level
 								})
 						wbs = frappe.get_doc("Work Breakdown Structure",i.get("work_breakdown_structure"))
 						if event == "Submit":
 							wbs.committed_overall_budget = wbs.committed_overall_budget - debit_amt
 							wbs.actual_overall_budget = wbs.actual_overall_budget + pi_amt
+
+							wbs.assigned_overall_budget = wbs.actual_overall_budget + wbs.committed_overall_budget
+							wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
+							if wbs.locked:
+								frappe.throw(
+									"Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs.name)
+								)
 						elif event == "Cancel":
 							wbs.committed_overall_budget = wbs.committed_overall_budget + debit_amt
 							wbs.actual_overall_budget = wbs.actual_overall_budget - pi_amt
+
+							wbs.assigned_overall_budget = wbs.actual_overall_budget + wbs.committed_overall_budget
+							wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
+							if wbs.locked:
+								frappe.throw(
+									"Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs.name)
+								)
 						wbs.save(ignore_permissions=True)
 		if wbs_dict:
 			for i in wbs_dict:
@@ -2071,9 +2103,11 @@ def create_budget_entry(data,event,company):
 		bgt_ent.wbs = data.get("wbs_id")
 		bgt_ent.date = data.get("txn_date")
 		bgt_ent.document_date = data.get("document_date")
-		bgt_ent.voucher_creation_date = data.get("voucher_creation_date")
+		bgt_ent.voucher_submit_date = datetime.now()
 		bgt_ent.submit_date = data.get("submit_date")
 		bgt_ent.company = company
+		bgt_ent.wbs_level = data.get("wbs_level")
+		bgt_ent.wbs_name = data.get("wbs_name")
 		if event == "Submit":
 			bgt_ent.actual_overall_credit = data.get("credit")
 			

@@ -68,8 +68,18 @@ frappe.ui.form.on("Zero Budget Item", {
         frm.doc.zero_budget_item.forEach(row => {
             total_amount += row.zero_budget;
         });
-        console.log("1")
         frm.set_value("total",total_amount);
         frm.refresh_field("total");
+    },
+    wbs_element: function(frm,cdt,cdn) {
+        var child = locals[cdt][cdn];
+        frappe.db.get_value("Work Breakdown Structure", child.wbs_element, ['wbs_name','wbs_level'])
+        .then(response => {
+            child.wbs_name = response.message.wbs_name || null;
+            child.wbs_level = response.message.wbs_level || null;
+            let row = frm.fields_dict['zero_budget_item'].grid.get_row(cdn);
+			row.refresh_field('wbs_name');
+            row.refresh_field('wbs_level');
+        })
     }
 });

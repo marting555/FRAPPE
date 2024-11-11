@@ -123,15 +123,19 @@
   },
   {
    "allow_on_submit": 1,
+   "default": "0",
    "fieldname": "original_budget",
    "fieldtype": "Currency",
-   "label": "Original Budget"
+   "label": "Original Budget",
+   "read_only": 1
   },
   {
    "allow_on_submit": 1,
+   "default": "0",
    "fieldname": "actual_overall_budget",
    "fieldtype": "Currency",
-   "label": "Actual Overall Budget"
+   "label": "Actual Overall Budget",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_rade",
@@ -139,15 +143,19 @@
   },
   {
    "allow_on_submit": 1,
+   "default": "0",
    "fieldname": "overall_budget",
    "fieldtype": "Currency",
-   "label": "Overall Budget"
+   "label": "Overall Budget",
+   "read_only": 1
   },
   {
    "allow_on_submit": 1,
+   "default": "0",
    "fieldname": "assigned_overall_budget",
    "fieldtype": "Currency",
-   "label": "Assigned Overall Budget"
+   "label": "Assigned Overall Budget",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_haw1",
@@ -155,15 +163,19 @@
   },
   {
    "allow_on_submit": 1,
+   "default": "0",
    "fieldname": "committed_overall_budget",
    "fieldtype": "Currency",
-   "label": "Committed Overall Budget"
+   "label": "Committed Overall Budget",
+   "read_only": 1
   },
   {
    "allow_on_submit": 1,
+   "default": "0",
    "fieldname": "available_budget",
    "fieldtype": "Currency",
-   "label": "Available Budget"
+   "label": "Available Budget",
+   "read_only": 1
   },
   {
    "default": "0",
@@ -181,7 +193,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-11-07 12:22:03.000841",
+ "modified": "2024-11-10 22:26:07.603831",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Work Breakdown Structure",
