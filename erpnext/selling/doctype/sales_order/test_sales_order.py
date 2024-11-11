@@ -2096,7 +2096,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		customer = frappe.get_doc("Customer", self.customer)
 		customer.credit_limits = []
 		customer.append(
-			"credit_limits", {"company": company, "credit_limit": 1000, "bypass_credit_limit_check": False}
+			"credit_limits", {"company": company, "credit_limit": 6000, "bypass_credit_limit_check": False}
 		)
 		customer.save()
 
