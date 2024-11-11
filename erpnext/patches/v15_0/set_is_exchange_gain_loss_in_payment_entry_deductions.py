@@ -8,6 +8,9 @@ def execute():
 		pluck="exchange_gain_loss_account",
 	)
 
+	if not default_exchange_gain_loss_accounts:
+		return
+
 	payment_entry = frappe.qb.DocType("Payment Entry")
 	payment_entry_deduction = frappe.qb.DocType("Payment Entry Deduction")
 

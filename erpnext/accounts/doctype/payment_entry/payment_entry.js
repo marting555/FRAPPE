@@ -1240,10 +1240,7 @@ frappe.ui.form.on("Payment Entry", {
 		await frappe.after_ajax();
 		if (!frm.doc.base_paid_amount || !frm.doc.base_received_amount) return;
 
-		const exchange_gain_loss =
-			frm.doc.payment_type == "Receive"
-				? frm.doc.base_paid_amount - frm.doc.base_received_amount
-				: frm.doc.base_received_amount - frm.doc.base_paid_amount;
+		const exchange_gain_loss = frm.doc.base_paid_amount - frm.doc.base_received_amount;
 
 		if (!exchange_gain_loss) {
 			frm.events.delete_exchange_gain_loss_entry(frm);

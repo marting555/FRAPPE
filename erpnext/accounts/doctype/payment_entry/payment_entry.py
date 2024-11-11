@@ -1136,10 +1136,9 @@ class PaymentEntry(AccountsController):
 		if self.paid_to_account_currency == self.paid_from_account_currency:
 			return
 
-		exchange_gain_loss = (
-			self.base_paid_amount - self.base_received_amount
-			if self.payment_type == "Receive"
-			else self.base_received_amount - self.base_paid_amount
+		exchange_gain_loss = flt(
+			self.base_paid_amount - self.base_received_amount,
+			self.precision("base_paid_amount"),
 		)
 
 		exchange_gain_loss_rows = [d for d in self.get("deductions") if d.is_exchange_gain_loss]

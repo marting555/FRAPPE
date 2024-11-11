@@ -484,20 +484,13 @@ class TestPaymentEntry(IntegrationTestCase):
 		# Early payment discount loss on income
 		self.assertEqual(pe.paid_amount, 90.0)
 		self.assertEqual(pe.received_amount, 4200.0)  # 5000 - 500 (discount) - 300 (exchange loss)
-		self.assertEqual(pe.deductions[0].amount, 500.0)
-		self.assertEqual(pe.deductions[0].account, "Write Off - _TC")
+		self.assertEqual(pe.deductions[1].amount, 500.0)
+		self.assertEqual(pe.deductions[1].account, "Write Off - _TC")
 
 		# Exchange loss
-		self.assertEqual(pe.difference_amount, 300.0)
-
-		pe.append(
-			"deductions",
-			{
-				"account": "_Test Exchange Gain/Loss - _TC",
-				"cost_center": "_Test Cost Center - _TC",
-				"amount": 300.0,
-			},
-		)
+		self.assertEqual(pe.deductions[0].amount, 300.0)
+		pe.deductions[0].account = "_Test Exchange Gain/Loss - _TC"
+		pe.deductions[0].cost_center = "_Test Cost Center - _TC"
 
 		pe.insert()
 		pe.submit()
@@ -561,16 +554,10 @@ class TestPaymentEntry(IntegrationTestCase):
 		pe.reference_no = "1"
 		pe.reference_date = "2016-01-01"
 
-		self.assertEqual(pe.difference_amount, 100)
+		self.assertEqual(pe.deductions[0].amount, 100)
+		pe.deductions[0].account = "_Test Exchange Gain/Loss - _TC"
+		pe.deductions[0].cost_center = "_Test Cost Center - _TC"
 
-		pe.append(
-			"deductions",
-			{
-				"account": "_Test Exchange Gain/Loss - _TC",
-				"cost_center": "_Test Cost Center - _TC",
-				"amount": 100,
-			},
-		)
 		pe.insert()
 		pe.submit()
 
@@ -660,16 +647,9 @@ class TestPaymentEntry(IntegrationTestCase):
 		pe.set_exchange_rate()
 		pe.set_amounts()
 
-		self.assertEqual(pe.difference_amount, 500)
-
-		pe.append(
-			"deductions",
-			{
-				"account": "_Test Exchange Gain/Loss - _TC",
-				"cost_center": "_Test Cost Center - _TC",
-				"amount": 500,
-			},
-		)
+		self.assertEqual(pe.deductions[0].amount, 500)
+		pe.deductions[0].account = "_Test Exchange Gain/Loss - _TC"
+		pe.deductions[0].cost_center = "_Test Cost Center - _TC"
 
 		pe.insert()
 		pe.submit()

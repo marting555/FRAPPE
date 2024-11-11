@@ -316,8 +316,8 @@ class TestUnreconcilePayment(AccountsTestMixin, IntegrationTestCase):
 		self.assertEqual(si2.outstanding_amount, 0)
 		self.assertEqual(len(pe1.references), 2)
 		self.assertEqual(len(pe2.references), 1)
-		self.assertEqual(pe1.unallocated_amount, 0)
-		self.assertEqual(pe2.unallocated_amount, 50)
+		self.assertEqual(pe1.unallocated_amount, 100)
+		self.assertEqual(pe2.unallocated_amount, 150)
 
 		# Exc gain/loss JE from PE1 should be available
 		self.assertEqual(
