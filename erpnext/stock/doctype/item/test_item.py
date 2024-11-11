@@ -9,7 +9,8 @@ from frappe.custom.doctype.property_setter.property_setter import make_property_
 from frappe.test_runner import make_test_objects
 from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, today
-
+from frappe.query_builder import DocType
+from frappe import _
 from erpnext.controllers.item_variant import (
 	InvalidItemAttributeValueError,
 	ItemVariantExistsError,
@@ -636,15 +637,45 @@ class TestItem(FrappeTestCase):
 			self.assertTrue(count >= 0)
 
 	def test_index_creation(self):
-		"check if index is getting created in db"
+		"""Check if indexes are created on specific columns in 'tabItem' table"""
 
-		indices = frappe.db.sql("show index from tabItem", as_dict=1)
+		# Define the DocType for the table and expected columns
+		Item = DocType("Item")
 		expected_columns = {"item_code", "item_name", "item_group"}
-		for index in indices:
-			expected_columns.discard(index.get("Column_name"))
 
-		if expected_columns:
-			self.fail(f"Expected db index on these columns: {', '.join(expected_columns)}")
+		# Query pg_indexes to get all index definitions for the table
+		indices = frappe.db.sql(
+        """
+        SELECT indexname, indexdef
+        FROM pg_indexes
+        WHERE schemaname = 'public' AND tablename = %s
+        """,
+        (Item.get_table_name(),),
+        as_dict=True,
+		)
+
+		# Parse the index definitions to identify indexed columns
+		indexed_columns = set()
+		for index in indices:
+			# Extract column names from index definition, handling multi-column indexes
+			index_columns = index["indexdef"].split("(")[-1].rstrip(")").split(", ")
+			indexed_columns.update(map(lambda x: x.strip(), index_columns))
+
+		# Check if any of the expected columns are missing in the indexes
+		missing_columns = expected_columns - indexed_columns
+		if missing_columns:
+			# In case of composite index, see if the columns are all part of an index
+			for col in missing_columns:
+				if not any(col in index for index in indexed_columns):
+					continue
+				# Check if they are part of a composite index
+				for index in indices:
+					if col in index["indexdef"]:
+						missing_columns.discard(col)
+
+		# Final assertion if any columns are missing
+		if missing_columns:
+			self.fail(f"Expected db index on these columns: {', '.join(missing_columns)}")
 
 	def test_attribute_completions(self):
 		expected_attrs = {"Small", "Extra Small", "Extra Large", "Large", "2XL", "Medium"}
