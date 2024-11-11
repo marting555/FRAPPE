@@ -484,13 +484,13 @@ class TestPaymentEntry(IntegrationTestCase):
 		# Early payment discount loss on income
 		self.assertEqual(pe.paid_amount, 90.0)
 		self.assertEqual(pe.received_amount, 4200.0)  # 5000 - 500 (discount) - 300 (exchange loss)
-		self.assertEqual(pe.deductions[1].amount, 500.0)
-		self.assertEqual(pe.deductions[1].account, "Write Off - _TC")
+		self.assertEqual(pe.deductions[0].amount, 500.0)
+		self.assertEqual(pe.deductions[0].account, "Write Off - _TC")
 
 		# Exchange loss
-		self.assertEqual(pe.deductions[0].amount, 300.0)
-		pe.deductions[0].account = "_Test Exchange Gain/Loss - _TC"
-		pe.deductions[0].cost_center = "_Test Cost Center - _TC"
+		self.assertEqual(pe.deductions[-1].amount, 300.0)
+		pe.deductions[-1].account = "_Test Exchange Gain/Loss - _TC"
+		pe.deductions[-1].cost_center = "_Test Cost Center - _TC"
 
 		pe.insert()
 		pe.submit()

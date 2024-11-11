@@ -2956,9 +2956,6 @@ def get_payment_entry(
 	update_accounting_dimensions(pe, doc)
 
 	if party_account and bank:
-		pe.set_exchange_rate(ref_doc=doc)
-		pe.set_amounts()
-
 		if discount_amount:
 			base_total_discount_loss = 0
 			if frappe.db.get_single_value("Accounts Settings", "book_tax_discount_loss"):
@@ -2968,7 +2965,8 @@ def get_payment_entry(
 				pe, doc, discount_amount, base_total_discount_loss, party_account_currency
 			)
 
-		pe.set_difference_amount()
+		pe.set_exchange_rate(ref_doc=doc)
+		pe.set_amounts()
 
 	# If PE is created from PR directly, then no need to find open PRs for the references
 	if not created_from_payment_request:
@@ -3318,13 +3316,14 @@ def set_pending_discount_loss(pe, doc, discount_amount, base_total_discount_loss
 		book_tax_loss = frappe.db.get_single_value("Accounts Settings", "book_tax_discount_loss")
 		account_type = "round_off_account" if book_tax_loss else "default_discount_account"
 
-		pe.set_gain_or_loss(
-			account_details={
+		pe.append(
+			"deductions",
+			{
 				"account": frappe.get_cached_value("Company", pe.company, account_type),
 				"cost_center": pe.cost_center
 				or frappe.get_cached_value("Company", pe.company, "cost_center"),
 				"amount": discount_amount * positive_negative,
-			}
+			},
 		)
 
 
