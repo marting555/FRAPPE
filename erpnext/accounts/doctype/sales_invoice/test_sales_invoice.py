@@ -77,7 +77,7 @@ class TestSalesInvoice(IntegrationTestCase):
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
-		# cls.enterClassContext(cls.change_settings("Selling Settings", validate_selling_price=0))
+		cls.enterClassContext(cls.change_settings("Selling Settings", validate_selling_price=0))
 		unlink_payment_on_cancel_of_invoice()
 
 	@classmethod
@@ -3904,7 +3904,11 @@ class TestSalesInvoice(IntegrationTestCase):
 		)
 		dn1.save().submit()
 		make_stock_entry(
-			target="_Test Warehouse - _TC", item_code="_Test Item", company="_Test Company", qty=5, basic_rate=100
+			target="_Test Warehouse - _TC",
+			item_code="_Test Item",
+			company="_Test Company",
+			qty=5,
+			basic_rate=100,
 		)
 		dn2 = create_delivery_note(do_not_submit=1)
 		dn2.items[0].qty = 5
