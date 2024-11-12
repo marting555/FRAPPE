@@ -457,8 +457,7 @@ class POSInvoice(SalesInvoice):
 				frappe.throw(_("Row #{0} (Payment Table): Amount must be negative").format(entry.idx))
 
 		invoice_total = self.rounded_total or self.grand_total
-		total_amount_in_payments = flt(total_amount_in_payments, self.precision("grand_total"))
-
+		total_amount_in_payments = flt(total_amount_in_payments, self.precision("grand_total")) + flt(self.loyalty_points, self.precision("grand_total"))
 		if self.docstatus != 0 and total_amount_in_payments and total_amount_in_payments < invoice_total:
 			if self.is_return:
 				frappe.throw(
