@@ -24,7 +24,7 @@ class TestPOSInvoice(IntegrationTestCase):
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
-		cls.enterClassContext(cls.change_settings("Selling Settings", validate_selling_price=0))
+		# cls.enterClassContext(cls.change_settings("Selling Settings", validate_selling_price=0))
 		make_stock_entry(target="_Test Warehouse - _TC", item_code="_Test Item", qty=800, basic_rate=100)
 		frappe.db.sql("delete from `tabTax Rule`")
 
@@ -317,17 +317,17 @@ class TestPOSInvoice(IntegrationTestCase):
 		)
 
 		pos.append(
-			"payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 1000, "default": 1}
+			"payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 2000, "default": 1}
 		)
 
 		pos.insert()
 		pos.submit()
 		pos.reload()
-
 		pos_return1 = make_sales_return(pos.name)
 
 		# partial return 1
 		pos_return1.get("items")[0].qty = -1
+		pos_return1.insert()
 		pos_return1.submit()
 		pos_return1.reload()
 
