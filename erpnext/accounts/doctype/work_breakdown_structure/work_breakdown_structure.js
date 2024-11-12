@@ -6,6 +6,11 @@ frappe.ui.form.on("Work Breakdown Structure", {
     onload_post_render: function(frm) {
         toggle_gl_account(frm);
     },
+    add_monthly_dist:function(frm){
+        
+            frappe.new_doc("WBS Monthly Distribution", { for_wbs: frm.doc.name });
+    
+    },
     onload: function(frm) {
         frm.set_query("project", function() {
             return {
