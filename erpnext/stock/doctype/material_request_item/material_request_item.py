@@ -55,7 +55,6 @@ class MaterialRequestItem(Document):
 		stock_uom: DF.Link
 		uom: DF.Link
 		warehouse: DF.Link | None
-		wip_composite_asset: DF.Link | None
 	# end: auto-generated types
 
 	pass

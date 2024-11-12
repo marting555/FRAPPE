@@ -34,8 +34,6 @@ from erpnext.accounts.general_ledger import (
 )
 from erpnext.accounts.party import get_due_date, get_party_account
 from erpnext.accounts.utils import get_account_currency, get_fiscal_year
-from assets.assets.doctype.asset.asset import is_cwip_accounting_enabled
-from assets.assets.doctype.asset_category.asset_category import get_asset_category_account
 from erpnext.buying.utils import check_on_hold_or_closed_status
 from erpnext.controllers.accounts_controller import validate_account_head
 from erpnext.controllers.buying_controller import BuyingController
@@ -448,8 +446,6 @@ class PurchaseInvoice(BuyingController):
 			stock_not_billed_account = self.get_company_default("stock_received_but_not_billed")
 			stock_items = self.get_stock_items()
 
-		self.asset_received_but_not_billed = None
-
 		if self.update_stock:
 			self.validate_item_code()
 			self.validate_warehouse(for_validate)
@@ -459,12 +455,11 @@ class PurchaseInvoice(BuyingController):
 		for item in self.get("items"):
 			# in case of auto inventory accounting,
 			# expense account is always "Stock Received But Not Billed" for a stock item
-			# except opening entry, drop-ship entry and fixed asset items
+			# except opening entry, drop-ship entry
 			if (
 				auto_accounting_for_stock
 				and item.item_code in stock_items
 				and self.is_opening == "No"
-				and not item.is_fixed_asset
 				and (
 					not item.po_detail
 					or not frappe.db.get_value("Purchase Order Item", item.po_detail, "delivered_by_supplier")
@@ -531,60 +526,6 @@ class PurchaseInvoice(BuyingController):
 							frappe.msgprint(msg, title=_("Expense Head Changed"))
 
 						item.expense_account = stock_not_billed_account
-			elif item.is_fixed_asset:
-				account = None
-				if not item.pr_detail and item.po_detail:
-					receipt_item = frappe.get_cached_value(
-						"Purchase Receipt Item",
-						{
-							"purchase_order": item.purchase_order,
-							"purchase_order_item": item.po_detail,
-							"docstatus": 1,
-						},
-						["name", "parent"],
-						as_dict=1,
-					)
-					if receipt_item:
-						item.pr_detail = receipt_item.name
-						item.purchase_receipt = receipt_item.parent
-
-				if item.pr_detail:
-					if not self.asset_received_but_not_billed:
-						self.asset_received_but_not_billed = self.get_company_default(
-							"asset_received_but_not_billed"
-						)
-
-					# check if 'Asset Received But Not Billed' account is credited in Purchase receipt or not
-					arbnb_booked_in_pr = frappe.db.get_value(
-						"GL Entry",
-						{
-							"voucher_type": "Purchase Receipt",
-							"voucher_no": item.purchase_receipt,
-							"account": self.asset_received_but_not_billed,
-						},
-						"name",
-					)
-					if arbnb_booked_in_pr:
-						account = self.asset_received_but_not_billed
-
-				if not account:
-					account_type = (
-						"capital_work_in_progress_account"
-						if is_cwip_accounting_enabled(item.asset_category)
-						else "fixed_asset_account"
-					)
-					account = get_asset_category_account(
-						account_type, item=item.item_code, company=self.company
-					)
-					if not account:
-						form_link = get_link_to_form("Asset Category", item.asset_category)
-						throw(
-							_("Please set Fixed Asset Account in {} against {}.").format(
-								form_link, self.company
-							),
-							title=_("Missing Account"),
-						)
-				item.expense_account = account
 			elif not item.expense_account and for_validate:
 				throw(_("Expense account is mandatory for item {0}").format(item.item_code or item.item_name))
 
@@ -871,15 +812,6 @@ class PurchaseInvoice(BuyingController):
 		self.make_gle_for_rounding_adjustment(gl_entries)
 		return gl_entries
 
-	def check_asset_cwip_enabled(self):
-		# Check if there exists any item with cwip accounting enabled in it's asset category
-		for item in self.get("items"):
-			if item.item_code and item.is_fixed_asset:
-				asset_category = frappe.get_cached_value("Item", item.item_code, "asset_category")
-				if is_cwip_accounting_enabled(asset_category):
-					return 1
-		return 0
-
 	def make_supplier_gl_entry(self, gl_entries):
 		# Checked both rounding_adjustment and rounded_total
 		# because rounded_total had value even before introduction of posting GLE based on rounded total
@@ -961,13 +893,11 @@ class PurchaseInvoice(BuyingController):
 		for item in self.get("items"):
 			if flt(item.base_net_amount):
 				account_currency = get_account_currency(item.expense_account)
-				if item.item_code:
-					frappe.get_cached_value("Item", item.item_code, "asset_category")
 
 				if (
 					self.update_stock
 					and self.auto_accounting_for_stock
-					and (item.item_code in stock_items or item.is_fixed_asset)
+					and (item.item_code in stock_items)
 				):
 					# warehouse account
 					warehouse_debit_amount = self.make_stock_adjustment_entry(
@@ -1164,9 +1094,7 @@ class PurchaseInvoice(BuyingController):
 					)
 
 					stock_rbnb = (
-						self.get_company_default("asset_received_but_not_billed")
-						if item.is_fixed_asset
-						else self.stock_received_but_not_billed
+						self.stock_received_but_not_billed
 					)
 
 					if not negative_expense_booked_in_pr:
@@ -1187,9 +1115,6 @@ class PurchaseInvoice(BuyingController):
 						self.negative_expense_to_be_booked += flt(
 							item.item_tax_amount, item.precision("item_tax_amount")
 						)
-
-			if item.is_fixed_asset and item.landed_cost_voucher_amount:
-				self.update_gross_purchase_amount_for_linked_assets(item)
 
 	def get_provisional_accounts(self):
 		self.provisional_accounts = frappe._dict()
@@ -1243,23 +1168,6 @@ class PurchaseInvoice(BuyingController):
 					reverse=1,
 					item_amount=(min(item.qty, pr_item.get("qty")) * pr_item.get("base_rate")),
 				)
-
-	def update_gross_purchase_amount_for_linked_assets(self, item):
-		assets = frappe.db.get_all(
-			"Asset",
-			filters={"purchase_invoice": self.name, "item_code": item.item_code},
-			fields=["name", "asset_quantity"],
-		)
-		for asset in assets:
-			purchase_amount = flt(item.valuation_rate) * asset.asset_quantity
-			frappe.db.set_value(
-				"Asset",
-				asset.name,
-				{
-					"gross_purchase_amount": purchase_amount,
-					"purchase_amount": purchase_amount,
-				},
-			)
 
 	def make_stock_adjustment_entry(self, gl_entries, item, voucher_wise_stock_value, account_currency):
 		net_amt_precision = item.precision("base_net_amount")
@@ -1968,7 +1876,6 @@ def make_purchase_receipt(source_name, target_doc=None):
 					"po_detail": "purchase_order_item",
 					"material_request": "material_request",
 					"material_request_item": "material_request_item",
-					"wip_composite_asset": "wip_composite_asset",
 				},
 				"postprocess": update_item,
 				"condition": lambda doc: abs(doc.received_qty) < abs(doc.qty),
