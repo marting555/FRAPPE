@@ -487,6 +487,17 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 			}
 		}
 	}
+
+	due_date(frm){
+		if (!frm.payment_discount_terms || (frm.payment_discount_terms && frm.payment_discount_terms.length < 1)){
+			return
+		}
+		for(let row of  frm.payment_discount_terms)
+		{
+			row.due_date = frm.due_date
+		}
+		cur_frm.refresh_field('payment_discount_terms')
+	}
 };
 
 cur_frm.script_manager.make(erpnext.accounts.PurchaseInvoice);
@@ -752,3 +763,22 @@ frappe.ui.form.on("Purchase Invoice", {
 		}
 	},
 });
+
+
+frappe.ui.form.on("Discount Terms", {
+	no_of_days:(frm)=>{
+		let discount_date = frappe.datetime.add_days(frappe.datetime.get_today(), frm.selected_doc.no_of_days)
+		frm.selected_doc.discount_date = discount_date
+		frm.refresh_field("payment_discount_terms")
+	},
+	due_date:(frm)=>{
+		let due_date = frm.selected_doc.due_date
+		if (!due_date) return
+
+		for(let row of  frm.doc.payment_discount_terms) row.due_date = due_date
+
+		frm.doc.due_date = due_date
+		cur_frm.refresh_field('payment_discount_terms')
+		cur_frm.refresh_field('due_date')
+	}
+})
