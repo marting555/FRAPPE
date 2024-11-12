@@ -16,6 +16,7 @@ class DiscountTerms(Document):
 
 		discount: DF.Float
 		discount_date: DF.Date | None
+		due_date: DF.Date | None
 		no_of_days: DF.Int
 		parent: DF.Data
 		parentfield: DF.Data
