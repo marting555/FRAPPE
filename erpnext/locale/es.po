@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2024-11-10 09:34+0000\n"
-"PO-Revision-Date: 2024-11-11 08:02\n"
+"PO-Revision-Date: 2024-11-12 08:22\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Spanish\n"
 "MIME-Version: 1.0\n"
@@ -5019,7 +5019,7 @@ msgstr "Otro registro de Asignación de Centro de Coste {0} aplicable desde {1},
 
 #: erpnext/accounts/doctype/payment_request/payment_request.py:727
 msgid "Another Payment Request is already processed"
-msgstr ""
+msgstr "Ya se ha tramitado otra solicitud de pago"
 
 #: erpnext/setup/doctype/sales_person/sales_person.py:100
 msgid "Another Sales Person {0} exists with the same Employee id"
@@ -6932,7 +6932,7 @@ msgstr "LdM Actualización iniciada"
 #. Name of a DocType
 #: erpnext/manufacturing/doctype/bom_update_log/bom_update_log.json
 msgid "BOM Update Log"
-msgstr ""
+msgstr "Registro de actualización de lista de materiales"
 
 #. Name of a DocType
 #. Label of a Link in the Manufacturing Workspace
@@ -6977,7 +6977,7 @@ msgstr "Se requiere la lista de materiales (LdM) y cantidad a manufacturar."
 #. 'Manufacturing Settings'
 #: erpnext/manufacturing/doctype/manufacturing_settings/manufacturing_settings.json
 msgid "BOM and Production"
-msgstr ""
+msgstr "Lista de materiales y producción"
 
 #: erpnext/stock/doctype/material_request/material_request.js:332
 #: erpnext/stock/doctype/stock_entry/stock_entry.js:689
@@ -7011,7 +7011,7 @@ msgstr ""
 #. Label of the boms_updated (Long Text) field in DocType 'BOM Update Batch'
 #: erpnext/manufacturing/doctype/bom_update_batch/bom_update_batch.json
 msgid "BOMs Updated"
-msgstr ""
+msgstr "Listas de materiales actualizadas"
 
 #: erpnext/manufacturing/doctype/bom_creator/bom_creator.py:284
 msgid "BOMs created successfully"
