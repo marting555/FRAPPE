@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2024-11-10 09:34+0000\n"
-"PO-Revision-Date: 2024-11-11 08:02\n"
+"PO-Revision-Date: 2024-11-12 08:23\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Persian\n"
 "MIME-Version: 1.0\n"
@@ -119,7 +119,7 @@ msgstr "%  تحویل داده شده"
 #: erpnext/stock/doctype/delivery_note/delivery_note.json
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.json
 msgid "% Amount Billed"
-msgstr "% مبلغ صورتحساب"
+msgstr "% مبلغ صورتحساب شده"
 
 #. Label of the per_billed (Percent) field in DocType 'Purchase Order'
 #: erpnext/buying/doctype/purchase_order/purchase_order.json
@@ -1376,7 +1376,7 @@ msgstr "موجودی حساب در حال حاضر در Debit است، شما م
 #: erpnext/accounts/doctype/pos_profile/pos_profile.json
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.json
 msgid "Account for Change Amount"
-msgstr "حساب برای تغییر مقدار"
+msgstr "حساب برای تغییر مبلغ"
 
 #: erpnext/accounts/doctype/bank_clearance/bank_clearance.py:46
 msgid "Account is mandatory to get payment entries"
@@ -2166,7 +2166,7 @@ msgstr "حساب استهلاک انباشته"
 #: erpnext/assets/doctype/asset/asset.js:287
 #: erpnext/assets/doctype/depreciation_schedule/depreciation_schedule.json
 msgid "Accumulated Depreciation Amount"
-msgstr "مقدار استهلاک انباشته"
+msgstr "مبلغ استهلاک انباشته"
 
 #: erpnext/accounts/report/asset_depreciations_and_balances/asset_depreciations_and_balances.py:485
 #: erpnext/accounts/report/asset_depreciations_and_balances/asset_depreciations_and_balances.py:503
@@ -4714,7 +4714,7 @@ msgstr "مبلغ"
 
 #: erpnext/regional/report/uae_vat_201/uae_vat_201.py:22
 msgid "Amount (AED)"
-msgstr "مقدار (AED)"
+msgstr "مبلغ (AED)"
 
 #. Label of the base_tax_amount (Currency) field in DocType 'Advance Taxes and
 #. Charges'
@@ -4764,7 +4764,7 @@ msgstr "مبلغ تحویل شده"
 #. Reconciliation Item'
 #: erpnext/stock/doctype/stock_reconciliation_item/stock_reconciliation_item.json
 msgid "Amount Difference"
-msgstr "تفاوت مقدار"
+msgstr "تفاوت مبلغ"
 
 #. Label of the amount_eligible_for_commission (Currency) field in DocType 'POS
 #. Invoice'
@@ -4785,7 +4785,7 @@ msgstr "مبلغ واجد شرایط برای کمیسیون"
 #. Template'
 #: erpnext/accounts/doctype/cheque_print_template/cheque_print_template.json
 msgid "Amount In Figure"
-msgstr "مقدار در شکل"
+msgstr "مبلغ در شکل"
 
 #. Label of the amount_in_account_currency (Currency) field in DocType 'Payment
 #. Ledger Entry'
@@ -7418,19 +7418,19 @@ msgstr "بشکه (آبجو)"
 #. Label of the base_amount (Currency) field in DocType 'BOM Creator Item'
 #: erpnext/manufacturing/doctype/bom_creator_item/bom_creator_item.json
 msgid "Base Amount"
-msgstr "مقدار پایه"
+msgstr "مبلغ پایه"
 
 #. Label of the base_amount (Currency) field in DocType 'Sales Invoice Payment'
 #: erpnext/accounts/doctype/sales_invoice_payment/sales_invoice_payment.json
 msgid "Base Amount (Company Currency)"
-msgstr "مقدار پایه (ارز شرکت)"
+msgstr "مبلغ پایه (ارز شرکت)"
 
 #. Label of the base_change_amount (Currency) field in DocType 'POS Invoice'
 #. Label of the base_change_amount (Currency) field in DocType 'Sales Invoice'
 #: erpnext/accounts/doctype/pos_invoice/pos_invoice.json
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.json
 msgid "Base Change Amount (Company Currency)"
-msgstr "مقدار تغییر پایه (ارز شرکت)"
+msgstr "مبلغ تغییر پایه (ارز شرکت)"
 
 #. Label of the base_cost_per_unit (Float) field in DocType 'BOM Operation'
 #: erpnext/manufacturing/doctype/bom_operation/bom_operation.json
@@ -7548,7 +7548,7 @@ msgstr "بر اساس خط مشی منابع انسانی خود، تاریخ ش
 #. Label of the basic_amount (Currency) field in DocType 'Stock Entry Detail'
 #: erpnext/stock/doctype/stock_entry_detail/stock_entry_detail.json
 msgid "Basic Amount"
-msgstr "مقدار پایه"
+msgstr "مبلغ پایه"
 
 #. Label of the base_amount (Currency) field in DocType 'BOM Scrap Item'
 #: erpnext/manufacturing/doctype/bom_scrap_item/bom_scrap_item.json
@@ -8460,7 +8460,7 @@ msgstr "بودجه در مقابل"
 #. Label of the budget_amount (Currency) field in DocType 'Budget Account'
 #: erpnext/accounts/doctype/budget_account/budget_account.json
 msgid "Budget Amount"
-msgstr "مقدار بودجه"
+msgstr "مبلغ بودجه"
 
 #. Label of the budget_detail (Section Break) field in DocType 'Company'
 #: erpnext/setup/doctype/company/company.json
@@ -8984,7 +8984,7 @@ msgstr "فقط می‌توانید با {0} پرداخت نشده انجام د�
 #: erpnext/controllers/accounts_controller.py:2715
 #: erpnext/public/js/controllers/accounts.js:90
 msgid "Can refer row only if the charge type is 'On Previous Row Amount' or 'Previous Row Total'"
-msgstr "فقط در صورتی می‌توان ردیف را ارجاع داد که نوع شارژ «بر مقدار ردیف قبلی» یا «مجموع ردیف قبلی» باشد"
+msgstr "فقط در صورتی می‌توان ردیف را ارجاع داد که نوع شارژ «بر مبلغ ردیف قبلی» یا «مجموع ردیف قبلی» باشد"
 
 #: erpnext/stock/doctype/stock_settings/stock_settings.py:147
 msgid "Can't change the valuation method, as there are transactions against some items which do not have its own valuation method"
@@ -9681,7 +9681,7 @@ msgstr "تغییر دادن"
 #: erpnext/accounts/doctype/pos_invoice/pos_invoice.json
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.json
 msgid "Change Amount"
-msgstr "تغییر مقدار"
+msgstr "تغییر مبلغ"
 
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.js:90
 msgid "Change Release Date"
@@ -11552,7 +11552,7 @@ msgstr "مصرف شده است"
 
 #: erpnext/stock/report/supplier_wise_sales_analytics/supplier_wise_sales_analytics.py:62
 msgid "Consumed Amount"
-msgstr "مقدار مصرف شده"
+msgstr "مبلغ مصرف شده"
 
 #: erpnext/assets/doctype/asset_capitalization/asset_capitalization.py:318
 msgid "Consumed Asset Items is mandatory for Decapitalization"
@@ -12482,7 +12482,7 @@ msgstr "هزینه یابی"
 #. Detail'
 #: erpnext/projects/doctype/timesheet_detail/timesheet_detail.json
 msgid "Costing Amount"
-msgstr "مقدار هزینه"
+msgstr "مبلغ هزینه"
 
 #. Label of the costing_detail (Section Break) field in DocType 'BOM Creator'
 #: erpnext/manufacturing/doctype/bom_creator/bom_creator.json
@@ -12848,7 +12848,7 @@ msgstr "ایجاد سرنخ"
 #. Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Create Ledger Entries for Change Amount"
-msgstr "برای تغییر مقدار، ورودی های دفتر کل ایجاد کنید"
+msgstr "برای تغییر مبلغ، ورودی های دفتر کل ایجاد کنید"
 
 #: erpnext/buying/doctype/supplier/supplier.js:224
 #: erpnext/selling/doctype/customer/customer.js:257
@@ -13157,7 +13157,7 @@ msgstr "حساب اعتباری"
 #: erpnext/accounts/doctype/account_closing_balance/account_closing_balance.json
 #: erpnext/accounts/doctype/gl_entry/gl_entry.json
 msgid "Credit Amount"
-msgstr "مقدار اعتبار"
+msgstr "مبلغ اعتبار"
 
 #. Label of the credit_in_account_currency (Currency) field in DocType 'Account
 #. Closing Balance'
@@ -13622,7 +13622,7 @@ msgstr "آدرس فعلی است"
 #. Reconciliation Item'
 #: erpnext/stock/doctype/stock_reconciliation_item/stock_reconciliation_item.json
 msgid "Current Amount"
-msgstr "مقدار فعلی"
+msgstr "مبلغ فعلی"
 
 #. Option for the 'Account Type' (Select) field in DocType 'Account'
 #: erpnext/accounts/doctype/account/account.json
@@ -16105,7 +16105,7 @@ msgstr "استهلاک"
 #: erpnext/assets/doctype/asset/asset.js:286
 #: erpnext/assets/doctype/depreciation_schedule/depreciation_schedule.json
 msgid "Depreciation Amount"
-msgstr "مقدار استهلاک"
+msgstr "مبلغ استهلاک"
 
 #: erpnext/accounts/report/asset_depreciations_and_balances/asset_depreciations_and_balances.py:491
 msgid "Depreciation Amount during the period"
@@ -16637,7 +16637,7 @@ msgstr "حساب مابه التفاوت باید یک حساب از نوع دا
 #: erpnext/assets/doctype/asset_value_adjustment/asset_value_adjustment.json
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.json
 msgid "Difference Amount"
-msgstr "مقدار تفاوت"
+msgstr "مبلغ تفاوت"
 
 #. Label of the difference_amount (Currency) field in DocType 'Payment Entry'
 #: erpnext/accounts/doctype/payment_entry/payment_entry.json
@@ -21041,7 +21041,7 @@ msgstr "از تاریخ باید در سال مالی باشد. با فرض از
 
 #: erpnext/accounts/doctype/bisect_accounting_statements/bisect_accounting_statements.py:43
 msgid "From Date: {0} cannot be greater than To date: {1}"
-msgstr ""
+msgstr "از تاریخ: {0} نمی تواند بیشتر از تا تاریخ: {1} باشد"
 
 #: erpnext/projects/report/daily_timesheet_summary/daily_timesheet_summary.py:29
 msgid "From Datetime"
@@ -27953,7 +27953,7 @@ msgstr "طول (سانتی متر)"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.js:869
 msgid "Less Than Amount"
-msgstr "کمتر از مقدار"
+msgstr "کمتر از مبلغ"
 
 #. Description of the 'Is Short Year' (Check) field in DocType 'Fiscal Year'
 #: erpnext/accounts/doctype/fiscal_year/fiscal_year.json
@@ -29669,7 +29669,7 @@ msgstr "برای کارت کار باید مواد به انبار کار در �
 #: erpnext/accounts/doctype/promotional_scheme_price_discount/promotional_scheme_price_discount.json
 #: erpnext/accounts/doctype/promotional_scheme_product_discount/promotional_scheme_product_discount.json
 msgid "Max Amount"
-msgstr "حداکثر مقدار"
+msgstr "حداکثر مبلغ"
 
 #. Label of the max_amt (Currency) field in DocType 'Pricing Rule'
 #: erpnext/accounts/doctype/pricing_rule/pricing_rule.json
@@ -41481,7 +41481,7 @@ msgstr "درخت را بازسازی کنید"
 
 #: erpnext/accounts/doctype/bisect_accounting_statements/bisect_accounting_statements.js:93
 msgid "Rebuilding BTree for period ..."
-msgstr ""
+msgstr "بازسازی BTree برای دوره ..."
 
 #. Label of the recalculate_rate (Check) field in DocType 'Stock Ledger Entry'
 #: erpnext/stock/doctype/stock_ledger_entry/stock_ledger_entry.json
@@ -43707,7 +43707,7 @@ msgstr "Rgt"
 #. Label of the right_child (Link) field in DocType 'Bisect Nodes'
 #: erpnext/accounts/doctype/bisect_nodes/bisect_nodes.json
 msgid "Right Child"
-msgstr ""
+msgstr "فرزند راست"
 
 #. Label of the rgt (Int) field in DocType 'Quality Procedure'
 #: erpnext/quality_management/doctype/quality_procedure/quality_procedure.json
@@ -43770,7 +43770,7 @@ msgstr "نقش مجاز برای دور زدن محدودیت اعتبار"
 #. Label of the root (Link) field in DocType 'Bisect Nodes'
 #: erpnext/accounts/doctype/bisect_nodes/bisect_nodes.json
 msgid "Root"
-msgstr ""
+msgstr "ریشه"
 
 #: erpnext/accounts/doctype/account/account_tree.js:47
 msgid "Root Company"
