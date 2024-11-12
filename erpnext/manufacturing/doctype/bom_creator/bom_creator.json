@@ -17,7 +17,6 @@
   "item_group",
   "column_break_ikj7",
   "qty",
-  "project",
   "uom",
   "raw_materials_tab",
   "currency_detail",
@@ -149,12 +148,6 @@
   {
    "fieldname": "column_break_ikj7",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "options": "Project"
   },
   {
    "fieldname": "item_code",

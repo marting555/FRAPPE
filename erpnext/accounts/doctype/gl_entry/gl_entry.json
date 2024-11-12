@@ -24,7 +24,6 @@
   "voucher_subtype",
   "voucher_no",
   "voucher_detail_no",
-  "project",
   "remarks",
   "is_opening",
   "is_advance",
@@ -185,12 +184,6 @@
    "label": "Voucher Detail No",
    "read_only": 1,
    "search_index": 1
-  },
-  {
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "options": "Project"
   },
   {
    "fieldname": "remarks",
