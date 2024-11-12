@@ -174,7 +174,6 @@ class SalesOrder(SellingController):
 	def validate(self):
 		super().validate()
 		self.validate_delivery_date()
-		self.validate_proj_cust()
 		self.validate_po()
 		self.validate_uom_is_integer("stock_uom", "stock_qty")
 		self.validate_uom_is_integer("uom", "qty")
@@ -307,18 +306,6 @@ class SalesOrder(SellingController):
 				frappe.throw(_("Please enter Delivery Date"))
 
 		self.validate_sales_mntc_quotation()
-
-	def validate_proj_cust(self):
-		if self.project and self.customer_name:
-			res = frappe.db.sql(
-				"""select name from `tabProject` where name = %s
-				and (customer = %s or ifnull(customer,'')='')""",
-				(self.project, self.customer),
-			)
-			if not res:
-				frappe.throw(
-					_("Customer {0} does not belong to project {1}").format(self.customer, self.project)
-				)
 
 	def validate_warehouse(self):
 		super().validate_warehouse()

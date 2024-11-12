@@ -29,7 +29,6 @@
   "accounting_dimensions_section",
   "cost_center",
   "dimension_col_break",
-  "project",
   "currency_and_price_list",
   "currency",
   "conversion_rate",
@@ -1135,16 +1134,6 @@
    "options": "Purchase Order",
    "read_only": 1,
    "search_index": 1
-  },
-  {
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Project",
-   "oldfieldname": "project",
-   "oldfieldtype": "Link",
-   "options": "Project"
   },
   {
    "fieldname": "party_account_currency",

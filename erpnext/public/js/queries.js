@@ -22,10 +22,6 @@ $.extend(erpnext.queries, {
 		return { query: "erpnext.controllers.queries.bom" };
 	},
 
-	task: function () {
-		return { query: "erpnext.projects.utils.query_task" };
-	},
-
 	customer_filter: function (doc) {
 		if (!doc.customer) {
 			frappe.throw(
