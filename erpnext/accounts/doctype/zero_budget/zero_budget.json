@@ -13,7 +13,6 @@
   "company",
   "section_break_ce7o",
   "zero_budget_item",
-  "budget_entry",
   "amended_from",
   "total"
  ],
@@ -55,12 +54,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "budget_entry",
-   "fieldtype": "Link",
-   "label": "Budget Entry",
-   "options": "Budget Entry"
-  },
-  {
    "fieldname": "amended_from",
    "fieldtype": "Link",
    "label": "Amended From",
@@ -84,7 +77,7 @@
    "link_fieldname": "voucher_no"
   }
  ],
- "modified": "2024-11-07 18:34:43.613853",
+ "modified": "2024-11-11 12:14:18.698178",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Zero Budget",

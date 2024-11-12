@@ -23,133 +23,172 @@ class BudgetAmendment(Document):
         project_name: DF.Data | None
         total_decrement_budget: DF.Data | None
         total_increment_budget: DF.Data | None
-        total_overall_budget: DF.Data | None
+    # end: auto-generated types
+    # begin: auto-generated types
+    # This code is auto-generated. Do not modify anything in this block.
 
     def on_submit(self):
-        for item in self.budget_amendment_items:
-            budget_entry = frappe.new_doc("Budget Entry")
-            budget_entry.name = self.name
-            budget_entry.project = self.project
-            budget_entry.company = self.company
-            budget_entry.posting_date = self.posting_date
-            # budget_entry.document_date = self.document_date
+        update_original_budget(self,"Submit")
+        # for item in self.budget_amendment_items:
+        #     budget_entry = frappe.new_doc("Budget Entry")
+        #     budget_entry.name = self.name
+        #     budget_entry.project = self.project
+        #     budget_entry.company = self.company
+        #     budget_entry.posting_date = self.posting_date
+        #     # budget_entry.document_date = self.document_date
 
-            if item.wbs_name:
-                budget_entry.wbs_name = item.wbs_name
+        #     if item.wbs_name:
+        #         budget_entry.wbs_name = item.wbs_name
 
-            if item.wbs_element:
-                budget_entry.wbs = item.wbs_element
+        #     if item.wbs_element:
+        #         budget_entry.wbs = item.wbs_element
 
-            if item.level:
-                budget_entry.wbs_level = item.level
+        #     if item.level:
+        #         budget_entry.wbs_level = item.level
 
-            if item.increment_budget:
-                budget_entry.overall_credit = item.increment_budget
+        #     if item.increment_budget:
+        #         budget_entry.overall_credit = item.increment_budget
             
-            if item.decrement_budget:
-                budget_entry.overall_debit = item.decrement_budget
+        #     if item.decrement_budget:
+        #         budget_entry.overall_debit = item.decrement_budget
             
-            budget_entry.voucher_no = self.name
-            budget_entry.voucher_type = "Budget Amendment"
-            budget_entry.voucher_submit_date = now()
+        #     budget_entry.voucher_no = self.name
+        #     budget_entry.voucher_type = "Budget Amendment"
+        #     budget_entry.voucher_submit_date = now()
 
-            budget_entry.insert()
-            budget_entry.submit()
+        #     budget_entry.insert()
+        #     budget_entry.submit()
 
-        update_wbs(self)
+        # update_wbs(self)
 
     def on_cancel(self):
         self.flags.ignore_links = True
-        print("on cancel")
 
     def before_cancel(self):
-        create_cancelled_budget_entries(self)
+        update_original_budget(self,"Cancel")
 
-def update_wbs(self):
+# def update_wbs(self):
+#     for row in self.budget_amendment_items:
+#         wbs = frappe.get_doc("Work Breakdown Structure",row.wbs_element)
+#         if row.increment_budget:
+#             wbs.overall_budget += row.increment_budget
+#         elif row.decrement_budget:
+#             wbs.overall_budget -= row.decrement_budget
+#         wbs.save()
+
+# def create_cancelled_budget_entries(self):
+#     for item in self.budget_amendment_items:
+#         budget_entry = frappe.new_doc("Budget Entry")
+#         budget_entry.name = self.name
+#         budget_entry.project = self.project
+#         budget_entry.company = self.company
+#         budget_entry.posting_date = self.posting_date
+#         # budget_entry.document_date = self.document_date
+
+#         if item.wbs_name:
+#             budget_entry.wbs_name = item.wbs_name
+
+#         if item.wbs_element:
+#             budget_entry.wbs = item.wbs_element
+
+#         if item.level:
+#             budget_entry.wbs_level = item.level
+
+#         if item.increment_budget:
+#             budget_entry.overall_debit = item.increment_budget
+        
+#         if item.decrement_budget:
+#             budget_entry.overall_credit = item.decrement_budget
+        
+#         budget_entry.voucher_no = self.name
+#         budget_entry.voucher_type = "Budget Amendment"
+#         budget_entry.voucher_submit_date = now()
+
+#         budget_entry.insert()
+#         budget_entry.submit()
+
+#     update_wbs_after_cancellation(self)
+
+# def update_wbs_after_cancellation(self):
+#     for row in self.budget_amendment_items:
+#         wbs = frappe.get_doc("Work Breakdown Structure",row.wbs_element)
+#         if row.increment_budget:
+#             wbs.overall_budget -= row.increment_budget
+#         elif row.decrement_budget:
+#             wbs.overall_budget += row.decrement_budget
+#         wbs.save()
+
+def update_original_budget(self,event):
+    wbs_dict = []
+    wbs_list = []
+    if self.budget_amendment_items:
+        for row in self.budget_amendment_items:
+            if row.get("wbs_element") not in wbs_list:
+                wbs_list.append(row.get("wbs_element"))
+    if wbs_list:
+        for i in wbs_list:
+            wbs_dict.append({
+                "wbs_id": i,
+                "voucher_name":"",
+                "voucher_type":"",
+                "amount":0.0
+            })
+
     for row in self.budget_amendment_items:
-        wbs = frappe.get_doc("Work Breakdown Structure",row.wbs_element)
-        if row.increment_budget:
-            wbs.overall_budget += row.increment_budget
-        elif row.decrement_budget:
-            wbs.overall_budget -= row.decrement_budget
-        wbs.save()
+        amount = row.get("increment_budget") if row.get("increment_budget") > 0 else row.get("decrement_budget")
+        if row.get("wbs_element"):
+            for j in wbs_dict:
+                if row.get("wbs_element") == j.get("wbs_id"):
+                    budget = row.get("increment_budget") if row.get("increment_budget") > 0 else row.get("decrement_budget")
+                    j.update({
+                        "amount": j.get("amount") + budget,
+                        "wbs_name": frappe.db.get_value("Work Breakdown Structure",row.get("wbs_element"), "wbs_name"),
+                        "wbs_level":row.get("level"),
+                        "txn_date":self.posting_date,
+                        "voucher_type":self.doctype,
+                        "voucher_name":self.name,
+                    })
+            wbs_curr_doc = frappe.get_doc("Work Breakdown Structure",row.get("wbs_element"))
+            if event == "Submit":
+                wbs_curr_doc.overall_budget = wbs_curr_doc.overall_budget + amount
 
-def create_cancelled_budget_entries(self):
-    for item in self.budget_amendment_items:
-        budget_entry = frappe.new_doc("Budget Entry")
-        budget_entry.name = self.name
-        budget_entry.project = self.project
-        budget_entry.company = self.company
-        budget_entry.posting_date = self.posting_date
-        # budget_entry.document_date = self.document_date
+                # wbs_curr_doc.assigned_overall_budget = wbs_curr_doc.actual_overall_budget + wbs_curr_doc.committed_overall_budget
+                wbs_curr_doc.available_budget = wbs_curr_doc.overall_budget - wbs_curr_doc.assigned_overall_budget
+                if wbs_curr_doc.locked:
+                    frappe.throw(
+                        "Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs_curr_doc.name)
+                    )
+            elif event == "Cancel":
+                wbs_curr_doc.overall_budget = wbs_curr_doc.overall_budget - amount
 
-        if item.wbs_name:
-            budget_entry.wbs_name = item.wbs_name
+                # wbs_curr_doc.assigned_overall_budget = wbs_curr_doc.actual_overall_budget + wbs_curr_doc.committed_overall_budget
+                wbs_curr_doc.available_budget = wbs_curr_doc.overall_budget - wbs_curr_doc.assigned_overall_budget
+                if wbs_curr_doc.locked:
+                    frappe.throw(
+                        "Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs_curr_doc.name)
+                    )
+            wbs_curr_doc.save(ignore_permissions=True)
 
-        if item.wbs_element:
-            budget_entry.wbs = item.wbs_element
+    if wbs_dict:
+        for i in wbs_dict:
+            create_budget_entry(self,i,event,self.company) 
+    
+def create_budget_entry(self,row,event,company):
+    if row.get("wbs_id"):
+        bgt_ent = frappe.new_doc("Budget Entry")
+        bgt_ent.project = self.project
+        bgt_ent.wbs = row.get("wbs_id")
+        bgt_ent.wbs_name = row.get("wbs_name")
+        bgt_ent.wbs_level = row.get("wbs_level")
+        bgt_ent.company = company
+        bgt_ent.posting_date = self.posting_date
+        if event == "Submit":
+            bgt_ent.overall_credit = row.get("amount")            
+        elif event == "Cancel":
+            bgt_ent.overall_debit = row.get("amount")   
 
-        if item.level:
-            budget_entry.wbs_level = item.level
-
-        if item.increment_budget:
-            budget_entry.overall_debit = item.increment_budget
-        
-        if item.decrement_budget:
-            budget_entry.overall_credit = item.decrement_budget
-        
-        budget_entry.voucher_no = self.name
-        budget_entry.voucher_type = "Budget Amendment"
-        budget_entry.voucher_submit_date = now()
-
-        budget_entry.insert()
-        budget_entry.submit()
-
-    update_wbs_after_cancellation(self)
-
-def update_wbs_after_cancellation(self):
-    for row in self.budget_amendment_items:
-        wbs = frappe.get_doc("Work Breakdown Structure",row.wbs_element)
-        if row.increment_budget:
-            wbs.overall_budget -= row.increment_budget
-        elif row.decrement_budget:
-            wbs.overall_budget += row.decrement_budget
-        wbs.save()
-
-    # # end: auto-generated types
-    # def before_submit(self):
-    #     budget_amendment_items = frappe.get_all(
-    #         "Budget Amendment Items", 
-    #         filters={"parent": self.name}, 
-    #         fields=["wbs_element", "increment_budget", "decrement_budget"]
-    #     )
-        
-    #     for item in budget_amendment_items:
-    #         if item.get("wbs_element"):
-    #             wbs = frappe.get_doc("Work Breakdown Structure", item["wbs_element"])
-    #             if item.get("increment_budget"):
-    #                 wbs.overall_budget += item["increment_budget"]
-    #             if item.get("decrement_budget"):
-    #                 wbs.overall_budget -= item["decrement_budget"]
-    #             wbs.save()
-    #     return
-
-    # def on_submit(self):
-    #     # Loop through budget_amendment_items to create new Budget Entry records
-    #     for item in self.budget_amendment_items:
-    #         data = frappe.new_doc("Budget Entry")
-    #         data.budget_amendment = self.name  # Link Budget Entry to the Budget Amendment record
-    #         data.project = self.project
-    #         data.company = self.company
-    #         data.posting_date = self.posting_date
-    #         # data.document_date = self.document_date
-
-    #         # Assign values based on conditions
-    #         data.wbs_name = item.wbs_name if item.get("wbs_name") else None
-    #         data.wbs = item.wbs_element if item.get("wbs_element") else None
-    #         data.wbs_level = item.level if item.get("level") else None
-    #         data.overall_credit = item.increment_budget if item.get("increment_budget") else 0
-    #         data.overall_debit = item.decrement_budget if item.get("decrement_budget") else 0
-
-    #         # Insert the new document into the database
-    #         data.insert()
+        bgt_ent.voucher_type = "Budget Amendment"
+        bgt_ent.voucher_no = self.name
+        bgt_ent.voucher_submit_date = now()
+        bgt_ent.save(ignore_permissions=True)
+        bgt_ent.submit()

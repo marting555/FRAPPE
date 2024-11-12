@@ -155,10 +155,10 @@
  "links": [
   {
    "link_doctype": "Budget Entry",
-   "link_fieldname": "name"
+   "link_fieldname": "voucher_no"
   }
  ],
- "modified": "2024-11-06 11:58:37.029270",
+ "modified": "2024-11-11 12:15:42.562896",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Budget Transfer",

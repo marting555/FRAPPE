@@ -4,7 +4,24 @@
 
 frappe.query_reports["WBS Summary Report"] = {
 	"filters": [
-
+		{
+			fieldname: "company",
+			label: __("Company"),
+			fieldtype: "Link",
+			options: "Company",
+		},
+		{
+			fieldname: "project",
+			label: __("Project"),
+			fieldtype: "Link",
+			options: "Project",
+		},
+		
+		{
+			fieldname: "wbs_name",
+			label: __("WBS"),
+			fieldtype: "Data",
+		},
 	],
 	"tree": true,
 	"name_field": "parent",

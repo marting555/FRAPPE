@@ -60,23 +60,23 @@ frappe.ui.form.on("Budget Amendment", {
 });
 
 frappe.ui.form.on("Budget Amendment Items", {
-    overall_budget: function(frm, cdt, cdn) {
-        var child = locals[cdt][cdn];
-        let total_amount = 0;
+    // overall_budget: function(frm, cdt, cdn) {
+    //     var child = locals[cdt][cdn];
+    //     let total_amount = 0;
 
-        if (frm.doc.budget_amendment_items && frm.doc.budget_amendment_items.length) {
-            frm.doc.budget_amendment_items.forEach(row => {
-                if (row.overall_budget !== undefined) {
-                    total_amount += row.overall_budget || 0;
-                }
-            });
-            console.log("Total Overall Budget:", total_amount);
-            frm.set_value("total_overall_budget", total_amount);
-            frm.refresh_field("total_overall_budget");
-        } else {
-            console.log("No budget amendment items found.");
-        }
-    },
+    //     if (frm.doc.budget_amendment_items && frm.doc.budget_amendment_items.length) {
+    //         frm.doc.budget_amendment_items.forEach(row => {
+    //             if (row.overall_budget !== undefined) {
+    //                 total_amount += row.overall_budget || 0;
+    //             }
+    //         });
+    //         console.log("Total Overall Budget:", total_amount);
+    //         frm.set_value("total_overall_budget", total_amount);
+    //         frm.refresh_field("total_overall_budget");
+    //     } else {
+    //         console.log("No budget amendment items found.");
+    //     }
+    // },
 
     increment_budget: function(frm, cdt, cdn) {
         var child = locals[cdt][cdn];
@@ -158,33 +158,18 @@ frappe.ui.form.on("Budget Amendment Items", {
             frm.refresh_field("total_increment_budget");
             frm.refresh_field("total_decrement_budget");
         }
+    },
+    wbs_element: function(frm,cdt,cdn) {
+        var child = locals[cdt][cdn];
+        frappe.db.get_value("Work Breakdown Structure", child.wbs_element, ['wbs_name','wbs_level','overall_budget'])
+        .then(response => {
+            child.wbs_name = response.message.wbs_name || null;
+            child.level = response.message.wbs_level || null;
+            child.overall_budget = response.message.overall_budget || null;
+            let row = frm.fields_dict['budget_amendment_items'].grid.get_row(cdn);
+			row.refresh_field('wbs_name');
+            row.refresh_field('level');
+            row.refresh_field('overall_budget');
+        });
     }
 });
-
-// frappe.ui.form.on('Budget Amendment Items', {
-//     increment_budget: function(frm, cdt, cdn) {
-//         let child = locals[cdt][cdn];
-//         // Set rate to readonly if item_code is entered first for this row
-//         frappe.model.set_value(cdt, cdn, 'decrement_budget', child.decrement_budget);
-//         frappe.model.set_value(cdt, cdn, 'is_increment_budget_selected', 1);  // Track selection order
-//         frm.fields_dict['budget_amendment_items'].grid.grid_rows_by_docname[cdn].toggle_editable('decrement_budget', false);
-//         frm.refresh_field('budget_amendment_items');
-//     },
-//     decrement_budget: function(frm, cdt, cdn) {
-//         let child = locals[cdt][cdn];
-//         // Set item_code to readonly if rate is entered first for this row
-//         frappe.model.set_value(cdt, cdn, 'increment_budget', child.increment_budget);
-//         frappe.model.set_value(cdt, cdn, 'is_decrement_budget_selected', 1);  // Track selection order
-//         frm.fields_dict['budget_amendment_items'].grid.grid_rows_by_docname[cdn].toggle_editable('increment_budget', false);
-//         frm.refresh_field('budget_amendment_items');
-//     },
-//     budget_amendment_items_add: function(frm, cdt, cdn) {
-//         let new_child = locals[cdt][cdn];
-//         // Enable both fields only for the new row, keeping previous rows unaffected
-//         frm.fields_dict['budget_amendment_items'].grid.grid_rows_by_docname[new_child.name].toggle_editable('increment_budget', true);
-//         frm.fields_dict['budget_amendment_items'].grid.grid_rows_by_docname[new_child.name].toggle_editable('decrement_budget', true);
-//         frm.refresh_field('budget_amendment_items');
-//     }
-// });
-
-

@@ -498,19 +498,21 @@
   {
    "fieldname": "project_name",
    "fieldtype": "Data",
-   "label": "Project Name"
+   "label": "Project Name",
+   "read_only": 1
   },
   {
    "fieldname": "wbs_name",
    "fieldtype": "Data",
-   "label": "WBS Name"
+   "label": "WBS Name",
+   "read_only": 1
   }
  ],
  "idx": 1,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-11-04 16:53:13.867215",
+ "modified": "2024-11-12 10:25:20.310070",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Material Request Item",

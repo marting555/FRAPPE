@@ -1,7 +1,8 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
-# import frappe
+import frappe
+from frappe import _
 from frappe.model.document import Document
 
 
@@ -33,4 +34,9 @@ class BudgetEntry(Document):
 		wbs_name: DF.Data | None
 		zero_budget: DF.Link | None
 	# end: auto-generated types
-	pass
+	
+	def on_cancel(self):
+		wbs = frappe.get_doc(self.voucher_type,self.voucher_no)
+		if wbs.docstatus == 1:
+			link = frappe.utils.get_link_to_form(self.voucher_type, self.voucher_no)
+			frappe.throw(_(f"Cannot cancel Budget Entry {self.name}. Please cancel {self.voucher_type} : {link} first."))

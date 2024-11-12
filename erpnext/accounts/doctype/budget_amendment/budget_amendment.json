@@ -1,6 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "BGT-AMDMT-.####",
  "creation": "2024-10-30 13:31:17.948554",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -14,7 +15,6 @@
   "section_break_7j5e",
   "budget_amendment_items",
   "section_break_lp3o",
-  "total_overall_budget",
   "total_increment_budget",
   "total_decrement_budget",
   "amended_from"
@@ -40,11 +40,6 @@
    "fieldname": "get_wbs",
    "fieldtype": "Button",
    "label": "GET WBS"
-  },
-  {
-   "fieldname": "total_overall_budget",
-   "fieldtype": "Data",
-   "label": "Total Overall Budget"
   },
   {
    "fieldname": "total_increment_budget",
@@ -98,10 +93,11 @@
    "link_fieldname": "voucher_no"
   }
  ],
- "modified": "2024-11-07 18:35:30.270115",
+ "modified": "2024-11-11 12:25:03.392137",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Budget Amendment",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {

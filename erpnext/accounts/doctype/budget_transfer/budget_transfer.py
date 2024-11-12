@@ -83,11 +83,13 @@ def create_credit_wbs_budget_entry(self):
 def update_debit_wbs(budget_entry):
 	wbs = frappe.get_doc("Work Breakdown Structure",budget_entry.wbs)
 	wbs.overall_budget -= budget_entry.overall_debit
+	wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
 	wbs.save()
 
 def update_credit_wbs(budget_entry):
 	wbs = frappe.get_doc("Work Breakdown Structure",budget_entry.wbs)
 	wbs.overall_budget += budget_entry.overall_credit
+	wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
 	wbs.save()
 
 def create_cancelled_debit_wbs_budget_entry(self):
@@ -123,9 +125,11 @@ def	create_cancelled_credit_wbs_budget_entry(self):
 def update_debit_wbs_after_cancel(budget_entry):
 	wbs = frappe.get_doc("Work Breakdown Structure",budget_entry.wbs)
 	wbs.overall_budget += budget_entry.overall_credit
+	wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
 	wbs.save()
 
 def update_credit_wbs_after_cancel(budget_entry):
 	wbs = frappe.get_doc("Work Breakdown Structure",budget_entry.wbs)
 	wbs.overall_budget -= budget_entry.overall_debit
+	wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
 	wbs.save()
