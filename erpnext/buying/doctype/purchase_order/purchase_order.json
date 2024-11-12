@@ -1274,8 +1274,13 @@
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "links": [],
- "modified": "2024-03-20 16:03:31.611808",
+ "links": [
+  {
+   "link_doctype": "Budget Entry",
+   "link_fieldname": "voucher_no"
+  }
+ ],
+ "modified": "2024-11-12 09:56:21.151583",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order",

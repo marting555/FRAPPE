@@ -356,8 +356,13 @@
  "icon": "fa fa-ticket",
  "idx": 70,
  "is_submittable": 1,
- "links": [],
- "modified": "2024-10-30 17:32:53.202669",
+ "links": [
+  {
+   "link_doctype": "Budget Entry",
+   "link_fieldname": "voucher_no"
+  }
+ ],
+ "modified": "2024-11-12 09:58:10.698797",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Material Request",

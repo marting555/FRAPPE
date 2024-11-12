@@ -30,9 +30,8 @@ class MaterialRequest(BuyingController):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
 		from erpnext.stock.doctype.material_request_item.material_request_item import MaterialRequestItem
+		from frappe.types import DF
 
 		amended_from: DF.Link | None
 		company: DF.Link
@@ -40,9 +39,7 @@ class MaterialRequest(BuyingController):
 		items: DF.Table[MaterialRequestItem]
 		job_card: DF.Link | None
 		letter_head: DF.Link | None
-		material_request_type: DF.Literal[
-			"Purchase", "Material Transfer", "Material Issue", "Manufacture", "Customer Provided"
-		]
+		material_request_type: DF.Literal["Purchase", "Material Transfer", "Material Issue", "Manufacture", "Customer Provided"]
 		naming_series: DF.Literal["MAT-MR-.YYYY.-"]
 		per_ordered: DF.Percent
 		per_received: DF.Percent
@@ -51,20 +48,7 @@ class MaterialRequest(BuyingController):
 		select_print_heading: DF.Link | None
 		set_from_warehouse: DF.Link | None
 		set_warehouse: DF.Link | None
-		status: DF.Literal[
-			"",
-			"Draft",
-			"Submitted",
-			"Stopped",
-			"Cancelled",
-			"Pending",
-			"Partially Ordered",
-			"Partially Received",
-			"Ordered",
-			"Issued",
-			"Transferred",
-			"Received",
-		]
+		status: DF.Literal["", "Draft", "Submitted", "Stopped", "Cancelled", "Pending", "Partially Ordered", "Partially Received", "Ordered", "Issued", "Transferred", "Received"]
 		tc_name: DF.Link | None
 		terms: DF.TextEditor | None
 		title: DF.Data | None
@@ -175,7 +159,8 @@ class MaterialRequest(BuyingController):
 		):
 			self.validate_budget()
 		#increment overall budget
-		increment_committed_overall_budget(self)
+		# increment_committed_overall_budget(self)
+		update_original_budget(self,"Submit")
 
 	def before_save(self):
 		self.set_status(update=True)
@@ -183,14 +168,15 @@ class MaterialRequest(BuyingController):
 	def before_submit(self):
 		self.set_status(update=True)
 		# create new budgte entry
-		create_budget_entry(self)
+		# create_budget_entry(self)
 
 	def before_cancel(self):
 		# if MRQ is already closed, no point saving the document
 		check_on_hold_or_closed_status(self.doctype, self.name)
 		
 		self.set_status(update=True, status="Cancelled")
-		create_budget_entry_on_cancel(self)
+		# create_budget_entry_on_cancel(self)
+		update_original_budget(self,"Cancel")
 
 	def check_modified_date(self):
 		mod_db = frappe.db.sql("""select modified from `tabMaterial Request` where name = %s""", self.name)
@@ -234,7 +220,7 @@ class MaterialRequest(BuyingController):
 		self.flags.ignore_links = True
 		self.update_requested_qty_in_production_plan()
 		self.update_requested_qty()
-		decrement_committed_overall_budget(self)
+		# decrement_committed_overall_budget(self)
 
 	def get_mr_items_ordered_qty(self, mr_items):
 		mr_items_ordered_qty = {}
@@ -839,59 +825,128 @@ def make_in_transit_stock_entry(source_name, in_transit_warehouse):
 	return ste_doc
 
 
-def increment_committed_overall_budget(self):
-	for budget in self.items:
-		if budget.work_breakdown_structure is not None:
-			total = budget.amount
-			doc = frappe.get_doc("Work Breakdown Structure",budget.work_breakdown_structure)
-			doc.committed_overall_budget += total
-			doc.save()
+# def increment_committed_overall_budget(self):
+# 	for budget in self.items:
+# 		if budget.work_breakdown_structure is not None:
+# 			total = budget.amount
+# 			doc = frappe.get_doc("Work Breakdown Structure",budget.work_breakdown_structure)
+# 			doc.committed_overall_budget += total
+# 			doc.save()
 		
 
-def decrement_committed_overall_budget(self):
-	for budget in self.items:
-		if budget.work_breakdown_structure is not None:
-			total = budget.amount
-			doc = frappe.get_doc("Work Breakdown Structure",budget.work_breakdown_structure)
-			doc.committed_overall_budget -= total
-			doc.save()
+# def decrement_committed_overall_budget(self):
+# 	for budget in self.items:
+# 		if budget.work_breakdown_structure is not None:
+# 			total = budget.amount
+# 			doc = frappe.get_doc("Work Breakdown Structure",budget.work_breakdown_structure)
+# 			doc.committed_overall_budget -= total
+# 			doc.save()
 		
 
-def create_budget_entry(self):
-	for budget in self.items:
-		if budget.work_breakdown_structure is not None:
-			data_from = frappe.new_doc("Budget Entry")
-			wbs_level=frappe.get_doc('Work Breakdown Structure',budget.work_breakdown_structure)
-			data_from.voucher_type = self.doctype
-			data_from.project = budget.project
-			data_from.company = self.company
-			data_from.posting_date = datetime.now().strftime("%Y-%m-%d")
-			data_from.document_date = self.transaction_date
-			data_from.wbs = budget.work_breakdown_structure
-			data_from.wbs_name = budget.wbs_name
-			data_from.voucher_no = self.name
-			data_from.overall_credit = budget.amount
-			data_from.wbs_level = wbs_level.wbs_level
-			data_from.insert()
-			data_from.submit()
+# def create_budget_entry(self):
+# 	for budget in self.items:
+# 		if budget.work_breakdown_structure is not None:
+# 			data_from = frappe.new_doc("Budget Entry")
+# 			wbs_level=frappe.get_doc('Work Breakdown Structure',budget.work_breakdown_structure)
+# 			data_from.voucher_type = self.doctype
+# 			data_from.project = budget.project
+# 			data_from.company = self.company
+# 			data_from.posting_date = datetime.now().strftime("%Y-%m-%d")
+# 			data_from.document_date = self.transaction_date
+# 			data_from.wbs = budget.work_breakdown_structure
+# 			data_from.wbs_name = budget.wbs_name
+# 			data_from.voucher_no = self.name
+# 			data_from.overall_credit = budget.amount
+# 			data_from.wbs_level = wbs_level.wbs_level
+# 			data_from.insert()
+# 			data_from.submit()
 
 
-def create_budget_entry_on_cancel(self):
-	for budget in self.items:
-		if budget.work_breakdown_structure is not None:
-			data_from = frappe.new_doc("Budget Entry")
-			wbs_level=frappe.get_doc('Work Breakdown Structure',budget.work_breakdown_structure)
-			data_from.voucher_type = self.doctype
-			data_from.project = budget.project
-			data_from.company = self.company
-			data_from.posting_date = datetime.now().strftime("%Y-%m-%d")
-			data_from.document_date = self.transaction_date
-			data_from.wbs = budget.work_breakdown_structure
-			data_from.wbs_name = budget.wbs_name
-			data_from.voucher_no = self.name
-			data_from.overall_debit = budget.amount
-			data_from.wbs_level = wbs_level.wbs_level
-			data_from.insert()
-			data_from.submit()
+# def create_budget_entry_on_cancel(self):
+# 	for budget in self.items:
+# 		if budget.work_breakdown_structure is not None:
+# 			data_from = frappe.new_doc("Budget Entry")
+# 			wbs_level=frappe.get_doc('Work Breakdown Structure',budget.work_breakdown_structure)
+# 			data_from.voucher_type = self.doctype
+# 			data_from.project = budget.project
+# 			data_from.company = self.company
+# 			data_from.posting_date = datetime.now().strftime("%Y-%m-%d")
+# 			data_from.document_date = self.transaction_date
+# 			data_from.wbs = budget.work_breakdown_structure
+# 			data_from.wbs_name = budget.wbs_name
+# 			data_from.voucher_no = self.name
+# 			data_from.overall_debit = budget.amount
+# 			data_from.wbs_level = wbs_level.wbs_level
+# 			data_from.insert()
+# 			data_from.submit()
 		
+def update_original_budget(self,event):
+	wbs_dict = []
+	wbs_list = []
 
+	if self.items:
+		for row in self.items:
+			if row.get("work_breakdown_structure") not in wbs_list:
+				wbs_list.append(row.get("work_breakdown_structure"))
+
+	if wbs_list:
+		for i in wbs_list:
+			wbs_dict.append({
+				"wbs_id": i,
+				"voucher_name": "",
+				"voucher_type": "",
+				"amount": 0.0
+			})
+
+	for row in self.items:
+		amount = row.get("amount")
+		if row.get("work_breakdown_structure"):
+			for j in wbs_dict:
+				if row.get("work_breakdown_structure") == j.get("wbs_id"):
+					wbs_name,wbs_level = frappe.db.get_value("Work Breakdown Structure",row.get("work_breakdown_structure"),['wbs_name','wbs_level'])
+					j.update({
+						"amount": j.get("amount") + row.get("amount"),
+						"wbs_name": wbs_name,
+						"wbs_level": wbs_level,
+						"txn_date": self.transaction_date,
+						"voucher_type": self.doctype,
+						"voucher_name": self.name,
+						'project':row.get('project')
+					})
+			print("ROW ====> ",row)
+			wbs = frappe.get_doc("Work Breakdown Structure",row.get("work_breakdown_structure"))
+			if event == "Submit":
+				wbs.committed_overall_budget += amount
+				wbs.assigned_overall_budget = wbs.committed_overall_budget + wbs.actual_overall_budget
+				wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
+			elif event == "Cancel":
+				wbs.committed_overall_budget -= amount
+				wbs.assigned_overall_budget = wbs.committed_overall_budget + wbs.actual_overall_budget
+				wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
+			wbs.save()
+
+	if wbs_dict:
+		for i in wbs_dict:
+			create_budget_entry(self, i, event, self.company)
+
+    
+def create_budget_entry(self,row,event,company):
+	print("Row ------------------",row)
+	if row.get("wbs_id"):
+		bgt_ent = frappe.new_doc("Budget Entry")
+		bgt_ent.project = row.get('project')
+		bgt_ent.wbs = row.get("wbs_id")
+		bgt_ent.wbs_name = row.get("wbs_name")
+		bgt_ent.wbs_level = row.get("wbs_level")
+		bgt_ent.company = company
+		bgt_ent.posting_date = datetime.now().strftime("%Y-%m-%d")
+		if event == "Submit":
+			bgt_ent.committed_overall_credit = row.get("amount")            
+		elif event == "Cancel":
+			bgt_ent.committed_overall_debit = row.get("amount")   
+
+		bgt_ent.voucher_type = "Material Request"
+		bgt_ent.voucher_no = self.name
+		bgt_ent.voucher_submit_date = datetime.now().strftime("%Y-%m-%d")
+		bgt_ent.save(ignore_permissions=True)
+		bgt_ent.submit()

@@ -19,7 +19,6 @@ class ZeroBudget(Document):
         from frappe.types import DF
 
         amended_from: DF.Link | None
-        budget_entry: DF.Link | None
         company: DF.Link | None
         posting_date: DF.Date | None
         project: DF.Link | None
@@ -46,7 +45,7 @@ def work_breakdown_structure(project):
     wbs = frappe.get_all(
         "Work Breakdown Structure",
         fields=["name", "wbs_name", "wbs_level", "overall_budget", "gl_account", "available_budget"],
-        filters={"project": project,"docstatus":1}  # Only filter by project
+        filters={"project": project,"docstatus":1,"wbs_level": ["!=", '0']}  # Only filter by project
     )
     return wbs
 
@@ -62,7 +61,8 @@ def update_original_budget(self,event):
             wbs_dict.append({
                 "wbs_id": i,
                 "voucher_name":"",
-                "voucher_type":""
+                "voucher_type":"",
+                "amount":0.0
             })
 
     for row in self.zero_budget_item:
@@ -71,7 +71,7 @@ def update_original_budget(self,event):
             for j in wbs_dict:
                 if row.get("wbs_element") == j.get("wbs_id"):
                     j.update({
-                        "amount": row.get("zero_budget"),
+                        "amount": j.get("amount") + row.get("zero_budget"),
                         "wbs_name": frappe.db.get_value("Work Breakdown Structure",row.get("wbs_element"), "wbs_name"),
                         "wbs_level":row.get("wbs_level"),
                         "txn_date":self.posting_date,
@@ -81,12 +81,16 @@ def update_original_budget(self,event):
             wbs_curr_doc = frappe.get_doc("Work Breakdown Structure",row.get("wbs_element"))
             if event == "Submit":
                 wbs_curr_doc.original_budget = wbs_curr_doc.original_budget + amount
+                wbs_curr_doc.overall_budget = wbs_curr_doc.original_budget
+                wbs_curr_doc.available_budget = wbs_curr_doc.overall_budget - wbs_curr_doc.assigned_overall_budget
                 if wbs_curr_doc.locked:
                     frappe.throw(
                         "Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs_curr_doc.name)
                     )
             elif event == "Cancel":
                 wbs_curr_doc.original_budget = wbs_curr_doc.original_budget - amount
+                wbs_curr_doc.overall_budget = wbs_curr_doc.original_budget
+                wbs_curr_doc.available_budget = wbs_curr_doc.overall_budget - wbs_curr_doc.assigned_overall_budget
                 if wbs_curr_doc.locked:
                     frappe.throw(
                         "Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs_curr_doc.name)

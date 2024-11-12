@@ -22,7 +22,6 @@ class WorkBreakdownStructure(Document):
 		available_budget: DF.Currency
 		committed_overall_budget: DF.Currency
 		company: DF.Link
-		end_date: DF.Date | None
 		gl_account: DF.Link | None
 		is_group: DF.Check
 		locked: DF.Check
@@ -32,7 +31,6 @@ class WorkBreakdownStructure(Document):
 		project: DF.Link
 		project_name: DF.Data | None
 		project_type: DF.Data | None
-		start_date: DF.Date | None
 		wbs_level: DF.Data | None
 		wbs_name: DF.Data
 	# end: auto-generated types

@@ -240,6 +240,7 @@ def update_original_budget(self,event):
 				"wbs_id": i,
 				"voucher_name":"",
 				"voucher_type":"",
+				"amount":0.0
 			})
 
 	for row in self.accounts:
@@ -249,7 +250,7 @@ def update_original_budget(self,event):
 				if row.get("child_wbs") == j.get("wbs_id"):
 					wbs_name,wbs_level = frappe.db.get_value("Work Breakdown Structure",row.get("child_wbs"),['wbs_name','wbs_level'])
 					j.update({
-						"amount": row.get("budget_amount"),
+						"amount": j.get("amount") + row.get("budget_amount"),
 						"wbs_name": wbs_name,
 						"wbs_level":wbs_level,
 						"voucher_type":self.doctype,
@@ -287,7 +288,7 @@ def update_original_budget(self,event):
 	if event == "Submit":
 		wbs_parent.overall_budget = wbs_parent.overall_budget - total_amt
 
-		wbs_parent.assigned_overall_budget = wbs_parent.actual_overall_budget + wbs_parent.committed_overall_budget
+		# wbs_parent.assigned_overall_budget = wbs_parent.actual_overall_budget + wbs_parent.committed_overall_budget
 		wbs_parent.available_budget = wbs_parent.overall_budget - wbs_parent.assigned_overall_budget	
 		if wbs_parent.locked:
 			frappe.throw(
@@ -296,7 +297,7 @@ def update_original_budget(self,event):
 	elif event == "Cancel":
 		wbs_parent.overall_budget = wbs_parent.overall_budget + total_amt
 
-		wbs_parent.assigned_overall_budget = wbs_parent.actual_overall_budget + wbs_parent.committed_overall_budget
+		# wbs_parent.assigned_overall_budget = wbs_parent.actual_overall_budget + wbs_parent.committed_overall_budget
 		wbs_parent.available_budget = wbs_parent.overall_budget - wbs_parent.assigned_overall_budget
 		if wbs_parent.locked:
 			frappe.throw(

@@ -2,30 +2,49 @@
 # For license information, please see license.txt
 
 import frappe
+from pypika import Case,Criterion
 
 
 def execute(filters=None):
 	columns =get_columns()
-	data = get_data()
+	data = get_data(filters)
 	return columns, data
-def get_data():
-    query = frappe.db.sql('''
-        SELECT 
-            name AS name,
-            project AS project_name,
-            wbs_name AS wbs_name,
-            overall_budget AS amt_allocated,
-            assigned_overall_budget AS amt_utilized,
-            (overall_budget - assigned_overall_budget) AS amt_balanced,
-            wbs_level AS wbs_level,
-            CASE 
-                WHEN overall_budget > 0 THEN (assigned_overall_budget / overall_budget) * 100
-                ELSE 0
-            END AS total_utilized,
-            is_group,
-            parent_work_breakdown_structure
-        FROM `tabWork Breakdown Structure`
-    ''', as_dict=True)
+
+def get_data(filters):
+    conditons=[]
+    wbs=frappe.qb.DocType('Work Breakdown Structure')
+    if filters.get("company"):
+        conditons.append(wbs.company == filters.get("company"))
+    if filters.get('project'):
+        conditons.append(wbs.project == filters.get('project'))
+    if filters.get('wbs_name'):
+        conditons.append(wbs.wbs_name == filters.get('wbs_name'))
+
+    query=(
+        frappe.qb.from_(wbs)
+        .select(
+            wbs.name.as_('name'),
+            wbs.project.as_('project_name'),
+            wbs.wbs_name.as_('wbs_name'),
+            wbs.overall_budget.as_('amt_allocated'),
+            wbs.assigned_overall_budget.as_('amt_utilized'),
+            wbs.wbs_level.as_('wbs_level'),
+            (wbs.overall_budget - wbs.assigned_overall_budget).as_('amt_balanced'),
+            Case()
+            .when(
+            wbs.overall_budget > 0,
+            (wbs.assigned_overall_budget / wbs.overall_budget) * 100
+        )
+        .else_(0)
+        .as_('total_utilized'),
+        wbs.is_group,
+        wbs.parent_work_breakdown_structure
+         )
+         .where(
+            Criterion.all(conditons)
+         )
+         .run(as_dict=True)
+    )
 
     wbs_map = {}
     for item in query:
@@ -137,4 +156,3 @@ def get_columns():
 	]
 
 	return columns
-
