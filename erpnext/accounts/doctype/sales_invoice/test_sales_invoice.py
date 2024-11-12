@@ -3855,12 +3855,14 @@ def check_gl_entries(doc, voucher_no, expected_gle, posting_date, voucher_type="
 	)
 	gl_entries = q.run(as_dict=True)
 
+	expected_gle = sorted(expected_gle, key=lambda x: x[0])
+	gl_entries = sorted(gl_entries, key=lambda x: x['account'])
+
 	for i, gle in enumerate(gl_entries):
 		doc.assertEqual(expected_gle[i][0], gle.account)
 		doc.assertEqual(expected_gle[i][1], gle.debit)
 		doc.assertEqual(expected_gle[i][2], gle.credit)
 		doc.assertEqual(getdate(expected_gle[i][3]), gle.posting_date)
-
 
 def create_sales_invoice(**args):
 	si = frappe.new_doc("Sales Invoice")
