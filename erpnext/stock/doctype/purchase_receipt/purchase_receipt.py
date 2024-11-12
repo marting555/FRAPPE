@@ -633,13 +633,10 @@ class PurchaseReceipt(BuyingController):
 				and flt(d.qty)
 				and d.get("provisional_expense_account")
 			):
-				print("A")
 				self.add_provisional_gl_entry(
 					d, gl_entries, self.posting_date, d.get("provisional_expense_account")
 				)
 			elif flt(d.qty) and (flt(d.valuation_rate) or self.is_return):
-				print(d.qty, d.valuation_rate, self.is_return)
-				print("B")
 				remarks = self.get("remarks") or _("Accounting Entry for {0}").format(
 					"Stock"
 				)
@@ -685,13 +682,9 @@ class PurchaseReceipt(BuyingController):
 			elif (d.warehouse and d.warehouse not in warehouse_with_no_account) or (
 				d.rejected_warehouse and d.rejected_warehouse not in warehouse_with_no_account
 			):
-				print(d.qty, d.valuation_rate, self.is_return)
-				print(d.warehouse,d.rejected_warehouse)
 				warehouse_with_no_account.append(d.warehouse or d.rejected_warehouse)
 
-		print(warehouse_with_no_account, "warehouse_with_no_account")
 		if warehouse_with_no_account:
-			print("hello")
 			frappe.msgprint(
 				_("No accounting entries for the following warehouses")
 				+ ": \n"

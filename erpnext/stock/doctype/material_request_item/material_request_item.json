@@ -41,7 +41,6 @@
   "accounting_details_section",
   "expense_account",
   "column_break_glru",
-  "wip_composite_asset",
   "manufacture_details",
   "manufacturer",
   "manufacturer_part_no",
@@ -470,12 +469,6 @@
   {
    "fieldname": "column_break_glru",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "wip_composite_asset",
-   "fieldtype": "Link",
-   "label": "WIP Composite Asset",
-   "options": "Asset"
   },
   {
    "fieldname": "price_list_rate",
