@@ -24,7 +24,11 @@ frappe.ui.form.on("Payment Entry", {
 			if (!frm.doc.paid_from) frm.set_value("paid_from_account_currency", null);
 			if (!frm.doc.paid_to) frm.set_value("paid_to_account_currency", null);
 		}
-
+		if (frm.doc.docstatus !== 1) {
+			frm.add_custom_button("Get Discount Eligible Invoice", ()=>{
+				check_conditions_get_invoice(frm)
+			});
+		}
 		erpnext.accounts.dimensions.setup_dimension_filters(frm, frm.doctype);
 	},
 
@@ -215,6 +219,7 @@ frappe.ui.form.on("Payment Entry", {
 				__("Actions")
 			);
 		}
+		
 		erpnext.accounts.unreconcile_payment.add_unreconcile_btn(frm);
 	},
 
@@ -1802,3 +1807,147 @@ frappe.ui.form.on("Payment Entry", {
 		}
 	},
 });
+
+function check_conditions_get_invoice(frm) {
+	const fields_to_watch = [
+        'paid_from', 
+        'paid_from_account_currency', 
+        'paid_to', 
+        'paid_to_account_currency', 
+        'party_type', 
+        'party',
+		'reference_date'
+    ];    
+
+    let missing_fields = fields_to_watch.filter(field => !frm.doc[field]);
+
+    if (missing_fields.length > 0) {
+		let field_labels = missing_fields.map(field => `<li><b>${frm.fields_dict[field].df.label}</b></li>`).join('');
+        frappe.msgprint({
+            title: __('Missing Fields'),
+            message: __('Please fill in the following mandatory fields to generate Invoice(s):<br>') + '<ul>' + field_labels + '</ul>',
+            indicator: 'red'
+        });
+		return;
+    }
+
+	show_invoice_dialogue();
+}
+
+function show_invoice_dialogue() {
+	const today = frappe.datetime.get_today();
+	let fields = [
+		{ fieldtype: "Section Break", label: __("Posting Date") },
+		{
+			fieldtype: "Date",
+			label: __("From Date"),
+			fieldname: "from_posting_date",
+			default: frappe.datetime.add_days(today, -30),
+		},
+		{
+			fieldtype: "Button",
+			label: __("Show Invoices"),
+			fieldname: "show_invoices",
+			click: function() {
+				populate_invoices();
+			}
+		},
+		{ fieldtype: "Column Break" },
+		{
+			fieldtype: "Date",
+			label: __("To Date"),
+			fieldname: "to_posting_date",
+			default: today,
+		},
+		
+		{ fieldtype: "Section Break", label: __("Outstanding Invoices") },
+		{
+			fieldtype: "Table",
+			fieldname: "invoice_table",
+			label: __("Invoice Table"),
+			cannot_add_rows: true,
+			fields: [
+				
+				{ fieldtype: "Data", fieldname: "invoice_number", label: __("Invoice Number"), in_list_view : 1, read_only:1 },
+				{ fieldtype: "Float", fieldname: "discount_percent", label: __("Discount (in %)"), in_list_view : 1, read_only:1 },
+				{ fieldtype: "Currency", fieldname: "outstanding_amount", label: __("Outstanding Amount"), in_list_view : 1, read_only:1 },
+				{ fieldtype: "Currency", fieldname: "amount_to_be_paid", label: __("Amount to be Paid"), in_list_view : 1 },
+				{ fieldtype: "Data", fieldname: "cost_center", label: __("Amount to be Paid"), hidden: 1 },
+				{ fieldtype: "Currency", fieldname: "grand_total", label: __("Discount (in %)"), hidden: 1, read_only:1 },
+				{ fieldtype: "Currency", fieldname: "payment_term", label: __("Outstanding Amount"), hidden: 1, read_only:1 },
+				
+			]
+		}
+	];
+
+	let dialog = new frappe.ui.Dialog({
+		title: __("Filters"),
+		fields: fields,
+		primary_action_label: "Proceed with Further Action",
+		primary_action: function() {
+			let dt_type = (cur_frm.doc.payment_type == "Pay")? "Purchase Invoice":"Sales Invoice"
+			let select_invoices = cur_dialog.get_field("invoice_table").grid.get_selected_children() 
+			if(select_invoices.length < 1){
+				frappe.throw("Select Atleast 1 invoice to continue")
+			}
+			set_selected_invoice(dt_type, select_invoices)
+		}
+	});
+
+	dialog.get_primary_btn().prop("disabled", true);
+
+	function populate_invoices() {
+		let dt_type = (cur_frm.doc.payment_type == "Pay")? "Purchase Invoice":"Sales Invoice"
+		let filters = {
+			"posting_date" : ['Between', [cur_dialog.get_value('from_posting_date'), cur_dialog.get_value('to_posting_date')]],
+			"company": cur_frm.doc.company,
+			"due_date": [">=", cur_frm.doc.reference_date],
+		}
+		if (dt_type == "Purchase Invoice") {
+			filters["supplier"]=cur_frm.doc.party
+		} else{
+			filters["customer"]=cur_frm.doc.party
+		}
+
+		frappe.call({
+			method:"erpnext.accounts.doctype.payment_entry.payment_entry.get_discount_eligible_invoice",
+			args:{filters:filters, dt : dt_type },
+			callback:(response)=>{
+				if(!response.message){
+					frappe.show_alert({
+						message: __("No Invoice Found for given Posting Date Range"), indicator: "orange" 
+					})
+				}
+				let table_field = dialog.get_field("invoice_table");
+
+				// Populate sample data into the table field
+				table_field.df.data = response.message;
+				
+				table_field.grid.refresh();
+				dialog.get_primary_btn().prop("disabled", false);
+			}
+		})
+	}
+
+	function set_selected_invoice(dt, selected_invoices){
+		
+		frappe.call({
+			method:"erpnext.accounts.doctype.payment_entry.payment_entry.calculate_discount_for_multiple_invoice",
+			args:{
+				dt : dt, 
+				dn_list_obj:selected_invoices, 
+				reference_date : cur_frm.doc.reference_date,
+				party_account_currency: cur_frm.doc.paid_to_account_currency , 
+				party_type: cur_frm.doc.party_type, 
+				party: cur_frm.doc.party,
+			},
+			callback:(response)=>{
+				for(let df in response.message){
+					cur_frm.set_value(df, response.message[df])
+				}
+				dialog.hide();	
+			}
+		})
+	}
+	dialog.show();
+}
