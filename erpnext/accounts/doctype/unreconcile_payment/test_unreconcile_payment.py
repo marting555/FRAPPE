@@ -262,6 +262,7 @@ class TestUnreconcilePayment(AccountsTestMixin, IntegrationTestCase):
 		pe1.paid_from = self.debtors_usd
 		pe1.paid_from_account_currency = "USD"
 		pe1.source_exchange_rate = 75
+		pe1.paid_amount = 100
 		pe1.received_amount = 75 * 100
 		pe1.save()
 		# Allocate payment against both invoices
@@ -279,6 +280,7 @@ class TestUnreconcilePayment(AccountsTestMixin, IntegrationTestCase):
 		pe2.paid_from = self.debtors_usd
 		pe2.paid_from_account_currency = "USD"
 		pe2.source_exchange_rate = 75
+		pe2.paid_amount = 100
 		pe2.received_amount = 75 * 100
 		pe2.save()
 		# Allocate payment against both invoices
@@ -316,8 +318,8 @@ class TestUnreconcilePayment(AccountsTestMixin, IntegrationTestCase):
 		self.assertEqual(si2.outstanding_amount, 0)
 		self.assertEqual(len(pe1.references), 2)
 		self.assertEqual(len(pe2.references), 1)
-		self.assertEqual(pe1.unallocated_amount, 100)
-		self.assertEqual(pe2.unallocated_amount, 150)
+		self.assertEqual(pe1.unallocated_amount, 0)
+		self.assertEqual(pe2.unallocated_amount, 50)
 
 		# Exc gain/loss JE from PE1 should be available
 		self.assertEqual(
