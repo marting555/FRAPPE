@@ -60,23 +60,23 @@ frappe.ui.form.on("Budget Amendment", {
 });
 
 frappe.ui.form.on("Budget Amendment Items", {
-    overall_budget: function(frm, cdt, cdn) {
-        var child = locals[cdt][cdn];
-        let total_amount = 0;
+    // overall_budget: function(frm, cdt, cdn) {
+    //     var child = locals[cdt][cdn];
+    //     let total_amount = 0;
 
-        if (frm.doc.budget_amendment_items && frm.doc.budget_amendment_items.length) {
-            frm.doc.budget_amendment_items.forEach(row => {
-                if (row.overall_budget !== undefined) {
-                    total_amount += row.overall_budget || 0;
-                }
-            });
-            console.log("Total Overall Budget:", total_amount);
-            frm.set_value("total_overall_budget", total_amount);
-            frm.refresh_field("total_overall_budget");
-        } else {
-            console.log("No budget amendment items found.");
-        }
-    },
+    //     if (frm.doc.budget_amendment_items && frm.doc.budget_amendment_items.length) {
+    //         frm.doc.budget_amendment_items.forEach(row => {
+    //             if (row.overall_budget !== undefined) {
+    //                 total_amount += row.overall_budget || 0;
+    //             }
+    //         });
+    //         console.log("Total Overall Budget:", total_amount);
+    //         frm.set_value("total_overall_budget", total_amount);
+    //         frm.refresh_field("total_overall_budget");
+    //     } else {
+    //         console.log("No budget amendment items found.");
+    //     }
+    // },
 
     increment_budget: function(frm, cdt, cdn) {
         var child = locals[cdt][cdn];
@@ -161,13 +161,15 @@ frappe.ui.form.on("Budget Amendment Items", {
     },
     wbs_element: function(frm,cdt,cdn) {
         var child = locals[cdt][cdn];
-        frappe.db.get_value("Work Breakdown Structure", child.wbs_element, ['wbs_name','wbs_level'])
+        frappe.db.get_value("Work Breakdown Structure", child.wbs_element, ['wbs_name','wbs_level','overall_budget'])
         .then(response => {
             child.wbs_name = response.message.wbs_name || null;
             child.level = response.message.wbs_level || null;
+            child.overall_budget = response.message.overall_budget || null;
             let row = frm.fields_dict['budget_amendment_items'].grid.get_row(cdn);
 			row.refresh_field('wbs_name');
             row.refresh_field('level');
-        })
+            row.refresh_field('overall_budget');
+        });
     }
 });

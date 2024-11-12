@@ -23,7 +23,9 @@ class BudgetAmendment(Document):
         project_name: DF.Data | None
         total_decrement_budget: DF.Data | None
         total_increment_budget: DF.Data | None
-        total_overall_budget: DF.Data | None
+    # end: auto-generated types
+    # begin: auto-generated types
+    # This code is auto-generated. Do not modify anything in this block.
 
     def on_submit(self):
         update_original_budget(self,"Submit")
@@ -129,28 +131,28 @@ def update_original_budget(self,event):
                 "wbs_id": i,
                 "voucher_name":"",
                 "voucher_type":"",
+                "amount":0.0
             })
 
     for row in self.budget_amendment_items:
-        amount = row.get("total")
+        amount = row.get("increment_budget") if row.get("increment_budget") > 0 else row.get("decrement_budget")
         if row.get("wbs_element"):
             for j in wbs_dict:
                 if row.get("wbs_element") == j.get("wbs_id"):
+                    budget = row.get("increment_budget") if row.get("increment_budget") > 0 else row.get("decrement_budget")
                     j.update({
-                        "amount": row.get("total"),
+                        "amount": j.get("amount") + budget,
                         "wbs_name": frappe.db.get_value("Work Breakdown Structure",row.get("wbs_element"), "wbs_name"),
                         "wbs_level":row.get("level"),
                         "txn_date":self.posting_date,
                         "voucher_type":self.doctype,
                         "voucher_name":self.name,
-                        "increment_budget": row.get("increment_budget"),
-                        "decrement_budget": row.get("decrement_budget")
                     })
             wbs_curr_doc = frappe.get_doc("Work Breakdown Structure",row.get("wbs_element"))
             if event == "Submit":
                 wbs_curr_doc.overall_budget = wbs_curr_doc.overall_budget + amount
 
-                wbs_curr_doc.assigned_overall_budget = wbs_curr_doc.actual_overall_budget + wbs_curr_doc.committed_overall_budget
+                # wbs_curr_doc.assigned_overall_budget = wbs_curr_doc.actual_overall_budget + wbs_curr_doc.committed_overall_budget
                 wbs_curr_doc.available_budget = wbs_curr_doc.overall_budget - wbs_curr_doc.assigned_overall_budget
                 if wbs_curr_doc.locked:
                     frappe.throw(
@@ -159,7 +161,7 @@ def update_original_budget(self,event):
             elif event == "Cancel":
                 wbs_curr_doc.overall_budget = wbs_curr_doc.overall_budget - amount
 
-                wbs_curr_doc.assigned_overall_budget = wbs_curr_doc.actual_overall_budget + wbs_curr_doc.committed_overall_budget
+                # wbs_curr_doc.assigned_overall_budget = wbs_curr_doc.actual_overall_budget + wbs_curr_doc.committed_overall_budget
                 wbs_curr_doc.available_budget = wbs_curr_doc.overall_budget - wbs_curr_doc.assigned_overall_budget
                 if wbs_curr_doc.locked:
                     frappe.throw(
