@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2024-11-10 09:34+0000\n"
-"PO-Revision-Date: 2024-11-11 08:02\n"
+"PO-Revision-Date: 2024-11-12 08:23\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Turkish\n"
 "MIME-Version: 1.0\n"
@@ -3487,7 +3487,7 @@ msgstr "Gelişmiş Ayarlar"
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.json
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.json
 msgid "Advances"
-msgstr "Peşinatlar"
+msgstr "Avanslar"
 
 #: erpnext/setup/setup_wizard/data/marketing_source.txt:3
 msgid "Advertisement"
@@ -12520,7 +12520,7 @@ msgstr "Verilen Ürünlerin Maliyeti"
 
 #: erpnext/accounts/report/asset_depreciations_and_balances/asset_depreciations_and_balances.py:473
 msgid "Cost of New Capitalized Asset"
-msgstr ""
+msgstr "Yeni Sermayelendirilmiş Varlığın Maliyeti"
 
 #: erpnext/accounts/report/asset_depreciations_and_balances/asset_depreciations_and_balances.py:455
 msgid "Cost of New Purchase"
@@ -29789,7 +29789,7 @@ msgstr "Maksimum İndirim (%)"
 #: erpnext/buying/doctype/supplier_scorecard_scoring_standing/supplier_scorecard_scoring_standing.json
 #: erpnext/buying/doctype/supplier_scorecard_standing/supplier_scorecard_standing.json
 msgid "Max Grade"
-msgstr "Maksimum Not"
+msgstr "Maksimum"
 
 #. Label of the max_qty (Float) field in DocType 'Promotional Scheme Price
 #. Discount'
@@ -30234,7 +30234,7 @@ msgstr "Min Miktar Maks Miktardan büyük olamaz"
 #: erpnext/buying/doctype/supplier_scorecard_scoring_standing/supplier_scorecard_scoring_standing.json
 #: erpnext/buying/doctype/supplier_scorecard_standing/supplier_scorecard_standing.json
 msgid "Min Grade"
-msgstr "Asgari Not"
+msgstr "Minimum"
 
 #. Label of the min_order_qty (Float) field in DocType 'Material Request Item'
 #: erpnext/stock/doctype/material_request_item/material_request_item.json
@@ -37140,7 +37140,7 @@ msgstr "Lütfen Ödeme Şeklinde varsayılan Nakit veya Banka hesabını ayarlay
 
 #: erpnext/accounts/utils.py:2161
 msgid "Please set default Exchange Gain/Loss Account in Company {}"
-msgstr ""
+msgstr "Lütfen {} Şirketi varsayılan Döviz Kazanç/Zarar Hesabını ayarlayın"
 
 #: erpnext/assets/doctype/asset_repair/asset_repair.py:359
 msgid "Please set default Expense Account in Company {0}"
@@ -37152,7 +37152,7 @@ msgstr "Lütfen Stok Ayarlarında varsayılan Ölçü Birimini ayarlayın"
 
 #: erpnext/controllers/stock_controller.py:574
 msgid "Please set default cost of goods sold account in company {0} for booking rounding gain and loss during stock transfer"
-msgstr ""
+msgstr "Stok transferi sırasında yuvarlama kazancı ve kaybını kaydetmek için lütfen {0} şirketinde varsayılan satılan malın maliyeti hesabını ayarlayın"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:248
 #: erpnext/accounts/utils.py:1050
@@ -37633,7 +37633,7 @@ msgstr "Önceki Doküman"
 #: erpnext/buying/doctype/supplier/supplier.json
 #: erpnext/buying/doctype/supplier_scorecard/supplier_scorecard.json
 msgid "Prevent POs"
-msgstr "PO'ları Önle"
+msgstr "Siparişleri Engelle"
 
 #. Label of the prevent_pos (Check) field in DocType 'Supplier Scorecard
 #. Scoring Standing'
@@ -42597,7 +42597,7 @@ msgstr "Notlar:"
 
 #: erpnext/manufacturing/doctype/bom_creator/bom_creator.py:105
 msgid "Remove Parent Row No in Items Table"
-msgstr ""
+msgstr "Ürünler Tablosunda Üst Satır Numarasını Kaldır"
 
 #: erpnext/stock/doctype/landed_cost_voucher/landed_cost_voucher.js:38
 msgid "Remove item if charges is not applicable to that item"
@@ -43649,7 +43649,7 @@ msgstr ""
 
 #: erpnext/manufacturing/doctype/work_order/work_order.js:216
 msgid "Return Components"
-msgstr ""
+msgstr "Bileşenleri İade Et"
 
 #. Option for the 'Status' (Select) field in DocType 'Delivery Note'
 #. Option for the 'Status' (Select) field in DocType 'Purchase Receipt'
@@ -47056,7 +47056,7 @@ msgstr "Seri No Kayıtları"
 
 #: erpnext/public/js/utils/serial_no_batch_selector.js:259
 msgid "Serial No Range"
-msgstr ""
+msgstr "Seri No Aralığı"
 
 #. Name of a report
 #. Label of a Link in the Stock Workspace
@@ -50390,7 +50390,7 @@ msgstr "Alt Yüklenici Sipariş Kalemi"
 #. Name of a DocType
 #: erpnext/subcontracting/doctype/subcontracting_order_service_item/subcontracting_order_service_item.json
 msgid "Subcontracting Order Service Item"
-msgstr ""
+msgstr "Alt Yüklenici Sipariş Kalemi"
 
 #. Name of a DocType
 #: erpnext/subcontracting/doctype/subcontracting_order_supplied_item/subcontracting_order_supplied_item.json
@@ -52693,7 +52693,7 @@ msgstr "Şartlar ve Koşullar Yardım"
 #: erpnext/buying/workspace/buying/buying.json
 #: erpnext/selling/workspace/selling/selling.json
 msgid "Terms and Conditions Template"
-msgstr "Şartlar ve Koşullar Şablonu"
+msgstr "Şartlar ve Koşullar"
 
 #. Label of the territory (Link) field in DocType 'POS Invoice'
 #. Option for the 'Applicable For' (Select) field in DocType 'Pricing Rule'
@@ -52932,7 +52932,7 @@ msgstr "Varlık Hesabı alanı boş olamaz"
 
 #: erpnext/accounts/doctype/share_transfer/share_transfer.py:192
 msgid "The field Equity/Liability Account cannot be blank"
-msgstr ""
+msgstr "Sermaye/Borç Hesabı alanı boş olamaz"
 
 #: erpnext/accounts/doctype/share_transfer/share_transfer.py:173
 msgid "The field From Shareholder cannot be blank"
@@ -53512,7 +53512,7 @@ msgstr "Bu {} hammadde transferi olarak değerlendirilecektir."
 #: erpnext/accounts/doctype/promotional_scheme_price_discount/promotional_scheme_price_discount.json
 #: erpnext/accounts/doctype/promotional_scheme_product_discount/promotional_scheme_product_discount.json
 msgid "Threshold for Suggestion"
-msgstr "Öneriler için Eşik"
+msgstr "Öneri için Eşik"
 
 #. Label of the threshold_percentage (Percent) field in DocType 'Pricing Rule'
 #: erpnext/accounts/doctype/pricing_rule/pricing_rule.json
@@ -54146,7 +54146,7 @@ msgstr "Bitiş Zamanı"
 
 #: erpnext/projects/doctype/timesheet_detail/timesheet_detail.py:96
 msgid "To Time cannot be before from date"
-msgstr ""
+msgstr "Bitiş tarihi başlangıç tarihinden önce olamaz"
 
 #. Description of the 'Referral Code' (Data) field in DocType 'Sales Partner'
 #: erpnext/setup/doctype/sales_partner/sales_partner.json
@@ -56807,7 +56807,7 @@ msgstr "Geçerlilik Bitiş Tarihi"
 #: erpnext/setup/doctype/employee/employee.json
 #: erpnext/stock/doctype/item_price/item_price.json
 msgid "Valid Up To"
-msgstr ""
+msgstr "Geçerlilik Tarihi"
 
 #: erpnext/regional/doctype/lower_deduction_certificate/lower_deduction_certificate.py:40
 msgid "Valid Up To date cannot be before Valid From date"
@@ -59658,7 +59658,7 @@ msgstr "{0} Maliyet Merkezi Tahsisinde alt maliyet merkezi olarak kullanıldığ
 
 #: erpnext/accounts/doctype/payment_request/payment_request.py:120
 msgid "{0} cannot be zero"
-msgstr ""
+msgstr "{0} sıfır olamaz"
 
 #: erpnext/manufacturing/doctype/production_plan/production_plan.py:826
 #: erpnext/manufacturing/doctype/production_plan/production_plan.py:920
@@ -59810,7 +59810,7 @@ msgstr "{0} iade faturasında negatif değer olmalıdır"
 
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.py:1999
 msgid "{0} not allowed to transact with {1}. Please change the Company or add the Company in the 'Allowed To Transact With'-Section in the Customer record."
-msgstr ""
+msgstr "{0} {1} ile işlem yapmaya izin verilmiyor. Lütfen Şirketi değiştirin veya Müşteri kaydındaki 'İşlem Yapmaya İzin Verilenler' bölümüne Şirketi ekleyin."
 
 #: erpnext/manufacturing/doctype/bom/bom.py:465
 msgid "{0} not found for item {1}"
