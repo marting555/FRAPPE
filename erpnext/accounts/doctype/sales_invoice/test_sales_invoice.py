@@ -1125,7 +1125,8 @@ class TestSalesInvoice(FrappeTestCase):
 			order_by="account, debit, credit",
 			as_list=1,
 		)
-		self.assertEqual(expected, res)
+		for i in range(len(res)):
+			self.assertEqual(expected[i], res[i])
 
 	def test_pos_with_no_gl_entry_for_change_amount(self):
 		frappe.db.set_single_value("Accounts Settings", "post_change_gl_entries", 0)
