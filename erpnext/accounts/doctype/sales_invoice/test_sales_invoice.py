@@ -2288,7 +2288,7 @@ class TestSalesInvoice(FrappeTestCase):
 			"""select account, sum(debit) as debit, sum(credit) as credit
 			from `tabGL Entry` where voucher_type='Sales Invoice' and voucher_no=%s
 			group by account
-			order by account asc""",
+			order by account desc""",
 			si.name,
 			as_dict=1,
 		)
