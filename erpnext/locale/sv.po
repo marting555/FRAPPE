@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2024-11-10 09:34+0000\n"
-"PO-Revision-Date: 2024-11-11 08:02\n"
+"PO-Revision-Date: 2024-11-12 08:22\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -14571,7 +14571,7 @@ msgstr "DFS"
 #: erpnext/setup/doctype/email_digest/email_digest.json
 #: erpnext/utilities/doctype/video_settings/video_settings.json
 msgid "Daily"
-msgstr "Varje Dag"
+msgstr "Dagsvis"
 
 #: erpnext/projects/doctype/project/project.py:667
 msgid "Daily Project Summary for {0}"
@@ -22488,7 +22488,7 @@ msgstr "Halvår"
 #. Task'
 #: erpnext/assets/doctype/asset_maintenance_task/asset_maintenance_task.json
 msgid "Half-yearly"
-msgstr "Halvår"
+msgstr "Halvårsvis"
 
 #. Name of a UOM
 #: erpnext/setup/setup_wizard/data/uom_data.json
@@ -22847,7 +22847,7 @@ msgstr "Timpris"
 #. 'Project'
 #: erpnext/projects/doctype/project/project.json
 msgid "Hourly"
-msgstr "Varje Timme"
+msgstr "Timvis"
 
 #. Label of the hours (Float) field in DocType 'Workstation Working Hour'
 #: erpnext/manufacturing/doctype/workstation_working_hour/workstation_working_hour.json
@@ -30644,7 +30644,7 @@ msgstr "Månad(er) efter Faktura Månad slut"
 #: erpnext/stock/report/stock_analytics/stock_analytics.js:80
 #: erpnext/support/report/issue_analytics/issue_analytics.js:42
 msgid "Monthly"
-msgstr "Varje Månad"
+msgstr "Månadsvis"
 
 #: erpnext/manufacturing/dashboard_fixtures.py:215
 msgid "Monthly Completed Work Orders"
@@ -40784,7 +40784,7 @@ msgstr "Kvartal {0} {1}"
 #: erpnext/stock/report/stock_analytics/stock_analytics.js:81
 #: erpnext/support/report/issue_analytics/issue_analytics.js:43
 msgid "Quarterly"
-msgstr "Varje Kvartal"
+msgstr "Kvartalsvis"
 
 #. Label of the query_options_sb (Section Break) field in DocType 'Support
 #. Search Source'
@@ -58258,7 +58258,7 @@ msgstr "Vardag"
 #: erpnext/stock/report/stock_analytics/stock_analytics.js:79
 #: erpnext/support/report/issue_analytics/issue_analytics.js:41
 msgid "Weekly"
-msgstr "Varje Vecka"
+msgstr "Veckovis"
 
 #. Label of the weekly_off (Check) field in DocType 'Holiday'
 #. Label of the weekly_off (Select) field in DocType 'Holiday List'
@@ -58925,7 +58925,7 @@ msgstr "År Start Datum eller Slut Datum överlappar med {0}. För att undvika d
 #: erpnext/stock/report/stock_analytics/stock_analytics.js:82
 #: erpnext/support/report/issue_analytics/issue_analytics.js:44
 msgid "Yearly"
-msgstr "Varje År"
+msgstr "Årsvis"
 
 #. Option for the 'Color' (Select) field in DocType 'Supplier Scorecard Scoring
 #. Standing'
