@@ -248,7 +248,6 @@ class DeliveryNote(SellingController):
 		self.validate_references()
 		self.set_status()
 		self.so_required()
-		self.validate_proj_cust()
 		self.check_sales_order_on_hold_or_close("against_sales_order")
 		self.validate_warehouse()
 		self.validate_uom_is_integer("stock_uom", "stock_qty")
@@ -401,19 +400,6 @@ class DeliveryNote(SellingController):
 		if err_msg:
 			frappe.throw(err_msg, title=_("References to Sales Invoices are Incomplete"))
 
-	def validate_proj_cust(self):
-		"""check for does customer belong to same project as entered.."""
-		if self.project and self.customer:
-			res = frappe.db.sql(
-				"""select name from `tabProject`
-				where name = %s and (customer = %s or
-					ifnull(customer,'')='')""",
-				(self.project, self.customer),
-			)
-			if not res:
-				frappe.throw(
-					_("Customer {0} does not belong to project {1}").format(self.customer, self.project)
-				)
 
 	def validate_warehouse(self):
 		super().validate_warehouse()

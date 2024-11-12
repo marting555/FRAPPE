@@ -99,7 +99,6 @@
   "column_break_40",
   "weight_uom",
   "accounting_dimensions_section",
-  "project",
   "dimension_col_break",
   "cost_center",
   "more_info_section_break",
@@ -456,13 +455,6 @@
    "oldfieldname": "warehouse",
    "oldfieldtype": "Link",
    "options": "Warehouse",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "options": "Project",
    "print_hide": 1
   },
   {
