@@ -53,7 +53,6 @@ def execute(filters=None):
 	for item in sorted(iwb_map):
 		if not filters.get("item") or filters.get("item") == item:
 			for wh in sorted(iwb_map[item]):
-				# for batch in sorted(iwb_map[item][wh]):
 				for batch in sorted(iwb_map[item][wh], key=lambda x: (x is None, x)):
 					qty_dict = iwb_map[item][wh][batch]
 					if qty_dict.opening_qty or qty_dict.in_qty or qty_dict.out_qty or qty_dict.bal_qty:
