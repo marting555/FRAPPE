@@ -21,7 +21,6 @@
   "to_date",
   "finance_book",
   "currency",
-  "project",
   "payment_terms_template",
   "sales_partner",
   "sales_person",
@@ -95,13 +94,6 @@
    "fieldtype": "Table MultiSelect",
    "label": "Cost Center",
    "options": "PSOA Cost Center"
-  },
-  {
-   "depends_on": "eval: (doc.report == 'General Ledger');",
-   "fieldname": "project",
-   "fieldtype": "Table MultiSelect",
-   "label": "Project",
-   "options": "PSOA Project"
   },
   {
    "fieldname": "section_break_3",

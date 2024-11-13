@@ -61,6 +61,9 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 		if (this.frm.doc.supplier && this.frm.doc.__islocal) {
 			this.frm.trigger("supplier");
 		}
+		if(this.frm.is_new() && this.frm.doc.payment_schedule && this.frm.doc.payment_schedule.length > 0){
+			this.frm.set_value("payment_schedule", "[]")
+		}
 		cur_frm.set_query("payment_term",function (doc) {
 			return {
 				
@@ -484,6 +487,14 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 			}
 		}
 	}
+
+	due_date(frm){
+		cur_frm.set_value("discount_due_date",frm.due_date)
+	}
+
+	discount_due_date(frm){
+		cur_frm.set_value("due_date",frm.discount_due_date)
+	}
 };
 
 cur_frm.script_manager.make(erpnext.accounts.PurchaseInvoice);
@@ -749,3 +760,12 @@ frappe.ui.form.on("Purchase Invoice", {
 		}
 	},
 });
+
+
+frappe.ui.form.on("Discount Terms", {
+	no_of_days:(frm)=>{
+		let discount_date = frappe.datetime.add_days(frappe.datetime.get_today(), frm.selected_doc.no_of_days)
+		frm.selected_doc.discount_date = discount_date
+		frm.refresh_field("payment_discount_terms")
+	}
+})

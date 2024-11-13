@@ -30,14 +30,11 @@ class Customer(TransactionBase):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
-		from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import (
-			AllowedToTransactWith,
-		)
+		from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import AllowedToTransactWith
 		from erpnext.accounts.doctype.party_account.party_account import PartyAccount
 		from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import CustomerCreditLimit
 		from erpnext.utilities.doctype.portal_user.portal_user import PortalUser
+		from frappe.types import DF
 
 		account_manager: DF.Link | None
 		accounts: DF.Table[PartyAccount]
@@ -51,10 +48,8 @@ class Customer(TransactionBase):
 		customer_primary_contact: DF.Link | None
 		customer_type: DF.Literal["Company", "Individual", "Partnership"]
 		default_bank_account: DF.Link | None
-		default_commission_rate: DF.Float
 		default_currency: DF.Link | None
 		default_price_list: DF.Link | None
-		default_sales_partner: DF.Link | None
 		disabled: DF.Check
 		dn_required: DF.Check
 		email_id: DF.ReadOnly | None

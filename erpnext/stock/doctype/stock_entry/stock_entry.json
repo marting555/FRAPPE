@@ -68,7 +68,6 @@
   "supplier_address",
   "address_display",
   "accounting_dimensions_section",
-  "project",
   "other_info_tab",
   "printing_settings",
   "select_print_heading",
@@ -502,13 +501,6 @@
    "fieldtype": "Select",
    "label": "Is Opening",
    "options": "No\nYes"
-  },
-  {
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "oldfieldtype": "Link",
-   "options": "Project"
   },
   {
    "fieldname": "remarks",
