@@ -1135,48 +1135,50 @@ class PaymentEntry(AccountsController):
 	def set_exchange_gain_loss(self):
 		exchange_gain_loss = flt(
 			self.base_paid_amount - self.base_received_amount,
-			self.precision("base_paid_amount"),
+			self.precision("amount", "deductions"),
 		)
 
-		exchange_gain_loss_rows = [d for d in self.get("deductions") if d.is_exchange_gain_loss]
-		exchange_gain_loss_row = exchange_gain_loss_rows[0] if exchange_gain_loss_rows else frappe._dict()
+		exchange_gain_loss_rows = [row for row in self.get("deductions") if row.is_exchange_gain_loss]
+		exchange_gain_loss_row = exchange_gain_loss_rows.pop(0) if exchange_gain_loss_rows else None
 
-		for row in exchange_gain_loss_rows[1:]:
+		for row in exchange_gain_loss_rows:
 			self.remove(row)
 
 		if not exchange_gain_loss:
-			self.remove(exchange_gain_loss_row)
+			if exchange_gain_loss_row:
+				self.remove(exchange_gain_loss_row)
+
 			return
 
-		exchange_gain_loss_account, cost_center = frappe.get_cached_value(
-			"Company", self.company, ["exchange_gain_loss_account", "cost_center"]
-		)
-
-		exchange_gain_loss_account = exchange_gain_loss_row.account or exchange_gain_loss_account
-		cost_center = exchange_gain_loss_row.cost_center or cost_center
-
-		if not exchange_gain_loss_account:
-			return frappe.msgprint(
-				_("Exchange Gain Loss Account is Mandatory in case of Exchange Gain / Loss"),
-				title=_("Mandatory"),
-				indicator="red" if self.docstatus == 1 else "yellow",
-				raise_exception=self.docstatus == 1,
+		if not exchange_gain_loss_row:
+			values = frappe.get_cached_value(
+				"Company", self.company, ("exchange_gain_loss_account", "cost_center"), as_dict=True
 			)
 
-		if exchange_gain_loss_row:
-			exchange_gain_loss_row.account = exchange_gain_loss_account
-			exchange_gain_loss_row.cost_center = cost_center
-			exchange_gain_loss_row.amount = exchange_gain_loss
-		else:
-			self.append(
+			for fieldname, value in values.items():
+				if value:
+					continue
+
+				label = _(frappe.get_meta("Company").get_label(fieldname))
+				return frappe.msgprint(
+					_("Please set {0} in Company {1} to account for Exchange Gain / Loss").format(
+						label, get_link_to_form("Company", self.company)
+					),
+					title=_("Missing Default in Company"),
+					indicator="red" if self.docstatus.is_submitted() else "yellow",
+					raise_exception=self.docstatus.is_submitted(),
+				)
+
+			exchange_gain_loss_row = self.append(
 				"deductions",
 				{
-					"account": exchange_gain_loss_account,
-					"cost_center": cost_center,
-					"amount": exchange_gain_loss,
+					"account": values.exchange_gain_loss_account,
+					"cost_center": values.cost_center,
 					"is_exchange_gain_loss": 1,
 				},
 			)
+
+		exchange_gain_loss_row.amount = exchange_gain_loss
 
 	def set_difference_amount(self):
 		base_unallocated_amount = flt(self.unallocated_amount) * (
@@ -2043,8 +2045,8 @@ class PaymentEntry(AccountsController):
 def get_matched_payment_request_of_references(references=None):
 	"""
 	Get those `Payment Requests` which are matched with `References`.\n
-	    - Amount must be same.
-	    - Only single `Payment Request` available for this amount.
+	        - Amount must be same.
+	        - Only single `Payment Request` available for this amount.
 
 	Example: [(reference_doctype, reference_name, allocated_amount, payment_request), ...]
 	"""
@@ -2146,7 +2148,7 @@ def get_outstanding_of_references_with_payment_term(references=None):
 def get_outstanding_of_references_with_no_payment_term(references):
 	"""
 	Fetch outstanding amount of `References` which have no `Payment Term` set.\n
-	    - Fetch outstanding amount from `References` it self.
+	        - Fetch outstanding amount from `References` it self.
 
 	Note: `None` is used for allocation of `Payment Request`
 	Example: {(reference_doctype, reference_name, None): outstanding_amount, ...}
@@ -2982,7 +2984,7 @@ def get_payment_entry(
 def get_open_payment_requests_for_references(references=None):
 	"""
 	Fetch all unpaid Payment Requests for the references. \n
-	    - Each reference can have multiple Payment Requests. \n
+	        - Each reference can have multiple Payment Requests. \n
 
 	Example: {("Sales Invoice", "SINV-00001"): {"PREQ-00001": 1000, "PREQ-00002": 2000}}
 	"""
