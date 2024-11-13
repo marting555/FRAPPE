@@ -1133,46 +1133,49 @@ class PaymentEntry(AccountsController):
 			) / self.target_exchange_rate
 
 	def set_exchange_gain_loss(self):
-		if self.paid_to_account_currency == self.paid_from_account_currency:
-			return
-
 		exchange_gain_loss = flt(
 			self.base_paid_amount - self.base_received_amount,
 			self.precision("base_paid_amount"),
 		)
 
 		exchange_gain_loss_rows = [d for d in self.get("deductions") if d.is_exchange_gain_loss]
+		exchange_gain_loss_row = exchange_gain_loss_rows[0] if exchange_gain_loss_rows else frappe._dict()
 
-		for row in exchange_gain_loss_rows:
+		for row in exchange_gain_loss_rows[1:]:
 			self.remove(row)
 
 		if not exchange_gain_loss:
 			return
 
-		exchange_gain_loss_account = None
-		exchange_gain_loss_cost_center = None
-
-		if exchange_gain_loss_rows:
-			exchange_gain_loss_account = exchange_gain_loss_rows[0].account
-			exchange_gain_loss_cost_center = exchange_gain_loss_rows[0].cost_center
-
-		exchange_gain_loss_account = exchange_gain_loss_account or frappe.get_cached_value(
-			"Company", self.company, "exchange_gain_loss_account"
+		exchange_gain_loss_account, cost_center = frappe.get_cached_value(
+			"Company", self.company, ["exchange_gain_loss_account", "cost_center"]
 		)
 
-		exchange_gain_loss_cost_center = exchange_gain_loss_cost_center or erpnext.get_default_cost_center(
-			self.company
-		)
+		exchange_gain_loss_account = exchange_gain_loss_row.account or exchange_gain_loss_account
+		cost_center = exchange_gain_loss_row.cost_center or cost_center
 
-		self.append(
-			"deductions",
-			{
-				"account": exchange_gain_loss_account,
-				"cost_center": exchange_gain_loss_cost_center,
-				"amount": exchange_gain_loss,
-				"is_exchange_gain_loss": 1,
-			},
-		)
+		if not exchange_gain_loss_account:
+			return frappe.msgprint(
+				_("Exchange Gain Loss Account is Mandatory in case of Exchange Gain / Loss"),
+				title=_("Mandatory"),
+				indicator="red" if self.docstatus == 1 else "yellow",
+				raise_exception=self.docstatus == 1,
+			)
+
+		if exchange_gain_loss_row:
+			exchange_gain_loss_row.account = exchange_gain_loss_account
+			exchange_gain_loss_row.cost_center = cost_center
+			exchange_gain_loss_row.amount = exchange_gain_loss
+		else:
+			self.append(
+				"deductions",
+				{
+					"account": exchange_gain_loss_account,
+					"cost_center": cost_center,
+					"amount": exchange_gain_loss,
+					"is_exchange_gain_loss": 1,
+				},
+			)
 
 	def set_difference_amount(self):
 		base_unallocated_amount = flt(self.unallocated_amount) * (
