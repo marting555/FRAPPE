@@ -5,7 +5,8 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import (cint, getdate)
 from frappe.query_builder.functions import Coalesce, Sum
-
+from frappe import qb
+from erpnext.accounts.report.financial_statements import sort_accounts
 
 class WorkBreakdownStructure(Document):
 	# begin: auto-generated types
@@ -35,13 +36,6 @@ class WorkBreakdownStructure(Document):
 		wbs_level: DF.Data | None
 		wbs_name: DF.Data
 	# end: auto-generated types
-   
-from frappe import qb
-from erpnext.accounts.report.financial_statements import sort_accounts
-
-from frappe import qb
-from erpnext.accounts.report.financial_statements import sort_accounts
-
 
 @frappe.whitelist()
 def get_children(doctype, parent, project, is_root=False):
@@ -126,16 +120,6 @@ def delete_wbs_from_tree_view(wbs):
         frappe.delete_doc('Work Breakdown Structure',wbs)
         # delete_warehouse(wbs)
 
-
-# def validate_level(self):
-#         if self.project_type:
-#             max_level = frappe.db.get_value("Project Type",{'name':self.project_type},["custom_max_wbs_levels"])
-#             if max_level > 0:
-#                 if int(self.level) > int(max_level):
-#                     msg = _("This Project Type has exceeded Maximum Allowed WBS Levels")
-#                     frappe.throw(msg)
-
-
 def after_insert(self):
     if self.is_wbs == 1:
         data = frappe.new_doc("Work Breakdown Structure")
@@ -145,6 +129,7 @@ def after_insert(self):
         data.project_name = self.project_name
         data.company = self.company
         data.insert()
+        data.submit()
 	
 
 @frappe.whitelist()

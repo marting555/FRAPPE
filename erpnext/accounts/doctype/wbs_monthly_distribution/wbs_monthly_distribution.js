@@ -7,12 +7,19 @@ frappe.ui.form.on("WBS Monthly Distribution", {
         add_default_distribution(frm)
         update_budget_in_distribution(frm)
         update_wbs_budget(frm)
+        frm.set_query("for_wbs", () => {
+            return {
+                filters: {
+                    is_group: 0,
+                }
+            }
+        });
 	},
     for_wbs(frm){
         update_available_budget(frm)
-        add_default_distribution(frm)
+        // add_default_distribution(frm)
         update_budget_in_distribution(frm)
-    }
+    },
 });
 
 function update_available_budget(frm){
@@ -28,7 +35,9 @@ function update_available_budget(frm){
 }
 
 function add_default_distribution(frm){
-    if(!frm.doc.monthly_distribution){
+    console.log(frm.doc.monthly_distribution)
+    if(frm.is_new() && frm.doc.monthly_distribution && frm.doc.monthly_distribution.length == 0){
+        console.log("99999")
         // List of months
     const months = [
         "January", "February", "March", "April", "May", "June",

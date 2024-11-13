@@ -47,123 +47,14 @@ class WBSBudget(Document):
 			if self.total_amount > self.available_budget:
 				frappe.throw(_("Total amount cannot exceed the Available Budget."))
 
-	# def on_submit(self):
-	# 	total_budget_amount = 0
-	# 	for item in self.accounts:
-	# 		total_budget_amount += item.budget_amount
-	# 		create_child_wbs_budget(self, item)
-	# 		create_parent_wbs_budget(self, item)
-	# 		credit_to_child_wbs(self,item)
-
-	# 	debit_from_parent_wbs(self,total_budget_amount)
-
 	def on_cancel(self):
 		self.flags.ignore_links = True
-		print("on cancel")
 			
 	def on_submit(self):
 		update_original_budget(self,"Submit")
 			
 	def before_cancel(self):
 		update_original_budget(self,"Cancel")
-
-# 	def before_cancel(self):
-# 		total_budget_amount = 0
-# 		for item in self.accounts:
-# 			total_budget_amount += item.budget_amount
-# 			create_cancelled_child_budget_entries(self,item)
-# 			create_cancelled_parent_budget_entries(self,item)
-# 			debit_from_child_wbs(self,item)	
-
-# 		credit_to_parent_wbs(self,total_budget_amount)
-
-
-# def credit_to_child_wbs(self,item):
-# 	wbs = frappe.get_doc("Work Breakdown Structure",item.child_wbs)
-# 	if item.budget_amount:
-# 		wbs.overall_budget = wbs.overall_budget + item.budget_amount
-# 	wbs.save(ignore_permissions=True)
-# 	wbs.submit()  
-
-# def debit_from_child_wbs(self,item):
-# 	wbs = frappe.get_doc("Work Breakdown Structure",item.child_wbs)
-# 	if item.budget_amount:
-# 		wbs.overall_budget = wbs.overall_budget - item.budget_amount
-# 	wbs.save(ignore_permissions=True)
-# 	wbs.submit()  
-
-# def create_cancelled_child_budget_entries(self,item):
-# 	budget_entry = frappe.new_doc("Budget Entry")
-# 	budget_entry.name = self.name
-# 	budget_entry.project = self.project
-# 	budget_entry.company = self.company
-
-# 	if item.child_wbs:
-# 		budget_entry.wbs = item.child_wbs
-
-# 	if item.budget_amount:
-# 		budget_entry.overall_debit = item.budget_amount
-
-# 	wbs = frappe.get_doc("Work Breakdown Structure",item.child_wbs)
-# 	if wbs.wbs_name:
-# 		budget_entry.wbs_name = wbs.wbs_name
-
-# 	if wbs.wbs_level:
-# 		budget_entry.wbs_level = wbs.wbs_level
-	
-# 	budget_entry.voucher_no = self.name
-# 	budget_entry.voucher_type = "WBS Budget"
-# 	budget_entry.voucher_submit_date = now()
-
-# 	budget_entry.insert()
-# 	budget_entry.submit()
-
-# # 	update_wbs_after_cancellation(self)
-
-# # def update_wbs_after_cancellation(self):
-# # 	for row in self.accounts:
-# # 		wbs = frappe.get_doc("Work Breakdown Structure",row.child_wbs)
-# # 		if row.budget_amount:
-# # 			wbs.overall_budget -= row.budget_amount
-# # 		wbs.save()
-
-# def create_cancelled_parent_budget_entries(self,item):
-# 	budget_entry = frappe.new_doc("Budget Entry")
-# 	budget_entry.name = self.name
-# 	budget_entry.project = self.project
-# 	budget_entry.company = self.company
-
-# 	budget_entry.wbs = self.wbs
-
-# 	if item.budget_amount:
-# 		budget_entry.overall_credit = item.budget_amount
-
-# 	wbs = frappe.get_doc("Work Breakdown Structure",self.wbs)
-# 	if wbs.wbs_name:
-# 		budget_entry.wbs_name = wbs.wbs_name
-
-# 	if wbs.wbs_level:
-# 		budget_entry.wbs_level = wbs.wbs_level
-	
-# 	budget_entry.voucher_no = self.name
-# 	budget_entry.voucher_type = "WBS Budget"
-# 	budget_entry.voucher_submit_date = now()
-
-# 	budget_entry.insert()
-# 	budget_entry.submit()
-
-
-# def debit_from_parent_wbs(self,total_budget_amount):
-# 	parent_wbs_account = frappe.get_doc("Work Breakdown Structure",self.wbs)
-# 	parent_wbs_account.overall_budget -= total_budget_amount
-# 	parent_wbs_account.save(ignore_permissions=True)
-# 	parent_wbs_account.submit()  
-
-# def credit_to_parent_wbs(self,total_budget_amount):
-# 	parent_wbs_account = frappe.get_doc("Work Breakdown Structure",self.wbs)
-# 	parent_wbs_account.overall_budget += total_budget_amount
-# 	parent_wbs_account.save(ignore_permissions=True)
-# 	parent_wbs_account.submit()  
 
 @frappe.whitelist()
 def get_gl_accounts(wbs):
@@ -172,60 +63,6 @@ def get_gl_accounts(wbs):
 		fields=["name","gl_account"]
 	)
 	return child_wbs_records
-
-# def create_child_wbs_budget(self, item):
-# 	budget_entry = frappe.new_doc("Budget Entry")
-# 	budget_entry.name = self.name
-# 	budget_entry.project = self.project
-# 	budget_entry.company = self.company
-
-# 	if item.child_wbs:
-# 		budget_entry.wbs = item.child_wbs
-
-# 	if item.budget_amount:
-# 		budget_entry.overall_credit = item.budget_amount
-
-# 	wbs = frappe.get_doc("Work Breakdown Structure",item.child_wbs)
-# 	if wbs.wbs_name:
-# 		budget_entry.wbs_name = wbs.wbs_name
-
-# 	if wbs.wbs_level:
-# 		budget_entry.wbs_level = wbs.wbs_level
-	
-# 	budget_entry.voucher_no = self.name
-# 	budget_entry.voucher_type = "WBS Budget"
-# 	budget_entry.voucher_submit_date = now()
-
-# 	budget_entry.insert()
-# 	budget_entry.submit()
-
-# def create_parent_wbs_budget(self, item):
-# 	budget_entry = frappe.new_doc("Budget Entry")
-# 	budget_entry.name = self.name
-# 	budget_entry.project = self.project
-# 	budget_entry.company = self.company
-
-# 	if self.wbs:
-# 		budget_entry.wbs = self.wbs
-
-# 	if item.budget_amount:
-# 		budget_entry.overall_debit = item.budget_amount
-
-# 	wbs = frappe.get_doc("Work Breakdown Structure",self.wbs)
-# 	if wbs.wbs_name:
-# 		budget_entry.wbs_name = wbs.wbs_name
-
-# 	if wbs.wbs_level:
-# 		budget_entry.wbs_level = wbs.wbs_level
-	
-# 	budget_entry.voucher_no = self.name
-# 	budget_entry.voucher_type = "WBS Budget"
-# 	budget_entry.voucher_submit_date = now()
-
-# 	budget_entry.insert()
-# 	budget_entry.submit()
-
-
 
 def update_original_budget(self,event):
 	wbs_dict = []
@@ -287,8 +124,6 @@ def update_original_budget(self,event):
 	wbs_parent = frappe.get_doc("Work Breakdown Structure",self.wbs)
 	if event == "Submit":
 		wbs_parent.overall_budget = wbs_parent.overall_budget - total_amt
-
-		# wbs_parent.assigned_overall_budget = wbs_parent.actual_overall_budget + wbs_parent.committed_overall_budget
 		wbs_parent.available_budget = wbs_parent.overall_budget - wbs_parent.assigned_overall_budget	
 		if wbs_parent.locked:
 			frappe.throw(
@@ -296,8 +131,6 @@ def update_original_budget(self,event):
 			)
 	elif event == "Cancel":
 		wbs_parent.overall_budget = wbs_parent.overall_budget + total_amt
-
-		# wbs_parent.assigned_overall_budget = wbs_parent.actual_overall_budget + wbs_parent.committed_overall_budget
 		wbs_parent.available_budget = wbs_parent.overall_budget - wbs_parent.assigned_overall_budget
 		if wbs_parent.locked:
 			frappe.throw(

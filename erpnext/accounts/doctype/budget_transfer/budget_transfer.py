@@ -6,6 +6,7 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils.data import getdate
 from frappe.utils import now
+from frappe import _
 from erpnext.accounts.doctype.work_breakdown_structure.work_breakdown_structure import check_available_budget
 
 class BudgetTransfer(Document):
@@ -20,6 +21,7 @@ class BudgetTransfer(Document):
 		amended_from: DF.Link | None
 		budget_amount: DF.Currency
 		company: DF.Link | None
+		fr_av_bgt: DF.Currency
 		fr_oa_bgt: DF.Currency
 		fr_og_bgt: DF.Currency
 		from_project: DF.Link | None
@@ -32,12 +34,16 @@ class BudgetTransfer(Document):
 		to_oa_bgt: DF.Currency
 		to_og_bgt: DF.Currency
 		to_wbs: DF.Link | None
+		to_wbs_available_budget: DF.Currency
 		to_wbs_level: DF.Data | None
 		to_wbs_name: DF.Data | None
 	# end: auto-generated types
 	# Copyright (c) 2023, 8848 Digital LLP and contributors
 	# For license information, please see license.txt
 
+	def validate(self):
+		if self.budget_amount > self.fr_av_bgt:
+			frappe.throw(_("Transfer Amount cannot be more than the Available Amount"))
 	def on_submit(self):
 		create_debit_wbs_budget_entry(self)
 		create_credit_wbs_budget_entry(self)
@@ -82,12 +88,20 @@ def create_credit_wbs_budget_entry(self):
 
 def update_debit_wbs(budget_entry):
 	wbs = frappe.get_doc("Work Breakdown Structure",budget_entry.wbs)
+	if wbs.locked:
+		frappe.throw(
+			"Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs.name)
+		)
 	wbs.overall_budget -= budget_entry.overall_debit
 	wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
 	wbs.save()
 
 def update_credit_wbs(budget_entry):
 	wbs = frappe.get_doc("Work Breakdown Structure",budget_entry.wbs)
+	if wbs.locked:
+		frappe.throw(
+			"Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs.name)
+		)
 	wbs.overall_budget += budget_entry.overall_credit
 	wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
 	wbs.save()
@@ -124,12 +138,20 @@ def	create_cancelled_credit_wbs_budget_entry(self):
 
 def update_debit_wbs_after_cancel(budget_entry):
 	wbs = frappe.get_doc("Work Breakdown Structure",budget_entry.wbs)
+	if wbs.locked:
+		frappe.throw(
+			"Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs.name)
+		)
 	wbs.overall_budget += budget_entry.overall_credit
 	wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
 	wbs.save()
 
 def update_credit_wbs_after_cancel(budget_entry):
 	wbs = frappe.get_doc("Work Breakdown Structure",budget_entry.wbs)
+	if wbs.locked:
+		frappe.throw(
+			"Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs.name)
+		)
 	wbs.overall_budget -= budget_entry.overall_debit
 	wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
 	wbs.save()

@@ -92,7 +92,6 @@ class PurchaseOrderItem(Document):
 		wbs_name: DF.Data | None
 		weight_per_unit: DF.Float
 		weight_uom: DF.Link | None
-		wip_composite_asset: DF.Link | None
 		work_breakdown_structure: DF.Link | None
 	# end: auto-generated types
 

@@ -11,6 +11,7 @@ from frappe.utils import cint, flt, get_datetime, getdate, nowdate
 from pypika import functions as fn
 
 import erpnext
+from erpnext.accounts.doctype.work_breakdown_structure.work_breakdown_structure import check_available_budget
 from erpnext.accounts.utils import get_account_currency
 from erpnext.buying.utils import check_on_hold_or_closed_status
 from erpnext.controllers.accounts_controller import merge_taxes
@@ -244,6 +245,7 @@ class PurchaseReceipt(BuyingController):
 		self.reset_default_field_value("set_warehouse", "items", "warehouse")
 		self.reset_default_field_value("rejected_warehouse", "items", "rejected_warehouse")
 		self.reset_default_field_value("set_from_warehouse", "items", "from_warehouse")
+		validate_available_budget(self)
 
 	def validate_uom_is_integer(self):
 		super().validate_uom_is_integer("uom", ["qty", "received_qty"], "Purchase Receipt Item")
@@ -1305,3 +1307,46 @@ def get_item_account_wise_additional_cost(purchase_document):
 @erpnext.allow_regional
 def update_regional_gl_entries(gl_list, doc):
 	return
+
+def validate_available_budget(self):
+	wbs_list = []
+	if self.items:
+		for i in self.items:
+			if i.work_breakdown_structure:
+				if i.work_breakdown_structure not in wbs_list:
+					wbs_list.append(i.work_breakdown_structure)
+
+	if wbs_list:
+		if len(set(wbs_list)) == 1:
+			amt = get_wbs_amount(self, wbs_list[0])
+			ab = check_available_budget(wbs_list[0], amt, "Purchase Receipt",self.posting_date)
+			abl = abs(ab.get("available_bgt"))
+			msg = _("Available Budget Limit Exceeded For This WBS - {0} by {1}".format(ab.get("wbs"), abl))
+			if ab.get("available_bgt") < 0.0:
+				abl = abs(ab.get("available_bgt"))
+				if ab.get("action") == "Stop":
+					frappe.throw(msg,title=_("Budget Exceeded"))
+				else:
+					frappe.msgprint(msg, indicator="orange", title=_("Budget Exceeded"))
+					
+		elif len(set(wbs_list)) > 1:
+			for i in set(wbs_list):
+				amt = get_wbs_amount(self, i)
+				ab = check_available_budget(i, amt, "Purchase Receipt",self.posting_date)
+				abl = abs(ab.get("available_bgt"))
+				msg = _("Available Budget Limit Exceeded For This WBS - {0} by {1}".format(ab.get("wbs"), abl))
+				if ab.get("available_bgt") < 0.0:
+					abl = abs(ab.get("available_bgt"))
+					if ab.get("action") == "Stop":
+						frappe.throw(msg,title=_("Budget Exceeded"))
+					else:
+						frappe.msgprint(msg, indicator="orange", title=_("Budget Exceeded"))
+
+def get_wbs_amount(self, wbs):
+	wbs_amount = 0.0
+	if self.items:
+		for i in self.items:
+			if i.work_breakdown_structure == wbs:
+				wbs_amount += i.amount
+
+	return wbs_amount
