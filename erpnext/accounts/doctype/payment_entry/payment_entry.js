@@ -1237,6 +1237,8 @@ frappe.ui.form.on("Payment Entry", {
 	},
 
 	set_exchange_gain_loss_deduction: async function (frm) {
+		// wait for allocate_party_amount_against_ref_docs to finish
+		await frappe.after_ajax();
 		const base_paid_amount = frm.doc.base_paid_amount || 0;
 		const base_received_amount = frm.doc.base_received_amount || 0;
 		const exchange_gain_loss = flt(
@@ -1254,7 +1256,6 @@ frappe.ui.form.on("Payment Entry", {
 
 		if (!row) {
 			const response = await get_company_defaults(frm.doc.company);
-			await frappe.after_ajax();
 
 			const account =
 				response.message?.[account_fieldname] ||
