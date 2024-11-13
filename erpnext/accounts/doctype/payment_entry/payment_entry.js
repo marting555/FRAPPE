@@ -1239,90 +1239,69 @@ frappe.ui.form.on("Payment Entry", {
 	set_exchange_gain_loss_deduction: async function (frm) {
 		const base_paid_amount = frm.doc.base_paid_amount || 0;
 		const base_received_amount = frm.doc.base_received_amount || 0;
-		const exchange_gain_loss = base_paid_amount - base_received_amount;
+		const exchange_gain_loss = flt(
+			base_paid_amount - base_received_amount,
+			get_deduction_amount_precision()
+		);
 
 		if (!exchange_gain_loss) {
 			frm.events.delete_exchange_gain_loss(frm);
 			return;
 		}
 
-		const exchange_gain_loss_row = (frm.doc["deductions"] || []).find((t) => t.is_exchange_gain_loss);
-		const account = "exchange_gain_loss_account";
+		const account_fieldname = "exchange_gain_loss_account";
+		let row = (frm.doc.deductions || []).find((t) => t.is_exchange_gain_loss);
 
-		let row = null;
-		let exchange_gain_loss_account = null;
-		if (!exchange_gain_loss_row) {
-			const r = await get_company_defaults(frm.doc.company);
+		if (!row) {
+			const response = await get_company_defaults(frm.doc.company);
 			await frappe.after_ajax();
 
-			if (!r.message) return;
-			exchange_gain_loss_account = r.message[account];
+			const account =
+				response.message?.[account_fieldname] ||
+				(await prompt_for_missing_account(frm, account_fieldname));
 
 			row = frm.add_child("deductions");
-			row.account = exchange_gain_loss_account;
-			row.cost_center = r.message["cost_center"];
+			row.account = account;
+			row.cost_center = response.message?.cost_center;
 			row.is_exchange_gain_loss = 1;
-		} else {
-			exchange_gain_loss_account = exchange_gain_loss_row.account;
-			row = exchange_gain_loss_row;
 		}
 
 		row.amount = exchange_gain_loss;
-		if (!exchange_gain_loss_account) {
-			prompt_for_missing_account(frm, account, (values) => {
-				row.account = values[account];
-				refresh_field("deductions");
-			});
-		}
-
-		refresh_field("deductions");
+		frm.refresh_field("deductions");
 		frm.events.set_unallocated_amount(frm);
 	},
 
 	delete_exchange_gain_loss: function (frm) {
-		const exchange_gain_loss_row = (frm.doc["deductions"] || []).find((t) => t.is_exchange_gain_loss);
+		const exchange_gain_loss_row = (frm.doc.deductions || []).find((row) => row.is_exchange_gain_loss);
 
-		if (exchange_gain_loss_row) {
-			exchange_gain_loss_row.amount = 0;
-			frm.get_field("deductions").grid.grid_rows[exchange_gain_loss_row.idx - 1].remove();
-		}
-		refresh_field("deductions");
+		if (!exchange_gain_loss_row) return;
+
+		exchange_gain_loss_row.amount = 0;
+		frm.get_field("deductions").grid.grid_rows[exchange_gain_loss_row.idx - 1].remove();
+		frm.refresh_field("deductions");
 	},
 
 	set_write_off_deduction: async function (frm) {
-		const difference_amount = flt(frm.doc.difference_amount, precision("difference_amount"));
+		const difference_amount = flt(frm.doc.difference_amount, get_deduction_amount_precision());
 		if (!difference_amount) return;
 
-		const account = "write_off_account";
-		const r = await get_company_defaults(frm.doc.company);
-		if (!r.message) return;
+		const account_fieldname = "write_off_account";
+		const response = await get_company_defaults(frm.doc.company);
+		const write_off_account =
+			response.message?.[account_fieldname] ||
+			(await prompt_for_missing_account(frm, account_fieldname));
 
-		const write_off_account = r.message[account];
-		const write_off_row = (frm.doc["deductions"] || []).find((t) => t.account == write_off_account);
+		if (!write_off_account) return;
 
-		const add_deductions = (details) => {
-			let row = null;
-			if (!write_off_row) {
-				row = frm.add_child("deductions");
-				row.account = details[account];
-				row.cost_center = details["cost_center"];
-			} else {
-				row = write_off_row;
-			}
-
-			row.amount = flt(row.amount) + difference_amount;
-			refresh_field("deductions");
-		};
-
-		if (!write_off_account) {
-			prompt_for_missing_account(frm, account, (values) => {
-				const details = Object.assign({}, r.message, values);
-				add_deductions(details);
-			});
-		} else {
-			add_deductions(r.message);
+		let row = (frm.doc["deductions"] || []).find((t) => t.account == write_off_account);
+		if (!row) {
+			row = frm.add_child("deductions");
+			row.account = write_off_account;
+			row.cost_center = response.message?.cost_center;
 		}
 
+		row.amount = flt(row.amount) + difference_amount;
+		frm.refresh_field("deductions");
 		frm.events.set_unallocated_amount(frm);
 	},
 
@@ -1829,20 +1808,28 @@ function get_company_defaults(company) {
 	});
 }
 
-function prompt_for_missing_account(frm, account, callback) {
-	frappe.prompt(
-		{
-			label: __(frappe.unscrub(account)),
-			fieldname: account,
-			fieldtype: "Link",
-			options: "Account",
-			get_query: () => ({
-				filters: {
-					company: frm.doc.company,
-				},
-			}),
-		},
-		callback,
-		__("Please Specify Account")
-	);
+function prompt_for_missing_account(frm, account) {
+	return new Promise((resolve) => {
+		const dialog = frappe.prompt(
+			{
+				label: __(frappe.unscrub(account)),
+				fieldname: account,
+				fieldtype: "Link",
+				options: "Account",
+				get_query: () => ({
+					filters: {
+						company: frm.doc.company,
+					},
+				}),
+			},
+			(values) => resolve(values?.[account]),
+			__("Please Specify Account")
+		);
+
+		dialog.on_hide = () => resolve("");
+	});
+}
+
+function get_deduction_amount_precision() {
+	return frappe.meta.get_field_precision(frappe.meta.get_field("Payment Entry Deduction", "amount"));
 }
