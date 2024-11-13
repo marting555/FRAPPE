@@ -1652,8 +1652,13 @@
  "icon": "fa fa-file-text",
  "idx": 204,
  "is_submittable": 1,
- "links": [],
- "modified": "2024-11-13 10:33:48.607034",
+ "links": [
+  {
+   "link_doctype": "Budget Entry",
+   "link_fieldname": "voucher_no"
+  }
+ ],
+ "modified": "2024-11-12 09:52:06.044204",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice",
