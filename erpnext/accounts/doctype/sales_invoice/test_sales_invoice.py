@@ -1118,6 +1118,7 @@ class TestSalesInvoice(FrappeTestCase):
 			("Debtors - _TC", 100.0, 0.0, pos_return.name, pos_return.name),
 			("Sales - _TC", 100.0, 0.0, pos_return.name, None),
 		)
+		expected_list = list(expected)
 		res = frappe.db.get_all(
 			"GL Entry",
 			filters={"voucher_no": pos_return.name, "is_cancelled": 0},
@@ -1125,8 +1126,7 @@ class TestSalesInvoice(FrappeTestCase):
 			order_by="account, debit, credit",
 			as_list=1,
 		)
-		for i in range(len(res)):
-			self.assertEqual(expected[i], res[i])
+		self.assertEqual(expected_list,res)
 
 	def test_pos_with_no_gl_entry_for_change_amount(self):
 		frappe.db.set_single_value("Accounts Settings", "post_change_gl_entries", 0)
