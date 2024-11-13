@@ -1116,7 +1116,7 @@ frappe.ui.form.on("Payment Entry", {
 				//If allocate payment amount checkbox is unchecked, set zero to allocate amount
 				row.allocated_amount = 0;
 			} else if (
-				frappe.flags.allocate_payment_amount != 0 &&
+				!frappe.flags.is_amount_settled && frappe.flags.allocate_payment_amount != 0 &&
 				(!row.allocated_amount || paid_amount_change)
 			) {
 				if (row.outstanding_amount > 0 && allocated_positive_outstanding >= 0) {
@@ -1134,7 +1134,8 @@ frappe.ui.form.on("Payment Entry", {
 				}
 			}
 		});
-
+		
+		if(frappe.flags.is_amount_settled) frappe.flags.is_amount_settled  = undefined
 		frm.refresh_fields();
 		frm.events.set_total_allocated_amount(frm);
 	},
@@ -1942,9 +1943,8 @@ function show_invoice_dialogue() {
 				party: cur_frm.doc.party,
 			},
 			callback:(response)=>{
-				for(let df in response.message){
-					cur_frm.set_value(df, response.message[df])
-				}
+				for(let df in response.message) cur_frm.set_value(df, response.message[df])	
+					frappe.flags.is_amount_settled = true
 				dialog.hide();	
 			}
 		})

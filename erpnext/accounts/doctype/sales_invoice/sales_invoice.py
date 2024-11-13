@@ -104,6 +104,7 @@ class SalesInvoice(SellingController):
 		debit_to: DF.Link
 		disable_rounded_total: DF.Check
 		discount_amount: DF.Currency
+		discount_due_date: DF.Date | None
 		dispatch_address: DF.SmallText | None
 		dispatch_address_name: DF.Link | None
 		due_date: DF.Date | None
