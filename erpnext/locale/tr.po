@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2024-11-10 09:34+0000\n"
-"PO-Revision-Date: 2024-11-12 08:23\n"
+"PO-Revision-Date: 2024-11-13 08:35\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Turkish\n"
 "MIME-Version: 1.0\n"
@@ -20555,12 +20555,12 @@ msgstr "Filo Yöneticisi"
 #. Label of the details_tab (Tab Break) field in DocType 'Plant Floor'
 #: erpnext/manufacturing/doctype/plant_floor/plant_floor.json
 msgid "Floor"
-msgstr ""
+msgstr "Üretim Alanı"
 
 #. Label of the floor_name (Data) field in DocType 'Plant Floor'
 #: erpnext/manufacturing/doctype/plant_floor/plant_floor.json
 msgid "Floor Name"
-msgstr ""
+msgstr "Adı"
 
 #. Name of a UOM
 #: erpnext/setup/setup_wizard/data/uom_data.json
@@ -26870,7 +26870,7 @@ msgstr "Ürünün varyantları mevcut."
 
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:495
 msgid "Item is mandatory in Raw Materials table."
-msgstr ""
+msgstr "Hammaddeler tablosunda kalem seçimi zorunludur."
 
 #: erpnext/selling/page/point_of_sale/pos_item_details.js:109
 msgid "Item is removed since no serial / batch no selected."
@@ -44918,7 +44918,7 @@ msgstr "Satır {0}: Ölçü Birimi Dönüşüm Faktörü zorunludur"
 #: erpnext/manufacturing/doctype/bom/bom.py:1023
 #: erpnext/manufacturing/doctype/work_order/work_order.py:200
 msgid "Row {0}: Workstation or Workstation Type is mandatory for an operation {1}"
-msgstr ""
+msgstr "Satır {0}: Bir Operasyon için İş İstasyonu veya İş İstasyonu Türü zorunludur {1}"
 
 #: erpnext/controllers/accounts_controller.py:885
 msgid "Row {0}: user has not applied the rule {1} on the item {2}"
@@ -46806,17 +46806,17 @@ msgstr ""
 #. in DocType 'Job Card'
 #: erpnext/manufacturing/doctype/job_card/job_card.json
 msgid "Semi Finished Good / Finished Good"
-msgstr ""
+msgstr "Yarı Mamul / Bitmiş Ürün"
 
 #. Label of the finished_good (Link) field in DocType 'Work Order Operation'
 #: erpnext/manufacturing/doctype/work_order_operation/work_order_operation.json
 msgid "Semi Finished Goods / Finished Goods"
-msgstr ""
+msgstr "Yarı Mamul / Bitmiş Ürünler"
 
 #. Label of the semi_fg_bom (Link) field in DocType 'Job Card'
 #: erpnext/manufacturing/doctype/job_card/job_card.json
 msgid "Semi Finished Goods BOM"
-msgstr ""
+msgstr "Yarı Mamul Ürün Ağacı"
 
 #: erpnext/selling/page/point_of_sale/pos_past_order_summary.js:57
 msgid "Send"
@@ -54170,7 +54170,7 @@ msgstr "Depo (İsteğe bağlı)"
 
 #: erpnext/manufacturing/doctype/bom/bom.js:839
 msgid "To add Operations tick the 'With Operations' checkbox."
-msgstr ""
+msgstr "Operasyonları Yönetmek için 'Operasyonlar' kutusunu işaretleyin."
 
 #: erpnext/manufacturing/doctype/production_plan/production_plan.js:605
 msgid "To add subcontracted Item's raw materials if include exploded items is disabled."
@@ -55926,7 +55926,7 @@ msgstr "{0} ile başlayan puan bulunamadı. 0 ile 100 arasında değişen sabit 
 
 #: erpnext/manufacturing/doctype/work_order/work_order.py:661
 msgid "Unable to find the time slot in the next {0} days for the operation {1}. Please increase the 'Capacity Planning For (Days)' in the {2}."
-msgstr ""
+msgstr "Önümüzdeki {0} gün içinde {1} operasyonu için zaman aralığı bulunamıyor. Lütfen {2} sayfasındaki 'Kapasite Planlama' alanının değerini artırın."
 
 #: erpnext/buying/doctype/supplier_scorecard_criteria/supplier_scorecard_criteria.py:98
 msgid "Unable to find variable:"
