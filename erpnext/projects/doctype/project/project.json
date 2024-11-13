@@ -74,6 +74,7 @@
   "actual_mileage",
   "client_requirements_section",
   "requirements",
+  "pickup",
   "section_break1",
   "client_description",
   "client_state_detail",
@@ -931,6 +932,13 @@
    "fieldtype": "Table",
    "label": "Requirement List",
    "options": "Client Requirements"
+  },
+  {
+   "default": "0",
+   "fieldname": "pickup",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Pickup"
   }
  ],
  "icon": "fa fa-puzzle-piece",
@@ -938,7 +946,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-11-06 21:25:18.783996",
+ "modified": "2024-11-12 22:31:39.605705",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
