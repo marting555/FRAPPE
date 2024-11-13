@@ -2863,6 +2863,7 @@ def calculate_discount_for_multiple_invoice(dt, dn_list_obj, reference_date,part
 	reference_table = []
 	deduction_table = []
 	paid_amount = 0
+	
 	total_allocated_amount = 0 
 
 	for dn_obj in dn_list_obj:
@@ -2890,16 +2891,17 @@ def calculate_discount_for_multiple_invoice(dt, dn_list_obj, reference_date,part
 		discount_amount = -discount_amount if dt == "Purchase Invoice" else discount_amount
 		total_allocated_amount +=  dn_obj.amount_to_be_paid
 		deduction_table.append({
-		"account" : discount_account ,
-		"cost_center" : dn_obj.cost_center ,
+		"account" : discount_account,
+		"cost_center" :dn_obj.cost_center,
 		"amount" : flt(discount_amount) ,
 		})
 		
-	
 	return {
 		"references": reference_table, 
-		"deductions": deduction_table, 
 		"paid_amount": paid_amount,
-		"total_allocated_amount" : total_allocated_amount
+		"deductions": deduction_table, 
+		"total_allocated_amount" : total_allocated_amount,
+		"unallocated_amount":0,
+		"difference_amount":0
 
 	}
