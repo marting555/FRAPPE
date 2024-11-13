@@ -294,13 +294,6 @@ def get_basic_details(args, item, overwrite_warehouse=True):
 
 	expense_account = None
 
-	if args.get("doctype") == "Purchase Invoice" and item.is_fixed_asset:
-		from assets.assets.doctype.asset_category.asset_category import get_asset_category_account
-
-		expense_account = get_asset_category_account(
-			fieldname="fixed_asset_account", item=args.item_code, company=args.company
-		)
-
 	# Set the UOM to the Default Sales UOM or Default Purchase UOM if configured in the Item Master
 	if not args.get("uom"):
 		if args.get("doctype") in sales_doctypes:
@@ -361,7 +354,6 @@ def get_basic_details(args, item, overwrite_warehouse=True):
 			"delivered_by_supplier": item.delivered_by_supplier
 			if args.get("doctype") in ["Sales Order", "Sales Invoice"]
 			else 0,
-			"is_fixed_asset": item.is_fixed_asset,
 			"last_purchase_rate": item.last_purchase_rate if args.get("doctype") in ["Purchase Order"] else 0,
 			"transaction_date": args.get("transaction_date"),
 			"against_blanket_order": args.get("against_blanket_order"),

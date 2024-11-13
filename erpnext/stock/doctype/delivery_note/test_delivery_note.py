@@ -104,7 +104,7 @@ class TestDeliveryNote(FrappeTestCase):
 				"Stock Ledger Entry",
 				{"voucher_type": "Delivery Note", "voucher_no": dn.name, "item_code": "_Test Item"},
 				"stock_value_difference",
-			)
+			) or 0
 		)
 
 		stock_value_diff_rm2 = abs(
@@ -116,7 +116,7 @@ class TestDeliveryNote(FrappeTestCase):
 					"item_code": "_Test Item Home Desktop 100",
 				},
 				"stock_value_difference",
-			)
+			)  or 0
 		)
 
 		stock_value_diff = stock_value_diff_rm1 + stock_value_diff_rm2

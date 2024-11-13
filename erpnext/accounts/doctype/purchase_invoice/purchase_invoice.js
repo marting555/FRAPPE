@@ -489,14 +489,11 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 	}
 
 	due_date(frm){
-		if (!frm.payment_discount_terms || (frm.payment_discount_terms && frm.payment_discount_terms.length < 1)){
-			return
-		}
-		for(let row of  frm.payment_discount_terms)
-		{
-			row.due_date = frm.due_date
-		}
-		cur_frm.refresh_field('payment_discount_terms')
+		cur_frm.set_value("discount_due_date",frm.due_date)
+	}
+
+	discount_due_date(frm){
+		cur_frm.set_value("due_date",frm.discount_due_date)
 	}
 };
 
@@ -568,12 +565,6 @@ cur_frm.set_query("expense_account", "items", function (doc) {
 	return {
 		query: "erpnext.controllers.queries.get_expense_account",
 		filters: { company: doc.company },
-	};
-});
-
-cur_frm.set_query("wip_composite_asset", "items", function () {
-	return {
-		filters: { is_composite_asset: 1, docstatus: 0 },
 	};
 });
 
@@ -839,15 +830,5 @@ frappe.ui.form.on("Discount Terms", {
 		let discount_date = frappe.datetime.add_days(frappe.datetime.get_today(), frm.selected_doc.no_of_days)
 		frm.selected_doc.discount_date = discount_date
 		frm.refresh_field("payment_discount_terms")
-	},
-	due_date:(frm)=>{
-		let due_date = frm.selected_doc.due_date
-		if (!due_date) return
-
-		for(let row of  frm.doc.payment_discount_terms) row.due_date = due_date
-
-		frm.doc.due_date = due_date
-		cur_frm.refresh_field('payment_discount_terms')
-		cur_frm.refresh_field('due_date')
 	}
 })

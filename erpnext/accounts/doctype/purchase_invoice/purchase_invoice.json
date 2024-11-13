@@ -152,6 +152,9 @@
   "terms_tab",
   "payment_schedule_section",
   "payment_term",
+  "column_break_sa8m",
+  "discount_due_date",
+  "section_break_wa3t",
   "payment_discount_terms",
   "payment_terms_template",
   "ignore_default_payment_terms_template",
@@ -1631,6 +1634,19 @@
    "fieldname": "payment_discount_terms",
    "fieldtype": "Table",
    "options": "Discount Terms"
+  },
+  {
+   "fieldname": "column_break_sa8m",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "discount_due_date",
+   "fieldtype": "Date",
+   "label": "Discount Due Date"
+  },
+  {
+   "fieldname": "section_break_wa3t",
+   "fieldtype": "Section Break"
   }
  ],
  "icon": "fa fa-file-text",

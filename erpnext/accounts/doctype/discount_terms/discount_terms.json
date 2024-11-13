@@ -7,8 +7,7 @@
  "field_order": [
   "discount",
   "no_of_days",
-  "discount_date",
-  "due_date"
+  "discount_date"
  ],
  "fields": [
   {
@@ -28,17 +27,12 @@
    "fieldtype": "Date",
    "label": "Discount Date",
    "read_only": 1
-  },
-  {
-   "fieldname": "due_date",
-   "fieldtype": "Date",
-   "label": "Due Date"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-11-11 20:51:43.101806",
+ "modified": "2024-11-13 10:13:58.307547",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Discount Terms",
