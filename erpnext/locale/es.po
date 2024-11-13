@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2024-11-10 09:34+0000\n"
-"PO-Revision-Date: 2024-11-12 08:22\n"
+"PO-Revision-Date: 2024-11-13 08:35\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Spanish\n"
 "MIME-Version: 1.0\n"
@@ -6694,7 +6694,7 @@ msgstr "B +"
 #. Option for the 'Blood Group' (Select) field in DocType 'Employee'
 #: erpnext/setup/doctype/employee/employee.json
 msgid "B-"
-msgstr "B-"
+msgstr "B -"
 
 #. Option for the 'Algorithm' (Select) field in DocType 'Bisect Accounting
 #. Statements'
@@ -8140,7 +8140,7 @@ msgstr "Dividir estados contables"
 
 #: erpnext/accounts/doctype/bisect_accounting_statements/bisect_accounting_statements.js:9
 msgid "Bisect Left"
-msgstr ""
+msgstr "Dividir a la izquierda"
 
 #. Name of a DocType
 #: erpnext/accounts/doctype/bisect_nodes/bisect_nodes.json
@@ -8149,21 +8149,21 @@ msgstr ""
 
 #: erpnext/accounts/doctype/bisect_accounting_statements/bisect_accounting_statements.js:13
 msgid "Bisect Right"
-msgstr ""
+msgstr "Dividir a la derecha"
 
 #. Label of the bisecting_from (Heading) field in DocType 'Bisect Accounting
 #. Statements'
 #: erpnext/accounts/doctype/bisect_accounting_statements/bisect_accounting_statements.json
 msgid "Bisecting From"
-msgstr ""
+msgstr "Dividir desde"
 
 #: erpnext/accounts/doctype/bisect_accounting_statements/bisect_accounting_statements.js:61
 msgid "Bisecting Left ..."
-msgstr ""
+msgstr "Dividir a la izquierda..."
 
 #: erpnext/accounts/doctype/bisect_accounting_statements/bisect_accounting_statements.js:71
 msgid "Bisecting Right ..."
-msgstr ""
+msgstr "Dividir a la derecha..."
 
 #. Label of the bisecting_to (Heading) field in DocType 'Bisect Accounting
 #. Statements'
@@ -8507,17 +8507,17 @@ msgstr ""
 #. Name of a UOM
 #: erpnext/setup/setup_wizard/data/uom_data.json
 msgid "Btu/Hour"
-msgstr ""
+msgstr "Btu/hora"
 
 #. Name of a UOM
 #: erpnext/setup/setup_wizard/data/uom_data.json
 msgid "Btu/Minutes"
-msgstr ""
+msgstr "Btu/minutos"
 
 #. Name of a UOM
 #: erpnext/setup/setup_wizard/data/uom_data.json
 msgid "Btu/Seconds"
-msgstr ""
+msgstr "Btu/segundos"
 
 #. Name of a DocType
 #. Label of a Link in the Accounting Workspace
@@ -8827,7 +8827,7 @@ msgstr ""
 #. 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Calculate daily depreciation using total days in depreciation period"
-msgstr ""
+msgstr "Calcular la depreciación diaria utilizando el total de días del período de depreciación"
 
 #: erpnext/accounts/report/bank_reconciliation_statement/bank_reconciliation_statement.py:53
 msgid "Calculated Bank Statement balance"
@@ -9080,11 +9080,11 @@ msgstr "Puede referirse a la línea, sólo si el tipo de importe es 'previo al i
 
 #: erpnext/stock/doctype/stock_settings/stock_settings.py:147
 msgid "Can't change the valuation method, as there are transactions against some items which do not have its own valuation method"
-msgstr ""
+msgstr "No se puede cambiar el método de valoración, ya que hay transacciones contra algunos artículos que no tienen su propio método de valoración"
 
 #: erpnext/stock/doctype/stock_settings/stock_settings.py:119
 msgid "Can't disable batch wise valuation for active batches."
-msgstr ""
+msgstr "No se puede deshabilitar la valoración por lotes para lotes activos."
 
 #: erpnext/stock/doctype/stock_settings/stock_settings.py:116
 msgid "Can't disable batch wise valuation for items with FIFO valuation method."
@@ -9300,7 +9300,7 @@ msgstr "No se puede cambiar la 'Fecha de Inicio' y la 'Fecha Final' del año fis
 
 #: erpnext/accounts/doctype/accounting_dimension/accounting_dimension.py:70
 msgid "Cannot change Reference Document Type."
-msgstr ""
+msgstr "No se puede cambiar el tipo de documento de referencia."
 
 #: erpnext/accounts/deferred_revenue.py:51
 msgid "Cannot change Service Stop Date for item in row {0}"
@@ -9324,7 +9324,7 @@ msgstr "No se puede convertir de 'Centros de Costos' a una cuenta del libro mayo
 
 #: erpnext/projects/doctype/task/task.js:49
 msgid "Cannot convert Task to non-group because the following child Tasks exist: {0}."
-msgstr ""
+msgstr "No se puede convertir una tarea a una no grupal porque existen las siguientes tareas secundarias: {0}."
 
 #: erpnext/accounts/doctype/account/account.py:403
 msgid "Cannot convert to Group because Account Type is selected."
@@ -9671,7 +9671,7 @@ msgstr "Categoría"
 #. Withholding Category'
 #: erpnext/accounts/doctype/tax_withholding_category/tax_withholding_category.json
 msgid "Category Details"
-msgstr ""
+msgstr "Detalles de la categoría"
 
 #. Label of the category_name (Data) field in DocType 'Tax Withholding
 #. Category'
@@ -16211,7 +16211,7 @@ msgstr "Fecha de depreciación"
 #. 'Asset Depreciation Schedule'
 #: erpnext/assets/doctype/asset_depreciation_schedule/asset_depreciation_schedule.json
 msgid "Depreciation Details"
-msgstr ""
+msgstr "Detalles de la depreciación"
 
 #: erpnext/accounts/report/asset_depreciations_and_balances/asset_depreciations_and_balances.py:497
 msgid "Depreciation Eliminated due to disposal of assets"
@@ -16665,7 +16665,7 @@ msgstr "Determinar la categoría de impuestos de la dirección de"
 #. Option for the 'Fuel Type' (Select) field in DocType 'Vehicle'
 #: erpnext/setup/doctype/vehicle/vehicle.json
 msgid "Diesel"
-msgstr ""
+msgstr "Diésel"
 
 #. Label of the difference_heading (Heading) field in DocType 'Bisect
 #. Accounting Statements'
@@ -16742,17 +16742,17 @@ msgstr "La diferencia de montos debe ser cero"
 
 #: erpnext/stock/report/stock_ledger_variance/stock_ledger_variance.js:49
 msgid "Difference In"
-msgstr ""
+msgstr "Diferencia en"
 
 #. Label of the gain_loss_posting_date (Date) field in DocType 'Payment
 #. Reconciliation Allocation'
 #: erpnext/accounts/doctype/payment_reconciliation_allocation/payment_reconciliation_allocation.json
 msgid "Difference Posting Date"
-msgstr ""
+msgstr "Fecha de publicación de la diferencia"
 
 #: erpnext/manufacturing/report/bom_stock_calculated/bom_stock_calculated.py:92
 msgid "Difference Qty"
-msgstr ""
+msgstr "Diferencia Cant."
 
 #: erpnext/stock/report/incorrect_stock_value_report/incorrect_stock_value_report.py:136
 #: erpnext/stock/report/stock_and_account_value_comparison/stock_and_account_value_comparison.py:130
@@ -16799,12 +16799,12 @@ msgstr "Nombre de dimensión"
 #. Name of a report
 #: erpnext/accounts/report/dimension_wise_accounts_balance_report/dimension_wise_accounts_balance_report.json
 msgid "Dimension-wise Accounts Balance Report"
-msgstr ""
+msgstr "Informe de balance de cuentas por dimensiones"
 
 #. Label of the dimensions_section (Section Break) field in DocType 'GL Entry'
 #: erpnext/accounts/doctype/gl_entry/gl_entry.json
 msgid "Dimensions"
-msgstr ""
+msgstr "Dimensiones"
 
 #. Option for the 'Account Type' (Select) field in DocType 'Account'
 #: erpnext/accounts/doctype/account/account.json
@@ -16959,7 +16959,7 @@ msgstr ""
 
 #: erpnext/controllers/accounts_controller.py:631
 msgid "Disabled pricing rules since this {} is an internal transfer"
-msgstr "Deshabilitado las reglas de precios ya que esta {} es una transferencia interna"
+msgstr "Deshabilitado las reglas de precios, ya que esta {} es una transferencia interna"
 
 #: erpnext/controllers/accounts_controller.py:645
 msgid "Disabled tax included prices since this {} is an internal transfer"
@@ -17487,7 +17487,7 @@ msgstr "DocType"
 
 #: erpnext/setup/doctype/transaction_deletion_record/transaction_deletion_record.py:69
 msgid "DocTypes should not be added manually to the 'Excluded DocTypes' table. You are only allowed to remove entries from it."
-msgstr ""
+msgstr "Los DocTypes no deben añadirse manualmente a la tabla 'DocTypes excluidos'. Solamente se le permite eliminar entradas de la misma."
 
 #: erpnext/templates/pages/search_help.py:22
 msgid "Docs Search"
@@ -20196,7 +20196,7 @@ msgstr "Estados financieros"
 
 #: erpnext/public/js/setup_wizard.js:41
 msgid "Financial Year Begins On"
-msgstr ""
+msgstr "El año fiscal comienza el"
 
 #. Description of the 'Ignore Account Closing Balance' (Check) field in DocType
 #. 'Accounts Settings'
@@ -20289,7 +20289,7 @@ msgstr ""
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:407
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:659
 msgid "Finished Good Warehouse"
-msgstr ""
+msgstr "Almacén de productos terminados"
 
 #: erpnext/subcontracting/doctype/subcontracting_bom/subcontracting_bom.py:51
 msgid "Finished Good {0} does not have a default BOM."
@@ -20538,7 +20538,7 @@ msgstr "Tipo de interés fijo"
 #. Label of the fixed_time (Check) field in DocType 'BOM Operation'
 #: erpnext/manufacturing/doctype/bom_operation/bom_operation.json
 msgid "Fixed Time"
-msgstr ""
+msgstr "Tiempo fijo"
 
 #. Name of a role
 #: erpnext/setup/doctype/driver/driver.json
@@ -21545,12 +21545,12 @@ msgstr ""
 #. Option for the 'Barcode Type' (Select) field in DocType 'Item Barcode'
 #: erpnext/stock/doctype/item_barcode/item_barcode.json
 msgid "GS1"
-msgstr ""
+msgstr "GS1"
 
 #. Option for the 'Barcode Type' (Select) field in DocType 'Item Barcode'
 #: erpnext/stock/doctype/item_barcode/item_barcode.json
 msgid "GTIN"
-msgstr ""
+msgstr "GTIN"
 
 #. Label of the gain_loss (Currency) field in DocType 'Exchange Rate
 #. Revaluation Account'
@@ -21567,7 +21567,7 @@ msgstr "Cuenta de ganancias/pérdidas por enajenación de activos fijos"
 #. 'Exchange Rate Revaluation'
 #: erpnext/accounts/doctype/exchange_rate_revaluation/exchange_rate_revaluation.json
 msgid "Gain/Loss accumulated in foreign currency account. Accounts with '0' balance in either Base or Account currency"
-msgstr ""
+msgstr "Ganancia/Pérdida acumulada en cuenta en moneda extranjera. Cuentas con saldo “0” en moneda base o de cuenta"
 
 #. Label of the gain_loss_booked (Currency) field in DocType 'Exchange Rate
 #. Revaluation'
@@ -22341,7 +22341,7 @@ msgstr "Agrupar por nota"
 #. Label of the group_same_items (Check) field in DocType 'Pick List'
 #: erpnext/stock/doctype/pick_list/pick_list.json
 msgid "Group Same Items"
-msgstr ""
+msgstr "Agrupar mismos artículos"
 
 #: erpnext/stock/doctype/stock_settings/stock_settings.py:126
 msgid "Group Warehouses cannot be used in transactions. Please change the value of {0}"
@@ -23664,7 +23664,7 @@ msgstr "Importar {0} de {1}, {2}"
 #. Plan Sub Assembly Item'
 #: erpnext/manufacturing/doctype/production_plan_sub_assembly_item/production_plan_sub_assembly_item.json
 msgid "In House"
-msgstr ""
+msgstr "En casa"
 
 #. Option for the 'Status' (Select) field in DocType 'Asset'
 #: erpnext/assets/doctype/asset/asset.json
@@ -24042,7 +24042,7 @@ msgstr "Incluir transacciones POS"
 
 #: erpnext/accounts/doctype/pos_invoice/pos_invoice.py:194
 msgid "Include Payment"
-msgstr ""
+msgstr "Incluir Pago"
 
 #. Label of the is_pos (Check) field in DocType 'POS Invoice'
 #. Label of the is_pos (Check) field in DocType 'Sales Invoice'
@@ -26999,7 +26999,7 @@ msgstr ""
 
 #: erpnext/stock/doctype/item_price/item_price.py:56
 msgid "Item {0} not found."
-msgstr ""
+msgstr "Artículo {0} no encontrado."
 
 #: erpnext/buying/doctype/purchase_order/purchase_order.py:341
 msgid "Item {0}: Ordered qty {1} cannot be less than minimum order qty {2} (defined in Item)."
