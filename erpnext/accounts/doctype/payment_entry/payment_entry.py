@@ -1145,6 +1145,7 @@ class PaymentEntry(AccountsController):
 			self.remove(row)
 
 		if not exchange_gain_loss:
+			self.remove(exchange_gain_loss_row)
 			return
 
 		exchange_gain_loss_account, cost_center = frappe.get_cached_value(
