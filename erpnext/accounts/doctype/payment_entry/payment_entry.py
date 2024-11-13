@@ -2830,3 +2830,78 @@ def apply_discount_paid_amount(paid_amount, received_amount, doc, party_account_
 def get_default_account_name(dn, dt):
 	field = "default_account_for_purchase" if dt in ["Purchase Order","Purchase Invoice"] else "default_account_for_sales"
 	return frappe.db.get_value("Payment Term", dn, field)
+
+
+@frappe.whitelist()
+def get_discount_eligible_invoice(filters, dt):
+	filters = frappe.parse_json(filters)
+	dn_list = frappe.db.get_all(dt, filters, pluck = "name")
+	invoice_list = []
+	refernce_date = filters.due_date[1]
+	for dn in dn_list:
+		invoice_doc = frappe.get_doc(dt, dn)
+		discount_term_list = invoice_doc.payment_discount_terms
+
+		for discount_row in discount_term_list:
+			if frappe.utils.getdate(refernce_date) <= discount_row.discount_date:
+				invoice_list.append({
+					"amount_to_be_paid": invoice_doc.outstanding_amount,
+					"cost_center" : invoice_doc.cost_center, 
+					"discount_percent": discount_row.discount, 
+					"grand_total" : invoice_doc.grand_total, 
+					"invoice_number": dn, 
+					"outstanding_amount": invoice_doc.outstanding_amount, 
+					"payment_term" : invoice_doc.payment_term, 
+				})
+				break
+
+	return invoice_list
+
+@frappe.whitelist()
+def calculate_discount_for_multiple_invoice(dt, dn_list_obj, reference_date,party_account_currency, party_type, party ):
+	dn_list_obj = frappe.parse_json(dn_list_obj)
+	reference_table = []
+	deduction_table = []
+	paid_amount = 0
+	
+	total_allocated_amount = 0 
+
+	for dn_obj in dn_list_obj:
+		dn_obj = frappe._dict(dn_obj)
+		ref_details = get_reference_details(
+					dt,
+					dn_obj.invoice_number,
+					party_account_currency,
+					party_type,
+					party,
+				)
+		temp_reference_obj = {
+			"reference_doctype" : dt,
+			"reference_name" :dn_obj.invoice_number,
+			"allocated_amount" : flt(dn_obj.amount_to_be_paid) 
+		}
+		for field, value in ref_details.items():
+			temp_reference_obj.update({field : value})
+		reference_table.append(temp_reference_obj)
+		
+		discount_account = get_default_account_name(dn_obj.payment_term, dt) 
+
+		discount_amount = flt(dn_obj.amount_to_be_paid) * (dn_obj.discount_percent / 100)
+		paid_amount += dn_obj.amount_to_be_paid - discount_amount
+		discount_amount = -discount_amount if dt == "Purchase Invoice" else discount_amount
+		total_allocated_amount +=  dn_obj.amount_to_be_paid
+		deduction_table.append({
+		"account" : discount_account,
+		"cost_center" :dn_obj.cost_center,
+		"amount" : flt(discount_amount) ,
+		})
+		
+	return {
+		"references": reference_table, 
+		"paid_amount": paid_amount,
+		"deductions": deduction_table, 
+		"total_allocated_amount" : total_allocated_amount,
+		"unallocated_amount":0,
+		"difference_amount":0
+
+	}
