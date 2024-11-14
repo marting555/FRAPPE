@@ -17,12 +17,14 @@
   "from_wbs_level",
   "fr_og_bgt",
   "fr_oa_bgt",
+  "fr_av_bgt",
   "column_break_www6",
   "to_wbs",
   "to_wbs_name",
   "to_wbs_level",
   "to_og_bgt",
   "to_oa_bgt",
+  "to_wbs_available_budget",
   "section_break_irxr",
   "budget_amount",
   "column_break_7gqc",
@@ -70,12 +72,14 @@
   {
    "fieldname": "from_wbs_name",
    "fieldtype": "Data",
-   "label": "From WBS Name"
+   "label": "From WBS Name",
+   "read_only": 1
   },
   {
    "fieldname": "fr_og_bgt",
    "fieldtype": "Currency",
-   "label": "From WBS Original Budget"
+   "label": "From WBS Original Budget",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_www6",
@@ -95,22 +99,26 @@
   {
    "fieldname": "to_wbs_name",
    "fieldtype": "Data",
-   "label": "To WBS Name"
+   "label": "To WBS Name",
+   "read_only": 1
   },
   {
    "fieldname": "to_wbs_level",
    "fieldtype": "Data",
-   "label": "To WBS Level"
+   "label": "To WBS Level",
+   "read_only": 1
   },
   {
    "fieldname": "to_og_bgt",
    "fieldtype": "Currency",
-   "label": "To WBS Original Budget"
+   "label": "To WBS Original Budget",
+   "read_only": 1
   },
   {
    "fieldname": "to_oa_bgt",
    "fieldtype": "Currency",
-   "label": "To WBS Overall Budget"
+   "label": "To WBS Overall Budget",
+   "read_only": 1
   },
   {
    "fieldname": "section_break_irxr",
@@ -124,12 +132,14 @@
   {
    "fieldname": "from_wbs_level",
    "fieldtype": "Data",
-   "label": "From WBS Level"
+   "label": "From WBS Level",
+   "read_only": 1
   },
   {
    "fieldname": "fr_oa_bgt",
    "fieldtype": "Currency",
-   "label": "From WBS Overall Budget"
+   "label": "From WBS Overall Budget",
+   "read_only": 1
   },
   {
    "fieldname": "section_break_vrtp",
@@ -148,6 +158,18 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "fr_av_bgt",
+   "fieldtype": "Currency",
+   "label": "From WBS Available Budget",
+   "read_only": 1
+  },
+  {
+   "fieldname": "to_wbs_available_budget",
+   "fieldtype": "Currency",
+   "label": "To WBS Available Budget",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -158,7 +180,7 @@
    "link_fieldname": "voucher_no"
   }
  ],
- "modified": "2024-11-11 12:15:42.562896",
+ "modified": "2024-11-13 18:19:28.412666",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Budget Transfer",

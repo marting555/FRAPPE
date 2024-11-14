@@ -435,38 +435,6 @@ erpnext.sales_common = {
 				}
 			}
 
-			project() {
-				let me = this;
-				if (["Delivery Note", "Sales Invoice", "Sales Order"].includes(this.frm.doc.doctype)) {
-					if (this.frm.doc.project) {
-						frappe.call({
-							method: "erpnext.projects.doctype.project.project.get_cost_center_name",
-							args: { project: this.frm.doc.project },
-							callback: function (r, rt) {
-								if (!r.exc) {
-									$.each(me.frm.doc["items"] || [], function (i, row) {
-										if (r.message) {
-											frappe.model.set_value(
-												row.doctype,
-												row.name,
-												"cost_center",
-												r.message
-											);
-											frappe.msgprint(
-												__(
-													"Cost Center For Item with Item Code {0} has been Changed to {1}",
-													[row.item_name, r.message]
-												)
-											);
-										}
-									});
-								}
-							},
-						});
-					}
-				}
-			}
-
 			coupon_code() {
 				this.frm.set_value("discount_amount", 0);
 				this.frm.set_value("additional_discount_percentage", 0);

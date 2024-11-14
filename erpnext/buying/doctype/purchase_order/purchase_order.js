@@ -305,7 +305,7 @@ frappe.ui.form.on("Purchase Order Item", {
 	},
 	expense_account: function(frm,cdt,cdn) {
 		var child = locals[cdt][cdn];
-		if (child.work_breakdown_structure) {
+		if (child.work_breakdown_structure && child.expense_account) {
 			frappe.db.get_value("Work Breakdown Structure",child.work_breakdown_structure,'gl_account')
 			.then(response => {
 				if (response.message && response.message.gl_account) {

@@ -494,6 +494,7 @@ frappe.ui.form.on("Material Request Item", {
 			frappe.msgprint(__("Warning: Material Requested Qty is less than Minimum Order Qty"));
 		}
 		frm.events.get_item_data(frm, item, false);
+		update_total(frm, doctype, name);
 	},
 
 	from_warehouse: function (frm, doctype, name) {
@@ -511,6 +512,8 @@ frappe.ui.form.on("Material Request Item", {
 		item.amount = flt(item.qty) * flt(item.rate);
 		frappe.model.set_value(doctype, name, "amount", item.amount);
 		refresh_field("amount", item.name, item.parentfield);
+
+		update_total(frm, doctype, name);
 	},
 
 	item_code: function (frm, doctype, name) {
@@ -551,6 +554,9 @@ frappe.ui.form.on("Material Request Item", {
             row.refresh_field('project_name');
 		})
 	},
+	items_remove: function(frm,cdt,cdn) {
+		update_total(frm,cdt,cdn);
+    },
 	work_breakdown_structure: function(frm,cdt,cdn) {
 		let child = locals[cdt][cdn];
 		frappe.db.get_value("Work Breakdown Structure", child.work_breakdown_structure, ["wbs_name", 'locked', 'gl_account'])
@@ -577,7 +583,7 @@ frappe.ui.form.on("Material Request Item", {
 	},
 	expense_account: function(frm,cdt,cdn) {
 		var child = locals[cdt][cdn];
-		if (child.work_breakdown_structure) {
+		if (child.work_breakdown_structure && child.expense_account) {
 			frappe.db.get_value("Work Breakdown Structure",child.work_breakdown_structure,'gl_account')
 			.then(response => {
 				if (response.message && response.message.gl_account) {
@@ -680,4 +686,14 @@ function set_schedule_date(frm) {
 			"schedule_date"
 		);
 	}
+}
+
+function update_total(frm, cdt, cdn) {
+	var child = locals[cdt][cdn];
+	let total_amount = 0;
+	frm.doc.items.forEach(row => {
+		total_amount += row.qty * row.rate;
+	});
+	frm.set_value("total",total_amount);
+	frm.refresh_field("total");
 }

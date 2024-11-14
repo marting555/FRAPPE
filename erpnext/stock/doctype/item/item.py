@@ -70,10 +70,7 @@ class Item(Document):
 
 		allow_alternative_item: DF.Check
 		allow_negative_stock: DF.Check
-		asset_category: DF.Link | None
-		asset_naming_series: DF.Literal[None]
 		attributes: DF.Table[ItemVariantAttribute]
-		auto_create_assets: DF.Check
 		barcodes: DF.Table[ItemBarcode]
 		batch_number_series: DF.Data | None
 		brand: DF.Link | None
@@ -105,8 +102,6 @@ class Item(Document):
 		inspection_required_before_delivery: DF.Check
 		inspection_required_before_purchase: DF.Check
 		is_customer_provided_item: DF.Check
-		is_fixed_asset: DF.Check
-		is_grouped_asset: DF.Check
 		is_purchase_item: DF.Check
 		is_sales_item: DF.Check
 		is_stock_item: DF.Check
@@ -151,7 +146,6 @@ class Item(Document):
 
 	def onload(self):
 		self.set_onload("stock_exists", self.stock_ledger_created())
-		self.set_onload("asset_naming_series", get_asset_naming_series())
 
 	def autoname(self):
 		if frappe.db.get_default("item_naming_by") == "Naming Series":
@@ -203,7 +197,6 @@ class Item(Document):
 		self.validate_attributes()
 		self.validate_variant_attributes()
 		self.validate_variant_based_on_change()
-		self.validate_fixed_asset()
 		self.clear_retain_sample()
 		self.validate_retain_sample()
 		self.validate_uom_conversion_factor()
@@ -292,24 +285,6 @@ class Item(Document):
 
 				stock_entry.add_comment("Comment", _("Opening Stock"))
 
-	def validate_fixed_asset(self):
-		if self.is_fixed_asset:
-			if self.is_stock_item:
-				frappe.throw(_("Fixed Asset Item must be a non-stock item."))
-
-			if not self.asset_category:
-				frappe.throw(_("Asset Category is mandatory for Fixed Asset item"))
-
-			if self.stock_ledger_created():
-				frappe.throw(_("Cannot be a fixed asset item as Stock Ledger is created."))
-
-		if not self.is_fixed_asset:
-			asset = frappe.db.get_all("Asset", filters={"item_code": self.name, "docstatus": 1}, limit=1)
-			if asset:
-				frappe.throw(
-					_('"Is Fixed Asset" cannot be unchecked, as Asset record exists against the item')
-				)
-
 	def validate_retain_sample(self):
 		if self.retain_sample and not frappe.db.get_single_value(
 			"Stock Settings", "sample_retention_warehouse"
@@ -385,11 +360,12 @@ class Item(Document):
 				)
 
 	def validate_item_type(self):
-		if self.has_serial_no == 1 and self.is_stock_item == 0 and not self.is_fixed_asset:
-			frappe.throw(_("'Has Serial No' can not be 'Yes' for non-stock item"))
+		if not "assets" in frappe.get_installed_apps():
+			if self.has_serial_no == 1 and self.is_stock_item == 0:
+				frappe.throw(_("'Has Serial No' can not be 'Yes' for non-stock item"))
 
-		if self.has_serial_no == 0 and self.serial_no_series:
-			self.serial_no_series = None
+			if self.has_serial_no == 0 and self.serial_no_series:
+				self.serial_no_series = None
 
 	def validate_naming_series(self):
 		for field in ["serial_no_series", "batch_number_series"]:
@@ -1383,14 +1359,6 @@ def validate_item_default_company_links(item_defaults: list[ItemDefault]) -> Non
 						),
 						title=_("Invalid Item Defaults"),
 					)
-
-
-@frappe.whitelist()
-def get_asset_naming_series():
-	from assets.assets.doctype.asset.asset import get_asset_naming_series
-
-	return get_asset_naming_series()
-
 
 @frappe.request_cache
 def get_child_warehouses(warehouse):

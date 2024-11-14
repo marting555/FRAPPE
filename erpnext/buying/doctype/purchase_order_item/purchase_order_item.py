@@ -44,7 +44,6 @@ class PurchaseOrderItem(Document):
 		from_warehouse: DF.Link | None
 		image: DF.Attach | None
 		include_exploded_items: DF.Check
-		is_fixed_asset: DF.Check
 		is_free_item: DF.Check
 		item_code: DF.Link
 		item_group: DF.Link | None
@@ -93,7 +92,6 @@ class PurchaseOrderItem(Document):
 		wbs_name: DF.Data | None
 		weight_per_unit: DF.Float
 		weight_uom: DF.Link | None
-		wip_composite_asset: DF.Link | None
 		work_breakdown_structure: DF.Link | None
 	# end: auto-generated types
 

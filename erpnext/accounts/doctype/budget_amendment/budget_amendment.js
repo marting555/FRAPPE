@@ -12,20 +12,27 @@ frappe.ui.form.on("Budget Amendment", {
             frm.set_value("company", null);
         }
     },
-
+    refresh: function(frm) {
+        frm.set_query("wbs_element", "budget_amendment_items", function () {
+            return {
+                filters: {
+                    "project":frm.doc.project,
+                    "docstatus": 1,
+                    "wbs_level": ["!=", '0']
+                },
+            };
+        });
+    },
     onload: function(frm) {
         frm.set_query("project", function() {
             return {};
         });
 
-        // if (!frm.doc.document_date) {
-        //     frm.set_value("document_date", frappe.datetime.get_today());
-        // }
         if (!frm.doc.posting_date) {
             frm.set_value("posting_date", frappe.datetime.get_today());
         }
 
-        frm.savecancel = function(btn, callback, on_error){ console.log("jiiri");return frm._cancel(btn, callback, on_error, false);}
+        frm.savecancel = function(btn, callback, on_error){return frm._cancel(btn, callback, on_error, false);}
     },
 
     get_wbs: function(frm) {
@@ -53,31 +60,10 @@ frappe.ui.form.on("Budget Amendment", {
                 }
             });
         }
-    },
-
-    
-    
+    },    
 });
 
 frappe.ui.form.on("Budget Amendment Items", {
-    // overall_budget: function(frm, cdt, cdn) {
-    //     var child = locals[cdt][cdn];
-    //     let total_amount = 0;
-
-    //     if (frm.doc.budget_amendment_items && frm.doc.budget_amendment_items.length) {
-    //         frm.doc.budget_amendment_items.forEach(row => {
-    //             if (row.overall_budget !== undefined) {
-    //                 total_amount += row.overall_budget || 0;
-    //             }
-    //         });
-    //         console.log("Total Overall Budget:", total_amount);
-    //         frm.set_value("total_overall_budget", total_amount);
-    //         frm.refresh_field("total_overall_budget");
-    //     } else {
-    //         console.log("No budget amendment items found.");
-    //     }
-    // },
-
     increment_budget: function(frm, cdt, cdn) {
         var child = locals[cdt][cdn];
         let total_amount = 0;
@@ -98,18 +84,12 @@ frappe.ui.form.on("Budget Amendment Items", {
         if (frm.doc.budget_amendment_items && frm.doc.budget_amendment_items.length) {
             frm.doc.budget_amendment_items.forEach(row => {
                 if (row.increment_budget !== undefined) {
-                    total_amount += row.increment_budget || 0; // Ensure we handle undefined values
+                    total_amount += row.increment_budget || 0;
                 }
             });
-            console.log("Total Increment Budget:", total_amount); // Debugging
             frm.set_value("total_increment_budget", total_amount);
             frm.refresh_field("total_increment_budget");
-        } else {
-            console.log("No budget amendment items found.");
         }
-
-        // cur_frm.fields_dict["budget_amendment_items"].grid.grid_rows_by_docname[child.name].set_field_property('decrement_budget','read_only',1);
-
     },
 
     decrement_budget: function(frm, cdt, cdn) {
@@ -117,7 +97,6 @@ frappe.ui.form.on("Budget Amendment Items", {
         let total_amount = 0;
         
         if(child.increment_budget) {
-            console.log("Yes")
             child.decrement_budget = 0
             frappe.msgprint(__("Please set increment budget to 0"))
             child.total = child.overall_budget - child.decrement_budget + child.increment_budget
@@ -128,22 +107,16 @@ frappe.ui.form.on("Budget Amendment Items", {
         row.refresh_field('decrement_budget')
 		row.refresh_field('total')
         
-
         // Check if budget_amendment_items is populated
         if (frm.doc.budget_amendment_items && frm.doc.budget_amendment_items.length) {
             frm.doc.budget_amendment_items.forEach(row => {
                 if (row.decrement_budget !== undefined) {
-                    total_amount += row.decrement_budget || 0; // Ensure we handle undefined values
+                    total_amount += row.decrement_budget || 0; 
                 }
             });
-            console.log("Total Decrement Budget:", total_amount); // Debugging
             frm.set_value("total_decrement_budget", total_amount);
             frm.refresh_field("total_decrement_budget");
-        } else {
-            console.log("No budget amendment items found.");
         }
-
-        // cur_frm.fields_dict["budget_amendment_items"].grid.grid_rows_by_docname[child.name].set_field_property('increment_budget','read_only',1);
     },
     budget_amendment_items_remove: function(frm,cdt,cdn) {
         if (frm.doc.budget_amendment_items) {

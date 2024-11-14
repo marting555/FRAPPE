@@ -109,6 +109,3 @@ def get_user_roles():
     user = frappe.session.user
     user_roles = frappe.get_roles(user)
     return user_roles
-
-
-

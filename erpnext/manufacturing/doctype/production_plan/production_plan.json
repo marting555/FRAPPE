@@ -15,7 +15,6 @@
   "item_code",
   "customer",
   "warehouse",
-  "project",
   "sales_order_status",
   "column_break2",
   "from_date",
@@ -129,13 +128,6 @@
    "fieldtype": "Link",
    "label": "Warehouse",
    "options": "Warehouse"
-  },
-  {
-   "depends_on": "eval: doc.get_items_from == \"Sales Order\"",
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "options": "Project"
   },
   {
    "fieldname": "column_break2",

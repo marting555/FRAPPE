@@ -3,9 +3,10 @@
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import (cint)
+from frappe.utils import (cint, getdate)
 from frappe.query_builder.functions import Coalesce, Sum
-
+from frappe import qb
+from erpnext.accounts.report.financial_statements import sort_accounts
 
 class WorkBreakdownStructure(Document):
 	# begin: auto-generated types
@@ -23,6 +24,7 @@ class WorkBreakdownStructure(Document):
 		company: DF.Link
 		gl_account: DF.Link | None
 		is_group: DF.Check
+		linked_monthly_distribution: DF.Link | None
 		locked: DF.Check
 		original_budget: DF.Currency
 		overall_budget: DF.Currency
@@ -33,13 +35,6 @@ class WorkBreakdownStructure(Document):
 		wbs_level: DF.Data | None
 		wbs_name: DF.Data
 	# end: auto-generated types
-   
-from frappe import qb
-from erpnext.accounts.report.financial_statements import sort_accounts
-
-from frappe import qb
-from erpnext.accounts.report.financial_statements import sort_accounts
-
 
 @frappe.whitelist()
 def get_children(doctype, parent, project, is_root=False):
@@ -124,16 +119,6 @@ def delete_wbs_from_tree_view(wbs):
         frappe.delete_doc('Work Breakdown Structure',wbs)
         # delete_warehouse(wbs)
 
-
-# def validate_level(self):
-#         if self.project_type:
-#             max_level = frappe.db.get_value("Project Type",{'name':self.project_type},["custom_max_wbs_levels"])
-#             if max_level > 0:
-#                 if int(self.level) > int(max_level):
-#                     msg = _("This Project Type has exceeded Maximum Allowed WBS Levels")
-#                     frappe.throw(msg)
-
-
 def after_insert(self):
     if self.is_wbs == 1:
         data = frappe.new_doc("Work Breakdown Structure")
@@ -143,21 +128,23 @@ def after_insert(self):
         data.project_name = self.project_name
         data.company = self.company
         data.insert()
+        data.submit()
 	
 
 @frappe.whitelist()
-def check_available_budget(wbs,amt,doctype):
-        wbs_off = check_parent_wbs_budget(wbs, amt)
-        wbs_doc = frappe.get_doc("Work Breakdown Structure", wbs_off[1])
+def check_available_budget(wbs,amt,doctype,txn_date):
+        month_name = getdate(txn_date).strftime("%B")
+        wbs_doc = frappe.get_doc("Work Breakdown Structure", wbs)
+        controls = get_control_actions(wbs_doc.linked_monthly_distribution)
         be = frappe.qb.DocType('Budget Entry')
+        dt_action = ""
 
         query = (
             frappe.qb.from_(be)
             .select(Sum(be.overall_credit - be.overall_debit).as_('sob'))
             .where(
                 (be.wbs == wbs_doc.name) &
-                (be.voucher_type.isin(["Supplementary Budget", "Budget Decrease", "Budget Transfer"])) &
-                (be.original_entry == 0)
+                (be.voucher_type.isin(["Budget Amendment", "Budget Transfer"]))
             )
         )
         statistical_amt = query.run(as_dict=True)
@@ -166,15 +153,70 @@ def check_available_budget(wbs,amt,doctype):
         cob = wbs_doc.committed_overall_budget
         aob = wbs_doc.actual_overall_budget
         ab_upd = ab
+        monthly_ab = get_available_budget_for_month(month_name,wbs_doc.linked_monthly_distribution,wbs_doc.available_budget)
         wbs_id = ""
         if wbs:
             wbs_id = wbs_doc.name
-            if doctype in ["Material Request" ,"Stock Entry","Budget Transfer","Budget Decrease", "Expense Claim", "Journal Entry"]:
-
-                ab_upd = ab - amt
+            if doctype in ["Material Request" ,"Stock Entry","Budget Transfer","Budget Amendment", "Expense Claim", "Journal Entry"]:
+                dt_action = controls.get("mr_action") 
+                ab_upd = monthly_ab - amt
             if doctype in ["Purchase Order","Purchase Receipt"]:
-                ab_upd = (ab + cob) - amt
+                if doctype == "Purchase Order":
+                    dt_action = controls.get("po_action")
+                elif doctype == "Purchase Receipt":
+                    dt_action = controls.get("pr_action")
+                ab_upd = (monthly_ab + cob) - amt
             if doctype in ["Purchase Invoice"]:
-                ab_upd = (ab + aob) - amt
+                dt_action = controls.get("pi_action")
+                ab_upd = (monthly_ab + aob) - amt
 
-        return [ab_upd, wbs_id]
+        return {"available_bgt":ab_upd,"wbs":wbs_id,"action":dt_action}
+
+
+def get_available_budget_for_month(month_name,monthly_distribution_name,total_avl_bgt):
+    # Fetch the available budget from the WBS record
+    if not total_avl_bgt:
+        return 0.0
+
+    # Fetch the linked monthly distribution record associated with this WBS
+    if not monthly_distribution_name:
+        return total_avl_bgt
+
+    # Retrieve the allocation percentage for the specified month from the linked Monthly Distribution
+    allocation_percentage = frappe.db.get_value("Distribution Percentage", 
+                                                {"parent": monthly_distribution_name, "month": month_name}, 
+                                                "allocation")
+    if not allocation_percentage:
+        return total_avl_bgt
+
+    # Calculate the available budget based on the allocation percentage
+    avl_bgt = total_avl_bgt * (allocation_percentage / 100)
+
+    # Return the available budget object
+    return  avl_bgt
+
+def get_control_actions(monthly_distribution=None):
+    controls = {"mr_action":"Ignore","po_action":"Ignore","pr_action":"Ignore","pi_action":"Ignore"}
+    if monthly_distribution:
+        md = frappe.get_doc("WBS Monthly Distribution",monthly_distribution)
+        if md.applicable_on_material_request:
+            controls.update({
+                "mr_action":md.action_if_accumulated_monthly_budget_exceeded_on_mr
+            })
+
+        if md.applicable_on_purchase_order:
+            controls.update({
+                "po_action":md.action_if_accumulated_monthly_budget_exceeded_on_po
+            })
+
+        if md.applicable_on_booking_actual_expenses:
+            controls.update({
+                "pi_action":md.action_if_accumulated_monthly_budget_exceeded_on_actual,
+                "pr_action":md.action_if_accumulated_monthly_budget_exceeded_on_actual
+            })
+
+    return controls
+    
+
+
+

@@ -36,7 +36,6 @@ from erpnext.accounts.party import get_due_date, get_party_account, get_party_de
 from erpnext.accounts.utils import cancel_exchange_gain_loss_journal, get_account_currency
 from erpnext.controllers.accounts_controller import validate_account_head
 from erpnext.controllers.selling_controller import SellingController
-from erpnext.projects.doctype.timesheet.timesheet import get_projectwise_timesheet_data
 from erpnext.setup.doctype.company.company import update_company_current_month_sales
 from erpnext.stock.doctype.delivery_note.delivery_note import update_billed_amount_based_on_so
 from erpnext.stock.doctype.serial_no.serial_no import get_delivery_note_serial_no, get_serial_nos
@@ -104,6 +103,7 @@ class SalesInvoice(SellingController):
 		debit_to: DF.Link
 		disable_rounded_total: DF.Check
 		discount_amount: DF.Currency
+		discount_due_date: DF.Date | None
 		dispatch_address: DF.SmallText | None
 		dispatch_address_name: DF.Link | None
 		due_date: DF.Date | None
@@ -247,7 +247,6 @@ class SalesInvoice(SellingController):
 
 		self.set_tax_withholding()
 
-		self.validate_proj_cust()
 		self.validate_pos_return()
 		self.validate_with_previous_doc()
 		self.validate_uom_is_integer("stock_uom", "stock_qty")
@@ -300,8 +299,6 @@ class SalesInvoice(SellingController):
 		else:
 			self.timesheets = []
 		self.update_packing_list()
-		self.set_billing_hours_and_amount()
-		self.update_timesheet_billing_for_project()
 		self.set_status()
 		if self.is_pos and not self.is_return:
 			self.verify_payment_amount_is_positive()
@@ -448,7 +445,6 @@ class SalesInvoice(SellingController):
 
 		if frappe.db.get_single_value("Selling Settings", "sales_update_frequency") == "Each Transaction":
 			update_company_current_month_sales(self.company)
-			self.update_project()
 		update_linked_doc(self.doctype, self.name, self.inter_company_invoice_reference)
 
 		# create the loyalty point ledger entry if the customer is enrolled in any loyalty program
@@ -535,7 +531,6 @@ class SalesInvoice(SellingController):
 
 		if frappe.db.get_single_value("Selling Settings", "sales_update_frequency") == "Each Transaction":
 			update_company_current_month_sales(self.company)
-			self.update_project()
 		if not self.is_return and not self.is_consolidated and self.loyalty_program:
 			self.delete_loyalty_point_entry()
 		elif self.is_return and self.return_against and not self.is_consolidated and self.loyalty_program:
@@ -957,17 +952,6 @@ class SalesInvoice(SellingController):
 							_("{0} is mandatory for Item {1}").format(key, d.item_code), raise_exception=1
 						)
 
-	def validate_proj_cust(self):
-		"""check for does customer belong to same project as entered.."""
-		if self.project and self.customer:
-			res = frappe.db.sql(
-				"""select name from `tabProject`
-				where name = %s and (customer = %s or customer is null or customer = '')""",
-				(self.project, self.customer),
-			)
-			if not res:
-				throw(_("Customer {0} does not belong to project {1}").format(self.customer, self.project))
-
 	def validate_pos(self):
 		if self.is_return:
 			invoice_total = self.rounded_total or self.grand_total
@@ -1038,41 +1022,6 @@ class SalesInvoice(SellingController):
 			make_packing_list(self)
 		else:
 			self.set("packed_items", [])
-
-	def set_billing_hours_and_amount(self):
-		if not self.project:
-			for timesheet in self.timesheets:
-				ts_doc = frappe.get_doc("Timesheet", timesheet.time_sheet)
-				if not timesheet.billing_hours and ts_doc.total_billable_hours:
-					timesheet.billing_hours = ts_doc.total_billable_hours
-
-				if not timesheet.billing_amount and ts_doc.total_billable_amount:
-					timesheet.billing_amount = ts_doc.total_billable_amount
-
-	def update_timesheet_billing_for_project(self):
-		if not self.timesheets and self.project:
-			self.add_timesheet_data()
-		else:
-			self.calculate_billing_amount_for_timesheet()
-
-	@frappe.whitelist()
-	def add_timesheet_data(self):
-		self.set("timesheets", [])
-		if self.project:
-			for data in get_projectwise_timesheet_data(self.project):
-				self.append(
-					"timesheets",
-					{
-						"time_sheet": data.time_sheet,
-						"billing_hours": data.billing_hours,
-						"billing_amount": data.billing_amount,
-						"timesheet_detail": data.name,
-						"activity_type": data.activity_type,
-						"description": data.description,
-					},
-				)
-
-			self.calculate_billing_amount_for_timesheet()
 
 	def calculate_billing_amount_for_timesheet(self):
 		def timesheet_sum(field):
@@ -1697,12 +1646,6 @@ class SalesInvoice(SellingController):
 						item.idx, item.qty, item.item_code, len(si_serial_nos)
 					)
 				)
-
-	def update_project(self):
-		if self.project:
-			project = frappe.get_doc("Project", self.project)
-			project.update_billed_amount()
-			project.db_update()
 
 	def verify_payment_amount_is_positive(self):
 		for entry in self.payments:

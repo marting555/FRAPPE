@@ -7,6 +7,7 @@
 from datetime import datetime
 import json
 
+from erpnext.accounts.doctype.work_breakdown_structure.work_breakdown_structure import check_available_budget
 import frappe
 from frappe import _, msgprint
 from frappe.model.mapper import get_mapped_doc
@@ -52,6 +53,7 @@ class MaterialRequest(BuyingController):
 		tc_name: DF.Link | None
 		terms: DF.TextEditor | None
 		title: DF.Data | None
+		total: DF.Float
 		transaction_date: DF.Date
 		transfer_status: DF.Literal["", "Not Started", "In Transit", "Completed"]
 		work_order: DF.Link | None
@@ -104,6 +106,7 @@ class MaterialRequest(BuyingController):
 		self.check_for_on_hold_or_closed_status("Sales Order", "sales_order")
 		self.validate_uom_is_integer("uom", "qty")
 		self.validate_material_request_type()
+		validate_available_budget(self)
 
 		if not self.status:
 			self.status = "Draft"
@@ -443,7 +446,6 @@ def make_purchase_order(source_name, target_doc=None, args=None):
 					["uom", "uom"],
 					["sales_order", "sales_order"],
 					["sales_order_item", "sales_order_item"],
-					["wip_composite_asset", "wip_composite_asset"],
 				],
 				"postprocess": update_item,
 				"condition": select_item,
@@ -824,62 +826,6 @@ def make_in_transit_stock_entry(source_name, in_transit_warehouse):
 
 	return ste_doc
 
-
-# def increment_committed_overall_budget(self):
-# 	for budget in self.items:
-# 		if budget.work_breakdown_structure is not None:
-# 			total = budget.amount
-# 			doc = frappe.get_doc("Work Breakdown Structure",budget.work_breakdown_structure)
-# 			doc.committed_overall_budget += total
-# 			doc.save()
-		
-
-# def decrement_committed_overall_budget(self):
-# 	for budget in self.items:
-# 		if budget.work_breakdown_structure is not None:
-# 			total = budget.amount
-# 			doc = frappe.get_doc("Work Breakdown Structure",budget.work_breakdown_structure)
-# 			doc.committed_overall_budget -= total
-# 			doc.save()
-		
-
-# def create_budget_entry(self):
-# 	for budget in self.items:
-# 		if budget.work_breakdown_structure is not None:
-# 			data_from = frappe.new_doc("Budget Entry")
-# 			wbs_level=frappe.get_doc('Work Breakdown Structure',budget.work_breakdown_structure)
-# 			data_from.voucher_type = self.doctype
-# 			data_from.project = budget.project
-# 			data_from.company = self.company
-# 			data_from.posting_date = datetime.now().strftime("%Y-%m-%d")
-# 			data_from.document_date = self.transaction_date
-# 			data_from.wbs = budget.work_breakdown_structure
-# 			data_from.wbs_name = budget.wbs_name
-# 			data_from.voucher_no = self.name
-# 			data_from.overall_credit = budget.amount
-# 			data_from.wbs_level = wbs_level.wbs_level
-# 			data_from.insert()
-# 			data_from.submit()
-
-
-# def create_budget_entry_on_cancel(self):
-# 	for budget in self.items:
-# 		if budget.work_breakdown_structure is not None:
-# 			data_from = frappe.new_doc("Budget Entry")
-# 			wbs_level=frappe.get_doc('Work Breakdown Structure',budget.work_breakdown_structure)
-# 			data_from.voucher_type = self.doctype
-# 			data_from.project = budget.project
-# 			data_from.company = self.company
-# 			data_from.posting_date = datetime.now().strftime("%Y-%m-%d")
-# 			data_from.document_date = self.transaction_date
-# 			data_from.wbs = budget.work_breakdown_structure
-# 			data_from.wbs_name = budget.wbs_name
-# 			data_from.voucher_no = self.name
-# 			data_from.overall_debit = budget.amount
-# 			data_from.wbs_level = wbs_level.wbs_level
-# 			data_from.insert()
-# 			data_from.submit()
-		
 def update_original_budget(self,event):
 	wbs_dict = []
 	wbs_list = []
@@ -931,7 +877,6 @@ def update_original_budget(self,event):
 
     
 def create_budget_entry(self,row,event,company):
-	print("Row ------------------",row)
 	if row.get("wbs_id"):
 		bgt_ent = frappe.new_doc("Budget Entry")
 		bgt_ent.project = row.get('project')
@@ -950,3 +895,46 @@ def create_budget_entry(self,row,event,company):
 		bgt_ent.voucher_submit_date = datetime.now().strftime("%Y-%m-%d")
 		bgt_ent.save(ignore_permissions=True)
 		bgt_ent.submit()
+		
+def get_wbs_amount(self, wbs):
+	wbs_amount = 0.0
+	if self.items:
+		for i in self.items:
+			if i.work_breakdown_structure == wbs:
+				wbs_amount += i.amount
+
+	return wbs_amount
+		
+def validate_available_budget(self):
+	wbs_list = []
+	if self.items:
+		for i in self.items:
+			if i.work_breakdown_structure:
+				if i.work_breakdown_structure not in wbs_list:
+					wbs_list.append(i.work_breakdown_structure)
+
+	if wbs_list:
+		if len(set(wbs_list)) == 1:
+			amt = get_wbs_amount(self, wbs_list[0])
+			ab = check_available_budget(wbs_list[0], amt, "Material Request",self.transaction_date)
+			abl = abs(ab.get("available_bgt"))
+			msg = _("Available Budget Limit Exceeded For This WBS - {0} by {1}".format(ab.get("wbs"), abl))
+			if ab.get("available_bgt") < 0.0:
+				abl = abs(ab.get("available_bgt"))
+				if ab.get("action") == "Stop":
+					frappe.throw(msg,title=_("Budget Exceeded"))
+				else:
+					frappe.msgprint(msg, indicator="orange", title=_("Budget Exceeded"))
+					
+		elif len(set(wbs_list)) > 1:
+			for i in set(wbs_list):
+				amt = get_wbs_amount(self, i)
+				ab = check_available_budget(i, amt, "Material Request",self.transaction_date)
+				abl = abs(ab.get("available_bgt"))
+				msg = _("Available Budget Limit Exceeded For This WBS - {0} by {1}".format(ab.get("wbs"), abl))
+				if ab.get("available_bgt") < 0.0:
+					abl = abs(ab.get("available_bgt"))
+					if ab.get("action") == "Stop":
+						frappe.throw(msg,title=_("Budget Exceeded"))
+					else:
+						frappe.msgprint(msg, indicator="orange", title=_("Budget Exceeded"))

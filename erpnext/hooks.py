@@ -201,13 +201,10 @@ website_route_rules = [
 			"doctype": "Material Request",
 			"parents": [{"label": "Material Request", "route": "material-requests"}],
 		},
-	},
-	{"from_route": "/project", "to_route": "Project"},
-	{"from_route": "/tasks", "to_route": "Task"},
+	}
 ]
 
 standard_portal_menu_items = [
-	{"title": "Projects", "route": "/project", "reference_doctype": "Project", "role": "Customer"},
 	{
 		"title": "Request for Quotations",
 		"route": "/rfq",
@@ -296,8 +293,6 @@ has_website_permission = {
 	"Material Request": "erpnext.controllers.website_list_for_contact.has_website_permission",
 	"Delivery Note": "erpnext.controllers.website_list_for_contact.has_website_permission",
 	"Issue": "erpnext.support.doctype.issue.issue.has_website_permission",
-	"Timesheet": "erpnext.controllers.website_list_for_contact.has_website_permission",
-	"Project": "erpnext.controllers.website_list_for_contact.has_website_permission",
 }
 
 before_tests = "erpnext.setup.utils.before_tests"
@@ -451,9 +446,6 @@ scheduler_events = {
 	},
 	"hourly": [
 		"erpnext.erpnext_integrations.doctype.plaid_settings.plaid_settings.automatic_synchronization",
-		"erpnext.projects.doctype.project.project.project_status_update_reminder",
-		"erpnext.projects.doctype.project.project.hourly_reminder",
-		"erpnext.projects.doctype.project.project.collect_project_status",
 	],
 	"hourly_long": [
 		"erpnext.stock.doctype.repost_item_valuation.repost_item_valuation.repost_entries",
@@ -464,13 +456,10 @@ scheduler_events = {
 		"erpnext.crm.doctype.opportunity.opportunity.auto_close_opportunity",
 		"erpnext.controllers.accounts_controller.update_invoice_status",
 		"erpnext.accounts.doctype.fiscal_year.fiscal_year.auto_create_fiscal_year",
-		"erpnext.projects.doctype.task.task.set_tasks_as_overdue",
 		"erpnext.stock.doctype.serial_no.serial_no.update_maintenance_status",
 		"erpnext.buying.doctype.supplier_scorecard.supplier_scorecard.refresh_scorecards",
 		"erpnext.setup.doctype.company.company.cache_companies_monthly_sales_history",
 		"erpnext.crm.doctype.contract.contract.update_status_for_contracts",
-		"erpnext.projects.doctype.project.project.update_project_sales_billing",
-		"erpnext.projects.doctype.project.project.send_project_status_email_to_users",
 		"erpnext.quality_management.doctype.quality_review.quality_review.review",
 		"erpnext.support.doctype.service_level_agreement.service_level_agreement.check_agreement_status",
 		"erpnext.crm.doctype.email_campaign.email_campaign.send_email_to_leads_or_contacts",

@@ -25,6 +25,8 @@
   "section_break_wlui",
   "is_group",
   "gl_account",
+  "linked_monthly_distribution",
+  "add_monthly_dist",
   "column_break_hwsg",
   "parent_work_breakdown_structure",
   "wbs_level",
@@ -176,12 +178,28 @@
    "fieldtype": "Link",
    "label": "GL Account",
    "options": "Account"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.is_group ==0 && !doc.linked_monthly_distribution && doc.docstatus ==1 ",
+   "fieldname": "add_monthly_dist",
+   "fieldtype": "Button",
+   "label": "Add Monthly Distribution & Controls"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.is_group ==0",
+   "fieldname": "linked_monthly_distribution",
+   "fieldtype": "Link",
+   "label": "Linked Monthly Distribution",
+   "options": "WBS Monthly Distribution",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-11-11 12:21:13.794135",
+ "modified": "2024-11-12 10:17:09.878161",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Work Breakdown Structure",

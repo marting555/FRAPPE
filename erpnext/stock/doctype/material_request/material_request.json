@@ -25,6 +25,7 @@
   "set_warehouse",
   "items_section",
   "items",
+  "total",
   "terms_tab",
   "terms_section_break",
   "tc_name",
@@ -351,6 +352,14 @@
   {
    "fieldname": "column_break_13",
    "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "total",
+   "fieldtype": "Float",
+   "label": "Total",
+   "precision": "3",
+   "read_only": 1
   }
  ],
  "icon": "fa fa-ticket",
@@ -362,7 +371,7 @@
    "link_fieldname": "voucher_no"
   }
  ],
- "modified": "2024-11-12 09:58:10.698797",
+ "modified": "2024-11-13 18:16:08.009268",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Material Request",

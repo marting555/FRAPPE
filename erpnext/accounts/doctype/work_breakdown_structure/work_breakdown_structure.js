@@ -6,6 +6,11 @@ frappe.ui.form.on("Work Breakdown Structure", {
     onload_post_render: function(frm) {
         toggle_gl_account(frm);
     },
+    add_monthly_dist:function(frm){
+        
+            frappe.new_doc("WBS Monthly Distribution", { for_wbs: frm.doc.name });
+    
+    },
     onload: function(frm) {
         frm.set_query("project", function() {
             return {
@@ -21,10 +26,6 @@ frappe.ui.form.on("Work Breakdown Structure", {
                  }
             };
         });
-
-        // Trigger budget calculations on form load
-        // calculate_assigned_budget(frm);
-        // calculate_available_budget(frm);
     },
 
     project: function(frm) {
@@ -62,14 +63,6 @@ frappe.ui.form.on("Work Breakdown Structure", {
     },
 
     refresh: function(frm) {
-        // if (frm.is_new())
-        // calculate_assigned_budget(frm);
-        // calculate_available_budget(frm);
-
-        // if (frm.doc.docstatus === 1 && !frm.fields_dict.allow_on_submit) {
-        //     frm.save_or_update();
-        // }
-
         frm.add_custom_button(__('Create Document'), function() {
             var dialog = new frappe.ui.Dialog({
                 title: __('Create New Document'),
@@ -120,7 +113,6 @@ function set_wbs_level(frm) {
     if (parent) {
         frappe.db.get_value("Work Breakdown Structure", parent, "wbs_level")
         .then(response => {
-            console.log(response)
             if (response.message && response.message.wbs_level) {
                 let wbsLevel = parseInt(response.message.wbs_level, 10);
                 frm.set_value("wbs_level", wbsLevel+1);
@@ -128,31 +120,6 @@ function set_wbs_level(frm) {
         });
     }
 }
-
-// // Helper functions for setting WBS level and calculating budgets
-// function set_wbs_level(frm) {
-//     let parent = frm.doc.parent_work_breakdown_structure;
-//     if (parent) {
-//         frappe.db.get_value("Work Breakdown Structure", parent, ["is_group", "parent_work_breakdown_structure"], (r) => {
-//             let level = r.is_group ? 2 : 1;
-//             increment_level(frm, r.parent_work_breakdown_structure, level);
-//         });
-//     } else {
-//         frm.set_value("wbs_level", 1);
-//     }
-// }
-
-// function increment_level(frm, parent, current_level) {
-//     if (parent) {
-//         frappe.db.get_value("Work Breakdown Structure", parent, ["is_group", "parent_work_breakdown_structure"], (r) => {
-//             if (r && r.is_group === 1) current_level++;
-//             frm.set_value("wbs_level", current_level);
-//             increment_level(frm, r.parent_work_breakdown_structure, current_level);
-//         });
-//     } else {
-//         frm.set_value("wbs_level", current_level);
-//     }
-// }
 
 function calculate_assigned_budget(frm) {
     let committed_budget = frm.doc.committed_overall_budget || 0;
@@ -167,19 +134,6 @@ function calculate_available_budget(frm) {
     let available_budget = overall_budget - assigned_overall_budget;
     frm.set_value("available_budget", available_budget);
 }
-
-
-// function toggle_gl_account(frm) {
-//     if (frm.doc.is_group === 1) {
-//         frm.set_value('gl_account', null);
-//         frm.refresh_field('gl_account');
-//         frm.set_df_property('gl_account', 'reqd', 0);
-//         frm.set_df_property('gl_account', 'hidden', 1);
-//     } else {
-//         frm.set_df_property('gl_account', 'hidden', 0);
-//         frm.set_df_property('gl_account', 'reqd', 1);
-//     }
-// }
 
 function toggle_gl_account(frm) {
     if (frm.doc.is_group) {
