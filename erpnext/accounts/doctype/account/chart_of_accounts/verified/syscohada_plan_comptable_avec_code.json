@@ -17,7 +17,7 @@
                     "Capital souscrit, appelé, versé, amorti":{
                         "account_number": "1014"
                     },
-                    "1018-Capital souscrit soumis à des conditions particulières":{
+                    "Capital souscrit soumis à des conditions particulières":{
                         "account_number": "1018"
                     },
                     "account_number": "101"
@@ -82,7 +82,7 @@
                     },
                     "account_number": "106"
                 },
-                "109-Apporteurs, capital souscrit, non appelé":{
+                "Apporteurs, capital souscrit, non appelé":{
                     "account_number": "109"
                 },
                 "account_number": "10"
@@ -385,7 +385,7 @@
                     },
                     "account_number": "176"
                 },
-                "178-Autres dettes de location acquisition":{
+                "Autres dettes de location acquisition":{
                     "account_number": "178"
                 },
                 "account_number": "17"
@@ -423,7 +423,7 @@
                 },
                 "account_number": "18"
             },
-            "19-Provisions pour risques et charges":{
+            "Provisions pour risques et charges":{
                 "Provisions pour litiges":{
                     "account_number": "191"
                 },
