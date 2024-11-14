@@ -606,3 +606,7 @@ body[data-route="pos"] {
 	0% { transform: rotate(0deg); }
 	100% { transform: rotate(360deg); }
 }
+
+#chat-container {
+	max-width: 24.875rem;
+}
