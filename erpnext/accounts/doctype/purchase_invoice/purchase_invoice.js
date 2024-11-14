@@ -35,6 +35,8 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 
 	onload() {
 		super.onload();
+
+		// Ignore linked advances
 		this.frm.ignore_doctypes_on_cancel_all = [
 			"Journal Entry",
 			"Payment Entry",
