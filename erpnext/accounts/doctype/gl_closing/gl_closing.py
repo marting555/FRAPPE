@@ -1,32 +1,44 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
-# import frappe
+import frappe
 from frappe.model.document import Document
-
+from frappe.utils import getdate, nowdate
+from frappe import _
 
 class GLClosing(Document):
-	# begin: auto-generated types
-	# This code is auto-generated. Do not modify anything in this block.
+    # begin: auto-generated types
+    # This code is auto-generated. Do not modify anything in this block.
 
-	from typing import TYPE_CHECKING
+    from typing import TYPE_CHECKING
 
-	if TYPE_CHECKING:
-		from erpnext.accounts.doctype.gl_closing_details.gl_closing_details import GLClosingDetails
-		from frappe.types import DF
+    if TYPE_CHECKING:
+        from erpnext.accounts.doctype.gl_closing_details.gl_closing_details import GLClosingDetails
+        from frappe.types import DF
 
-		company: DF.Link
-		end_date: DF.Date
-		gl_closing_details: DF.Table[GLClosingDetails]
-		period_name: DF.Data
-		start_date: DF.Date
-	# end: auto-generated types
-	pass
+        company: DF.Link
+        end_date: DF.Date
+        gl_closing_details: DF.Table[GLClosingDetails]
+        period_name: DF.Data
+        start_date: DF.Date
+    # end: auto-generated types
+    def before_save(self):
+        # Check for duplicate GL Closing for the same start_date, end_date, and company
+        existing_closing = frappe.get_all(
+            "GL Closing", 
+            filters={
+                "company": self.company, 
+                "start_date": self.start_date, 
+                "end_date": self.end_date
+            },
+            limit_page_length=1
+        )
+        
+        if existing_closing:
+            frappe.throw(_("GL Closing for the period from {0} to {1} already exists for the company {2}").format(self.start_date, self.end_date, self.company))
 
+        
 
-
-import frappe
-from frappe.utils import getdate, nowdate
 @frappe.whitelist(allow_guest=True)
 def validate_account_link_or_child_table(doc, method):
     if doc.doctype == "GL Entry" or doc.doctype == "GL Closing":
