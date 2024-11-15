@@ -1,3 +1,4 @@
+// frappe
 frappe.ui.form.on("GL Closing", {
     refresh: function(frm) {
         frm.set_query("account", "gl_closing_details", function() {
