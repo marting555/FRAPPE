@@ -34,6 +34,11 @@
   "cost_center",
   "dimension_col_break",
   "project",
+  "cai_info_section",
+  "cai",
+  "due_date_cai",
+  "authorized_range",
+  "cashier",
   "currency_and_price_list",
   "currency",
   "conversion_rate",
@@ -213,7 +218,8 @@
   "is_internal_customer",
   "is_discounted",
   "remarks",
-  "connections_tab"
+  "connections_tab",
+  "repost_required"
  ],
  "fields": [
   {
@@ -2135,6 +2141,7 @@
    "read_only": 1
   },
   {
+   "default": "0",
    "depends_on": "allocate_advances_automatically",
    "description": "Advance payments allocated against orders will only be fetched",
    "fieldname": "only_include_allocated_payments",
@@ -2171,6 +2178,31 @@
    "label": "Update Outstanding for Self",
    "no_copy": 1,
    "print_hide": 1
+  },
+  {
+   "fieldname": "cai_info_section",
+   "fieldtype": "Section Break",
+   "label": "CAI Info"
+  },
+  {
+   "fieldname": "cai",
+   "fieldtype": "Data",
+   "label": "Cai"
+  },
+  {
+   "fieldname": "due_date_cai",
+   "fieldtype": "Date",
+   "label": "Due Date CAI"
+  },
+  {
+   "fieldname": "authorized_range",
+   "fieldtype": "Data",
+   "label": "Authorized Range"
+  },
+  {
+   "fieldname": "cashier",
+   "fieldtype": "Data",
+   "label": "Cashier"
   }
  ],
  "icon": "fa fa-file-text",
@@ -2183,7 +2215,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2024-07-18 15:30:39.428519",
+ "modified": "2024-11-14 16:53:42.139537",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

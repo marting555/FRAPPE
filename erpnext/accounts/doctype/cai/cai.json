@@ -1,0 +1,142 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:name_cai",
+ "creation": "2024-11-14 15:22:18.604142",
+ "default_view": "List",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "name_cai",
+  "no_declaration",
+  "cai",
+  "initial_number",
+  "final_number",
+  "reception_date",
+  "issue_deadline",
+  "select_doc_for_series",
+  "prefix",
+  "expired_days",
+  "expired_amount",
+  "status",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "name_cai",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "no_declaration",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "No. Declaration",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cai",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "CAI",
+   "reqd": 1
+  },
+  {
+   "fieldname": "initial_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Initial Number",
+   "reqd": 1
+  },
+  {
+   "fieldname": "final_number",
+   "fieldtype": "Data",
+   "label": "FInal Number",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reception_date",
+   "fieldtype": "Date",
+   "label": "Reception date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "issue_deadline",
+   "fieldtype": "Date",
+   "label": "Issue deadline",
+   "reqd": 1
+  },
+  {
+   "fieldname": "select_doc_for_series",
+   "fieldtype": "Select",
+   "label": "Select Transaction",
+   "reqd": 1
+  },
+  {
+   "fieldname": "prefix",
+   "fieldtype": "Select",
+   "label": "Prefix",
+   "reqd": 1
+  },
+  {
+   "fieldname": "expired_days",
+   "fieldtype": "Data",
+   "label": "Expired Days",
+   "reqd": 1
+  },
+  {
+   "fieldname": "expired_amount",
+   "fieldtype": "Int",
+   "label": "Expired Amount",
+   "reqd": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Pending\nActive\nInactive",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "CAI",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2024-11-14 17:50:48.978033",
+ "modified_by": "Administrator",
+ "module": "Accounts",
+ "name": "CAI",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
