@@ -364,6 +364,10 @@ def get_basic_details(args, item, overwrite_warehouse=True):
 		}
 	)
 
+	#check if is_fixed_asset is present
+	if item.meta.get_field("is_fixed_asset"):
+		out["is_fixed_asset"] = item.is_fixed_asset
+
 	default_supplier = get_default_supplier(args, item_defaults, item_group_defaults, brand_defaults)
 	if default_supplier:
 		out.supplier = default_supplier
