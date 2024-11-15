@@ -2187,22 +2187,26 @@
   {
    "fieldname": "cai",
    "fieldtype": "Data",
-   "label": "Cai"
+   "label": "Cai",
+   "read_only": 1
   },
   {
    "fieldname": "due_date_cai",
    "fieldtype": "Date",
-   "label": "Due Date CAI"
+   "label": "Due Date CAI",
+   "read_only": 1
   },
   {
    "fieldname": "authorized_range",
    "fieldtype": "Data",
-   "label": "Authorized Range"
+   "label": "Authorized Range",
+   "read_only": 1
   },
   {
    "fieldname": "cashier",
    "fieldtype": "Data",
-   "label": "Cashier"
+   "label": "Cashier",
+   "read_only": 1
   }
  ],
  "icon": "fa fa-file-text",
@@ -2215,7 +2219,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2024-11-14 16:53:42.139537",
+ "modified": "2024-11-14 18:52:05.553201",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",
