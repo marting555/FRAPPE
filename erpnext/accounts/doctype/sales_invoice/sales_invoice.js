@@ -884,7 +884,7 @@ frappe.ui.form.on("Sales Invoice", {
 	hide_fields: function (frm) {
 		let doc = frm.doc;
 		var parent_fields = [
-			"project",
+			// "project",
 			"due_date",
 			"is_opening",
 			"source",
