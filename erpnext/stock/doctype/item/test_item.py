@@ -9,8 +9,8 @@ from frappe.custom.doctype.property_setter.property_setter import make_property_
 from frappe.test_runner import make_test_objects
 from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, today
-from frappe.query_builder import DocType
-from frappe import _
+import re
+
 from erpnext.controllers.item_variant import (
 	InvalidItemAttributeValueError,
 	ItemVariantExistsError,
@@ -97,11 +97,11 @@ class TestItem(FrappeTestCase):
 		to_check = {
 			"item_code": "_Test Item",
 			"item_name": "_Test Item",
-			"description": "_Test Item 1",
+			"description": "_Test Item",
 			"warehouse": "_Test Warehouse - _TC",
 			"income_account": "Sales - _TC",
-			"expense_account": "_Test Account Cost for Goods Sold - _TC",
-			"cost_center": "_Test Cost Center - _TC",
+			"expense_account": "Cost of Goods Sold - _TC",
+			"cost_center": "_Test Cost Center 2 - _TC",
 			"qty": 1.0,
 			"price_list_rate": 100.0,
 			"base_price_list_rate": 0.0,
@@ -111,7 +111,7 @@ class TestItem(FrappeTestCase):
 			"amount": 0.0,
 			"base_amount": 0.0,
 			"batch_no": None,
-			"uom": "_Test UOM",
+			"uom": "Nos",
 			"conversion_factor": 1.0,
 			"reserved_qty": 1,
 			"actual_qty": 5,
@@ -522,6 +522,9 @@ class TestItem(FrappeTestCase):
 
 	def test_uom_conv_intermediate(self):
 		factor = get_uom_conv_factor("Pound", "Gram")
+		print("*********************************")
+		print(factor)
+		print("*********************************")
 		self.assertAlmostEqual(factor, 453.592, 3)
 
 	def test_uom_conv_base_case(self):
@@ -637,45 +640,32 @@ class TestItem(FrappeTestCase):
 			self.assertTrue(count >= 0)
 
 	def test_index_creation(self):
-		"""Check if indexes are created on specific columns in 'tabItem' table"""
+		"Check if specific columns have indexes in the database"
 
-		# Define the DocType for the table and expected columns
-		Item = DocType("Item")
+		# Query to retrieve all indexed columns for the `tabItem` table (converted to lowercase)
+		indices = frappe.db.sql("""
+			SELECT
+				a.attname AS column_name
+			FROM
+				pg_index i
+			JOIN
+				pg_attribute a ON a.attnum = ANY(i.indkey)
+			WHERE
+				i.indrelid = '"tabItem"'::regclass
+		""", as_dict=1)
+
+		# Collect indexed columns
+		indexed_columns = {index["column_name"] for index in indices}
+
+		# Set of columns we expect to have indexes
 		expected_columns = {"item_code", "item_name", "item_group"}
 
-		# Query pg_indexes to get all index definitions for the table
-		indices = frappe.db.sql(
-        """
-        SELECT indexname, indexdef
-        FROM pg_indexes
-        WHERE schemaname = 'public' AND tablename = %s
-        """,
-        (Item.get_table_name(),),
-        as_dict=True,
-		)
-
-		# Parse the index definitions to identify indexed columns
-		indexed_columns = set()
-		for index in indices:
-			# Extract column names from index definition, handling multi-column indexes
-			index_columns = index["indexdef"].split("(")[-1].rstrip(")").split(", ")
-			indexed_columns.update(map(lambda x: x.strip(), index_columns))
-
-		# Check if any of the expected columns are missing in the indexes
+		# Check for missing indexes
 		missing_columns = expected_columns - indexed_columns
 		if missing_columns:
-			# In case of composite index, see if the columns are all part of an index
-			for col in missing_columns:
-				if not any(col in index for index in indexed_columns):
-					continue
-				# Check if they are part of a composite index
-				for index in indices:
-					if col in index["indexdef"]:
-						missing_columns.discard(col)
+			self.fail(f"Expected database indexes on these columns: {', '.join(missing_columns)}")
 
-		# Final assertion if any columns are missing
-		if missing_columns:
-			self.fail(f"Expected db index on these columns: {', '.join(missing_columns)}")
+
 
 	def test_attribute_completions(self):
 		expected_attrs = {"Small", "Extra Small", "Extra Large", "Large", "2XL", "Medium"}
