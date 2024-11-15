@@ -2,10 +2,12 @@
 # License: GNU General Public License v3. See license.txt
 
 
+from datetime import datetime, timedelta, date
 import frappe
 from frappe import _, msgprint, throw
 from frappe.contacts.doctype.address.address import get_address_display
 from frappe.model.mapper import get_mapped_doc
+from frappe.model.naming import parse_naming_series
 from frappe.model.utils import get_fetch_values
 from frappe.utils import add_days, cint, cstr, flt, formatdate, get_link_to_form, getdate, nowdate
 
@@ -316,6 +318,162 @@ class SalesInvoice(SellingController):
 
 		self.process_common_party_accounting()
 
+	def before_naming(self):
+		if self.docstatus == 0:
+			self.assign_cai()
+			# self.create_prefix_for_days()
+			# self.create_daily_summary_series()
+
+		if self.status == 'Draft' and self.cai == None:
+			self.assign_cai()
+			# self.create_prefix_for_days()
+			# self.create_daily_summary_series()
+
+	def assign_cai(self):
+		user = frappe.session.user
+
+		# user_name = frappe.get_all("User", ["first_name"], filters = {"email": user})
+
+		cai = frappe.get_all("CAI", ["initial_number", "final_number", "name_cai", "cai", "issue_deadline", "prefix", "expired_days", "expired_amount"], filters = { "status": "Active", "prefix": self.naming_series})
+
+		if len(cai) == 0:
+			cai_secondary = frappe.get_all("CAI", ["initial_number", "final_number", "name_cai", "cai", "issue_deadline", "prefix"], filters = { "status": "Pending", "prefix": self.naming_series})
+			
+			if len(cai_secondary) > 0:
+				self.assing_data(cai_secondary[0].cai, cai_secondary[0].issue_deadline, cai_secondary[0].initial_number, cai_secondary[0].final_number, user, cai_secondary[0].prefix)
+				# doc = frappe.get_doc("CAI", cai[0].name_cai)
+				# doc.status = "Inactive"
+				# doc.save()
+
+				doc_sec = frappe.get_doc("CAI", cai_secondary[0].name_cai)
+				doc_sec.status = "Active"
+				doc.db_set('status', "Active", update_modified=False)
+
+				new_current = int(cai_secondary[0].initial_number) - 1
+				name = self.parse_naming_series(cai_secondary[0].prefix)
+
+				frappe.db.sql("""
+				UPDATE `tabSeries`
+				SET `current` = %s
+				WHERE `name` = %s
+				""", (new_current, name))
+			else:
+				# self.assing_data(cai[0].cai, cai[0].issue_deadline, cai[0].initial_number, cai[0].final_number, user, cai[0].prefix)
+				frappe.throw("The CAI you are using is expired.")
+			# frappe.throw(_("This secuence no assign cai"))
+
+		current_value = self.get_current(cai[0].prefix)
+
+		now = datetime.now()
+
+		date = now.date()
+
+		if current_value == None:
+			current_value = 0
+
+		number_final = current_value + 1
+
+		if number_final <= int(cai[0].final_number) and str(date) <= str(cai[0].issue_deadline):
+			self.assing_data(cai[0].cai, cai[0].issue_deadline, cai[0].initial_number, cai[0].final_number, user, cai[0].prefix)
+
+			amount = int(cai[0].final_number) - current_value
+
+			self.alerts(cai[0].issue_deadline, amount, cai[0].expired_days, cai[0].expired_amount)
+		else:
+			cai_secondary = frappe.get_all("CAI", ["initial_number", "final_number", "name_cai", "cai", "issue_deadline", "prefix"], filters = { "status": "Pending", "prefix": self.naming_series})
+			
+			if len(cai_secondary) > 0:
+				final = int(cai[0].final_number) + 1
+				initial = int(cai_secondary[0].initial_number)
+				if final <= initial:
+					self.assing_data(cai_secondary[0].cai, cai_secondary[0].issue_deadline, cai_secondary[0].initial_number, cai_secondary[0].final_number, user, cai_secondary[0].prefix)
+					doc = frappe.get_doc("CAI", cai[0].name_cai)
+					doc.status = "Inactive"
+					doc.db_set('status', "Inactive", update_modified=False)
+
+					doc_sec = frappe.get_doc("CAI", cai_secondary[0].name_cai)
+					doc_sec.status = "Active"
+					doc_sec.db_set('status', "Active", update_modified=False)
+
+					new_current = int(cai_secondary[0].initial_number) - 1
+					name = self.parse_naming_series(cai_secondary[0].prefix)
+
+					frappe.db.sql("""
+					UPDATE `tabSeries`
+					SET `current` = %s
+					WHERE `name` = %s
+					""", (new_current, name))
+				else:
+					self.assing_data(cai[0].cai, cai[0].issue_deadline, cai[0].initial_number, cai[0].final_number, user, cai[0].prefix)
+					frappe.throw("The CAI you are using is expired.")
+			else:
+				self.assing_data(cai[0].cai, cai[0].issue_deadline, cai[0].initial_number, cai[0].final_number, user, cai[0].prefix)
+				frappe.throw("The CAI you are using is expired.")
+	
+	def get_current(self, prefix):
+		pre = self.parse_naming_series(prefix)
+		current_value = frappe.db.get_value("Series",
+		pre, "current", order_by = "name")
+		return current_value
+
+	def parse_naming_series(self, prefix):
+		parts = prefix.split('.')
+		if parts[-1] == "#" * len(parts[-1]):
+			del parts[-1]
+
+		pre = parse_naming_series(parts)
+		return pre
+	
+	def assing_data(self, cai, issue_deadline, initial_number, final_number, user, prefix):
+		pre = self.parse_naming_series(prefix)
+
+		self.cai = cai
+
+		self.due_date_cai = issue_deadline
+
+		self.authorized_range = "{}{} al {}{}".format(pre, self.serie_number(int(initial_number)), pre, self.serie_number(int(final_number)))
+
+		self.cashier = user
+
+	def serie_number(self, number):
+
+		if number >= 1 and number < 10:
+			return("0000000" + str(number))
+		elif number >= 10 and number < 100:
+			return("000000" + str(number))
+		elif number >= 100 and number < 1000:
+			return("00000" + str(number))
+		elif number >= 1000 and number < 10000:
+			return("0000" + str(number))
+		elif number >= 10000 and number < 100000:
+			return("000" + str(number))
+		elif number >= 100000 and number < 1000000:
+			return("00" + str(number))
+		elif number >= 1000000 and number < 10000000:
+			return("0" + str(number))
+		elif number >= 10000000:
+			return(str(number))
+	
+	def alerts(self, date, amount, expired_days, expired_amount):		
+		if amount <= expired_amount:
+			amount_rest = amount - 1
+			frappe.msgprint(_("There are only {} numbers available for this CAI.".format(amount_rest)))
+		
+		now = date.today()
+		days = timedelta(days=int(expired_days))
+
+		sum_dates = now+days
+
+		if str(date) <= str(sum_dates):
+			for i in range(int(expired_days)):		
+				now1 = date.today()
+				days1 = timedelta(days=i)
+
+				sum_dates1 = now1+days1
+				if str(date) == str(sum_dates1):
+					frappe.msgprint(_("This CAI expires in {} days.".format(i)))
+					break	
+	
 	def validate_pos_return(self):
 		if self.is_consolidated:
 			# pos return is already validated in pos invoice
