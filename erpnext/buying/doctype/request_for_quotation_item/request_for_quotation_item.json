@@ -160,13 +160,6 @@
    "print_hide": 1
   },
   {
-   "fieldname": "project_name",
-   "fieldtype": "Link",
-   "label": "Project",
-   "options": "Project",
-   "print_hide": 1
-  },
-  {
    "fieldname": "material_request",
    "fieldtype": "Link",
    "label": "Material Request",

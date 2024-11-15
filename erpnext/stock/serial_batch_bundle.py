@@ -5,7 +5,7 @@ from frappe import _, bold
 from frappe.model.naming import make_autoname
 from frappe.query_builder.functions import CombineDatetime, Sum, Timestamp, _PostgresTimestamp
 from frappe.utils import add_days, cint, cstr, flt, get_link_to_form, now, nowtime, today
-from pypika import Order
+from pypika import Order , functions as fn
 
 from erpnext.stock.deprecated_serial_batch import (
 	DeprecatedBatchNoValuation,
@@ -544,9 +544,9 @@ class SerialNoValuation(DeprecatedSerialNoValuation):
 			if self.sle.posting_time is None:
 				self.sle.posting_time = nowtime()
 
-			timestamp_condition = CombineDatetime(
+			timestamp_condition = fn.Concat(
 				bundle.posting_date, bundle.posting_time
-			) <= CombineDatetime(self.sle.posting_date, self.sle.posting_time)
+			) <= fn.Concat(self.sle.posting_date, self.sle.posting_time)
 
 			query = query.where(timestamp_condition)
 
