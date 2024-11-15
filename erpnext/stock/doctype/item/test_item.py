@@ -97,11 +97,11 @@ class TestItem(FrappeTestCase):
 		to_check = {
 			"item_code": "_Test Item",
 			"item_name": "_Test Item",
-			"description": "_Test Item",
+			"description": "_Test Item 1",
 			"warehouse": "_Test Warehouse - _TC",
 			"income_account": "Sales - _TC",
-			"expense_account": "Cost of Goods Sold - _TC",
-			"cost_center": "_Test Cost Center 2 - _TC",
+			"expense_account": "_Test Account Cost for Goods Sold - _TC",
+			"cost_center": "_Test Cost Center - _TC",
 			"qty": 1.0,
 			"price_list_rate": 100.0,
 			"base_price_list_rate": 0.0,
@@ -111,7 +111,7 @@ class TestItem(FrappeTestCase):
 			"amount": 0.0,
 			"base_amount": 0.0,
 			"batch_no": None,
-			"uom": "Nos",
+			"uom": "_Test UOM",
 			"conversion_factor": 1.0,
 			"reserved_qty": 1,
 			"actual_qty": 5,
@@ -522,9 +522,6 @@ class TestItem(FrappeTestCase):
 
 	def test_uom_conv_intermediate(self):
 		factor = get_uom_conv_factor("Pound", "Gram")
-		print("*********************************")
-		print(factor)
-		print("*********************************")
 		self.assertAlmostEqual(factor, 453.592, 3)
 
 	def test_uom_conv_base_case(self):
