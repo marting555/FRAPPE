@@ -7,8 +7,9 @@ from frappe import _, qb, throw
 from frappe.model.mapper import get_mapped_doc
 from frappe.query_builder.functions import Sum
 from frappe.utils import cint, cstr, flt, formatdate, get_link_to_form, getdate, nowdate
-
+from datetime import datetime
 import erpnext
+from erpnext.accounts.doctype.work_breakdown_structure.work_breakdown_structure import check_available_budget
 from erpnext.accounts.deferred_revenue import validate_service_stop_date
 from erpnext.accounts.doctype.gl_entry.gl_entry import update_outstanding_amt
 from erpnext.accounts.doctype.repost_accounting_ledger.repost_accounting_ledger import (
@@ -34,8 +35,6 @@ from erpnext.accounts.general_ledger import (
 )
 from erpnext.accounts.party import get_due_date, get_party_account
 from erpnext.accounts.utils import get_account_currency, get_fiscal_year
-from assets.assets.doctype.asset.asset import is_cwip_accounting_enabled
-from assets.assets.doctype.asset_category.asset_category import get_asset_category_account
 from erpnext.buying.utils import check_on_hold_or_closed_status
 from erpnext.controllers.accounts_controller import validate_account_head
 from erpnext.controllers.buying_controller import BuyingController
@@ -112,6 +111,7 @@ class PurchaseInvoice(BuyingController):
 		currency: DF.Link | None
 		disable_rounded_total: DF.Check
 		discount_amount: DF.Currency
+		discount_due_date: DF.Date | None
 		due_date: DF.Date | None
 		from_date: DF.Date | None
 		grand_total: DF.Currency
@@ -280,6 +280,8 @@ class PurchaseInvoice(BuyingController):
 		self.reset_default_field_value("set_from_warehouse", "items", "from_warehouse")
 		self.set_percentage_received()
 
+		validate_available_budget(self)
+
 	def set_percentage_received(self):
 		total_billed_qty = 0.0
 		total_received_qty = 0.0
@@ -447,8 +449,6 @@ class PurchaseInvoice(BuyingController):
 			stock_not_billed_account = self.get_company_default("stock_received_but_not_billed")
 			stock_items = self.get_stock_items()
 
-		self.asset_received_but_not_billed = None
-
 		if self.update_stock:
 			self.validate_item_code()
 			self.validate_warehouse(for_validate)
@@ -458,12 +458,11 @@ class PurchaseInvoice(BuyingController):
 		for item in self.get("items"):
 			# in case of auto inventory accounting,
 			# expense account is always "Stock Received But Not Billed" for a stock item
-			# except opening entry, drop-ship entry and fixed asset items
+			# except opening entry, drop-ship entry
 			if (
 				auto_accounting_for_stock
 				and item.item_code in stock_items
 				and self.is_opening == "No"
-				and not item.is_fixed_asset
 				and (
 					not item.po_detail
 					or not frappe.db.get_value("Purchase Order Item", item.po_detail, "delivered_by_supplier")
@@ -530,60 +529,6 @@ class PurchaseInvoice(BuyingController):
 							frappe.msgprint(msg, title=_("Expense Head Changed"))
 
 						item.expense_account = stock_not_billed_account
-			elif item.is_fixed_asset:
-				account = None
-				if not item.pr_detail and item.po_detail:
-					receipt_item = frappe.get_cached_value(
-						"Purchase Receipt Item",
-						{
-							"purchase_order": item.purchase_order,
-							"purchase_order_item": item.po_detail,
-							"docstatus": 1,
-						},
-						["name", "parent"],
-						as_dict=1,
-					)
-					if receipt_item:
-						item.pr_detail = receipt_item.name
-						item.purchase_receipt = receipt_item.parent
-
-				if item.pr_detail:
-					if not self.asset_received_but_not_billed:
-						self.asset_received_but_not_billed = self.get_company_default(
-							"asset_received_but_not_billed"
-						)
-
-					# check if 'Asset Received But Not Billed' account is credited in Purchase receipt or not
-					arbnb_booked_in_pr = frappe.db.get_value(
-						"GL Entry",
-						{
-							"voucher_type": "Purchase Receipt",
-							"voucher_no": item.purchase_receipt,
-							"account": self.asset_received_but_not_billed,
-						},
-						"name",
-					)
-					if arbnb_booked_in_pr:
-						account = self.asset_received_but_not_billed
-
-				if not account:
-					account_type = (
-						"capital_work_in_progress_account"
-						if is_cwip_accounting_enabled(item.asset_category)
-						else "fixed_asset_account"
-					)
-					account = get_asset_category_account(
-						account_type, item=item.item_code, company=self.company
-					)
-					if not account:
-						form_link = get_link_to_form("Asset Category", item.asset_category)
-						throw(
-							_("Please set Fixed Asset Account in {} against {}.").format(
-								form_link, self.company
-							),
-							title=_("Missing Account"),
-						)
-				item.expense_account = account
 			elif not item.expense_account and for_validate:
 				throw(_("Expense account is mandatory for item {0}").format(item.item_code or item.item_name))
 
@@ -738,6 +683,7 @@ class PurchaseInvoice(BuyingController):
 		super().on_submit()
 
 		self.check_prev_docstatus()
+		update_actual_overall_budget(self,"Submit")
 
 		if self.is_return and not self.update_billed_amount_in_purchase_order:
 			# NOTE status updating bypassed for is_return
@@ -780,6 +726,10 @@ class PurchaseInvoice(BuyingController):
 		self.update_advance_tax_references()
 
 		self.process_common_party_accounting()
+
+		
+	def before_cancel(self):
+		update_actual_overall_budget(self,"Cancel")
 
 	def on_update_after_submit(self):
 		fields_to_check = [
@@ -873,15 +823,6 @@ class PurchaseInvoice(BuyingController):
 		self.make_gle_for_rounding_adjustment(gl_entries)
 		return gl_entries
 
-	def check_asset_cwip_enabled(self):
-		# Check if there exists any item with cwip accounting enabled in it's asset category
-		for item in self.get("items"):
-			if item.item_code and item.is_fixed_asset:
-				asset_category = frappe.get_cached_value("Item", item.item_code, "asset_category")
-				if is_cwip_accounting_enabled(asset_category):
-					return 1
-		return 0
-
 	def make_supplier_gl_entry(self, gl_entries):
 		# Checked both rounding_adjustment and rounded_total
 		# because rounded_total had value even before introduction of posting GLE based on rounded total
@@ -963,13 +904,11 @@ class PurchaseInvoice(BuyingController):
 		for item in self.get("items"):
 			if flt(item.base_net_amount):
 				account_currency = get_account_currency(item.expense_account)
-				if item.item_code:
-					frappe.get_cached_value("Item", item.item_code, "asset_category")
 
 				if (
 					self.update_stock
 					and self.auto_accounting_for_stock
-					and (item.item_code in stock_items or item.is_fixed_asset)
+					and (item.item_code in stock_items)
 				):
 					# warehouse account
 					warehouse_debit_amount = self.make_stock_adjustment_entry(
@@ -1166,9 +1105,7 @@ class PurchaseInvoice(BuyingController):
 					)
 
 					stock_rbnb = (
-						self.get_company_default("asset_received_but_not_billed")
-						if item.is_fixed_asset
-						else self.stock_received_but_not_billed
+						self.stock_received_but_not_billed
 					)
 
 					if not negative_expense_booked_in_pr:
@@ -1189,9 +1126,6 @@ class PurchaseInvoice(BuyingController):
 						self.negative_expense_to_be_booked += flt(
 							item.item_tax_amount, item.precision("item_tax_amount")
 						)
-
-			if item.is_fixed_asset and item.landed_cost_voucher_amount:
-				self.update_gross_purchase_amount_for_linked_assets(item)
 
 	def get_provisional_accounts(self):
 		self.provisional_accounts = frappe._dict()
@@ -1246,6 +1180,7 @@ class PurchaseInvoice(BuyingController):
 					item_amount=(min(item.qty, pr_item.get("qty")) * pr_item.get("base_rate")),
 				)
 
+
 	def update_gross_purchase_amount_for_linked_assets(self, item):
 		assets = frappe.db.get_all(
 			"Asset",
@@ -1266,6 +1201,7 @@ class PurchaseInvoice(BuyingController):
 					"purchase_amount": purchase_amount,
 				},
 			)
+
 
 	def make_stock_adjustment_entry(self, gl_entries, item, voucher_wise_stock_value, account_currency):
 		net_amt_precision = item.precision("base_net_amount")
@@ -1527,6 +1463,7 @@ class PurchaseInvoice(BuyingController):
 
 	def on_cancel(self):
 		check_if_return_invoice_linked_with_payment_entry(self)
+		self.flags.ignore_links = True
 
 		super().on_cancel()
 
@@ -1974,7 +1911,6 @@ def make_purchase_receipt(source_name, target_doc=None):
 					"po_detail": "purchase_order_item",
 					"material_request": "material_request",
 					"material_request_item": "material_request_item",
-					"wip_composite_asset": "wip_composite_asset",
 				},
 				"postprocess": update_item,
 				"condition": lambda doc: abs(doc.received_qty) < abs(doc.qty),
@@ -1985,3 +1921,189 @@ def make_purchase_receipt(source_name, target_doc=None):
 	)
 
 	return doc
+
+def update_actual_overall_budget(self,event):
+	wbs_dict = []
+	wbs_list = []
+	if self.items:
+		for i in self.items:
+			if i.get("work_breakdown_structure") not in wbs_list:
+				wbs_list.append(i.get("work_breakdown_structure"))
+
+		if wbs_list:
+			for i in wbs_list:
+				wbs_dict.append({
+					"wbs_id":i,
+					"credit":0.0,
+					"debit_po":0.0,
+					"debit_pr":0.0,
+					"txn_date":"",
+					"project":"",
+					"voucher_name":"",
+					"voucher_type":""
+				})
+
+
+		for i in self.items:
+			pi_amt = i.get("net_amount")
+			if i.get("work_breakdown_structure") and not i.get("po_detail") and not i.get("pr_detail"):
+				for j in wbs_dict:
+					if i.get("work_breakdown_structure") == j.get("wbs_id"):
+						wbs_name,wbs_level = frappe.db.get_value("Work Breakdown Structure",i.get("work_breakdown_structure"),['wbs_name','wbs_level'])
+						j.update({
+							"credit":j.get("credit") + i.get("net_amount"),
+							"txn_date":self.posting_date,
+							"project":i.get("project"),
+							"voucher_type":self.doctype,
+							"voucher_name":self.name,
+							"wbs_name": wbs_name,
+							"wbs_level": wbs_level
+						})
+				wbs_curr_doc = frappe.get_doc("Work Breakdown Structure",i.get("work_breakdown_structure"))
+				if event == "Submit":
+					wbs_curr_doc.actual_overall_budget = wbs_curr_doc.actual_overall_budget + pi_amt
+					wbs_curr_doc.assigned_overall_budget = wbs_curr_doc.actual_overall_budget + wbs_curr_doc.committed_overall_budget
+					wbs_curr_doc.available_budget = wbs_curr_doc.overall_budget - wbs_curr_doc.assigned_overall_budget
+					if wbs_curr_doc.locked:
+						frappe.throw(
+							"Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs_curr_doc.name)
+						)
+				elif event == "Cancel":
+					wbs_curr_doc.actual_overall_budget = wbs_curr_doc.actual_overall_budget - pi_amt
+					wbs_curr_doc.assigned_overall_budget = wbs_curr_doc.actual_overall_budget + wbs_curr_doc.committed_overall_budget
+					wbs_curr_doc.available_budget = wbs_curr_doc.overall_budget - wbs_curr_doc.assigned_overall_budget
+					if wbs_curr_doc.locked:
+						frappe.throw(
+							"Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs_curr_doc.name)
+						)
+				wbs_curr_doc.save(ignore_permissions=True)
+			elif i.get("work_breakdown_structure") and i.get("po_detail") and not i.get("pr_detail"):
+				poi = frappe.qb.DocType("Purchase Order Item")
+				query1 = (
+					frappe.qb.from_(poi)
+					.select(
+						poi.amount,poi.qty,poi.received_qty,poi.rate
+					)
+					.where(poi.name == i.get("po_detail"))
+				)
+
+				po_details = query1.run(as_dict=True)
+
+				if po_details:
+					if po_details[0].get("qty") == i.get("qty"):
+						pi_amt = i.get("net_amount")
+						debit_amt = i.get('qty') * po_details[0].get("rate")
+						for j in wbs_dict:
+							if i.get("work_breakdown_structure") == j.get("wbs_id"):
+								wbs_name,wbs_level = frappe.db.get_value("Work Breakdown Structure",i.get("work_breakdown_structure"),['wbs_name','wbs_level'])
+								j.update({
+									"credit":j.get("credit") + pi_amt,
+									"debit_po":j.get("debit_po") + debit_amt,
+									"txn_date":self.posting_date,
+									"project":i.get("project"),
+									"voucher_type":self.doctype,
+									"voucher_name":self.name,
+									"wbs_name": wbs_name,
+									"wbs_level": wbs_level
+								})
+						wbs = frappe.get_doc("Work Breakdown Structure",i.get("work_breakdown_structure"))
+						if event == "Submit":
+							wbs.committed_overall_budget = wbs.committed_overall_budget - debit_amt
+							wbs.actual_overall_budget = wbs.actual_overall_budget + pi_amt
+
+							wbs.assigned_overall_budget = wbs.actual_overall_budget + wbs.committed_overall_budget
+							wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
+							if wbs.locked:
+								frappe.throw(
+									"Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs.name)
+								)
+						elif event == "Cancel":
+							wbs.committed_overall_budget = wbs.committed_overall_budget + debit_amt
+							wbs.actual_overall_budget = wbs.actual_overall_budget - pi_amt
+
+							wbs.assigned_overall_budget = wbs.actual_overall_budget + wbs.committed_overall_budget
+							wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
+							if wbs.locked:
+								frappe.throw(
+									"Transaction Not Allowed for  WBS Element - {0} as this WBS is locked !".format(wbs.name)
+								)
+						wbs.save(ignore_permissions=True)
+		if wbs_dict:
+			for i in wbs_dict:
+				create_budget_entry(i,event,self.company) 
+
+def create_budget_entry(data,event,company):
+	if data.get("credit") > 0.0 and data.get("wbs_id"):
+		bgt_ent = frappe.new_doc("Budget Entry")
+		bgt_ent.project = data.get("project")
+		bgt_ent.wbs = data.get("wbs_id")
+		bgt_ent.date = data.get("txn_date")
+		bgt_ent.document_date = data.get("document_date")
+		bgt_ent.voucher_submit_date = datetime.now()
+		bgt_ent.submit_date = data.get("submit_date")
+		bgt_ent.company = company
+		bgt_ent.wbs_level = data.get("wbs_level")
+		bgt_ent.wbs_name = data.get("wbs_name")
+		if event == "Submit":
+			bgt_ent.actual_overall_credit = data.get("credit")
+			
+			if data.get("debit_po") > 0.0:
+				bgt_ent.committed_overall_debit = data.get("debit_po")
+			if data.get("debit_pr") > 0.0:
+				bgt_ent.actual_overall_debit = data.get("debit_pr")
+			
+		elif event == "Cancel":
+			bgt_ent.actual_overall_debit = data.get("credit")
+			if data.get("debit_po") > 0.0:
+				bgt_ent.committed_overall_credit = data.get("debit_po")
+				
+			if data.get("debit_pr") > 0.0:
+				bgt_ent.actual_overall_credit = data.get("debit_pr")
+				
+		bgt_ent.voucher_type = data.get("voucher_type")
+		bgt_ent.voucher_no = data.get("voucher_name")
+		bgt_ent.save(ignore_permissions=True)
+		bgt_ent.submit()
+
+def validate_available_budget(self):
+	wbs_list = []
+	if self.items:
+		for i in self.items:
+			if i.work_breakdown_structure:
+				if i.work_breakdown_structure not in wbs_list:
+					wbs_list.append(i.work_breakdown_structure)
+
+	if wbs_list:
+		if len(set(wbs_list)) == 1:
+			amt = get_wbs_amount(self, wbs_list[0])
+			ab = check_available_budget(wbs_list[0], amt, "Purchase Invoice",self.posting_date)
+			abl = abs(ab.get("available_bgt"))
+			msg = _("Available Budget Limit Exceeded For This WBS - {0} by {1}".format(ab.get("wbs"), abl))
+			if ab.get("available_bgt") < 0.0:
+				abl = abs(ab.get("available_bgt"))
+				if ab.get("action") == "Stop":
+					frappe.throw(msg,title=_("Budget Exceeded"))
+				else:
+					frappe.msgprint(msg, indicator="orange", title=_("Budget Exceeded"))
+					
+		elif len(set(wbs_list)) > 1:
+			for i in set(wbs_list):
+				amt = get_wbs_amount(self, i)
+				ab = check_available_budget(i, amt, "Purchase Invoice",self.posting_date)
+				abl = abs(ab.get("available_bgt"))
+				msg = _("Available Budget Limit Exceeded For This WBS - {0} by {1}".format(ab.get("wbs"), abl))
+				if ab.get("available_bgt") < 0.0:
+					abl = abs(ab.get("available_bgt"))
+					if ab.get("action") == "Stop":
+						frappe.throw(msg,title=_("Budget Exceeded"))
+					else:
+						frappe.msgprint(msg, indicator="orange", title=_("Budget Exceeded"))
+
+def get_wbs_amount(self, wbs):
+	wbs_amount = 0.0
+	if self.items:
+		for i in self.items:
+			if i.work_breakdown_structure == wbs:
+				wbs_amount += i.amount
+
+	return wbs_amount

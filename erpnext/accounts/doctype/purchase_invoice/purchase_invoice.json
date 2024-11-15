@@ -35,7 +35,6 @@
   "accounting_dimensions_section",
   "cost_center",
   "dimension_col_break",
-  "project",
   "currency_and_price_list",
   "currency",
   "conversion_rate",
@@ -153,6 +152,9 @@
   "terms_tab",
   "payment_schedule_section",
   "payment_term",
+  "column_break_sa8m",
+  "discount_due_date",
+  "section_break_wa3t",
   "payment_discount_terms",
   "payment_terms_template",
   "ignore_default_payment_terms_template",
@@ -1138,18 +1140,18 @@
   {
    "fieldname": "payment_terms_template",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Payment Terms Template",
-   "options": "Payment Terms Template",
-   "hidden":1
+   "options": "Payment Terms Template"
   },
   {
    "fieldname": "payment_schedule",
    "fieldtype": "Table",
+   "hidden": 1,
    "label": "Payment Schedule",
    "no_copy": 1,
    "options": "Payment Schedule",
-   "print_hide": 1,
-   "hidden":1
+   "print_hide": 1
   },
   {
    "fieldname": "terms_section_break",
@@ -1371,13 +1373,6 @@
    "fieldtype": "Small Text",
    "label": "Billing Address",
    "read_only": 1
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "options": "Project"
   },
   {
    "allow_on_submit": 1,
@@ -1640,13 +1635,31 @@
    "fieldname": "payment_discount_terms",
    "fieldtype": "Table",
    "options": "Discount Terms"
+  },
+  {
+   "fieldname": "column_break_sa8m",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "discount_due_date",
+   "fieldtype": "Date",
+   "label": "Discount Due Date"
+  },
+  {
+   "fieldname": "section_break_wa3t",
+   "fieldtype": "Section Break"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 204,
  "is_submittable": 1,
- "links": [],
- "modified": "2024-09-11 12:59:19.130593",
+ "links": [
+  {
+   "link_doctype": "Budget Entry",
+   "link_fieldname": "voucher_no"
+  }
+ ],
+ "modified": "2024-11-12 09:52:06.044204",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice",

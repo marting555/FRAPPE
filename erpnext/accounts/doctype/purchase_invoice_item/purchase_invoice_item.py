@@ -17,8 +17,6 @@ class PurchaseInvoiceItem(Document):
 		allow_zero_valuation_rate: DF.Check
 		amount: DF.Currency
 		apply_tds: DF.Check
-		asset_category: DF.Link | None
-		asset_location: DF.Link | None
 		base_amount: DF.Currency
 		base_net_amount: DF.Currency
 		base_net_rate: DF.Currency
@@ -39,7 +37,6 @@ class PurchaseInvoiceItem(Document):
 		from_warehouse: DF.Link | None
 		image: DF.Attach | None
 		include_exploded_items: DF.Check
-		is_fixed_asset: DF.Check
 		is_free_item: DF.Check
 		item_code: DF.Link | None
 		item_group: DF.Link | None
@@ -66,6 +63,7 @@ class PurchaseInvoiceItem(Document):
 		pricing_rules: DF.SmallText | None
 		product_bundle: DF.Link | None
 		project: DF.Link | None
+		project_name: DF.Data | None
 		purchase_invoice_item: DF.Data | None
 		purchase_order: DF.Link | None
 		purchase_receipt: DF.Link | None
@@ -94,9 +92,11 @@ class PurchaseInvoiceItem(Document):
 		use_serial_batch_fields: DF.Check
 		valuation_rate: DF.Currency
 		warehouse: DF.Link | None
+		wbs_name: DF.Data | None
 		weight_per_unit: DF.Float
 		weight_uom: DF.Link | None
 		wip_composite_asset: DF.Link | None
+		work_breakdown_structure: DF.Link | None
 	# end: auto-generated types
 
 	pass

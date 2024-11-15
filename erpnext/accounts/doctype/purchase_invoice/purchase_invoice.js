@@ -62,7 +62,7 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 			this.frm.trigger("supplier");
 		}
 		if(this.frm.is_new() && this.frm.doc.payment_schedule && this.frm.doc.payment_schedule.length > 0){
-			this.frm.set_value("payment_schedule", "[]")
+			this.frm.set_value("payment_schedule", [])
 		}
 		cur_frm.set_query("payment_term",function (doc) {
 			return {
@@ -487,6 +487,14 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 			}
 		}
 	}
+
+	due_date(frm){
+		cur_frm.set_value("discount_due_date",frm.due_date)
+	}
+
+	discount_due_date(frm){
+		cur_frm.set_value("due_date",frm.discount_due_date)
+	}
 };
 
 cur_frm.script_manager.make(erpnext.accounts.PurchaseInvoice);
@@ -557,12 +565,6 @@ cur_frm.set_query("expense_account", "items", function (doc) {
 	return {
 		query: "erpnext.controllers.queries.get_expense_account",
 		filters: { company: doc.company },
-	};
-});
-
-cur_frm.set_query("wip_composite_asset", "items", function () {
-	return {
-		filters: { is_composite_asset: 1, docstatus: 0 },
 	};
 });
 
@@ -642,6 +644,16 @@ frappe.ui.form.on("Purchase Invoice", {
 				},
 			};
 		};
+
+		var list = frm.fields_dict['items'].grid.get_field('work_breakdown_structure').get_query = function (doc, cdt, cdn) {
+			var child = locals[cdt][cdn];
+			return {
+				filters: {
+					project : child.project,
+					is_group: 0
+				}
+			};
+		};
 	},
 
 	refresh: function (frm) {
@@ -653,6 +665,7 @@ frappe.ui.form.on("Purchase Invoice", {
 			frm.set_value("cash_bank_account", account);
 		});
 	},
+	
 
 	create_landed_cost_voucher: function (frm) {
 		let lcv = frappe.model.get_new_doc("Landed Cost Voucher");
@@ -695,6 +708,7 @@ frappe.ui.form.on("Purchase Invoice", {
 	},
 
 	onload: function (frm) {
+		frm.savecancel = function(btn, callback, on_error){ return frm._cancel(btn, callback, on_error, false);}
 		if (frm.doc.__onload && frm.is_new()) {
 			if (frm.doc.supplier) {
 				frm.doc.apply_tds = frm.doc.__onload.supplier_tds ? 1 : 0;
@@ -703,7 +717,6 @@ frappe.ui.form.on("Purchase Invoice", {
 				frm.set_df_property("apply_tds", "read_only", 1);
 			}
 		}
-
 		erpnext.queries.setup_queries(frm, "Warehouse", function () {
 			return erpnext.queries.warehouse(frm.doc);
 		});
@@ -752,3 +765,70 @@ frappe.ui.form.on("Purchase Invoice", {
 		}
 	},
 });
+
+frappe.ui.form.on("Purchase Invoice Item", {
+	project: function(frm,cdt,cdn) {
+		let child = locals[cdt][cdn];
+		frappe.db.get_value("Project", child.project, "project_name")
+		.then(response => {
+			if (response.message && response.message.project_name) {
+				let project_name = response.message.project_name;
+				child.project_name = project_name;
+			} else {
+				child.project_name = null;
+			}
+			let row = frm.fields_dict['items'].grid.get_row(cdn);
+            row.refresh_field('project_name');
+		})
+	},
+	work_breakdown_structure: function(frm,cdt,cdn) {
+		let child = locals[cdt][cdn];
+		frappe.db.get_value("Work Breakdown Structure", child.work_breakdown_structure, ["wbs_name", 'locked', 'gl_account'])
+		.then(response => {
+			if (response.message && response.message.wbs_name) {
+				let wbs_name = response.message.wbs_name;
+				if (response.message.locked == 1) {
+					frappe.msgprint(__(`WBS "${child.work_breakdown_structure}" is locked`));
+					child.work_breakdown_structure = null;
+				} else {
+					child.wbs_name = wbs_name;
+				}
+				if (response.message.gl_account) {
+					child.expense_account = response.message.gl_account;
+				}
+			} else {
+				child.wbs_name = null;
+			}
+			let row = frm.fields_dict['items'].grid.get_row(cdn);
+			row.refresh_field('work_breakdown_structure')
+            row.refresh_field('wbs_name');
+			row.refresh_field('expense_account');
+		})
+	},
+	expense_account: function(frm,cdt,cdn) {
+		var child = locals[cdt][cdn];
+		if (child.work_breakdown_structure && child.expense_account) {
+			frappe.db.get_value("Work Breakdown Structure",child.work_breakdown_structure,'gl_account')
+			.then(response => {
+				if (response.message && response.message.gl_account) {
+					if (child.expense_account != response.message.gl_account) {
+						frappe.msgprint(__(`${child.expense_account} is not a GL Account of WBS ${child.work_breakdown_structure}`));
+						child.expense_account = null;
+						let row = frm.fields_dict['items'].grid.get_row(cdn);
+						row.refresh_field('expense_account');
+						row.refresh_field('work_breakdown_structure');
+					}
+				}
+			});
+		}
+	}
+})
+
+
+frappe.ui.form.on("Discount Terms", {
+	no_of_days:(frm)=>{
+		let discount_date = frappe.datetime.add_days(frappe.datetime.get_today(), frm.selected_doc.no_of_days)
+		frm.selected_doc.discount_date = discount_date
+		frm.refresh_field("payment_discount_terms")
+	}
+})

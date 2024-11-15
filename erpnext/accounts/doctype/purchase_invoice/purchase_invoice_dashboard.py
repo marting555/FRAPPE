@@ -20,7 +20,7 @@ def get_data():
 			{"label": _("Payment"), "items": ["Payment Entry", "Payment Request", "Journal Entry"]},
 			{
 				"label": _("Reference"),
-				"items": ["Purchase Order", "Purchase Receipt", "Asset", "Landed Cost Voucher"],
+				"items": ["Purchase Order", "Purchase Receipt", "Landed Cost Voucher"],
 			},
 			{"label": _("Returns"), "items": ["Purchase Invoice"]},
 			{"label": _("Subscription"), "items": ["Auto Repeat"]},

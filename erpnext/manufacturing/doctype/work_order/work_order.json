@@ -21,7 +21,6 @@
   "material_transferred_for_manufacturing",
   "produced_qty",
   "process_loss_qty",
-  "project",
   "section_break_ndpq",
   "required_items",
   "work_order_configuration",
@@ -221,14 +220,6 @@
    "in_global_search": 1,
    "label": "Sales Order",
    "options": "Sales Order"
-  },
-  {
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "oldfieldname": "project",
-   "oldfieldtype": "Link",
-   "options": "Project"
   },
   {
    "default": "0",

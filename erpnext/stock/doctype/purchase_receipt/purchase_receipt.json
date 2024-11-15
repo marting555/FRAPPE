@@ -29,7 +29,6 @@
   "accounting_dimensions_section",
   "cost_center",
   "dimension_col_break",
-  "project",
   "currency_and_price_list",
   "currency",
   "conversion_rate",
@@ -930,12 +929,6 @@
    "width": "50%"
   },
   {
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "options": "Project"
-  },
-  {
    "fieldname": "per_billed",
    "fieldtype": "Percent",
    "label": "% Amount Billed",
@@ -1272,8 +1265,13 @@
  "icon": "fa fa-truck",
  "idx": 261,
  "is_submittable": 1,
- "links": [],
- "modified": "2024-07-04 14:50:10.538472",
+ "links": [
+  {
+   "link_doctype": "Budget Entry",
+   "link_fieldname": "voucher_no"
+  }
+ ],
+ "modified": "2024-11-12 09:59:21.000382",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Purchase Receipt",
