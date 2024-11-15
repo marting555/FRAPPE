@@ -19,19 +19,13 @@ class Quotation(SellingController):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
 		from erpnext.accounts.doctype.payment_schedule.payment_schedule import PaymentSchedule
 		from erpnext.accounts.doctype.pricing_rule_detail.pricing_rule_detail import PricingRuleDetail
-		from erpnext.accounts.doctype.sales_taxes_and_charges.sales_taxes_and_charges import (
-			SalesTaxesandCharges,
-		)
-		from erpnext.crm.doctype.competitor_detail.competitor_detail import CompetitorDetail
+		from erpnext.accounts.doctype.sales_taxes_and_charges.sales_taxes_and_charges import SalesTaxesandCharges
 		from erpnext.selling.doctype.quotation_item.quotation_item import QuotationItem
-		from erpnext.setup.doctype.quotation_lost_reason_detail.quotation_lost_reason_detail import (
-			QuotationLostReasonDetail,
-		)
+		from erpnext.setup.doctype.quotation_lost_reason_detail.quotation_lost_reason_detail import QuotationLostReasonDetail
 		from erpnext.stock.doctype.packed_item.packed_item import PackedItem
+		from frappe.types import DF
 
 		additional_discount_percentage: DF.Float
 		address_display: DF.SmallText | None
@@ -46,11 +40,9 @@ class Quotation(SellingController):
 		base_rounding_adjustment: DF.Currency
 		base_total: DF.Currency
 		base_total_taxes_and_charges: DF.Currency
-		campaign: DF.Link | None
 		company: DF.Link
 		company_address: DF.Link | None
 		company_address_display: DF.SmallText | None
-		competitors: DF.TableMultiSelect[CompetitorDetail]
 		contact_display: DF.SmallText | None
 		contact_email: DF.Data | None
 		contact_mobile: DF.SmallText | None
@@ -75,7 +67,6 @@ class Quotation(SellingController):
 		named_place: DF.Data | None
 		naming_series: DF.Literal["SAL-QTN-.YYYY.-"]
 		net_total: DF.Currency
-		opportunity: DF.Link | None
 		order_lost_reason: DF.SmallText | None
 		order_type: DF.Literal["", "Sales", "Maintenance", "Shopping Cart"]
 		other_charges_calculation: DF.TextEditor | None
@@ -96,10 +87,7 @@ class Quotation(SellingController):
 		shipping_address: DF.SmallText | None
 		shipping_address_name: DF.Link | None
 		shipping_rule: DF.Link | None
-		source: DF.Link | None
-		status: DF.Literal[
-			"Draft", "Open", "Replied", "Partially Ordered", "Ordered", "Lost", "Cancelled", "Expired"
-		]
+		status: DF.Literal["Draft", "Open", "Replied", "Partially Ordered", "Ordered", "Lost", "Cancelled", "Expired"]
 		supplier_quotation: DF.Link | None
 		tax_category: DF.Link | None
 		taxes: DF.Table[SalesTaxesandCharges]
@@ -225,12 +213,13 @@ class Quotation(SellingController):
 			if opportunity:
 				self.update_opportunity_status(status, opportunity)
 
-		if self.opportunity:
-			self.update_opportunity_status(status)
+		# if self.opportunity:
+		# 	self.update_opportunity_status(status)
 
 	def update_opportunity_status(self, status, opportunity=None):
 		if not opportunity:
-			opportunity = self.opportunity
+			pass
+			# opportunity = self.opportunity
 
 		opp = frappe.get_doc("Opportunity", opportunity)
 		opp.set_status(status=status, update=True)
@@ -264,6 +253,13 @@ class Quotation(SellingController):
 
 		else:
 			frappe.throw(_("Cannot set as Lost as Sales Order is made."))
+	def before_save(self):
+		print("Befor saving #################################")
+	
+	def on_update_after_submit(self):
+		print("on update after submit saving #################################")
+
+		
 
 	def on_submit(self):
 		# Check for Approving Authority
@@ -534,7 +530,7 @@ def _make_customer(source_name, ignore_permissions=False):
 
 
 def create_customer_from_lead(lead_name, ignore_permissions=False):
-	from erpnext.crm.doctype.lead.lead import _make_customer
+	from crm.crm.doctype.lead.lead import _make_customer
 
 	customer = _make_customer(lead_name, ignore_permissions=ignore_permissions)
 	customer.flags.ignore_permissions = ignore_permissions
@@ -547,7 +543,7 @@ def create_customer_from_lead(lead_name, ignore_permissions=False):
 
 
 def create_customer_from_prospect(prospect_name, ignore_permissions=False):
-	from erpnext.crm.doctype.prospect.prospect import make_customer as make_customer_from_prospect
+	from crm.crm.doctype.prospect.prospect import make_customer as make_customer_from_prospect
 
 	customer = make_customer_from_prospect(prospect_name)
 	customer.flags.ignore_permissions = ignore_permissions
@@ -571,3 +567,38 @@ def handle_mandatory_error(e, customer, lead_name):
 	message += _("Please create Customer from Lead {0}.").format(get_link_to_form("Lead", lead_name))
 
 	frappe.throw(message, title=_("Mandatory Missing"))
+
+
+@frappe.whitelist()
+def get_field_for_lost(doctype):
+	options = "Quotation Lost Reason Detail"
+	competitor = None
+	
+	if "crm" in frappe.get_installed_apps():		
+		if doctype == "Opportunity" : options = "Opportunity Lost Reason Detail"
+		competitor = {
+				"fieldtype": "Table MultiSelect",
+				"label": _("Competitors"),
+				"fieldname": "competitors",
+				"options": "Competitor Detail",
+			} 
+
+	fields = [
+				{
+					"fieldtype": "Table MultiSelect",
+					"label": _("Lost Reasons"),
+					"fieldname": "lost_reason",
+					"options": options ,  
+					"reqd": 1,
+				},
+				
+				{
+					"fieldtype": "Small Text",
+					"label": _("Detailed Reason"),
+					"fieldname": "detailed_reason",
+				}
+			]
+	if competitor:
+		fields.append(competitor)
+
+	return fields

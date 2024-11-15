@@ -148,6 +148,12 @@ def create_default_success_action():
 def create_default_energy_point_rules():
 	for rule in get_default_energy_point_rules():
 		# check if any rule for ref. doctype exists
+		if not frappe.db.exists("DocType", rule.get("reference_doctype")):
+			frappe.log_error(
+                title="Missing Reference Doctype",
+                message=f"Reference Doctype '{rule.get('reference_doctype')}' not found. Skipping rule creation."
+            )
+			continue
 		rule_exists = frappe.db.exists(
 			"Energy Point Rule", {"reference_doctype": rule.get("reference_doctype")}
 		)

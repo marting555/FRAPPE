@@ -368,11 +368,9 @@ doc_events = {
 			"erpnext.support.doctype.service_level_agreement.service_level_agreement.on_communication_update",
 			"erpnext.support.doctype.issue.issue.set_first_response_time",
 		],
-		"after_insert": "erpnext.crm.utils.link_communications_with_prospect",
+		
 	},
-	"Event": {
-		"after_insert": "erpnext.crm.utils.link_events_with_prospect",
-	},
+
 	"Sales Invoice": {
 		"on_submit": [
 			"erpnext.regional.create_transaction_log",
@@ -404,11 +402,8 @@ doc_events = {
 	"Contact": {
 		"on_trash": "erpnext.support.doctype.issue.issue.update_issue",
 		"after_insert": "erpnext.telephony.doctype.call_log.call_log.link_existing_conversations",
-		"validate": ["erpnext.crm.utils.update_lead_phone_numbers"],
 	},
-	"Email Unsubscribe": {
-		"after_insert": "erpnext.crm.doctype.email_campaign.email_campaign.unsubscribe_recipient"
-	},
+	
 	"Integration Request": {
 		"validate": "erpnext.accounts.doctype.payment_request.payment_request.validate_payment"
 	},
@@ -453,17 +448,13 @@ scheduler_events = {
 	],
 	"daily": [
 		"erpnext.support.doctype.issue.issue.auto_close_tickets",
-		"erpnext.crm.doctype.opportunity.opportunity.auto_close_opportunity",
 		"erpnext.controllers.accounts_controller.update_invoice_status",
 		"erpnext.accounts.doctype.fiscal_year.fiscal_year.auto_create_fiscal_year",
 		"erpnext.stock.doctype.serial_no.serial_no.update_maintenance_status",
 		"erpnext.buying.doctype.supplier_scorecard.supplier_scorecard.refresh_scorecards",
 		"erpnext.setup.doctype.company.company.cache_companies_monthly_sales_history",
-		"erpnext.crm.doctype.contract.contract.update_status_for_contracts",
 		"erpnext.quality_management.doctype.quality_review.quality_review.review",
 		"erpnext.support.doctype.service_level_agreement.service_level_agreement.check_agreement_status",
-		"erpnext.crm.doctype.email_campaign.email_campaign.send_email_to_leads_or_contacts",
-		"erpnext.crm.doctype.email_campaign.email_campaign.set_email_campaign_status",
 		"erpnext.selling.doctype.quotation.quotation.set_expired_status",
 		"erpnext.buying.doctype.supplier_quotation.supplier_quotation.set_expired_status",
 		"erpnext.accounts.doctype.process_statement_of_accounts.process_statement_of_accounts.send_auto_email",
@@ -477,7 +468,6 @@ scheduler_events = {
 		"erpnext.accounts.doctype.process_subscription.process_subscription.create_subscription_process",
 		"erpnext.setup.doctype.email_digest.email_digest.send",
 		"erpnext.manufacturing.doctype.bom_update_tool.bom_update_tool.auto_update_latest_price_in_all_boms",
-		"erpnext.crm.utils.open_leads_opportunities_based_on_todays_event",
 	],
 	"monthly_long": [
 		"erpnext.accounts.deferred_revenue.process_deferred_accounting",

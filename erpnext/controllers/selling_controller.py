@@ -90,7 +90,7 @@ class SellingController(StockController):
 			self.update_if_missing(party_details)
 
 		elif lead:
-			from erpnext.crm.doctype.lead.lead import get_lead_details
+			from crm.crm.doctype.lead.lead import get_lead_details
 
 			self.update_if_missing(
 				get_lead_details(
@@ -776,3 +776,8 @@ def get_serial_and_batch_bundle(child, parent):
 	child.db_set("serial_and_batch_bundle", doc.name)
 
 	return doc.name
+
+
+
+	
+
