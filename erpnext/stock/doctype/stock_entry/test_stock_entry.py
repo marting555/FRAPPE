@@ -970,6 +970,7 @@ class TestStockEntry(FrappeTestCase):
 
 		self.assertRaises(frappe.ValidationError, ste.submit)
 
+<<<<<<< HEAD
 	def test_same_serial_nos_in_repack_or_manufacture_entries(self):
 		s1 = make_serialized_item(target_warehouse="_Test Warehouse - _TC")
 		serial_nos = get_serial_nos_from_bundle(s1.get("items")[0].serial_and_batch_bundle)
@@ -1025,6 +1026,8 @@ class TestStockEntry(FrappeTestCase):
 		s2.cancel()
 		frappe.flags.use_serial_and_batch_fields = False
 
+=======
+>>>>>>> 93c8b4c39a (fix: validation for serial no (#44133))
 	def test_quality_check(self):
 		item_code = "_Test Item For QC"
 		if not frappe.db.exists("Item", item_code):
