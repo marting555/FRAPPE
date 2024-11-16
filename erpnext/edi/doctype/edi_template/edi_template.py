@@ -6,6 +6,7 @@ import os
 import frappe
 from frappe.model.document import Document, DocumentProxy
 from frappe.modules.utils import export_module_json, get_doc_module
+from frappe.utils.jinja import ProcessedContext, process_context
 from lxml import etree, objectify
 
 from erpnext.edi.doctype.edi_log.edi_log import EDILog
@@ -53,9 +54,17 @@ class EDITemplate(Document):
 		validation: DF.Code | None
 	# end: auto-generated types
 
-	def get_edi_template_proxy_class(template):
+	@property
+	def document_proxy_class(self):
+		return self.get_document_proxy_class()
+
+	def get_document_proxy_class(self):
+		return self._get_default_document_proxy_class()
+
+	def _get_default_document_proxy_class(template):
 		class EDITemplateDocumentProxy(DocumentProxy):
 			def __init__(self, *args, **kwargs):
+				super().__init__(*args, **kwargs)
 				self._bound_common_codes = {
 					doctype: {
 						item.reference_name: item
@@ -88,6 +97,9 @@ class EDITemplate(Document):
 			self.log_error(f"Error evaluating condition: {e!s}")
 		return False
 
+	def get_processed_context(self, doc: Document, method: str) -> ProcessedContext:
+		return process_context(self.get_context(doc, method), document_proxy_class=self.document_proxy_class)
+
 	@use_module_if_standard
 	def get_context(self, doc: Document, method: str) -> dict:
 		return {"doc": doc, "method": method}
@@ -105,9 +117,8 @@ class EDITemplate(Document):
 		pass
 
 	def get_render(self, doc: Document, method: str) -> str:
-		context = self.get_context(doc, method)
-		proxy_class = self.get_edi_template_proxy_class()
-		render = frappe.render_template(self.template, context=context, document_proxy_class=proxy_class)
+		context = self.get_processed_context(doc, method)
+		render = frappe.render_template(self.template, context=context)
 		signed = self.sign(render, doc)
 		self.get_validation(signed)
 		return signed
