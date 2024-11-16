@@ -83,7 +83,7 @@
    "link_fieldname": "code_list"
   }
  ],
- "modified": "2024-11-06 18:56:23.177120",
+ "modified": "2024-11-16 17:01:40.260293",
  "modified_by": "Administrator",
  "module": "EDI",
  "name": "Code List",
@@ -103,6 +103,7 @@
    "write": 1
   }
  ],
+ "search_fields": "description",
  "show_title_field_in_link": 1,
  "sort_field": "creation",
  "sort_order": "DESC",
