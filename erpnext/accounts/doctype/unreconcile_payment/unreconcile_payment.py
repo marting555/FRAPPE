@@ -137,7 +137,7 @@ def get_linked_payments_for_doc(
 					ple.account_currency,
 				)
 				.where(Criterion.all(criteria))
-				.groupby(ple.voucher_no, ple.against_voucher_no)
+				.groupby(ple.voucher_no, ple.against_voucher_no, ple.company, ple.voucher_type, ple.account_currency)
 				.having(qb.Field("allocated_amount") > 0)
 				.run(as_dict=True)
 			)
@@ -160,7 +160,7 @@ def get_linked_payments_for_doc(
 					ple.account_currency,
 				)
 				.where(Criterion.all(criteria))
-				.groupby(ple.against_voucher_no)
+				.groupby(ple.against_voucher_no, ple.company, ple.against_voucher_type, ple.account_currency)
 			)
 			res = query.run(as_dict=True)
 			return res

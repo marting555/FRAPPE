@@ -4,6 +4,7 @@
 
 import frappe
 from frappe.tests.utils import FrappeTestCase
+from erpnext.buying.doctype.supplier_quotation.supplier_quotation import make_quotation
 
 
 class TestPurchaseOrder(FrappeTestCase):
@@ -29,5 +30,21 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		po.insert()
 
+	# test make quotation from supplier quotation 
+	def test_make_quotation(self):
+		sq = frappe.copy_doc(test_records[0]).insert()
+		sq = frappe.get_doc("Supplier Quotation", sq.name)
+		sq.submit()
+	
+		qt = make_quotation(sq.name)
+		qt.quotation_to = 'Customer'
+		qt.customer_name = '_Test Customer'
+		qt.submit()
+		
+		self.assertEqual(sq.doctype, "Supplier Quotation")
+		self.assertEqual(qt.doctype, "Quotation")
+		self.assertEqual(len(sq.get("items")), len(qt.get("items")))
+		self.assertEqual(sq.get("items")[0].item_code, qt.get("items")[0].item_code)
+		self.assertEqual(sq.get("items")[0].qty, qt.get("items")[0].qty)
 
 test_records = frappe.get_test_records("Supplier Quotation")

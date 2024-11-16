@@ -70,6 +70,7 @@ class PurchaseOrderItem(Document):
 		production_plan_item: DF.Data | None
 		production_plan_sub_assembly_item: DF.Data | None
 		project: DF.Link | None
+		project_name: DF.Data | None
 		qty: DF.Float
 		rate: DF.Currency
 		rate_with_margin: DF.Currency
@@ -88,8 +89,10 @@ class PurchaseOrderItem(Document):
 		total_weight: DF.Float
 		uom: DF.Link
 		warehouse: DF.Link | None
+		wbs_name: DF.Data | None
 		weight_per_unit: DF.Float
 		weight_uom: DF.Link | None
+		work_breakdown_structure: DF.Link | None
 	# end: auto-generated types
 
 	pass
