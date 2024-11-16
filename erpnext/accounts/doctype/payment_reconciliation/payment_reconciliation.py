@@ -323,6 +323,7 @@ class PaymentReconciliation(Document):
 								"posting_date": inv.posting_date,
 								"currency": inv.currency,
 								"cost_center": inv.cost_center,
+								"remarks": inv.remarks,
 							}
 						)
 					)
@@ -369,6 +370,10 @@ class PaymentReconciliation(Document):
 
 		if self.invoice_limit:
 			non_reconciled_invoices = non_reconciled_invoices[: self.invoice_limit]
+
+		non_reconciled_invoices = sorted(
+			non_reconciled_invoices, key=lambda k: k["posting_date"] or getdate(nowdate())
+		)
 
 		self.add_invoice_entries(non_reconciled_invoices)
 

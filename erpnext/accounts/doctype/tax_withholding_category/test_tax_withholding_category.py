@@ -84,11 +84,17 @@ class TestTaxWithholdingCategory(IntegrationTestCase):
 		self.assertEqual(pi.grand_total, 18000)
 
 		# check gl entry for the purchase invoice
-		gl_entries = frappe.db.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["*"])
+		gl_entries = frappe.db.get_all(
+			"GL Entry",
+			filters={"voucher_no": pi.name},
+			fields=["account", "sum(debit) as debit", "sum(credit) as credit"],
+			group_by="account",
+		)
 		self.assertEqual(len(gl_entries), 3)
 		for d in gl_entries:
 			if d.account == pi.credit_to:
-				self.assertEqual(d.credit, 18000)
+				self.assertEqual(d.credit, 20000)
+				self.assertEqual(d.debit, 2000)
 			elif d.account == pi.items[0].get("expense_account"):
 				self.assertEqual(d.debit, 20000)
 			elif d.account == pi.taxes[0].get("account_head"):
@@ -127,6 +133,46 @@ class TestTaxWithholdingCategory(IntegrationTestCase):
 		# Threshold calculation should be only on the Second invoice
 		# Second didn't breach, no TDS should be applied
 		self.assertEqual(pi1.taxes, [])
+
+		for d in reversed(invoices):
+			d.cancel()
+
+	def test_cumulative_threshold_with_party_ledger_amount_on_net_total(self):
+		invoices = []
+		frappe.db.set_value(
+			"Supplier", "Test TDS Supplier3", "tax_withholding_category", "Advance TDS Category"
+		)
+
+		# Invoice with tax and without exceeding single and cumulative thresholds
+		for _ in range(2):
+			pi = create_purchase_invoice(supplier="Test TDS Supplier3", rate=1000, do_not_save=True)
+			pi.apply_tds = 1
+			pi.append(
+				"taxes",
+				{
+					"category": "Total",
+					"charge_type": "Actual",
+					"account_head": "_Test Account VAT - _TC",
+					"cost_center": "Main - _TC",
+					"tax_amount": 500,
+					"description": "Test",
+					"add_deduct_tax": "Add",
+				},
+			)
+			pi.save()
+			pi.submit()
+			invoices.append(pi)
+
+		# Third Invoice exceeds single threshold and not exceeding cumulative threshold
+		pi1 = create_purchase_invoice(supplier="Test TDS Supplier3", rate=6000)
+		pi1.apply_tds = 1
+		pi1.save()
+		pi1.submit()
+		invoices.append(pi1)
+
+		# Cumulative threshold is 10,000
+		# Threshold calculation should be only on the third invoice
+		self.assertEqual(pi1.taxes[0].tax_amount, 800)
 
 		for d in reversed(invoices):
 			d.cancel()

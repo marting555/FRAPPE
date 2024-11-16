@@ -334,6 +334,11 @@ class StockController(AccountsController):
 					}
 				)
 
+				if self.doctype in ["Sales Invoice", "Delivery Note"]:
+					row.db_set(
+						"incoming_rate", frappe.db.get_value("Serial and Batch Bundle", bundle, "avg_rate")
+					)
+
 	def get_reference_ids(self, table_name, qty_field=None, bundle_field=None) -> tuple[str, list[str]]:
 		field = {
 			"Sales Invoice": "sales_invoice_item",
@@ -832,6 +837,15 @@ class StockController(AccountsController):
 		dimensions = get_evaluated_inventory_dimension(row, sl_dict, parent_doc=self)
 		for dimension in dimensions:
 			if not dimension:
+				continue
+
+			if (
+				self.doctype in ["Purchase Invoice", "Purchase Receipt"]
+				and row.get("rejected_warehouse")
+				and sl_dict.get("warehouse") == row.get("rejected_warehouse")
+			):
+				fieldname = f"rejected_{dimension.source_fieldname}"
+				sl_dict[dimension.target_fieldname] = row.get(fieldname)
 				continue
 
 			if self.doctype in [

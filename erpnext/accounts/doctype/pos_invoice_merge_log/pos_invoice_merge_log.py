@@ -13,6 +13,7 @@ from frappe.utils.background_jobs import enqueue, is_job_enqueued
 from frappe.utils.scheduler import is_scheduler_inactive
 
 from erpnext.accounts.doctype.pos_profile.pos_profile import required_accounting_dimensions
+from erpnext.controllers.taxes_and_totals import ItemWiseTaxDetail
 
 
 class POSInvoiceMergeLog(Document):
@@ -336,15 +337,14 @@ def update_item_wise_tax_detail(consolidate_tax_row, tax_row):
 		consolidated_tax_detail = {}
 
 	for item_code, tax_data in tax_row_detail.items():
+		tax_data = ItemWiseTaxDetail(**tax_data)
 		if consolidated_tax_detail.get(item_code):
-			consolidated_tax_data = consolidated_tax_detail.get(item_code)
-			consolidated_tax_detail.update(
-				{item_code: [consolidated_tax_data[0], consolidated_tax_data[1] + tax_data[1]]}
-			)
+			consolidated_tax_detail[item_code]["tax_amount"] += tax_data.tax_amount
+			consolidated_tax_detail[item_code]["net_amount"] += tax_data.net_amount
 		else:
-			consolidated_tax_detail.update({item_code: [tax_data[0], tax_data[1]]})
+			consolidated_tax_detail.update({item_code: tax_data})
 
-	consolidate_tax_row.item_wise_tax_detail = json.dumps(consolidated_tax_detail, separators=(",", ":"))
+	consolidate_tax_row.item_wise_tax_detail = json.dumps(consolidated_tax_detail)
 
 
 def get_all_unconsolidated_invoices():
@@ -438,7 +438,9 @@ def split_invoices(invoices):
 			if not item.serial_no and not item.serial_and_batch_bundle:
 				continue
 
-			return_against_is_added = any(d for d in _invoices if d.pos_invoice == pos_invoice.return_against)
+			return_against_is_added = any(
+				d for d in _invoices if d and d[0].pos_invoice == pos_invoice.return_against
+			)
 			if return_against_is_added:
 				break
 
