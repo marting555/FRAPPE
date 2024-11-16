@@ -3,9 +3,11 @@
 
 frappe.ui.form.on("Code List", {
 	refresh: (frm) => {
-		frm.add_custom_button(__("Import Genericode File"), function () {
-			erpnext.edi.import_genericode(frm);
-		});
+		if (!frm.doc.__islocal) {
+			frm.add_custom_button(__("Import Genericode File"), function () {
+				erpnext.edi.import_genericode(frm);
+			});
+		}
 	},
 	setup: (frm) => {
 		frm.savetrash = () => {
