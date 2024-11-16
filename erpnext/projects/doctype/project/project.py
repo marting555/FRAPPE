@@ -313,11 +313,11 @@ class Project(Document):
 			self.per_gross_margin = (self.gross_margin / flt(self.total_billed_amount)) * 100
 
 	def update_purchase_costing(self):
-		total_purchase_cost = calculate_total_purchase_cost(self.name)
+		total_purchase_cost = get_total_purchase_cost(self.name)
 		self.total_purchase_cost = total_purchase_cost and total_purchase_cost[0][0] or 0
 
 	def update_ordered_costing(self):
-		total_ordered_cost = calculate_total_ordered_cost(self.name)
+		total_ordered_cost = get_total_ordered_cost(self.name)
 		self.total_ordered_cost = total_ordered_cost and total_ordered_cost[0][0] or 0
 
 	def update_sales_amount(self):
@@ -735,7 +735,7 @@ def get_users_email(doc):
 	return [d.email for d in doc.users if frappe.db.get_value("User", d.user, "enabled")]
 
 
-def calculate_total_purchase_cost(project: str | None = None):
+def get_total_purchase_cost(project: str | None = None):
 	if project:
 		pitem = qb.DocType("Purchase Invoice Item")
 		total_purchase_cost = (
@@ -745,13 +745,13 @@ def calculate_total_purchase_cost(project: str | None = None):
 			.run(as_list=True)
 		)
 		return total_purchase_cost
-	return None
+	return 0.0
 
 
 @frappe.whitelist()
 def recalculate_project_total_purchase_cost(project: str | None = None):
 	if project:
-		total_purchase_cost = calculate_total_purchase_cost(project)
+		total_purchase_cost = get_total_purchase_cost(project)
 		frappe.db.set_value(
 			"Project",
 			project,
@@ -760,7 +760,7 @@ def recalculate_project_total_purchase_cost(project: str | None = None):
 		)
 
 
-def calculate_total_ordered_cost(project: str | None = None):
+def get_total_ordered_cost(project: str | None = None):
 	if project:
 		pitem = qb.DocType("Purchase Order Item")
 		frappe.qb.DocType("Purchase Order Item")
@@ -771,13 +771,13 @@ def calculate_total_ordered_cost(project: str | None = None):
 			.run(as_list=True)
 		)
 		return total_ordered_cost
-	return None
+	return 0.0
 
 
 @frappe.whitelist()
 def recalculate_project_total_ordered_cost(project: str | None = None):
 	if project:
-		total_ordered_cost = calculate_total_ordered_cost(project)
+		total_ordered_cost = get_total_ordered_cost(project)
 		frappe.db.set_value(
 			"Project",
 			project,
