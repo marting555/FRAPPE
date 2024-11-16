@@ -43,7 +43,7 @@ class CodeList(Document):
 		)
 
 		for doc in linked_docs:
-			frappe.delete_doc("Common Code", doc.name, force=1)
+			frappe.delete_doc("Common Code", doc.name)
 
 	def get_codes_for(self, doctype: str, name: str) -> tuple[str]:
 		"""Get the applicable codes for a doctype and name"""
