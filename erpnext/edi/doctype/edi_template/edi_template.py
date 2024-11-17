@@ -65,25 +65,24 @@ class EDITemplate(Document):
 		class EDITemplateDocumentProxy(DocumentProxy):
 			def __init__(self, *args, **kwargs):
 				super().__init__(*args, **kwargs)
-				self._bound_common_codes = {
-					doctype: {
-						item.reference_name: item
-						for item in template.bound_common_codes
-						if item.reference_doctype == doctype
-					}
-					for doctype in set(item.reference_doctype for item in template.bound_common_codes)
-				}
+				if hasattr(self._super, "_bound_common_codes"):
+					self._bound_common_codes = self._super._bound_common_codes
+				else:
+					self._bound_common_codes = {}
+					for bc in template.bound_common_codes:
+						self._bound_common_codes.setdefault(bc.reference_doctype, {}).setdefault(
+							bc.reference_name, []
+						).append(bc)
 
 			def __getattr__(self, attr):
 				value = super().__getattr__(attr)
 				if isinstance(value, type(self)):
-					if bcc := self._bound_common_codes.get(value.doctype, {}).get(value.name):
+					for bcc in self._bound_common_codes.get(value.doctype, {}).get(value.name, []):
 						setattr(
 							value,
 							bcc.attribute_name,
-							EDITemplateDocumentProxy("Common Code", bcc.common_code),
+							type(self)("Common Code", bcc.common_code),
 						)
-						return value
 				if attr == "additional_data" and isinstance(value, str):
 					# Parse XML stored in additional_data
 					return objectify.fromstring(value)
