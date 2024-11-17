@@ -97,8 +97,9 @@ CertFilePath = str
 
 
 def _get_credentials(self: EDITemplate) -> (KeyFilePath, CertFilePath):
-	key_file_doc = frappe.get_doc("File", {"file_url": self.keyfile})
-	cert_file_doc = frappe.get_doc("File", {"file_url": self.certfile})
+	submit_config = frappe.get_doc("EDI Submit Config", self.submit_config)
+	key_file_doc = frappe.get_doc("File", {"file_url": submit_config.keyfile})
+	cert_file_doc = frappe.get_doc("File", {"file_url": submit_config.certfile})
 
 	key_file_path = key_file_doc.get_full_path()
 	cert_file_path = cert_file_doc.get_full_path()

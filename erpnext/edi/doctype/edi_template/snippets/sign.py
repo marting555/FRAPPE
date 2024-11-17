@@ -39,8 +39,9 @@ CertFileContent = str
 
 
 def _get_credentials(self: EDITemplate) -> (KeyFileContent, CertFileContent):
-	key_file_doc = frappe.get_doc("File", {"file_url": self.keyfile})
-	cert_file_doc = frappe.get_doc("File", {"file_url": self.certfile})
+	submit_config = frappe.get_doc("EDI Submit Config", self.submit_config)
+	key_file_doc = frappe.get_doc("File", {"file_url": submit_config.keyfile})
+	cert_file_doc = frappe.get_doc("File", {"file_url": submit_config.certfile})
 
 	key_file_content = key_file_doc.get_content()
 	cert_file_content = cert_file_doc.get_content()

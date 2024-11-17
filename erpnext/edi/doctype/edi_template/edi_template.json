@@ -17,6 +17,7 @@
   "outound_column",
   "status",
   "condition",
+  "submit_config",
   "section_break_rxld",
   "bindings_column",
   "bound_common_codes",
@@ -137,6 +138,12 @@
    "label": "API Endpoint",
    "link_filters": "[[\"Server Script\", \"script_type\", \"=\", \"API\"]]",
    "options": "Server Script"
+  },
+  {
+   "fieldname": "submit_config",
+   "fieldtype": "Link",
+   "label": "Submit Config",
+   "options": "EDI Submit Config"
   }
  ],
  "links": [
@@ -145,7 +152,7 @@
    "link_fieldname": "edi"
   }
  ],
- "modified": "2024-11-05 18:27:41.392538",
+ "modified": "2024-11-17 11:37:07.248503",
  "modified_by": "Administrator",
  "module": "EDI",
  "name": "EDI Template",

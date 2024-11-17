@@ -50,6 +50,7 @@ class EDITemplate(Document):
 		module: DF.Link | None
 		schema: DF.Code | None
 		status: DF.Literal["Draft", "Staging", "Production", "Obsolete"]
+		submit_config: DF.Link | None
 		template: DF.Code | None
 		validation: DF.Code | None
 	# end: auto-generated types
