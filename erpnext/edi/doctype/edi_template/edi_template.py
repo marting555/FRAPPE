@@ -78,7 +78,11 @@ class EDITemplate(Document):
 				value = super().__getattr__(attr)
 				if isinstance(value, type(self)):
 					if bcc := self._bound_common_codes.get(value.doctype, {}).get(value.name):
-						value[bcc.attribute_name] = EDITemplateDocumentProxy("Common Code", bcc.common_code)
+						setattr(
+							value,
+							bcc.attribute_name,
+							EDITemplateDocumentProxy("Common Code", bcc.common_code),
+						)
 						return value
 				if attr == "additional_data" and isinstance(value, str):
 					# Parse XML stored in additional_data
