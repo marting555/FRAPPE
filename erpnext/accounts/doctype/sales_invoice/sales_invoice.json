@@ -258,6 +258,7 @@
   },
   {
    "bold": 1,
+   "fetch_from": "project.customer",
    "fieldname": "customer",
    "fieldtype": "Link",
    "hide_days": 1,
