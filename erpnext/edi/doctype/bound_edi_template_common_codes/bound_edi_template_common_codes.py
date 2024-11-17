@@ -15,6 +15,7 @@ class BoundEDITemplateCommonCodes(Document):
 		from frappe.types import DF
 
 		attribute_name: DF.Data
+		code_list: DF.Link
 		common_code: DF.Link
 		parent: DF.Data
 		parentfield: DF.Data

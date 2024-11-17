@@ -9,6 +9,7 @@
   "reference_doctype",
   "reference_name",
   "attribute_name",
+  "code_list",
   "common_code"
  ],
  "fields": [
@@ -17,6 +18,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Common Code",
+   "link_filters": "[[\"Common Code\",\"code_list\",\"=\",\"eval:doc.code_list\"]]",
    "options": "Common Code",
    "reqd": 1
   },
@@ -42,12 +44,20 @@
    "in_list_view": 1,
    "label": "Attribute Name",
    "reqd": 1
+  },
+  {
+   "fieldname": "code_list",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Code List",
+   "options": "Code List",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-10-29 10:46:03.806399",
+ "modified": "2024-11-16 15:14:54.859747",
  "modified_by": "Administrator",
  "module": "EDI",
  "name": "Bound EDI Template Common Codes",
