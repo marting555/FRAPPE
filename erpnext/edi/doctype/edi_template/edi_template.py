@@ -2,6 +2,8 @@
 # For license information, please see license.txt
 
 import os
+from collections import defaultdict
+from typing import ClassVar
 
 import frappe
 from frappe.model.document import Document, DocumentProxy
@@ -64,19 +66,23 @@ class EDITemplate(Document):
 
 	def _get_default_document_proxy_class(template):
 		class EDITemplateDocumentProxy(DocumentProxy):
+			_bound_common_codes: ClassVar[dict[str, dict[str, list]]] = defaultdict(lambda: defaultdict(list))
+			_initialized: ClassVar[bool] = False
+
+			# Don't deviate from DocumentProxy's init signature - recursive instantiation (!)
 			def __init__(self, *args, **kwargs):
 				super().__init__(*args, **kwargs)
-				if hasattr(self._super, "_bound_common_codes"):
-					self._bound_common_codes = self._super._bound_common_codes
-				else:
-					self._bound_common_codes = {}
-					for bc in template.bound_common_codes:
-						self._bound_common_codes.setdefault(bc.reference_doctype, {}).setdefault(
-							bc.reference_name, []
-						).append(bc)
+				self._init_bindings()
 
-			def __getattr__(self, attr):
-				value = super().__getattr__(attr)
+			@classmethod
+			def _init_bindings(cls):
+				if not cls._initialized:
+					for bc in template.bound_common_codes:
+						cls._bound_common_codes[bc.reference_doctype][bc.reference_name].append(bc)
+					cls._initialized = True
+
+			def __getattr_value__(self, attr):
+				value = super().__getattr_value__(attr)
 				if isinstance(value, type(self)):
 					for bcc in self._bound_common_codes.get(value.doctype, {}).get(value.name, []):
 						setattr(
@@ -84,6 +90,7 @@ class EDITemplate(Document):
 							bcc.attribute_name,
 							type(self)("Common Code", bcc.common_code),
 						)
+					return value
 				if attr == "additional_data" and isinstance(value, str):
 					# Parse XML stored in additional_data
 					return objectify.fromstring(value)
