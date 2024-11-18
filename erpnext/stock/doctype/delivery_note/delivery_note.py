@@ -24,11 +24,14 @@ class DeliveryNote(SellingController):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
+		from frappe.types import DF
+
 		from erpnext.accounts.doctype.pricing_rule_detail.pricing_rule_detail import PricingRuleDetail
-		from erpnext.accounts.doctype.sales_taxes_and_charges.sales_taxes_and_charges import SalesTaxesandCharges
+		from erpnext.accounts.doctype.sales_taxes_and_charges.sales_taxes_and_charges import (
+			SalesTaxesandCharges,
+		)
 		from erpnext.stock.doctype.delivery_note_item.delivery_note_item import DeliveryNoteItem
 		from erpnext.stock.doctype.packed_item.packed_item import PackedItem
-		from frappe.types import DF
 
 		additional_discount_percentage: DF.Float
 		address_display: DF.SmallText | None
@@ -43,6 +46,8 @@ class DeliveryNote(SellingController):
 		base_rounding_adjustment: DF.Currency
 		base_total: DF.Currency
 		base_total_taxes_and_charges: DF.Currency
+		campaign: DF.Link | None
+		commission_rate: DF.Float
 		company: DF.Link
 		company_address: DF.Link | None
 		company_address_display: DF.SmallText | None
@@ -97,7 +102,6 @@ class DeliveryNote(SellingController):
 		price_list_currency: DF.Link
 		pricing_rules: DF.Table[PricingRuleDetail]
 		print_without_amount: DF.Check
-		project: DF.Link | None
 		represents_company: DF.Link | None
 		return_against: DF.Link | None
 		rounded_total: DF.Currency
@@ -111,6 +115,7 @@ class DeliveryNote(SellingController):
 		shipping_address: DF.SmallText | None
 		shipping_address_name: DF.Link | None
 		shipping_rule: DF.Link | None
+		source: DF.Link | None
 		status: DF.Literal["", "Draft", "To Bill", "Completed", "Return Issued", "Cancelled", "Closed"]
 		tax_category: DF.Link | None
 		tax_id: DF.Data | None
@@ -394,7 +399,6 @@ class DeliveryNote(SellingController):
 
 		if err_msg:
 			frappe.throw(err_msg, title=_("References to Sales Invoices are Incomplete"))
-
 
 	def validate_warehouse(self):
 		super().validate_warehouse()
