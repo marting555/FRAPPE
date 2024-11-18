@@ -1891,10 +1891,7 @@ def make_purchase_receipt(source_name, target_doc=None):
 			(flt(obj.qty) - flt(obj.received_qty)) * flt(obj.rate) * flt(source_parent.conversion_rate)
 		)
 
-	doc = get_mapped_doc(
-		"Purchase Invoice",
-		source_name,
-		{
+	fields  = {
 			"Purchase Invoice": {
 				"doctype": "Purchase Receipt",
 				"validation": {
@@ -1916,7 +1913,15 @@ def make_purchase_receipt(source_name, target_doc=None):
 				"condition": lambda doc: abs(doc.received_qty) < abs(doc.qty),
 			},
 			"Purchase Taxes and Charges": {"doctype": "Purchase Taxes and Charges"},
-		},
+		}
+	
+	if "assets" in frappe.get_installed_apps():
+		fields["Purchase Invoice Item"]["field_map"].update({"wip_composite_asset": "wip_composite_asset"})
+
+	doc = get_mapped_doc(
+		"Purchase Invoice",
+		source_name,
+		fields,
 		target_doc,
 	)
 

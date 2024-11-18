@@ -700,10 +700,7 @@ def make_purchase_receipt(source_name, target_doc=None):
 			(flt(obj.qty) - flt(obj.received_qty)) * flt(obj.rate) * flt(source_parent.conversion_rate)
 		)
 
-	doc = get_mapped_doc(
-		"Purchase Order",
-		source_name,
-		{
+	fields = {
 			"Purchase Order": {
 				"doctype": "Purchase Receipt",
 				"field_map": {"supplier_warehouse": "supplier_warehouse"},
@@ -727,7 +724,15 @@ def make_purchase_receipt(source_name, target_doc=None):
 				and doc.delivered_by_supplier != 1,
 			},
 			"Purchase Taxes and Charges": {"doctype": "Purchase Taxes and Charges", "add_if_empty": True},
-		},
+		}
+	
+	if "assets" in frappe.get_installed_apps():
+		fields["Purchase Order Item"]["field_map"].update({"wip_composite_asset": "wip_composite_asset"})
+
+	doc = get_mapped_doc(
+		"Purchase Order",
+		source_name,
+		fields,
 		target_doc,
 		set_missing_values,
 	)
@@ -803,6 +808,9 @@ def get_mapped_purchase_invoice(source_name, target_doc=None, ignore_permissions
 		},
 		"Purchase Taxes and Charges": {"doctype": "Purchase Taxes and Charges", "add_if_empty": True},
 	}
+
+	if "assets" in frappe.get_installed_apps():
+		fields["Purchase Order Item"]["field_map"].update({"wip_composite_asset": "wip_composite_asset"})
 
 	doc = get_mapped_doc(
 		"Purchase Order",
