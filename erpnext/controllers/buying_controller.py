@@ -165,7 +165,7 @@ class BuyingController(SubcontractingController):
 					break
 
 	def validate_stock_or_nonstock_items(self):
-		if self.meta.get_field("taxes") and not self.get_stock_items():
+		if self.meta.get_field("taxes") and not self.get_stock_items() and not get_asset_items(self):
 			msg = _('Tax Category has been changed to "Total" because all the Items are non-stock items')
 			self.update_tax_category(msg)
 
@@ -250,15 +250,15 @@ class BuyingController(SubcontractingController):
 
 		TODO: rename item_tax_amount to valuation_tax_amount
 		"""
-		stock_items = []
-		stock_items = self.get_stock_items()
+		stock_and_asset_items = []
+		stock_and_asset_items = self.get_stock_items() + get_asset_items(self)
 
-		stock_items_qty, stock_items_amount = 0, 0
+		stock_and_asset_items_qty, stock_and_asset_items_amount = 0, 0
 		last_item_idx = 1
 		for d in self.get("items"):
-			if d.item_code and d.item_code in stock_items:
-				stock_items_qty += flt(d.qty)
-				stock_items_amount += flt(d.base_net_amount)
+			if d.item_code and d.item_code in stock_and_asset_items:
+				stock_and_asset_items_qty += flt(d.qty)
+				stock_and_asset_items_amount += flt(d.base_net_amount)
 				last_item_idx = d.idx
 
 		total_valuation_amount = sum(
@@ -269,11 +269,11 @@ class BuyingController(SubcontractingController):
 
 		valuation_amount_adjustment = total_valuation_amount
 		for i, item in enumerate(self.get("items")):
-			if item.item_code and item.qty and item.item_code in stock_items:
+			if item.item_code and item.qty and item.item_code in stock_and_asset_items:
 				item_proportion = (
-					flt(item.base_net_amount) / stock_items_amount
-					if stock_items_amount
-					else flt(item.qty) / stock_items_qty
+					flt(item.base_net_amount) / stock_and_asset_items_amount
+					if stock_and_asset_items_amount
+					else flt(item.qty) / stock_and_asset_items_qty
 				)
 
 				if i == (last_item_idx - 1):
@@ -314,7 +314,6 @@ class BuyingController(SubcontractingController):
 					) / qty_in_stock_uom
 			else:
 				item.valuation_rate = 0.0
-
 		update_regional_item_valuation_rate(self)
 
 	def set_incoming_rate(self):
@@ -768,6 +767,11 @@ def validate_item_type(doc, fieldname, message):
 
 		frappe.throw(error_message)
 
+def get_asset_items(doc):
+	if doc.doctype not in ["Purchase Order", "Purchase Invoice", "Purchase Receipt"]:
+		return []
+
+	return [d.item_code for d in doc.items if d.get("is_fixed_asset")]
 
 @erpnext.allow_regional
 def update_regional_item_valuation_rate(doc):

@@ -428,11 +428,8 @@ def make_purchase_order(source_name, target_doc=None, args=None):
 		child_filter = d.name in filtered_items if filtered_items else True
 
 		return d.ordered_qty < d.stock_qty and child_filter
-
-	doclist = get_mapped_doc(
-		"Material Request",
-		source_name,
-		{
+	
+	fields = {
 			"Material Request": {
 				"doctype": "Purchase Order",
 				"validation": {"docstatus": ["=", 1], "material_request_type": ["=", "Purchase"]},
@@ -450,7 +447,14 @@ def make_purchase_order(source_name, target_doc=None, args=None):
 				"postprocess": update_item,
 				"condition": select_item,
 			},
-		},
+		}
+	if "assets" in frappe.get_installed_apps():
+		fields["Material Request Item"]["field_map"].append(["wip_composite_asset", "wip_composite_asset"])
+
+	doclist = get_mapped_doc(
+		"Material Request",
+		source_name,
+		fields,
 		target_doc,
 		postprocess,
 	)
