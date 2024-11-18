@@ -674,3 +674,13 @@ after_migrate = "erpnext.accounts.install.after_migrate"
 #         "after_save": "erpnext.public.is_wbs.after_save"
 #     }
 # }
+
+fixtures =[
+    {"dt":"Custom Field","filters":[
+        [
+            "module","=","Purchase Order Item"
+		]
+	]
+        
+	}
+]
