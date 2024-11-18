@@ -84,6 +84,7 @@ class PaymentRequest(Document):
 		subscription_plans: DF.Table[SubscriptionPlanDetail]
 		swift_number: DF.ReadOnly | None
 		transaction_date: DF.Date | None
+		company: DF.Link | None
 	# end: auto-generated types
 
 	def validate(self):
@@ -491,6 +492,7 @@ def make_payment_request(**args):
 				"message": gateway_account.get("message") or get_dummy_message(ref_doc),
 				"reference_doctype": args.dt,
 				"reference_name": args.dn,
+				"company": ref_doc.get("company"),
 				"party_type": args.get("party_type") or "Customer",
 				"party": args.get("party") or ref_doc.get("customer"),
 				"bank_account": bank_account,
@@ -514,6 +516,8 @@ def make_payment_request(**args):
 		if frappe.db.get_single_value("Accounts Settings", "create_pr_in_draft_status", cache=True):
 			pr.insert(ignore_permissions=True)
 		if args.submit_doc:
+			if pr.get("__unsaved"):
+				pr.insert(ignore_permissions=True)
 			pr.submit()
 
 	if args.order_type == "Shopping Cart":

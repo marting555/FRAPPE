@@ -12,9 +12,10 @@ from erpnext.controllers.sales_and_purchase_return import make_return_doc
 from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
 from erpnext.stock.doctype.item.test_item import make_item
 from erpnext.stock.get_item_details import get_item_details
+from frappe.tests.utils import FrappeTestCase, change_settings
 
 
-class TestPricingRule(unittest.TestCase):
+class TestPricingRule(FrappeTestCase):
 	def setUp(self):
 		delete_existing_pricing_rules()
 		setup_pricing_rule_data()
