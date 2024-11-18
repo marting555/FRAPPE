@@ -56,6 +56,10 @@
    "reqd": 1
   },
   {
+   "fieldname": "column_break_bcho",
+   "fieldtype": "Column Break"
+  },
+  {
    "allow_on_submit": 1,
    "default": "0",
    "fieldname": "locked",
@@ -74,40 +78,6 @@
    "label": "Company",
    "options": "Company",
    "reqd": 1
-  },
-  {
-   "fieldname": "column_break_bcho",
-   "fieldtype": "Column Break"
-  },
-  {
-   "default": "0",
-   "fieldname": "is_group",
-   "fieldtype": "Check",
-   "label": "Is Group"
-  },
-  {
-   "fieldname": "parent_work_breakdown_structure",
-   "fieldtype": "Link",
-   "label": "Parent Work Breakdown Structure",
-   "options": "Work Breakdown Structure"
-  },
-  {
-   "fieldname": "column_break_hwsg",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "section_break_wlui",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "amended_from",
-   "fieldtype": "Link",
-   "label": "Amended From",
-   "no_copy": 1,
-   "options": "Work Breakdown Structure",
-   "print_hide": 1,
-   "read_only": 1,
-   "search_index": 1
   },
   {
    "fieldname": "budget_details_section",
@@ -171,10 +141,14 @@
    "read_only": 1
   },
   {
+   "fieldname": "section_break_wlui",
+   "fieldtype": "Section Break"
+  },
+  {
    "default": "0",
-   "fieldname": "wbs_level",
-   "fieldtype": "Data",
-   "label": "WBS Level"
+   "fieldname": "is_group",
+   "fieldtype": "Check",
+   "label": "Is Group"
   },
   {
    "fieldname": "gl_account",
@@ -184,19 +158,45 @@
   },
   {
    "allow_on_submit": 1,
-   "depends_on": "eval:doc.is_group ==0 && !doc.linked_monthly_distribution && doc.docstatus ==1 ",
-   "fieldname": "add_monthly_dist",
-   "fieldtype": "Button",
-   "label": "Add Monthly Distribution & Controls"
-  },
-  {
-   "allow_on_submit": 1,
    "depends_on": "eval:doc.is_group ==0",
    "fieldname": "linked_monthly_distribution",
    "fieldtype": "Link",
    "label": "Linked Monthly Distribution",
    "options": "WBS Monthly Distribution",
    "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.is_group ==0 && !doc.linked_monthly_distribution && doc.docstatus ==1 ",
+   "fieldname": "add_monthly_dist",
+   "fieldtype": "Button",
+   "label": "Add Monthly Distribution & Controls"
+  },
+  {
+   "fieldname": "column_break_hwsg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "parent_work_breakdown_structure",
+   "fieldtype": "Link",
+   "label": "Parent Work Breakdown Structure",
+   "options": "Work Breakdown Structure"
+  },
+  {
+   "default": "0",
+   "fieldname": "wbs_level",
+   "fieldtype": "Data",
+   "label": "WBS Level"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Work Breakdown Structure",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fieldname": "lft",
@@ -220,9 +220,9 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-11-18 12:33:15.937812",
+ "modified": "2024-11-18 12:40:19.884701",
  "modified_by": "Administrator",
- "module": "Accounts",
+ "module": "Budget",
  "name": "Work Breakdown Structure",
  "naming_rule": "Expression",
  "owner": "Administrator",
