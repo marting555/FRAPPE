@@ -20,21 +20,16 @@ class GLClosing(Document):
         start_date: DF.Date
     # end: auto-generated types
     def before_save(self):
-        # Check for duplicate GL Closing for the same start_date, end_date, and company
-        existing_closing = frappe.get_all(
-            "GL Closing", 
+        if self.is_new():
+            existing_closing = frappe.get_all("GL Closing", 
             filters={
                 "company": self.company, 
                 "start_date": self.start_date, 
                 "end_date": self.end_date
             },
-            limit_page_length=1
-        )
-        
-        if existing_closing:
-            frappe.throw(_("GL Closing for the period from {0} to {1} already exists for the company {2}").format(self.start_date, self.end_date, self.company))
-
-        
+            limit_page_length=1)
+            if existing_closing:
+                frappe.throw(_("GL Closing for the period from {0} to {1} already exists for the company {2}").format(self.start_date, self.end_date, self.company))
 
 @frappe.whitelist(allow_guest=True)
 def validate_account_link_or_child_table(doc, method):
