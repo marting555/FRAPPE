@@ -9,19 +9,9 @@ erpnext.financial_statements = {
 			data &&
 			column.colIndex >= 3
 		) {
-			//Assuming that the first three columns are s.no, account name and the very first year of the accounting values, to calculate the relative percentage values of the successive columns.
-			const lastAnnualValue = row[column.colIndex - 1].content;
-			const currentAnnualvalue = data[column.fieldname];
-			if (currentAnnualvalue == undefined) return "NA"; //making this not applicable for undefined/null values
-			let annualGrowth = 0;
-			if (lastAnnualValue == 0 && currentAnnualvalue > 0) {
-				//If the previous year value is 0 and the current value is greater than 0
-				annualGrowth = 1;
-			} else if (lastAnnualValue > 0) {
-				annualGrowth = (currentAnnualvalue - lastAnnualValue) / lastAnnualValue;
-			}
+			const growthPercent = data[column.fieldname];
 
-			const growthPercent = Math.round(annualGrowth * 10000) / 100; //calculating the rounded off percentage
+			if (growthPercent == undefined) return "NA"; //making this not applicable for undefined/null values
 
 			value = $(`<span>${(growthPercent >= 0 ? "+" : "") + growthPercent + "%"}</span>`);
 			if (growthPercent < 0) {

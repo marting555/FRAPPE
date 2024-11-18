@@ -2,6 +2,7 @@
 # License: GNU General Public License v3. See license.txt
 
 
+import copy
 import functools
 import math
 import re
@@ -668,3 +669,32 @@ def get_filtered_list_for_consolidated_report(filters, period_list):
 			filtered_summary_list.append(period)
 
 	return filtered_summary_list
+
+
+def compute_growth_data(data, columns, accumulated_values):
+	if not accumulated_values:
+		columns.append(frappe._dict({"key": "total"}))
+
+	data_copy = copy.deepcopy(data)
+
+	for row_idx in range(len(data_copy)):
+		for column_idx in range(1, len(columns)):
+			previous_period_key = columns[column_idx - 1].key
+			current_period_key = columns[column_idx].key
+			current_period_value = data_copy[row_idx].get(current_period_key)
+			previous_period_value = data_copy[row_idx].get(previous_period_key)
+			annual_growth = 0
+
+			if current_period_value is None:
+				data[row_idx][current_period_key] = None
+				continue
+
+			if previous_period_value == 0 and current_period_value > 0:
+				annual_growth = 1
+
+			elif previous_period_value > 0:
+				annual_growth = (current_period_value - previous_period_value) / previous_period_value
+
+			growth_percent = round(annual_growth * 100, 2)
+
+			data[row_idx][current_period_key] = growth_percent
