@@ -138,7 +138,7 @@ def get_linked_payments_for_doc(
 				)
 				.where(Criterion.all(criteria))
 				.groupby(ple.voucher_no, ple.against_voucher_no, ple.company, ple.voucher_type, ple.account_currency)
-				.having(qb.Field("allocated_amount") > 0)
+				.having(Abs(Sum(ple.amount_in_account_currency)) > 0)
 				.run(as_dict=True)
 			)
 			return res
