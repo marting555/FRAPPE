@@ -142,6 +142,8 @@ class POSInvoiceMergeLog(Document):
 		sales_invoice.set_posting_time = 1
 		sales_invoice.posting_date = getdate(self.posting_date)
 		sales_invoice.posting_time = get_time(self.posting_time)
+		sales_invoice.disable_rounded_total = frappe.db.get_single_value("Global Defaults", "disable_rounded_total")
+		
 		sales_invoice.save()
 		sales_invoice.submit()
 
