@@ -30,10 +30,7 @@
   "column_break_hwsg",
   "parent_work_breakdown_structure",
   "wbs_level",
-  "amended_from",
-  "lft",
-  "rgt",
-  "created_from_project"
+  "amended_from"
  ],
  "fields": [
   {
@@ -197,30 +194,12 @@
    "label": "Linked Monthly Distribution",
    "options": "WBS Monthly Distribution",
    "read_only": 1
-  },
-  {
-   "fieldname": "lft",
-   "fieldtype": "Int",
-   "hidden": 1,
-   "label": "LEFT"
-  },
-  {
-   "fieldname": "rgt",
-   "fieldtype": "Int",
-   "hidden": 1,
-   "label": "Right"
-  },
-  {
-   "default": "0",
-   "fieldname": "created_from_project",
-   "fieldtype": "Check",
-   "label": "Created From Project"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-11-18 12:33:15.937812",
+ "modified": "2024-11-12 10:17:09.878161",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Work Breakdown Structure",
