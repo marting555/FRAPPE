@@ -89,7 +89,7 @@ class Dunning(AccountsController):
 				)
 
 	def validate_overdue_payments(self):
-		daily_interest = self.rate_of_interest / 100 / 365
+		daily_interest = (self.rate_of_interest or 0) / 100 / 365
 
 		for row in self.overdue_payments:
 			row.overdue_days = (getdate(self.posting_date) - getdate(row.due_date)).days or 0
@@ -98,7 +98,7 @@ class Dunning(AccountsController):
 	def validate_totals(self):
 		self.total_outstanding = sum(row.outstanding for row in self.overdue_payments)
 		self.total_interest = sum(row.interest for row in self.overdue_payments)
-		self.dunning_amount = self.total_interest + self.dunning_fee
+		self.dunning_amount = self.total_interest + (self.dunning_fee or 0)
 		self.base_dunning_amount = self.dunning_amount * self.conversion_rate
 		self.grand_total = self.total_outstanding + self.dunning_amount
 
