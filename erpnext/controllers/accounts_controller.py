@@ -346,12 +346,17 @@ class AccountsController(TransactionBase):
 					repost_doc.save(ignore_permissions=True)
 
 	def on_trash(self):
+		from erpnext.accounts.utils import delete_exchange_gain_loss_journal
+
 		self._remove_references_in_repost_doctypes()
 		self._remove_references_in_unreconcile()
 		self.remove_serial_and_batch_bundle()
 
 		# delete sl and gl entries on deletion of transaction
 		if frappe.db.get_single_value("Accounts Settings", "delete_linked_ledger_entries"):
+			# delete linked exchange gain/loss journal
+			delete_exchange_gain_loss_journal(self)
+			
 			ple = frappe.qb.DocType("Payment Ledger Entry")
 			frappe.qb.from_(ple).delete().where(
 				(ple.voucher_type == self.doctype) & (ple.voucher_no == self.name)
@@ -1580,6 +1585,7 @@ class AccountsController(TransactionBase):
 			remove_from_bank_transaction,
 		)
 		from erpnext.accounts.utils import (
+			cancel_common_party_journal,
 			cancel_exchange_gain_loss_journal,
 			unlink_ref_doc_from_payment_entries,
 		)
@@ -1591,6 +1597,7 @@ class AccountsController(TransactionBase):
 
 			# Cancel Exchange Gain/Loss Journal before unlinking
 			cancel_exchange_gain_loss_journal(self)
+			cancel_common_party_journal(self)
 
 			if frappe.db.get_single_value("Accounts Settings", "unlink_payment_on_cancellation_of_invoice"):
 				unlink_ref_doc_from_payment_entries(self)
@@ -1911,21 +1918,22 @@ class AccountsController(TransactionBase):
 		return stock_items
 
 	def set_total_advance_paid(self):
-		ple = frappe.qb.DocType("Payment Ledger Entry")
 		party = self.customer if self.doctype == "Sales Order" else self.supplier
-		advance = (
-			frappe.qb.from_(ple)
-			.select(ple.account_currency, Abs(Sum(ple.amount_in_account_currency)).as_("amount"))
-			.where(
-				(ple.against_voucher_type == self.doctype)
-				& (ple.against_voucher_no == self.name)
-				& (ple.party == party)
-				& (ple.delinked == 0)
-				& (ple.company == self.company)
-			)
-			.groupby(ple.account_currency)
-			.run(as_dict=True)
-		)
+		
+		advance =frappe.db.sql(
+			f"""SELECT 
+				(ARRAY_AGG(ple.account_currency))[1] as account_currency, 
+				ABS(SUM(ple.amount_in_account_currency)) AS amount
+			FROM 
+				"tabPayment Ledger Entry" as ple
+			WHERE
+				ple.against_voucher_type = '{self.doctype}'
+				AND ple.against_voucher_no = '{ self.name}'
+				AND ple.party = '{party}'
+				AND ple.delinked = 0
+				AND ple.company = '{self.company}'
+			"""
+		,as_dict=True)
 
 		if advance:
 			advance = advance[0]
@@ -1946,6 +1954,7 @@ class AccountsController(TransactionBase):
 			else:
 				order_total = self.get("base_rounded_total") or self.base_grand_total
 				precision = "base_rounded_total" if self.get("base_rounded_total") else "base_grand_total"
+				
 
 			formatted_order_total = fmt_money(
 				order_total, precision=self.precision(precision), currency=advance.account_currency
@@ -1958,7 +1967,7 @@ class AccountsController(TransactionBase):
 					).format(formatted_advance_paid, self.name, formatted_order_total)
 				)
 
-			frappe.db.set_value(self.doctype, self.name, "advance_paid", advance_paid)
+			self.db_set("advance_paid", advance_paid)
 
 	@property
 	def company_abbr(self):
@@ -2419,12 +2428,15 @@ class AccountsController(TransactionBase):
 
 		primary_account = get_party_account(primary_party_type, primary_party, self.company)
 		secondary_account = get_party_account(secondary_party_type, secondary_party, self.company)
+		primary_account_currency = get_account_currency(primary_account)
+		secondary_account_currency = get_account_currency(secondary_account)
 
 		jv = frappe.new_doc("Journal Entry")
 		jv.voucher_type = "Journal Entry"
 		jv.posting_date = self.posting_date
 		jv.company = self.company
 		jv.remark = f"Adjustment for {self.doctype} {self.name}"
+		jv.is_system_generated = True
 
 		reconcilation_entry = frappe._dict()
 		advance_entry = frappe._dict()
@@ -2457,6 +2469,10 @@ class AccountsController(TransactionBase):
 		else:
 			advance_entry.credit_in_account_currency = self.outstanding_amount
 			reconcilation_entry.debit_in_account_currency = self.outstanding_amount
+
+		default_currency = erpnext.get_company_currency(self.company)
+		if primary_account_currency != default_currency or secondary_account_currency != default_currency:
+			jv.multi_currency = 1
 
 		jv.append("accounts", reconcilation_entry)
 		jv.append("accounts", advance_entry)
@@ -3492,7 +3508,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 	else:  # Sales Order
 		parent.validate_warehouse()
 		parent.update_reserved_qty()
-		parent.update_project()
+		# parent.update_project()
 		parent.update_prevdoc_status("submit")
 		parent.update_delivery_status()
 

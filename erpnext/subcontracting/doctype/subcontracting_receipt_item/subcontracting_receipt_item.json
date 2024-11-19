@@ -67,7 +67,6 @@
   "accounting_dimensions_section",
   "cost_center",
   "dimension_col_break",
-  "project",
   "section_break_80",
   "page_break",
   "purchase_order",
@@ -431,13 +430,6 @@
    "fieldname": "accounting_dimensions_section",
    "fieldtype": "Section Break",
    "label": "Accounting Dimensions"
-  },
-  {
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "options": "Project",
-   "print_hide": 1
   },
   {
    "fieldname": "dimension_col_break",

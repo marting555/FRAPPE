@@ -104,7 +104,7 @@ class TestDeliveryNote(FrappeTestCase):
 				"Stock Ledger Entry",
 				{"voucher_type": "Delivery Note", "voucher_no": dn.name, "item_code": "_Test Item"},
 				"stock_value_difference",
-			)
+			) or 0
 		)
 
 		stock_value_diff_rm2 = abs(
@@ -116,7 +116,7 @@ class TestDeliveryNote(FrappeTestCase):
 					"item_code": "_Test Item Home Desktop 100",
 				},
 				"stock_value_difference",
-			)
+			)  or 0
 		)
 
 		stock_value_diff = stock_value_diff_rm1 + stock_value_diff_rm2
@@ -887,7 +887,7 @@ class TestDeliveryNote(FrappeTestCase):
 		dn.submit()
 
 		update_delivery_note_status(dn.name, "Closed")
-		self.assertEqual(frappe.db.get_value("Delivery Note", dn.name, "Status"), "Closed")
+		self.assertEqual(frappe.db.get_value("Delivery Note", dn.name, "status"), "Closed")
 
 		# Check cancelling closed delivery note
 		dn.load_from_db()

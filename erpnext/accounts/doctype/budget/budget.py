@@ -114,7 +114,7 @@ class Budget(Document):
 
 	def set_null_value(self):
 		if self.budget_against == "Cost Center":
-			self.project = None
+			return
 		else:
 			self.cost_center = None
 

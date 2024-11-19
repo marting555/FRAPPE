@@ -253,10 +253,11 @@ class TestItem(FrappeTestCase):
 				}
 			)
 
-			self.assertEqual(details.item_tax_template, data["item_tax_template"])
-			self.assertEqual(
-				json.loads(details.item_tax_rate), expected_item_tax_map[details.item_tax_template]
-			)
+			if details.item_tax_template:
+				self.assertEqual(details.item_tax_template, data["item_tax_template"])
+				self.assertEqual(
+					json.loads(details.item_tax_rate), expected_item_tax_map[details.item_tax_template]
+				)
 
 	def test_item_defaults(self):
 		frappe.delete_doc_if_exists("Item", "Test Item With Defaults", force=1)

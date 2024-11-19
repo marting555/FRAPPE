@@ -61,14 +61,6 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 		if (this.frm.doc.supplier && this.frm.doc.__islocal) {
 			this.frm.trigger("supplier");
 		}
-		cur_frm.set_query("payment_term",function (doc) {
-			return {
-				
-				filters: {
-					is_for_purchase: 1,
-				},
-			};
-		});
 	}
 
 	refresh(doc) {

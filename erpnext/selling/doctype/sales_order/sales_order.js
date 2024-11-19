@@ -233,6 +233,15 @@ frappe.ui.form.on("Sales Order", {
 			"Unreconcile Payment",
 			"Unreconcile Payment Entries",
 		];
+
+		frm.set_query("set_warehouse", function () {
+			return {
+				filters: {
+					"company": frm.doc.company,
+					"is_group" : ["!=", 1]
+				},
+			};
+		});
 	},
 
 	delivery_date: function (frm) {

@@ -7,11 +7,13 @@
 
 import json
 
+from erpnext.accounts.doctype.work_breakdown_structure.work_breakdown_structure import check_available_budget
 import frappe
 from frappe import _, msgprint
 from frappe.model.mapper import get_mapped_doc
 from frappe.query_builder.functions import Sum
 from frappe.utils import cint, cstr, flt, get_link_to_form, getdate, new_line_sep, nowdate
+from datetime import datetime
 
 from erpnext.buying.utils import check_on_hold_or_closed_status, validate_for_items
 from erpnext.controllers.buying_controller import BuyingController
@@ -29,9 +31,8 @@ class MaterialRequest(BuyingController):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
 		from erpnext.stock.doctype.material_request_item.material_request_item import MaterialRequestItem
+		from frappe.types import DF
 
 		amended_from: DF.Link | None
 		company: DF.Link
@@ -39,9 +40,7 @@ class MaterialRequest(BuyingController):
 		items: DF.Table[MaterialRequestItem]
 		job_card: DF.Link | None
 		letter_head: DF.Link | None
-		material_request_type: DF.Literal[
-			"Purchase", "Material Transfer", "Material Issue", "Manufacture", "Customer Provided"
-		]
+		material_request_type: DF.Literal["Purchase", "Material Transfer", "Material Issue", "Manufacture", "Customer Provided"]
 		naming_series: DF.Literal["MAT-MR-.YYYY.-"]
 		per_ordered: DF.Percent
 		per_received: DF.Percent
@@ -50,23 +49,11 @@ class MaterialRequest(BuyingController):
 		select_print_heading: DF.Link | None
 		set_from_warehouse: DF.Link | None
 		set_warehouse: DF.Link | None
-		status: DF.Literal[
-			"",
-			"Draft",
-			"Submitted",
-			"Stopped",
-			"Cancelled",
-			"Pending",
-			"Partially Ordered",
-			"Partially Received",
-			"Ordered",
-			"Issued",
-			"Transferred",
-			"Received",
-		]
+		status: DF.Literal["", "Draft", "Submitted", "Stopped", "Cancelled", "Pending", "Partially Ordered", "Partially Received", "Ordered", "Issued", "Transferred", "Received"]
 		tc_name: DF.Link | None
 		terms: DF.TextEditor | None
 		title: DF.Data | None
+		total: DF.Float
 		transaction_date: DF.Date
 		transfer_status: DF.Literal["", "Not Started", "In Transit", "Completed"]
 		work_order: DF.Link | None
@@ -119,6 +106,7 @@ class MaterialRequest(BuyingController):
 		self.check_for_on_hold_or_closed_status("Sales Order", "sales_order")
 		self.validate_uom_is_integer("uom", "qty")
 		self.validate_material_request_type()
+		validate_available_budget(self)
 
 		if not self.status:
 			self.status = "Draft"
@@ -173,18 +161,25 @@ class MaterialRequest(BuyingController):
 			"Budget", {"applicable_on_material_request": 1, "docstatus": 1}
 		):
 			self.validate_budget()
+		#increment overall budget
+		# increment_committed_overall_budget(self)
+		update_original_budget(self,"Submit")
 
 	def before_save(self):
 		self.set_status(update=True)
 
 	def before_submit(self):
 		self.set_status(update=True)
+		# create new budgte entry
+		# create_budget_entry(self)
 
 	def before_cancel(self):
 		# if MRQ is already closed, no point saving the document
 		check_on_hold_or_closed_status(self.doctype, self.name)
-
+		
 		self.set_status(update=True, status="Cancelled")
+		# create_budget_entry_on_cancel(self)
+		update_original_budget(self,"Cancel")
 
 	def check_modified_date(self):
 		mod_db = frappe.db.sql("""select modified from `tabMaterial Request` where name = %s""", self.name)
@@ -225,8 +220,10 @@ class MaterialRequest(BuyingController):
 				)
 
 	def on_cancel(self):
+		self.flags.ignore_links = True
 		self.update_requested_qty_in_production_plan()
 		self.update_requested_qty()
+		# decrement_committed_overall_budget(self)
 
 	def get_mr_items_ordered_qty(self, mr_items):
 		mr_items_ordered_qty = {}
@@ -431,11 +428,8 @@ def make_purchase_order(source_name, target_doc=None, args=None):
 		child_filter = d.name in filtered_items if filtered_items else True
 
 		return d.ordered_qty < d.stock_qty and child_filter
-
-	doclist = get_mapped_doc(
-		"Material Request",
-		source_name,
-		{
+	
+	fields = {
 			"Material Request": {
 				"doctype": "Purchase Order",
 				"validation": {"docstatus": ["=", 1], "material_request_type": ["=", "Purchase"]},
@@ -449,12 +443,18 @@ def make_purchase_order(source_name, target_doc=None, args=None):
 					["uom", "uom"],
 					["sales_order", "sales_order"],
 					["sales_order_item", "sales_order_item"],
-					["wip_composite_asset", "wip_composite_asset"],
 				],
 				"postprocess": update_item,
 				"condition": select_item,
 			},
-		},
+		}
+	if "assets" in frappe.get_installed_apps():
+		fields["Material Request Item"]["field_map"].append(["wip_composite_asset", "wip_composite_asset"])
+
+	doclist = get_mapped_doc(
+		"Material Request",
+		source_name,
+		fields,
 		target_doc,
 		postprocess,
 	)
@@ -829,3 +829,116 @@ def make_in_transit_stock_entry(source_name, in_transit_warehouse):
 		row.t_warehouse = in_transit_warehouse
 
 	return ste_doc
+
+def update_original_budget(self,event):
+	wbs_dict = []
+	wbs_list = []
+
+	if self.items:
+		for row in self.items:
+			if row.get("work_breakdown_structure") not in wbs_list:
+				wbs_list.append(row.get("work_breakdown_structure"))
+
+	if wbs_list:
+		for i in wbs_list:
+			wbs_dict.append({
+				"wbs_id": i,
+				"voucher_name": "",
+				"voucher_type": "",
+				"amount": 0.0
+			})
+
+	for row in self.items:
+		amount = row.get("amount")
+		if row.get("work_breakdown_structure"):
+			for j in wbs_dict:
+				if row.get("work_breakdown_structure") == j.get("wbs_id"):
+					wbs_name,wbs_level = frappe.db.get_value("Work Breakdown Structure",row.get("work_breakdown_structure"),['wbs_name','wbs_level'])
+					j.update({
+						"amount": j.get("amount") + row.get("amount"),
+						"wbs_name": wbs_name,
+						"wbs_level": wbs_level,
+						"txn_date": self.transaction_date,
+						"voucher_type": self.doctype,
+						"voucher_name": self.name,
+						'project':row.get('project')
+					})
+			print("ROW ====> ",row)
+			wbs = frappe.get_doc("Work Breakdown Structure",row.get("work_breakdown_structure"))
+			if event == "Submit":
+				wbs.committed_overall_budget += amount
+				wbs.assigned_overall_budget = wbs.committed_overall_budget + wbs.actual_overall_budget
+				wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
+			elif event == "Cancel":
+				wbs.committed_overall_budget -= amount
+				wbs.assigned_overall_budget = wbs.committed_overall_budget + wbs.actual_overall_budget
+				wbs.available_budget = wbs.overall_budget - wbs.assigned_overall_budget
+			wbs.save()
+
+	if wbs_dict:
+		for i in wbs_dict:
+			create_budget_entry(self, i, event, self.company)
+
+    
+def create_budget_entry(self,row,event,company):
+	if row.get("wbs_id"):
+		bgt_ent = frappe.new_doc("Budget Entry")
+		bgt_ent.project = row.get('project')
+		bgt_ent.wbs = row.get("wbs_id")
+		bgt_ent.wbs_name = row.get("wbs_name")
+		bgt_ent.wbs_level = row.get("wbs_level")
+		bgt_ent.company = company
+		bgt_ent.posting_date = datetime.now().strftime("%Y-%m-%d")
+		if event == "Submit":
+			bgt_ent.committed_overall_credit = row.get("amount")            
+		elif event == "Cancel":
+			bgt_ent.committed_overall_debit = row.get("amount")   
+
+		bgt_ent.voucher_type = "Material Request"
+		bgt_ent.voucher_no = self.name
+		bgt_ent.voucher_submit_date = datetime.now().strftime("%Y-%m-%d")
+		bgt_ent.save(ignore_permissions=True)
+		bgt_ent.submit()
+		
+def get_wbs_amount(self, wbs):
+	wbs_amount = 0.0
+	if self.items:
+		for i in self.items:
+			if i.work_breakdown_structure == wbs:
+				wbs_amount += i.amount
+
+	return wbs_amount
+		
+def validate_available_budget(self):
+	wbs_list = []
+	if self.items:
+		for i in self.items:
+			if i.work_breakdown_structure:
+				if i.work_breakdown_structure not in wbs_list:
+					wbs_list.append(i.work_breakdown_structure)
+
+	if wbs_list:
+		if len(set(wbs_list)) == 1:
+			amt = get_wbs_amount(self, wbs_list[0])
+			ab = check_available_budget(wbs_list[0], amt, "Material Request",self.transaction_date)
+			abl = abs(ab.get("available_bgt"))
+			msg = _("Available Budget Limit Exceeded For This WBS - {0} by {1}".format(ab.get("wbs"), abl))
+			if ab.get("available_bgt") < 0.0:
+				abl = abs(ab.get("available_bgt"))
+				if ab.get("action") == "Stop":
+					frappe.throw(msg,title=_("Budget Exceeded"))
+				else:
+					frappe.msgprint(msg, indicator="orange", title=_("Budget Exceeded"))
+					
+		elif len(set(wbs_list)) > 1:
+			for i in set(wbs_list):
+				amt = get_wbs_amount(self, i)
+				ab = check_available_budget(i, amt, "Material Request",self.transaction_date)
+				abl = abs(ab.get("available_bgt"))
+				msg = _("Available Budget Limit Exceeded For This WBS - {0} by {1}".format(ab.get("wbs"), abl))
+				if ab.get("available_bgt") < 0.0:
+					abl = abs(ab.get("available_bgt"))
+					if ab.get("action") == "Stop":
+						frappe.throw(msg,title=_("Budget Exceeded"))
+					else:
+						frappe.msgprint(msg, indicator="orange", title=_("Budget Exceeded"))

@@ -530,10 +530,6 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 		var me = this;
 		super.currency();
 		if (this.frm.doc.timesheets) {
-			this.frm.doc.timesheets.forEach((d) => {
-				let row = frappe.get_doc(d.doctype, d.name);
-				set_timesheet_detail_rate(row.doctype, row.name, me.frm.doc.currency, row.timesheet_detail);
-			});
 			this.frm.trigger("calculate_timesheet_totals");
 		}
 	}
@@ -711,12 +707,6 @@ frappe.ui.form.on("Sales Invoice", {
 			"Payment Request": "Payment Request",
 			"Payment Entry": "Payment",
 		}),
-			(frm.fields_dict["timesheets"].grid.get_field("time_sheet").get_query = function (doc, cdt, cdn) {
-				return {
-					query: "erpnext.projects.doctype.timesheet.timesheet.get_timesheet",
-					filters: { project: doc.project },
-				};
-			});
 
 		// discount account
 		frm.fields_dict["items"].grid.get_field("discount_account").get_query = function (doc) {
@@ -839,7 +829,7 @@ frappe.ui.form.on("Sales Invoice", {
 	hide_fields: function (frm) {
 		let doc = frm.doc;
 		var parent_fields = [
-			"project",
+			// "project",
 			"due_date",
 			"is_opening",
 			"source",
@@ -899,100 +889,6 @@ frappe.ui.form.on("Sales Invoice", {
 		}
 	},
 
-	project: function (frm) {
-		if (frm.doc.project) {
-			frm.events.add_timesheet_data(frm, {
-				project: frm.doc.project,
-			});
-		}
-	},
-
-	async add_timesheet_data(frm, kwargs) {
-		if (kwargs === "Sales Invoice") {
-			// called via frm.trigger()
-			kwargs = Object();
-		}
-
-		if (!Object.prototype.hasOwnProperty.call(kwargs, "project") && frm.doc.project) {
-			kwargs.project = frm.doc.project;
-		}
-
-		const timesheets = await frm.events.get_timesheet_data(frm, kwargs);
-		return frm.events.set_timesheet_data(frm, timesheets);
-	},
-
-	async get_timesheet_data(frm, kwargs) {
-		return frappe
-			.call({
-				method: "erpnext.projects.doctype.timesheet.timesheet.get_projectwise_timesheet_data",
-				args: kwargs,
-			})
-			.then((r) => {
-				if (!r.exc && r.message.length > 0) {
-					return r.message;
-				} else {
-					return [];
-				}
-			});
-	},
-
-	set_timesheet_data: function (frm, timesheets) {
-		frm.clear_table("timesheets");
-		timesheets.forEach(async (timesheet) => {
-			if (frm.doc.currency != timesheet.currency) {
-				const exchange_rate = await frm.events.get_exchange_rate(
-					frm,
-					timesheet.currency,
-					frm.doc.currency
-				);
-				frm.events.append_time_log(frm, timesheet, exchange_rate);
-			} else {
-				frm.events.append_time_log(frm, timesheet, 1.0);
-			}
-		});
-		frm.trigger("calculate_timesheet_totals");
-		frm.refresh();
-	},
-
-	async get_exchange_rate(frm, from_currency, to_currency) {
-		if (
-			frm.exchange_rates &&
-			frm.exchange_rates[from_currency] &&
-			frm.exchange_rates[from_currency][to_currency]
-		) {
-			return frm.exchange_rates[from_currency][to_currency];
-		}
-
-		return frappe.call({
-			method: "erpnext.setup.utils.get_exchange_rate",
-			args: {
-				from_currency,
-				to_currency,
-			},
-			callback: function (r) {
-				if (r.message) {
-					// cache exchange rates
-					frm.exchange_rates = frm.exchange_rates || {};
-					frm.exchange_rates[from_currency] = frm.exchange_rates[from_currency] || {};
-					frm.exchange_rates[from_currency][to_currency] = r.message;
-				}
-			},
-		});
-	},
-
-	append_time_log: function (frm, time_log, exchange_rate) {
-		const row = frm.add_child("timesheets");
-		row.activity_type = time_log.activity_type;
-		row.description = time_log.description;
-		row.time_sheet = time_log.time_sheet;
-		row.from_time = time_log.from_time;
-		row.to_time = time_log.to_time;
-		row.billing_hours = time_log.billing_hours;
-		row.billing_amount = flt(time_log.billing_amount) * flt(exchange_rate);
-		row.timesheet_detail = time_log.name;
-		row.project_name = time_log.project_name;
-	},
-
 	calculate_timesheet_totals: function (frm) {
 		frm.set_value(
 			"total_billing_amount",
@@ -1005,50 +901,6 @@ frappe.ui.form.on("Sales Invoice", {
 	},
 
 	refresh: function (frm) {
-		if (frm.doc.docstatus === 0 && !frm.doc.is_return) {
-			frm.add_custom_button(__("Fetch Timesheet"), function () {
-				let d = new frappe.ui.Dialog({
-					title: __("Fetch Timesheet"),
-					fields: [
-						{
-							label: __("From"),
-							fieldname: "from_time",
-							fieldtype: "Date",
-							reqd: 1,
-						},
-						{
-							fieldtype: "Column Break",
-							fieldname: "col_break_1",
-						},
-						{
-							label: __("To"),
-							fieldname: "to_time",
-							fieldtype: "Date",
-							reqd: 1,
-						},
-						{
-							label: __("Project"),
-							fieldname: "project",
-							fieldtype: "Link",
-							options: "Project",
-							default: frm.doc.project,
-						},
-					],
-					primary_action: function () {
-						const data = d.get_values();
-						frm.events.add_timesheet_data(frm, {
-							from_time: data.from_time,
-							to_time: data.to_time,
-							project: data.project,
-						});
-						d.hide();
-					},
-					primary_action_label: __("Get Timesheets"),
-				});
-				d.show();
-			});
-		}
-
 		if (frm.doc.is_debit_note) {
 			frm.set_df_property("return_against", "label", __("Adjustment Against"));
 		}
@@ -1074,21 +926,6 @@ frappe.ui.form.on("Sales Invoice Timesheet", {
 		frm.trigger("calculate_timesheet_totals");
 	},
 });
-
-var set_timesheet_detail_rate = function (cdt, cdn, currency, timelog) {
-	frappe.call({
-		method: "erpnext.projects.doctype.timesheet.timesheet.get_timesheet_detail_rate",
-		args: {
-			timelog: timelog,
-			currency: currency,
-		},
-		callback: function (r) {
-			if (!r.exc && r.message) {
-				frappe.model.set_value(cdt, cdn, "billing_amount", r.message);
-			}
-		},
-	});
-};
 
 var select_loyalty_program = function (frm, loyalty_programs) {
 	var dialog = new frappe.ui.Dialog({
@@ -1120,3 +957,11 @@ var select_loyalty_program = function (frm, loyalty_programs) {
 
 	dialog.show();
 };
+
+frappe.ui.form.on("Discount Terms", {
+	no_of_days:(frm)=>{
+		let discount_date = frappe.datetime.add_days(frappe.datetime.get_today(), frm.selected_doc.no_of_days)
+		frm.selected_doc.discount_date = discount_date
+		frm.refresh_field("payment_discount_terms")
+	}
+})

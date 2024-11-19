@@ -232,6 +232,7 @@ class StockEntry(StockController):
 		self.validate_serialized_batch()
 		self.calculate_rate_and_amount()
 		self.validate_putaway_capacity()
+		self.validate_component_quantities()
 
 		if not self.get("purpose") == "Manufacture":
 			# ignore scrap item wh difference and empty source/target wh
@@ -252,7 +253,6 @@ class StockEntry(StockController):
 		self.make_gl_entries()
 
 		self.repost_future_sle_and_gle()
-		self.update_cost_in_project()
 		self.update_transferred_qty()
 		self.update_quality_inspection()
 
@@ -281,7 +281,6 @@ class StockEntry(StockController):
 
 		self.make_gl_entries_on_cancel()
 		self.repost_future_sle_and_gle()
-		self.update_cost_in_project()
 		self.update_transferred_qty()
 		self.update_quality_inspection()
 		self.delete_auto_created_batches()
@@ -377,41 +376,6 @@ class StockEntry(StockController):
 					_("Row {0}: Qty in Stock UOM can not be zero.").format(item.idx), title=_("Zero quantity")
 				)
 
-	def update_cost_in_project(self):
-		if self.work_order and not frappe.db.get_value(
-			"Work Order", self.work_order, "update_consumed_material_cost_in_project"
-		):
-			return
-
-		if self.project:
-			amount = frappe.db.sql(
-				""" select ifnull(sum(sed.amount), 0)
-				from
-					`tabStock Entry` se, `tabStock Entry Detail` sed
-				where
-					se.docstatus = 1 and se.project = %s and sed.parent = se.name
-					and (sed.t_warehouse is null or sed.t_warehouse = '')""",
-				self.project,
-				as_list=1,
-			)
-
-			amount = amount[0][0] if amount else 0
-			additional_costs = frappe.db.sql(
-				""" select ifnull(sum(sed.base_amount), 0)
-				from
-					`tabStock Entry` se, `tabLanded Cost Taxes and Charges` sed
-				where
-					se.docstatus = 1 and se.project = %s and sed.parent = se.name
-					and se.purpose = 'Manufacture'""",
-				self.project,
-				as_list=1,
-			)
-
-			additional_cost_amt = additional_costs[0][0] if additional_costs else 0
-
-			amount += additional_cost_amt
-			frappe.db.set_value("Project", self.project, "total_consumed_material_cost", amount)
-
 	def validate_item(self):
 		stock_items = self.get_stock_items()
 		for item in self.get("items"):
@@ -430,7 +394,7 @@ class StockEntry(StockController):
 					{
 						"item_code": item.item_code,
 						"company": self.company,
-						"project": self.project,
+						# "project": self.project,
 						"uom": item.uom,
 						"s_warehouse": item.s_warehouse,
 					}
@@ -746,6 +710,35 @@ class StockEntry(StockController):
 					NegativeStockError,
 					title=_("Insufficient Stock"),
 				)
+	
+	def validate_component_quantities(self):
+		if self.purpose not in ["Manufacture", "Material Transfer for Manufacture"]:
+			return
+
+		if not frappe.db.get_single_value("Manufacturing Settings", "validate_components_quantities_per_bom"):
+			return
+
+		if not self.fg_completed_qty:
+			return
+
+		raw_materials = self.get_bom_raw_materials(self.fg_completed_qty)
+
+		precision = frappe.get_precision("Stock Entry Detail", "qty")
+		for row in self.items:
+			if not row.s_warehouse:
+				continue
+
+			if details := raw_materials.get(row.item_code):
+				if flt(details.get("qty"), precision) != flt(row.qty, precision):
+					frappe.throw(
+						_("For the item {0}, the quantity should be {1} according to the BOM {2}.").format(
+							frappe.bold(row.item_code),
+							flt(details.get("qty"), precision),
+							get_link_to_form("BOM", self.bom_no),
+						),
+						title=_("Incorrect Component Quantity"),
+					)
+
 
 	@frappe.whitelist()
 	def get_stock_and_rate(self):
@@ -2109,7 +2102,7 @@ class StockEntry(StockController):
 				& (job_card.work_order == self.work_order)
 				& (job_card.docstatus == 1)
 			)
-			.groupby(job_card_scrap_item.item_code)
+			.groupby(job_card_scrap_item.item_code, job_card_scrap_item.item_name, job_card_scrap_item.description, job_card_scrap_item.stock_uom)
 		).run(as_dict=1)
 
 		pending_qty = flt(self.get_completed_job_card_qty()) - flt(self.pro_doc.produced_qty)
@@ -2959,7 +2952,7 @@ def get_expired_batch_items():
 	where b.expiry_date <= %s
 	and b.expiry_date is not NULL
 	and b.batch_id = sle.batch_no and sle.is_cancelled = 0
-	group by sle.warehouse, sle.item_code, sle.batch_no""",
+	group by sle.warehouse, sle.item_code, sle.batch_no, b.item, sle.stock_uom""",
 		(nowdate()),
 		as_dict=1,
 	)

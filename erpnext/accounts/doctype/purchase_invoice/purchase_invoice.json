@@ -1136,6 +1136,7 @@
    "depends_on": "eval:(!doc.is_paid && !doc.is_return)",
    "fieldname": "payment_terms_template",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Payment Terms Template",
    "options": "Payment Terms Template"
   },
@@ -1143,6 +1144,7 @@
    "depends_on": "eval:(!doc.is_paid && !doc.is_return)",
    "fieldname": "payment_schedule",
    "fieldtype": "Table",
+   "hidden": 1,
    "label": "Payment Schedule",
    "no_copy": 1,
    "options": "Payment Schedule",

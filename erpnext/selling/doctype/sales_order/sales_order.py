@@ -178,6 +178,8 @@ class SalesOrder(SellingController):
 		super().__init__(*args, **kwargs)
 
 	def onload(self) -> None:
+		super().onload()
+		
 		if frappe.db.get_single_value("Stock Settings", "enable_stock_reservation"):
 			if self.has_unreserved_stock():
 				self.set_onload("has_unreserved_stock", True)
@@ -188,7 +190,6 @@ class SalesOrder(SellingController):
 	def validate(self):
 		super().validate()
 		self.validate_delivery_date()
-		self.validate_proj_cust()
 		self.validate_po()
 		self.validate_uom_is_integer("stock_uom", "stock_qty")
 		self.validate_uom_is_integer("uom", "qty")
@@ -322,18 +323,6 @@ class SalesOrder(SellingController):
 
 		self.validate_sales_mntc_quotation()
 
-	def validate_proj_cust(self):
-		if self.project and self.customer_name:
-			res = frappe.db.sql(
-				"""select name from `tabProject` where name = %s
-				and (customer = %s or ifnull(customer,'')='')""",
-				(self.project, self.customer),
-			)
-			if not res:
-				frappe.throw(
-					_("Customer {0} does not belong to project {1}").format(self.customer, self.project)
-				)
-
 	def validate_warehouse(self):
 		super().validate_warehouse()
 
@@ -399,7 +388,6 @@ class SalesOrder(SellingController):
 		frappe.get_doc("Authorization Control").validate_approving_authority(
 			self.doctype, self.company, self.base_grand_total, self
 		)
-		self.update_project()
 		self.update_prevdoc_status("submit")
 
 		self.update_blanket_order()
@@ -429,7 +417,6 @@ class SalesOrder(SellingController):
 
 		self.check_nextdoc_docstatus()
 		self.update_reserved_qty()
-		self.update_project()
 		self.update_prevdoc_status("cancel")
 
 		self.db_set("status", "Cancelled")
@@ -442,15 +429,6 @@ class SalesOrder(SellingController):
 			from erpnext.accounts.doctype.pricing_rule.utils import update_coupon_code_count
 
 			update_coupon_code_count(self.coupon_code, "cancelled")
-
-	def update_project(self):
-		if frappe.db.get_single_value("Selling Settings", "sales_update_frequency") != "Each Transaction":
-			return
-
-		if self.project:
-			project = frappe.get_doc("Project", self.project)
-			project.update_sales_amount()
-			project.db_update()
 
 	def check_credit_limit(self):
 		# if bypass credit limit check is set to true (1) at sales order level,
@@ -482,7 +460,7 @@ class SalesOrder(SellingController):
 
 	def check_modified_date(self):
 		mod_db = frappe.db.get_value("Sales Order", self.name, "modified")
-		date_diff = frappe.db.sql(f"select TIMEDIFF('{mod_db}', '{cstr(self.modified)}')")
+		date_diff = frappe.db.sql(f"select AGE('{mod_db}', '{cstr(self.modified)}')")
 		if date_diff and date_diff[0][0]:
 			frappe.throw(_("{0} {1} has been modified. Please refresh.").format(self.doctype, self.name))
 

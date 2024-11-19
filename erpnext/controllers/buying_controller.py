@@ -39,7 +39,6 @@ class BuyingController(SubcontractingController):
 		self.validate_warehouse()
 		self.validate_from_warehouse()
 		self.set_supplier_address()
-		self.validate_asset_return()
 		self.validate_auto_repeat_subscription_dates()
 		self.create_package_for_transfer()
 
@@ -166,7 +165,7 @@ class BuyingController(SubcontractingController):
 					break
 
 	def validate_stock_or_nonstock_items(self):
-		if self.meta.get_field("taxes") and not self.get_stock_items() and not self.get_asset_items():
+		if self.meta.get_field("taxes") and not self.get_stock_items() and not get_asset_items(self):
 			msg = _('Tax Category has been changed to "Total" because all the Items are non-stock items')
 			self.update_tax_category(msg)
 
@@ -180,32 +179,6 @@ class BuyingController(SubcontractingController):
 				d.category = "Total"
 
 			msgprint(msg)
-
-	def validate_asset_return(self):
-		if self.doctype not in ["Purchase Receipt", "Purchase Invoice"] or not self.is_return:
-			return
-
-		purchase_doc_field = "purchase_receipt" if self.doctype == "Purchase Receipt" else "purchase_invoice"
-		not_cancelled_asset = []
-		if self.return_against:
-			not_cancelled_asset = [
-				d.name
-				for d in frappe.db.get_all("Asset", {purchase_doc_field: self.return_against, "docstatus": 1})
-			]
-
-		if self.is_return and len(not_cancelled_asset):
-			frappe.throw(
-				_(
-					"{} has submitted assets linked to it. You need to cancel the assets to create purchase return."
-				).format(self.return_against),
-				title=_("Not Allowed"),
-			)
-
-	def get_asset_items(self):
-		if self.doctype not in ["Purchase Order", "Purchase Invoice", "Purchase Receipt"]:
-			return []
-
-		return [d.item_code for d in self.items if d.is_fixed_asset]
 
 	def set_landed_cost_voucher_amount(self):
 		for d in self.get("items"):
@@ -278,7 +251,7 @@ class BuyingController(SubcontractingController):
 		TODO: rename item_tax_amount to valuation_tax_amount
 		"""
 		stock_and_asset_items = []
-		stock_and_asset_items = self.get_stock_items() + self.get_asset_items()
+		stock_and_asset_items = self.get_stock_items() + get_asset_items(self)
 
 		stock_and_asset_items_qty, stock_and_asset_items_amount = 0, 0
 		last_item_idx = 1
@@ -341,7 +314,6 @@ class BuyingController(SubcontractingController):
 					) / qty_in_stock_uom
 			else:
 				item.valuation_rate = 0.0
-
 		update_regional_item_valuation_rate(self)
 
 	def set_incoming_rate(self):
@@ -691,9 +663,6 @@ class BuyingController(SubcontractingController):
 		if self.get("is_return"):
 			return
 
-		if self.doctype in ["Purchase Receipt", "Purchase Invoice"]:
-			self.process_fixed_asset()
-
 		if self.doctype in [
 			"Purchase Order",
 			"Purchase Receipt",
@@ -711,12 +680,6 @@ class BuyingController(SubcontractingController):
 			"Buying Settings", "disable_last_purchase_rate"
 		):
 			update_last_purchase_rate(self, is_submit=0)
-
-		if self.doctype in ["Purchase Receipt", "Purchase Invoice"]:
-			field = "purchase_invoice" if self.doctype == "Purchase Invoice" else "purchase_receipt"
-
-			self.delete_linked_asset()
-			self.update_fixed_asset(field, delete_asset=True)
 
 	def validate_budget(self):
 		if self.docstatus == 1:
@@ -827,13 +790,16 @@ class BuyingController(SubcontractingController):
 				"asset_quantity": asset_quantity,
 				"purchase_receipt": self.name if self.doctype == "Purchase Receipt" else None,
 				"purchase_invoice": self.name if self.doctype == "Purchase Invoice" else None,
+				"purchase_receipt_item": row.name if self.doctype == "Purchase Receipt" else None,
+				"purchase_invoice_item": row.name if self.doctype == "Purchase Invoice" else None,
 				"cost_center": row.cost_center,
 			}
 		)
 		fields = frappe.get_list("Accounting Dimension", pluck="fieldname")
 		for field in fields:
-			if hasattr(self, field):
-				setattr(asset, field, getattr(self, field))
+			if field != "location":
+				if hasattr(self, field):
+					setattr(asset, field, getattr(self, field))
 
 		asset.flags.ignore_validate = True
 		asset.flags.ignore_mandatory = True
@@ -891,6 +857,7 @@ class BuyingController(SubcontractingController):
 		asset_movement = frappe.db.get_value("Asset Movement", {"reference_name": self.name}, "name")
 		frappe.delete_doc("Asset Movement", asset_movement, force=1)
 
+
 	def validate_schedule_date(self):
 		if not self.get("items"):
 			return
@@ -924,19 +891,6 @@ class BuyingController(SubcontractingController):
 			validate_item_type(self, "is_sub_contracted_item", "subcontracted")
 		else:
 			validate_item_type(self, "is_purchase_item", "purchase")
-
-
-def get_asset_item_details(asset_items):
-	asset_items_data = {}
-	for d in frappe.get_all(
-		"Item",
-		fields=["name", "auto_create_assets", "asset_naming_series", "is_grouped_asset"],
-		filters={"name": ("in", asset_items)},
-	):
-		asset_items_data.setdefault(d.name, d)
-
-	return asset_items_data
-
 
 def validate_item_type(doc, fieldname, message):
 	# iterate through items and check if they are valid sales or purchase items
@@ -972,6 +926,11 @@ def validate_item_type(doc, fieldname, message):
 
 		frappe.throw(error_message)
 
+def get_asset_items(doc):
+	if doc.doctype not in ["Purchase Order", "Purchase Invoice", "Purchase Receipt"]:
+		return []
+
+	return [d.item_code for d in doc.items if d.get("is_fixed_asset")]
 
 @erpnext.allow_regional
 def update_regional_item_valuation_rate(doc):

@@ -35,7 +35,6 @@ class ProcessStatementOfAccounts(Document):
 			ProcessStatementOfAccountsCustomer,
 		)
 		from erpnext.accounts.doctype.psoa_cost_center.psoa_cost_center import PSOACostCenter
-		from erpnext.accounts.doctype.psoa_project.psoa_project import PSOAProject
 
 		account: DF.Link | None
 		ageing_based_on: DF.Literal["Due Date", "Posting Date"]
@@ -64,7 +63,6 @@ class ProcessStatementOfAccounts(Document):
 		pdf_name: DF.Data | None
 		posting_date: DF.Date | None
 		primary_mandatory: DF.Check
-		project: DF.TableMultiSelect[PSOAProject]
 		report: DF.Literal["General Ledger", "Accounts Receivable"]
 		sales_partner: DF.Link | None
 		sales_person: DF.Link | None
