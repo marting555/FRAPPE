@@ -1,6 +1,6 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
-
+# BudgetEntry
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -26,6 +26,7 @@ class BudgetEntry(Document):
 		overall_debit: DF.Currency
 		posting_date: DF.Data | None
 		project: DF.Link | None
+		total: DF.Int
 		voucher_no: DF.DynamicLink | None
 		voucher_submit_date: DF.Datetime | None
 		voucher_type: DF.Link | None

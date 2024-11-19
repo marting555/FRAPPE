@@ -1,6 +1,7 @@
 # Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+# Budget Transfer
 from datetime import datetime
 import frappe
 from frappe.model.document import Document
@@ -37,6 +38,7 @@ class BudgetTransfer(Document):
 		to_wbs_available_budget: DF.Currency
 		to_wbs_level: DF.Data | None
 		to_wbs_name: DF.Data | None
+		total: DF.Int
 	# end: auto-generated types
 	# Copyright (c) 2023, 8848 Digital LLP and contributors
 	# For license information, please see license.txt

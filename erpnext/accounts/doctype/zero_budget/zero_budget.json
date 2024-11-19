@@ -13,8 +13,7 @@
   "company",
   "section_break_ce7o",
   "zero_budget_item",
-  "amended_from",
-  "total"
+  "amended_from"
  ],
  "fields": [
   {
@@ -62,11 +61,6 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
-  },
-  {
-   "fieldname": "total",
-   "fieldtype": "Currency",
-   "label": "Total"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -77,7 +71,7 @@
    "link_fieldname": "voucher_no"
   }
  ],
- "modified": "2024-11-14 17:50:56.983724",
+ "modified": "2024-11-19 17:28:40.750301",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Zero Budget",

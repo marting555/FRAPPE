@@ -25,8 +25,9 @@
   "committed_overall_debit",
   "actual_overall_debit",
   "voucher_no",
-  "amended_from",
-  "zero_budget"
+  "zero_budget",
+  "total",
+  "amended_from"
  ],
  "fields": [
   {
@@ -142,12 +143,18 @@
   {
    "fieldname": "column_break_ccnn",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Total"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-11-14 17:47:04.116305",
+ "modified": "2024-11-19 17:35:39.433307",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Budget Entry",
