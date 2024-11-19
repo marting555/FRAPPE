@@ -2030,7 +2030,7 @@ class QueryPaymentLedger:
 				Table("vouchers").amount,
 				Table("outstanding").amount,
 				Table("vouchers").amount_in_account_currency,
-						Table("outstanding").amount_in_account_currency
+				Table("outstanding").amount_in_account_currency
 					)
 			.where(Criterion.all(filter_on_outstanding_amount))
 		)
