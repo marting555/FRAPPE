@@ -15,13 +15,16 @@
 			display: table-footer-group;
 		}
 	}
+	.title-letter-spacing {
+	    letter-spacing: .2rem;
+	}
 </style>
 <br>
 <div style="font-size:12px; font-family:Arial">
 	<div>
-		<div style="text-align:center; font-size:15px; text-decoration:underline; ">
+		<div class="title-letter-spacing" style="text-align:center; font-size:15px; text-decoration:underline;">
 			<b>
-				{%= __("A &nbsp;&nbsp;C &nbsp;&nbsp;C &nbsp;&nbsp;O &nbsp;&nbsp;U &nbsp;&nbsp;N &nbsp;&nbsp;T &nbsp;&nbsp;S &nbsp;&nbsp;&nbsp;&nbsp;- &nbsp;&nbsp;&nbsp;&nbsp;L &nbsp;&nbsp;E &nbsp;&nbsp;D &nbsp;&nbsp;G &nbsp;&nbsp;E &nbsp;&nbsp;R") %}<br>
+				{%= __("STATEMENT OF ACCOUNTS") %}<br>
 				{% if (filters.party_name) { %}
 					<br>{%= filters.party_name %}
 				{% } else if (filters.party && filters.party.length) { %}
@@ -29,7 +32,7 @@
 				{% } else if (filters.account) { %}
 					<br>{%= filters.account %}
 				{% } else { %}
-					<br>{%= __("All Parties ") %}	
+					<br>{%= __("All Parties ") %}
 				{% } %}
 			</b>
 		</div>
@@ -43,12 +46,12 @@
 	</div>
 	<table style="width:100%">
 		<thead>
-			<tr style="border-bottom: 2px solid black; border-top: 2px solid black; font-weight:bold">
-				<td style="border-right: 2px solid black; text-align: center; width: 12%">D A T E</td>
-				<td style="border-right: 2px solid black; text-align: center; width: 43%">P  A  R  T  I  C  U  L  A  R  S</td>
-				<td style="border-right: 2px solid black; text-align: center; width: 14%">D E B I T</td>
-				<td style="border-right: 2px solid black; text-align: center; width: 14%">C R E D I T</td>
-				<td style="text-align: center; width: 17%">B A L A N C E</td>
+			<tr class="title-letter-spacing" style="border-bottom: 2px solid black; border-top: 2px solid black; font-weight:bold">
+				<td style="border-right: 2px solid black; text-align: center; width: 12%">DATE</td>
+				<td style="border-right: 2px solid black; text-align: center; width: 43%">PARTICULARS</td>
+				<td style="border-right: 2px solid black; text-align: center; width: 14%">DEBIT</td>
+				<td style="border-right: 2px solid black; text-align: center; width: 14%">CREDIT</td>
+				<td style="text-align: center; width: 17%">BALANCE</td>
 			</tr>
 		</thead>
 		<tbody>
@@ -88,10 +91,10 @@
 						</td>
 						<td style="border-right: 1px dotted black"><b>
 							{% if(i == l-2) { %}
-								{%= "Current Total" %}
+								{%= "Total" %}
 							{% } else { %}
 								{% if(i == l-1) { %}
-									{%= "Grand Total [ Opening+Current Total ] " %}
+									{%= "Closing [Opening + Total] " %}
 								{% } else { %}
 									{%= frappe.format(data[i].account, {fieldtype: "Link"}) || "&nbsp;" %}
 								{% } %}
