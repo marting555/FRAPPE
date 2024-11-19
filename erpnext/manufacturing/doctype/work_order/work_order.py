@@ -209,8 +209,8 @@ class WorkOrder(Document):
 				if not self.expected_delivery_date:
 					self.expected_delivery_date = so[0].delivery_date
 
-				if so[0].project:
-					self.project = so[0].project
+				# if so[0].project:
+				# 	self.project = so[0].project
 
 				if not self.material_request:
 					self.validate_work_order_against_so()
@@ -1102,8 +1102,8 @@ class WorkOrder(Document):
 						},
 					)
 
-					if not self.project:
-						self.project = item.get("project")
+					# if not self.project:
+					# 	self.project = item.get("project")
 
 			self.set_available_qty()
 
