@@ -8,7 +8,8 @@
   "excel",
   "column_break_ijjj",
   "module",
-  "upload"
+  "upload",
+  "product_bundle_errors"
  ],
  "fields": [
   {
@@ -29,12 +30,17 @@
   {
    "fieldname": "column_break_ijjj",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "product_bundle_errors",
+   "fieldtype": "Button",
+   "label": "Show product bundle errrors"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-11-19 16:21:23.544951",
+ "modified": "2024-11-19 17:51:57.459937",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Handle Parts",

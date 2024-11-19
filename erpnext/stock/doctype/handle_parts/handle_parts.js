@@ -62,6 +62,7 @@ frappe.ui.form.on("Handle Parts", {
                 });
                 frm.set_value('excel', "");
                 frm.refresh_field('excel');
+                frappe.db.set_value('Handle Parts Config', 'Handle Parts Config', 'binary_data', '');
             } else {
                 const errorText = await response.text();
                 console.error('Upload failed:', errorText);
@@ -79,7 +80,91 @@ frappe.ui.form.on("Handle Parts", {
                 indicator: 'red',
             });
         }
-    }
+    },
+    product_bundle_errors: async function (frm) {
+        const data = await frappe.db.get_doc('Handle Parts Config');
+        if (!data || !data.product_bundle_errors_url) {
+            frappe.msgprint({
+                title: __('Validation Error'),
+                message: __('The URL for product bundle errors is missing or invalid.'),
+                indicator: 'red',
+            });
+            return;
+        }
+
+        const response = await fetch(data.product_bundle_errors_url);
+        if (response.ok) {
+            const errors = await response.json();
+            let dialog = new frappe.ui.Dialog({
+                title: __('Product Bundle Errors'),
+                fields: [
+                    {
+                        label: __('Errors'),
+                        fieldtype: 'HTML',
+                        fieldname: 'errors_list',
+                        options: generate_error_table(errors)
+                    }
+                ]
+            });
+
+            // Mostrar el modal
+            dialog.$wrapper.modal({
+                backdrop: "static",
+                keyboard: false,
+                size: "1024px"  // Esta línea aún la puedes dejar para un valor inicial
+            });
+
+            dialog.show();
+
+            // Aquí se aplica el tamaño del 90% del ancho de la ventana
+            dialog.$wrapper.find('.modal-dialog').css("width", "90%").css("max-width", "90%");
+        }
+
+    },
+
 });
+
+function generate_error_table(errors) {
+    let table_html = `
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>TVS PN</th>
+                    <th>Item Codes (tvs pn)</th>
+                    <th>Quantities</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    errors.forEach(error => {
+        // Start a new row for each error (new_item_code)
+        let row_html = `
+            <tr>
+                <td>${error.new_item_code}</td>
+                <td>
+        `;
+
+        let qty_html = ''; // To hold the quantities of the items
+
+        // Loop through the items to display each one in the same row
+        error.items.forEach(item => {
+            const row_style = item.found ? "" : "background-color: #f8d7da; color: #721c24;"; // Red style if not found
+
+            row_html += `<span style="${row_style}">${item.item_code}</span><br>`;
+            qty_html += `<span style="${row_style}">${item.qty}</span><br>`;
+        });
+
+        row_html += `</td><td>${qty_html}</td></tr>`;
+        table_html += row_html;
+    });
+
+    table_html += `
+            </tbody>
+        </table>
+    `;
+    return table_html;
+}
+
 
 

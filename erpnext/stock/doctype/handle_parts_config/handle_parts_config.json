@@ -6,6 +6,7 @@
  "engine": "InnoDB",
  "field_order": [
   "pre_signed_url",
+  "product_bundle_errors_url",
   "date_time_url_created",
   "column_break_itdu",
   "submit_file_url",
@@ -15,12 +16,17 @@
   {
    "fieldname": "pre_signed_url",
    "fieldtype": "Data",
-   "label": "pre signed url request"
+   "label": "Pre Signed URL"
+  },
+  {
+   "fieldname": "product_bundle_errors_url",
+   "fieldtype": "Data",
+   "label": "Product Bundle Errors URL"
   },
   {
    "fieldname": "submit_file_url",
    "fieldtype": "Data",
-   "label": "url to submit file (1 hours before expiration)",
+   "label": "Submit File URL (1 hours before expiration)",
    "read_only": 1
   },
   {
