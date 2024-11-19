@@ -95,14 +95,18 @@ frappe.ui.form.on("Handle Parts", {
         const response = await fetch(data.product_bundle_errors_url);
         if (response.ok) {
             const errors = await response.json();
+            const createdAt = errors.length > 0 ? errors[0].created_at : '';
+            console.log("createdAt", createdAt, "-- ", errors[0].created_at);
+            const title = __('Product Bundle Errors (Red items are not found, and the bundle was not created)');
+
             let dialog = new frappe.ui.Dialog({
-                title: __('Product Bundle Errors'),
+                title: title,
                 fields: [
                     {
                         label: __('Errors'),
                         fieldtype: 'HTML',
                         fieldname: 'errors_list',
-                        options: generate_error_table(errors)
+                        options: generate_error_table(errors, createdAt)
                     }
                 ]
             });
@@ -120,7 +124,7 @@ frappe.ui.form.on("Handle Parts", {
 
 });
 
-function generate_error_table(errors) {
+function generate_error_table(errors, createdAt) {
     let table_html = `
         <table class="table table-bordered">
             <thead>
@@ -132,6 +136,15 @@ function generate_error_table(errors) {
             </thead>
             <tbody>
     `;
+
+    if (createdAt) {
+        const formattedDate = new Date(createdAt).toLocaleString();
+        table_html += `
+            <tr style="background-color: #f8d7da; color: #721c24;">
+                <td colspan="3"><strong>Information Created At: ${formattedDate}</strong></td>
+            </tr>
+        `;
+    }
 
     errors.forEach(error => {
         let row_html = `
