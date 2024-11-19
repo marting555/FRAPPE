@@ -1170,28 +1170,30 @@ def get_companies():
 
 @frappe.whitelist()
 def get_children(doctype, parent, company, is_root=False):
-	from erpnext.accounts.report.financial_statements import sort_accounts
+    from erpnext.accounts.report.financial_statements import sort_accounts
 
-	parent_fieldname = "parent_" + frappe.scrub(doctype)
-	fields = ["name as value", "is_group as expandable"]
-	filters = [["docstatus", "<", 2]]
+    parent_fieldname = "parent_" + frappe.scrub(doctype)
+    fields = ["name as value", "is_group as expandable"]
+    filters = [["docstatus", "<", 2]]
 
-	filters.append([f'ifnull(`{parent_fieldname}`,"")', "=", "" if is_root else parent])
+    if is_root:
+        fields += ["root_type", "report_type", "account_currency"] if doctype == "Account" else []
+        filters.append(["company", "=", company])
+        # Combine conditions for NULL and empty into one filter
+        filters.append([f"ifnull({parent_fieldname}, '')", "=", ""])
+    else:
+        fields += ["root_type", "account_currency"] if doctype == "Account" else []
+        fields += [f"{parent_fieldname} as parent"]
+        filters.append([parent_fieldname, "=", parent])
 
-	if is_root:
-		fields += ["root_type", "report_type", "account_currency"] if doctype == "Account" else []
-		filters.append(["company", "=", company])
+    # Fetch data
+    acc = frappe.get_list(doctype, fields=fields, filters=filters)
 
-	else:
-		fields += ["root_type", "account_currency"] if doctype == "Account" else []
-		fields += [parent_fieldname + " as parent"]
+    # Sort accounts if doctype is "Account"
+    if doctype == "Account":
+        sort_accounts(acc, is_root, key="value")
 
-	acc = frappe.get_list(doctype, fields=fields, filters=filters)
-
-	if doctype == "Account":
-		sort_accounts(acc, is_root, key="value")
-
-	return acc
+    return acc
 
 
 @frappe.whitelist()
