@@ -2491,17 +2491,6 @@ class AccountsController(TransactionBase):
 		):
 			throw(_("Conversion rate cannot be 0 or 1"))
 
-	def check_finance_books(self, item, asset):
-		if (
-			len(asset.finance_books) > 1
-			and not item.get("finance_book")
-			and not self.get("finance_book")
-			and asset.finance_books[0].finance_book
-		):
-			frappe.throw(
-				_("Select finance book for the item {0} at row {1}").format(item.item_code, item.idx)
-			)
-
 	def check_if_fields_updated(self, fields_to_check, child_tables):
 		# Check if any field affecting accounting entry is altered
 		doc_before_update = self.get_doc_before_save()
