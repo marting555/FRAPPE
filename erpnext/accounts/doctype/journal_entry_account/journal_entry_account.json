@@ -182,7 +182,7 @@
    "fieldtype": "Select",
    "label": "Reference Type",
    "no_copy": 1,
-   "options": "\nSales Invoice\nPurchase Invoice\nJournal Entry\nSales Order\nPurchase Order\nExpense Claim\nAsset\nLoan\nPayroll Entry\nEmployee Advance\nExchange Rate Revaluation\nInvoice Discounting\nFees\nFull and Final Statement\nPayment Entry",
+   "options": "\nSales Invoice\nPurchase Invoice\nJournal Entry\nSales Order\nPurchase Order\nExpense Claim\nLoan\nPayroll Entry\nEmployee Advance\nExchange Rate Revaluation\nInvoice Discounting\nFees\nFull and Final Statement\nPayment Entry",
    "search_index": 1
   },
   {
@@ -195,7 +195,7 @@
    "search_index": 1
   },
   {
-   "depends_on": "eval:doc.reference_type&&!in_list(doc.reference_type, ['Expense Claim', 'Asset', 'Employee Loan', 'Employee Advance'])",
+   "depends_on": "eval:doc.reference_type&&!in_list(doc.reference_type, ['Expense Claim', 'Employee Loan', 'Employee Advance'])",
    "fieldname": "reference_due_date",
    "fieldtype": "Date",
    "label": "Reference Due Date",
