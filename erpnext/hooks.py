@@ -678,7 +678,7 @@ after_migrate = "erpnext.accounts.install.after_migrate"
 fixtures =[
     {"dt":"Custom Field","filters":[
         [
-            "module","=","Purchase Order Item"
+            "module","=","Budget"
 		]
 	]
         
