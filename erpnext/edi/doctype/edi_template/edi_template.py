@@ -6,6 +6,7 @@ from collections import defaultdict
 from typing import ClassVar
 
 import frappe
+from frappe import _
 from frappe.model.document import Document, DocumentProxy
 from frappe.modules.utils import export_module_json, get_doc_module
 from frappe.utils.jinja import ProcessedContext, process_context
@@ -130,8 +131,26 @@ class EDITemplate(Document):
 	def get_render(self, doc: Document, method: str) -> str:
 		context = self.get_processed_context(doc, method)
 		render = frappe.render_template(self.template, context=context)
-		signed = self.sign(render, doc)
-		self.get_validation(signed)
+		try:
+			signed = self.sign(render, doc)
+		except Exception as e:
+			logger = frappe.logger("edi-template")
+			logger.warning("\n" + render)
+			hint = _("Tip: analyze the render in <code>logs/edi-template.log</code>")
+			raise frappe.Throw(
+				title="EDI Signing Error",
+				msg=f"<i>{hint}</i><hr/><b>{e.__class__.__name__}</b><br/>{e!s}",
+			) from e
+		try:
+			self.get_validation(signed)
+		except Exception as e:
+			logger = frappe.logger("edi-template")
+			logger.warning("\n" + render)
+			hint = _("Tip: analyze the render in <code>logs/edi-template.log</code>")
+			raise frappe.Throw(
+				title="EDI Validation Error",
+				msg=f"<i>{hint}</i><hr/><b>{e.__class__.__name__}</b><br/>{e!s}",
+			) from e
 		return signed
 
 	@use_module_if_standard
