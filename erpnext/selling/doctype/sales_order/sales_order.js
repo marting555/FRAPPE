@@ -51,6 +51,26 @@ frappe.ui.form.on("Sales Order", {
 
 		frm.set_df_property("packed_items", "cannot_add_rows", true);
 		frm.set_df_property("packed_items", "cannot_delete_rows", true);
+
+		frm.set_query("shipping_rule", function () {
+			return {
+				filters: {
+					"shipping_rule_type": "Buying",
+					"company": frm.doc.company
+				},
+			};
+		});
+	},
+
+	onload_post_render: function(frm) {
+		frm.set_query("shipping_rule", function () {
+			return {
+				filters: {
+					shipping_rule_type: "Selling",
+					company: frm.doc.company
+				},
+			};
+		});
 	},
 
 	refresh: function (frm) {
@@ -228,12 +248,6 @@ frappe.ui.form.on("Sales Order", {
 			frm.set_value("advance_paid", 0);
 		}
 
-		frm.ignore_doctypes_on_cancel_all = [
-			"Purchase Order",
-			"Unreconcile Payment",
-			"Unreconcile Payment Entries",
-		];
-
 		frm.set_query("set_warehouse", function () {
 			return {
 				filters: {
@@ -242,6 +256,12 @@ frappe.ui.form.on("Sales Order", {
 				},
 			};
 		});
+
+		frm.ignore_doctypes_on_cancel_all = [
+			"Purchase Order",
+			"Unreconcile Payment",
+			"Unreconcile Payment Entries",
+		];
 	},
 
 	delivery_date: function (frm) {
