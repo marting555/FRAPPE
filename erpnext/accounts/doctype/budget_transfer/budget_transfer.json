@@ -30,6 +30,7 @@
   "column_break_7gqc",
   "section_break_k9k0",
   "reason",
+  "total",
   "amended_from"
  ],
  "fields": [
@@ -170,6 +171,12 @@
    "fieldtype": "Currency",
    "label": "To WBS Available Budget",
    "read_only": 1
+  },
+  {
+   "fieldname": "total",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Total"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -180,7 +187,7 @@
    "link_fieldname": "voucher_no"
   }
  ],
- "modified": "2024-11-13 18:19:28.412666",
+ "modified": "2024-11-19 17:32:15.572841",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Budget Transfer",

@@ -1,3 +1,4 @@
+// Work Breakdown Structure
 frappe.listview_settings['Work Breakdown Structure'] = {
     //	add_fields: ["base_grand_total", "customer_name", "currency", "delivery_date",
     //		"per_delivered", "per_billed", "status", "order_type", "name", "skip_delivery_note"],

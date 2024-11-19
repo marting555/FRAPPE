@@ -1,3 +1,4 @@
+// budget Amendment
 frappe.ui.form.on("Budget Amendment", {
     project: function(frm) {
         if (frm.doc.project) {
