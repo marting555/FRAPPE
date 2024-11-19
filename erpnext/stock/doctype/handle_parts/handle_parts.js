@@ -46,30 +46,31 @@ frappe.ui.form.on("Handle Parts", {
                 return;
             }
 
-            // Correct binary data conversion
-            // const response = await fetch(data.submit_file_url, {
-            //     method: 'PUT',
-            //     headers: {
-            //         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            //     },
-            //     body: Uint8Array.from(atob(data.binary_data), c => c.charCodeAt(0))
-            // });
+            const response = await fetch(data.submit_file_url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                },
+                body: Uint8Array.from(atob(data.binary_data), c => c.charCodeAt(0))
+            });
 
-            // if (response.ok) {
-            //     frappe.msgprint({
-            //         title: __('Success'),
-            //         message: __('File uploaded successfully. The process will take a 10 minutes or less to complete. You will be notified when the process is complete.'),
-            //         indicator: 'green',
-            //     });
-            // } else {
-            //     const errorText = await response.text();
-            //     console.error('Upload failed:', errorText);
-            //     frappe.msgprint({
-            //         title: __('Error'),
-            //         message: __('File upload failed: ') + errorText,
-            //         indicator: 'red',
-            //     });
-            // }
+            if (response.ok) {
+                frappe.msgprint({
+                    title: __('Success'),
+                    message: __('File uploaded successfully. The process will take 10 minutes or less to complete. You will be notified when the process is complete.'),
+                    indicator: 'green',
+                });
+                frm.set_value('excel', "");
+                frm.refresh_field('excel');
+            } else {
+                const errorText = await response.text();
+                console.error('Upload failed:', errorText);
+                frappe.msgprint({
+                    title: __('Error'),
+                    message: __('File upload failed: ') + errorText,
+                    indicator: 'red',
+                });
+            }
         } catch (error) {
             console.error("Error in upload function:", error);
             frappe.msgprint({
