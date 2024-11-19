@@ -106,17 +106,13 @@ frappe.ui.form.on("Handle Parts", {
                     }
                 ]
             });
-
-            // Mostrar el modal
             dialog.$wrapper.modal({
                 backdrop: "static",
                 keyboard: false,
-                size: "1024px"  // Esta línea aún la puedes dejar para un valor inicial
+                size: "1024px"
             });
 
             dialog.show();
-
-            // Aquí se aplica el tamaño del 90% del ancho de la ventana
             dialog.$wrapper.find('.modal-dialog').css("width", "90%").css("max-width", "90%");
         }
 
@@ -138,18 +134,15 @@ function generate_error_table(errors) {
     `;
 
     errors.forEach(error => {
-        // Start a new row for each error (new_item_code)
         let row_html = `
             <tr>
                 <td>${error.new_item_code}</td>
                 <td>
         `;
 
-        let qty_html = ''; // To hold the quantities of the items
-
-        // Loop through the items to display each one in the same row
+        let qty_html = '';
         error.items.forEach(item => {
-            const row_style = item.found ? "" : "background-color: #f8d7da; color: #721c24;"; // Red style if not found
+            const row_style = item.found ? "" : "background-color: #f8d7da; color: #721c24;";
 
             row_html += `<span style="${row_style}">${item.item_code}</span><br>`;
             qty_html += `<span style="${row_style}">${item.qty}</span><br>`;
