@@ -11,7 +11,7 @@ from erpnext.accounts.report.financial_statements import sort_accounts
 class WorkBreakdownStructure(Document):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
-    
+
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
@@ -23,9 +23,11 @@ class WorkBreakdownStructure(Document):
 		available_budget: DF.Currency
 		committed_overall_budget: DF.Currency
 		company: DF.Link
+		created_from_project: DF.Check
+		end_date: DF.Date | None
 		gl_account: DF.Link | None
 		is_group: DF.Check
-		linked_monthly_distribution: DF.Link | None
+		lft: DF.Int
 		locked: DF.Check
 		original_budget: DF.Currency
 		overall_budget: DF.Currency
@@ -33,6 +35,8 @@ class WorkBreakdownStructure(Document):
 		project: DF.Link
 		project_name: DF.Data | None
 		project_type: DF.Data | None
+		rgt: DF.Int
+		start_date: DF.Date | None
 		wbs_level: DF.Data | None
 		wbs_name: DF.Data
 	# end: auto-generated types

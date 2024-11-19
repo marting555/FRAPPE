@@ -348,6 +348,9 @@ erpnext.patches.v14_0.set_maintain_stock_for_bom_item
 erpnext.patches.v15_0.fix_debit_credit_in_transaction_currency
 erpnext.patches.v14_0.enable_set_priority_for_pricing_rules #1
 erpnext.patches.v15_0.do_not_use_batchwise_valuation
+erpnext.patches.v15_0.update_invoice_remarks
+erpnext.patches.v14_0.update_reports_with_range
 erpnext.patches.v15_0.drop_index_posting_datetime_from_sle
 erpnext.patches.v15_0.add_disassembly_order_stock_entry_type #1
 erpnext.patches.v15_0.set_standard_stock_entry_type
+erpnext.patches.v15_0.link_purchase_item_to_asset_doc

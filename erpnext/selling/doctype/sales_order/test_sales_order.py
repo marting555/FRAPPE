@@ -2096,7 +2096,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		customer = frappe.get_doc("Customer", self.customer)
 		customer.credit_limits = []
 		customer.append(
-			"credit_limits", {"company": company, "credit_limit": 1000, "bypass_credit_limit_check": False}
+			"credit_limits", {"company": company, "credit_limit": 6000, "bypass_credit_limit_check": False}
 		)
 		customer.save()
 
@@ -2113,12 +2113,21 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertRaises(frappe.ValidationError, so1.update_status, "Draft")
 	
 	def test_sales_order_discount_on_total(self):
-		so = make_sales_order(qty=10, rate=100, do_not_save=True)
 		make_item_price()
 		make_pricing_rule()
+		so = make_sales_order(qty=10, rate=100, do_not_save=True)
 		so.save()
 		so.submit()
 		self.assertEqual(so.total,900)
+	
+	def test_manual_discount_for_sales_order(self):
+		so = make_sales_order(qty=10, rate=100, do_not_save=True)
+		so.save()
+		self.assertEqual(so.grand_total,1000)
+		so.apply_discount_on = 'Grand Total'
+		so.additional_discount_percentage = 10
+		so.save()
+		self.assertEqual(so.grand_total,900)
 		
 
 def automatically_fetch_payment_terms(enable=1):

@@ -30,12 +30,14 @@ class DeliveryNote(SellingController):
 		from erpnext.accounts.doctype.sales_taxes_and_charges.sales_taxes_and_charges import (
 			SalesTaxesandCharges,
 		)
+		from erpnext.selling.doctype.sales_team.sales_team import SalesTeam
 		from erpnext.stock.doctype.delivery_note_item.delivery_note_item import DeliveryNoteItem
 		from erpnext.stock.doctype.packed_item.packed_item import PackedItem
 
 		additional_discount_percentage: DF.Float
 		address_display: DF.SmallText | None
 		amended_from: DF.Link | None
+		amount_eligible_for_commission: DF.Currency
 		apply_discount_on: DF.Literal["", "Grand Total", "Net Total"]
 		auto_repeat: DF.Link | None
 		base_discount_amount: DF.Currency
@@ -47,6 +49,7 @@ class DeliveryNote(SellingController):
 		base_total: DF.Currency
 		base_total_taxes_and_charges: DF.Currency
 		campaign: DF.Link | None
+		commission_rate: DF.Float
 		company: DF.Link
 		company_address: DF.Link | None
 		company_address_display: DF.SmallText | None
@@ -106,6 +109,8 @@ class DeliveryNote(SellingController):
 		return_against: DF.Link | None
 		rounded_total: DF.Currency
 		rounding_adjustment: DF.Currency
+		sales_partner: DF.Link | None
+		sales_team: DF.Table[SalesTeam]
 		scan_barcode: DF.Data | None
 		select_print_heading: DF.Link | None
 		selling_price_list: DF.Link
@@ -126,6 +131,7 @@ class DeliveryNote(SellingController):
 		territory: DF.Link | None
 		title: DF.Data | None
 		total: DF.Currency
+		total_commission: DF.Currency
 		total_net_weight: DF.Float
 		total_qty: DF.Float
 		total_taxes_and_charges: DF.Currency
@@ -202,6 +208,8 @@ class DeliveryNote(SellingController):
 			)
 
 	def onload(self):
+		super().onload()
+
 		if self.docstatus == 0:
 			self.set_onload("has_unpacked_items", self.has_unpacked_items())
 
@@ -353,52 +361,33 @@ class DeliveryNote(SellingController):
 		self.validate_sales_invoice_references()
 
 	def validate_sales_order_references(self):
-		err_msg = ""
-		for item in self.items:
-			if (item.against_sales_order and not item.so_detail) or (
-				not item.against_sales_order and item.so_detail
-			):
-				if not item.against_sales_order:
-					err_msg += (
-						_("'Sales Order' reference ({1}) is missing in row {0}").format(
-							frappe.bold(item.idx), frappe.bold("against_sales_order")
-						)
-						+ "<br>"
-					)
-				else:
-					err_msg += (
-						_("'Sales Order Item' reference ({1}) is missing in row {0}").format(
-							frappe.bold(item.idx), frappe.bold("so_detail")
-						)
-						+ "<br>"
-					)
-
-		if err_msg:
-			frappe.throw(err_msg, title=_("References to Sales Orders are Incomplete"))
+		self._validate_dependent_item_fields(
+			"against_sales_order", "so_detail", _("References to Sales Orders are Incomplete")
+		)
 
 	def validate_sales_invoice_references(self):
-		err_msg = ""
-		for item in self.items:
-			if (item.against_sales_invoice and not item.si_detail) or (
-				not item.against_sales_invoice and item.si_detail
-			):
-				if not item.against_sales_invoice:
-					err_msg += (
-						_("'Sales Invoice' reference ({1}) is missing in row {0}").format(
-							frappe.bold(item.idx), frappe.bold("against_sales_invoice")
-						)
-						+ "<br>"
-					)
-				else:
-					err_msg += (
-						_("'Sales Invoice Item' reference ({1}) is missing in row {0}").format(
-							frappe.bold(item.idx), frappe.bold("si_detail")
-						)
-						+ "<br>"
-					)
+		self._validate_dependent_item_fields(
+			"against_sales_invoice", "si_detail", _("References to Sales Invoices are Incomplete")
+		)
 
-		if err_msg:
-			frappe.throw(err_msg, title=_("References to Sales Invoices are Incomplete"))
+	def _validate_dependent_item_fields(self, field_a: str, field_b: str, error_title: str):
+		errors = []
+		for item in self.items:
+			missing_label = None
+			if item.get(field_a) and not item.get(field_b):
+				missing_label = item.meta.get_label(field_b)
+			elif item.get(field_b) and not item.get(field_a):
+				missing_label = item.meta.get_label(field_a)
+
+			if missing_label and missing_label != "No Label":
+				errors.append(
+					_("The field {0} in row {1} is not set").format(
+						frappe.bold(_(missing_label)), frappe.bold(item.idx)
+					)
+				)
+
+		if errors:
+			frappe.throw("<br>".join(errors), title=error_title)
 
 
 	def validate_warehouse(self):
