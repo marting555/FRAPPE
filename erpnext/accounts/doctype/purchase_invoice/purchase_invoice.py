@@ -1820,11 +1820,6 @@ class PurchaseInvoice(BuyingController):
 		if update:
 			self.db_set("status", self.status, update_modified=update_modified)
 
-	@frappe.whitelist()
-	def get_payment_discount_term(doc):
-		discount_term_table =frappe.db.get_values("Discount Terms", {"parent" : doc.payment_term },"*", order_by = "no_of_days ASC")
-		return discount_term_table
-
 
 # to get details of purchase invoice/receipt from which this doc was created for exchange rate difference handling
 def get_purchase_document_details(doc):

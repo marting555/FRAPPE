@@ -1892,10 +1892,6 @@ class SalesInvoice(SellingController):
 		if update:
 			self.db_set("status", self.status, update_modified=update_modified)
 
-	@frappe.whitelist()
-	def get_payment_discount_term(doc):
-		discount_term_table =frappe.db.get_values("Discount Terms", {"parent" : doc.payment_term },"*", order_by = "no_of_days ASC")
-		return discount_term_table
 
 
 def get_total_in_party_account_currency(doc):

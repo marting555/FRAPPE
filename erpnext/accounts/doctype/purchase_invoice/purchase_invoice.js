@@ -449,41 +449,6 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 		});
 	}
 
-	payment_term(frm){
-		if(frm.payment_term){
-			frappe.call({
-				doc: frm,
-				method: "get_payment_discount_term",
-				callback: (response)=>{
-					cur_frm.set_value('payment_discount_terms', []); 
-					let discount_terms = response.message
-					if(discount_terms){
-						for (let discount_term of discount_terms){
-							let discount_date = frappe.datetime.add_days(cur_frm.doc.posting_date, discount_term.no_of_days) 
-							let childTable = cur_frm.add_child("payment_discount_terms");
-
-							childTable.no_of_days = discount_term.no_of_days
-							childTable.discount = discount_term.discount
-							childTable.discount_date = discount_date
-							cur_frm.refresh_fields("payment_discount_terms");
-						}
-					}
-				}
-			})
-		} else {
-			if (frm.payment_discount_terms.length > 0) cur_frm.set_value('payment_discount_terms', []); 
-		}
-	}
-
-	validate(frm){
-		if(frm.payment_discount_terms && frm.payment_discount_terms.length > 0){
-			for(let discount_row of frm.payment_discount_terms){
-				if(discount_row.discount_date > frm.due_date){
-					frappe.throw(`Error from Row ${discount_row.idx} <br><b>Discount term period</b> cannot be greater then <b>Payment Due Date</b>.`)
-				}
-			}
-		}
-	}
 };
 
 cur_frm.script_manager.make(erpnext.accounts.PurchaseInvoice);

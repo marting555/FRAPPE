@@ -2229,7 +2229,6 @@ def get_reference_details(
 def get_payment_entry(
 	dt,
 	dn,
-	amount_to_be_paid = None,
 	party_amount=None,
 	bank_account=None,
 	bank_amount=None,
@@ -2244,9 +2243,6 @@ def get_payment_entry(
 
 	if not party_type:
 		party_type = set_party_type(dt)
-
-	if float(amount_to_be_paid) < 1:
-		frappe.throw("Invalid Amount")
 
 	party_account = set_party_account(dt, dn, doc, party_type)
 	party_account_currency = set_party_account_currency(dt, party_account, doc)
@@ -2267,17 +2263,11 @@ def get_payment_entry(
 		if party_bank_account:
 			account = frappe.db.get_value("Bank Account", party_bank_account, "account")
 			bank = get_bank_cash_account(doc, account)
-	if amount_to_be_paid :
-		paid_amount =  received_amount = float(amount_to_be_paid)
-		allocated_amount = amount_to_be_paid
-	else:
-		paid_amount, received_amount = set_paid_amount_and_received_amount(
-			dt, party_account_currency, bank, outstanding_amount, payment_type, bank_amount, doc
-		)
-		allocated_amount = outstanding_amount
-	
+	paid_amount, received_amount = set_paid_amount_and_received_amount(
+		dt, party_account_currency, bank, outstanding_amount, payment_type, bank_amount, doc
+	)
 	reference_date = getdate(reference_date)
-	paid_amount, received_amount, discount_amount, valid_discounts = apply_discount_paid_amount(
+	paid_amount, received_amount, discount_amount, valid_discounts = apply_early_payment_discount(
 		paid_amount, received_amount, doc, party_account_currency, reference_date
 	)
 
@@ -2367,7 +2357,7 @@ def get_payment_entry(
 						"due_date": doc.get("due_date"),
 						"total_amount": grand_total,
 						"outstanding_amount": outstanding_amount,
-						"allocated_amount": allocated_amount,
+						"allocated_amount": outstanding_amount,
 					},
 				)
 
@@ -2774,56 +2764,3 @@ def make_payment_order(source_name, target_doc=None):
 @erpnext.allow_regional
 def add_regional_gl_entries(gl_entries, doc):
 	return
-
-@frappe.whitelist()
-def get_discount_term(doc = None):
-	doc = frappe.parse_json(doc)
-	payment_reference = frappe._dict(doc.references[0])
-	sales_invoice_doc = frappe.get_doc(payment_reference.reference_doctype, payment_reference.reference_name)
-	received_amount = doc.paid_amount
-
-	paid_amount, received_amount, discount_amount, valid_discounts = apply_discount_paid_amount(
-	doc.paid_amount, received_amount, sales_invoice_doc, doc.paid_to_account_currency, frappe.utils.getdate(doc.reference_date)
-)
-	return discount_amount
-
-def apply_discount_paid_amount(paid_amount, received_amount, doc, party_account_currency, reference_date):
-	total_discount = 0
-	valid_discounts = []
-	eligible_for_payments = ["Sales Order", "Sales Invoice", "Purchase Order", "Purchase Invoice"]
-	has_payment_discount_term = hasattr(doc, "payment_discount_terms") and doc.payment_discount_terms
-	is_multi_currency = party_account_currency != doc.company_currency
-	is_discount_applied = False
-
-	if doc.doctype in eligible_for_payments and has_payment_discount_term:
-		for term in doc.payment_discount_terms:
-			if term.discount and reference_date <= term.discount_date and is_discount_applied is False:
-				# grand_total = doc.get("grand_total") if is_multi_currency else doc.get("base_grand_total")
-				discount_amount = flt(paid_amount) * (term.discount / 100)
-				
-				# if accounting is done in the same currency, paid_amount = received_amount
-				conversion_rate = doc.get("conversion_rate", 1) if is_multi_currency else 1
-				discount_amount_in_foreign_currency = discount_amount * conversion_rate
-
-				if doc.doctype == "Sales Invoice":
-					paid_amount -= discount_amount
-					received_amount -= discount_amount_in_foreign_currency
-				else:
-					received_amount -= discount_amount
-					paid_amount -= discount_amount_in_foreign_currency
-
-				valid_discounts.append({"type": "Percentage", "discount": term.discount})
-				total_discount += discount_amount
-				
-				is_discount_applied = True
-
-			else:
-				continue
-
-		if total_discount:
-			currency = doc.get("currency") if is_multi_currency else doc.company_currency
-			money = frappe.utils.fmt_money(total_discount, currency=currency)
-			frappe.msgprint(_("Discount of {} applied as per Payment Term").format(money), alert=1)
-
-	return paid_amount, received_amount, total_discount, valid_discounts
-

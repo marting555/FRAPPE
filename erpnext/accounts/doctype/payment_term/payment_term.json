@@ -23,9 +23,6 @@
   "discount_validity",
   "section_break_6",
   "discount_terms_column",
-  "is_for_sales",
-  "is_for_purchase",
-  "table_ouui",
   "description"
  ],
  "fields": [
@@ -121,32 +118,15 @@
   {
    "fieldname": "discount_terms_column",
    "fieldtype": "Column Break",
-   "label": "Discount terms",
    "options": "Discount Terms"
-  },
-  {
-   "fieldname": "table_ouui",
-   "fieldtype": "Table",
-   "options": "Discount Terms"
-  },
-  {
-   "default": "0",
-   "fieldname": "is_for_sales",
-   "fieldtype": "Check",
-   "label": "Is For Sales"
-  },
-  {
-   "default": "0",
-   "fieldname": "is_for_purchase",
-   "fieldtype": "Check",
-   "label": "Is For Purchase"
   }
  ],
  "links": [],
- "modified": "2024-10-31 13:02:05.882908",
+ "modified": "2024-11-19 12:20:40.173012",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payment Term",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
