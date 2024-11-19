@@ -40,7 +40,6 @@ class Issue(Document):
 		first_response_time: DF.Duration | None
 		issue_split_from: DF.Link | None
 		issue_type: DF.Link | None
-		lead: DF.Link | None
 		naming_series: DF.Literal["ISS-.YYYY.-"]
 		on_hold_since: DF.Datetime | None
 		opening_date: DF.Date | None
@@ -69,7 +68,6 @@ class Issue(Document):
 		if not self.raised_by:
 			self.raised_by = frappe.session.user
 
-		self.set_lead_contact(self.raised_by)
 
 	def on_update(self):
 		# Add a communication in the issue timeline
@@ -77,25 +75,7 @@ class Issue(Document):
 			self.create_communication()
 			self.flags.communication_created = None
 
-	def set_lead_contact(self, email_id):
-		import email.utils
-
-		email_id = email.utils.parseaddr(email_id)[1]
-		if email_id:
-			if not self.lead:
-				self.lead = frappe.db.get_value("Lead", {"email_id": email_id})
-
-			if not self.contact and not self.customer:
-				self.contact = frappe.db.get_value("Contact", {"email_id": email_id})
-
-				if self.contact:
-					contact = frappe.get_doc("Contact", self.contact)
-					self.customer = contact.get_link_for("Customer")
-
-			if not self.company:
-				self.company = frappe.db.get_value("Lead", self.lead, "company") or frappe.db.get_default(
-					"Company"
-				)
+	
 
 	def create_communication(self):
 		communication = frappe.new_doc("Communication")

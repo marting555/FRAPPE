@@ -149,12 +149,11 @@
   "inter_company_reference",
   "customer_group",
   "territory",
-  "source",
-  "campaign",
   "column_break5",
   "excise_page",
   "instructions",
-  "connections_tab"
+  "connections_tab",
+  "source"
  ],
  "fields": [
   {
@@ -952,15 +951,6 @@
    "print_hide": 1
   },
   {
-   "fieldname": "campaign",
-   "fieldtype": "Link",
-   "label": "Campaign",
-   "oldfieldname": "campaign",
-   "oldfieldtype": "Link",
-   "options": "Campaign",
-   "print_hide": 1
-  },
-  {
    "fieldname": "source",
    "fieldtype": "Link",
    "label": "Source",
@@ -1307,7 +1297,7 @@
  "idx": 146,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-10-24 11:56:29.224353",
+ "modified": "2024-11-18 10:22:40.741262",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note",

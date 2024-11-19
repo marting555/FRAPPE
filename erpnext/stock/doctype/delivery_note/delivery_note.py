@@ -104,7 +104,6 @@ class DeliveryNote(SellingController):
 		price_list_currency: DF.Link
 		pricing_rules: DF.Table[PricingRuleDetail]
 		print_without_amount: DF.Check
-		project: DF.Link | None
 		represents_company: DF.Link | None
 		return_against: DF.Link | None
 		rounded_total: DF.Currency
@@ -388,7 +387,6 @@ class DeliveryNote(SellingController):
 
 		if errors:
 			frappe.throw("<br>".join(errors), title=error_title)
-
 
 	def validate_warehouse(self):
 		super().validate_warehouse()
