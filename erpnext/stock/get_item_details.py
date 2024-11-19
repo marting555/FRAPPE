@@ -134,7 +134,7 @@ def get_item_details(
 	ctx.customer = current_customer
 
 	if ctx.customer and cint(ctx.is_pos):
-		out.update(get_pos_profile_item_details(ctx.company, ctx, update_data=True))
+		out.update(get_pos_profile_item_details_(ctx, ctx.company, update_data=True))
 
 	if item.is_stock_item:
 		update_bin_details(ctx, out, doc)
@@ -293,7 +293,7 @@ def get_basic_details(ctx: ItemDetailsCtx, item, overwrite_warehouse=True) -> It
 		}
 	)
 
-	warehouse = get_item_warehouse(item, ctx, overwrite_warehouse, defaults)
+	warehouse = get_item_warehouse_(ctx, item, overwrite_warehouse, defaults)
 
 	if ctx.doctype == "Material Request" and not ctx.material_request_type:
 		ctx["material_request_type"] = frappe.db.get_value(
@@ -465,7 +465,11 @@ def get_basic_details(ctx: ItemDetailsCtx, item, overwrite_warehouse=True) -> It
 	return out
 
 
-def get_item_warehouse(item, ctx: ItemDetailsCtx, overwrite_warehouse, defaults=None):
+from erpnext.deprecation_dumpster import get_item_warehouse
+
+
+@type_narrow_ctx_arg
+def get_item_warehouse_(ctx: ItemDetailsCtx, item, overwrite_warehouse, defaults=None):
 	if not defaults:
 		defaults = frappe._dict(
 			{
@@ -1141,7 +1145,11 @@ def get_party_item_code(ctx: ItemDetailsCtx, item_doc, out: ItemDetails):
 		out.supplier_part_no = item_supplier[0].supplier_part_no if item_supplier else None
 
 
-def get_pos_profile_item_details(company, ctx: ItemDetailsCtx, pos_profile=None, update_data=False):
+from erpnext.deprecation_dumpster import get_pos_profile_item_details
+
+
+@type_narrow_ctx_arg
+def get_pos_profile_item_details_(ctx: ItemDetailsCtx, company, pos_profile=None, update_data=False):
 	res = frappe._dict()
 
 	if not frappe.flags.pos_profile and not pos_profile:

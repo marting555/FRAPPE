@@ -28,7 +28,7 @@ from erpnext.stock.doctype.item.item import get_item_defaults
 from erpnext.stock.get_item_details import (
 	get_default_cost_center,
 	get_default_expense_account,
-	get_item_warehouse,
+	get_item_warehouse_,
 )
 from erpnext.stock.stock_ledger import get_previous_sle
 from erpnext.stock.utils import get_incoming_rate
@@ -803,7 +803,7 @@ def get_consumed_stock_item_details(args):
 	out.stock_qty = flt(args.stock_qty) or 1
 	out.stock_uom = item.stock_uom
 
-	out.warehouse = get_item_warehouse(item, args, overwrite_warehouse=True) if item else None
+	out.warehouse = get_item_warehouse_(args, item, overwrite_warehouse=True) if item else None
 
 	# Cost Center
 	item_defaults = get_item_defaults(item.name, args.company)
