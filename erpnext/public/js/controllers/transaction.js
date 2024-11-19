@@ -2211,7 +2211,6 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		);
 		let has_payment_schedule = this.frm.doc.payment_schedule && this.frm.doc.payment_schedule.length;
 		if(!is_eligible || !has_payment_schedule) return false;
-
 		let has_discount = this.frm.doc.payment_schedule.some(row => row.discount);
 		return has_discount;
 	}
