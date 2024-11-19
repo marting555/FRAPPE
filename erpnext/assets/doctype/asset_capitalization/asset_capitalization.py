@@ -785,11 +785,11 @@ def get_target_asset_details(asset=None, company=None):
 
 
 @frappe.whitelist()
-def get_consumed_stock_item_details(args):
-	if isinstance(args, str):
-		args = json.loads(args)
+def get_consumed_stock_item_details(args_):
+	if isinstance(args_, str):
+		args_ = json.loads(args_)
 
-	args = frappe._dict(args)
+	args = frappe._dict(args_)
 	out = frappe._dict()
 
 	item = frappe._dict()
