@@ -98,7 +98,6 @@ class StockEntry(StockController):
 		address_display: DF.SmallText | None
 		amended_from: DF.Link | None
 		apply_putaway_rule: DF.Check
-		asset_repair: DF.Link | None
 		bom_no: DF.Link | None
 		company: DF.Link
 		credit_note: DF.Link | None
