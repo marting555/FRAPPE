@@ -1060,7 +1060,7 @@ def get_held_invoices(party_type, party):
 
 	if party_type == "Supplier":
 		held_invoices = frappe.db.sql(
-			"select name from `tabPurchase Invoice` where on_hold = 1 and release_date IS NOT NULL and release_date > CURDATE()",
+			"select name from `tabPurchase Invoice` where on_hold = 1 and release_date IS NOT NULL and release_date > CURRENT_DATE",
 			as_dict=1,
 		)
 		held_invoices = set(d["name"] for d in held_invoices)
@@ -1436,7 +1436,7 @@ def sort_stock_vouchers_by_posting_date(stock_vouchers: list[tuple[str, str]]) -
 		frappe.qb.from_(sle)
 		.select(sle.voucher_type, sle.voucher_no, sle.posting_date, sle.posting_time, sle.creation)
 		.where((sle.is_cancelled == 0) & (sle.voucher_no.isin(voucher_nos)))
-		.groupby(sle.voucher_type, sle.voucher_no)
+		.groupby(sle.voucher_type, sle.voucher_no, sle.posting_date, sle.posting_time, sle.creation, sle.posting_datetime)
 		.orderby(sle.posting_datetime)
 		.orderby(sle.creation)
 	).run(as_dict=True)
@@ -1927,9 +1927,9 @@ class QueryPaymentLedger:
 				.where(Criterion.all(self.common_filter))
 				.where(Criterion.all(self.dimensions_filter))
 				.where(Criterion.all(self.voucher_posting_date))
-				.groupby(ple.against_voucher_type, ple.against_voucher_no, ple.party_type, ple.party)
+				.groupby(ple.posting_date, ple.against_voucher_type, ple.against_voucher_no, ple.party_type, ple.party)
 				.orderby(ple.posting_date, ple.voucher_no)
-				.having(qb.Field("amount_in_account_currency") > 0)
+				.having(Sum(ple.amount_in_account_currency) > 0)
 				.limit(self.limit)
 				.run()
 			)
@@ -2017,6 +2017,21 @@ class QueryPaymentLedger:
 				Table("vouchers").currency,
 				Table("vouchers").cost_center.as_("cost_center"),
 			)
+			.groupby(
+				Table("vouchers").account,
+				Table("vouchers").voucher_type,
+				Table("vouchers").voucher_no,
+				Table("vouchers").party_type,
+				Table("vouchers").party,
+				Table("vouchers").posting_date,
+				Table("vouchers").due_date,
+				Table("vouchers").currency,
+				Table("vouchers").cost_center,
+				Table("vouchers").amount,
+				Table("outstanding").amount,
+				Table("vouchers").amount_in_account_currency,
+						Table("outstanding").amount_in_account_currency
+					)
 			.where(Criterion.all(filter_on_outstanding_amount))
 		)
 
@@ -2025,14 +2040,14 @@ class QueryPaymentLedger:
 		if self.get_invoices:
 			self.cte_query_voucher_amount_and_outstanding = (
 				self.cte_query_voucher_amount_and_outstanding.having(
-					qb.Field("outstanding_in_account_currency") > 0
+					(Table("outstanding").amount_in_account_currency > 0)
 				)
 			)
 		# only fetch payments
 		elif self.get_payments:
 			self.cte_query_voucher_amount_and_outstanding = (
 				self.cte_query_voucher_amount_and_outstanding.having(
-					qb.Field("outstanding_in_account_currency") < 0
+					(Table("outstanding").amount_in_account_currency < 0)
 				)
 			)
 
