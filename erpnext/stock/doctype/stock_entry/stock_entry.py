@@ -394,7 +394,7 @@ class StockEntry(StockController):
 					{
 						"item_code": item.item_code,
 						"company": self.company,
-						"project": self.project,
+						# "project": self.project,
 						"uom": item.uom,
 						"s_warehouse": item.s_warehouse,
 					}
