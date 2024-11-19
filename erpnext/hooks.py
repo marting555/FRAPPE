@@ -24,11 +24,11 @@ add_to_apps_screen = [
 		"logo": "/assets/erpnext/images/erpnext-logo-blue.png",
 		"title": "ERPNext",
 		"route": "/app/home",
-		# "has_permission": "erpnext.api.permission.has_app_permission"
+		"has_permission": "erpnext.check_app_permission",
 	}
 ]
 
-develop_version = "14.x.x-develop"
+develop_version = "15.x.x-develop"
 
 app_include_js = "erpnext.bundle.js"
 app_include_css = "erpnext.bundle.css"
@@ -674,3 +674,13 @@ after_migrate = "erpnext.accounts.install.after_migrate"
 #         "after_save": "erpnext.public.is_wbs.after_save"
 #     }
 # }
+
+fixtures =[
+    {"dt":"Custom Field","filters":[
+        [
+            "module","=","Budget"
+		]
+	]
+        
+	}
+]

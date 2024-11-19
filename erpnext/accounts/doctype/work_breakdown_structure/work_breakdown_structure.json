@@ -9,6 +9,8 @@
   "project",
   "project_type",
   "wbs_name",
+  "start_date",
+  "end_date",
   "column_break_bcho",
   "locked",
   "project_name",
@@ -25,8 +27,6 @@
   "section_break_wlui",
   "is_group",
   "gl_account",
-  "linked_monthly_distribution",
-  "add_monthly_dist",
   "column_break_hwsg",
   "parent_work_breakdown_structure",
   "wbs_level",
@@ -58,7 +58,6 @@
    "default": "0",
    "fieldname": "locked",
    "fieldtype": "Check",
-   "in_list_view": 1,
    "label": "Locked"
   },
   {
@@ -103,19 +102,15 @@
   },
   {
    "allow_on_submit": 1,
-   "default": "0",
    "fieldname": "original_budget",
    "fieldtype": "Currency",
-   "label": "Original Budget",
-   "read_only": 1
+   "label": "Original Budget"
   },
   {
    "allow_on_submit": 1,
-   "default": "0",
    "fieldname": "actual_overall_budget",
    "fieldtype": "Currency",
-   "label": "Actual Overall Budget",
-   "read_only": 1
+   "label": "Actual Overall Budget"
   },
   {
    "fieldname": "column_break_rade",
@@ -123,19 +118,15 @@
   },
   {
    "allow_on_submit": 1,
-   "default": "0",
    "fieldname": "overall_budget",
    "fieldtype": "Currency",
-   "label": "Overall Budget",
-   "read_only": 1
+   "label": "Overall Budget"
   },
   {
    "allow_on_submit": 1,
-   "default": "0",
    "fieldname": "assigned_overall_budget",
    "fieldtype": "Currency",
-   "label": "Assigned Overall Budget",
-   "read_only": 1
+   "label": "Assigned Overall Budget"
   },
   {
    "fieldname": "column_break_haw1",
@@ -143,19 +134,15 @@
   },
   {
    "allow_on_submit": 1,
-   "default": "0",
    "fieldname": "committed_overall_budget",
    "fieldtype": "Currency",
-   "label": "Committed Overall Budget",
-   "read_only": 1
+   "label": "Committed Overall Budget"
   },
   {
    "allow_on_submit": 1,
-   "default": "0",
    "fieldname": "available_budget",
    "fieldtype": "Currency",
-   "label": "Available Budget",
-   "read_only": 1
+   "label": "Available Budget"
   },
   {
    "default": "0",
@@ -171,11 +158,9 @@
    "options": "Account"
   },
   {
-   "allow_on_submit": 1,
-   "depends_on": "eval:doc.is_group ==0 && !doc.linked_monthly_distribution && doc.docstatus ==1 ",
-   "fieldname": "add_monthly_dist",
-   "fieldtype": "Button",
-   "label": "Add Monthly Distribution & Controls"
+   "fieldname": "lft",
+   "fieldtype": "Int",
+   "label": "LEFT"
   },
   {
    "allow_on_submit": 1,

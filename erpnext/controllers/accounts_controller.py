@@ -346,12 +346,17 @@ class AccountsController(TransactionBase):
 					repost_doc.save(ignore_permissions=True)
 
 	def on_trash(self):
+		from erpnext.accounts.utils import delete_exchange_gain_loss_journal
+
 		self._remove_references_in_repost_doctypes()
 		self._remove_references_in_unreconcile()
 		self.remove_serial_and_batch_bundle()
 
 		# delete sl and gl entries on deletion of transaction
 		if frappe.db.get_single_value("Accounts Settings", "delete_linked_ledger_entries"):
+			# delete linked exchange gain/loss journal
+			delete_exchange_gain_loss_journal(self)
+			
 			ple = frappe.qb.DocType("Payment Ledger Entry")
 			frappe.qb.from_(ple).delete().where(
 				(ple.voucher_type == self.doctype) & (ple.voucher_no == self.name)
@@ -518,6 +523,9 @@ class AccountsController(TransactionBase):
 
 	def calculate_taxes_and_totals(self):
 		from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
+
+		if self.taxes_and_charges and not len(self.get("taxes")):
+			self.append_taxes_from_master()
 
 		calculate_taxes_and_totals(self)
 
@@ -1580,6 +1588,7 @@ class AccountsController(TransactionBase):
 			remove_from_bank_transaction,
 		)
 		from erpnext.accounts.utils import (
+			cancel_common_party_journal,
 			cancel_exchange_gain_loss_journal,
 			unlink_ref_doc_from_payment_entries,
 		)
@@ -1591,6 +1600,7 @@ class AccountsController(TransactionBase):
 
 			# Cancel Exchange Gain/Loss Journal before unlinking
 			cancel_exchange_gain_loss_journal(self)
+			cancel_common_party_journal(self)
 
 			if frappe.db.get_single_value("Accounts Settings", "unlink_payment_on_cancellation_of_invoice"):
 				unlink_ref_doc_from_payment_entries(self)
@@ -2421,12 +2431,15 @@ class AccountsController(TransactionBase):
 
 		primary_account = get_party_account(primary_party_type, primary_party, self.company)
 		secondary_account = get_party_account(secondary_party_type, secondary_party, self.company)
+		primary_account_currency = get_account_currency(primary_account)
+		secondary_account_currency = get_account_currency(secondary_account)
 
 		jv = frappe.new_doc("Journal Entry")
 		jv.voucher_type = "Journal Entry"
 		jv.posting_date = self.posting_date
 		jv.company = self.company
 		jv.remark = f"Adjustment for {self.doctype} {self.name}"
+		jv.is_system_generated = True
 
 		reconcilation_entry = frappe._dict()
 		advance_entry = frappe._dict()
@@ -2460,6 +2473,10 @@ class AccountsController(TransactionBase):
 			advance_entry.credit_in_account_currency = self.outstanding_amount
 			reconcilation_entry.debit_in_account_currency = self.outstanding_amount
 
+		default_currency = erpnext.get_company_currency(self.company)
+		if primary_account_currency != default_currency or secondary_account_currency != default_currency:
+			jv.multi_currency = 1
+
 		jv.append("accounts", reconcilation_entry)
 		jv.append("accounts", advance_entry)
 
@@ -2476,17 +2493,6 @@ class AccountsController(TransactionBase):
 			or (self.currency != default_currency and flt(self.conversion_rate) == 1.00)
 		):
 			throw(_("Conversion rate cannot be 0 or 1"))
-
-	def check_finance_books(self, item, asset):
-		if (
-			len(asset.finance_books) > 1
-			and not item.get("finance_book")
-			and not self.get("finance_book")
-			and asset.finance_books[0].finance_book
-		):
-			frappe.throw(
-				_("Select finance book for the item {0} at row {1}").format(item.item_code, item.idx)
-			)
 
 	def check_if_fields_updated(self, fields_to_check, child_tables):
 		# Check if any field affecting accounting entry is altered
@@ -3494,7 +3500,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 	else:  # Sales Order
 		parent.validate_warehouse()
 		parent.update_reserved_qty()
-		parent.update_project()
+		# parent.update_project()
 		parent.update_prevdoc_status("submit")
 		parent.update_delivery_status()
 

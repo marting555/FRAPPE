@@ -45,7 +45,6 @@ class JournalEntryAccount(Document):
 			"Sales Order",
 			"Purchase Order",
 			"Expense Claim",
-			"Asset",
 			"Loan",
 			"Payroll Entry",
 			"Employee Advance",

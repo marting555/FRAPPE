@@ -178,6 +178,8 @@ class SalesOrder(SellingController):
 		super().__init__(*args, **kwargs)
 
 	def onload(self) -> None:
+		super().onload()
+		
 		if frappe.db.get_single_value("Stock Settings", "enable_stock_reservation"):
 			if self.has_unreserved_stock():
 				self.set_onload("has_unreserved_stock", True)
@@ -386,7 +388,6 @@ class SalesOrder(SellingController):
 		frappe.get_doc("Authorization Control").validate_approving_authority(
 			self.doctype, self.company, self.base_grand_total, self
 		)
-		self.update_project()
 		self.update_prevdoc_status("submit")
 
 		self.update_blanket_order()
@@ -416,7 +417,6 @@ class SalesOrder(SellingController):
 
 		self.check_nextdoc_docstatus()
 		self.update_reserved_qty()
-		self.update_project()
 		self.update_prevdoc_status("cancel")
 
 		self.db_set("status", "Cancelled")
@@ -429,15 +429,6 @@ class SalesOrder(SellingController):
 			from erpnext.accounts.doctype.pricing_rule.utils import update_coupon_code_count
 
 			update_coupon_code_count(self.coupon_code, "cancelled")
-
-	def update_project(self):
-		if frappe.db.get_single_value("Selling Settings", "sales_update_frequency") != "Each Transaction":
-			return
-
-		if self.project:
-			project = frappe.get_doc("Project", self.project)
-			project.update_sales_amount()
-			project.db_update()
 
 	def check_credit_limit(self):
 		# if bypass credit limit check is set to true (1) at sales order level,

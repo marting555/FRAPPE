@@ -151,11 +151,6 @@
   "billing_address_display",
   "terms_tab",
   "payment_schedule_section",
-  "payment_term",
-  "column_break_sa8m",
-  "discount_due_date",
-  "section_break_wa3t",
-  "payment_discount_terms",
   "payment_terms_template",
   "ignore_default_payment_terms_template",
   "payment_schedule",
@@ -1138,6 +1133,7 @@
    "label": "Payment Terms"
   },
   {
+   "depends_on": "eval:(!doc.is_paid && !doc.is_return)",
    "fieldname": "payment_terms_template",
    "fieldtype": "Link",
    "hidden": 1,
@@ -1145,6 +1141,7 @@
    "options": "Payment Terms Template"
   },
   {
+   "depends_on": "eval:(!doc.is_paid && !doc.is_return)",
    "fieldname": "payment_schedule",
    "fieldtype": "Table",
    "hidden": 1,
@@ -1277,6 +1274,7 @@
    "fieldtype": "Select",
    "in_standard_filter": 1,
    "label": "Status",
+   "no_copy": 1,
    "options": "\nDraft\nReturn\nDebit Note Issued\nSubmitted\nPaid\nPartly Paid\nUnpaid\nOverdue\nCancelled\nInternal Transfer",
    "print_hide": 1
   },
@@ -1623,30 +1621,6 @@
    "fieldname": "update_outstanding_for_self",
    "fieldtype": "Check",
    "label": "Update Outstanding for Self"
-  },
-  {
-   "fieldname": "payment_term",
-   "fieldtype": "Link",
-   "label": "Payment Term",
-   "options": "Payment Term"
-  },
-  {
-   "fieldname": "payment_discount_terms",
-   "fieldtype": "Table",
-   "options": "Discount Terms"
-  },
-  {
-   "fieldname": "column_break_sa8m",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "discount_due_date",
-   "fieldtype": "Date",
-   "label": "Discount Due Date"
-  },
-  {
-   "fieldname": "section_break_wa3t",
-   "fieldtype": "Section Break"
   }
  ],
  "icon": "fa fa-file-text",
@@ -1658,7 +1632,7 @@
    "link_fieldname": "voucher_no"
   }
  ],
- "modified": "2024-11-12 09:52:06.044204",
+ "modified": "2024-11-19 12:21:26.746786",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice",

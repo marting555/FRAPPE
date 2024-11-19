@@ -10,7 +10,7 @@ import frappe.defaults
 from frappe import _, qb, throw
 from frappe.model.meta import get_field_precision
 from frappe.query_builder import AliasedQuery, Criterion, Table
-from frappe.query_builder.functions import Count, Sum, Min
+from frappe.query_builder.functions import Count, Sum
 from frappe.query_builder.utils import DocType
 from frappe.utils import (
 	add_days,
@@ -745,40 +745,114 @@ def cancel_exchange_gain_loss_journal(
 	Cancel Exchange Gain/Loss for Sales/Purchase Invoice, if they have any.
 	"""
 	if parent_doc.doctype in ["Sales Invoice", "Purchase Invoice", "Payment Entry", "Journal Entry"]:
-		journals = frappe.db.get_all(
-			"Journal Entry Account",
-			filters={
-				"reference_type": parent_doc.doctype,
-				"reference_name": parent_doc.name,
-				"docstatus": 1,
-			},
-			fields=["parent"],
-			as_list=1,
+		gain_loss_journals = get_linked_exchange_gain_loss_journal(
+			referenced_dt=parent_doc.doctype, referenced_dn=parent_doc.name, je_docstatus=1
 		)
-
-		if journals:
-			gain_loss_journals = frappe.db.get_all(
-				"Journal Entry",
-				filters={
-					"name": ["in", [x[0] for x in journals]],
-					"voucher_type": "Exchange Gain Or Loss",
-					"docstatus": 1,
-				},
-				as_list=1,
-			)
-			for doc in gain_loss_journals:
-				gain_loss_je = frappe.get_doc("Journal Entry", doc[0])
-				if referenced_dt and referenced_dn:
-					references = [(x.reference_type, x.reference_name) for x in gain_loss_je.accounts]
-					if (
-						len(references) == 2
-						and (referenced_dt, referenced_dn) in references
-						and (parent_doc.doctype, parent_doc.name) in references
-					):
-						# only cancel JE generated against parent_doc and referenced_dn
-						gain_loss_je.cancel()
-				else:
+		for doc in gain_loss_journals:
+			gain_loss_je = frappe.get_doc("Journal Entry", doc)
+			if referenced_dt and referenced_dn:
+				references = [(x.reference_type, x.reference_name) for x in gain_loss_je.accounts]
+				if (
+					len(references) == 2
+					and (referenced_dt, referenced_dn) in references
+					and (parent_doc.doctype, parent_doc.name) in references
+				):
+					# only cancel JE generated against parent_doc and referenced_dn
 					gain_loss_je.cancel()
+			else:
+				gain_loss_je.cancel()
+
+
+def delete_exchange_gain_loss_journal(
+	parent_doc: dict | object, referenced_dt: str | None = None, referenced_dn: str | None = None
+) -> None:
+	"""
+	Delete Exchange Gain/Loss for Sales/Purchase Invoice, if they have any.
+	"""
+	if parent_doc.doctype in ["Sales Invoice", "Purchase Invoice", "Payment Entry", "Journal Entry"]:
+		gain_loss_journals = get_linked_exchange_gain_loss_journal(
+			referenced_dt=parent_doc.doctype, referenced_dn=parent_doc.name, je_docstatus=2
+		)
+		for doc in gain_loss_journals:
+			gain_loss_je = frappe.get_doc("Journal Entry", doc)
+			if referenced_dt and referenced_dn:
+				references = [(x.reference_type, x.reference_name) for x in gain_loss_je.accounts]
+				if (
+					len(references) == 2
+					and (referenced_dt, referenced_dn) in references
+					and (parent_doc.doctype, parent_doc.name) in references
+				):
+					# only delete JE generated against parent_doc and referenced_dn
+					gain_loss_je.delete()
+			else:
+				gain_loss_je.delete()
+
+
+def get_linked_exchange_gain_loss_journal(referenced_dt: str, referenced_dn: str, je_docstatus: int) -> list:
+	"""
+	Get all the linked exchange gain/loss journal entries for a given document.
+	"""
+	gain_loss_journals = []
+	if journals := frappe.db.get_all(
+		"Journal Entry Account",
+		{
+			"reference_type": referenced_dt,
+			"reference_name": referenced_dn,
+			"docstatus": je_docstatus,
+		},
+		pluck="parent",
+	):
+		gain_loss_journals = frappe.db.get_all(
+			"Journal Entry",
+			{
+				"name": ["in", journals],
+				"voucher_type": "Exchange Gain Or Loss",
+				"is_system_generated": 1,
+				"docstatus": je_docstatus,
+			},
+			pluck="name",
+		)
+	return gain_loss_journals
+
+
+def cancel_common_party_journal(self):
+	if self.doctype not in ["Sales Invoice", "Purchase Invoice"]:
+		return
+
+	if not frappe.db.get_single_value("Accounts Settings", "enable_common_party_accounting"):
+		return
+
+	party_link = self.get_common_party_link()
+	if not party_link:
+		return
+
+	journal_entry = frappe.db.get_value(
+		"Journal Entry Account",
+		filters={
+			"reference_type": self.doctype,
+			"reference_name": self.name,
+			"docstatus": 1,
+		},
+		fieldname="parent",
+	)
+
+	if not journal_entry:
+		return
+
+	common_party_journal = frappe.db.get_value(
+		"Journal Entry",
+		filters={
+			"name": journal_entry,
+			"is_system_generated": True,
+			"docstatus": 1,
+		},
+	)
+
+	if not common_party_journal:
+		return
+
+	common_party_je = frappe.get_doc("Journal Entry", common_party_journal)
+	common_party_je.cancel()
 
 
 def update_accounting_ledgers_after_reference_removal(
@@ -986,7 +1060,7 @@ def get_held_invoices(party_type, party):
 
 	if party_type == "Supplier":
 		held_invoices = frappe.db.sql(
-			"select name from `tabPurchase Invoice` where on_hold = 1 and release_date IS NOT NULL and release_date > CURRENT_DATE",
+			"select name from `tabPurchase Invoice` where on_hold = 1 and release_date IS NOT NULL and release_date > CURDATE()",
 			as_dict=1,
 		)
 		held_invoices = set(d["name"] for d in held_invoices)
@@ -1102,7 +1176,7 @@ def get_children(doctype, parent, company, is_root=False):
 	fields = ["name as value", "is_group as expandable"]
 	filters = [["docstatus", "<", 2]]
 
-	filters.append([f"{parent_fieldname}", "=", "" if is_root else parent])
+	filters.append([f'ifnull(`{parent_fieldname}`,"")', "=", "" if is_root else parent])
 
 	if is_root:
 		fields += ["root_type", "report_type", "account_currency"] if doctype == "Account" else []
@@ -1362,7 +1436,7 @@ def sort_stock_vouchers_by_posting_date(stock_vouchers: list[tuple[str, str]]) -
 		frappe.qb.from_(sle)
 		.select(sle.voucher_type, sle.voucher_no, sle.posting_date, sle.posting_time, sle.creation)
 		.where((sle.is_cancelled == 0) & (sle.voucher_no.isin(voucher_nos)))
-		.groupby(sle.voucher_type, sle.voucher_no, sle.posting_date, sle.posting_time, sle.creation, sle.posting_datetime)
+		.groupby(sle.voucher_type, sle.voucher_no)
 		.orderby(sle.posting_datetime)
 		.orderby(sle.creation)
 	).run(as_dict=True)
@@ -1391,21 +1465,13 @@ def get_future_stock_vouchers(posting_date, posting_time, for_warehouses=None, f
 		values.append(company)
 
 	future_stock_vouchers = frappe.db.sql(
-		f"""
-		WITH distinct_rows AS (
-		SELECT DISTINCT ON (sle.voucher_type, sle.voucher_no)
-			sle.voucher_type, sle.voucher_no, sle.posting_date, sle.posting_time, sle.creation
-		FROM "tabStock Ledger Entry" sle
-		WHERE sle.posting_date >= %s
-			AND sle.posting_time >= %s
-			AND is_cancelled = 0
+		f"""select distinct sle.voucher_type, sle.voucher_no
+		from `tabStock Ledger Entry` sle
+		where
+			timestamp(sle.posting_date, sle.posting_time) >= timestamp(%s, %s)
+			and is_cancelled = 0
 			{condition}
-		ORDER BY sle.voucher_type, sle.voucher_no, sle.posting_date ASC, sle.posting_time ASC, sle.creation ASC
-		)
-		SELECT *
-		FROM distinct_rows
-		FOR UPDATE;
-		""",
+		order by timestamp(sle.posting_date, sle.posting_time) asc, creation asc for update""",
 		tuple([posting_date, posting_time, *values]),
 		as_dict=True,
 	)
@@ -1861,15 +1927,9 @@ class QueryPaymentLedger:
 				.where(Criterion.all(self.common_filter))
 				.where(Criterion.all(self.dimensions_filter))
 				.where(Criterion.all(self.voucher_posting_date))
-				.groupby(
-					ple.against_voucher_type, 
-					ple.against_voucher_no, 
-					ple.party_type, 
-					ple.party,
-					ple.posting_date
-				)
+				.groupby(ple.against_voucher_type, ple.against_voucher_no, ple.party_type, ple.party)
 				.orderby(ple.posting_date, ple.voucher_no)
-				.having(Sum(ple.amount_in_account_currency) > 0)
+				.having(qb.Field("amount_in_account_currency") > 0)
 				.limit(self.limit)
 				.run()
 			)
@@ -1912,8 +1972,8 @@ class QueryPaymentLedger:
 				ple.against_voucher_no.as_("voucher_no"),
 				ple.party_type,
 				ple.party,
-				Min(ple.posting_date).as_("posting_date"),
-				Min(ple.due_date).as_("due_date"),
+				ple.posting_date,
+				ple.due_date,
 				ple.account_currency.as_("currency"),
 				Sum(ple.amount).as_("amount"),
 				Sum(ple.amount_in_account_currency).as_("amount_in_account_currency"),
@@ -1921,7 +1981,7 @@ class QueryPaymentLedger:
 			.where(ple.delinked == 0)
 			.where(Criterion.all(filter_on_against_voucher_no))
 			.where(Criterion.all(self.common_filter))
-			.groupby(ple.account, ple.against_voucher_type, ple.against_voucher_no, ple.party_type, ple.party, ple.account_currency)
+			.groupby(ple.account, ple.against_voucher_type, ple.against_voucher_no, ple.party_type,ple.party, ple.posting_date,  ple.due_date, ple.account_currency )
 		)
 
 		# build CTE for combining voucher amount and outstanding
@@ -1957,21 +2017,6 @@ class QueryPaymentLedger:
 				Table("vouchers").currency,
 				Table("vouchers").cost_center.as_("cost_center"),
 			)
-			.groupby(
-				Table("vouchers").account,
-				Table("vouchers").voucher_type,
-				Table("vouchers").voucher_no,
-				Table("vouchers").party_type,
-				Table("vouchers").party,
-				Table("vouchers").posting_date,
-				Table("vouchers").due_date,
-				Table("vouchers").currency,
-				Table("vouchers").cost_center,
-				Table("vouchers").amount,
-				Table("outstanding").amount,
-				Table("vouchers").amount_in_account_currency,
-				Table("outstanding").amount_in_account_currency
-			)
 			.where(Criterion.all(filter_on_outstanding_amount))
 		)
 
@@ -1980,14 +2025,14 @@ class QueryPaymentLedger:
 		if self.get_invoices:
 			self.cte_query_voucher_amount_and_outstanding = (
 				self.cte_query_voucher_amount_and_outstanding.having(
-					(Table("outstanding").amount_in_account_currency > 0)
+					qb.Field("outstanding_in_account_currency") > 0
 				)
 			)
 		# only fetch payments
 		elif self.get_payments:
 			self.cte_query_voucher_amount_and_outstanding = (
 				self.cte_query_voucher_amount_and_outstanding.having(
-					(Table("outstanding").amount_in_account_currency < 0)
+					qb.Field("outstanding_in_account_currency") < 0
 				)
 			)
 

@@ -8,7 +8,7 @@ import frappe
 from frappe import qb
 from frappe.model.dynamic_links import get_dynamic_link_map
 from frappe.tests.utils import FrappeTestCase, change_settings
-from frappe.utils import add_days, flt, getdate, nowdate, today
+from frappe.utils import add_days, flt, format_date, getdate, nowdate, today
 
 import erpnext
 from erpnext.accounts.doctype.account.test_account import create_account, get_inventory_account
@@ -19,11 +19,6 @@ from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import (
 )
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_inter_company_transaction
 from erpnext.accounts.utils import PaymentEntryUnlinkError
-from assets.assets.doctype.asset.depreciation import post_depreciation_entries
-from assets.assets.doctype.asset.test_asset import create_asset, create_asset_data
-from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
-	get_depr_schedule,
-)
 from erpnext.controllers.accounts_controller import update_invoice_status
 from erpnext.controllers.taxes_and_totals import get_itemised_tax_breakup_data
 from erpnext.exceptions import InvalidAccountCurrency, InvalidCurrency
@@ -1591,38 +1586,6 @@ class TestSalesInvoice(FrappeTestCase):
 		)
 		self.assertRaises(frappe.ValidationError, cr_note.save)
 
-	def test_gle_made_when_asset_is_returned(self):
-		create_asset_data()
-		asset = create_asset(item_code="Macbook Pro")
-
-		si = create_sales_invoice(item_code="Macbook Pro", asset=asset.name, qty=1, rate=90000)
-		return_si = create_sales_invoice(
-			is_return=1,
-			return_against=si.name,
-			item_code="Macbook Pro",
-			asset=asset.name,
-			qty=-1,
-			rate=90000,
-		)
-
-		disposal_account = frappe.get_cached_value("Company", "_Test Company", "disposal_account")
-
-		# Asset value is 100,000 but it was sold for 90,000, so there should be a loss of 10,000
-		loss_for_si = frappe.get_all(
-			"GL Entry",
-			filters={"voucher_no": si.name, "account": disposal_account},
-			fields=["credit", "debit"],
-		)[0]
-
-		loss_for_return_si = frappe.get_all(
-			"GL Entry",
-			filters={"voucher_no": return_si.name, "account": disposal_account},
-			fields=["credit", "debit"],
-		)[0]
-
-		self.assertEqual(loss_for_si["credit"], loss_for_return_si["debit"])
-		self.assertEqual(loss_for_si["debit"], loss_for_return_si["credit"])
-
 	def test_incoming_rate_for_stand_alone_credit_note(self):
 		return_si = create_sales_invoice(
 			is_return=1,
@@ -2911,92 +2874,6 @@ class TestSalesInvoice(FrappeTestCase):
 
 		check_gl_entries(self, si.name, expected_gle, add_days(nowdate(), -1))
 
-	def test_asset_depreciation_on_sale_with_pro_rata(self):
-		"""
-		Tests if an Asset set to depreciate yearly on June 30, that gets sold on Sept 30, creates an additional depreciation entry on its date of sale.
-		"""
-
-		create_asset_data()
-		asset = create_asset(item_code="Macbook Pro", calculate_depreciation=1, submit=1)
-		post_depreciation_entries(getdate("2021-09-30"))
-
-		create_sales_invoice(
-			item_code="Macbook Pro", asset=asset.name, qty=1, rate=90000, posting_date=getdate("2021-09-30")
-		)
-		asset.load_from_db()
-
-		expected_values = [
-			["2020-06-30", 1366.12, 1366.12],
-			["2021-06-30", 20000.0, 21366.12],
-			["2021-09-30", 5041.1, 26407.22],
-		]
-
-		for i, schedule in enumerate(get_depr_schedule(asset.name, "Active")):
-			self.assertEqual(getdate(expected_values[i][0]), schedule.schedule_date)
-			self.assertEqual(expected_values[i][1], schedule.depreciation_amount)
-			self.assertEqual(expected_values[i][2], schedule.accumulated_depreciation_amount)
-			self.assertTrue(schedule.journal_entry)
-
-	def test_asset_depreciation_on_sale_without_pro_rata(self):
-		"""
-		Tests if an Asset set to depreciate yearly on Dec 31, that gets sold on Dec 31 after two years, created an additional depreciation entry on its date of sale.
-		"""
-
-		create_asset_data()
-		asset = create_asset(
-			item_code="Macbook Pro",
-			calculate_depreciation=1,
-			available_for_use_date=getdate("2019-12-31"),
-			total_number_of_depreciations=3,
-			expected_value_after_useful_life=10000,
-			depreciation_start_date=getdate("2020-12-31"),
-			submit=1,
-		)
-
-		post_depreciation_entries(getdate("2021-09-30"))
-
-		create_sales_invoice(
-			item_code="Macbook Pro", asset=asset.name, qty=1, rate=90000, posting_date=getdate("2021-12-31")
-		)
-		asset.load_from_db()
-
-		expected_values = [["2020-12-31", 30000, 30000], ["2021-12-31", 30000, 60000]]
-
-		for i, schedule in enumerate(get_depr_schedule(asset.name, "Active")):
-			self.assertEqual(getdate(expected_values[i][0]), schedule.schedule_date)
-			self.assertEqual(expected_values[i][1], schedule.depreciation_amount)
-			self.assertEqual(expected_values[i][2], schedule.accumulated_depreciation_amount)
-			self.assertTrue(schedule.journal_entry)
-
-	def test_depreciation_on_return_of_sold_asset(self):
-		from erpnext.controllers.sales_and_purchase_return import make_return_doc
-
-		create_asset_data()
-		asset = create_asset(item_code="Macbook Pro", calculate_depreciation=1, submit=1)
-		post_depreciation_entries(getdate("2021-09-30"))
-
-		si = create_sales_invoice(
-			item_code="Macbook Pro", asset=asset.name, qty=1, rate=90000, posting_date=getdate("2021-09-30")
-		)
-		return_si = make_return_doc("Sales Invoice", si.name)
-		return_si.submit()
-		asset.load_from_db()
-
-		expected_values = [
-			["2020-06-30", 1366.12, 1366.12, True],
-			["2021-06-30", 20000.0, 21366.12, True],
-			["2022-06-30", 20000.0, 41366.12, False],
-			["2023-06-30", 20000.0, 61366.12, False],
-			["2024-06-30", 20000.0, 81366.12, False],
-			["2025-06-06", 18633.88, 100000.0, False],
-		]
-
-		for i, schedule in enumerate(get_depr_schedule(asset.name, "Active")):
-			self.assertEqual(getdate(expected_values[i][0]), schedule.schedule_date)
-			self.assertEqual(expected_values[i][1], schedule.depreciation_amount)
-			self.assertEqual(expected_values[i][2], schedule.accumulated_depreciation_amount)
-			self.assertEqual(schedule.journal_entry, schedule.journal_entry)
-
 	def test_sales_invoice_against_supplier(self):
 		from erpnext.accounts.doctype.opening_invoice_creation_tool.test_opening_invoice_creation_tool import (
 			make_customer,
@@ -3117,6 +2994,41 @@ class TestSalesInvoice(FrappeTestCase):
 
 		dim.disabled = True
 		dim.save()
+		party_link.delete()
+		frappe.db.set_single_value("Accounts Settings", "enable_common_party_accounting", 0)
+
+	def test_sales_invoice_cancel_with_common_party_advance_jv(self):
+		from erpnext.accounts.doctype.opening_invoice_creation_tool.test_opening_invoice_creation_tool import (
+			make_customer,
+		)
+		from erpnext.accounts.doctype.party_link.party_link import create_party_link
+		from erpnext.buying.doctype.supplier.test_supplier import create_supplier
+		# create a customer
+		customer = make_customer(customer="_Test Common Supplier")
+		# create a supplier
+		supplier = create_supplier(supplier_name="_Test Common Supplier").name
+		# create a party link between customer & supplier
+		party_link = create_party_link("Supplier", supplier, customer)
+		# enable common party accounting
+		frappe.db.set_single_value("Accounts Settings", "enable_common_party_accounting", 1)
+		# create a sales invoice
+		si = create_sales_invoice(customer=customer)
+		# check creation of journal entry
+		jv = frappe.db.get_value(
+			"Journal Entry Account",
+			filters={
+				"reference_type": si.doctype,
+				"reference_name": si.name,
+				"docstatus": 1,
+			},
+			fieldname="parent",
+		)
+		self.assertTrue(jv)
+		# cancel sales invoice
+		si.cancel()
+		# check cancellation of journal entry
+		jv_status = frappe.db.get_value("Journal Entry", jv, "docstatus")
+		self.assertEqual(jv_status, 2)
 		party_link.delete()
 		frappe.db.set_single_value("Accounts Settings", "enable_common_party_accounting", 0)
 
@@ -3828,6 +3740,90 @@ class TestSalesInvoice(FrappeTestCase):
 		)
 		self.assertEqual(len(res), 1)
 		self.assertEqual(res[0][0], pos_return.return_against)
+
+	
+
+	@change_settings("Accounts Settings", {"enable_common_party_accounting": True})
+	def test_common_party_with_foreign_currency_jv(self):
+		from erpnext.accounts.doctype.account.test_account import create_account
+		from erpnext.accounts.doctype.opening_invoice_creation_tool.test_opening_invoice_creation_tool import (
+			make_customer,
+		)
+		from erpnext.accounts.doctype.party_link.party_link import create_party_link
+		from erpnext.buying.doctype.supplier.test_supplier import create_supplier
+		from erpnext.setup.utils import get_exchange_rate
+		creditors = create_account(
+			account_name="Creditors USD",
+			parent_account="Accounts Payable - _TC",
+			company="_Test Company",
+			account_currency="USD",
+			account_type="Payable",
+		)
+		debtors = create_account(
+			account_name="Debtors USD",
+			parent_account="Accounts Receivable - _TC",
+			company="_Test Company",
+			account_currency="USD",
+			account_type="Receivable",
+		)
+		# create a customer
+		customer = make_customer(customer="_Test Common Party USD")
+		cust_doc = frappe.get_doc("Customer", customer)
+		cust_doc.default_currency = "USD"
+		test_account_details = {
+			"company": "_Test Company",
+			"account": debtors,
+		}
+		cust_doc.append("accounts", test_account_details)
+		cust_doc.save()
+		# create a supplier
+		supplier = create_supplier(supplier_name="_Test Common Party USD").name
+		supp_doc = frappe.get_doc("Supplier", supplier)
+		supp_doc.default_currency = "USD"
+		test_account_details = {
+			"company": "_Test Company",
+			"account": creditors,
+		}
+		supp_doc.append("accounts", test_account_details)
+		supp_doc.save()
+		create_party_link("Supplier", supplier, customer)
+		# create a sales invoice
+		si = create_sales_invoice(
+			customer=customer,
+			currency="USD",
+			conversion_rate=get_exchange_rate("USD", "INR"),
+			debit_to=debtors,
+			do_not_save=1,
+		)
+		si.party_account_currency = "USD"
+		si.save()
+		si.submit()
+		# check outstanding of sales invoice
+		si.reload()
+		self.assertEqual(si.status, "Paid")
+		self.assertEqual(flt(si.outstanding_amount), 0.0)
+		# check creation of journal entry
+		jv = frappe.get_all(
+			"Journal Entry Account",
+			{
+				"account": si.debit_to,
+				"party_type": "Customer",
+				"party": si.customer,
+				"reference_type": si.doctype,
+				"reference_name": si.name,
+			},
+			pluck="credit_in_account_currency",
+		)
+		self.assertTrue(jv)
+		self.assertEqual(jv[0], si.grand_total)
+
+	def test_invoice_remarks(self):
+		si = frappe.copy_doc(test_records[0])
+		si.po_no = "Test PO"
+		si.po_date = nowdate()
+		si.save()
+		si.submit()
+		self.assertEqual(si.remarks, f"Against Customer Order Test PO dated {format_date(nowdate())}")
 
 
 def set_advance_flag(company, flag, default_account):

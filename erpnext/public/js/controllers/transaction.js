@@ -1258,6 +1258,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 			"Purchase Receipt": ["purchase_order_item", "purchase_invoice_item", "purchase_receipt_item"],
 			"Purchase Invoice": ["purchase_order_item", "pr_detail", "po_detail"],
 			"Sales Order": ["prevdoc_docname", "quotation_item"],
+			"Purchase Order": ["supplier_quotation_item"],
 		};
 		const mappped_fields = mapped_item_field_map[this.frm.doc.doctype] || [];
 
@@ -1501,6 +1502,31 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		}
 	}
 
+	batch_no(frm, cdt, cdn) {
+		let row = locals[cdt][cdn];
+		if (row.use_serial_batch_fields && row.batch_no) {
+			var params = this._get_args(row);
+			params.batch_no = row.batch_no;
+			params.uom = row.uom;
+
+			frappe.call({
+				method: "erpnext.stock.get_item_details.get_batch_based_item_price",
+				args: {
+					params: params,
+					item_code: row.item_code,
+				},
+				callback: function(r) {
+					if (!r.exc && r.message) {
+						row.price_list_rate = r.message;
+						row.rate = r.message;
+						refresh_field("rate", row.name, row.parentfield);
+						refresh_field("price_list_rate", row.name, row.parentfield);
+					}
+				}
+			})
+		}
+	}
+
 	toggle_item_grid_columns(company_currency) {
 		const me = this;
 		// toggle columns
@@ -1510,8 +1536,8 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 				item_grid.set_column_disp(fname, me.frm.doc.currency != company_currency);
 		});
 
-		var show = (cint(cur_frm.doc.discount_amount)) ||
-			((cur_frm.doc.taxes || []).filter(function(d) {return d.included_in_print_rate===1}).length);
+		var show = (cint(this.frm.doc.discount_amount)) ||
+			((this.frm.doc.taxes || []).filter(function(d) {return d.included_in_print_rate===1}).length);
 
 		$.each(["net_rate", "net_amount"], function(i, fname) {
 			if(frappe.meta.get_docfield(item_grid.doctype, fname))
@@ -1777,7 +1803,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 
 			if (data && data.apply_rule_on_other_items && JSON.parse(data.apply_rule_on_other_items)) {
 				me.frm.doc.items.forEach(d => {
-					if (in_list(JSON.parse(data.apply_rule_on_other_items), d[data.apply_rule_on])) {
+					if (in_list(JSON.parse(data.apply_rule_on_other_items), d[data.apply_rule_on]) && d.item_code === data.item_code) {
 						for(var k in data) {
 							if (data.pricing_rule_for == "Discount Percentage" && data.apply_rule_on_other_items && k == "discount_amount") {
 								continue;
@@ -1878,6 +1904,10 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		let me = this;
 		const fields = ["discount_percentage",
 			"discount_amount", "margin_rate_or_amount", "rate_with_margin"];
+
+		if (!item) {
+			return;
+		}
 
 		if(item.remove_free_item) {
 			let items = [];
@@ -2144,7 +2174,6 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 	make_mapped_payment_entry(args) {
 		var me = this;
 		args = args || { "dt": this.frm.doc.doctype, "dn": this.frm.doc.name };
-		
 		return frappe.call({
 			method: me.get_method_for_payment(),
 			args: args,
@@ -2157,23 +2186,16 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 
 	prompt_user_for_reference_date(){
 		let me = this;
-		frappe.prompt([{
+		frappe.prompt({
 			label: __("Cheque/Reference Date"),
 			fieldname: "reference_date",
 			fieldtype: "Date",
 			reqd: 1,
-		},
-		{
-			label: __("Amount to be Paid"),
-			fieldname: "amount_to_be_paid",
-			fieldtype: "Float",
-			reqd: 1
-		}], (values) => {
+		}, (values) => {
 			let args = {
 				"dt": me.frm.doc.doctype,
 				"dn": me.frm.doc.name,
-				"reference_date": values.reference_date,
-				"amount_to_be_paid": values.amount_to_be_paid,
+				"reference_date": values.reference_date
 			}
 			me.make_mapped_payment_entry(args);
 		},
@@ -2184,13 +2206,12 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 
 	has_discount_in_schedule() {
 		let is_eligible = in_list(
-		  ["Sales Order", "Sales Invoice", "Purchase Order", "Purchase Invoice"],
-		  this.frm.doctype
+			["Sales Order", "Sales Invoice", "Purchase Order", "Purchase Invoice"],
+			this.frm.doctype
 		);
-		let has_payment_discount_term = this.frm.doc.payment_discount_terms && this.frm.doc.payment_discount_terms.length;
-		if (!is_eligible || !has_payment_discount_term)
-		  return false;
-		let has_discount = this.frm.doc.payment_discount_terms.some((row) => row.discount);
+		let has_payment_schedule = this.frm.doc.payment_schedule && this.frm.doc.payment_schedule.length;
+		if(!is_eligible || !has_payment_schedule) return false;
+		let has_discount = this.frm.doc.payment_schedule.some(row => row.discount);
 		return has_discount;
 	}
 

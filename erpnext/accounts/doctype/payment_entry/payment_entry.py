@@ -2229,7 +2229,6 @@ def get_reference_details(
 def get_payment_entry(
 	dt,
 	dn,
-	amount_to_be_paid = None,
 	party_amount=None,
 	bank_account=None,
 	bank_amount=None,
@@ -2244,9 +2243,6 @@ def get_payment_entry(
 
 	if not party_type:
 		party_type = set_party_type(dt)
-
-	if amount_to_be_paid and float(amount_to_be_paid) < 1:
-		frappe.throw("Invalid Amount")
 
 	party_account = set_party_account(dt, dn, doc, party_type)
 	party_account_currency = set_party_account_currency(dt, party_account, doc)
@@ -2267,17 +2263,11 @@ def get_payment_entry(
 		if party_bank_account:
 			account = frappe.db.get_value("Bank Account", party_bank_account, "account")
 			bank = get_bank_cash_account(doc, account)
-	if amount_to_be_paid :
-		paid_amount =  received_amount = float(amount_to_be_paid)
-		allocated_amount = amount_to_be_paid
-	else:
-		paid_amount, received_amount = set_paid_amount_and_received_amount(
-			dt, party_account_currency, bank, outstanding_amount, payment_type, bank_amount, doc
-		)
-		allocated_amount = outstanding_amount
-	
+	paid_amount, received_amount = set_paid_amount_and_received_amount(
+		dt, party_account_currency, bank, outstanding_amount, payment_type, bank_amount, doc
+	)
 	reference_date = getdate(reference_date)
-	paid_amount, received_amount, discount_amount, valid_discounts = apply_discount_paid_amount(
+	paid_amount, received_amount, discount_amount, valid_discounts = apply_early_payment_discount(
 		paid_amount, received_amount, doc, party_account_currency, reference_date
 	)
 
@@ -2367,7 +2357,7 @@ def get_payment_entry(
 						"due_date": doc.get("due_date"),
 						"total_amount": grand_total,
 						"outstanding_amount": outstanding_amount,
-						"allocated_amount": allocated_amount,
+						"allocated_amount": outstanding_amount,
 					},
 				)
 
@@ -2565,10 +2555,10 @@ def set_pending_discount_loss(pe, doc, discount_amount, base_total_discount_loss
 		# Otherwise it will be the total discount loss.
 		book_tax_loss = frappe.db.get_single_value("Accounts Settings", "book_tax_discount_loss")
 		account_type = "round_off_account" if book_tax_loss else "default_discount_account"
-		account_name = get_default_account_name(doc.payment_term, doc.doctype)
+
 		pe.set_gain_or_loss(
 			account_details={
-				"account": account_name,
+				"account": frappe.get_cached_value("Company", pe.company, account_type),
 				"cost_center": pe.cost_center
 				or frappe.get_cached_value("Company", pe.company, "cost_center"),
 				"amount": discount_amount * positive_negative,
@@ -2774,134 +2764,3 @@ def make_payment_order(source_name, target_doc=None):
 @erpnext.allow_regional
 def add_regional_gl_entries(gl_entries, doc):
 	return
-
-@frappe.whitelist()
-def get_discount_term(doc = None):
-	doc = frappe.parse_json(doc)
-	payment_reference = frappe._dict(doc.references[0])
-	sales_invoice_doc = frappe.get_doc(payment_reference.reference_doctype, payment_reference.reference_name)
-	received_amount = doc.paid_amount
-
-	paid_amount, received_amount, discount_amount, valid_discounts = apply_discount_paid_amount(
-	doc.paid_amount, received_amount, sales_invoice_doc, doc.paid_to_account_currency, frappe.utils.getdate(doc.reference_date)
-)
-	return discount_amount
-
-def apply_discount_paid_amount(paid_amount, received_amount, doc, party_account_currency, reference_date):
-	total_discount = 0
-	valid_discounts = []
-	eligible_for_payments = ["Sales Order", "Sales Invoice", "Purchase Order", "Purchase Invoice"]
-	has_payment_discount_term = hasattr(doc, "payment_discount_terms") and doc.payment_discount_terms
-	is_multi_currency = party_account_currency != doc.company_currency
-	is_discount_applied = False
-	
-	if doc.doctype in eligible_for_payments and has_payment_discount_term:
-		for term in doc.payment_discount_terms:
-			if term.discount and reference_date <= term.discount_date and is_discount_applied is False:
-				# grand_total = doc.get("grand_total") if is_multi_currency else doc.get("base_grand_total")
-				discount_amount = flt(paid_amount) * (term.discount / 100)
-				
-				# if accounting is done in the same currency, paid_amount = received_amount
-				conversion_rate = doc.get("conversion_rate", 1) if is_multi_currency else 1
-				discount_amount_in_foreign_currency = discount_amount * conversion_rate
-
-				if doc.doctype == "Sales Invoice":
-					paid_amount -= discount_amount
-					received_amount -= discount_amount_in_foreign_currency
-				else:
-					received_amount -= discount_amount
-					paid_amount -= discount_amount_in_foreign_currency
-
-				valid_discounts.append({"type": "Percentage", "discount": term.discount})
-				total_discount += discount_amount
-				
-				is_discount_applied = True
-				
-			else:
-				continue
-
-		if total_discount:
-			currency = doc.get("currency") if is_multi_currency else doc.company_currency
-			money = frappe.utils.fmt_money(total_discount, currency=currency)
-			frappe.msgprint(_("Discount of {} applied as per Payment Term").format(money), alert=1)
-
-	return paid_amount, received_amount, total_discount, valid_discounts
-
-def get_default_account_name(dn, dt):
-	field = "default_account_for_purchase" if dt in ["Purchase Order","Purchase Invoice"] else "default_account_for_sales"
-	return frappe.db.get_value("Payment Term", dn, field)
-
-
-@frappe.whitelist()
-def get_discount_eligible_invoice(filters, dt):
-	filters = frappe.parse_json(filters)
-	dn_list = frappe.db.get_all(dt, filters, pluck = "name")
-	invoice_list = []
-	refernce_date = filters.due_date[1]
-	for dn in dn_list:
-		invoice_doc = frappe.get_doc(dt, dn)
-		discount_term_list = invoice_doc.payment_discount_terms
-
-		for discount_row in discount_term_list:
-			if frappe.utils.getdate(refernce_date) <= discount_row.discount_date:
-				invoice_list.append({
-					"amount_to_be_paid": invoice_doc.outstanding_amount,
-					"cost_center" : invoice_doc.cost_center, 
-					"discount_percent": discount_row.discount, 
-					"grand_total" : invoice_doc.grand_total, 
-					"invoice_number": dn, 
-					"outstanding_amount": invoice_doc.outstanding_amount, 
-					"payment_term" : invoice_doc.payment_term, 
-				})
-				break
-
-	return invoice_list
-
-@frappe.whitelist()
-def calculate_discount_for_multiple_invoice(dt, dn_list_obj, reference_date,party_account_currency, party_type, party ):
-	dn_list_obj = frappe.parse_json(dn_list_obj)
-	reference_table = []
-	deduction_table = []
-	paid_amount = 0
-	
-	total_allocated_amount = 0 
-
-	for dn_obj in dn_list_obj:
-		dn_obj = frappe._dict(dn_obj)
-		ref_details = get_reference_details(
-					dt,
-					dn_obj.invoice_number,
-					party_account_currency,
-					party_type,
-					party,
-				)
-		temp_reference_obj = {
-			"reference_doctype" : dt,
-			"reference_name" :dn_obj.invoice_number,
-			"allocated_amount" : flt(dn_obj.amount_to_be_paid) 
-		}
-		for field, value in ref_details.items():
-			temp_reference_obj.update({field : value})
-		reference_table.append(temp_reference_obj)
-		
-		discount_account = get_default_account_name(dn_obj.payment_term, dt) 
-
-		discount_amount = flt(dn_obj.amount_to_be_paid) * (dn_obj.discount_percent / 100)
-		paid_amount += dn_obj.amount_to_be_paid - discount_amount
-		discount_amount = -discount_amount if dt == "Purchase Invoice" else discount_amount
-		total_allocated_amount +=  dn_obj.amount_to_be_paid
-		deduction_table.append({
-		"account" : discount_account,
-		"cost_center" :dn_obj.cost_center,
-		"amount" : flt(discount_amount) ,
-		})
-		
-	return {
-		"references": reference_table, 
-		"paid_amount": paid_amount,
-		"deductions": deduction_table, 
-		"total_allocated_amount" : total_allocated_amount,
-		"unallocated_amount":0,
-		"difference_amount":0
-
-	}

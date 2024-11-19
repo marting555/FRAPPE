@@ -270,7 +270,6 @@ class PurchaseInvoice(BuyingController):
 		self.set_against_expense_account()
 		self.validate_write_off_account()
 		self.validate_multiple_billing("Purchase Receipt", "pr_detail", "amount")
-		self.create_remarks()
 		self.set_status()
 		self.validate_purchase_receipt_if_update_stock()
 		validate_inter_company_party(
@@ -309,10 +308,10 @@ class PurchaseInvoice(BuyingController):
 
 	def create_remarks(self):
 		if not self.remarks:
-			if self.bill_no and self.bill_date:
-				self.remarks = _("Against Supplier Invoice {0} dated {1}").format(
-					self.bill_no, formatdate(self.bill_date)
-				)
+			if self.bill_no:
+				self.remarks = _("Against Supplier Invoice {0}").format(self.bill_no)
+				if self.bill_date:
+					self.remarks += " " + _("dated {0}").format(formatdate(self.bill_date))
 			else:
 				self.remarks = _("No Remarks")
 
@@ -677,6 +676,9 @@ class PurchaseInvoice(BuyingController):
 		validate_docs_for_voucher_types(["Purchase Invoice"])
 		validate_docs_for_deferred_accounting([], [self.name])
 
+	def before_submit(self):
+		self.create_remarks()
+
 	def on_submit(self):
 		super().on_submit()
 
@@ -716,9 +718,6 @@ class PurchaseInvoice(BuyingController):
 
 		if self.update_stock == 1:
 			self.repost_future_sle_and_gle()
-
-		if frappe.db.get_single_value("Buying Settings", "project_update_frequency") == "Each Transaction":
-			self.update_project()
 
 		update_linked_doc(self.doctype, self.name, self.inter_company_invoice_reference)
 		self.update_advance_tax_references()
@@ -854,7 +853,7 @@ class PurchaseInvoice(BuyingController):
 						else grand_total,
 						"against_voucher": against_voucher,
 						"against_voucher_type": self.doctype,
-						"project": self.project,
+						# "project": self.project,
 						"cost_center": self.cost_center,
 					},
 					self.party_account_currency,
@@ -920,7 +919,7 @@ class PurchaseInvoice(BuyingController):
 									"account": warehouse_account[item.warehouse]["account"],
 									"against": warehouse_account[item.from_warehouse]["account"],
 									"cost_center": item.cost_center,
-									"project": item.project or self.project,
+									# "project": item.project or self.project,
 									"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
 									"debit": warehouse_debit_amount,
 								},
@@ -940,7 +939,7 @@ class PurchaseInvoice(BuyingController):
 									"account": warehouse_account[item.from_warehouse]["account"],
 									"against": warehouse_account[item.warehouse]["account"],
 									"cost_center": item.cost_center,
-									"project": item.project or self.project,
+									# "project": item.project or self.project,
 									"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
 									"debit": -1 * flt(credit_amount, item.precision("base_net_amount")),
 								},
@@ -976,7 +975,7 @@ class PurchaseInvoice(BuyingController):
 										"debit": warehouse_debit_amount,
 										"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
 										"cost_center": item.cost_center,
-										"project": item.project or self.project,
+										# "project": item.project or self.project,
 									},
 									account_currency,
 									item=item,
@@ -996,7 +995,7 @@ class PurchaseInvoice(BuyingController):
 											"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
 											"credit": flt(amount["base_amount"]),
 											"credit_in_account_currency": flt(amount["amount"]),
-											"project": item.project or self.project,
+											# "project": item.project or self.project,
 										},
 										item=item,
 									)
@@ -1015,7 +1014,7 @@ class PurchaseInvoice(BuyingController):
 									"account": supplier_warehouse_account,
 									"against": item.expense_account,
 									"cost_center": item.cost_center,
-									"project": item.project or self.project,
+									# "project": item.project or self.project,
 									"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
 									"credit": flt(item.rm_supp_cost),
 								},
@@ -1044,7 +1043,7 @@ class PurchaseInvoice(BuyingController):
 									"against": self.supplier,
 									"debit": amount,
 									"cost_center": item.cost_center,
-									"project": item.project or self.project,
+									# "project": item.project or self.project,
 								},
 								account_currency,
 								item=item,
@@ -1069,7 +1068,7 @@ class PurchaseInvoice(BuyingController):
 											"against": self.supplier,
 											"debit": discrepancy_caused_by_exchange_rate_difference,
 											"cost_center": item.cost_center,
-											"project": item.project or self.project,
+											# "project": item.project or self.project,
 										},
 										account_currency,
 										item=item,
@@ -1082,7 +1081,7 @@ class PurchaseInvoice(BuyingController):
 											"against": self.supplier,
 											"credit": discrepancy_caused_by_exchange_rate_difference,
 											"cost_center": item.cost_center,
-											"project": item.project or self.project,
+											# "project": item.project or self.project,
 										},
 										account_currency,
 										item=item,
@@ -1115,7 +1114,7 @@ class PurchaseInvoice(BuyingController):
 									"debit": flt(item.item_tax_amount, item.precision("item_tax_amount")),
 									"remarks": self.remarks or _("Accounting Entry for Stock"),
 									"cost_center": self.cost_center,
-									"project": item.project or self.project,
+									# "project": item.project or self.project,
 								},
 								item=item,
 							)
@@ -1178,6 +1177,29 @@ class PurchaseInvoice(BuyingController):
 					item_amount=(min(item.qty, pr_item.get("qty")) * pr_item.get("base_rate")),
 				)
 
+
+	def update_gross_purchase_amount_for_linked_assets(self, item):
+		assets = frappe.db.get_all(
+			"Asset",
+			filters={
+				"purchase_invoice": self.name,
+				"item_code": item.item_code,
+				"purchase_invoice_item": ("in", [item.name, ""]),
+			},
+			fields=["name", "asset_quantity"],
+		)
+		for asset in assets:
+			purchase_amount = flt(item.valuation_rate) * asset.asset_quantity
+			frappe.db.set_value(
+				"Asset",
+				asset.name,
+				{
+					"gross_purchase_amount": purchase_amount,
+					"purchase_amount": purchase_amount,
+				},
+			)
+
+
 	def make_stock_adjustment_entry(self, gl_entries, item, voucher_wise_stock_value, account_currency):
 		net_amt_precision = item.precision("base_net_amount")
 		val_rate_db_precision = 6 if cint(item.precision("valuation_rate")) <= 6 else 9
@@ -1206,7 +1228,7 @@ class PurchaseInvoice(BuyingController):
 						"debit": stock_adjustment_amt,
 						"remarks": self.get("remarks") or _("Stock Adjustment"),
 						"cost_center": item.cost_center,
-						"project": item.project or self.project,
+						# "project": item.project or self.project,
 					},
 					account_currency,
 					item=item,
@@ -1345,7 +1367,7 @@ class PurchaseInvoice(BuyingController):
 						else self.name,
 						"against_voucher_type": self.doctype,
 						"cost_center": self.cost_center,
-						"project": self.project,
+						# "project": self.project,
 					},
 					self.party_account_currency,
 					item=self,
@@ -1390,7 +1412,7 @@ class PurchaseInvoice(BuyingController):
 						else self.name,
 						"against_voucher_type": self.doctype,
 						"cost_center": self.cost_center,
-						"project": self.project,
+						# "project": self.project,
 					},
 					self.party_account_currency,
 					item=self,
@@ -1471,8 +1493,6 @@ class PurchaseInvoice(BuyingController):
 		if self.update_stock == 1:
 			self.repost_future_sle_and_gle()
 
-		if frappe.db.get_single_value("Buying Settings", "project_update_frequency") == "Each Transaction":
-			self.update_project()
 		self.db_set("status", "Cancelled")
 
 		unlink_inter_company_doc(self.doctype, self.name, self.inter_company_invoice_reference)
@@ -1491,21 +1511,6 @@ class PurchaseInvoice(BuyingController):
 			"Serial and Batch Bundle",
 		)
 		self.update_advance_tax_references(cancel=1)
-
-	def update_project(self):
-		projects = frappe._dict()
-		for d in self.items:
-			if d.project:
-				if self.docstatus == 1:
-					projects[d.project] = projects.get(d.project, 0) + d.base_net_amount
-				elif self.docstatus == 2:
-					projects[d.project] = projects.get(d.project, 0) - d.base_net_amount
-
-		pj = frappe.qb.DocType("Project")
-		for proj, value in projects.items():
-			res = frappe.qb.from_(pj).select(pj.total_purchase_cost).where(pj.name == proj).for_update().run()
-			current_purchase_cost = res and res[0][0] or 0
-			frappe.db.set_value("Project", proj, "total_purchase_cost", current_purchase_cost + value)
 
 	def validate_supplier_invoice(self):
 		if self.bill_date:
@@ -1738,11 +1743,6 @@ class PurchaseInvoice(BuyingController):
 		if update:
 			self.db_set("status", self.status, update_modified=update_modified)
 
-	@frappe.whitelist()
-	def get_payment_discount_term(doc):
-		discount_term_table =frappe.db.get_values("Discount Terms", {"parent" : doc.payment_term },"*", order_by = "no_of_days ASC")
-		return discount_term_table
-
 
 # to get details of purchase invoice/receipt from which this doc was created for exchange rate difference handling
 def get_purchase_document_details(doc):
@@ -1866,10 +1866,7 @@ def make_purchase_receipt(source_name, target_doc=None):
 			(flt(obj.qty) - flt(obj.received_qty)) * flt(obj.rate) * flt(source_parent.conversion_rate)
 		)
 
-	doc = get_mapped_doc(
-		"Purchase Invoice",
-		source_name,
-		{
+	fields  = {
 			"Purchase Invoice": {
 				"doctype": "Purchase Receipt",
 				"validation": {
@@ -1891,7 +1888,15 @@ def make_purchase_receipt(source_name, target_doc=None):
 				"condition": lambda doc: abs(doc.received_qty) < abs(doc.qty),
 			},
 			"Purchase Taxes and Charges": {"doctype": "Purchase Taxes and Charges"},
-		},
+		}
+	
+	if "assets" in frappe.get_installed_apps():
+		fields["Purchase Invoice Item"]["field_map"].update({"wip_composite_asset": "wip_composite_asset"})
+
+	doc = get_mapped_doc(
+		"Purchase Invoice",
+		source_name,
+		fields,
 		target_doc,
 	)
 

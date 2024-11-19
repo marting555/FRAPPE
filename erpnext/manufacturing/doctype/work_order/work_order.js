@@ -84,12 +84,6 @@ frappe.ui.form.on("Work Order", {
 			};
 		});
 
-		// Set query for FG Item
-		frm.set_query("project", function () {
-			return {
-				filters: [["Project", "status", "not in", "Completed, Cancelled"]],
-			};
-		});
 
 		frm.set_query("operation", "required_items", function () {
 			return {
@@ -109,8 +103,6 @@ frappe.ui.form.on("Work Order", {
 
 	onload: function (frm) {
 		if (!frm.doc.status) frm.doc.status = "Draft";
-
-		frm.add_fetch("sales_order", "project", "project");
 
 		if (frm.doc.__islocal) {
 			frm.set_value({
@@ -448,7 +440,7 @@ frappe.ui.form.on("Work Order", {
 				method: "erpnext.manufacturing.doctype.work_order.work_order.get_item_details",
 				args: {
 					item: frm.doc.production_item,
-					project: frm.doc.project,
+					// project: frm.doc.project,
 				},
 				freeze: true,
 				callback: function (r) {
@@ -461,7 +453,7 @@ frappe.ui.form.on("Work Order", {
 							[
 								"description",
 								"stock_uom",
-								"project",
+								// "project",
 								"bom_no",
 								"allow_alternative_item",
 								"transfer_material_against",
@@ -479,12 +471,6 @@ frappe.ui.form.on("Work Order", {
 					}
 				},
 			});
-		}
-	},
-
-	project: function (frm) {
-		if (!erpnext.in_production_item_onchange && !frm.doc.bom_no) {
-			frm.trigger("production_item");
 		}
 	},
 

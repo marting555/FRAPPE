@@ -171,8 +171,8 @@ class BankTransaction(Document):
 				elif 0.0 < unallocated_amount <= remaining_amount:
 					payment_entry.allocated_amount = unallocated_amount
 					remaining_amount -= unallocated_amount
-					if should_clear:
-						latest_transaction.clear_linked_payment_entry(payment_entry)
+					# if should_clear:
+					latest_transaction.clear_linked_payment_entry(payment_entry)
 
 				elif 0.0 < unallocated_amount:
 					payment_entry.allocated_amount = remaining_amount
@@ -386,12 +386,6 @@ def get_paid_amount(payment_entry, currency, gl_bank_account):
 
 def set_voucher_clearance(doctype, docname, clearance_date, self):
 	if doctype in get_doctypes_for_bank_reconciliation():
-		if (
-			doctype == "Payment Entry"
-			and frappe.db.get_value("Payment Entry", docname, "payment_type") == "Internal Transfer"
-			and len(get_reconciled_bank_transactions(doctype, docname)) < 2
-		):
-			return
 
 		if doctype == "Sales Invoice":
 			frappe.db.set_value(
