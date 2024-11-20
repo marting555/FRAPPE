@@ -92,6 +92,8 @@
   "delivery_note_item",
   "putaway_rule",
   "section_break_45",
+  "has_batch_no",
+  "has_serial_no",
   "add_serial_batch_bundle",
   "serial_and_batch_bundle",
   "use_serial_batch_fields",
@@ -121,7 +123,6 @@
   "column_break_102",
   "provisional_expense_account",
   "accounting_dimensions_section",
-  "project",
   "work_breakdown_structure",
   "cost_center",
   "dimension_col_break",
@@ -569,6 +570,7 @@
    "width": "100px"
   },
   {
+   "depends_on": "eval: doc.has_batch_no === 1 || doc.has_serial_no === 1",
    "fieldname": "section_break_45",
    "fieldtype": "Section Break",
    "label": "Serial and Batch No"
@@ -989,16 +991,19 @@
    "label": "Subcontract BOM"
   },
   {
+   "depends_on": "eval:doc.use_serial_batch_fields === 1 && doc.has_serial_no === 1",
    "fieldname": "serial_no",
    "fieldtype": "Text",
    "label": "Serial No"
   },
   {
+   "depends_on": "eval:doc.use_serial_batch_fields === 1 && doc.has_serial_no === 1",
    "fieldname": "rejected_serial_no",
    "fieldtype": "Text",
    "label": "Rejected Serial No"
   },
   {
+   "depends_on": "eval:doc.use_serial_batch_fields === 1 && doc.has_batch_no === 1",
    "fieldname": "batch_no",
    "fieldtype": "Link",
    "label": "Batch No",
@@ -1113,12 +1118,28 @@
    "fieldtype": "Data",
    "label": "WBS Name",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "item_code.has_serial_no",
+   "fieldname": "has_serial_no",
+   "fieldtype": "Check",
+   "label": "Has Serial No",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "item_code.has_batch_no",
+   "fieldname": "has_batch_no",
+   "fieldtype": "Check",
+   "label": " Has Batch No",
+   "read_only": 1
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-11-12 10:23:08.850029",
+ "modified": "2024-11-19 19:41:44.060832",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Purchase Receipt Item",
