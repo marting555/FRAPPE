@@ -102,22 +102,17 @@ class Warehouse(NestedSet):
 		"If Warehouse value is split across multiple accounts, warn."
 
 		def get_accounts_where_value_is_booked(name):
-			sle = frappe.qb.DocType("Stock Ledger Entry")
-			gle = frappe.qb.DocType("GL Entry")
-			ac = frappe.qb.DocType("Account")
+			query =f"""
+					SELECT DISTINCT ON (gle.account) gle.account, sle.creation
+					FROM "tabStock Ledger Entry" sle
+					JOIN "tabGL Entry" gle ON sle.voucher_no = gle.voucher_no
+					JOIN "tabAccount" ac ON ac.name = gle.account
+					WHERE sle.warehouse = '{name}' AND ac.account_type = 'Stock' 
+					ORDER BY gle.account, sle.creation;
+					"""
+			
+			return frappe.db.sql(query=query,as_dict=True)
 
-			return (
-				frappe.qb.from_(sle)
-				.join(gle)
-				.on(sle.voucher_no == gle.voucher_no)
-				.join(ac)
-				.on(ac.name == gle.account)
-				.select(gle.account)
-				.distinct()
-				.where((sle.warehouse == name) & (ac.account_type == "Stock"))
-				.orderby(sle.creation)
-				.run(as_dict=True)
-			)
 
 		if self.is_new():
 			return
