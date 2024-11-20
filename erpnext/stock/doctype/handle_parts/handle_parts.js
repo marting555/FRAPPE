@@ -95,6 +95,9 @@ frappe.ui.form.on("Handle Parts", {
         const response = await fetch(data.product_bundle_errors_url);
         if (response.ok) {
             const errors = await response.json();
+            if (!errors.length) {
+                return;
+            }
             const createdAt = errors.length > 0 ? errors[0].created_at : '';
             console.log("createdAt", createdAt, "-- ", errors[0].created_at);
             const title = __('Product Bundle Errors (Red items are not found, and the bundle was not created)');

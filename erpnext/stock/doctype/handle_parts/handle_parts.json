@@ -6,16 +6,16 @@
  "engine": "InnoDB",
  "field_order": [
   "excel",
+  "product_bundle_errors",
   "column_break_ijjj",
   "module",
-  "upload",
-  "product_bundle_errors"
+  "upload"
  ],
  "fields": [
   {
    "fieldname": "upload",
    "fieldtype": "Button",
-   "label": "Upload"
+   "label": "Upload File"
   },
   {
    "fieldname": "excel",
@@ -34,13 +34,13 @@
   {
    "fieldname": "product_bundle_errors",
    "fieldtype": "Button",
-   "label": "Show product bundle errrors"
+   "label": "Show product bundle errors"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-11-19 17:51:57.459937",
+ "modified": "2024-11-20 15:27:37.413797",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Handle Parts",
