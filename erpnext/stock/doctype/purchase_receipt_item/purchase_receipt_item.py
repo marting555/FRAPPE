@@ -36,7 +36,9 @@ class PurchaseReceiptItem(Document):
 		discount_percentage: DF.Percent
 		expense_account: DF.Link | None
 		from_warehouse: DF.Link | None
+		has_batch_no: DF.Check
 		has_item_scanned: DF.Check
+		has_serial_no: DF.Check
 		image: DF.Attach | None
 		include_exploded_items: DF.Check
 		is_free_item: DF.Check
@@ -62,7 +64,6 @@ class PurchaseReceiptItem(Document):
 		price_list_rate: DF.Currency
 		pricing_rules: DF.SmallText | None
 		product_bundle: DF.Link | None
-		project: DF.Link | None
 		project_name: DF.Data | None
 		provisional_expense_account: DF.Link | None
 		purchase_invoice: DF.Link | None
