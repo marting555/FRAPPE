@@ -7,24 +7,24 @@ erpnext.pre_sales.set_as_lost("Quotation");
 erpnext.sales_common.setup_selling_controller();
 
 frappe.ui.form.on('Quotation', {
-	setup: function(frm) {
+	setup: function (frm) {
 		frm.custom_make_buttons = {
 			'Sales Order': 'Sales Order'
 		},
 
-		frm.set_query("quotation_to", function() {
-			return{
-				"filters": {
-					"name": ["in", ["Customer", "Lead", "Prospect"]],
+			frm.set_query("quotation_to", function () {
+				return {
+					"filters": {
+						"name": ["in", ["Customer", "Lead", "Prospect"]],
+					}
 				}
-			}
-		});
+			});
 
 		frm.set_df_property('packed_items', 'cannot_add_rows', true);
 		frm.set_df_property('packed_items', 'cannot_delete_rows', true);
 
-		frm.set_query('company_address', function(doc) {
-			if(!doc.company) {
+		frm.set_query('company_address', function (doc) {
+			if (!doc.company) {
 				frappe.throw(__('Please set Company'));
 			}
 
@@ -50,7 +50,7 @@ frappe.ui.form.on('Quotation', {
 		});
 	},
 
-	refresh: function(frm) {
+	refresh: function (frm) {
 		frm.trigger("set_label");
 		frm.trigger("set_dynamic_field_label");
 
@@ -66,13 +66,13 @@ frappe.ui.form.on('Quotation', {
 		}
 	},
 
-	quotation_to: function(frm) {
+	quotation_to: function (frm) {
 		frm.trigger("set_label");
 		frm.trigger("toggle_reqd_lead_customer");
 		frm.trigger("set_dynamic_field_label");
 	},
 
-	set_label: function(frm) {
+	set_label: function (frm) {
 		frm.fields_dict.customer_address.set_label(__(frm.doc.quotation_to + " Address"));
 	},
 });
@@ -102,11 +102,11 @@ erpnext.selling.QuotationController = class QuotationController extends erpnext.
 
 	party_name() {
 		var me = this;
-		erpnext.utils.get_party_details(this.frm, null, null, function() {
+		erpnext.utils.get_party_details(this.frm, null, null, function () {
 			me.apply_price_list();
 		});
 
-		if(me.frm.doc.quotation_to=="Lead" && me.frm.doc.party_name) {
+		if (me.frm.doc.quotation_to == "Lead" && me.frm.doc.party_name) {
 			me.frm.trigger("get_lead_details");
 		}
 	}
@@ -121,7 +121,7 @@ erpnext.selling.QuotationController = class QuotationController extends erpnext.
 		var me = this;
 
 		if (doc.__islocal && !doc.valid_till) {
-			if(frappe.boot.sysdefaults.quotation_valid_till){
+			if (frappe.boot.sysdefaults.quotation_valid_till) {
 				this.frm.set_value('valid_till', frappe.datetime.add_days(doc.transaction_date, frappe.boot.sysdefaults.quotation_valid_till));
 			} else {
 				this.frm.set_value('valid_till', frappe.datetime.add_months(doc.transaction_date, 1));
@@ -132,25 +132,25 @@ erpnext.selling.QuotationController = class QuotationController extends erpnext.
 			if (frappe.boot.sysdefaults.allow_sales_order_creation_for_expired_quotation
 				|| (!doc.valid_till)
 				|| frappe.datetime.get_diff(doc.valid_till, frappe.datetime.get_today()) >= 0) {
-					this.frm.add_custom_button(
-						__("Sales Order"),
-						() => this.make_sales_order(),
-						__("Create")
-					);
-				}
+				this.frm.add_custom_button(
+					__("Sales Order"),
+					() => this.make_sales_order(),
+					__("Create")
+				);
+			}
 
-			if(doc.status!=="Ordered") {
+			if (doc.status !== "Ordered") {
 				this.frm.add_custom_button(__('Set as Lost'), () => {
-						this.frm.trigger('set_as_lost_dialog');
-					});
-				}
+					this.frm.trigger('set_as_lost_dialog');
+				});
+			}
 
 			cur_frm.page.set_inner_btn_group_as_primary(__('Create'));
 		}
 
-		if (this.frm.doc.docstatus===0) {
+		if (this.frm.doc.docstatus === 0) {
 			this.frm.add_custom_button(__('Opportunity'),
-				function() {
+				function () {
 					erpnext.utils.map_current_doc({
 						method: "erpnext.crm.doctype.opportunity.opportunity.make_quotation",
 						source_doctype: "Opportunity",
@@ -196,14 +196,14 @@ erpnext.selling.QuotationController = class QuotationController extends erpnext.
 		}
 	}
 
-	set_dynamic_field_label(){
+	set_dynamic_field_label() {
 		if (this.frm.doc.quotation_to == "Customer") {
 			this.frm.set_df_property("party_name", "label", "Customer");
 			this.frm.fields_dict.party_name.get_query = null;
 		} else if (this.frm.doc.quotation_to == "Lead") {
 			this.frm.set_df_property("party_name", "label", "Lead");
-			this.frm.fields_dict.party_name.get_query = function() {
-				return{	query: "erpnext.controllers.queries.lead_query" }
+			this.frm.fields_dict.party_name.get_query = function () {
+				return { query: "erpnext.controllers.queries.lead_query" }
 			}
 		} else if (this.frm.doc.quotation_to == "Prospect") {
 			this.frm.set_df_property("party_name", "label", "Prospect");
@@ -234,7 +234,7 @@ erpnext.selling.QuotationController = class QuotationController extends erpnext.
 	}
 
 	validate_company_and_party(party_field) {
-		if(!this.frm.doc.quotation_to) {
+		if (!this.frm.doc.quotation_to) {
 			frappe.msgprint(__("Please select a value for {0} quotation_to {1}", [this.frm.doc.doctype, this.frm.doc.name]));
 			return false;
 		} else if (this.frm.doc.quotation_to == "Lead") {
@@ -246,7 +246,7 @@ erpnext.selling.QuotationController = class QuotationController extends erpnext.
 
 	get_lead_details() {
 		var me = this;
-		if(!this.frm.doc.quotation_to === "Lead") {
+		if (!this.frm.doc.quotation_to === "Lead") {
 			return;
 		}
 
@@ -257,8 +257,8 @@ erpnext.selling.QuotationController = class QuotationController extends erpnext.
 				'posting_date': this.frm.doc.transaction_date,
 				'company': this.frm.doc.company,
 			},
-			callback: function(r) {
-				if(r.message) {
+			callback: function (r) {
+				if (r.message) {
 					me.frm.updating_party_details = true;
 					me.frm.set_value(r.message);
 					me.frm.refresh();
@@ -273,45 +273,45 @@ erpnext.selling.QuotationController = class QuotationController extends erpnext.
 		let me = this;
 
 		const table_fields = [
-		{
-			fieldtype:"Data",
-			fieldname:"name",
-			label: __("Name"),
-			read_only: 1,
-		},
-		{
-			fieldtype:"Link",
-			fieldname:"item_code",
-			options: "Item",
-			label: __("Item Code"),
-			read_only: 1,
-			in_list_view: 1,
-			columns: 2,
-			formatter: (value, df, options, doc) => {
-				return doc.is_alternative ? `<span class="indicator yellow">${value}</span>` : value;
-			}
-		},
-		{
-			fieldtype:"Data",
-			fieldname:"description",
-			label: __("Description"),
-			in_list_view: 1,
-			read_only: 1,
-		},
-		{
-			fieldtype:"Currency",
-			fieldname:"amount",
-			label: __("Amount"),
-			options: "currency",
-			in_list_view: 1,
-			read_only: 1,
-		},
-		{
-			fieldtype:"Check",
-			fieldname:"is_alternative",
-			label: __("Is Alternative"),
-			read_only: 1,
-		}];
+			{
+				fieldtype: "Data",
+				fieldname: "name",
+				label: __("Name"),
+				read_only: 1,
+			},
+			{
+				fieldtype: "Link",
+				fieldname: "item_code",
+				options: "Item",
+				label: __("Item Code"),
+				read_only: 1,
+				in_list_view: 1,
+				columns: 2,
+				formatter: (value, df, options, doc) => {
+					return doc.is_alternative ? `<span class="indicator yellow">${value}</span>` : value;
+				}
+			},
+			{
+				fieldtype: "Data",
+				fieldname: "description",
+				label: __("Description"),
+				in_list_view: 1,
+				read_only: 1,
+			},
+			{
+				fieldtype: "Currency",
+				fieldname: "amount",
+				label: __("Amount"),
+				options: "currency",
+				in_list_view: 1,
+				read_only: 1,
+			},
+			{
+				fieldtype: "Check",
+				fieldname: "is_alternative",
+				label: __("Is Alternative"),
+				read_only: 1,
+			}];
 
 
 		this.data = this.frm.doc.items.filter(
@@ -349,7 +349,7 @@ erpnext.selling.QuotationController = class QuotationController extends erpnext.
 					fields: table_fields
 				},
 			],
-			primary_action: function() {
+			primary_action: function () {
 				frappe.model.open_mapped_doc({
 					method: "erpnext.selling.doctype.quotation.quotation.make_sales_order",
 					frm: me.frm,
@@ -374,20 +374,20 @@ erpnext.selling.QuotationController = class QuotationController extends erpnext.
 
 cur_frm.script_manager.make(erpnext.selling.QuotationController);
 
-frappe.ui.form.on("Quotation Item", "items_on_form_rendered", "packed_items_on_form_rendered", function(frm, cdt, cdn) {
+frappe.ui.form.on("Quotation Item", "items_on_form_rendered", "packed_items_on_form_rendered", function (frm, cdt, cdn) {
 	// enable tax_amount field if Actual
 })
 
-frappe.ui.form.on("Quotation Item", "stock_balance", function(frm, cdt, cdn) {
+frappe.ui.form.on("Quotation Item", "stock_balance", function (frm, cdt, cdn) {
 	var d = frappe.model.get_doc(cdt, cdn);
-	frappe.route_options = {"item_code": d.item_code};
+	frappe.route_options = { "item_code": d.item_code };
 	frappe.set_route("query-report", "Stock Balance");
 })
 
 //---------------------------------- Quotation on item code change and qty change
 frappe.ui.form.on('Quotation Item', {
-    item_code: function(frm, cdt, cdn) {
-        const row = locals[cdt][cdn];
+	item_code: function (frm, cdt, cdn) {
+		const row = locals[cdt][cdn];
 
 		const exist = validateItemsNotExist(frm, row.item_code, row);
 		if (exist) {
@@ -395,169 +395,169 @@ frappe.ui.form.on('Quotation Item', {
 			return;
 		}
 
-        const confirmItems = [];
-        let concatenatedDescription = '';
+		const confirmItems = [];
+		let concatenatedDescription = '';
 
-        initializeLocalStorage(row);
+		initializeLocalStorage(row);
 
-        if (row.is_product_bundle) {
-            storeOriginalQuantities(row);
-        }
+		if (row.is_product_bundle) {
+			storeOriginalQuantities(row);
+		}
 
-        if (row.is_product_bundle) {
-            processProductBundle(frm, row, confirmItems, concatenatedDescription);
-        }
-    },
+		if (row.is_product_bundle) {
+			processProductBundle(frm, row, confirmItems, concatenatedDescription);
+		}
+	},
 
-    qty: function(frm, cdt, cdn) {
-        const row = locals[cdt][cdn];
+	qty: function (frm, cdt, cdn) {
+		const row = locals[cdt][cdn];
 		const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
-        const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
+		const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
 
-        if (row.is_product_bundle) {
-            updateSubItemQuantities(frm, row, originalQuantities);
-        }
-    }   
+		if (row.is_product_bundle) {
+			updateSubItemQuantities(frm, row, originalQuantities);
+		}
+	}
 });
 
 function validateItemsNotExist(frm, item_code, current_row) {
-    return frm.doc.items.some(item => {
-        return item.item_code === item_code && item.is_product_bundle && item.name !== current_row.name;
-    });
+	return frm.doc.items.some(item => {
+		return item.item_code === item_code && item.is_product_bundle && item.name !== current_row.name;
+	});
 }
-	
+
 
 function initializeLocalStorage(row) {
 	const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
-    if (!localStorage.getItem(storage_name)) {
-        localStorage.setItem(storage_name, JSON.stringify({}));
+	if (!localStorage.getItem(storage_name)) {
+		localStorage.setItem(storage_name, JSON.stringify({}));
 	}
 }
 
 function storeOriginalQuantities(row) {
 	const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
-    const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
-    originalQuantities[row.item_code] = {
-        qty: row.qty,
-        product_bundle_items: row.product_bundle_items.map(bundleItem => ({
-            item_code: bundleItem.item_code,
-            qty: bundleItem.qty,
-            sub_items: bundleItem.sub_items.map(subItem => ({
-                item_code: subItem.item_code,
-                qty: subItem.qty
-            }))
-        }))
-    };
-    localStorage.setItem(storage_name, JSON.stringify(originalQuantities));
+	const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
+	originalQuantities[row.item_code] = {
+		qty: row.qty,
+		product_bundle_items: row.product_bundle_items.map(bundleItem => ({
+			item_code: bundleItem.item_code,
+			qty: bundleItem.qty,
+			sub_items: bundleItem.sub_items.map(subItem => ({
+				item_code: subItem.item_code,
+				qty: subItem.qty
+			}))
+		}))
+	};
+	localStorage.setItem(storage_name, JSON.stringify(originalQuantities));
 }
 
 function processProductBundle(frm, row, confirmItems, concatenatedDescription) {
-    row.product_bundle_items.forEach(bundleItem => {
-        const visibleDescriptions = row.product_bundle_items
-            .filter(item => item.description_visible)
-            .map(item => item.description || '');
+	row.product_bundle_items.forEach(bundleItem => {
+		const visibleDescriptions = row.product_bundle_items
+			.filter(item => item.description_visible)
+			.map(item => item.description || '');
 
-        concatenatedDescription = visibleDescriptions.join(', ').trim();
+		concatenatedDescription = visibleDescriptions.join(', ').trim();
 
-        bundleItem.sub_items.forEach(subItem => {
-                subItem.qty *= bundleItem.qty;
+		bundleItem.sub_items.forEach(subItem => {
+			subItem.qty *= bundleItem.qty;
 
-                if (subItem.options === "Recommended additional") {
-                    confirmItems.push({ ...subItem, _parent: subItem._product_bundle });
-                } else {
-                    addSubItemToQuotation(frm, subItem, row);
-                }
-        });
-    });
+			if (subItem.options === "Recommended additional") {
+				confirmItems.push({ ...subItem, _parent: subItem._product_bundle });
+			} else {
+				addSubItemToQuotation(frm, subItem, row);
+			}
+		});
+	});
 
-    updateRowDescription(frm, row, concatenatedDescription);
-    showDialog(frm, row, confirmItems);
+	updateRowDescription(frm, row, concatenatedDescription);
+	showDialog(frm, row, confirmItems);
 }
 
 function addSubItemToQuotation(frm, subItem, row) {
-    frm.add_child('items', {
-        item_name: subItem.item_code,
-        item_code: subItem.item_code,
-        description: subItem.description,
+	frm.add_child('items', {
+		item_name: subItem.item_code,
+		item_code: subItem.item_code,
+		description: subItem.description,
 		weight_per_unit: row.weight_per_unit,
-        qty: subItem.qty,
-        rate: subItem.price,
-        uom: row.uom,
-        stock_uom: row.stock_uom,
-        _parent: row.item_code,
-        parentfield: "items",
-        parenttype: "Quotation"
-    });
+		qty: subItem.qty,
+		rate: subItem.price,
+		uom: row.uom,
+		stock_uom: row.stock_uom,
+		_parent: row.item_code,
+		parentfield: "items",
+		parenttype: "Quotation"
+	});
 }
 
 function updateRowDescription(frm, row, concatenatedDescription) {
-    setTimeout(() => {
-        row.description = concatenatedDescription;
-        const allItems = frm.doc.items.map(item => updateItemRate(item, row));
-        frm.set_value('items', allItems);
-        frm.refresh_field('items');
-        frm.trigger('calculate_taxes_and_totals');
-        frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
-    }, 1000);
+	setTimeout(() => {
+		row.description = concatenatedDescription;
+		const allItems = frm.doc.items.map(item => updateItemRate(item, row));
+		frm.set_value('items', allItems);
+		frm.refresh_field('items');
+		frm.trigger('calculate_taxes_and_totals');
+		frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+	}, 1000);
 }
 
 function updateItemRate(item, row) {
-    if (item.name === row.name) {
-        item.description = row.description;
-    }
-    item.rate = item.product_bundle_items?.reduce((total, bundleItem) => 
-        total + (bundleItem.qty * bundleItem.price), 0) || item.rate || 0;
+	if (item.name === row.name) {
+		item.description = row.description;
+	}
+	item.rate = item.product_bundle_items?.reduce((total, bundleItem) =>
+		total + (bundleItem.qty * bundleItem.price), 0) || item.rate || 0;
 
-    return item;
+	return item;
 }
 
 
 
 
 function showDialog(frm, row, confirmItems) {
-    const dialog = new frappe.ui.Dialog({
-        title: __(row.item_code),
-        fields: createDialogFields(row, confirmItems),
-        primary_action_label: __("Add Selected Items"),
-        secondary_action_label: __("Cancel"),
-        primary_action(values) {
-            addSelectedItemsToQuotation(frm, values, confirmItems, row);
-            dialog.hide();
-        },
-        secondary_action() {
-            dialog.hide();
-        }
-    });
+	const dialog = new frappe.ui.Dialog({
+		title: __(row.item_code),
+		fields: createDialogFields(row, confirmItems),
+		primary_action_label: __("Add Selected Items"),
+		secondary_action_label: __("Cancel"),
+		primary_action(values) {
+			addSelectedItemsToQuotation(frm, values, confirmItems, row);
+			dialog.hide();
+		},
+		secondary_action() {
+			dialog.hide();
+		}
+	});
 
-    dialog.$wrapper.modal({
-        backdrop: "static",
-        keyboard: false,
-        size: "1024px"
-    });
-    dialog.show();
-    dialog.$wrapper.find('.modal-dialog').css("max-width", "1024px").css("width", "1024px");
+	dialog.$wrapper.modal({
+		backdrop: "static",
+		keyboard: false,
+		size: "1024px"
+	});
+	dialog.show();
+	dialog.$wrapper.find('.modal-dialog').css("max-width", "1024px").css("width", "1024px");
 }
 
 function createDialogFields(row, confirmItems) {
-    const tableOptions = createSummaryTable(row);
-    const fields = [{
-        fieldtype: 'HTML',
-        fieldname: 'summary_table',
-        options: tableOptions
-    }];
-    confirmItems.forEach(item => {
-        fields.push({
-            label: item.item_code,
-            fieldname: item.item_code,
-            fieldtype: 'Check',
-            default: 0
-        });
-    });
-    return fields;
+	const tableOptions = createSummaryTable(row);
+	const fields = [{
+		fieldtype: 'HTML',
+		fieldname: 'summary_table',
+		options: tableOptions
+	}];
+	confirmItems.forEach(item => {
+		fields.push({
+			label: item.item_code,
+			fieldname: item.item_code,
+			fieldtype: 'Check',
+			default: 0
+		});
+	});
+	return fields;
 }
 
 function createSummaryTable(row) {
-    const tableHeader = `
+	const tableHeader = `
         <thead>
             <tr>
                 <th>${__("Quantity")}</th>
@@ -568,22 +568,22 @@ function createSummaryTable(row) {
             </tr>
         </thead>
     `;
-    const tableBody = row.product_bundle_items.map(bundleItem => createBundleItemRow(bundleItem)).join('');
+	const tableBody = row.product_bundle_items.map(bundleItem => createBundleItemRow(bundleItem)).join('');
 
-    const totalRow = `
+	const totalRow = `
         <tr>
             <td colspan="4"><strong>${__("Total")}</strong></td>
             <td><strong>${format_currency(calculateTotal(row))}</strong></td>
         </tr>
     `;
 
-    return `<table class="table table-bordered">${tableHeader}<tbody>${tableBody}${totalRow}</tbody></table>
+	return `<table class="table table-bordered">${tableHeader}<tbody>${tableBody}${totalRow}</tbody></table>
             <p><strong>${__("Recommended Additional Items")}:</strong></p>`;
 }
 
 function createBundleItemRow(bundleItem) {
-    const bundleAmount = bundleItem.qty * bundleItem.price;
-    let rows = `
+	const bundleAmount = bundleItem.qty * bundleItem.price;
+	let rows = `
         <tr>
             <td>${bundleItem.qty}</td>
             <td>${bundleItem.item_code}</td>
@@ -592,15 +592,15 @@ function createBundleItemRow(bundleItem) {
             <td>${format_currency(bundleAmount)}</td>
         </tr>
     `;
-    rows += bundleItem.sub_items
-        .filter(subItem => subItem.options !== "Recommended additional")
-        .map(subItem => createSubItemRow(bundleItem, subItem)).join('');
-    return rows;
+	rows += bundleItem.sub_items
+		.filter(subItem => subItem.options !== "Recommended additional")
+		.map(subItem => createSubItemRow(bundleItem, subItem)).join('');
+	return rows;
 }
 
 function createSubItemRow(bundleItem, subItem) {
-    const subItemAmount = subItem.qty * subItem.price;
-    return `
+	const subItemAmount = subItem.qty * subItem.price;
+	return `
         <tr>
             <td>${subItem.qty}</td>
             <td>${subItem.item_code}</td>
@@ -612,146 +612,146 @@ function createSubItemRow(bundleItem, subItem) {
 }
 
 function calculateTotal(row) {
-    return row.product_bundle_items.reduce((total, bundleItem) => {
-        const bundleSubtotal = bundleItem.qty * (bundleItem.price || 0);
-        const subItemsTotal = bundleItem.sub_items
-            .filter(subItem => subItem.options !== "Recommended additional")
-            .reduce((subTotal, subItem) => {
-                return subTotal + (subItem.qty * (subItem.price || 0));
-            }, 0);
-        return total + bundleSubtotal + subItemsTotal;
-    }, 0);
+	return row.product_bundle_items.reduce((total, bundleItem) => {
+		const bundleSubtotal = bundleItem.qty * (bundleItem.price || 0);
+		const subItemsTotal = bundleItem.sub_items
+			.filter(subItem => subItem.options !== "Recommended additional")
+			.reduce((subTotal, subItem) => {
+				return subTotal + (subItem.qty * (subItem.price || 0));
+			}, 0);
+		return total + bundleSubtotal + subItemsTotal;
+	}, 0);
 }
 
 function addSelectedItemsToQuotation(frm, values, confirmItems, row) {
-    confirmItems.forEach(item => {
-        if (values[item.item_code]) {
-            frm.add_child('items', {
-                item_name: item.item_code,
-                item_code: item.item_code,
-                description: item.description,
-                qty: item.qty,
-                rate: item.price,
-                uom: row.uom,
-                stock_uom: row.stock_uom,
-                parent: row.parent,
+	confirmItems.forEach(item => {
+		if (values[item.item_code]) {
+			frm.add_child('items', {
+				item_name: item.item_code,
+				item_code: item.item_code,
+				description: item.description,
+				qty: item.qty,
+				rate: item.price,
+				uom: row.uom,
+				stock_uom: row.stock_uom,
+				parent: row.parent,
 				_parent: item._parent,
 				_product_bundle: item._product_bundle,
-                parentfield: "items",
-                parenttype: "Quotation",
+				parentfield: "items",
+				parenttype: "Quotation",
 				weight_per_unit: row.weight_per_unit
-            });
-        }
-    });
-    frm.refresh_field('items');
-    frm.trigger('calculate_taxes_and_totals');
-    frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+			});
+		}
+	});
+	frm.refresh_field('items');
+	frm.trigger('calculate_taxes_and_totals');
+	frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
 }
 
 function updateSubItemQuantities(frm, row, originalQuantities) {
-    const storage = originalQuantities[row.item_code];
-    const nuevaQtyProductBundle = row.qty;
-    frm.doc.items.forEach(item => {
-        if (item._parent === row.item_code) {
-            storage.product_bundle_items.forEach(bundleItem => {
-                bundleItem.sub_items.forEach(subItem => {
-                    if (subItem.item_code === item.item_code) {
-                        const updatedQty = (subItem.qty * bundleItem.qty) * nuevaQtyProductBundle;
-                        frappe.model.set_value(item.doctype, item.name, 'qty', updatedQty);
-                    }
-                });
-            });
-        }
-    });
-    frm.refresh_field('items');
-    frm.trigger('calculate_taxes_and_totals');
-    frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+	const storage = originalQuantities[row.item_code];
+	const nuevaQtyProductBundle = row.qty;
+	frm.doc.items.forEach(item => {
+		if (item._parent === row.item_code) {
+			storage.product_bundle_items.forEach(bundleItem => {
+				bundleItem.sub_items.forEach(subItem => {
+					if (subItem.item_code === item.item_code) {
+						const updatedQty = (subItem.qty * bundleItem.qty) * nuevaQtyProductBundle;
+						frappe.model.set_value(item.doctype, item.name, 'qty', updatedQty);
+					}
+				});
+			});
+		}
+	});
+	frm.refresh_field('items');
+	frm.trigger('calculate_taxes_and_totals');
+	frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
 }
 
 //---------------------------------- Quotation on selling price list change
 frappe.ui.form.on('Quotation', {
-    selling_price_list: function(frm) {
-        if (!frm.doc.items.length || (frm.doc.items.length > 0 && !frm.doc.items[0].item_code)) {
-            return;
-        }
+	selling_price_list: function (frm) {
+		if (!frm.doc.items.length || (frm.doc.items.length > 0 && !frm.doc.items[0].item_code)) {
+			return;
+		}
 
-        const itemCodesToSend = collectItemCodes(frm);
+		const itemCodesToSend = collectItemCodes(frm);
 
-        const newSellingPriceList = frm.doc.selling_price_list;
-        frappe.call({
-            method: "erpnext.stock.get_item_details.get_item_product_bundle_template",
-            args: {
-                args: {
-                    item_codes: itemCodesToSend,
-                    selling_price_list: newSellingPriceList
-                }
-            },
-            callback: function(r) {
-                if (r.message) {
-                    updateItemRates(frm, r.message);
-                }
-            }
-        });
-    }
+		const newSellingPriceList = frm.doc.selling_price_list;
+		frappe.call({
+			method: "erpnext.stock.get_item_details.get_item_product_bundle_template",
+			args: {
+				args: {
+					item_codes: itemCodesToSend,
+					selling_price_list: newSellingPriceList
+				}
+			},
+			callback: function (r) {
+				if (r.message) {
+					updateItemRates(frm, r.message);
+				}
+			}
+		});
+	}
 });
 
 function collectItemCodes(frm) {
-    const itemCodesToSend = [];
+	const itemCodesToSend = [];
 
-    frm.doc.items.forEach(item => {
-        if (item.is_product_bundle) {
-            item.product_bundle_items.forEach(bundleItem => {
-                if (bundleItem.description_visible) {
-                    itemCodesToSend.push(bundleItem.item_code);
-                    bundleItem.sub_items.forEach(subItem => {
-                        if (!frm.doc.items.some(docItem => docItem.item_code === subItem.item_code)) {
-                            itemCodesToSend.push(subItem.item_code);
-                        }
-                    });
-                }
-            });
-        } else {
-            itemCodesToSend.push(item.item_code);
-        }
-    });
+	frm.doc.items.forEach(item => {
+		if (item.is_product_bundle) {
+			item.product_bundle_items.forEach(bundleItem => {
+				if (bundleItem.description_visible) {
+					itemCodesToSend.push(bundleItem.item_code);
+					bundleItem.sub_items.forEach(subItem => {
+						if (!frm.doc.items.some(docItem => docItem.item_code === subItem.item_code)) {
+							itemCodesToSend.push(subItem.item_code);
+						}
+					});
+				}
+			});
+		} else {
+			itemCodesToSend.push(item.item_code);
+		}
+	});
 
-    return itemCodesToSend;
+	return itemCodesToSend;
 }
 
 function updateItemRates(frm, updatedPrices) {
-    frm.doc.items.forEach(item => {
-        if (item.is_product_bundle) {
-            let newRate = 0;
+	frm.doc.items.forEach(item => {
+		if (item.is_product_bundle) {
+			let newRate = 0;
 
-            item.product_bundle_items.forEach(bundleItem => {
-                if (updatedPrices[bundleItem.item_code]) {
-                    bundleItem.price = updatedPrices[bundleItem.item_code];
-                    if (bundleItem.description_visible) {
-                        newRate += bundleItem.qty * bundleItem.price;
-                    }
-                }
+			item.product_bundle_items.forEach(bundleItem => {
+				if (updatedPrices[bundleItem.item_code]) {
+					bundleItem.price = updatedPrices[bundleItem.item_code];
+					if (bundleItem.description_visible) {
+						newRate += bundleItem.qty * bundleItem.price;
+					}
+				}
 
-                bundleItem.sub_items.forEach(subItem => {
-                    if (!frm.doc.items.some(docItem => docItem.item_code === subItem.item_code) && updatedPrices[subItem.item_code]) {
-                        subItem.price = updatedPrices[subItem.item_code];
-                        newRate += subItem.qty * subItem.price;
-                    }
-                });
-            });
+				bundleItem.sub_items.forEach(subItem => {
+					if (!frm.doc.items.some(docItem => docItem.item_code === subItem.item_code) && updatedPrices[subItem.item_code]) {
+						subItem.price = updatedPrices[subItem.item_code];
+						newRate += subItem.qty * subItem.price;
+					}
+				});
+			});
 
-            item.rate = newRate;
-        } else if (updatedPrices[item.item_code]) {
-            item.rate = updatedPrices[item.item_code];
-        }
-    });
+			item.rate = newRate;
+		} else if (updatedPrices[item.item_code]) {
+			item.rate = updatedPrices[item.item_code];
+		}
+	});
 
-    frm.refresh_field('items');
-    frm.trigger('calculate_taxes_and_totals');
-    frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+	frm.refresh_field('items');
+	frm.trigger('calculate_taxes_and_totals');
+	frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
 }
 
 
- 
+
 
 
 

@@ -1,0 +1,63 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-11-18 22:11:14.231380",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "excel",
+  "product_bundle_errors",
+  "column_break_ijjj",
+  "module",
+  "upload"
+ ],
+ "fields": [
+  {
+   "fieldname": "upload",
+   "fieldtype": "Button",
+   "label": "Upload File"
+  },
+  {
+   "fieldname": "excel",
+   "fieldtype": "Attach"
+  },
+  {
+   "fieldname": "module",
+   "fieldtype": "Select",
+   "label": "Module",
+   "options": "Item"
+  },
+  {
+   "fieldname": "column_break_ijjj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "product_bundle_errors",
+   "fieldtype": "Button",
+   "label": "Show product bundle errors"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2024-11-20 15:27:37.413797",
+ "modified_by": "Administrator",
+ "module": "Stock",
+ "name": "Handle Parts",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
