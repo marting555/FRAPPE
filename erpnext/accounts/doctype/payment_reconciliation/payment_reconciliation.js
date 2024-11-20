@@ -131,6 +131,20 @@ erpnext.accounts.PaymentReconciliationController = class PaymentReconciliationCo
 				},
 			});
 		}
+
+		// Initialise display field
+		if (!this.frm.fields_dict.invoices_display) {
+            $(this.frm.fields_dict.invoices.wrapper).before('<div id="invoices_display" style="margin-bottom: 15px;"></div>');
+            $(this.frm.fields_dict.payments.wrapper).before('<div id="payments_display" style="margin-bottom: 15px;"></div>');
+        }
+
+		// call select_total function while clicking Invoice Table or Payment Table
+        this.frm.fields_dict['invoices'].grid.wrapper.on('click', '.grid-row-check', (event) => {
+            this.frm.trigger("select_total");
+        });
+        this.frm.fields_dict['payments'].grid.wrapper.on('click', '.grid-row-check', (event) => {
+            this.frm.trigger("select_total");
+        });
 	}
 	set_query_for_dimension_filters() {
 		frappe.call({
@@ -187,6 +201,9 @@ erpnext.accounts.PaymentReconciliationController = class PaymentReconciliationCo
 				},
 			});
 		}
+
+		// call select_total function while changing party field
+		this.frm.trigger("select_total");
 	}
 
 	receivable_payable_account() {
@@ -375,6 +392,58 @@ erpnext.accounts.PaymentReconciliationController = class PaymentReconciliationCo
 			},
 		});
 	}
+
+	select_total() {
+		const currencyFormatter = new Intl.NumberFormat('en-IN', {
+			currency: 'INR',
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2,
+		});
+	
+		// Helper function to sum the values of a field in an array of rows
+		const sumField = (rows, field) => rows.reduce((sum, row) => sum + (row[field] || 0), 0);
+	
+		// Get selected invoices and payments
+		const selectedInvoices = this.frm.fields_dict.invoices.grid.get_selected_children();
+		const selectedPayments = this.frm.fields_dict.payments.grid.get_selected_children();
+	
+		// Calculate totals for selected invoices and payments
+		const selectedInvoiceAmt = sumField(selectedInvoices, 'outstanding_amount');
+		const selectedPaymentAmt = sumField(selectedPayments, 'amount');
+	
+		// Calculate total for all invoices and payments
+		const invoiceTotal = sumField(this.frm.doc.invoices || [], 'outstanding_amount');
+		const paymentTotal = sumField(this.frm.doc.payments || [], 'amount');
+	
+		// Calculate differences
+		const totalOutstanding = invoiceTotal - paymentTotal;
+		const selectedDifference = selectedInvoiceAmt - selectedPaymentAmt;
+	
+		// Prepare HTML for invoices and payments display
+		const invoicesHtml = `
+			<div style="font-weight: bold; font-size: 14px; color: green;">
+				<p>Invoice Total: ${currencyFormatter.format(invoiceTotal)}</p>
+			</div>
+			<div style="font-weight: bold; font-size: 14px; color: red;">
+				<p>Selected Invoice's: ${currencyFormatter.format(selectedInvoiceAmt)}</p>
+			</div>
+		`;
+	
+		const paymentsHtml = `
+			<div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; color: green;">
+				<p>Payment Total: ${currencyFormatter.format(paymentTotal)}</p>
+				<p style="color: blue;"> Total Outstanding: ${currencyFormatter.format(totalOutstanding)} </p>
+			</div>
+			<div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; color: red;">
+				<p>Selected Payment's: ${currencyFormatter.format(selectedPaymentAmt)}</p>
+				<p style="color: blue;"> Selected Amount: ${currencyFormatter.format(selectedDifference)} </p>
+			</div>
+		`;
+	
+		// Update the HTML in the DOM
+		$('#invoices_display').html(invoicesHtml);
+		$('#payments_display').html(paymentsHtml);
+	}	
 };
 
 frappe.ui.form.on("Payment Reconciliation Allocation", {
