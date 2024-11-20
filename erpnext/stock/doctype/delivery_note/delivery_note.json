@@ -152,8 +152,7 @@
   "column_break5",
   "excise_page",
   "instructions",
-  "connections_tab",
-  "source"
+  "connections_tab"
  ],
  "fields": [
   {
@@ -951,15 +950,6 @@
    "print_hide": 1
   },
   {
-   "fieldname": "source",
-   "fieldtype": "Link",
-   "label": "Source",
-   "oldfieldname": "source",
-   "oldfieldtype": "Select",
-   "options": "Lead Source",
-   "print_hide": 1
-  },
-  {
    "fieldname": "column_break5",
    "fieldtype": "Column Break",
    "oldfieldtype": "Column Break",
@@ -1297,7 +1287,7 @@
  "idx": 146,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-11-18 10:22:40.741262",
+ "modified": "2024-11-20 21:06:08.222825",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note",
