@@ -367,3 +367,8 @@ erpnext.patches.v14_0.delete_orphaned_asset_movement_item_records
 erpnext.patches.v14_0.remove_cancelled_asset_capitalization_from_asset
 erpnext.patches.v14_0.enable_set_priority_for_pricing_rules #1
 erpnext.patches.v14_0.update_currency_exchange_settings_for_frankfurter
+<<<<<<< HEAD
+=======
+erpnext.patches.v15_0.migrate_old_item_wise_tax_detail_data_format
+erpnext.patches.v14_0.update_stock_uom_in_work_order_item
+>>>>>>> cc571aca8f (fix: added Stock UOM field for RM in work order (#44185))
