@@ -57,13 +57,13 @@ frappe.query_reports["General and Payment Ledger Comparison"] = {
 	},
 
 	onload(report) {
-		report.page.add_inner_button(__("Create Reposting Entries"), function () {
-			let message = `Are you sure you want to create Reposting Entries?`;
+		report.page.add_inner_button(__("Repost"), function () {
+			let message = `Are you sure you want to Repost Payment Ledger Entry for the selected differences?`;
 			let indexes = frappe.query_report.datatable.rowmanager.getCheckedRows();
 			let selected_rows = indexes.map((i) => frappe.query_report.data[i]);
 
 			if (!selected_rows.length) {
-				frappe.throw(__("Please select rows to create Reposting Entries"));
+				frappe.throw(__("Please select rows to create repost entries"));
 			}
 
 			frappe.confirm(__(message), () => {
