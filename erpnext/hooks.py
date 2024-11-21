@@ -9,15 +9,15 @@ app_license = "GNU General Public License (v3)"
 source_link = "https://github.com/frappe/erpnext"
 app_logo_url = "/assets/erpnext/images/erpnext-logo.svg"
 
-fixtures =[
-    {"dt":"Custom Field","filters":[
-        [
-            "module","=","Stock"
-		]
-	]
-        
-	}
+fixtures = [
+    {
+        "dt": "Custom Field",
+        "filters": [
+            ["module", "in", ["Stock", "Accounts"]]
+        ]
+    }
 ]
+
 add_to_apps_screen = [
 	{
 		"name": "erpnext",
