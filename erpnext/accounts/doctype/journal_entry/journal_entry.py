@@ -890,6 +890,17 @@ class JournalEntry(AccountsController):
 			self.total_credit, self.precision("total_credit")
 		)
 
+		# It checks if the absolute difference is less than or equal to 0.01.
+		# If so, it adjusts either total_debit or total_credit by setting one to the value of the other (whichever is higher), and the difference is set to zero.
+
+		if abs(self.difference) <= 0.01:
+			if self.total_debit > self.total_credit:
+				self.total_credit = flt(self.total_debit, self.precision("total_credit"))
+			else:
+				self.total_debit = flt(self.total_credit, self.precision("total_debit"))
+
+			self.difference = 0
+
 	def validate_multi_currency(self):
 		alternate_currency = []
 		for d in self.get("accounts"):
