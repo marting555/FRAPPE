@@ -550,7 +550,7 @@ def get_item_tax_info(company, tax_category, item_codes, item_rates=None, item_t
 		if not item_code or item_code[1] in out or not item_tax_templates.get(item_code[1]):
 			continue
 
-		out[item_code[1]] = {}
+		out[item_code[1]] = ItemDetails()
 		item = frappe.get_cached_doc("Item", item_code[0])
 		ctx: ItemDetailsCtx = {
 			"company": company,
@@ -1297,7 +1297,7 @@ def apply_price_list(ctx: ItemDetailsCtx, as_doc=False, doc=None):
 	children = []
 
 	if "items" in ctx:
-		item_list = ctx.items
+		item_list = ctx.get("items")
 		ctx.update(parent)
 
 		for item in item_list:
@@ -1309,8 +1309,8 @@ def apply_price_list(ctx: ItemDetailsCtx, as_doc=False, doc=None):
 	if as_doc:
 		ctx.price_list_currency = (parent.price_list_currency,)
 		ctx.plc_conversion_rate = parent.plc_conversion_rate
-		if ctx.items:
-			for i, item in enumerate(ctx.items):
+		if ctx.get("items"):
+			for i, item in enumerate(ctx.get("items")):
 				for fieldname in children[i]:
 					# if the field exists in the original doc
 					# update the value
