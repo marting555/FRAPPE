@@ -23,16 +23,10 @@ erpnext.financial_statements = {
 
 			return value;
 		} else if (frappe.query_report.get_filter_value("selected_view") == "Margin" && data) {
-			if (column.fieldname == "stub" && data.account_name == __("Income")) {
-				//Taking the total income from each column (for all the financial years) as the base (100%)
-				this.baseData = row;
-			}
 			if (column.colIndex >= 2) {
-				//Assuming that the first two columns are s.no and account name, to calculate the relative percentage values of the successive columns.
-				const currentAnnualvalue = data[column.fieldname];
-				const baseValue = this.baseData[column.colIndex].content;
-				if (currentAnnualvalue == undefined || baseValue <= 0) return "NA";
-				const marginPercent = Math.round((currentAnnualvalue / baseValue) * 10000) / 100;
+				const marginPercent = data[column.fieldname];
+
+				if (marginPercent == undefined) return "NA"; //making this not applicable for undefined/null values
 
 				value = $(`<span>${marginPercent + "%"}</span>`);
 				if (marginPercent < 0) value = $(value).addClass("text-danger");
