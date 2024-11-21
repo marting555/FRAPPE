@@ -10,7 +10,7 @@ from frappe.desk.notifications import clear_doctype_notifications
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils import cint, cstr, flt, get_link_to_form
 from datetime import datetime
-from erpnext.accounts.doctype.work_breakdown_structure.work_breakdown_structure import check_available_budget
+from erpnext.budget.doctype.work_breakdown_structure.work_breakdown_structure import check_available_budget
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import (
 	unlink_inter_company_doc,
 	update_linked_doc,
