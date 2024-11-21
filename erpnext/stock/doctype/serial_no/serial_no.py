@@ -35,8 +35,6 @@ class SerialNo(StockController):
 		from frappe.types import DF
 
 		amc_expiry_date: DF.Date | None
-		asset: DF.Link | None
-		asset_status: DF.Literal["", "Issue", "Receipt", "Transfer"]
 		batch_no: DF.Link | None
 		brand: DF.Link | None
 		company: DF.Link
