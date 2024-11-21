@@ -1,3 +1,4 @@
+// treeview_settings
 frappe.provide("frappe.treeview_settings");
 
 frappe.treeview_settings["Work Breakdown Structure"] = {
