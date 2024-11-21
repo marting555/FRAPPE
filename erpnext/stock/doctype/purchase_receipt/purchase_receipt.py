@@ -1119,42 +1119,52 @@ def make_purchase_invoice(source_name, target_doc=None, args=None):
 				returned_qty = 0
 
 		return pending_qty, returned_qty
+	
+	fields = {
+				"Purchase Receipt": {
+					"doctype": "Purchase Invoice",
+					"field_map": {
+						"supplier_warehouse": "supplier_warehouse",
+						"is_return": "is_return",
+						"bill_date": "bill_date",
+					},
+					"validation": {
+						"docstatus": ["=", 1],
+					},
+				},
+				"Purchase Receipt Item": {
+					"doctype": "Purchase Invoice Item",
+					"field_map": {
+						"name": "pr_detail",
+						"parent": "purchase_receipt",
+						"qty": "received_qty",
+						"purchase_order_item": "po_detail",
+						"purchase_order": "purchase_order",
+					},
+					"postprocess": update_item,
+					"filter": lambda d: get_pending_qty(d)[0] <= 0
+					if not doc.get("is_return")
+					else get_pending_qty(d)[0] > 0,
+				},
+				"Purchase Taxes and Charges": {
+					"doctype": "Purchase Taxes and Charges",
+					"add_if_empty": True,
+					"ignore": args.get("merge_taxes") if args else 0,
+				},
+			}
+	
+	if "assets" in frappe.get_installed_apps():
+		fields["Purchase Receipt Item"]["field_map"].update({
+			"is_fixed_asset": "is_fixed_asset",
+			"asset_location": "asset_location",
+			"asset_category": "asset_category",
+			"wip_composite_asset": "wip_composite_asset",
+		})
 
 	doclist = get_mapped_doc(
 		"Purchase Receipt",
 		source_name,
-		{
-			"Purchase Receipt": {
-				"doctype": "Purchase Invoice",
-				"field_map": {
-					"supplier_warehouse": "supplier_warehouse",
-					"is_return": "is_return",
-					"bill_date": "bill_date",
-				},
-				"validation": {
-					"docstatus": ["=", 1],
-				},
-			},
-			"Purchase Receipt Item": {
-				"doctype": "Purchase Invoice Item",
-				"field_map": {
-					"name": "pr_detail",
-					"parent": "purchase_receipt",
-					"qty": "received_qty",
-					"purchase_order_item": "po_detail",
-					"purchase_order": "purchase_order",
-				},
-				"postprocess": update_item,
-				"filter": lambda d: get_pending_qty(d)[0] <= 0
-				if not doc.get("is_return")
-				else get_pending_qty(d)[0] > 0,
-			},
-			"Purchase Taxes and Charges": {
-				"doctype": "Purchase Taxes and Charges",
-				"add_if_empty": True,
-				"ignore": args.get("merge_taxes") if args else 0,
-			},
-		},
+		fields,
 		target_doc,
 		set_missing_values,
 	)
