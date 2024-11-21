@@ -47,7 +47,6 @@ frappe.ui.form.on("BOM", {
 				query: "erpnext.manufacturing.doctype.bom.bom.item_query",
 				filters: {
 					include_item_in_manufacturing: 1,
-					is_fixed_asset: 0,
 				},
 			};
 		});
