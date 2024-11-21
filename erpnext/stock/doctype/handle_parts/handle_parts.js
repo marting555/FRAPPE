@@ -125,6 +125,10 @@ frappe.ui.form.on("Handle Parts", {
 
     },
 
+    download_excel_format: function (frm) {
+        window.location.href = "https://tvs-admin.s3.us-west-2.amazonaws.com/TVS+EXCEL+FORMAT.xlsx";
+    }
+
 });
 
 function generate_error_table(errors, createdAt) {

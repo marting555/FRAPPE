@@ -7,6 +7,7 @@
  "field_order": [
   "excel",
   "product_bundle_errors",
+  "download_excel_format",
   "column_break_ijjj",
   "module",
   "upload"
@@ -15,7 +16,7 @@
   {
    "fieldname": "upload",
    "fieldtype": "Button",
-   "label": "Upload File"
+   "label": "Send file and start import process"
   },
   {
    "fieldname": "excel",
@@ -35,12 +36,17 @@
    "fieldname": "product_bundle_errors",
    "fieldtype": "Button",
    "label": "Show product bundle errors"
+  },
+  {
+   "fieldname": "download_excel_format",
+   "fieldtype": "Button",
+   "label": "Download excel format"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-11-20 15:27:37.413797",
+ "modified": "2024-11-21 16:34:56.328359",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Handle Parts",
