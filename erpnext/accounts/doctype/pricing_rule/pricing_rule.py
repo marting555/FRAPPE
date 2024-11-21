@@ -77,7 +77,6 @@ class PricingRule(Document):
 		recurse_for: DF.Float
 		round_free_qty: DF.Check
 		rule_description: DF.SmallText | None
-		sales_partner: DF.Link | None
 		same_item: DF.Check
 		selling: DF.Check
 		supplier: DF.Link | None

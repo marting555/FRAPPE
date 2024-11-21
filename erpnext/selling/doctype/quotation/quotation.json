@@ -73,7 +73,6 @@
   "column_break_46",
   "additional_discount_percentage",
   "discount_amount",
-  "referral_sales_partner",
   "sec_tax_breakup",
   "other_charges_calculation",
   "bundle_items_section",
@@ -599,12 +598,6 @@
    "options": "Coupon Code"
   },
   {
-   "fieldname": "referral_sales_partner",
-   "fieldtype": "Link",
-   "label": "Referral Sales Partner",
-   "options": "Sales Partner"
-  },
-  {
    "default": "Grand Total",
    "fieldname": "apply_discount_on",
    "fieldtype": "Select",
@@ -1036,7 +1029,7 @@
  "idx": 82,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-11-07 16:48:52.747883",
+ "modified": "2024-11-19 15:07:09.554878",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Quotation",
