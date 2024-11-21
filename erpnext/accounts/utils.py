@@ -1508,7 +1508,6 @@ def get_future_stock_vouchers(posting_date, posting_time, for_warehouses=None, f
 
 	return [(d.voucher_type, d.voucher_no) for d in future_stock_vouchers]
 
-
 def get_voucherwise_gl_entries(future_stock_vouchers, posting_date):
 	"""Get voucherwise list of GL entries.
 
