@@ -370,8 +370,6 @@ def update_net_values(entry):
 
 
 def save_entries(gl_map, adv_adj, update_outstanding, from_repost=False, clearing_date=None):
-	if not from_repost:
-		validate_cwip_accounts(gl_map)
 
 	process_debit_credit_difference(gl_map)
 
