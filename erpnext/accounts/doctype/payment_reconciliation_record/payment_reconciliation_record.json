@@ -9,6 +9,7 @@
   "section_break_h9kx",
   "company",
   "party_type",
+  "clearing_date",
   "column_break_dtti",
   "party",
   "receivable__payable_account",
@@ -37,6 +38,13 @@
    "options": "DocType",
    "read_only": 1
   },
+  {
+    "default": "Today",
+    "fieldname": "clearing_date",
+    "fieldtype": "Date",
+    "label": "Clearing Date",
+    "no_copy": 1
+   },
   {
    "fieldname": "column_break_dtti",
    "fieldtype": "Column Break"
