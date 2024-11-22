@@ -75,8 +75,6 @@ class ProductBundle(Document):
 		"""Validates, main Item is not a stock item"""
 		if frappe.db.get_value("Item", self.new_item_code, "is_stock_item"):
 			frappe.throw(_("Parent Item {0} must not be a Stock Item").format(self.new_item_code))
-		if frappe.db.get_value("Item", self.new_item_code, "is_fixed_asset"):
-			frappe.throw(_("Parent Item {0} must not be a Fixed Asset").format(self.new_item_code))
 
 	def validate_child_items(self):
 		for item in self.items:
@@ -94,10 +92,15 @@ def get_new_item_code(doctype, txt, searchfield, start, page_len, filters):
 	product_bundles = frappe.db.get_list("Product Bundle", {"disabled": 0}, pluck="name")
 
 	item = frappe.qb.DocType("Item")
+	conditions = (item.is_stock_item == 0) & (item[searchfield].like(f"%{txt}%"))
+	# Check if the "assets" app is installed
+	if "assets" in frappe.get_installed_apps():
+		conditions &= (item.is_fixed_asset == 0)
+		
 	query = (
 		frappe.qb.from_(item)
 		.select(item.item_code, item.item_name)
-		.where((item.is_stock_item == 0) & (item.is_fixed_asset == 0) & (item[searchfield].like(f"%{txt}%")))
+		.where(conditions)
 		.limit(page_len)
 		.offset(start)
 	)

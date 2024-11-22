@@ -22,7 +22,6 @@ class ZeroBudget(Document):
         company: DF.Link | None
         posting_date: DF.Date | None
         project: DF.Link | None
-        total: DF.Currency
         zero_budget_item: DF.Table[ZeroBudgetItem]
     # end: auto-generated types
 

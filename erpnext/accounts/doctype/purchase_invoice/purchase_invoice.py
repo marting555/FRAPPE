@@ -1163,29 +1163,6 @@ class PurchaseInvoice(BuyingController):
 					item_amount=(min(item.qty, pr_item.get("qty")) * pr_item.get("base_rate")),
 				)
 
-
-	def update_gross_purchase_amount_for_linked_assets(self, item):
-		assets = frappe.db.get_all(
-			"Asset",
-			filters={
-				"purchase_invoice": self.name,
-				"item_code": item.item_code,
-				"purchase_invoice_item": ("in", [item.name, ""]),
-			},
-			fields=["name", "asset_quantity"],
-		)
-		for asset in assets:
-			purchase_amount = flt(item.valuation_rate) * asset.asset_quantity
-			frappe.db.set_value(
-				"Asset",
-				asset.name,
-				{
-					"gross_purchase_amount": purchase_amount,
-					"purchase_amount": purchase_amount,
-				},
-			)
-
-
 	def make_stock_adjustment_entry(self, gl_entries, item, voucher_wise_stock_value, account_currency):
 		net_amt_precision = item.precision("base_net_amount")
 		val_rate_db_precision = 6 if cint(item.precision("valuation_rate")) <= 6 else 9
@@ -1728,11 +1705,6 @@ class PurchaseInvoice(BuyingController):
 
 		if update:
 			self.db_set("status", self.status, update_modified=update_modified)
-
-	@frappe.whitelist()
-	def get_payment_discount_term(doc):
-		discount_term_table =frappe.db.get_values("Discount Terms", {"parent" : doc.payment_term },"*", order_by = "no_of_days ASC")
-		return discount_term_table
 
 
 # to get details of purchase invoice/receipt from which this doc was created for exchange rate difference handling

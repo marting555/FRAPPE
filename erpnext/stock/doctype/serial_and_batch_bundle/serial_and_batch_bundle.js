@@ -165,8 +165,6 @@ frappe.ui.form.on("Serial and Batch Bundle", {
 					name: [
 						"in",
 						[
-							"Asset Capitalization",
-							"Asset Repair",
 							"Delivery Note",
 							"Installation Note",
 							"Job Card",

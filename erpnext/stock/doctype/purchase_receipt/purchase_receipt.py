@@ -794,30 +794,6 @@ class PurchaseReceipt(BuyingController):
 
 					i += 1
 
-
-	def update_assets(self, item, valuation_rate):
-		assets = frappe.db.get_all(
-			"Asset",
-			filters={
-				"purchase_receipt": self.name,
-				"item_code": item.item_code,
-				"purchase_receipt_item": ("in", [item.name, ""]),
-			},
-			fields=["name", "asset_quantity"],
-		)
-
-		for asset in assets:
-			purchase_amount = flt(valuation_rate) * asset.asset_quantity
-			frappe.db.set_value(
-				"Asset",
-				asset.name,
-				{
-					"gross_purchase_amount": purchase_amount,
-					"purchase_amount": purchase_amount,
-				},
-			)
-
-
 	def update_status(self, status):
 		self.set_status(update=True, status=status)
 		self.notify_update()
@@ -1143,42 +1119,52 @@ def make_purchase_invoice(source_name, target_doc=None, args=None):
 				returned_qty = 0
 
 		return pending_qty, returned_qty
+	
+	fields = {
+				"Purchase Receipt": {
+					"doctype": "Purchase Invoice",
+					"field_map": {
+						"supplier_warehouse": "supplier_warehouse",
+						"is_return": "is_return",
+						"bill_date": "bill_date",
+					},
+					"validation": {
+						"docstatus": ["=", 1],
+					},
+				},
+				"Purchase Receipt Item": {
+					"doctype": "Purchase Invoice Item",
+					"field_map": {
+						"name": "pr_detail",
+						"parent": "purchase_receipt",
+						"qty": "received_qty",
+						"purchase_order_item": "po_detail",
+						"purchase_order": "purchase_order",
+					},
+					"postprocess": update_item,
+					"filter": lambda d: get_pending_qty(d)[0] <= 0
+					if not doc.get("is_return")
+					else get_pending_qty(d)[0] > 0,
+				},
+				"Purchase Taxes and Charges": {
+					"doctype": "Purchase Taxes and Charges",
+					"add_if_empty": True,
+					"ignore": args.get("merge_taxes") if args else 0,
+				},
+			}
+	
+	if "assets" in frappe.get_installed_apps():
+		fields["Purchase Receipt Item"]["field_map"].update({
+			"is_fixed_asset": "is_fixed_asset",
+			"asset_location": "asset_location",
+			"asset_category": "asset_category",
+			"wip_composite_asset": "wip_composite_asset",
+		})
 
 	doclist = get_mapped_doc(
 		"Purchase Receipt",
 		source_name,
-		{
-			"Purchase Receipt": {
-				"doctype": "Purchase Invoice",
-				"field_map": {
-					"supplier_warehouse": "supplier_warehouse",
-					"is_return": "is_return",
-					"bill_date": "bill_date",
-				},
-				"validation": {
-					"docstatus": ["=", 1],
-				},
-			},
-			"Purchase Receipt Item": {
-				"doctype": "Purchase Invoice Item",
-				"field_map": {
-					"name": "pr_detail",
-					"parent": "purchase_receipt",
-					"qty": "received_qty",
-					"purchase_order_item": "po_detail",
-					"purchase_order": "purchase_order",
-				},
-				"postprocess": update_item,
-				"filter": lambda d: get_pending_qty(d)[0] <= 0
-				if not doc.get("is_return")
-				else get_pending_qty(d)[0] > 0,
-			},
-			"Purchase Taxes and Charges": {
-				"doctype": "Purchase Taxes and Charges",
-				"add_if_empty": True,
-				"ignore": args.get("merge_taxes") if args else 0,
-			},
-		},
+		fields,
 		target_doc,
 		set_missing_values,
 	)

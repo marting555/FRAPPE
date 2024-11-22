@@ -56,17 +56,6 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 			me.frm.refresh_fields();
 		}
 		erpnext.queries.setup_warehouse_query(this.frm);
-		if(me.frm.is_new() && me.frm.payment_schedule && me.frm.payment_schedule.length > 0){
-			me.frm.set_value("payment_schedule", "[]")
-		}
-		cur_frm.set_query("payment_term",function (doc) {
-			return {
-				
-				filters: {
-					is_for_sales: 1,
-				},
-			};
-		});
 	}
 
 	refresh(doc, dt, dn) {
@@ -455,22 +444,6 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 		});
 	}
 
-	asset(frm, cdt, cdn) {
-		var row = locals[cdt][cdn];
-		if (row.asset) {
-			frappe.call({
-				method: assets.assets.doctype.asset.depreciation.get_disposal_account_and_cost_center,
-				args: {
-					company: frm.doc.company,
-				},
-				callback: function (r, rt) {
-					frappe.model.set_value(cdt, cdn, "income_account", r.message[0]);
-					frappe.model.set_value(cdt, cdn, "cost_center", r.message[1]);
-				},
-			});
-		}
-	}
-
 	is_pos(frm) {
 		this.set_pos_data();
 	}
@@ -564,50 +537,6 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 		this.calculate_taxes_and_totals();
 	}
 
-	payment_term(frm){
-		if(frm.payment_term){
-			frappe.call({
-				doc: frm,
-				method: "get_payment_discount_term",
-				callback: (response)=>{
-					cur_frm.set_value('payment_discount_terms', []); 
-					let discount_terms = response.message
-					if(discount_terms){
-						for (let discount_term of discount_terms){
-							let discount_date = frappe.datetime.add_days(cur_frm.doc.posting_date, discount_term.no_of_days) 
-							let childTable = cur_frm.add_child("payment_discount_terms");
-
-							childTable.no_of_days = discount_term.no_of_days
-							childTable.discount = discount_term.discount
-							childTable.discount_date = discount_date
-							cur_frm.refresh_fields("payment_discount_terms");
-						}
-					}
-				}
-			})
-		} else {
-			if (frm.payment_discount_terms.length > 0) cur_frm.set_value('payment_discount_terms', []); 
-		}
-	}
-
-	validate(frm){
-		if(frm.payment_discount_terms && frm.payment_discount_terms.length > 0){
-			for(let discount_row of frm.payment_discount_terms){
-				if(discount_row.discount_date > frm.due_date){
-					frappe.throw(`Error from Row ${discount_row.idx} <br><b>Discount term period</b> cannot be greater then <b>Payment Due Date</b>.`)
-				}
-			}
-		}
-	}
-
-	due_date(frm){
-		cur_frm.set_value("discount_due_date",frm.due_date)
-	}
-
-	discount_due_date(frm){
-		cur_frm.set_value("due_date",frm.discount_due_date)
-	}
-
 };
 
 // for backward compatibility: combine new and previous states
@@ -682,18 +611,6 @@ cur_frm.set_query("debit_to", function (doc) {
 			is_group: 0,
 			company: doc.company,
 		},
-	};
-});
-
-cur_frm.set_query("asset", "items", function (doc, cdt, cdn) {
-	var d = locals[cdt][cdn];
-	return {
-		filters: [
-			["Asset", "item_code", "=", d.item_code],
-			["Asset", "docstatus", "=", 1],
-			["Asset", "status", "in", ["Submitted", "Partially Depreciated", "Fully Depreciated"]],
-			["Asset", "company", "=", doc.company],
-		],
 	};
 });
 
@@ -887,7 +804,6 @@ frappe.ui.form.on("Sales Invoice", {
 			// "project",
 			"due_date",
 			"is_opening",
-			"source",
 			"total_advance",
 			"get_advances",
 			"advances",

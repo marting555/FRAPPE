@@ -14,8 +14,8 @@ from erpnext.buying.doctype.request_for_quotation.request_for_quotation import (
 	get_pdf,
 	make_supplier_quotation_from_rfq,
 )
-from erpnext.crm.doctype.opportunity.opportunity import make_request_for_quotation as make_rfq
-from erpnext.crm.doctype.opportunity.test_opportunity import make_opportunity
+from crm.crm.doctype.opportunity.opportunity import make_request_for_quotation as make_rfq
+from crm.crm.doctype.opportunity.test_opportunity import make_opportunity
 from erpnext.stock.doctype.item.test_item import make_item
 from erpnext.templates.pages.rfq import check_supplier_has_docname_access
 

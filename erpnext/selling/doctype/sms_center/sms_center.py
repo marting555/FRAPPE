@@ -23,17 +23,7 @@ class SMSCenter(Document):
 		department: DF.Link | None
 		message: DF.Text
 		receiver_list: DF.Code | None
-		sales_partner: DF.Link | None
-		send_to: DF.Literal[
-			"",
-			"All Contact",
-			"All Customer Contact",
-			"All Supplier Contact",
-			"All Sales Partner Contact",
-			"All Lead (Open)",
-			"All Employee (Active)",
-			"All Sales Person",
-		]
+		send_to: DF.Literal["", "All Contact", "All Customer Contact", "All Supplier Contact", "All Sales Partner Contact", "All Lead (Open)", "All Employee (Active)", "All Sales Person"]
 		supplier: DF.Link | None
 		total_characters: DF.Int
 		total_messages: DF.Int

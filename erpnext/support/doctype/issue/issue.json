@@ -45,7 +45,6 @@
   "resolution_time",
   "user_resolution_time",
   "additional_info",
-  "lead",
   "contact",
   "email_account",
   "column_break_16",
@@ -200,12 +199,6 @@
    "label": "Reference",
    "options": "fa fa-pushpin",
    "read_only": 1
-  },
-  {
-   "fieldname": "lead",
-   "fieldtype": "Link",
-   "label": "Lead",
-   "options": "Lead"
   },
   {
    "fieldname": "contact",
@@ -384,7 +377,7 @@
  "icon": "fa fa-ticket",
  "idx": 7,
  "links": [],
- "modified": "2021-11-24 13:13:10.276630",
+ "modified": "2024-11-07 15:26:10.034826",
  "modified_by": "Administrator",
  "module": "Support",
  "name": "Issue",
@@ -408,6 +401,7 @@
  "sender_field": "raised_by",
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "subject_field": "subject",
  "timeline_field": "customer",
  "title_field": "subject",

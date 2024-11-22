@@ -524,6 +524,9 @@ class AccountsController(TransactionBase):
 	def calculate_taxes_and_totals(self):
 		from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
 
+		if self.taxes_and_charges and not len(self.get("taxes")):
+			self.append_taxes_from_master()
+
 		calculate_taxes_and_totals(self)
 
 		if self.doctype in (
@@ -2519,17 +2522,6 @@ class AccountsController(TransactionBase):
 			or (self.currency != default_currency and flt(self.conversion_rate) == 1.00)
 		):
 			throw(_("Conversion rate cannot be 0 or 1"))
-
-	def check_finance_books(self, item, asset):
-		if (
-			len(asset.finance_books) > 1
-			and not item.get("finance_book")
-			and not self.get("finance_book")
-			and asset.finance_books[0].finance_book
-		):
-			frappe.throw(
-				_("Select finance book for the item {0} at row {1}").format(item.item_code, item.idx)
-			)
 
 	def check_if_fields_updated(self, fields_to_check, child_tables):
 		# Check if any field affecting accounting entry is altered

@@ -372,8 +372,6 @@ def update_net_values(entry):
 
 
 def save_entries(gl_map, adv_adj, update_outstanding, from_repost=False):
-	if not from_repost:
-		validate_cwip_accounts(gl_map)
 
 	process_debit_credit_difference(gl_map)
 
@@ -401,33 +399,6 @@ def make_entry(args, adv_adj, update_outstanding, from_repost=False):
 
 	if not from_repost and gle.voucher_type != "Period Closing Voucher":
 		validate_expense_against_budget(args)
-
-
-def validate_cwip_accounts(gl_map):
-	"""Validate that CWIP account are not used in Journal Entry"""
-	if gl_map and gl_map[0].voucher_type != "Journal Entry":
-		return
-
-	cwip_enabled = any(
-		cint(ac.enable_cwip_accounting)
-		for ac in frappe.db.get_all("Asset Category", "enable_cwip_accounting")
-	)
-	if cwip_enabled:
-		cwip_accounts = [
-			d[0]
-			for d in frappe.db.sql(
-				"""select name from tabAccount
-			where account_type = 'Capital Work in Progress' and is_group=0"""
-			)
-		]
-
-		for entry in gl_map:
-			if entry.account in cwip_accounts:
-				frappe.throw(
-					_(
-						"Account: <b>{0}</b> is capital Work in progress and can not be updated by Journal Entry"
-					).format(entry.account)
-				)
 
 
 def process_debit_credit_difference(gl_map):

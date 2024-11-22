@@ -20,7 +20,6 @@
   "sales_invoice_no",
   "pick_list",
   "purchase_receipt_no",
-  "asset_repair",
   "col2",
   "company",
   "posting_date",
@@ -668,14 +667,6 @@
   {
    "fieldname": "column_break_eaoa",
    "fieldtype": "Column Break"
-  },
-  {
-   "depends_on": "eval:doc.asset_repair",
-   "fieldname": "asset_repair",
-   "fieldtype": "Link",
-   "label": "Asset Repair",
-   "options": "Asset Repair",
-   "read_only": 1
   },
   {
    "fieldname": "tab_connections",

@@ -2673,11 +2673,9 @@ def get_payment_entry(
 		if party_bank_account:
 			account = frappe.db.get_value("Bank Account", party_bank_account, "account")
 			bank = get_bank_cash_account(doc, account)
-
 	paid_amount, received_amount = set_paid_amount_and_received_amount(
 		dt, party_account_currency, bank, outstanding_amount, payment_type, bank_amount, doc
 	)
-
 	reference_date = getdate(reference_date)
 	paid_amount, received_amount, discount_amount, valid_discounts = apply_early_payment_discount(
 		paid_amount, received_amount, doc, party_account_currency, reference_date

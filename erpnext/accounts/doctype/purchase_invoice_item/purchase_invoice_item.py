@@ -35,6 +35,8 @@ class PurchaseInvoiceItem(Document):
 		enable_deferred_expense: DF.Check
 		expense_account: DF.Link | None
 		from_warehouse: DF.Link | None
+		has_batch_no: DF.Check
+		has_serial_no: DF.Check
 		image: DF.Attach | None
 		include_exploded_items: DF.Check
 		is_free_item: DF.Check
@@ -62,7 +64,6 @@ class PurchaseInvoiceItem(Document):
 		price_list_rate: DF.Currency
 		pricing_rules: DF.SmallText | None
 		product_bundle: DF.Link | None
-		project: DF.Link | None
 		project_name: DF.Data | None
 		purchase_invoice_item: DF.Data | None
 		purchase_order: DF.Link | None
@@ -95,7 +96,6 @@ class PurchaseInvoiceItem(Document):
 		wbs_name: DF.Data | None
 		weight_per_unit: DF.Float
 		weight_uom: DF.Link | None
-		wip_composite_asset: DF.Link | None
 		work_breakdown_structure: DF.Link | None
 	# end: auto-generated types
 

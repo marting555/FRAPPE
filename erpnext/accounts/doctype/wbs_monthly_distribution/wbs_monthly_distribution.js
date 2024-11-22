@@ -1,6 +1,6 @@
 // Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 // For license information, please see license.txt
-
+// WBS Monthly Distribution
 frappe.ui.form.on("WBS Monthly Distribution", {
 	refresh(frm) {
         update_available_budget(frm)

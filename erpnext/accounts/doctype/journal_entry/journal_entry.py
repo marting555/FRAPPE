@@ -140,7 +140,6 @@ class JournalEntry(AccountsController):
 		self.validate_credit_debit_note()
 		self.validate_empty_accounts_table()
 		self.validate_inter_company_accounts()
-		self.validate_depr_entry_voucher_type()
 		self.validate_advance_accounts()
 
 		if self.docstatus == 0:
@@ -188,7 +187,6 @@ class JournalEntry(AccountsController):
 		self.update_advance_paid()
 		self.update_inter_company_jv()
 		self.update_invoice_discounting()
-		self.unlink_asset_movement_entry()
 
 	def on_update_after_submit(self):
 		# Flag will be set on Reconciliation
@@ -242,13 +240,6 @@ class JournalEntry(AccountsController):
 			if account_currency == previous_account_currency:
 				if self.total_credit != doc.total_debit or self.total_debit != doc.total_credit:
 					frappe.throw(_("Total Credit/ Debit Amount should be same as linked Journal Entry"))
-
-	def validate_depr_entry_voucher_type(self):
-		if (
-			any(d.account_type == "Depreciation" for d in self.get("accounts"))
-			and self.voucher_type != "Depreciation Entry"
-		):
-			frappe.throw(_("Journal Entry type should be set as Depreciation Entry for asset depreciation"))
 
 	def validate_stock_accounts(self):
 		stock_accounts = get_stock_accounts(self.company, self.doctype, self.name)
@@ -424,12 +415,7 @@ class JournalEntry(AccountsController):
 			)
 			frappe.db.set_value("Journal Entry", self.name, "inter_company_journal_entry_reference", "")
 
-	def unlink_asset_movement_entry(self):
-		frappe.db.sql(
-			""" update `tabAsset Movement`
-			set journal_entry = null where journal_entry = %s""",
-			self.name,
-		)
+
 
 	def validate_party(self):
 		for d in self.get("accounts"):
