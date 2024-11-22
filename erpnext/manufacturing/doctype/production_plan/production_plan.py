@@ -651,7 +651,7 @@ class ProductionPlan(Document):
 				"production_plan_item": d.name,
 				"product_bundle_item": d.product_bundle_item,
 				"planned_start_date": d.planned_start_date,
-				"project": self.project,
+				"project": self.get("project") if "projects" in frappe.get_installed_apps() else "",
 			}
 
 			key = (d.item_code, d.sales_order, d.sales_order_item, d.warehouse)

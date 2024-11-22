@@ -393,7 +393,7 @@ class StockEntry(StockController):
 					{
 						"item_code": item.item_code,
 						"company": self.company,
-						# "project": self.project,
+						"project": self.get("project") if "projects" in frappe.get_installed_apps() else "",
 						"uom": item.uom,
 						"s_warehouse": item.s_warehouse,
 					}

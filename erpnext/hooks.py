@@ -330,9 +330,6 @@ doc_events = {
 		
 		],
 	},
-	"Project": {
-        "on_update": "erpnext.public.is_wbs.on_update",
-	},
 	
     # "Material Request": {
     #     "on_submit": "erpnext.public.material_request.on_submit",
@@ -625,9 +622,6 @@ global_search_doctypes = {
 		{"doctype": "Item Price", "index": 25},
 		{"doctype": "Purchase Taxes and Charges Template", "index": 26},
 		{"doctype": "Sales Taxes and Charges", "index": 27},
-		{"doctype": "Project", "index": 29},
-		{"doctype": "Task", "index": 30},
-		{"doctype": "Timesheet", "index": 31},
 		{"doctype": "Issue", "index": 32},
 		{"doctype": "Serial No", "index": 33},
 		{"doctype": "Batch", "index": 34},

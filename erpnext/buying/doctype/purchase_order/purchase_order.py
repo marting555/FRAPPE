@@ -971,7 +971,7 @@ def update_committed_overall_budget(self,event):
 							"txn_date": self.transaction_date,
 							"document_date": self.transaction_date,
 							"voucher_creation_date": self.creation,
-							"project": i.get("project"),
+							"project": i.get("project") if "projects" in frappe.get_installed_apps() else "",
 							"voucher_type": self.doctype,
 							"voucher_name": self.name,
 							"wbs_name": wbs_name,
@@ -1023,7 +1023,7 @@ def update_committed_overall_budget(self,event):
 									"txn_date": self.transaction_date,
 									"document_date": self.transaction_date,
 									"voucher_creation_date": self.creation,
-									"project": i.get("project"),
+									"project": i.get("project") if "projects" in frappe.get_installed_apps() else "",
 									"voucher_type": self.doctype,
 									"voucher_name": self.name,
 									"wbs_name": wbs_name,
@@ -1062,7 +1062,8 @@ def update_committed_overall_budget(self,event):
 def create_budget_entry(self,data, event, company):
 	if data.get("credit") > 0.0 and data.get("wbs_id"):
 		bgt_ent = frappe.new_doc("Budget Entry")
-		bgt_ent.project = data.get("project")
+		if "projects" in frappe.get_installed_apps():
+			bgt_ent.project = data.get("project")
 		bgt_ent.wbs = data.get("wbs_id")
 		bgt_ent.posting_date = data.get("document_date")
 		bgt_ent.voucher_submit_date = data.get("voucher_creation_date")

@@ -542,7 +542,7 @@ class SubcontractingReceipt(SubcontractingController):
 						remarks=remarks,
 						against_account=item.expense_account,
 						account_currency=get_account_currency(accepted_warehouse_account),
-						project=item.project,
+						project=item.project if "projects" in frappe.get_installed_apps() else "",
 						item=item,
 					)
 					# Expense Account (Credit)
@@ -555,7 +555,7 @@ class SubcontractingReceipt(SubcontractingController):
 						remarks=remarks,
 						against_account=accepted_warehouse_account,
 						account_currency=get_account_currency(item.expense_account),
-						project=item.project,
+						project=item.project if "projects" in frappe.get_installed_apps() else "",
 						item=item,
 					)
 
@@ -570,7 +570,7 @@ class SubcontractingReceipt(SubcontractingController):
 							remarks=remarks,
 							against_account=item.expense_account,
 							account_currency=get_account_currency(supplier_warehouse_account),
-							project=item.project,
+							project=item.project if "projects" in frappe.get_installed_apps() else "",
 							item=item,
 						)
 						# Expense Account (Debit)
@@ -583,7 +583,7 @@ class SubcontractingReceipt(SubcontractingController):
 							remarks=remarks,
 							against_account=supplier_warehouse_account,
 							account_currency=get_account_currency(item.expense_account),
-							project=item.project,
+							project=item.project if "projects" in frappe.get_installed_apps() else "",
 							item=item,
 						)
 
@@ -615,7 +615,7 @@ class SubcontractingReceipt(SubcontractingController):
 							remarks=remarks,
 							against_account=item.expense_account,
 							account_currency=get_account_currency(loss_account),
-							project=item.project,
+							project=item.project if "projects" in frappe.get_installed_apps() else "",
 							item=item,
 						)
 						# Expense Account (Debit)
@@ -628,7 +628,7 @@ class SubcontractingReceipt(SubcontractingController):
 							remarks=remarks,
 							against_account=loss_account,
 							account_currency=get_account_currency(item.expense_account),
-							project=item.project,
+							project=item.project if "projects" in frappe.get_installed_apps() else "",
 							item=item,
 						)
 				elif (
@@ -733,7 +733,7 @@ def make_purchase_receipt(source_name, target_doc=None, save=False, submit=False
 						"purchase_order": item.purchase_order,
 						"purchase_order_item": item.purchase_order_item,
 						"subcontracting_receipt_item": item.name,
-						"project": po_item.project,
+						"project": po_item.project if "projects" in frappe.get_installed_apps() else "",
 					}
 					target_doc.append("items", item_row)
 
