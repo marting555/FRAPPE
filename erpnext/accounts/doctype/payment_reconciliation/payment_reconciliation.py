@@ -511,7 +511,7 @@ class PaymentReconciliation(Document):
 				reconciled_entry.append(payment_details)
 
 		if entry_list:
-			reconcile_against_document(entry_list, skip_ref_details_update_for_pe, self.dimensions)
+			reconcile_against_document(entry_list, skip_ref_details_update_for_pe, self.dimensions, self.clearing_date)
 
 		if dr_or_cr_notes:
 			reconcile_dr_cr_note(dr_or_cr_notes, self.company, self.dimensions)
@@ -750,6 +750,7 @@ class PaymentReconciliation(Document):
 		pay_rec = frappe.new_doc("Payment Reconciliation Record")
 		pay_rec.company = self.company
 		pay_rec.party_type = self.party_type
+		pay_rec.clearing_date = self.clearing_date
 		pay_rec.party = self.party
 		pay_rec.receivable_payable_account = self.receivable_payable_account
 		pay_rec.default_advance_account = self.default_advance_account

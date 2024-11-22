@@ -1106,16 +1106,16 @@ class PaymentEntry(AccountsController):
 		add_regional_gl_entries(gl_entries, self)
 		return gl_entries
 
-	def make_gl_entries(self, cancel=0, adv_adj=0):
+	def make_gl_entries(self, cancel=0, adv_adj=0, clearing_date=None):
 		gl_entries = self.build_gl_map()
 		gl_entries = process_gl_map(gl_entries)
-		make_gl_entries(gl_entries, cancel=cancel, adv_adj=adv_adj)
+		make_gl_entries(gl_entries, cancel=cancel, adv_adj=adv_adj, clearing_date=clearing_date)
 		if cancel:
 			cancel_exchange_gain_loss_journal(frappe._dict(doctype=self.doctype, name=self.name))
 		else:
 			self.make_exchange_gain_loss_journal()
 
-		self.make_advance_gl_entries(cancel=cancel)
+		self.make_advance_gl_entries(cancel=cancel, clearing_date=clearing_date)
 
 	def add_party_gl_entries(self, gl_entries):
 		if not self.party_account:
@@ -1196,17 +1196,17 @@ class PaymentEntry(AccountsController):
 			gl_entries.append(gle)
 
 	def make_advance_gl_entries(
-		self, entry: object | dict = None, cancel: bool = 0, update_outstanding: str = "Yes"
+		self, entry: object | dict = None, cancel: bool = 0, update_outstanding: str = "Yes",clearing_date = None
 	):
 		gl_entries = []
-		self.add_advance_gl_entries(gl_entries, entry)
+		self.add_advance_gl_entries(gl_entries, entry, clearing_date=clearing_date)
 
 		if cancel:
 			make_reverse_gl_entries(gl_entries, partial_cancel=True)
 		else:
-			make_gl_entries(gl_entries, update_outstanding=update_outstanding)
+			make_gl_entries(gl_entries, update_outstanding=update_outstanding,clearing_date=clearing_date)
 
-	def add_advance_gl_entries(self, gl_entries: list, entry: object | dict | None):
+	def add_advance_gl_entries(self, gl_entries: list, entry: object | dict | None, clearing_date=None):
 		"""
 		If 'entry' is passed, GL entries only for that reference is added.
 		"""
@@ -1222,7 +1222,7 @@ class PaymentEntry(AccountsController):
 					"Journal Entry",
 					"Payment Entry",
 				):
-					self.add_advance_gl_for_reference(gl_entries, ref)
+					self.add_advance_gl_for_reference(gl_entries, ref, clearing_date)
 
 	def get_dr_and_account_for_advances(self, reference):
 		if reference.reference_doctype == "Sales Invoice":
@@ -1244,7 +1244,7 @@ class PaymentEntry(AccountsController):
 			else:
 				return "debit", reference.account
 
-	def add_advance_gl_for_reference(self, gl_entries, invoice):
+	def add_advance_gl_for_reference(self, gl_entries, invoice, clearing_date=None):
 		args_dict = {
 			"party_type": self.party_type,
 			"party": self.party,
@@ -1266,6 +1266,8 @@ class PaymentEntry(AccountsController):
 			if getdate(posting_date) < getdate(self.posting_date):
 				posting_date = self.posting_date
 
+		if clearing_date:
+			posting_date = clearing_date
 		dr_or_cr, account = self.get_dr_and_account_for_advances(invoice)
 		args_dict["account"] = account
 		args_dict[dr_or_cr] = self.calculate_base_allocated_amount_for_reference(invoice)
