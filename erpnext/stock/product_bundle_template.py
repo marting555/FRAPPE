@@ -5,7 +5,7 @@ import frappe
 class ProductBundleTemplate:
     def __init__(self):
         self.item_code = None
-        self.price_list = "Standard Selling"
+        self.price_list = "Retail"
 
     def set_item_code(self, item_code):
         if not item_code or item_code.strip() == "":
@@ -15,7 +15,7 @@ class ProductBundleTemplate:
     
     def set_price_list(self, price_list):
         if not price_list or price_list.strip() == "":
-            price_list = "Standard Selling"
+            price_list = "Retail"
         self.price_list = price_list
         return self
 
@@ -46,7 +46,7 @@ class ProductBundleTemplate:
 
     def get_item_price(self, item_details):
         try:
-             # print("get_item_price: ", item_details.__dict__)
+            # print("==========> get_item_price: ", item_details.__dict__)
             price_list_rate = frappe.db.get_value(
                 "Item Price", 
                 {
@@ -57,7 +57,7 @@ class ProductBundleTemplate:
             )
             if price_list_rate is None:
                 price_list_rate = item_details.get('standard_rate')  # valuation_rate
-        except Exception:
+        except Exception as e:
             price_list_rate = 0
 
         return price_list_rate
