@@ -986,6 +986,7 @@ class SalesInvoice(SellingController):
 		if not self.is_pos and self.write_off_account:
 			self.write_off_account = None
 	
+	
 	def validate_write_off_account(self):
 		if flt(self.write_off_amount) and not self.write_off_account:
 			self.write_off_account = frappe.get_cached_value("Company", self.company, "write_off_account")
