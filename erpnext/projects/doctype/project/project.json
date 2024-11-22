@@ -75,6 +75,7 @@
   "client_requirements_section",
   "requirements",
   "pickup",
+  "terms_and_conditions_accepted",
   "section_break1",
   "client_description",
   "client_state_detail",
@@ -939,6 +940,14 @@
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Pickup"
+  },
+  {
+   "default": "0",
+   "fieldname": "terms_and_conditions_accepted",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Terms and Conditions accepted"
   }
  ],
  "icon": "fa fa-puzzle-piece",
@@ -946,7 +955,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-11-18 18:39:01.700499",
+ "modified": "2024-11-22 14:48:48.438265",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
