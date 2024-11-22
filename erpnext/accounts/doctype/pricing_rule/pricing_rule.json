@@ -35,7 +35,6 @@
   "customer",
   "customer_group",
   "territory",
-  "campaign",
   "supplier",
   "supplier_group",
   "section_break_19",
@@ -268,13 +267,6 @@
    "fieldtype": "Link",
    "label": "Territory",
    "options": "Territory"
-  },
-  {
-   "depends_on": "eval:doc.applicable_for==\"Campaign\"",
-   "fieldname": "campaign",
-   "fieldtype": "Link",
-   "label": "Campaign",
-   "options": "Campaign"
   },
   {
    "depends_on": "eval:doc.applicable_for==\"Supplier\"",
@@ -639,7 +631,7 @@
  "icon": "fa fa-gift",
  "idx": 1,
  "links": [],
- "modified": "2024-11-19 14:06:16.289227",
+ "modified": "2024-11-21 20:32:47.997150",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Pricing Rule",
