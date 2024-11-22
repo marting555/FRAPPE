@@ -1482,20 +1482,38 @@ def get_future_stock_vouchers(posting_date, posting_time, for_warehouses=None, f
 		condition += " and company = %s"
 		values.append(company)
 
-	future_stock_vouchers = frappe.db.sql(
-		f"""select distinct sle.voucher_type, sle.voucher_no
-		from `tabStock Ledger Entry` sle
-		where
-			timestamp(sle.posting_date, sle.posting_time) >= timestamp(%s, %s)
-			and is_cancelled = 0
-			{condition}
-		order by timestamp(sle.posting_date, sle.posting_time) asc, creation asc for update""",
-		tuple([posting_date, posting_time, *values]),
-		as_dict=True,
-	)
+	if frappe.db.db_type == 'postgres':
+		future_stock_vouchers = frappe.db.sql(
+			f"""SELECT subquery.voucher_type, subquery.voucher_no
+			FROM (
+				SELECT sle.voucher_type, sle.voucher_no, 
+					TO_TIMESTAMP(sle.posting_date::TEXT || ' ' || sle.posting_time::TEXT, 'YYYY-MM-DD HH24:MI:SS') AS posting_timestamp,
+					sle.creation
+				FROM `tabStock Ledger Entry` sle
+				WHERE
+					TO_TIMESTAMP(sle.posting_date::TEXT || ' ' || sle.posting_time::TEXT, 'YYYY-MM-DD HH24:MI:SS') >= TO_TIMESTAMP(%s || ' ' || %s, 'YYYY-MM-DD HH24:MI:SS')
+					AND is_cancelled = 0
+					{condition}
+			) AS subquery
+			ORDER BY subquery.posting_timestamp ASC, subquery.creation ASC
+			FOR UPDATE""",
+			tuple([posting_date, posting_time, *values]),
+			as_dict=True,
+		)
+	else:
+		future_stock_vouchers = frappe.db.sql(
+			f"""select distinct sle.voucher_type, sle.voucher_no
+			from `tabStock Ledger Entry` sle
+			where
+				timestamp(sle.posting_date, sle.posting_time) >= timestamp(%s, %s)
+				and is_cancelled = 0
+				{condition}
+			order by timestamp(sle.posting_date, sle.posting_time) asc, creation asc for update""",
+			tuple([posting_date, posting_time, *values]),
+			as_dict=True,
+		)
 
 	return [(d.voucher_type, d.voucher_no) for d in future_stock_vouchers]
-
 
 def get_voucherwise_gl_entries(future_stock_vouchers, posting_date):
 	"""Get voucherwise list of GL entries.

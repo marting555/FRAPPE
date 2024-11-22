@@ -130,7 +130,6 @@
   "per_billed",
   "per_picked",
   "billing_status",
-  "sales_partner",
   "loyalty_points_redemption",
   "loyalty_points",
   "column_break_116",
@@ -1298,18 +1297,6 @@
    "print_hide": 1
   },
   {
-   "fieldname": "sales_partner",
-   "fieldtype": "Link",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Sales Partner",
-   "oldfieldname": "sales_partner",
-   "oldfieldtype": "Link",
-   "options": "Sales Partner",
-   "print_hide": 1,
-   "width": "150px"
-  },
-  {
    "allow_on_submit": 1,
    "collapsible": 1,
    "fieldname": "subscription_section",
@@ -1531,7 +1518,7 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-11-07 16:58:01.253463",
+ "modified": "2024-11-19 14:01:50.747337",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

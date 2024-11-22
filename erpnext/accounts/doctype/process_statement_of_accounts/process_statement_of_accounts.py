@@ -29,11 +29,7 @@ class ProcessStatementOfAccounts(Document):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
-		from erpnext.accounts.doctype.process_statement_of_accounts_customer.process_statement_of_accounts_customer import (
-			ProcessStatementOfAccountsCustomer,
-		)
+		from erpnext.accounts.doctype.process_statement_of_accounts_customer.process_statement_of_accounts_customer import ProcessStatementOfAccountsCustomer
 		from erpnext.accounts.doctype.psoa_cost_center.psoa_cost_center import PSOACostCenter
 
 		account: DF.Link | None
@@ -64,7 +60,6 @@ class ProcessStatementOfAccounts(Document):
 		posting_date: DF.Date | None
 		primary_mandatory: DF.Check
 		report: DF.Literal["General Ledger", "Accounts Receivable"]
-		sales_partner: DF.Link | None
 		sales_person: DF.Link | None
 		sender: DF.Link | None
 		show_net_values_in_party_account: DF.Check

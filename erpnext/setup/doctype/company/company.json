@@ -77,16 +77,6 @@
   "submit_err_jv",
   "budget_detail",
   "exception_budget_approver_role",
-  "fixed_asset_defaults",
-  "accumulated_depreciation_account",
-  "depreciation_expense_account",
-  "series_for_depreciation_entry",
-  "expenses_included_in_asset_valuation",
-  "column_break_40",
-  "disposal_account",
-  "depreciation_cost_center",
-  "capital_work_in_progress_account",
-  "asset_received_but_not_billed",
   "buying_and_selling_tab",
   "sales_settings",
   "default_buying_terms",
@@ -481,61 +471,6 @@
    "options": "Account"
   },
   {
-   "fieldname": "accumulated_depreciation_account",
-   "fieldtype": "Link",
-   "label": "Accumulated Depreciation Account",
-   "no_copy": 1,
-   "options": "Account"
-  },
-  {
-   "fieldname": "depreciation_expense_account",
-   "fieldtype": "Link",
-   "label": "Depreciation Expense Account",
-   "no_copy": 1,
-   "options": "Account"
-  },
-  {
-   "fieldname": "series_for_depreciation_entry",
-   "fieldtype": "Data",
-   "label": "Series for Asset Depreciation Entry (Journal Entry)"
-  },
-  {
-   "fieldname": "expenses_included_in_asset_valuation",
-   "fieldtype": "Link",
-   "label": "Expenses Included In Asset Valuation",
-   "options": "Account"
-  },
-  {
-   "fieldname": "column_break_40",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "disposal_account",
-   "fieldtype": "Link",
-   "label": "Gain/Loss Account on Asset Disposal",
-   "no_copy": 1,
-   "options": "Account"
-  },
-  {
-   "fieldname": "depreciation_cost_center",
-   "fieldtype": "Link",
-   "label": "Asset Depreciation Cost Center",
-   "no_copy": 1,
-   "options": "Cost Center"
-  },
-  {
-   "fieldname": "capital_work_in_progress_account",
-   "fieldtype": "Link",
-   "label": "Capital Work In Progress Account",
-   "options": "Account"
-  },
-  {
-   "fieldname": "asset_received_but_not_billed",
-   "fieldtype": "Link",
-   "label": "Asset Received But Not Billed",
-   "options": "Account"
-  },
-  {
    "fieldname": "budget_detail",
    "fieldtype": "Section Break",
    "label": "Budget Detail"
@@ -679,11 +614,7 @@
    "fieldname": "column_break_26",
    "fieldtype": "Column Break"
   },
-  {
-   "fieldname": "fixed_asset_defaults",
-   "fieldtype": "Section Break",
-   "label": "Fixed Asset Defaults"
-  },
+
   {
    "fieldname": "section_break_28",
    "fieldtype": "Section Break",

@@ -28,13 +28,10 @@ class Company(NestedSet):
 		from frappe.types import DF
 
 		abbr: DF.Data
-		accumulated_depreciation_account: DF.Link | None
 		allow_account_creation_against_child_company: DF.Check
-		asset_received_but_not_billed: DF.Link | None
 		auto_err_frequency: DF.Literal["Daily", "Weekly", "Monthly"]
 		auto_exchange_rate_revaluation: DF.Check
 		book_advance_payments_in_separate_party_account: DF.Check
-		capital_work_in_progress_account: DF.Link | None
 		chart_of_accounts: DF.Literal[None]
 		company_description: DF.TextEditor | None
 		company_logo: DF.AttachImage | None
@@ -68,9 +65,6 @@ class Company(NestedSet):
 		default_receivable_account: DF.Link | None
 		default_selling_terms: DF.Link | None
 		default_warehouse_for_sales_return: DF.Link | None
-		depreciation_cost_center: DF.Link | None
-		depreciation_expense_account: DF.Link | None
-		disposal_account: DF.Link | None
 		domain: DF.Data | None
 		email: DF.Data | None
 		enable_perpetual_inventory: DF.Check
@@ -92,7 +86,6 @@ class Company(NestedSet):
 		round_off_account: DF.Link | None
 		round_off_cost_center: DF.Link | None
 		sales_monthly_history: DF.SmallText | None
-		series_for_depreciation_entry: DF.Data | None
 		stock_adjustment_account: DF.Link | None
 		stock_received_but_not_billed: DF.Link | None
 		submit_err_jv: DF.Check
@@ -484,11 +477,6 @@ class Company(NestedSet):
 			"default_cash_account": "Cash",
 			"default_bank_account": "Bank",
 			"round_off_account": "Round Off",
-			"accumulated_depreciation_account": "Accumulated Depreciation",
-			"depreciation_expense_account": "Depreciation",
-			"capital_work_in_progress_account": "Capital Work in Progress",
-			"asset_received_but_not_billed": "Asset Received But Not Billed",
-			"expenses_included_in_asset_valuation": "Expenses Included In Asset Valuation",
 			"default_expense_account": "Cost of Goods Sold",
 		}
 
@@ -541,14 +529,6 @@ class Company(NestedSet):
 
 			self.db_set("exchange_gain_loss_account", exchange_gain_loss_acct)
 
-		if not self.disposal_account:
-			disposal_acct = frappe.db.get_value(
-				"Account",
-				{"account_name": _("Gain/Loss on Asset Disposal"), "company": self.name, "is_group": 0},
-			)
-
-			self.db_set("disposal_account", disposal_acct)
-
 	def _set_default_account(self, fieldname, account_type):
 		if self.get(fieldname):
 			return
@@ -599,7 +579,6 @@ class Company(NestedSet):
 
 		self.db_set("cost_center", _("Main") + " - " + self.abbr)
 		self.db_set("round_off_cost_center", _("Main") + " - " + self.abbr)
-		self.db_set("depreciation_cost_center", _("Main") + " - " + self.abbr)
 
 	def after_rename(self, olddn, newdn, merge=False):
 		self.db_set("company_name", newdn)

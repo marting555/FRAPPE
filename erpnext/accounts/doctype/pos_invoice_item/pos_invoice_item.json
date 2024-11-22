@@ -58,9 +58,6 @@
   "delivered_by_supplier",
   "accounting",
   "income_account",
-  "is_fixed_asset",
-  "asset",
-  "finance_book",
   "col_break4",
   "expense_account",
   "deferred_revenue",
@@ -481,30 +478,6 @@
    "print_width": "120px",
    "reqd": 1,
    "width": "120px"
-  },
-  {
-   "default": "0",
-   "fieldname": "is_fixed_asset",
-   "fieldtype": "Check",
-   "hidden": 1,
-   "label": "Is Fixed Asset",
-   "no_copy": 1,
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "asset",
-   "fieldtype": "Link",
-   "label": "Asset",
-   "no_copy": 1,
-   "options": "Asset"
-  },
-  {
-   "depends_on": "asset",
-   "fieldname": "finance_book",
-   "fieldtype": "Link",
-   "label": "Finance Book",
-   "options": "Finance Book"
   },
   {
    "fieldname": "col_break4",
