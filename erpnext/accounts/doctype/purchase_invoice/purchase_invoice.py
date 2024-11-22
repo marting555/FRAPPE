@@ -853,7 +853,7 @@ class PurchaseInvoice(BuyingController):
 						else grand_total,
 						"against_voucher": against_voucher,
 						"against_voucher_type": self.doctype,
-						# "project": self.project,
+						"project": self.get("project") if "projects" in frappe.get_installed_apps() else "",
 						"cost_center": self.cost_center,
 					},
 					self.party_account_currency,
@@ -919,7 +919,7 @@ class PurchaseInvoice(BuyingController):
 									"account": warehouse_account[item.warehouse]["account"],
 									"against": warehouse_account[item.from_warehouse]["account"],
 									"cost_center": item.cost_center,
-									# "project": item.project or self.project,
+									"project": item.project or self.get("project") if "projects" in frappe.get_installed_apps() else "",
 									"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
 									"debit": warehouse_debit_amount,
 								},
@@ -939,7 +939,7 @@ class PurchaseInvoice(BuyingController):
 									"account": warehouse_account[item.from_warehouse]["account"],
 									"against": warehouse_account[item.warehouse]["account"],
 									"cost_center": item.cost_center,
-									# "project": item.project or self.project,
+									"project": item.project or self.get("project") if "projects" in frappe.get_installed_apps() else "",
 									"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
 									"debit": -1 * flt(credit_amount, item.precision("base_net_amount")),
 								},
@@ -958,7 +958,7 @@ class PurchaseInvoice(BuyingController):
 										"debit": flt(item.base_net_amount, item.precision("base_net_amount")),
 										"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
 										"cost_center": item.cost_center,
-										"project": item.project,
+										"project": item.project if "projects" in frappe.get_installed_apps() else "",
 									},
 									account_currency,
 									item=item,
@@ -975,7 +975,7 @@ class PurchaseInvoice(BuyingController):
 										"debit": warehouse_debit_amount,
 										"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
 										"cost_center": item.cost_center,
-										# "project": item.project or self.project,
+										"project": item.project or self.get("project") if "projects" in frappe.get_installed_apps() else "",
 									},
 									account_currency,
 									item=item,
@@ -995,7 +995,7 @@ class PurchaseInvoice(BuyingController):
 											"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
 											"credit": flt(amount["base_amount"]),
 											"credit_in_account_currency": flt(amount["amount"]),
-											# "project": item.project or self.project,
+											"project": item.project or self.get("project") if "projects" in frappe.get_installed_apps() else ""
 										},
 										item=item,
 									)
@@ -1014,7 +1014,7 @@ class PurchaseInvoice(BuyingController):
 									"account": supplier_warehouse_account,
 									"against": item.expense_account,
 									"cost_center": item.cost_center,
-									# "project": item.project or self.project,
+									"project": item.project or self.get("project") if "projects" in frappe.get_installed_apps() else "",
 									"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
 									"credit": flt(item.rm_supp_cost),
 								},
@@ -1043,7 +1043,7 @@ class PurchaseInvoice(BuyingController):
 									"against": self.supplier,
 									"debit": amount,
 									"cost_center": item.cost_center,
-									# "project": item.project or self.project,
+									"project": item.project or self.get("project") if "projects" in frappe.get_installed_apps() else "",
 								},
 								account_currency,
 								item=item,
@@ -1068,7 +1068,7 @@ class PurchaseInvoice(BuyingController):
 											"against": self.supplier,
 											"debit": discrepancy_caused_by_exchange_rate_difference,
 											"cost_center": item.cost_center,
-											# "project": item.project or self.project,
+											"project": item.project or self.get("project") if "projects" in frappe.get_installed_apps() else "",
 										},
 										account_currency,
 										item=item,
@@ -1081,7 +1081,7 @@ class PurchaseInvoice(BuyingController):
 											"against": self.supplier,
 											"credit": discrepancy_caused_by_exchange_rate_difference,
 											"cost_center": item.cost_center,
-											# "project": item.project or self.project,
+											"project": item.project or self.get("project") if "projects" in frappe.get_installed_apps() else "",
 										},
 										account_currency,
 										item=item,
@@ -1114,7 +1114,7 @@ class PurchaseInvoice(BuyingController):
 									"debit": flt(item.item_tax_amount, item.precision("item_tax_amount")),
 									"remarks": self.remarks or _("Accounting Entry for Stock"),
 									"cost_center": self.cost_center,
-									# "project": item.project or self.project,
+									"project": item.project or self.get("project") if "projects" in frappe.get_installed_apps() else "",
 								},
 								item=item,
 							)
@@ -1205,7 +1205,7 @@ class PurchaseInvoice(BuyingController):
 						"debit": stock_adjustment_amt,
 						"remarks": self.get("remarks") or _("Stock Adjustment"),
 						"cost_center": item.cost_center,
-						# "project": item.project or self.project,
+						"project": item.project or self.get("project") if "projects" in frappe.get_installed_apps() else "",
 					},
 					account_currency,
 					item=item,
@@ -1344,7 +1344,7 @@ class PurchaseInvoice(BuyingController):
 						else self.name,
 						"against_voucher_type": self.doctype,
 						"cost_center": self.cost_center,
-						# "project": self.project,
+						"project": self.get("project") if "projects" in frappe.get_installed_apps() else "",
 					},
 					self.party_account_currency,
 					item=self,
@@ -1389,7 +1389,7 @@ class PurchaseInvoice(BuyingController):
 						else self.name,
 						"against_voucher_type": self.doctype,
 						"cost_center": self.cost_center,
-						# "project": self.project,
+						"project": self.get("project") if "projects" in frappe.get_installed_apps() else "",
 					},
 					self.party_account_currency,
 					item=self,
@@ -1910,7 +1910,7 @@ def update_actual_overall_budget(self,event):
 						j.update({
 							"credit":j.get("credit") + i.get("net_amount"),
 							"txn_date":self.posting_date,
-							"project":i.get("project"),
+							"project":i.get("project") if "projects" in frappe.get_installed_apps() else "",
 							"voucher_type":self.doctype,
 							"voucher_name":self.name,
 							"wbs_name": wbs_name,
@@ -1957,7 +1957,7 @@ def update_actual_overall_budget(self,event):
 									"credit":j.get("credit") + pi_amt,
 									"debit_po":j.get("debit_po") + debit_amt,
 									"txn_date":self.posting_date,
-									"project":i.get("project"),
+									"project":i.get("project") if "projects" in frappe.get_installed_apps() else "",
 									"voucher_type":self.doctype,
 									"voucher_name":self.name,
 									"wbs_name": wbs_name,
@@ -1992,7 +1992,8 @@ def update_actual_overall_budget(self,event):
 def create_budget_entry(data,event,company):
 	if data.get("credit") > 0.0 and data.get("wbs_id"):
 		bgt_ent = frappe.new_doc("Budget Entry")
-		bgt_ent.project = data.get("project")
+		if "projects" in frappe.get_installed_apps():
+			bgt_ent.project = data.get("project")
 		bgt_ent.wbs = data.get("wbs_id")
 		bgt_ent.date = data.get("txn_date")
 		bgt_ent.document_date = data.get("document_date")
