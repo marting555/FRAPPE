@@ -15,21 +15,12 @@ Remember, deprecated doesn't mean useless - it just means these functions are en
 Enjoy your stay in the Deprecation Dumpster, where every function gets a second chance to shine (or at least, to not break everything).
 """
 
+import functools
 import re
 import sys
 import warnings
 
-
-def colorize(text, color_code):
-	if sys.stdout.isatty():
-		return f"\033[{color_code}m{text}\033[0m"
-	return text
-
-
-class Color:
-	RED = 91
-	YELLOW = 93
-	CYAN = 96
+from frappe.deprecation_dumpster import Color, _deprecated, colorize
 
 
 # we use Warning because DeprecationWarning has python default filters which would exclude them from showing
@@ -81,34 +72,6 @@ def __get_deprecation_class(graduation: str | None = None, class_name: str | Non
 		return getattr(current_module, class_name)
 	except AttributeError:
 		return PendingDeprecationWarning
-
-
-try:
-	# since python 3.13, PEP 702
-	from warnings import deprecated as _deprecated
-except ImportError:
-	import functools
-	import warnings
-	from collections.abc import Callable
-	from typing import Optional, TypeVar, Union, overload
-
-	T = TypeVar("T", bound=Callable)
-
-	def _deprecated(message: str, category=ERPNextDeprecationWarning, stacklevel=1) -> Callable[[T], T]:
-		def decorator(func: T) -> T:
-			@functools.wraps(func)
-			def wrapper(*args, **kwargs):
-				if message:
-					warning_msg = f"{func.__name__} is deprecated.\n{message}"
-				else:
-					warning_msg = f"{func.__name__} is deprecated."
-				warnings.warn(warning_msg, category=category, stacklevel=stacklevel + 1)
-				return func(*args, **kwargs)
-
-			return wrapper
-			wrapper.__deprecated__ = True  # hint for the type checker
-
-		return decorator
 
 
 def deprecated(original: str, marked: str, graduation: str, msg: str, stacklevel: int = 1):
