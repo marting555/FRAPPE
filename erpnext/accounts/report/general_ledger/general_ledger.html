@@ -1,5 +1,4 @@
-<!-- Modified on 20-11-2024
-
+<!-- Modified on 25-11-2024
 -->
 
 <style type="text/css">
@@ -23,9 +22,6 @@
         @page {
             size: A4; /* Use fixed A4 page size */
             margin-top: 10mm;
-            margin-right: 10mm;
-            margin-bottom: 10mm;
-            margin-left: 10mm;
         }
 
         /* Force a page break before elements with the class "page-break" */
@@ -136,8 +132,7 @@
 								{%= frappe.datetime.str_to_user(filters.from_date) %}
 							{% } %}
 						</td>
-						<td style="text-align: left; border-right: 1px dotted black"
-							{% if(filters.show_remarks) { %} colspan="2" {% } %}><b>
+						<td style="text-align: left; border-right: 1px dotted black"><b>
 							{% if(i == l-2) { %}
 								{%= "Total" %}
 							{% } else { %}
@@ -148,6 +143,7 @@
 								{% } %}
 							{% } %}</b>
 						</td>
+						{% if(filters.show_remarks) { %} <td style="text-align: left; border-right: 1px dotted black"></td>{% } %}
 						<td style="text-align: right; border-right: 1px dotted black">
 							{% if(i != 0){ %}
 								{% if(i != l-1){ %}
