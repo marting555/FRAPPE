@@ -927,14 +927,6 @@
   {
    "fieldname": "column_break_ytgd",
    "fieldtype": "Column Break"
-<<<<<<< HEAD
-=======
-  },
-  {
-   "fieldname": "distributed_discount_amount",
-   "fieldtype": "Currency",
-   "label": "Distributed Discount Amount",
-   "options": "currency"
   },
   {
    "fieldname": "available_quantity_section",
@@ -953,7 +945,6 @@
    "no_copy": 1,
    "print_hide": 1,
    "read_only": 1
->>>>>>> d8b9aef14f (feat: available qty at company in sales transactions)
   }
  ],
  "idx": 1,
