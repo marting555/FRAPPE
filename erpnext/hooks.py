@@ -107,7 +107,7 @@ webform_list_context = "erpnext.controllers.website_list_for_contact.get_webform
 
 calendars = ["Task", "Work Order", "Sales Order", "Holiday List", "ToDo"]
 
-website_generators = ["BOM", "Sales Partner"]
+website_generators = ["BOM"]
 
 website_context = {
 	"favicon": "/assets/erpnext/images/erpnext-favicon.svg",

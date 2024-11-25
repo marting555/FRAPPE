@@ -303,7 +303,8 @@ class SalesInvoice(SellingController):
 			and not self.is_consolidated
 		):
 			validate_loyalty_points(self, self.loyalty_points)
-
+		
+		self.allow_write_off_only_on_pos()
 		self.reset_default_field_value("set_warehouse", "items", "warehouse")
 
 	def validate_accounts(self):
@@ -915,6 +916,11 @@ class SalesInvoice(SellingController):
 					raise_exception=1,
 				)
 
+	def allow_write_off_only_on_pos(self):
+		if not self.is_pos and self.write_off_account:
+			self.write_off_account = None
+	
+	
 	def validate_write_off_account(self):
 		if flt(self.write_off_amount) and not self.write_off_account:
 			self.write_off_account = frappe.get_cached_value("Company", self.company, "write_off_account")

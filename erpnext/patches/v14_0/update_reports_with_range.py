@@ -20,6 +20,10 @@ def update_reference_reports(reference_report):
 def update_report_json(report):
 	report_json = json.loads(report.json)
 	report_filter = report_json.get("filters")
+
+	if not report_filter:
+		return
+	
 	keys_to_pop = [key for key in report_filter if key.startswith("range")]
 	report_filter["range"] = ", ".join(str(report_filter.pop(key)) for key in keys_to_pop)
 	frappe.db.set_value("Report", report.name, "json", json.dumps(report_json))
