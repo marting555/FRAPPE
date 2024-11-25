@@ -48,11 +48,13 @@ frappe.ui.form.on('Quotation', {
 				}
 			}
 		});
+		frm.set_value('selling_price_list', "Retail");
 	},
 
 	refresh: function (frm) {
 		frm.trigger("set_label");
 		frm.trigger("set_dynamic_field_label");
+		frm.set_value('selling_price_list', "Retail");
 
 		let sbb_field = frm.get_docfield('packed_items', 'serial_and_batch_bundle');
 		if (sbb_field) {

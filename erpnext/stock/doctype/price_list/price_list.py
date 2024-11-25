@@ -67,3 +67,5 @@ def get_price_list_details(price_list):
 		frappe.cache().hset("price_list_details", price_list, price_list_details)
 
 	return price_list_details or {}
+
+
