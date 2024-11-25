@@ -63,6 +63,8 @@
   "rm_supp_cost",
   "warehouse_section",
   "warehouse",
+  "has_batch_no",
+  "has_serial_no",
   "add_serial_batch_bundle",
   "serial_and_batch_bundle",
   "use_serial_batch_fields",
@@ -110,7 +112,6 @@
   "column_break_38",
   "weight_uom",
   "accounting_dimensions_section",
-  "project",
   "work_breakdown_structure",
   "cost_center",
   "dimension_col_break",
@@ -445,7 +446,7 @@
    "print_hide": 1
   },
   {
-   "depends_on": "doc.use_serial_batch_fields === 1 && parent.update_stock === 1",
+   "depends_on": "doc.use_serial_batch_fields === 1 && doc.has_batch_no === 1 && parent.update_stock === 1",
    "fieldname": "batch_no",
    "fieldtype": "Link",
    "label": "Batch No",
@@ -457,13 +458,13 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "doc.use_serial_batch_fields === 1 && parent.update_stock === 1",
+   "depends_on": "doc.use_serial_batch_fields === 1 && doc.has_serial_no ===  && parent.update_stock === 1",
    "fieldname": "serial_no",
    "fieldtype": "Text",
    "label": "Serial No"
   },
   {
-   "depends_on": "doc.use_serial_batch_fields === 1 && parent.update_stock === 1",
+   "depends_on": "doc.use_serial_batch_fields === 1 && doc.has_serial_no === 1 && parent.update_stock === 1",
    "fieldname": "rejected_serial_no",
    "fieldtype": "Text",
    "label": "Rejected Serial No",
@@ -944,12 +945,28 @@
    "fieldtype": "Data",
    "label": "WBS Name",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "item_code.has_batch_no",
+   "fieldname": "has_batch_no",
+   "fieldtype": "Check",
+   "label": "Has Batch No",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fetch_from": "item_code.has_serial_no",
+   "fieldname": "has_serial_no",
+   "fieldtype": "Check",
+   "label": "Has Serial No",
+   "read_only": 1
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-11-10 22:36:33.008331",
+ "modified": "2024-11-20 13:22:37.979046",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice Item",

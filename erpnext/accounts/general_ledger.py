@@ -29,6 +29,7 @@ def make_gl_entries(
 	merge_entries=True,
 	update_outstanding="Yes",
 	from_repost=False,
+	clearing_date=None
 ):
 	if gl_map:
 		if not cancel:
@@ -44,7 +45,7 @@ def make_gl_entries(
 					update_outstanding=update_outstanding,
 					from_repost=from_repost,
 				)
-				save_entries(gl_map, adv_adj, update_outstanding, from_repost)
+				save_entries(gl_map, adv_adj, update_outstanding, from_repost, clearing_date=clearing_date)
 			# Post GL Map proccess there may no be any GL Entries
 			elif gl_map:
 				frappe.throw(
@@ -368,7 +369,8 @@ def update_net_values(entry):
 			entry.debit_in_account_currency = 0
 
 
-def save_entries(gl_map, adv_adj, update_outstanding, from_repost=False):
+
+def save_entries(gl_map, adv_adj, update_outstanding, from_repost=False, clearing_date=None):
 
 	process_debit_credit_difference(gl_map)
 
@@ -381,11 +383,13 @@ def save_entries(gl_map, adv_adj, update_outstanding, from_repost=False):
 
 	for entry in gl_map:
 		validate_allowed_dimensions(entry, dimension_filter_map)
-		make_entry(entry, adv_adj, update_outstanding, from_repost)
+		make_entry(entry, adv_adj, update_outstanding, from_repost, clearing_date)
 
 
-def make_entry(args, adv_adj, update_outstanding, from_repost=False):
+def make_entry(args, adv_adj, update_outstanding, from_repost=False, clearing_date=None):
 	gle = frappe.new_doc("GL Entry")
+	if args.is_cancelled == 0  and clearing_date:
+		gle.posting_date=clearing_date
 	gle.update(args)
 	gle.flags.ignore_permissions = 1
 	gle.flags.from_repost = from_repost

@@ -327,7 +327,7 @@ class PaymentRequest(Document):
 		payment_entry.update(
 			{
 				"cost_center": self.get("cost_center"),
-				"project": self.get("project"),
+				"project": self.get("project") if "projects" in frappe.get_installed_apps() else "",
 			}
 		)
 

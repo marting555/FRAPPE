@@ -49,7 +49,10 @@ class SalesInvoice(SellingController):
 		from erpnext.accounts.doctype.sales_invoice_payment.sales_invoice_payment import SalesInvoicePayment
 		from erpnext.accounts.doctype.sales_invoice_timesheet.sales_invoice_timesheet import SalesInvoiceTimesheet
 		from erpnext.accounts.doctype.sales_taxes_and_charges.sales_taxes_and_charges import SalesTaxesandCharges
+		from erpnext.accounts.doctype.sales_invoice_timesheet.sales_invoice_timesheet import SalesInvoiceTimesheet
+		from erpnext.accounts.doctype.sales_taxes_and_charges.sales_taxes_and_charges import SalesTaxesandCharges
 		from erpnext.stock.doctype.packed_item.packed_item import PackedItem
+		from frappe.types import DF
 		from frappe.types import DF
 
 		account_for_change_amount: DF.Link | None
@@ -73,7 +76,6 @@ class SalesInvoice(SellingController):
 		base_total: DF.Currency
 		base_total_taxes_and_charges: DF.Currency
 		base_write_off_amount: DF.Currency
-		campaign: DF.Link | None
 		cash_bank_account: DF.Link | None
 		change_amount: DF.Currency
 		company: DF.Link
@@ -280,7 +282,6 @@ class SalesInvoice(SellingController):
 			)
 
 		self.set_against_income_account()
-		self.validate_time_sheets_are_submitted()
 		self.validate_multiple_billing("Delivery Note", "dn_detail", "amount")
 		if not self.is_return:
 			self.validate_serial_numbers()
@@ -415,7 +416,6 @@ class SalesInvoice(SellingController):
 		if not cint(self.is_pos) == 1 and not self.is_return:
 			self.update_against_document_in_jv()
 
-		self.update_time_sheet(self.name)
 
 		if frappe.db.get_single_value("Selling Settings", "sales_update_frequency") == "Each Transaction":
 			update_company_current_month_sales(self.company)
@@ -470,7 +470,6 @@ class SalesInvoice(SellingController):
 		self.check_if_consolidated_invoice()
 
 		super().before_cancel()
-		self.update_time_sheet(None)
 
 	def on_cancel(self):
 		check_if_return_invoice_linked_with_payment_entry(self)
@@ -514,7 +513,6 @@ class SalesInvoice(SellingController):
 
 		unlink_inter_company_doc(self.doctype, self.name, self.inter_company_invoice_reference)
 
-		self.unlink_sales_invoice_from_timesheets()
 		self.ignore_linked_doctypes = (
 			"GL Entry",
 			"Stock Ledger Entry",
@@ -590,17 +588,6 @@ class SalesInvoice(SellingController):
 		if validate_against_credit_limit:
 			check_credit_limit(self.customer, self.company, bypass_credit_limit_check_at_sales_order)
 
-	def unlink_sales_invoice_from_timesheets(self):
-		for row in self.timesheets:
-			timesheet = frappe.get_doc("Timesheet", row.time_sheet)
-			for time_log in timesheet.time_logs:
-				if time_log.sales_invoice == self.name:
-					time_log.sales_invoice = None
-			timesheet.calculate_total_amounts()
-			timesheet.calculate_percentage_billed()
-			timesheet.flags.ignore_validate_update_after_submit = True
-			timesheet.set_status()
-			timesheet.db_update_all()
 
 	@frappe.whitelist()
 	def set_missing_values(self, for_validate=False):
@@ -629,25 +616,6 @@ class SalesInvoice(SellingController):
 				"allow_print_before_pay": pos.get("allow_print_before_pay"),
 			}
 
-	def update_time_sheet(self, sales_invoice):
-		for d in self.timesheets:
-			if d.time_sheet:
-				timesheet = frappe.get_doc("Timesheet", d.time_sheet)
-				self.update_time_sheet_detail(timesheet, d, sales_invoice)
-				timesheet.calculate_total_amounts()
-				timesheet.calculate_percentage_billed()
-				timesheet.flags.ignore_validate_update_after_submit = True
-				timesheet.set_status()
-				timesheet.db_update_all()
-
-	def update_time_sheet_detail(self, timesheet, args, sales_invoice):
-		for data in timesheet.time_logs:
-			if (
-				(self.project and args.timesheet_detail == data.name)
-				or (not self.project and not data.sales_invoice)
-				or (not sales_invoice and data.sales_invoice == self.name)
-			):
-				data.sales_invoice = sales_invoice
 
 	def on_update_after_submit(self):
 		fields_to_check = [
@@ -684,12 +652,6 @@ class SalesInvoice(SellingController):
 			if not payment.account:
 				payment.account = get_bank_cash_account(payment.mode_of_payment, self.company).get("account")
 
-	def validate_time_sheets_are_submitted(self):
-		for data in self.timesheets:
-			if data.time_sheet:
-				status = frappe.db.get_value("Timesheet", data.time_sheet, "status")
-				if status not in ["Submitted", "Payslip"]:
-					frappe.throw(_("Timesheet {0} is already completed or cancelled").format(data.time_sheet))
 
 	def set_pos_fields(self, for_validate=False):
 		"""Set retail related fields from POS Profiles"""
@@ -1143,7 +1105,7 @@ class SalesInvoice(SellingController):
 						"against_voucher": against_voucher,
 						"against_voucher_type": self.doctype,
 						"cost_center": self.cost_center,
-						"project": self.project,
+						"project": self.get("project") if "projects" in frappe.get_installed_apps() else "",
 					},
 					self.party_account_currency,
 					item=self,
@@ -1228,7 +1190,7 @@ class SalesInvoice(SellingController):
 								else flt(amount, item.precision("net_amount"))
 							),
 							"cost_center": item.cost_center,
-							"project": item.project or self.project,
+							"project": item.project or self.get("project") if "projects" in frappe.get_installed_apps() else "",
 						},
 						account_currency,
 						item=item,
@@ -1355,7 +1317,7 @@ class SalesInvoice(SellingController):
 							else self.name,
 							"against_voucher_type": self.doctype,
 							"cost_center": self.cost_center,
-							# "project": self.project,
+							"project": self.get("project") if "projects" in frappe.get_installed_apps() else "",
 						},
 						self.party_account_currency,
 						item=self,
@@ -1402,7 +1364,7 @@ class SalesInvoice(SellingController):
 						"against_voucher": self.return_against if cint(self.is_return) else self.name,
 						"against_voucher_type": self.doctype,
 						"cost_center": self.cost_center,
-						# "project": self.project,
+						"project": self.get("project") if "projects" in frappe.get_installed_apps() else "",
 					},
 					self.party_account_currency,
 					item=self,
@@ -1720,10 +1682,6 @@ class SalesInvoice(SellingController):
 		if update:
 			self.db_set("status", self.status, update_modified=update_modified)
 
-	@frappe.whitelist()
-	def get_payment_discount_term(doc):
-		discount_term_table =frappe.db.get_values("Discount Terms", {"parent" : doc.payment_term },"*", order_by = "no_of_days ASC")
-		return discount_term_table
 
 
 def get_total_in_party_account_currency(doc):

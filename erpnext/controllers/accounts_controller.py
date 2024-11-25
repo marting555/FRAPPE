@@ -524,6 +524,9 @@ class AccountsController(TransactionBase):
 	def calculate_taxes_and_totals(self):
 		from erpnext.controllers.taxes_and_totals import calculate_taxes_and_totals
 
+		if self.taxes_and_charges and not len(self.get("taxes")):
+			self.append_taxes_from_master()
+
 		calculate_taxes_and_totals(self)
 
 		if self.doctype in (

@@ -2038,6 +2038,42 @@ class TestDeliveryNote(FrappeTestCase):
 			self.assertEqual(getdate(sn.warranty_expiry_date), getdate(add_days(nowdate(), 100)))
 			self.assertEqual(sn.status, "Delivered")
 			self.assertEqual(sn.warranty_period, 100)
+	
+	def test_item_tax_template_delivery_note(self):
+		if not frappe.db.exists("Item", "_Test Fabric Item Tax"):
+			item_code = create_item_with_tax()
+			create_stock_entry_for_item_with_tax(item_code)
+		if not frappe.db.exists("Item Tax Template", {"title": "_Test Fabric Tax Template"}):
+			create_item_tax_template()
+
+		new_item_with_tax = update_item_tax_table()
+		
+		dn = create_delivery_note(
+			do_not_save=True,
+			do_not_submit = True
+		)
+		dn.append('items',{
+			"item_code": new_item_with_tax.name,
+			"rate": 100,
+			"qty": 1,
+			"warehouse":'_Test Warehouse - _TC'
+		})
+		dn.taxes_and_charges=''
+		dn.append(
+			"taxes",
+			{
+				"account_head": "_Test Account Service Tax - _TC",
+				"charge_type": "On Net Total",
+				"cost_center": "_Test Cost Center - _TC",
+				"description": "Service Duty",
+				"doctype": "Purchase Taxes and Charges",
+				"rate": 10,
+			},
+		)
+		dn.save()
+		self.assertEqual(dn.grand_total,220)
+		self.assertEqual(dn.total_taxes_and_charges,20)
+
 
 
 def create_delivery_note(**args):
@@ -2111,5 +2147,52 @@ def create_delivery_note(**args):
 
 	return dn
 
+def create_item_with_tax():
+	item_code = make_item(
+				"_Test Fabric Item Tax",
+				properties={
+				"has_serial_no": 1,
+				"serial_no_series": "TWE.#####",
+				"is_stock_item": 1,
+				"warranty_period": 100,
+			},
+	).name
+	return item_code
+
+def create_item_tax_template():
+	frappe.get_doc(
+					{
+						"doctype": "Item Tax Template",
+						"title": "_Test Fabric Tax Template",
+						"company": "_Test Company",
+						"taxes": [
+							{
+								"tax_type": "_Test Account Service Tax - _TC",
+								"tax_rate": 10,
+							}
+						],
+					}
+				).insert()
+
+def create_stock_entry_for_item_with_tax(item_code):
+	make_stock_entry(
+					item_code=item_code,
+					target="_Test Warehouse - _TC",
+					qty=100,
+					basic_rate=50,
+					posting_date=nowdate(),
+				)
+
+def update_item_tax_table():
+	new_item_with_tax = frappe.get_doc("Item", "_Test Fabric Item Tax")
+	if not frappe.db.exists(
+			"Item Tax",
+			{"item_tax_template": "_Test Fabric Tax Template - _TC", "parent": "_Test Fabric Item Tax"},
+		):
+			new_item_with_tax.append(
+				"taxes", {"item_tax_template": "_Test Fabric Tax Template - _TC", "valid_from": nowdate()}
+			)
+			new_item_with_tax.save()
+	return new_item_with_tax
 
 test_dependencies = ["Product Bundle"]

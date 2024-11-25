@@ -453,7 +453,7 @@ def _build_dimensions_dict_for_exc_gain_loss(
 
 
 def reconcile_against_document(
-	args, skip_ref_details_update_for_pe=False, active_dimensions=None
+	args, skip_ref_details_update_for_pe=False, active_dimensions=None, clearing_date=None
 ):  # nosemgrep
 	"""
 	Cancel PE or JV, Update against document, split if required and resubmit
@@ -473,11 +473,15 @@ def reconcile_against_document(
 		# cancel advance entry
 		doc = frappe.get_doc(voucher_type, voucher_no)
 		frappe.flags.ignore_party_validation = True
+		repost_whole_ledger = any([x.voucher_detail_no for x in entries])
 
 		# For payments with `Advance` in separate account feature enabled, only new ledger entries are posted for each reference.
 		# No need to cancel/delete payment ledger entries
 		if voucher_type == "Payment Entry" and doc.book_advance_payments_in_separate_party_account:
-			doc.make_advance_gl_entries(cancel=1)
+			if repost_whole_ledger:
+				doc.make_gl_entries(cancel=1, clearing_date=clearing_date)
+			else:
+				doc.make_advance_gl_entries(cancel=1, clearing_date=clearing_date)
 		else:
 			_delete_pl_entries(voucher_type, voucher_no)
 
@@ -513,7 +517,10 @@ def reconcile_against_document(
 		if voucher_type == "Payment Entry" and doc.book_advance_payments_in_separate_party_account:
 			# both ledgers must be posted to for `Advance` in separate account feature
 			# TODO: find a more efficient way post only for the new linked vouchers
-			doc.make_advance_gl_entries()
+			if repost_whole_ledger:
+				doc.make_gl_entries(clearing_date=clearing_date)
+			else:
+				doc.make_advance_gl_entries(clearing_date=clearing_date)
 		else:
 			gl_map = doc.build_gl_map()
 			# Make sure there is no overallocation
@@ -1060,7 +1067,7 @@ def get_held_invoices(party_type, party):
 
 	if party_type == "Supplier":
 		held_invoices = frappe.db.sql(
-			"select name from `tabPurchase Invoice` where on_hold = 1 and release_date IS NOT NULL and release_date > CURDATE()",
+			"select name from `tabPurchase Invoice` where on_hold = 1 and release_date IS NOT NULL and release_date > CURRENT_DATE",
 			as_dict=1,
 		)
 		held_invoices = set(d["name"] for d in held_invoices)
@@ -1176,15 +1183,26 @@ def get_children(doctype, parent, company, is_root=False):
 	fields = ["name as value", "is_group as expandable"]
 	filters = [["docstatus", "<", 2]]
 
-	filters.append([f'ifnull(`{parent_fieldname}`,"")', "=", "" if is_root else parent])
-
-	if is_root:
-		fields += ["root_type", "report_type", "account_currency"] if doctype == "Account" else []
-		filters.append(["company", "=", company])
-
+	if frappe.db.db_type == "postgres":
+		if is_root:
+			fields += ["root_type", "report_type", "account_currency"] if doctype == "Account" else []
+			filters.append(["company", "=", company])
+			# Combine conditions for NULL and empty into one filter
+			filters.append([f"ifnull({parent_fieldname}, '')", "=", ""])
+		else:
+			fields += ["root_type", "account_currency"] if doctype == "Account" else []
+			fields += [f"{parent_fieldname} as parent"]
+			filters.append([parent_fieldname, "=", parent])
 	else:
-		fields += ["root_type", "account_currency"] if doctype == "Account" else []
-		fields += [parent_fieldname + " as parent"]
+		filters.append([f'ifnull(`{parent_fieldname}`,"")', "=", "" if is_root else parent])
+
+		if is_root:
+			fields += ["root_type", "report_type", "account_currency"] if doctype == "Account" else []
+			filters.append(["company", "=", company])
+
+		else:
+			fields += ["root_type", "account_currency"] if doctype == "Account" else []
+			fields += [parent_fieldname + " as parent"]
 
 	acc = frappe.get_list(doctype, fields=fields, filters=filters)
 
@@ -1436,7 +1454,7 @@ def sort_stock_vouchers_by_posting_date(stock_vouchers: list[tuple[str, str]]) -
 		frappe.qb.from_(sle)
 		.select(sle.voucher_type, sle.voucher_no, sle.posting_date, sle.posting_time, sle.creation)
 		.where((sle.is_cancelled == 0) & (sle.voucher_no.isin(voucher_nos)))
-		.groupby(sle.voucher_type, sle.voucher_no)
+		.groupby(sle.voucher_type, sle.voucher_no, sle.posting_date, sle.posting_time, sle.creation, sle.posting_datetime)
 		.orderby(sle.posting_datetime)
 		.orderby(sle.creation)
 	).run(as_dict=True)
@@ -1464,20 +1482,38 @@ def get_future_stock_vouchers(posting_date, posting_time, for_warehouses=None, f
 		condition += " and company = %s"
 		values.append(company)
 
-	future_stock_vouchers = frappe.db.sql(
-		f"""select distinct sle.voucher_type, sle.voucher_no
-		from `tabStock Ledger Entry` sle
-		where
-			timestamp(sle.posting_date, sle.posting_time) >= timestamp(%s, %s)
-			and is_cancelled = 0
-			{condition}
-		order by timestamp(sle.posting_date, sle.posting_time) asc, creation asc for update""",
-		tuple([posting_date, posting_time, *values]),
-		as_dict=True,
-	)
+	if frappe.db.db_type == 'postgres':
+		future_stock_vouchers = frappe.db.sql(
+			f"""SELECT subquery.voucher_type, subquery.voucher_no
+			FROM (
+				SELECT sle.voucher_type, sle.voucher_no, 
+					TO_TIMESTAMP(sle.posting_date::TEXT || ' ' || sle.posting_time::TEXT, 'YYYY-MM-DD HH24:MI:SS') AS posting_timestamp,
+					sle.creation
+				FROM `tabStock Ledger Entry` sle
+				WHERE
+					TO_TIMESTAMP(sle.posting_date::TEXT || ' ' || sle.posting_time::TEXT, 'YYYY-MM-DD HH24:MI:SS') >= TO_TIMESTAMP(%s || ' ' || %s, 'YYYY-MM-DD HH24:MI:SS')
+					AND is_cancelled = 0
+					{condition}
+			) AS subquery
+			ORDER BY subquery.posting_timestamp ASC, subquery.creation ASC
+			FOR UPDATE""",
+			tuple([posting_date, posting_time, *values]),
+			as_dict=True,
+		)
+	else:
+		future_stock_vouchers = frappe.db.sql(
+			f"""select distinct sle.voucher_type, sle.voucher_no
+			from `tabStock Ledger Entry` sle
+			where
+				timestamp(sle.posting_date, sle.posting_time) >= timestamp(%s, %s)
+				and is_cancelled = 0
+				{condition}
+			order by timestamp(sle.posting_date, sle.posting_time) asc, creation asc for update""",
+			tuple([posting_date, posting_time, *values]),
+			as_dict=True,
+		)
 
 	return [(d.voucher_type, d.voucher_no) for d in future_stock_vouchers]
-
 
 def get_voucherwise_gl_entries(future_stock_vouchers, posting_date):
 	"""Get voucherwise list of GL entries.
@@ -1820,7 +1856,7 @@ def delink_original_entry(pl_entry, partial_cancel=False):
 		ple = qb.DocType("Payment Ledger Entry")
 		query = (
 			qb.update(ple)
-			.set(ple.delinked, True)
+			.set(ple.delinked, 1)
 			.set(ple.modified, now())
 			.set(ple.modified_by, frappe.session.user)
 			.where(
@@ -1927,9 +1963,9 @@ class QueryPaymentLedger:
 				.where(Criterion.all(self.common_filter))
 				.where(Criterion.all(self.dimensions_filter))
 				.where(Criterion.all(self.voucher_posting_date))
-				.groupby(ple.against_voucher_type, ple.against_voucher_no, ple.party_type, ple.party)
+				.groupby(ple.posting_date, ple.against_voucher_type, ple.against_voucher_no, ple.party_type, ple.party)
 				.orderby(ple.posting_date, ple.voucher_no)
-				.having(qb.Field("amount_in_account_currency") > 0)
+				.having(Sum(ple.amount_in_account_currency) > 0)
 				.limit(self.limit)
 				.run()
 			)
@@ -1960,7 +1996,7 @@ class QueryPaymentLedger:
 			.where(Criterion.all(self.common_filter))
 			.where(Criterion.all(self.dimensions_filter))
 			.where(Criterion.all(self.voucher_posting_date))
-			.groupby(ple.voucher_type, ple.voucher_no, ple.party_type, ple.party)
+			.groupby(ple.account, ple.voucher_type, ple.voucher_no, ple.party_type, ple.party, ple.posting_date, ple.due_date, ple.account_currency, ple.cost_center)
 		)
 
 		# build query for voucher outstanding
@@ -1981,7 +2017,7 @@ class QueryPaymentLedger:
 			.where(ple.delinked == 0)
 			.where(Criterion.all(filter_on_against_voucher_no))
 			.where(Criterion.all(self.common_filter))
-			.groupby(ple.against_voucher_type, ple.against_voucher_no, ple.party_type, ple.party)
+			.groupby(ple.account, ple.against_voucher_type, ple.against_voucher_no, ple.party_type,ple.party, ple.posting_date,  ple.due_date, ple.account_currency )
 		)
 
 		# build CTE for combining voucher amount and outstanding
@@ -2017,6 +2053,21 @@ class QueryPaymentLedger:
 				Table("vouchers").currency,
 				Table("vouchers").cost_center.as_("cost_center"),
 			)
+			.groupby(
+				Table("vouchers").account,
+				Table("vouchers").voucher_type,
+				Table("vouchers").voucher_no,
+				Table("vouchers").party_type,
+				Table("vouchers").party,
+				Table("vouchers").posting_date,
+				Table("vouchers").due_date,
+				Table("vouchers").currency,
+				Table("vouchers").cost_center,
+				Table("vouchers").amount,
+				Table("outstanding").amount,
+				Table("vouchers").amount_in_account_currency,
+				Table("outstanding").amount_in_account_currency
+					)
 			.where(Criterion.all(filter_on_outstanding_amount))
 		)
 
@@ -2025,14 +2076,14 @@ class QueryPaymentLedger:
 		if self.get_invoices:
 			self.cte_query_voucher_amount_and_outstanding = (
 				self.cte_query_voucher_amount_and_outstanding.having(
-					qb.Field("outstanding_in_account_currency") > 0
+					(Table("outstanding").amount_in_account_currency > 0)
 				)
 			)
 		# only fetch payments
 		elif self.get_payments:
 			self.cte_query_voucher_amount_and_outstanding = (
 				self.cte_query_voucher_amount_and_outstanding.having(
-					qb.Field("outstanding_in_account_currency") < 0
+					(Table("outstanding").amount_in_account_currency < 0)
 				)
 			)
 

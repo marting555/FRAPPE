@@ -2128,7 +2128,15 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		so.additional_discount_percentage = 10
 		so.save()
 		self.assertEqual(so.grand_total,900)
-		
+	
+	def test_line_item_discount(self):
+		make_item_price()
+		so = make_sales_order(qty=1, rate=90, do_not_save=True)
+		so.save()
+		self.assertEqual(so.items[0].discount_amount,10)
+		so.items[0].rate = 110
+		so.save()
+		self.assertEqual(so.items[0].margin_rate_or_amount,10)	
 
 def automatically_fetch_payment_terms(enable=1):
 	accounts_settings = frappe.get_doc("Accounts Settings")

@@ -25,25 +25,16 @@ class POSInvoice(SalesInvoice):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
 		from erpnext.accounts.doctype.payment_schedule.payment_schedule import PaymentSchedule
 		from erpnext.accounts.doctype.pos_invoice_item.pos_invoice_item import POSInvoiceItem
 		from erpnext.accounts.doctype.pricing_rule_detail.pricing_rule_detail import PricingRuleDetail
-		from erpnext.accounts.doctype.sales_invoice_advance.sales_invoice_advance import (
-			SalesInvoiceAdvance,
-		)
-		from erpnext.accounts.doctype.sales_invoice_payment.sales_invoice_payment import (
-			SalesInvoicePayment,
-		)
-		from erpnext.accounts.doctype.sales_invoice_timesheet.sales_invoice_timesheet import (
-			SalesInvoiceTimesheet,
-		)
-		from erpnext.accounts.doctype.sales_taxes_and_charges.sales_taxes_and_charges import (
-			SalesTaxesandCharges,
-		)
+		from erpnext.accounts.doctype.sales_invoice_advance.sales_invoice_advance import SalesInvoiceAdvance
+		from erpnext.accounts.doctype.sales_invoice_payment.sales_invoice_payment import SalesInvoicePayment
+		from erpnext.accounts.doctype.sales_invoice_timesheet.sales_invoice_timesheet import SalesInvoiceTimesheet
+		from erpnext.accounts.doctype.sales_taxes_and_charges.sales_taxes_and_charges import SalesTaxesandCharges
 		from erpnext.selling.doctype.sales_team.sales_team import SalesTeam
 		from erpnext.stock.doctype.packed_item.packed_item import PackedItem
+		from frappe.types import DF
 
 		account_for_change_amount: DF.Link | None
 		additional_discount_percentage: DF.Float
@@ -66,7 +57,6 @@ class POSInvoice(SalesInvoice):
 		base_total: DF.Currency
 		base_total_taxes_and_charges: DF.Currency
 		base_write_off_amount: DF.Currency
-		campaign: DF.Link | None
 		cash_bank_account: DF.Link | None
 		change_amount: DF.Currency
 		commission_rate: DF.Float
@@ -131,7 +121,6 @@ class POSInvoice(SalesInvoice):
 		return_against: DF.Link | None
 		rounded_total: DF.Currency
 		rounding_adjustment: DF.Currency
-		sales_partner: DF.Link | None
 		sales_team: DF.Table[SalesTeam]
 		scan_barcode: DF.Data | None
 		select_print_heading: DF.Link | None
@@ -141,21 +130,7 @@ class POSInvoice(SalesInvoice):
 		shipping_address: DF.SmallText | None
 		shipping_address_name: DF.Link | None
 		shipping_rule: DF.Link | None
-		source: DF.Link | None
-		status: DF.Literal[
-			"",
-			"Draft",
-			"Return",
-			"Credit Note Issued",
-			"Consolidated",
-			"Submitted",
-			"Paid",
-			"Unpaid",
-			"Unpaid and Discounted",
-			"Overdue and Discounted",
-			"Overdue",
-			"Cancelled",
-		]
+		status: DF.Literal["", "Draft", "Return", "Credit Note Issued", "Consolidated", "Submitted", "Paid", "Unpaid", "Unpaid and Discounted", "Overdue and Discounted", "Overdue", "Cancelled"]
 		tax_category: DF.Link | None
 		tax_id: DF.Data | None
 		taxes: DF.Table[SalesTaxesandCharges]

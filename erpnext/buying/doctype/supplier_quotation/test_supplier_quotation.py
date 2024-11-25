@@ -5,6 +5,7 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 from erpnext.buying.doctype.supplier_quotation.supplier_quotation import make_quotation
+from frappe.utils import add_days, add_months, flt, getdate, nowdate
 
 
 class TestPurchaseOrder(FrappeTestCase):
@@ -46,5 +47,19 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(len(sq.get("items")), len(qt.get("items")))
 		self.assertEqual(sq.get("items")[0].item_code, qt.get("items")[0].item_code)
 		self.assertEqual(sq.get("items")[0].qty, qt.get("items")[0].qty)
+
+	# To check if valid_till is yesterday then document status should be Expired
+	def test_supplier_quotation_expiry(self):
+		from erpnext.buying.doctype.supplier_quotation.supplier_quotation import set_expired_status
+		yesterday = add_days(nowdate(), -1)
+
+		sq = frappe.copy_doc(test_records[0]).insert()
+		sq = frappe.get_doc("Supplier Quotation", sq.name)
+		sq.transaction_date=yesterday
+		sq.valid_till = yesterday
+		sq.submit()	
+		set_expired_status()
+		sq.reload()
+		self.assertEqual(sq.status, "Expired")
 
 test_records = frappe.get_test_records("Supplier Quotation")
