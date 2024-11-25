@@ -72,7 +72,6 @@ class PaymentRequest(Document):
 		payment_request_type: DF.Literal["Outward", "Inward"]
 		payment_url: DF.Data | None
 		print_format: DF.Literal[None]
-		project: DF.Link | None
 		reference_doctype: DF.Link | None
 		reference_name: DF.DynamicLink | None
 		status: DF.Literal[
@@ -364,7 +363,6 @@ class PaymentRequest(Document):
 		payment_entry.update(
 			{
 				"cost_center": self.get("cost_center"),
-				"project": self.get("project"),
 			}
 		)
 
@@ -608,7 +606,6 @@ def make_payment_request(**args):
 		pr.update(
 			{
 				"cost_center": ref_doc.get("cost_center"),
-				"project": ref_doc.get("project"),
 			}
 		)
 
