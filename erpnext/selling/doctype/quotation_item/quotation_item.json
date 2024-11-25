@@ -666,14 +666,6 @@
    "label": "Has Alternative Item",
    "print_hide": 1,
    "read_only": 1
-<<<<<<< HEAD
-=======
-  },
-  {
-   "fieldname": "distributed_discount_amount",
-   "fieldtype": "Currency",
-   "label": "Distributed Discount Amount",
-   "options": "currency"
   },
   {
    "fieldname": "available_quantity_section",
@@ -693,17 +685,12 @@
    "print_hide": 1,
    "read_only": 1,
    "report_hide": 1
->>>>>>> d8b9aef14f (feat: available qty at company in sales transactions)
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
-<<<<<<< HEAD
- "modified": "2023-11-14 18:24:24.619832",
-=======
- "modified": "2024-11-24 14:18:43.952844",
->>>>>>> d8b9aef14f (feat: available qty at company in sales transactions)
+ "modified": "2024-11-24 15:18:43.952844",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Quotation Item",
