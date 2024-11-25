@@ -13,6 +13,7 @@ from frappe.utils.background_jobs import enqueue, is_job_enqueued
 from frappe.utils.scheduler import is_scheduler_inactive
 
 from erpnext.accounts.doctype.pos_profile.pos_profile import required_accounting_dimensions
+from erpnext.controllers.taxes_and_totals import ItemWiseTaxDetail
 
 
 class POSInvoiceMergeLog(Document):
@@ -54,7 +55,7 @@ class POSInvoiceMergeLog(Document):
 		for key, value in pos_occurences.items():
 			if len(value) > 1:
 				error_list.append(
-					_("{} is added multiple times on rows: {}".format(frappe.bold(key), frappe.bold(value)))
+					_("{0} is added multiple times on rows: {1}").format(frappe.bold(key), frappe.bold(value))
 				)
 
 		if error_list:
@@ -81,7 +82,9 @@ class POSInvoiceMergeLog(Document):
 			bold_pos_invoice = frappe.bold(d.pos_invoice)
 			bold_status = frappe.bold(status)
 			if docstatus != 1:
-				frappe.throw(_("Row #{}: POS Invoice {} is not submitted yet").format(d.idx, bold_pos_invoice))
+				frappe.throw(
+					_("Row #{}: POS Invoice {} is not submitted yet").format(d.idx, bold_pos_invoice)
+				)
 			if status == "Consolidated":
 				frappe.throw(
 					_("Row #{}: POS Invoice {} has been {}").format(d.idx, bold_pos_invoice, bold_status)
@@ -95,20 +98,21 @@ class POSInvoiceMergeLog(Document):
 				return_against_status = frappe.db.get_value("POS Invoice", return_against, "status")
 				if return_against_status != "Consolidated":
 					# if return entry is not getting merged in the current pos closing and if it is not consolidated
-					bold_unconsolidated = frappe.bold("not Consolidated")
-					msg = _("Row #{}: Original Invoice {} of return invoice {} is {}.").format(
-						d.idx, bold_return_against, bold_pos_invoice, bold_unconsolidated
-					)
+					msg = _(
+						"Row #{}: The original Invoice {} of return invoice {} is not consolidated."
+					).format(d.idx, bold_return_against, bold_pos_invoice)
 					msg += " "
-					msg += _("Original invoice should be consolidated before or along with the return invoice.")
+					msg += _(
+						"The original invoice should be consolidated before or along with the return invoice."
+					)
 					msg += "<br><br>"
-					msg += _("You can add original invoice {} manually to proceed.").format(bold_return_against)
+					msg += _("You can add the original invoice {} manually to proceed.").format(
+						bold_return_against
+					)
 					frappe.throw(msg)
 
 	def on_submit(self):
-		pos_invoice_docs = [
-			frappe.get_cached_doc("POS Invoice", d.pos_invoice) for d in self.pos_invoices
-		]
+		pos_invoice_docs = [frappe.get_cached_doc("POS Invoice", d.pos_invoice) for d in self.pos_invoices]
 
 		returns = [d for d in pos_invoice_docs if d.get("is_return") == 1]
 		sales = [d for d in pos_invoice_docs if d.get("is_return") == 0]
@@ -124,11 +128,10 @@ class POSInvoiceMergeLog(Document):
 		self.update_pos_invoices(pos_invoice_docs, sales_invoice, credit_note)
 
 	def on_cancel(self):
-		pos_invoice_docs = [
-			frappe.get_cached_doc("POS Invoice", d.pos_invoice) for d in self.pos_invoices
-		]
+		pos_invoice_docs = [frappe.get_cached_doc("POS Invoice", d.pos_invoice) for d in self.pos_invoices]
 
 		self.update_pos_invoices(pos_invoice_docs)
+		self.serial_and_batch_bundle_reference_for_pos_invoice()
 		self.cancel_linked_invoices()
 
 	def process_merging_into_sales_invoice(self, data):
@@ -189,6 +192,7 @@ class POSInvoiceMergeLog(Document):
 				for i in items:
 					if (
 						i.item_code == item.item_code
+						and not i.serial_and_batch_bundle
 						and not i.serial_no
 						and not i.batch_no
 						and i.uom == item.uom
@@ -217,7 +221,9 @@ class POSInvoiceMergeLog(Document):
 				for t in taxes:
 					if t.account_head == tax.account_head and t.cost_center == tax.cost_center:
 						t.tax_amount = flt(t.tax_amount) + flt(tax.tax_amount_after_discount_amount)
-						t.base_tax_amount = flt(t.base_tax_amount) + flt(tax.base_tax_amount_after_discount_amount)
+						t.base_tax_amount = flt(t.base_tax_amount) + flt(
+							tax.base_tax_amount_after_discount_amount
+						)
 						update_item_wise_tax_detail(t, tax)
 						found = True
 				if not found:
@@ -308,6 +314,12 @@ class POSInvoiceMergeLog(Document):
 			doc.set_status(update=True)
 			doc.save()
 
+	def serial_and_batch_bundle_reference_for_pos_invoice(self):
+		for d in self.pos_invoices:
+			pos_invoice = frappe.get_doc("POS Invoice", d.pos_invoice)
+			for table_name in ["items", "packed_items"]:
+				pos_invoice.set_serial_and_batch_bundle(table_name)
+
 	def cancel_linked_invoices(self):
 		for si_name in [self.consolidated_invoice, self.consolidated_credit_note]:
 			if not si_name:
@@ -325,17 +337,14 @@ def update_item_wise_tax_detail(consolidate_tax_row, tax_row):
 		consolidated_tax_detail = {}
 
 	for item_code, tax_data in tax_row_detail.items():
+		tax_data = ItemWiseTaxDetail(**tax_data)
 		if consolidated_tax_detail.get(item_code):
-			consolidated_tax_data = consolidated_tax_detail.get(item_code)
-			consolidated_tax_detail.update(
-				{item_code: [consolidated_tax_data[0], consolidated_tax_data[1] + tax_data[1]]}
-			)
+			consolidated_tax_detail[item_code]["tax_amount"] += tax_data.tax_amount
+			consolidated_tax_detail[item_code]["net_amount"] += tax_data.net_amount
 		else:
-			consolidated_tax_detail.update({item_code: [tax_data[0], tax_data[1]]})
+			consolidated_tax_detail.update({item_code: tax_data})
 
-	consolidate_tax_row.item_wise_tax_detail = json.dumps(
-		consolidated_tax_detail, separators=(",", ":")
-	)
+	consolidate_tax_row.item_wise_tax_detail = json.dumps(consolidated_tax_detail)
 
 
 def get_all_unconsolidated_invoices():
@@ -380,9 +389,7 @@ def consolidate_pos_invoices(pos_invoices=None, closing_entry=None):
 
 	if len(invoices) >= 10 and closing_entry:
 		closing_entry.set_status(update=True, status="Queued")
-		enqueue_job(
-			create_merge_logs, invoice_by_customer=invoice_by_customer, closing_entry=closing_entry
-		)
+		enqueue_job(create_merge_logs, invoice_by_customer=invoice_by_customer, closing_entry=closing_entry)
 	else:
 		create_merge_logs(invoice_by_customer, closing_entry)
 
@@ -392,7 +399,7 @@ def unconsolidate_pos_invoices(closing_entry):
 		"POS Invoice Merge Log", filters={"pos_closing_entry": closing_entry.name}, pluck="name"
 	)
 
-	if len(merge_logs) >= 10:
+	if len(closing_entry.pos_transactions) >= 10:
 		closing_entry.set_status(update=True, status="Queued")
 		enqueue_job(cancel_merge_logs, merge_logs=merge_logs, closing_entry=closing_entry)
 	else:
@@ -432,7 +439,7 @@ def split_invoices(invoices):
 				continue
 
 			return_against_is_added = any(
-				d for d in _invoices if d.pos_invoice == pos_invoice.return_against
+				d for d in _invoices if d and d[0].pos_invoice == pos_invoice.return_against
 			)
 			if return_against_is_added:
 				break
@@ -482,8 +489,8 @@ def create_merge_logs(invoice_by_customer, closing_entry=None):
 
 		if closing_entry:
 			closing_entry.set_status(update=True, status="Failed")
-			if type(error_message) == list:
-				error_message = frappe.json.dumps(error_message)
+			if isinstance(error_message, list):
+				error_message = json.dumps(error_message)
 			closing_entry.db_set("error_message", error_message)
 		raise
 
@@ -533,7 +540,7 @@ def enqueue_job(job, **kwargs):
 			timeout=10000,
 			event="processing_merge_logs",
 			job_id=job_id,
-			now=frappe.conf.developer_mode or frappe.flags.in_test
+			now=frappe.conf.developer_mode or frappe.flags.in_test,
 		)
 
 		if job == create_merge_logs:

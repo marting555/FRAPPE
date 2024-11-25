@@ -16,6 +16,7 @@ from frappe.utils import comma_and, get_link_to_form, has_gravatar, validate_ema
 from erpnext.accounts.party import set_taxes
 from erpnext.controllers.selling_controller import SellingController
 from erpnext.crm.utils import CRMNote, copy_comments, link_communications, link_open_events
+from erpnext.selling.doctype.customer.customer import parse_full_name
 
 
 class Lead(SellingController, CRMNote):
@@ -31,7 +32,6 @@ class Lead(SellingController, CRMNote):
 
 		annual_revenue: DF.Currency
 		blog_subscriber: DF.Check
-		campaign_name: DF.Link | None
 		city: DF.Data | None
 		company: DF.Link | None
 		company_name: DF.Data | None
@@ -60,11 +60,8 @@ class Lead(SellingController, CRMNote):
 		qualification_status: DF.Literal["Unqualified", "In Process", "Qualified"]
 		qualified_by: DF.Link | None
 		qualified_on: DF.Date | None
-		request_type: DF.Literal[
-			"", "Product Enquiry", "Request for Information", "Suggestions", "Other"
-		]
+		request_type: DF.Literal["", "Product Enquiry", "Request for Information", "Suggestions", "Other"]
 		salutation: DF.Link | None
-		source: DF.Link | None
 		state: DF.Data | None
 		status: DF.Literal[
 			"Lead",
@@ -81,6 +78,10 @@ class Lead(SellingController, CRMNote):
 		title: DF.Data | None
 		type: DF.Literal["", "Client", "Channel Partner", "Consultant"]
 		unsubscribed: DF.Check
+		utm_campaign: DF.Link | None
+		utm_content: DF.Data | None
+		utm_medium: DF.Link | None
+		utm_source: DF.Link | None
 		website: DF.Data | None
 		whatsapp_no: DF.Data | None
 	# end: auto-generated types
@@ -102,16 +103,20 @@ class Lead(SellingController, CRMNote):
 	def before_insert(self):
 		self.contact_doc = None
 		if frappe.db.get_single_value("CRM Settings", "auto_creation_of_contact"):
-			if self.source == "Existing Customer" and self.customer:
+			if self.utm_source == "Existing Customer" and self.customer:
 				contact = frappe.db.get_value(
 					"Dynamic Link",
-					{"link_doctype": "Customer", "link_name": self.customer},
+					{"link_doctype": "Customer", "parenttype": "Contact", "link_name": self.customer},
 					"parent",
 				)
 				if contact:
 					self.contact_doc = frappe.get_doc("Contact", contact)
 					return
 			self.contact_doc = self.create_contact()
+
+		# leads created by email inbox only have the full name set
+		if self.lead_name and not any([self.first_name, self.middle_name, self.last_name]):
+			self.first_name, self.middle_name, self.last_name = parse_full_name(self.lead_name)
 
 	def after_insert(self):
 		self.link_to_contact()
@@ -182,9 +187,7 @@ class Lead(SellingController, CRMNote):
 			self.contact_doc.save()
 
 	def update_prospect(self):
-		lead_row_name = frappe.db.get_value(
-			"Prospect Lead", filters={"lead": self.name}, fieldname="name"
-		)
+		lead_row_name = frappe.db.get_value("Prospect Lead", filters={"lead": self.name}, fieldname="name")
 		if lead_row_name:
 			lead_row = frappe.get_doc("Prospect Lead", lead_row_name)
 			lead_row.update(
@@ -234,9 +237,7 @@ class Lead(SellingController, CRMNote):
 		)
 
 	def has_lost_quotation(self):
-		return frappe.db.get_value(
-			"Quotation", {"party_name": self.name, "docstatus": 1, "status": "Lost"}
-		)
+		return frappe.db.get_value("Quotation", {"party_name": self.name, "docstatus": 1, "status": "Lost"})
 
 	@frappe.whitelist()
 	def create_prospect_and_contact(self, data):
@@ -370,7 +371,6 @@ def make_opportunity(source_name, target_doc=None):
 			"Lead": {
 				"doctype": "Opportunity",
 				"field_map": {
-					"campaign_name": "campaign",
 					"doctype": "opportunity_from",
 					"name": "party_name",
 					"lead_name": "contact_display",
@@ -515,9 +515,9 @@ def get_lead_with_phone_number(number):
 	leads = frappe.get_all(
 		"Lead",
 		or_filters={
-			"phone": ["like", "%{}".format(number)],
-			"whatsapp_no": ["like", "%{}".format(number)],
-			"mobile_no": ["like", "%{}".format(number)],
+			"phone": ["like", f"%{number}"],
+			"whatsapp_no": ["like", f"%{number}"],
+			"mobile_no": ["like", f"%{number}"],
 		},
 		limit=1,
 		order_by="creation DESC",
@@ -544,9 +544,7 @@ def add_lead_to_prospect(lead, prospect):
 	link_open_events("Lead", lead, prospect)
 
 	frappe.msgprint(
-		_("Lead {0} has been added to prospect {1}.").format(
-			frappe.bold(lead), frappe.bold(prospect.name)
-		),
+		_("Lead {0} has been added to prospect {1}.").format(frappe.bold(lead), frappe.bold(prospect.name)),
 		title=_("Lead -> Prospect"),
 		indicator="green",
 	)

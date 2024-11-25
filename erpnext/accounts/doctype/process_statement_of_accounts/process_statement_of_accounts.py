@@ -46,9 +46,7 @@ class ProcessStatementOfAccounts(Document):
 		company: DF.Link
 		cost_center: DF.TableMultiSelect[PSOACostCenter]
 		currency: DF.Link | None
-		customer_collection: DF.Literal[
-			"", "Customer Group", "Territory", "Sales Partner", "Sales Person"
-		]
+		customer_collection: DF.Literal["", "Customer Group", "Territory", "Sales Partner", "Sales Person"]
 		customers: DF.Table[ProcessStatementOfAccountsCustomer]
 		enable_auto_email: DF.Check
 		filter_duration: DF.Int
@@ -56,6 +54,8 @@ class ProcessStatementOfAccounts(Document):
 		frequency: DF.Literal["Weekly", "Monthly", "Quarterly"]
 		from_date: DF.Date | None
 		group_by: DF.Literal["", "Group by Voucher", "Group by Voucher (Consolidated)"]
+		ignore_cr_dr_notes: DF.Check
+		ignore_exchange_rate_revaluation_journals: DF.Check
 		include_ageing: DF.Check
 		include_break: DF.Check
 		letter_head: DF.Link | None
@@ -70,6 +70,7 @@ class ProcessStatementOfAccounts(Document):
 		sales_person: DF.Link | None
 		sender: DF.Link | None
 		show_net_values_in_party_account: DF.Check
+		show_remarks: DF.Check
 		start_date: DF.Date | None
 		subject: DF.Data | None
 		terms_and_conditions: DF.Link | None
@@ -131,6 +132,11 @@ def get_statement_dict(doc, get_statement_dict=False):
 		)
 
 		filters = get_common_filters(doc)
+		if doc.ignore_exchange_rate_revaluation_journals:
+			filters.update({"ignore_err": True})
+
+		if doc.ignore_cr_dr_notes:
+			filters.update({"ignore_cr_dr_notes": True})
 
 		if doc.report == "General Ledger":
 			filters.update(get_gl_filters(doc, entry, tax_id, presentation_currency))
@@ -157,7 +163,7 @@ def set_ageing(doc, entry):
 	ageing_filters = frappe._dict(
 		{
 			"company": doc.company,
-			"report_date": doc.to_date,
+			"report_date": doc.posting_date,
 			"ageing_based_on": doc.ageing_based_on,
 			"range1": 30,
 			"range2": 60,
@@ -182,6 +188,7 @@ def get_common_filters(doc):
 			"finance_book": doc.finance_book if doc.finance_book else None,
 			"account": [doc.account] if doc.account else None,
 			"cost_center": [cc.cost_center_name for cc in doc.cost_center],
+			"show_remarks": doc.show_remarks,
 		}
 	)
 
@@ -403,9 +410,7 @@ def get_customer_emails(customer_name, primary_mandatory, billing_and_primary=Tr
 			{mcond}
 		ORDER BY
 			contact.creation desc
-		""".format(
-			mcond=get_match_cond("Contact")
-		),
+		""".format(mcond=get_match_cond("Contact")),
 		customer_name,
 	)
 
@@ -452,11 +457,16 @@ def send_emails(document_name, from_scheduler=False, posting_date=None):
 			subject = frappe.render_template(doc.subject, context)
 			message = frappe.render_template(doc.body, context)
 
+			if doc.sender:
+				sender_email = frappe.db.get_value("Email Account", doc.sender, "email_id")
+			else:
+				sender_email = frappe.session.user
+
 			frappe.enqueue(
 				queue="short",
 				method=frappe.sendmail,
 				recipients=recipients,
-				sender=doc.sender or frappe.session.user,
+				sender=sender_email,
 				cc=cc,
 				subject=subject,
 				message=message,
@@ -473,9 +483,7 @@ def send_emails(document_name, from_scheduler=False, posting_date=None):
 			else:
 				new_to_date = add_months(new_to_date, 1 if doc.frequency == "Monthly" else 3)
 			new_from_date = add_months(new_to_date, -1 * doc.filter_duration)
-			doc.add_comment(
-				"Comment", "Emails sent on: " + frappe.utils.format_datetime(frappe.utils.now())
-			)
+			doc.add_comment("Comment", "Emails sent on: " + frappe.utils.format_datetime(frappe.utils.now()))
 			if doc.report == "General Ledger":
 				doc.db_set("to_date", new_to_date, commit=True)
 				doc.db_set("from_date", new_from_date, commit=True)

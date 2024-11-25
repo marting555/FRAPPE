@@ -94,12 +94,6 @@ def get_data(filters):
 
 	accounts, accounts_by_name, parent_children_map = filter_accounts(accounts)
 
-	min_lft, max_rgt = frappe.db.sql(
-		"""select min(lft), max(rgt) from `tabAccount`
-		where company=%s""",
-		(filters.company,),
-	)[0]
-
 	gl_entries_by_account = {}
 
 	opening_balances = get_opening_balances(filters)
@@ -112,17 +106,15 @@ def get_data(filters):
 		filters.company,
 		filters.from_date,
 		filters.to_date,
-		min_lft,
-		max_rgt,
 		filters,
 		gl_entries_by_account,
-		ignore_closing_entries=not flt(filters.with_period_closing_entry),
+		root_lft=None,
+		root_rgt=None,
+		ignore_closing_entries=not flt(filters.with_period_closing_entry_for_current_period),
 		ignore_opening_entries=True,
 	)
 
-	calculate_values(
-		accounts, gl_entries_by_account, opening_balances, filters.get("show_net_values")
-	)
+	calculate_values(accounts, gl_entries_by_account, opening_balances, filters.get("show_net_values"))
 	accumulate_values_into_parents(accounts, accounts_by_name)
 
 	data = prepare_data(accounts, filters, parent_children_map, company_currency)
@@ -152,9 +144,9 @@ def get_rootwise_opening_balances(filters, report_type):
 	if not ignore_closing_balances:
 		last_period_closing_voucher = frappe.db.get_all(
 			"Period Closing Voucher",
-			filters={"docstatus": 1, "company": filters.company, "posting_date": ("<", filters.from_date)},
-			fields=["posting_date", "name"],
-			order_by="posting_date desc",
+			filters={"docstatus": 1, "company": filters.company, "period_end_date": ("<", filters.from_date)},
+			fields=["period_end_date", "name"],
+			order_by="period_end_date desc",
 			limit=1,
 		)
 
@@ -170,10 +162,8 @@ def get_rootwise_opening_balances(filters, report_type):
 		)
 
 		# Report getting generate from the mid of a fiscal year
-		if getdate(last_period_closing_voucher[0].posting_date) < getdate(
-			add_days(filters.from_date, -1)
-		):
-			start_date = add_days(last_period_closing_voucher[0].posting_date, 1)
+		if getdate(last_period_closing_voucher[0].period_end_date) < getdate(add_days(filters.from_date, -1)):
+			start_date = add_days(last_period_closing_voucher[0].period_end_date, 1)
 			gle += get_opening_balance(
 				"GL Entry", filters, report_type, accounting_dimensions, start_date=start_date
 			)
@@ -249,13 +239,11 @@ def get_opening_balance(
 	):
 		opening_balance = opening_balance.where(closing_balance.posting_date >= filters.year_start_date)
 
-	if not flt(filters.with_period_closing_entry):
+	if not flt(filters.with_period_closing_entry_for_opening):
 		if doctype == "Account Closing Balance":
 			opening_balance = opening_balance.where(closing_balance.is_period_closing_voucher_entry == 0)
 		else:
-			opening_balance = opening_balance.where(
-				closing_balance.voucher_type != "Period Closing Voucher"
-			)
+			opening_balance = opening_balance.where(closing_balance.voucher_type != "Period Closing Voucher")
 
 	if filters.cost_center:
 		lft, rgt = frappe.db.get_value("Cost Center", filters.cost_center, ["lft", "rgt"])
@@ -388,7 +376,7 @@ def prepare_data(accounts, filters, parent_children_map, company_currency):
 			"to_date": filters.to_date,
 			"currency": company_currency,
 			"account_name": (
-				"{} - {}".format(d.account_number, d.account_name) if d.account_number else d.account_name
+				f"{d.account_number} - {d.account_name}" if d.account_number else d.account_name
 			),
 		}
 

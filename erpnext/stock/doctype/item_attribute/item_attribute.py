@@ -37,9 +37,6 @@ class ItemAttribute(Document):
 		to_range: DF.Float
 	# end: auto-generated types
 
-	def __setup__(self):
-		self.flags.ignore_these_exceptions_in_test = [InvalidItemAttributeValueError]
-
 	def validate(self):
 		frappe.flags.attribute_values = None
 		self.validate_numeric()
@@ -93,7 +90,9 @@ class ItemAttribute(Document):
 		values, abbrs = [], []
 		for d in self.item_attribute_values:
 			if d.attribute_value.lower() in map(str.lower, values):
-				frappe.throw(_("Attribute value: {0} must appear only once").format(d.attribute_value.title()))
+				frappe.throw(
+					_("Attribute value: {0} must appear only once").format(d.attribute_value.title())
+				)
 			values.append(d.attribute_value)
 
 			if d.abbr.lower() in map(str.lower, abbrs):

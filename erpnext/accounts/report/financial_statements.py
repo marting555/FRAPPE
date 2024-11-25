@@ -9,6 +9,7 @@ import re
 import frappe
 from frappe import _
 from frappe.utils import add_days, add_months, cint, cstr, flt, formatdate, get_first_day, getdate
+from pypika.terms import ExistsCriterion
 
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 	get_accounting_dimensions,
@@ -162,7 +163,6 @@ def get_data(
 	ignore_accumulated_values_for_fy=False,
 	total=True,
 ):
-
 	accounts = get_accounts(company, root_type)
 	if not accounts:
 		return None
@@ -178,17 +178,16 @@ def get_data(
 		root_type,
 		as_dict=1,
 	):
-
 		set_gl_entries_by_account(
 			company,
 			period_list[0]["year_start_date"] if only_current_fiscal_year else None,
 			period_list[-1]["to_date"],
-			root.lft,
-			root.rgt,
 			filters,
 			gl_entries_by_account,
-			ignore_closing_entries=ignore_closing_entries,
+			root.lft,
+			root.rgt,
 			root_type=root_type,
+			ignore_closing_entries=ignore_closing_entries,
 		)
 
 	calculate_values(
@@ -199,7 +198,13 @@ def get_data(
 		ignore_accumulated_values_for_fy,
 	)
 	accumulate_values_into_parents(accounts, accounts_by_name, period_list)
-	out = prepare_data(accounts, balance_must_be, period_list, company_currency)
+	out = prepare_data(
+		accounts,
+		balance_must_be,
+		period_list,
+		company_currency,
+		accumulated_values=filters.accumulated_values,
+	)
 	out = filter_out_zero_value_rows(out, parent_children_map)
 
 	if out and total:
@@ -236,7 +241,8 @@ def calculate_values(
 
 				if entry.posting_date <= period.to_date:
 					if (accumulated_values or entry.posting_date >= period.from_date) and (
-						not ignore_accumulated_values_for_fy or entry.fiscal_year == period.to_date_fiscal_year
+						not ignore_accumulated_values_for_fy
+						or entry.fiscal_year == period.to_date_fiscal_year
 					):
 						d[period.key] = d.get(period.key, 0.0) + flt(entry.debit) - flt(entry.credit)
 
@@ -258,7 +264,7 @@ def accumulate_values_into_parents(accounts, accounts_by_name, period_list):
 			) + d.get("opening_balance", 0.0)
 
 
-def prepare_data(accounts, balance_must_be, period_list, company_currency):
+def prepare_data(accounts, balance_must_be, period_list, company_currency, accumulated_values):
 	data = []
 	year_start_date = period_list[0]["year_start_date"].strftime("%Y-%m-%d")
 	year_end_date = period_list[-1]["year_end_date"].strftime("%Y-%m-%d")
@@ -280,9 +286,7 @@ def prepare_data(accounts, balance_must_be, period_list, company_currency):
 				"is_group": d.is_group,
 				"opening_balance": d.get("opening_balance", 0.0) * (1 if balance_must_be == "Debit" else -1),
 				"account_name": (
-					"%s - %s" % (_(d.account_number), _(d.account_name))
-					if d.account_number
-					else _(d.account_name)
+					f"{_(d.account_number)} - {_(d.account_name)}" if d.account_number else _(d.account_name)
 				),
 			}
 		)
@@ -298,8 +302,14 @@ def prepare_data(accounts, balance_must_be, period_list, company_currency):
 				has_value = True
 				total += flt(row[period.key])
 
-		row["has_value"] = has_value
-		row["total"] = total
+		if accumulated_values:
+			# when 'accumulated_values' is enabled, periods have running balance.
+			# so, last period will have the net amount.
+			row["has_value"] = has_value
+			row["total"] = flt(d.get(period_list[-1].key, 0.0), 3)
+		else:
+			row["has_value"] = has_value
+			row["total"] = total
 		data.append(row)
 
 	return data
@@ -324,8 +334,8 @@ def filter_out_zero_value_rows(data, parent_children_map, show_zero_values=False
 
 def add_total_row(out, root_type, balance_must_be, period_list, company_currency):
 	total_row = {
-		"account_name": _("Total {0} ({1})").format(_(root_type), _(balance_must_be)),
-		"account": _("Total {0} ({1})").format(_(root_type), _(balance_must_be)),
+		"account_name": "'" + _("Total {0} ({1})").format(_(root_type), _(balance_must_be)) + "'",
+		"account": "'" + _("Total {0} ({1})").format(_(root_type), _(balance_must_be)) + "'",
 		"currency": company_currency,
 		"opening_balance": 0.0,
 	}
@@ -370,7 +380,7 @@ def filter_accounts(accounts, depth=20):
 	def add_to_list(parent, level):
 		if level < depth:
 			children = parent_children_map.get(parent) or []
-			sort_accounts(children, is_root=True if parent == None else False)
+			sort_accounts(children, is_root=True if parent is None else False)
 
 			for child in children:
 				child.indent = level
@@ -410,93 +420,78 @@ def set_gl_entries_by_account(
 	company,
 	from_date,
 	to_date,
-	root_lft,
-	root_rgt,
 	filters,
 	gl_entries_by_account,
+	root_lft=None,
+	root_rgt=None,
+	root_type=None,
 	ignore_closing_entries=False,
 	ignore_opening_entries=False,
-	root_type=None,
 ):
 	"""Returns a dict like { "account": [gl entries], ... }"""
 	gl_entries = []
 
-	account_filters = {
-		"company": company,
-		"is_group": 0,
-		"lft": (">=", root_lft),
-		"rgt": ("<=", root_rgt),
-	}
-
-	if root_type:
-		account_filters.update(
-			{
-				"root_type": root_type,
-			}
+	# For balance sheet
+	ignore_closing_balances = frappe.db.get_single_value(
+		"Accounts Settings", "ignore_account_closing_balance"
+	)
+	if not from_date and not ignore_closing_balances:
+		last_period_closing_voucher = frappe.db.get_all(
+			"Period Closing Voucher",
+			filters={
+				"docstatus": 1,
+				"company": filters.company,
+				"period_end_date": ("<", filters["period_start_date"]),
+			},
+			fields=["period_end_date", "name"],
+			order_by="period_end_date desc",
+			limit=1,
 		)
+		if last_period_closing_voucher:
+			gl_entries += get_accounting_entries(
+				"Account Closing Balance",
+				from_date,
+				to_date,
+				filters,
+				root_lft,
+				root_rgt,
+				root_type,
+				ignore_closing_entries,
+				last_period_closing_voucher[0].name,
+			)
+			from_date = add_days(last_period_closing_voucher[0].period_end_date, 1)
+			ignore_opening_entries = True
 
-	accounts_list = frappe.db.get_all(
-		"Account",
-		filters=account_filters,
-		pluck="name",
+	gl_entries += get_accounting_entries(
+		"GL Entry",
+		from_date,
+		to_date,
+		filters,
+		root_lft,
+		root_rgt,
+		root_type,
+		ignore_closing_entries,
+		ignore_opening_entries=ignore_opening_entries,
 	)
 
-	if accounts_list:
-		# For balance sheet
-		ignore_closing_balances = frappe.db.get_single_value(
-			"Accounts Settings", "ignore_account_closing_balance"
-		)
-		if not from_date and not ignore_closing_balances:
-			last_period_closing_voucher = frappe.db.get_all(
-				"Period Closing Voucher",
-				filters={
-					"docstatus": 1,
-					"company": filters.company,
-					"posting_date": ("<", filters["period_start_date"]),
-				},
-				fields=["posting_date", "name"],
-				order_by="posting_date desc",
-				limit=1,
-			)
-			if last_period_closing_voucher:
-				gl_entries += get_accounting_entries(
-					"Account Closing Balance",
-					from_date,
-					to_date,
-					accounts_list,
-					filters,
-					ignore_closing_entries,
-					last_period_closing_voucher[0].name,
-				)
-				from_date = add_days(last_period_closing_voucher[0].posting_date, 1)
-				ignore_opening_entries = True
+	if filters and filters.get("presentation_currency"):
+		convert_to_presentation_currency(gl_entries, get_currency(filters))
 
-		gl_entries += get_accounting_entries(
-			"GL Entry",
-			from_date,
-			to_date,
-			accounts_list,
-			filters,
-			ignore_closing_entries,
-			ignore_opening_entries=ignore_opening_entries,
-		)
+	for entry in gl_entries:
+		gl_entries_by_account.setdefault(entry.account, []).append(entry)
 
-		if filters and filters.get("presentation_currency"):
-			convert_to_presentation_currency(gl_entries, get_currency(filters))
-
-		for entry in gl_entries:
-			gl_entries_by_account.setdefault(entry.account, []).append(entry)
-
-		return gl_entries_by_account
+	return gl_entries_by_account
 
 
 def get_accounting_entries(
 	doctype,
 	from_date,
 	to_date,
-	accounts,
 	filters,
-	ignore_closing_entries,
+	root_lft=None,
+	root_rgt=None,
+	root_type=None,
+	ignore_closing_entries=None,
 	period_closing_voucher=None,
 	ignore_opening_entries=False,
 ):
@@ -526,11 +521,28 @@ def get_accounting_entries(
 		query = query.where(gl_entry.period_closing_voucher == period_closing_voucher)
 
 	query = apply_additional_conditions(doctype, query, from_date, ignore_closing_entries, filters)
-	query = query.where(gl_entry.account.isin(accounts))
+
+	if (root_lft and root_rgt) or root_type:
+		account_filter_query = get_account_filter_query(root_lft, root_rgt, root_type, gl_entry)
+		query = query.where(ExistsCriterion(account_filter_query))
 
 	entries = query.run(as_dict=True)
 
 	return entries
+
+
+def get_account_filter_query(root_lft, root_rgt, root_type, gl_entry):
+	acc = frappe.qb.DocType("Account")
+	exists_query = (
+		frappe.qb.from_(acc).select(acc.name).where(acc.name == gl_entry.account).where(acc.is_group == 0)
+	)
+	if root_lft and root_rgt:
+		exists_query = exists_query.where(acc.lft >= root_lft).where(acc.rgt <= root_rgt)
+
+	if root_type:
+		exists_query = exists_query.where(acc.root_type == root_type)
+
+	return exists_query
 
 
 def apply_additional_conditions(doctype, query, from_date, ignore_closing_entries, filters):
@@ -561,7 +573,9 @@ def apply_additional_conditions(doctype, query, from_date, ignore_closing_entrie
 			company_fb = frappe.get_cached_value("Company", filters.company, "default_finance_book")
 
 			if filters.finance_book and company_fb and cstr(filters.finance_book) != cstr(company_fb):
-				frappe.throw(_("To use a different finance book, please uncheck 'Include Default FB Entries'"))
+				frappe.throw(
+					_("To use a different finance book, please uncheck 'Include Default FB Entries'")
+				)
 
 			query = query.where(
 				(gl_entry.finance_book.isin([cstr(filters.finance_book), cstr(company_fb), ""]))
@@ -602,11 +616,11 @@ def get_cost_centers_with_children(cost_centers):
 	return list(set(all_cost_centers))
 
 
-def get_columns(periodicity, period_list, accumulated_values=1, company=None):
+def get_columns(periodicity, period_list, accumulated_values=1, company=None, cash_flow=False):
 	columns = [
 		{
-			"fieldname": "account",
-			"label": _("Account"),
+			"fieldname": "stub",
+			"label": _("Account") if not cash_flow else _("Section"),
 			"fieldtype": "Link",
 			"options": "Account",
 			"width": 300,

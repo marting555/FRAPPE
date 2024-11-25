@@ -33,7 +33,7 @@ class InventoryDimension(Document):
 		dimension_name: DF.Data
 		disabled: DF.Check
 		document_type: DF.Link | None
-		fetch_from_parent: DF.Literal
+		fetch_from_parent: DF.Literal[None]
 		istable: DF.Check
 		mandatory_depends_on: DF.SmallText | None
 		reference_document: DF.Link
@@ -107,6 +107,7 @@ class InventoryDimension(Document):
 					self.source_fieldname,
 					f"to_{self.source_fieldname}",
 					f"from_{self.source_fieldname}",
+					f"rejected_{self.source_fieldname}",
 				],
 			)
 		}
@@ -171,12 +172,12 @@ class InventoryDimension(Document):
 		if label_start_with:
 			label = f"{label_start_with} {self.dimension_name}"
 
-		return [
+		dimension_fields = [
 			dict(
 				fieldname="inventory_dimension",
 				fieldtype="Section Break",
 				insert_after=self.get_insert_after_fieldname(doctype),
-				label="Inventory Dimension",
+				label=_("Inventory Dimension"),
 				collapsible=1,
 			),
 			dict(
@@ -184,12 +185,28 @@ class InventoryDimension(Document):
 				fieldtype="Link",
 				insert_after="inventory_dimension",
 				options=self.reference_document,
-				label=label,
+				label=_(label),
 				search_index=1,
 				reqd=self.reqd,
 				mandatory_depends_on=self.mandatory_depends_on,
 			),
 		]
+
+		if doctype in ["Purchase Invoice Item", "Purchase Receipt Item"]:
+			dimension_fields.append(
+				dict(
+					fieldname="rejected_" + self.source_fieldname,
+					fieldtype="Link",
+					insert_after=self.source_fieldname,
+					options=self.reference_document,
+					label=_("Rejected " + self.dimension_name),
+					search_index=1,
+					reqd=self.reqd,
+					mandatory_depends_on=self.mandatory_depends_on,
+				)
+			)
+
+		return dimension_fields
 
 	def add_custom_fields(self):
 		custom_fields = {}
@@ -305,7 +322,7 @@ def get_evaluated_inventory_dimension(doc, sl_dict, parent_doc=None):
 	dimensions = get_document_wise_inventory_dimensions(doc.doctype)
 	filter_dimensions = []
 	for row in dimensions:
-		if row.type_of_transaction:
+		if row.type_of_transaction and row.type_of_transaction != "Both":
 			if (
 				row.type_of_transaction == "Inward"
 				if doc.docstatus == 1
@@ -384,9 +401,7 @@ def delete_dimension(dimension):
 
 @frappe.whitelist()
 def get_parent_fields(child_doctype, dimension_name):
-	parent_doctypes = frappe.get_all(
-		"DocField", fields=["parent"], filters={"options": child_doctype}
-	)
+	parent_doctypes = frappe.get_all("DocField", fields=["parent"], filters={"options": child_doctype})
 
 	fields = []
 

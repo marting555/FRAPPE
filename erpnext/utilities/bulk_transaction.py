@@ -7,26 +7,25 @@ from frappe.utils import get_link_to_form, today
 
 
 @frappe.whitelist()
-def transaction_processing(data, from_doctype, to_doctype):
+def transaction_processing(data, from_doctype, to_doctype, args=None):
 	if isinstance(data, str):
 		deserialized_data = json.loads(data)
 	else:
 		deserialized_data = data
 
+	if isinstance(args, str):
+		args = frappe._dict(json.loads(args))
+
 	length_of_data = len(deserialized_data)
 
-	if length_of_data > 10:
-		frappe.msgprint(
-			_("Started a background job to create {1} {0}").format(to_doctype, length_of_data)
-		)
-		frappe.enqueue(
-			job,
-			deserialized_data=deserialized_data,
-			from_doctype=from_doctype,
-			to_doctype=to_doctype,
-		)
-	else:
-		job(deserialized_data, from_doctype, to_doctype)
+	frappe.msgprint(_("Started a background job to create {1} {0}").format(to_doctype, length_of_data))
+	frappe.enqueue(
+		job,
+		deserialized_data=deserialized_data,
+		from_doctype=from_doctype,
+		to_doctype=to_doctype,
+		args=args,
+	)
 
 
 @frappe.whitelist()
@@ -60,9 +59,9 @@ def retry_failed_transactions(failed_docs: list | None):
 			try:
 				frappe.db.savepoint("before_creation_state")
 				task(log.transaction_name, log.from_doctype, log.to_doctype)
-			except Exception as e:
+			except Exception:
 				frappe.db.rollback(save_point="before_creation_state")
-				update_log(log.name, "Failed", 1, str(frappe.get_traceback()))
+				update_log(log.name, "Failed", 1, str(frappe.get_traceback(with_context=True)))
 			else:
 				update_log(log.name, "Success", 1)
 
@@ -74,28 +73,31 @@ def update_log(log_name, status, retried, err=None):
 		frappe.db.set_value("Bulk Transaction Log Detail", log_name, "error_description", err)
 
 
-def job(deserialized_data, from_doctype, to_doctype):
+def job(deserialized_data, from_doctype, to_doctype, args):
 	fail_count = 0
+
+	if args:
+		# currently: flag-based transport to `task`
+		frappe.flags.args = args
+
 	for d in deserialized_data:
 		try:
 			doc_name = d.get("name")
 			frappe.db.savepoint("before_creation_state")
 			task(doc_name, from_doctype, to_doctype)
-		except Exception as e:
+		except Exception:
 			frappe.db.rollback(save_point="before_creation_state")
 			fail_count += 1
 			create_log(
 				doc_name,
-				str(frappe.get_traceback()),
+				str(frappe.get_traceback(with_context=True)),
 				from_doctype,
 				to_doctype,
 				status="Failed",
 				log_date=str(date.today()),
 			)
 		else:
-			create_log(
-				doc_name, None, from_doctype, to_doctype, status="Success", log_date=str(date.today())
-			)
+			create_log(doc_name, None, from_doctype, to_doctype, status="Success", log_date=str(date.today()))
 
 	show_job_status(fail_count, len(deserialized_data), to_doctype)
 
@@ -144,15 +146,23 @@ def task(doc_name, from_doctype, to_doctype):
 		},
 		"Purchase Receipt": {"Purchase Invoice": purchase_receipt.make_purchase_invoice},
 	}
+
+	hooks = frappe.get_hooks("bulk_transaction_task_mapper")
+	for hook in hooks:
+		mapper.update(frappe.get_attr(hook)())
+
 	frappe.flags.bulk_transaction = True
 	if to_doctype in ["Payment Entry"]:
 		obj = mapper[from_doctype][to_doctype](from_doctype, doc_name)
 	else:
 		obj = mapper[from_doctype][to_doctype](doc_name)
 
-	obj.flags.ignore_validate = True
-	obj.set_title_field()
-	obj.insert(ignore_mandatory=True)
+	if obj:
+		obj.flags.ignore_validate = True
+		obj.set_title_field()
+		obj.insert(ignore_mandatory=True)
+
+	del obj
 	del frappe.flags.bulk_transaction
 
 
@@ -167,7 +177,7 @@ def create_log(doc_name, e, from_doctype, to_doctype, status, log_date=None, res
 	transaction_log.from_doctype = from_doctype
 	transaction_log.to_doctype = to_doctype
 	transaction_log.retried = restarted
-	transaction_log.save()
+	transaction_log.save(ignore_permissions=True)
 
 
 def show_job_status(fail_count, deserialized_data_count, to_doctype):

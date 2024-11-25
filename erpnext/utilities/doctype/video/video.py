@@ -78,14 +78,11 @@ def get_frequency(value):
 
 def update_youtube_data():
 	# Called every 30 minutes via hooks
-	enable_youtube_tracking, frequency = frappe.db.get_value(
-		"Video Settings", "Video Settings", ["enable_youtube_tracking", "frequency"]
-	)
-
-	if not cint(enable_youtube_tracking):
+	video_settings = frappe.get_cached_doc("Video Settings")
+	if not video_settings.enable_youtube_tracking:
 		return
 
-	frequency = get_frequency(frequency)
+	frequency = get_frequency(video_settings.frequency)
 	time = datetime.now()
 	timezone = pytz.timezone(get_system_timezone())
 	site_time = time.astimezone(timezone)
@@ -115,9 +112,7 @@ def get_id_from_url(url):
 	if not isinstance(url, str):
 		frappe.throw(_("URL can only be a string"), title=_("Invalid URL"))
 
-	pattern = re.compile(
-		r'[a-z\:\//\.]+(youtube|youtu)\.(com|be)/(watch\?v=|embed/|.+\?v=)?([^"&?\s]{11})?'
-	)
+	pattern = re.compile(r'[a-z\:\//\.]+(youtube|youtu)\.(com|be)/(watch\?v=|embed/|.+\?v=)?([^"&?\s]{11})?')
 	id = pattern.match(url)
 	return id.groups()[-1]
 
