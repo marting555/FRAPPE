@@ -209,8 +209,9 @@ class WorkOrder(Document):
 				if not self.expected_delivery_date:
 					self.expected_delivery_date = so[0].delivery_date
 
-				# if so[0].project:
-				# 	self.project = so[0].project
+				if "projects" in frappe.get_installed_apps():
+					if so[0].project:
+						self.project = so[0].project
 
 				if not self.material_request:
 					self.validate_work_order_against_so()
@@ -1102,8 +1103,9 @@ class WorkOrder(Document):
 						},
 					)
 
-					# if not self.project:
-					# 	self.project = item.get("project")
+					if "projects" in frappe.get_installed_apps():
+						if not self.project:
+							self.project = item.get("project")
 
 			self.set_available_qty()
 
@@ -1584,7 +1586,7 @@ def create_job_card(work_order, row, enable_capacity_planning=False, auto_create
 			"for_quantity": row.job_card_qty or work_order.get("qty", 0),
 			"operation_id": row.get("name"),
 			"bom_no": work_order.bom_no,
-			"project": work_order.project,
+			"project": work_order.project if "projects" in frappe.get_installed_apps() else "",
 			"company": work_order.company,
 			"sequence_id": row.get("sequence_id"),
 			"wip_warehouse": work_order.wip_warehouse,

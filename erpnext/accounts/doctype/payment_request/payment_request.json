@@ -1,5 +1,4 @@
 {
-
 	"actions": [],
 	"autoname": "naming_series:",
 	"creation": "2015-12-15 22:23:24.745065",
@@ -29,9 +28,7 @@
 	"subscription_plans",
 	"bank_account_details",
 	"bank_account",
-	"bank",
-	"bank_account_no",
-	"account",
+	"bank"
 	"column_break_11",
 	"iban",
 	"branch_code",

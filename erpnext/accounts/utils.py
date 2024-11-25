@@ -453,7 +453,7 @@ def _build_dimensions_dict_for_exc_gain_loss(
 
 
 def reconcile_against_document(
-	args, skip_ref_details_update_for_pe=False, active_dimensions=None
+	args, skip_ref_details_update_for_pe=False, active_dimensions=None, clearing_date=None
 ):  # nosemgrep
 	"""
 	Cancel PE or JV, Update against document, split if required and resubmit
@@ -473,11 +473,15 @@ def reconcile_against_document(
 		# cancel advance entry
 		doc = frappe.get_doc(voucher_type, voucher_no)
 		frappe.flags.ignore_party_validation = True
+		repost_whole_ledger = any([x.voucher_detail_no for x in entries])
 
 		# For payments with `Advance` in separate account feature enabled, only new ledger entries are posted for each reference.
 		# No need to cancel/delete payment ledger entries
 		if voucher_type == "Payment Entry" and doc.book_advance_payments_in_separate_party_account:
-			doc.make_advance_gl_entries(cancel=1)
+			if repost_whole_ledger:
+				doc.make_gl_entries(cancel=1, clearing_date=clearing_date)
+			else:
+				doc.make_advance_gl_entries(cancel=1, clearing_date=clearing_date)
 		else:
 			_delete_pl_entries(voucher_type, voucher_no)
 
@@ -513,7 +517,10 @@ def reconcile_against_document(
 		if voucher_type == "Payment Entry" and doc.book_advance_payments_in_separate_party_account:
 			# both ledgers must be posted to for `Advance` in separate account feature
 			# TODO: find a more efficient way post only for the new linked vouchers
-			doc.make_advance_gl_entries()
+			if repost_whole_ledger:
+				doc.make_gl_entries(clearing_date=clearing_date)
+			else:
+				doc.make_advance_gl_entries(clearing_date=clearing_date)
 		else:
 			gl_map = doc.build_gl_map()
 			# Make sure there is no overallocation

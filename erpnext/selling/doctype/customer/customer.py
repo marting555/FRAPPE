@@ -121,9 +121,7 @@ class Customer(TransactionBase):
 
 		return self.customer_name
 
-	def after_insert(self):
-		"""If customer created from Lead, update customer id in quotations, opportunities"""
-		self.update_lead_status()
+	
 
 	def validate(self):
 		self.flags.is_new_doc = self.is_new()
@@ -216,12 +214,25 @@ class Customer(TransactionBase):
 
 	def on_update(self):
 		self.validate_name_with_customer_group()
+		self.create_primary_contact()
 		self.create_primary_address()
+
+
 		self.update_customer_groups()
+	
+
 
 	def add_role_for_user(self):
 		for portal_user in self.portal_users:
 			add_role_for_portal_user(portal_user, "Customer")
+	
+	def create_primary_contact(self):
+		if not self.customer_primary_contact:
+			if self.mobile_no or self.email_id:
+				contact = make_contact(self)
+				self.db_set("customer_primary_contact", contact.name)
+				self.db_set("mobile_no", self.mobile_no)
+				self.db_set("email_id", self.email_id)
 
 	def update_customer_groups(self):
 		ignore_doctypes = ["Lead", "Opportunity", "POS Profile", "Tax Rule", "Pricing Rule"]
@@ -230,11 +241,9 @@ class Customer(TransactionBase):
 				"Customer", self.name, "Customer Group", self.customer_group, ignore_doctypes
 			)
 
-	def update_lead_status(self):
-			"""If Customer created from Lead, update lead status to "Converted"
-			update Customer link in Quotation, Opportunity"""
-			if self.lead_name:
-				frappe.db.set_value("Lead", self.lead_name, "status", "Converted")
+	
+
+	
 
 	def create_primary_address(self):
 		from frappe.contacts.doctype.address.address import get_address_display
@@ -247,6 +256,7 @@ class Customer(TransactionBase):
 			self.db_set("primary_address", address_display)
 
 
+
 	def validate_name_with_customer_group(self):
 		if frappe.db.exists("Customer Group", self.name):
 			frappe.throw(
@@ -255,6 +265,13 @@ class Customer(TransactionBase):
 				),
 				frappe.NameError,
 			)
+
+	def on_trash(self):
+		if self.customer_primary_contact:
+			self.db_set("customer_primary_contact", None)
+		if self.customer_primary_address:
+			self.db_set("customer_primary_address", None)
+		delete_contact_and_address("Customer", self.name)
 
 	def validate_credit_limit_on_change(self):
 		if self.get("__islocal") or not self.credit_limits:
@@ -640,8 +657,15 @@ def get_credit_limit(customer, company):
 
 	return flt(credit_limit)
 
+def make_contact(args, is_primary_contact=1):
+	values = {
+		"doctype": "Contact",
+		"is_primary_contact": is_primary_contact,
+		"links": [{"link_doctype": args.get("doctype"), "link_name": args.get("name")}],
+	}
 	party_type = args.customer_type if args.doctype == "Customer" else args.supplier_type
 	party_name_key = "customer_name" if args.doctype == "Customer" else "supplier_name"
+
 
 	if party_type == "Individual":
 		first, middle, last = parse_full_name(args.get(party_name_key))
