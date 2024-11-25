@@ -112,7 +112,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 	condition += get_item_group_condition(pos_profile)
 	if "assets" in frappe.get_installed_apps():
 		if condition:
-			condition += "AND item.is_fixed_asset = 0"
+			condition += " AND item.is_fixed_asset = 0"
 		else:
 			condition += "item.is_fixed_asset = 0"
 
