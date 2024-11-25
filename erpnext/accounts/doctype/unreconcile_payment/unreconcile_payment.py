@@ -187,3 +187,74 @@ def create_unreconcile_doc_for_selection(selections=None):
 				and x.reference_name == row.get("against_voucher_no")
 			]
 			unrecon.save().submit()
+
+
+@frappe.whitelist()
+def payment_reconciliation_record_on_unreconcile(payment_reconciliation_record_name=None, header=None, allocation=None, clearing_date=None):
+	"""
+	If `payment_reconciliation_record_name` is provided:
+	- Create a duplicate of the given Payment Reconciliation Record with the 'unreconcile' checkbox selected,
+		and update the original record's 'unreconcile' value in the child table only.
+		
+	If `payment_reconciliation_record_name` is not provided:
+	- Create a new Payment Reconciliation Record using the provided `header` and `allocation`.
+	"""
+	if payment_reconciliation_record_name:
+		# Case when payment_reconciliation_record_name is provided
+		original = frappe.get_doc("Payment Reconciliation Record", payment_reconciliation_record_name)
+		new_record = frappe.copy_doc(original)
+		new_record.flags.ignore_permissions = True
+		new_record.unreconcile = 1 
+		new_record.clearing_date = clearing_date
+		filtered_allocations = [alloc for alloc in original.allocation if not alloc.unreconcile]
+		new_record.allocation = []
+		for alloc in filtered_allocations:
+			alloc.unreconcile = 1
+			new_record.append("allocation", alloc.as_dict())
+		original.flags.ignore_validate_update_after_submit = True
+		for allocation in original.allocation:
+			allocation.unreconcile = 1
+		original.save()
+		new_record.save()
+		new_record.submit()
+
+	else:
+		header = frappe.parse_json(header)
+		allocation = frappe.parse_json(allocation)
+
+		# Create a new Payment Reconciliation Record using the provided data
+		payment_reconciliation = frappe.new_doc("Payment Reconciliation Record")
+		payment_reconciliation.company = header.get("company")
+		payment_reconciliation.party_type = header.get("party_type")
+		payment_reconciliation.party = header.get("party")
+		payment_reconciliation.unreconcile = 1  # Set unreconcile flag
+		for row in allocation:
+			payment_reconciliation.append("allocation", {
+				"reference_type": row.get("reference_type"),
+				"reference_name": row.get("reference_name"),
+				"invoice_type": row.get("invoice_type"),
+				"invoice_number": row.get("invoice_number"),
+				"allocated_amount": row.get("allocated_amount"),
+				"unreconcile":1
+			})
+			update_unreconcile_flag(row)
+		payment_reconciliation.save()
+		payment_reconciliation.submit()
+	
+
+def update_unreconcile_flag(row):
+	allocation = frappe.db.get_value(
+		"Payment Reconciliation Allocation Records",
+		{
+			"reference_type": row.get("reference_type"),
+			"reference_name": row.get("reference_name"),
+			"invoice_type": row.get("invoice_type"),
+			"invoice_number": row.get("invoice_number"),
+		},
+		"name"
+	)
+
+	if allocation:
+		# Update the `unreconcile` field to 1 for the matched record
+		frappe.db.set_value(
+			"Payment Reconciliation Allocation Records", allocation, "unreconcile", 1)
