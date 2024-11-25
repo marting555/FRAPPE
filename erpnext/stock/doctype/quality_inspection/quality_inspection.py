@@ -109,6 +109,7 @@ class QualityInspection(Document):
 		self.update_qc_reference()
 
 	def on_cancel(self):
+		self.ignore_linked_doctypes = "Serial and Batch Bundle"
 		self.update_qc_reference()
 
 	def on_trash(self):

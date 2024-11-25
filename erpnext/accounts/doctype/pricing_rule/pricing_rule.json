@@ -403,7 +403,8 @@
    "depends_on": "eval:doc.rate_or_discount==\"Rate\"",
    "fieldname": "rate",
    "fieldtype": "Currency",
-   "label": "Rate"
+   "label": "Rate",
+   "options": "currency"
   },
   {
    "default": "0",

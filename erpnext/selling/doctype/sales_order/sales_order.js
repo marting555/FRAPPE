@@ -1262,7 +1262,7 @@ erpnext.selling.SalesOrderController = class SalesOrderController extends erpnex
 					],
 				},
 			],
-			primary_action_label: "Create Purchase Order",
+			primary_action_label: __("Create Purchase Order"),
 			primary_action(args) {
 				if (!args) return;
 
