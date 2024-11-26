@@ -560,6 +560,15 @@ frappe.ui.form.on("Purchase Invoice", {
 				frm.trigger("create_landed_cost_voucher");
 			},
 		};
+		var list = frm.fields_dict['items'].grid.get_field('work_breakdown_structure').get_query = function (doc, cdt, cdn) {
+			var child = locals[cdt][cdn];
+			return {
+				filters: {
+					project : child.project,
+					is_group: 0
+				}
+			};
+		};
 
 		frm.set_query("additional_discount_account", function () {
 			return {
