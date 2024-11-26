@@ -653,11 +653,12 @@ fields_for_group_similar_items = ["qty", "amount"]
 
 after_migrate = "erpnext.accounts.install.after_migrate"
 
-# doc_events = {
-#     "Project": {
-#         "after_save": "erpnext.public.is_wbs.after_save"
-#     }
-# }
+doc_events = {
+    "Project": {
+		"on_update": "erpnext.public.is_wbs.on_update",
+	
+    }
+}
 
 fixtures =[
     {"dt":"Custom Field","filters":[
