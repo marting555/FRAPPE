@@ -6,7 +6,8 @@
  "engine": "InnoDB",
  "field_order": [
   "auto_move_paused",
-  "aws_url"
+  "aws_url",
+  "job_workload_status"
  ],
  "fields": [
   {
@@ -19,12 +20,18 @@
    "fieldname": "aws_url",
    "fieldtype": "Data",
    "label": "aws url"
+  },
+  {
+   "fieldname": "job_workload_status",
+   "fieldtype": "Table",
+   "label": "Job Workload Status",
+   "options": "Job Workload Item"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-06-24 17:40:45.695112",
+ "modified": "2024-11-25 20:29:07.829213",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Queue Settings",
