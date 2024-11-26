@@ -78,7 +78,7 @@ $.extend(erpnext.queries, {
 
 	company_address_query: function (doc) {
 		if (!doc.company) {
-			frappe.throw(__("Please set Company"));
+			frappe.throw(__("Please set {0}", [__(frappe.meta.get_label(doc.doctype, "company", doc.name))]));
 		}
 
 		return {
