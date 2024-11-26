@@ -7,7 +7,7 @@
 
 import json
 
-from erpnext.accounts.doctype.work_breakdown_structure.work_breakdown_structure import check_available_budget
+from erpnext.budget.doctype.work_breakdown_structure.work_breakdown_structure import check_available_budget
 import frappe
 from frappe import _, msgprint
 from frappe.model.mapper import get_mapped_doc
