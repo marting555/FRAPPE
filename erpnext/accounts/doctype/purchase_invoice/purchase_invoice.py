@@ -2009,6 +2009,16 @@ def create_budget_entry(data,event,company):
 		bgt_ent.save(ignore_permissions=True)
 		bgt_ent.submit()
 
+def get_wbs_amount(self, wbs):
+	wbs_amount = 0.0
+	if self.items:
+		for i in self.items:
+			if i.work_breakdown_structure == wbs:
+				wbs_amount += i.amount
+
+	return wbs_amount
+
+
 def validate_available_budget(self):
 	wbs_list = []
 	if self.items:
@@ -2020,7 +2030,7 @@ def validate_available_budget(self):
 	if wbs_list:
 		if len(set(wbs_list)) == 1:
 			amt = get_wbs_amount(self, wbs_list[0])
-			ab = check_available_budget(wbs_list[0], amt, "Purchase Invoice",self.posting_date)
+			ab = check_available_budget(wbs_list[0], amt, "Material Request",self.posting_date)
 			abl = abs(ab.get("available_bgt"))
 			msg = _("Available Budget Limit Exceeded For This WBS - {0} by {1}".format(ab.get("wbs"), abl))
 			if ab.get("available_bgt") < 0.0:
@@ -2033,7 +2043,7 @@ def validate_available_budget(self):
 		elif len(set(wbs_list)) > 1:
 			for i in set(wbs_list):
 				amt = get_wbs_amount(self, i)
-				ab = check_available_budget(i, amt, "Purchase Invoice",self.posting_date)
+				ab = check_available_budget(i, amt, "Material Request",self.posting_date)
 				abl = abs(ab.get("available_bgt"))
 				msg = _("Available Budget Limit Exceeded For This WBS - {0} by {1}".format(ab.get("wbs"), abl))
 				if ab.get("available_bgt") < 0.0:
@@ -2042,12 +2052,3 @@ def validate_available_budget(self):
 						frappe.throw(msg,title=_("Budget Exceeded"))
 					else:
 						frappe.msgprint(msg, indicator="orange", title=_("Budget Exceeded"))
-
-def get_wbs_amount(self, wbs):
-	wbs_amount = 0.0
-	if self.items:
-		for i in self.items:
-			if i.work_breakdown_structure == wbs:
-				wbs_amount += i.amount
-
-	return wbs_amount

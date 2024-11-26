@@ -701,3 +701,48 @@ frappe.ui.form.on("Purchase Invoice", {
 		}
 	},
 });
+
+frappe.ui.form.on("Purchase Invoice Item", {
+    work_breakdown_structure: function(frm,cdt,cdn) {
+		let child = locals[cdt][cdn];
+		frappe.db.get_value("Work Breakdown Structure", child.work_breakdown_structure, ["wbs_name", 'locked', 'gl_account'])
+		.then(response => {
+			if (response.message && response.message.wbs_name) {
+				let wbs_name = response.message.wbs_name;
+				if (response.message.locked == 1) {
+					frappe.msgprint(__(`WBS "${child.work_breakdown_structure}" is locked`));
+					child.work_breakdown_structure = null;
+				} else {
+					child.wbs_name = wbs_name;
+				}
+				if (response.message.gl_account) {
+					child.expense_account = response.message.gl_account;
+				}
+			} else {
+				child.wbs_name = null;
+			}
+			let row = frm.fields_dict['items'].grid.get_row(cdn);
+			row.refresh_field('work_breakdown_structure')
+            row.refresh_field('wbs_name');
+			row.refresh_field('expense_account');
+		})
+	},
+	expense_account: function(frm,cdt,cdn) {
+		var child = locals[cdt][cdn];
+		if (child.work_breakdown_structure && child.expense_account) {
+			frappe.db.get_value("Work Breakdown Structure",child.work_breakdown_structure,'gl_account')
+			.then(response => {
+				if (response.message && response.message.gl_account) {
+					if (child.expense_account != response.message.gl_account) {
+						frappe.msgprint(__(`${child.expense_account} is not a GL Account of WBS ${child.work_breakdown_structure}`));
+						child.expense_account = null;
+						let row = frm.fields_dict['items'].grid.get_row(cdn);
+						row.refresh_field('expense_account');
+						row.refresh_field('work_breakdown_structure');
+					}
+				}
+			});
+		}
+	}
+});
+
