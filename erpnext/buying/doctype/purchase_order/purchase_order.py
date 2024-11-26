@@ -1092,42 +1092,47 @@ def create_budget_entry(self,data, event, company):
 		bgt_ent.voucher_no = self.name
 		bgt_ent.save(ignore_permissions=True)
 		bgt_ent.submit()
+		
+def get_wbs_amount(self, wbs):
+	wbs_amount = 0.0
+	if self.items:
+		for i in self.items:
+			if i.work_breakdown_structure == wbs:
+				wbs_amount += i.amount
 
+	return wbs_amount
 
 
 def validate_available_budget(self):
-    for item in self.items:
-        wbs = item.get("work_breakdown_structure")
-        if wbs:
-            # Fetch the WBS Monthly Distribution document
-            wbs_monthly_distribution_name = frappe.db.get_value(
-                "WBS Monthly Distribution", {"for_wbs": wbs}, "name"
-            )
-            
-            if not wbs_monthly_distribution_name:
-                frappe.throw(f"No WBS Monthly Distribution found for WBS: {wbs}")
-            
-            wbs_monthly_distribution = frappe.get_doc("WBS Monthly Distribution", wbs_monthly_distribution_name)
-            print("wbs_monthly_distribution", wbs_monthly_distribution)
-            
-            # Get the current month from the transaction date
-            current_date = datetime.strptime(self.transaction_date, "%Y-%m-%d")
-            current_month = current_date.strftime("%B")
-            print("current_month", current_month)
-            
-            # Initialize rate limit to 0
-            rate_limit = 0
-            
-            # Find the budget for the current month
-            for distribution in wbs_monthly_distribution.monthly_distribution:
-                if distribution.get("month") == current_month:
-                    rate_limit = distribution.budget
-                    break
-            
-            # Compare item rate against the rate limit
-            if item.rate > rate_limit:
-                exceeded_amount = item.rate - rate_limit
-                frappe.throw(
-                    f"Available Budget Limit Exceeded for WBS - {wbs_monthly_distribution_name}.<br>"
-                    f"Exceeded by ₹{exceeded_amount} for the month {current_month}."
-                )
+	wbs_list = []
+	if self.items:
+		for i in self.items:
+			if i.work_breakdown_structure:
+				if i.work_breakdown_structure not in wbs_list:
+					wbs_list.append(i.work_breakdown_structure)
+
+	if wbs_list:
+		if len(set(wbs_list)) == 1:
+			amt = get_wbs_amount(self, wbs_list[0])
+			ab = check_available_budget(wbs_list[0], amt, "Material Request",self.transaction_date)
+			abl = abs(ab.get("available_bgt"))
+			msg = _("Available Budget Limit Exceeded For This WBS - {0} by {1}".format(ab.get("wbs"), abl))
+			if ab.get("available_bgt") < 0.0:
+				abl = abs(ab.get("available_bgt"))
+				if ab.get("action") == "Stop":
+					frappe.throw(msg,title=_("Budget Exceeded"))
+				else:
+					frappe.msgprint(msg, indicator="orange", title=_("Budget Exceeded"))
+					
+		elif len(set(wbs_list)) > 1:
+			for i in set(wbs_list):
+				amt = get_wbs_amount(self, i)
+				ab = check_available_budget(i, amt, "Material Request",self.transaction_date)
+				abl = abs(ab.get("available_bgt"))
+				msg = _("Available Budget Limit Exceeded For This WBS - {0} by {1}".format(ab.get("wbs"), abl))
+				if ab.get("available_bgt") < 0.0:
+					abl = abs(ab.get("available_bgt"))
+					if ab.get("action") == "Stop":
+						frappe.throw(msg,title=_("Budget Exceeded"))
+					else:
+						frappe.msgprint(msg, indicator="orange", title=_("Budget Exceeded"))
