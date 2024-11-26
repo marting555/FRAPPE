@@ -1,0 +1,97 @@
+name: Server
+
+on:
+  repository_dispatch:
+    types: [frappe-framework-change]
+  pull_request:
+    paths-ignore:
+      - '**.js'
+      - '**.css'
+      - '**.md'
+      - '**.html'
+  workflow_dispatch:
+  schedule:
+    # Run everday at midnight UTC / 5:30 IST
+    - cron: "0 0 * * *"
+
+concurrency:
+  group: server-${{ github.event_name }}-${{ github.event.number }}
+  cancel-in-progress: true
+
+permissions:
+  # Do not change this as GITHUB_TOKEN is being used by roulette
+  contents: read
+
+jobs:
+  typecheck:
+    name: Types
+    uses: frappe/frappe/.github/workflows/_base-type-check.yml@develop
+
+  test:
+    name: Tests
+    needs: [typecheck]
+    uses: frappe/frappe/.github/workflows/_base-server-tests.yml@develop
+    with:
+      # This will test against both MariaDB and PostgreSQL, if enabled
+      enable-postgres: ${{ contains(github.event.pull_request.labels.*.name, 'postgres') }}
+      parallel-runs: 4
+      enable-coverage: ${{ github.event_name != 'pull_request' }}
+    secrets: inherit
+
+  migrate:
+    name: Migration
+    needs: [typecheck]
+    uses: frappe/frappe/.github/workflows/_base-migration.yml@develop
+    with:
+      db-artifact-url: https://erpnext.com/files/v13-erpnext.sql.gz
+      # We remove payments app from the default environment because it was extracted later only
+      # and is not available in earlier versions; likewise, since the site is already seeded,
+      # we remove the install_app config directive
+      pre: |
+        rm -rf ${GITHUB_WORKSPACE}/apps/payments
+        sed -i '/^payments$/d' ${GITHUB_WORKSPACE}/sites/apps.txt
+        jq 'del(.install_apps)' ${GITHUB_WORKSPACE}/sites/test_site/site_config.json > $RUNNER_TEMP/site_config.json
+        mv $RUNNER_TEMP/site_config.json ${GITHUB_WORKSPACE}/sites/test_site/site_config.json
+      python-version: '3.10'
+      node-version: 20
+
+  coverage:
+    name: Coverage Wrap Up
+    needs: [test]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v4.1.8
+      - name: Upload coverage data
+        uses: codecov/codecov-action@v5
+        with:
+          name: Server
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: true
+          flags: server
+
+  dispatch:
+    name: Downstream
+    runs-on: "ubuntu-latest"
+    needs: [test, migrate]
+    if: ${{ contains( github.event.pull_request.labels.*.name, 'trigger-downstream-ci') }}
+    strategy:
+      matrix:
+        repo:
+          - frappe/lending
+          - frappe/hrms
+          - frappe/payments
+          - frappe/ecommerce_integrations
+          - frappe/webshop
+    steps:
+      - name: Dispatch Downstream CI (if supported)
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.CI_PAT }}
+          repository: ${{ matrix.repo }}
+          event-type: erpnext-framework-change
+          client-payload: '{"erpnext_sha": "${{ github.sha }}"}'

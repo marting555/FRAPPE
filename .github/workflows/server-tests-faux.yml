@@ -1,0 +1,24 @@
+# Tests are skipped for these files but github doesn't allow "passing" hence this is required.
+
+name: Skipped Tests
+
+on:
+  pull_request:
+    paths:
+      - "**.js"
+      - "**.css"
+      - "**.md"
+      - "**.html"
+
+jobs:
+  test:
+    name: Tests
+    uses: frappe/frappe/.github/workflows/_base-server-tests.yml@develop
+    with:
+      fake-success: true
+
+  migrate:
+    name: Migration
+    uses: frappe/frappe/.github/workflows/_base-migration.yml@develop
+    with:
+      fake-success: true
