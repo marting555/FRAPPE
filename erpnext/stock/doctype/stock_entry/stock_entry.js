@@ -117,6 +117,10 @@ frappe.ui.form.on("Stock Entry", {
 					filters["is_inward"] = 1;
 				}
 
+				if (["Material Receipt", "Material Transfer", "Material Issue"].includes(doc.purpose)) {
+					filters["include_expired_batches"] = 1;
+				}
+
 				return {
 					query: "erpnext.controllers.queries.get_batch_no",
 					filters: filters,
@@ -830,6 +834,15 @@ frappe.ui.form.on("Stock Entry", {
 });
 
 frappe.ui.form.on("Stock Entry Detail", {
+	set_basic_rate_manually(frm, cdt, cdn) {
+		let row = locals[cdt][cdn];
+		frm.fields_dict.items.grid.update_docfield_property(
+			"basic_rate",
+			"read_only",
+			row?.set_basic_rate_manually ? 0 : 1
+		);
+	},
+
 	qty(frm, cdt, cdn) {
 		frm.events.set_basic_rate(frm, cdt, cdn);
 	},
@@ -1298,7 +1311,7 @@ erpnext.stock.StockEntry = class StockEntry extends erpnext.stock.StockControlle
 
 		this.frm.cscript.toggle_enable_bom();
 
-		if (doc.purpose == "Send to Subcontractor") {
+		if (erpnext.stock.is_subcontracting_or_return_transfer(doc)) {
 			doc.customer =
 				doc.customer_name =
 				doc.customer_address =
@@ -1362,6 +1375,10 @@ erpnext.stock.select_batch_and_serial_no = (frm, item) => {
 			});
 		}
 	});
+};
+
+erpnext.stock.is_subcontracting_or_return_transfer = (doc) => {
+	return doc.purpose == "Send to Subcontractor" || (doc.purpose == "Material Transfer" && doc.is_return);
 };
 
 function attach_bom_items(bom_no) {

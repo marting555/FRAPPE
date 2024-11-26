@@ -192,6 +192,7 @@ class PaymentEntry(AccountsController):
 		self.update_outstanding_amounts()
 		self.update_payment_schedule()
 		self.update_payment_requests()
+		self.make_advance_payment_ledger_entries()
 		self.update_advance_paid()  # advance_paid_status depends on the payment request amount
 		self.set_status()
 
@@ -272,6 +273,7 @@ class PaymentEntry(AccountsController):
 			"Repost Accounting Ledger Items",
 			"Unreconcile Payment",
 			"Unreconcile Payment Entries",
+			"Advance Payment Ledger Entry",
 		)
 		super().on_cancel()
 		self.make_gl_entries(cancel=1)
@@ -279,6 +281,7 @@ class PaymentEntry(AccountsController):
 		self.delink_advance_entry_references()
 		self.update_payment_schedule(cancel=1)
 		self.update_payment_requests(cancel=True)
+		self.make_advance_payment_ledger_entries()
 		self.update_advance_paid()  # advance_paid_status depends on the payment request amount
 		self.set_status()
 
@@ -1240,6 +1243,12 @@ class PaymentEntry(AccountsController):
 		if self.payment_type in ("Receive", "Pay") and not self.get("party_account_field"):
 			self.setup_party_account_field()
 
+		company_currency = erpnext.get_company_currency(self.company)
+		if self.paid_from_account_currency != company_currency:
+			self.currency = self.paid_from_account_currency
+		elif self.paid_to_account_currency != company_currency:
+			self.currency = self.paid_to_account_currency
+
 		gl_entries = []
 		self.add_party_gl_entries(gl_entries)
 		self.add_bank_gl_entries(gl_entries)
@@ -1344,13 +1353,22 @@ class PaymentEntry(AccountsController):
 			base_unallocated_amount = self.unallocated_amount * exchange_rate
 
 			gle = party_gl_dict.copy()
-			gle.update(
-				{
-					dr_or_cr + "_in_account_currency": self.unallocated_amount,
-					dr_or_cr: base_unallocated_amount,
-				}
-			)
 
+			gle.update(
+				self.get_gl_dict(
+					{
+						"account": self.party_account,
+						"party_type": self.party_type,
+						"party": self.party,
+						"against": against_account,
+						"account_currency": self.party_account_currency,
+						"cost_center": self.cost_center,
+						dr_or_cr + "_in_account_currency": self.unallocated_amount,
+						dr_or_cr: base_unallocated_amount,
+					},
+					item=self,
+				)
+			)
 			if self.book_advance_payments_in_separate_party_account:
 				gle.update(
 					{
@@ -2588,7 +2606,9 @@ def get_party_details(company, party_type, party, date, cost_center=None):
 	account_balance = get_balance_on(party_account, date, cost_center=cost_center)
 	_party_name = "title" if party_type == "Shareholder" else party_type.lower() + "_name"
 	party_name = frappe.db.get_value(party_type, party, _party_name)
-	party_balance = get_balance_on(party_type=party_type, party=party, cost_center=cost_center)
+	party_balance = get_balance_on(
+		party_type=party_type, party=party, company=company, cost_center=cost_center
+	)
 	if party_type in ["Customer", "Supplier"]:
 		party_bank_account = get_party_bank_account(party_type, party)
 		bank_account = get_default_company_bank_account(company, party_type, party)
