@@ -91,7 +91,7 @@ $.extend(erpnext.queries, {
 
 		return {
 			query: "frappe.contacts.doctype.address.address.address_query",
-			filters: { link_doctype: "Company", link_name: doc.company},
+			filters: { link_doctype: "Company", link_name: doc.company },
 		};
 	},
 
