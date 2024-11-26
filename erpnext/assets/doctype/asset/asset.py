@@ -746,6 +746,7 @@ class Asset(AccountsController):
 						"debit": self.purchase_amount,
 						"debit_in_account_currency": self.purchase_amount,
 						"cost_center": self.cost_center,
+						"asset": self.name,
 					},
 					item=self,
 				)

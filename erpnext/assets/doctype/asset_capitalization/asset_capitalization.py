@@ -550,6 +550,7 @@ class AssetCapitalization(StockController):
 
 			for gle in fixed_asset_gl_entries:
 				gle["against"] = target_account
+				gle["asset"] = self.target_asset
 				gl_entries.append(self.get_gl_dict(gle, item=item))
 				target_against.add(gle["account"])
 
@@ -586,6 +587,7 @@ class AssetCapitalization(StockController):
 						"remarks": self.get("remarks") or _("Accounting Entry for Asset"),
 						"debit": flt(self.total_value, precision),
 						"cost_center": self.get("cost_center"),
+						"asset": self.target_asset,
 					},
 					item=self,
 				)

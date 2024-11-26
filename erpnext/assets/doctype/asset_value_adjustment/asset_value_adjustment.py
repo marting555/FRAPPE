@@ -117,6 +117,7 @@ class AssetValueAdjustment(Document):
 			credit_entry = {
 				"account": fixed_asset_account,
 				"credit_in_account_currency": -self.difference_amount,
+				"asset": self.asset,
 				**entry_template,
 			}
 			debit_entry = {
@@ -133,6 +134,7 @@ class AssetValueAdjustment(Document):
 			debit_entry = {
 				"account": fixed_asset_account,
 				"debit_in_account_currency": self.difference_amount,
+				"asset": self.asset,
 				**entry_template,
 			}
 

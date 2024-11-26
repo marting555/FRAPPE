@@ -1099,6 +1099,7 @@ class JournalEntry(AccountsController):
 							"cost_center": d.cost_center,
 							"project": d.project,
 							"finance_book": self.finance_book,
+							"asset": getattr(d, "asset", None),
 						},
 						item=d,
 					)

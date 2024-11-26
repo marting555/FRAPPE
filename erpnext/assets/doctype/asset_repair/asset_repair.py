@@ -338,6 +338,7 @@ class AssetRepair(AccountsController):
 					"posting_date": getdate(),
 					"against_voucher_type": "Purchase Invoice",
 					"company": self.company,
+					"asset": self.asset,
 				},
 				item=self,
 			)
@@ -391,6 +392,7 @@ class AssetRepair(AccountsController):
 							"against_voucher_type": "Stock Entry",
 							"against_voucher": stock_entry.name,
 							"company": self.company,
+							"asset": self.asset,
 						},
 						item=self,
 					)

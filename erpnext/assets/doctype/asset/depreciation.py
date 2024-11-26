@@ -285,6 +285,7 @@ def _make_journal_entry_for_depreciation(
 		"reference_type": "Asset",
 		"reference_name": asset.name,
 		"cost_center": depreciation_cost_center,
+		"asset": asset.name,
 	}
 
 	debit_entry = {
@@ -293,6 +294,7 @@ def _make_journal_entry_for_depreciation(
 		"reference_type": "Asset",
 		"reference_name": asset.name,
 		"cost_center": depreciation_cost_center,
+		"asset": asset.name,
 	}
 
 	for dimension in accounting_dimensions:

@@ -28,7 +28,6 @@
   "against_voucher_type",
   "against_voucher",
   "voucher_detail_no",
-  "asset_id",
   "transaction_exchange_rate",
   "amounts_section",
   "debit_in_account_currency",
@@ -41,6 +40,7 @@
   "dimensions_section",
   "cost_center",
   "column_break_lmnm",
+  "asset",
   "project",
   "more_info_section",
   "finance_book",
@@ -300,12 +300,12 @@
    "label": "Voucher Subtype"
   },
   {
-<<<<<<< HEAD
-   "fieldname": "asset_id",
+   "fieldname": "asset",
    "fieldtype": "Link",
-   "label": "Asset ID",
+   "label": "Asset",
    "options": "Asset"
-=======
+  },
+  {
    "fieldname": "dates_section",
    "fieldtype": "Section Break",
    "label": "Dates"
@@ -358,18 +358,13 @@
   {
    "fieldname": "column_break_8abq",
    "fieldtype": "Column Break"
->>>>>>> upstream
   }
  ],
  "icon": "fa fa-list",
  "idx": 1,
  "in_create": 1,
  "links": [],
-<<<<<<< HEAD
- "modified": "2024-10-14 15:03:58.050677",
-=======
  "modified": "2024-08-22 13:03:39.997475",
->>>>>>> upstream
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "GL Entry",
