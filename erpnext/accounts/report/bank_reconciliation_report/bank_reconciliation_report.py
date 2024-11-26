@@ -1,5 +1,4 @@
 import frappe
-# Bank Reconciliation Report
 def execute(filters=None):
     columns = get_columns()
 
