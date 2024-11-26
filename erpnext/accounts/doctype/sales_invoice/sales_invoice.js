@@ -707,12 +707,70 @@ frappe.ui.form.on('Sales Invoice', {
 		// set get_query for loyalty redemption cost center
 		frm.fields_dict["loyalty_redemption_cost_center"].get_query = function() {
 			return {
+<<<<<<< HEAD
 				filters:{
 					"company": frm.doc.company,
 					"is_group": 0
 				}
 			}
 		};
+=======
+				query: "erpnext.projects.doctype.timesheet.timesheet.get_timesheet",
+				filters: { project: doc.project },
+			};
+		});
+
+		frm.set_query("discount_account", "items", function (doc) {
+			return {
+				filters: {
+					report_type: "Profit and Loss",
+					company: doc.company,
+					is_group: 0,
+				},
+			};
+		});
+
+		frm.set_query("deferred_revenue_account", "items", function (doc) {
+			return {
+				filters: {
+					root_type: "Liability",
+					company: doc.company,
+					is_group: 0,
+				},
+			};
+		});
+
+		frm.set_query("pos_profile", function (doc) {
+			if (!doc.company) {
+				frappe.throw(__("Please set Company"));
+			}
+
+			return {
+				query: "erpnext.accounts.doctype.pos_profile.pos_profile.pos_profile_query",
+				filters: {
+					company: doc.company,
+				},
+			};
+		});
+
+		frm.set_query("loyalty_redemption_account", function () {
+			return {
+				filters: {
+					company: frm.doc.company,
+					is_group: 0,
+				},
+			};
+		});
+
+		frm.set_query("loyalty_redemption_cost_center", function () {
+			return {
+				filters: {
+					company: frm.doc.company,
+					is_group: 0,
+				},
+			};
+		});
+>>>>>>> 3f92a57d63 (fix: unify company address query in sales transactions (#44361))
 	},
 	// When multiple companies are set up. in case company name is changed set default company address
 	company: function(frm){

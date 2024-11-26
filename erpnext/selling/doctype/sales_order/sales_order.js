@@ -21,6 +21,7 @@ frappe.ui.form.on("Sales Order", {
 		frm.set_indicator_formatter('item_code',
 			function(doc) { return (doc.stock_qty<=doc.delivered_qty) ? "green" : "orange" })
 
+<<<<<<< HEAD
 		frm.set_query('company_address', function(doc) {
 			if(!doc.company) {
 				frappe.throw(__('Please set Company'));
@@ -36,6 +37,9 @@ frappe.ui.form.on("Sales Order", {
 		})
 
 		frm.set_query("bom_no", "items", function(doc, cdt, cdn) {
+=======
+		frm.set_query("bom_no", "items", function (doc, cdt, cdn) {
+>>>>>>> 3f92a57d63 (fix: unify company address query in sales transactions (#44361))
 			var row = locals[cdt][cdn];
 			return {
 				filters: {
