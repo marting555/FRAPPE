@@ -54,6 +54,7 @@ frappe.ui.form.on("Item", {
 
 	refresh: function (frm) {
 		if (frm.doc.is_stock_item) {
+			frm.set_df_property("is_fixed_asset", "read_only", 1);
 			frm.add_custom_button(
 				__("Stock Balance"),
 				function () {
