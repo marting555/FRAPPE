@@ -514,12 +514,6 @@ cur_frm.set_query("expense_account", "items", function (doc) {
 	};
 });
 
-cur_frm.set_query("wip_composite_asset", "items", function () {
-	return {
-		filters: { is_composite_asset: 1, docstatus: 0 },
-	};
-});
-
 cur_frm.cscript.expense_account = function (doc, cdt, cdn) {
 	var d = locals[cdt][cdn];
 	if (d.idx == 1 && d.expense_account) {
@@ -649,11 +643,12 @@ frappe.ui.form.on("Purchase Invoice", {
 	},
 
 	onload: function (frm) {
-		if (frm.doc.__onload && frm.is_new()) {
-			if (frm.doc.supplier) {
+		frm.savecancel = function(btn, callback, on_error){ return frm._cancel(btn, callback, on_error, false);}
+		if (frm.doc.__onload && frm.doc.supplier) {
+			if (frm.is_new()) {
 				frm.doc.apply_tds = frm.doc.__onload.supplier_tds ? 1 : 0;
 			}
-			if (!frm.doc.__onload.enable_apply_tds) {
+			if (!frm.doc.__onload.supplier_tds) {
 				frm.set_df_property("apply_tds", "read_only", 1);
 			}
 		}

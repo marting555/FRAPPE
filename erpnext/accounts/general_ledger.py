@@ -29,6 +29,7 @@ def make_gl_entries(
 	merge_entries=True,
 	update_outstanding="Yes",
 	from_repost=False,
+	clearing_date=None
 ):
 	if gl_map:
 		if not cancel:
@@ -44,7 +45,7 @@ def make_gl_entries(
 					update_outstanding=update_outstanding,
 					from_repost=from_repost,
 				)
-				save_entries(gl_map, adv_adj, update_outstanding, from_repost)
+				save_entries(gl_map, adv_adj, update_outstanding, from_repost, clearing_date=clearing_date)
 			# Post GL Map proccess there may no be any GL Entries
 			elif gl_map:
 				frappe.throw(
@@ -179,10 +180,6 @@ def process_gl_map(gl_map, merge_entries=True, precision=None):
 
 
 def distribute_gl_based_on_cost_center_allocation(gl_map, precision=None):
-	cost_center_allocation = get_cost_center_allocation_data(gl_map[0]["company"], gl_map[0]["posting_date"])
-	if not cost_center_allocation:
-		return gl_map
-
 	new_gl_map = []
 	for d in gl_map:
 		cost_center = d.get("cost_center")
@@ -190,39 +187,46 @@ def distribute_gl_based_on_cost_center_allocation(gl_map, precision=None):
 		# Validate budget against main cost center
 		validate_expense_against_budget(d, expense_amount=flt(d.debit, precision) - flt(d.credit, precision))
 
-		if cost_center and cost_center_allocation.get(cost_center):
-			for sub_cost_center, percentage in cost_center_allocation.get(cost_center, {}).items():
-				gle = copy.deepcopy(d)
-				gle.cost_center = sub_cost_center
-				for field in ("debit", "credit", "debit_in_account_currency", "credit_in_account_currency"):
-					gle[field] = flt(flt(d.get(field)) * percentage / 100, precision)
-				new_gl_map.append(gle)
-		else:
+		cost_center_allocation = get_cost_center_allocation_data(
+			gl_map[0]["company"], gl_map[0]["posting_date"], cost_center
+		)
+		if not cost_center_allocation:
 			new_gl_map.append(d)
+			continue
+		for sub_cost_center, percentage in cost_center_allocation:
+			gle = copy.deepcopy(d)
+			gle.cost_center = sub_cost_center
+			for field in ("debit", "credit", "debit_in_account_currency", "credit_in_account_currency"):
+				gle[field] = flt(flt(d.get(field)) * percentage / 100, precision)
+			new_gl_map.append(gle)
 
 	return new_gl_map
 
 
-def get_cost_center_allocation_data(company, posting_date):
-	par = frappe.qb.DocType("Cost Center Allocation")
-	child = frappe.qb.DocType("Cost Center Allocation Percentage")
+def get_cost_center_allocation_data(company, posting_date, cost_center):
+	cost_center_allocation = frappe.db.get_value(
+		"Cost Center Allocation",
+		{
+			"docstatus": 1,
+			"company": company,
+			"valid_from": ("<=", posting_date),
+			"main_cost_center": cost_center,
+		},
+		pluck="name",
+		order_by="valid_from desc",
+	)
 
-	records = (
-		frappe.qb.from_(par)
-		.inner_join(child)
-		.on(par.name == child.parent)
-		.select(par.main_cost_center, child.cost_center, child.percentage)
-		.where(par.docstatus == 1)
-		.where(par.company == company)
-		.where(par.valid_from <= posting_date)
-		.orderby(par.valid_from, order=frappe.qb.desc)
-	).run(as_dict=True)
+	if not cost_center_allocation:
+		return []
 
-	cc_allocation = frappe._dict()
-	for d in records:
-		cc_allocation.setdefault(d.main_cost_center, frappe._dict()).setdefault(d.cost_center, d.percentage)
+	records = frappe.db.get_all(
+		"Cost Center Allocation Percentage",
+		{"parent": cost_center_allocation},
+		["cost_center", "percentage"],
+		as_list=True,
+	)
 
-	return cc_allocation
+	return records
 
 
 def merge_similar_entries(gl_map, precision=None):
@@ -368,9 +372,8 @@ def update_net_values(entry):
 			entry.debit_in_account_currency = 0
 
 
-def save_entries(gl_map, adv_adj, update_outstanding, from_repost=False):
-	if not from_repost:
-		validate_cwip_accounts(gl_map)
+
+def save_entries(gl_map, adv_adj, update_outstanding, from_repost=False, clearing_date=None):
 
 	process_debit_credit_difference(gl_map)
 
@@ -383,11 +386,13 @@ def save_entries(gl_map, adv_adj, update_outstanding, from_repost=False):
 
 	for entry in gl_map:
 		validate_allowed_dimensions(entry, dimension_filter_map)
-		make_entry(entry, adv_adj, update_outstanding, from_repost)
+		make_entry(entry, adv_adj, update_outstanding, from_repost, clearing_date)
 
 
-def make_entry(args, adv_adj, update_outstanding, from_repost=False):
+def make_entry(args, adv_adj, update_outstanding, from_repost=False, clearing_date=None):
 	gle = frappe.new_doc("GL Entry")
+	if args.is_cancelled == 0  and clearing_date:
+		gle.posting_date=clearing_date
 	gle.update(args)
 	gle.flags.ignore_permissions = 1
 	gle.flags.from_repost = from_repost
@@ -398,33 +403,6 @@ def make_entry(args, adv_adj, update_outstanding, from_repost=False):
 
 	if not from_repost and gle.voucher_type != "Period Closing Voucher":
 		validate_expense_against_budget(args)
-
-
-def validate_cwip_accounts(gl_map):
-	"""Validate that CWIP account are not used in Journal Entry"""
-	if gl_map and gl_map[0].voucher_type != "Journal Entry":
-		return
-
-	cwip_enabled = any(
-		cint(ac.enable_cwip_accounting)
-		for ac in frappe.db.get_all("Asset Category", "enable_cwip_accounting")
-	)
-	if cwip_enabled:
-		cwip_accounts = [
-			d[0]
-			for d in frappe.db.sql(
-				"""select name from tabAccount
-			where account_type = 'Capital Work in Progress' and is_group=0"""
-			)
-		]
-
-		for entry in gl_map:
-			if entry.account in cwip_accounts:
-				frappe.throw(
-					_(
-						"Account: <b>{0}</b> is capital Work in progress and can not be updated by Journal Entry"
-					).format(entry.account)
-				)
 
 
 def process_debit_credit_difference(gl_map):

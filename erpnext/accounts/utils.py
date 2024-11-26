@@ -453,7 +453,7 @@ def _build_dimensions_dict_for_exc_gain_loss(
 
 
 def reconcile_against_document(
-	args, skip_ref_details_update_for_pe=False, active_dimensions=None
+	args, skip_ref_details_update_for_pe=False, active_dimensions=None, clearing_date=None
 ):  # nosemgrep
 	"""
 	Cancel PE or JV, Update against document, split if required and resubmit
@@ -473,11 +473,15 @@ def reconcile_against_document(
 		# cancel advance entry
 		doc = frappe.get_doc(voucher_type, voucher_no)
 		frappe.flags.ignore_party_validation = True
+		repost_whole_ledger = any([x.voucher_detail_no for x in entries])
 
 		# For payments with `Advance` in separate account feature enabled, only new ledger entries are posted for each reference.
 		# No need to cancel/delete payment ledger entries
 		if voucher_type == "Payment Entry" and doc.book_advance_payments_in_separate_party_account:
-			doc.make_advance_gl_entries(cancel=1)
+			if repost_whole_ledger:
+				doc.make_gl_entries(cancel=1, clearing_date=clearing_date)
+			else:
+				doc.make_advance_gl_entries(cancel=1, clearing_date=clearing_date)
 		else:
 			_delete_pl_entries(voucher_type, voucher_no)
 
@@ -513,7 +517,10 @@ def reconcile_against_document(
 		if voucher_type == "Payment Entry" and doc.book_advance_payments_in_separate_party_account:
 			# both ledgers must be posted to for `Advance` in separate account feature
 			# TODO: find a more efficient way post only for the new linked vouchers
-			doc.make_advance_gl_entries()
+			if repost_whole_ledger:
+				doc.make_gl_entries(clearing_date=clearing_date)
+			else:
+				doc.make_advance_gl_entries(clearing_date=clearing_date)
 		else:
 			gl_map = doc.build_gl_map()
 			# Make sure there is no overallocation
@@ -665,6 +672,8 @@ def update_reference_in_journal_entry(d, journal_entry, do_not_save=False):
 
 	# will work as update after submit
 	journal_entry.flags.ignore_validate_update_after_submit = True
+	# Ledgers will be reposted by Reconciliation tool
+	journal_entry.flags.ignore_reposting_on_reconciliation = True
 	if not do_not_save:
 		journal_entry.save(ignore_permissions=True)
 
@@ -1475,20 +1484,38 @@ def get_future_stock_vouchers(posting_date, posting_time, for_warehouses=None, f
 		condition += " and company = %s"
 		values.append(company)
 
-	future_stock_vouchers = frappe.db.sql(
-		f"""select distinct sle.voucher_type, sle.voucher_no
-		from `tabStock Ledger Entry` sle
-		where
-			timestamp(sle.posting_date, sle.posting_time) >= timestamp(%s, %s)
-			and is_cancelled = 0
-			{condition}
-		order by timestamp(sle.posting_date, sle.posting_time) asc, creation asc for update""",
-		tuple([posting_date, posting_time, *values]),
-		as_dict=True,
-	)
+	if frappe.db.db_type == 'postgres':
+		future_stock_vouchers = frappe.db.sql(
+			f"""SELECT subquery.voucher_type, subquery.voucher_no
+			FROM (
+				SELECT sle.voucher_type, sle.voucher_no, 
+					TO_TIMESTAMP(sle.posting_date::TEXT || ' ' || sle.posting_time::TEXT, 'YYYY-MM-DD HH24:MI:SS') AS posting_timestamp,
+					sle.creation
+				FROM `tabStock Ledger Entry` sle
+				WHERE
+					TO_TIMESTAMP(sle.posting_date::TEXT || ' ' || sle.posting_time::TEXT, 'YYYY-MM-DD HH24:MI:SS') >= TO_TIMESTAMP(%s || ' ' || %s, 'YYYY-MM-DD HH24:MI:SS')
+					AND is_cancelled = 0
+					{condition}
+			) AS subquery
+			ORDER BY subquery.posting_timestamp ASC, subquery.creation ASC
+			FOR UPDATE""",
+			tuple([posting_date, posting_time, *values]),
+			as_dict=True,
+		)
+	else:
+		future_stock_vouchers = frappe.db.sql(
+			f"""select distinct sle.voucher_type, sle.voucher_no
+			from `tabStock Ledger Entry` sle
+			where
+				timestamp(sle.posting_date, sle.posting_time) >= timestamp(%s, %s)
+				and is_cancelled = 0
+				{condition}
+			order by timestamp(sle.posting_date, sle.posting_time) asc, creation asc for update""",
+			tuple([posting_date, posting_time, *values]),
+			as_dict=True,
+		)
 
 	return [(d.voucher_type, d.voucher_no) for d in future_stock_vouchers]
-
 
 def get_voucherwise_gl_entries(future_stock_vouchers, posting_date):
 	"""Get voucherwise list of GL entries.

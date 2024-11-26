@@ -57,7 +57,6 @@ class MaterialRequestItem(Document):
 		uom: DF.Link
 		warehouse: DF.Link | None
 		wbs_name: DF.Data | None
-		wip_composite_asset: DF.Link | None
 		work_breakdown_structure: DF.Link | None
 	# end: auto-generated types
 

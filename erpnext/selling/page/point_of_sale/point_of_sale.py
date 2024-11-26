@@ -110,6 +110,11 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 
 	condition = get_conditions(search_term)
 	condition += get_item_group_condition(pos_profile)
+	if "assets" in frappe.get_installed_apps():
+		if condition:
+			condition += " AND item.is_fixed_asset = 0"
+		else:
+			condition += "item.is_fixed_asset = 0"
 
 	lft, rgt = frappe.db.get_value("Item Group", item_group, ["lft", "rgt"])
 
@@ -135,7 +140,6 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 			item.disabled = 0
 			AND item.has_variants = 0
 			AND item.is_sales_item = 1
-			AND item.is_fixed_asset = 0
 			AND item.item_group in (SELECT name FROM `tabItem Group` WHERE lft >= {lft} AND rgt <= {rgt})
 			AND {condition}
 			{bin_join_condition}

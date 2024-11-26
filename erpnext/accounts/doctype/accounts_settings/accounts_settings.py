@@ -29,11 +29,9 @@ class AccountsSettings(Document):
 		auto_reconcile_payments: DF.Check
 		automatically_fetch_payment_terms: DF.Check
 		automatically_process_deferred_accounting_entry: DF.Check
-		book_asset_depreciation_entry_automatically: DF.Check
 		book_deferred_entries_based_on: DF.Literal["Days", "Months"]
 		book_deferred_entries_via_journal_entry: DF.Check
 		book_tax_discount_loss: DF.Check
-		calculate_depr_using_total_days: DF.Check
 		check_supplier_invoice_uniqueness: DF.Check
 		create_pr_in_draft_status: DF.Check
 		credit_controller: DF.Link | None

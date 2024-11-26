@@ -294,6 +294,14 @@ def get_basic_details(args, item, overwrite_warehouse=True):
 
 	expense_account = None
 
+	#Check if assets app is installed
+	if "assets" in frappe.get_installed_apps() and args.get("doctype") == "Purchase Invoice" and item.get("is_fixed_asset"):
+		from assets.assets.doctype.asset_category.asset_category import get_asset_category_account
+
+		expense_account = get_asset_category_account(
+			fieldname="fixed_asset_account", item=args.item_code, company=args.company
+		)
+
 	# Set the UOM to the Default Sales UOM or Default Purchase UOM if configured in the Item Master
 	if not args.get("uom"):
 		if args.get("doctype") in sales_doctypes:

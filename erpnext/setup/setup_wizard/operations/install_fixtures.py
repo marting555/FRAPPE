@@ -217,13 +217,7 @@ def install(country=None):
 			"is_group": 0,
 			"parent_supplier_group": _("All Supplier Groups"),
 		},
-		# Sales Person
-		{
-			"doctype": "Sales Person",
-			"sales_person_name": _("Sales Team"),
-			"is_group": 1,
-			"parent_sales_person": "",
-		},
+		
 		# Mode of Payment
 		{
 			"doctype": "Mode of Payment",
@@ -235,11 +229,6 @@ def install(country=None):
 		{"doctype": "Mode of Payment", "mode_of_payment": _("Wire Transfer"), "type": "Bank"},
 		{"doctype": "Mode of Payment", "mode_of_payment": _("Bank Draft"), "type": "Bank"},
 		# Activity Type
-		{"doctype": "Activity Type", "activity_type": _("Planning")},
-		{"doctype": "Activity Type", "activity_type": _("Research")},
-		{"doctype": "Activity Type", "activity_type": _("Proposal Writing")},
-		{"doctype": "Activity Type", "activity_type": _("Execution")},
-		{"doctype": "Activity Type", "activity_type": _("Communication")},
 		{
 			"doctype": "Item Attribute",
 			"attribute_name": _("Size"),
@@ -272,30 +261,21 @@ def install(country=None):
 		{"doctype": "Party Type", "party_type": "Supplier", "account_type": "Payable"},
 		{"doctype": "Party Type", "party_type": "Employee", "account_type": "Payable"},
 		{"doctype": "Party Type", "party_type": "Shareholder", "account_type": "Payable"},
-		{"doctype": "Opportunity Type", "name": _("Sales")},
-		{"doctype": "Opportunity Type", "name": _("Support")},
-		{"doctype": "Opportunity Type", "name": _("Maintenance")},
-		{"doctype": "Project Type", "project_type": "Internal"},
-		{"doctype": "Project Type", "project_type": "External"},
-		{"doctype": "Project Type", "project_type": "Other"},
+	
 		{"doctype": "Print Heading", "print_heading": _("Credit Note")},
 		{"doctype": "Print Heading", "print_heading": _("Debit Note")},
 		# Share Management
 		{"doctype": "Share Type", "title": _("Equity")},
 		{"doctype": "Share Type", "title": _("Preference")},
 		# Market Segments
-		{"doctype": "Market Segment", "market_segment": _("Lower Income")},
-		{"doctype": "Market Segment", "market_segment": _("Middle Income")},
-		{"doctype": "Market Segment", "market_segment": _("Upper Income")},
+
 		# Warehouse Type
 		{"doctype": "Warehouse Type", "name": "Transit"},
 	]
 
 	for doctype, title_field, filename in (
 		("Designation", "designation_name", "designation.txt"),
-		("Sales Stage", "stage_name", "sales_stage.txt"),
 		("Industry Type", "industry", "industry_type.txt"),
-		("Lead Source", "source_name", "lead_source.txt"),
 		("Sales Partner Type", "sales_partner_type", "sales_partner_type.txt"),
 	):
 		records += [{"doctype": doctype, title_field: title} for title in read_lines(filename)]
@@ -409,14 +389,7 @@ def add_market_segments():
 def add_sale_stages():
 	# Sale Stages
 	records = [
-		{"doctype": "Sales Stage", "stage_name": _("Prospecting")},
-		{"doctype": "Sales Stage", "stage_name": _("Qualification")},
-		{"doctype": "Sales Stage", "stage_name": _("Needs Analysis")},
-		{"doctype": "Sales Stage", "stage_name": _("Value Proposition")},
-		{"doctype": "Sales Stage", "stage_name": _("Identifying Decision Makers")},
-		{"doctype": "Sales Stage", "stage_name": _("Perception Analysis")},
-		{"doctype": "Sales Stage", "stage_name": _("Proposal/Price Quote")},
-		{"doctype": "Sales Stage", "stage_name": _("Negotiation/Review")},
+		
 	]
 	for sales_stage in records:
 		frappe.get_doc(sales_stage).db_insert()

@@ -78,7 +78,6 @@ class Quotation(SellingController):
 		price_list_currency: DF.Link
 		pricing_rules: DF.Table[PricingRuleDetail]
 		quotation_to: DF.Link
-		referral_sales_partner: DF.Link | None
 		rounded_total: DF.Currency
 		rounding_adjustment: DF.Currency
 		scan_barcode: DF.Data | None
