@@ -1900,7 +1900,7 @@ def get_matched_payment_request_of_references(references=None):
 		.where(Tuple(PR.reference_doctype, PR.reference_name, PR.outstanding_amount).isin(refs))
 		.where(PR.status != "Paid")
 		.where(PR.docstatus == 1)
-		.groupby(PR.reference_doctype, PR.reference_name, PR.outstanding_amount)
+		.groupby(PR.reference_doctype, PR.reference_name, PR.outstanding_amount, PR.name  )
 	)
 
 	# query to fetch matched rows which are single
@@ -2344,36 +2344,37 @@ def get_orders_to_be_billed(
 		rounded_total_field = "rounded_total"
 
 	orders = frappe.db.sql(
-		"""
-		select
-			name as voucher_no,
-			if({rounded_total_field}, {rounded_total_field}, {grand_total_field}) as invoice_amount,
-			(if({rounded_total_field}, {rounded_total_field}, {grand_total_field}) - advance_paid) as outstanding_amount,
-			transaction_date as posting_date
-		from
-			`tab{voucher_type}`
-		where
-			{party_type} = %s
-			and docstatus = 1
-			and company = %s
-			and status != "Closed"
-			and if({rounded_total_field}, {rounded_total_field}, {grand_total_field}) > advance_paid
-			and abs(100 - per_billed) > 0.01
-			{condition}
-		order by
-			transaction_date, name
-	""".format(
-			**{
-				"rounded_total_field": rounded_total_field,
-				"grand_total_field": grand_total_field,
-				"voucher_type": voucher_type,
-				"party_type": scrub(party_type),
-				"condition": condition,
-			}
-		),
-		(party, company),
-		as_dict=True,
-	)
+        f"""
+        SELECT
+            name AS voucher_no,
+            CASE 
+                WHEN {rounded_total_field} IS NOT NULL THEN {rounded_total_field}
+                ELSE {grand_total_field}
+            END AS invoice_amount,
+            (CASE 
+                WHEN {rounded_total_field} IS NOT NULL THEN {rounded_total_field}
+                ELSE {grand_total_field}
+            END - advance_paid) AS outstanding_amount,
+            transaction_date AS posting_date
+        FROM
+            "tab{voucher_type}"
+        WHERE
+            {scrub(party_type)} = %s
+            AND docstatus = 1
+            AND company = %s
+            AND status != 'Closed'
+            AND (CASE 
+                    WHEN {rounded_total_field} IS NOT NULL THEN {rounded_total_field}
+                    ELSE {grand_total_field}
+                 END) > advance_paid
+            AND ABS(100 - per_billed) > 0.01
+            {condition}
+        ORDER BY
+            transaction_date, name
+        """,
+        (party, company),
+        as_dict=True,
+    )
 
 	order_list = []
 	for d in orders:
@@ -2421,37 +2422,45 @@ def get_negative_outstanding_invoices(
 		rounded_total_field = "rounded_total"
 
 	return frappe.db.sql(
-		"""
-		select
-			"{voucher_type}" as voucher_type, name as voucher_no, {account} as account,
-			if({rounded_total_field}, {rounded_total_field}, {grand_total_field}) as invoice_amount,
-			outstanding_amount, posting_date,
-			due_date, conversion_rate as exchange_rate
-		from
-			`tab{voucher_type}`
-		where
-			{party_type} = %s and {party_account} = %s and docstatus = 1 and
-			outstanding_amount < 0
-			{supplier_condition}
-			{condition}
-		order by
-			posting_date, name
-		""".format(
-			**{
-				"supplier_condition": supplier_condition,
-				"condition": condition,
-				"rounded_total_field": rounded_total_field,
-				"grand_total_field": grand_total_field,
-				"voucher_type": voucher_type,
-				"party_type": scrub(party_type),
-				"party_account": "debit_to" if party_type == "Customer" else "credit_to",
-				"cost_center": cost_center,
-				"account": account,
-			}
-		),
-		(party, party_account),
-		as_dict=True,
-	)
+    """
+    SELECT
+        '{voucher_type}' AS voucher_type, 
+        name AS voucher_no, 
+        {account} AS account,
+        CASE 
+            WHEN {rounded_total_field} IS NOT NULL THEN {rounded_total_field} 
+            ELSE {grand_total_field} 
+        END AS invoice_amount,
+        outstanding_amount, 
+        posting_date,
+        due_date, 
+        conversion_rate AS exchange_rate
+    FROM
+        "tab{voucher_type}"
+    WHERE
+        {party_type} = %s AND {party_account} = %s AND docstatus = 1 AND
+        outstanding_amount < 0
+        {supplier_condition}
+        {condition}
+    ORDER BY
+        posting_date, 
+        name
+    """.format(
+        **{
+            "supplier_condition": supplier_condition,
+            "condition": condition,
+            "rounded_total_field": rounded_total_field,
+            "grand_total_field": grand_total_field,
+            "voucher_type": voucher_type,
+            "party_type": scrub(party_type),
+            "party_account": "debit_to" if party_type == "Customer" else "credit_to",
+            "cost_center": cost_center,
+            "account": account,
+        }
+    ),
+    (party, party_account),
+    as_dict=True,
+)
 
 
 @frappe.whitelist()
