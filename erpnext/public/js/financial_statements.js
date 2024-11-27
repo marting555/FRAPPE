@@ -13,11 +13,16 @@ erpnext.financial_statements = {
 
 			if (growthPercent == undefined) return "NA"; //making this not applicable for undefined/null values
 
-			value = $(`<span>${(growthPercent >= 0 ? "+" : "") + growthPercent + "%"}</span>`);
-			if (growthPercent < 0) {
-				value = $(value).addClass("text-danger");
+			if (column.fieldname === "total") {
+				value = $(`<span>${growthPercent}</span>`);
 			} else {
-				value = $(value).addClass("text-success");
+				value = $(`<span>${(growthPercent >= 0 ? "+" : "") + growthPercent + "%"}</span>`);
+
+				if (growthPercent < 0) {
+					value = $(value).addClass("text-danger");
+				} else {
+					value = $(value).addClass("text-success");
+				}
 			}
 			value = $(value).wrap("<p></p>").parent().html();
 

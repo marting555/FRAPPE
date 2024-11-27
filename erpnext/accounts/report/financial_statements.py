@@ -671,10 +671,7 @@ def get_filtered_list_for_consolidated_report(filters, period_list):
 	return filtered_summary_list
 
 
-def compute_growth_view_data(data, columns, accumulated_values):
-	if not accumulated_values:
-		columns.append({"key": "total"})
-
+def compute_growth_view_data(data, columns):
 	data_copy = copy.deepcopy(data)
 
 	for row_idx in range(len(data_copy)):
@@ -709,14 +706,15 @@ def compute_margin_view_data(data, columns, accumulated_values):
 
 	data_copy = copy.deepcopy(data)
 
+	base_row = next(row for row in data_copy if row.get("account_name") == _("Income"))
+	if not base_row:
+		return
+
 	for row_idx in range(len(data_copy)):
 		# Taking the total income from each column (for all the financial years) as the base (100%)
 		row = data_copy[row_idx]
 		if not row:
 			continue
-
-		if row["account_name"] == _("Income"):
-			base_row = row
 
 		for column in columns:
 			curr_period = column.get("key")

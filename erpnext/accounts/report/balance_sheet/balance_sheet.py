@@ -104,10 +104,7 @@ def execute(filters=None):
 	)
 
 	if filters.get("selected_view") == "Growth":
-		compute_growth_view_data(data, period_list, filters.accumulated_values)
-
-	if filters.get("selected_view") == "Margin":
-		compute_margin_view_data(data, period_list, filters.accumulated_values)
+		compute_growth_view_data(data, period_list)
 
 	return columns, data, message, chart, report_summary, primitive_summary
 
