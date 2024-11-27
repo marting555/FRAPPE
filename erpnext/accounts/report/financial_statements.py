@@ -706,7 +706,12 @@ def compute_margin_view_data(data, columns, accumulated_values):
 
 	data_copy = copy.deepcopy(data)
 
-	base_row = next(row for row in data_copy if row.get("account_name") == _("Income"))
+	base_row = None
+	for row in data_copy:
+		if row.get("account_name") == _("Income"):
+			base_row = row
+			break
+
 	if not base_row:
 		return
 
