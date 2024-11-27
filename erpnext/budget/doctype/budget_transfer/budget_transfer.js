@@ -1,21 +1,7 @@
 // Budget Transfer
 frappe.ui.form.on("Budget Transfer", {
     onload: function(frm) {
-        // Set query for 'project' field without any specific filter
-        frm.set_query("project", function() {
-            return {}; // No filters applied
-        });
-
-        // Automatically set the document_date and posting_date to today's date
-        // if (!frm.doc.document_date) {
-        //     frm.set_value("document_date", frappe.datetime.get_today());
-        // }
-        if (!frm.doc.posting_date) {
-            frm.set_value("posting_date", frappe.datetime.get_today());
-        }
-
         frm.savecancel = function(btn, callback, on_error){ console.log("jiiri");return frm._cancel(btn, callback, on_error, false);}
-
     },
     
     from_wbs: function(frm) {
@@ -62,21 +48,4 @@ frappe.ui.form.on("Budget Transfer", {
             frm.set_value("to_wbs_available_budget", null);
         }
     },
-
-    from_project: function(frm) {
-        // Check if 'from_project' field has a value
-        if (frm.doc.from_project) {
-            // Fetch 'project_name' and 'company' from the selected Project
-            frappe.db.get_value("Project", frm.doc.from_project, ["project_name", "company"], (r) => {
-                if (r) {
-                    frm.set_value("from_project_name", r.project_name);
-                    frm.set_value("company", r.company);
-                }
-            });
-        } else {
-            // Clear the fields if 'from_project' is not set
-            frm.set_value("from_project_name", null);
-            frm.set_value("company", null);
-        }
-    }
 });

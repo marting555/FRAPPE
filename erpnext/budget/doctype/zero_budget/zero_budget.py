@@ -34,13 +34,9 @@ class ZeroBudget(Document):
 
     def before_cancel(self):
         update_original_budget(self,"Cancel")
- 
-    def validate(self):
-        if frappe.db.exists("Zero Budget", {"project": self.project, "docstatus": ["=", 1]}):
-            frappe.throw(_(f"There already exists one Zero Budget with project {self.project}"))
 
 @frappe.whitelist(allow_guest=True)
-def work_breakdown_structure(project):
+def work_breakdown_structure(project = None):
     # Fetch WBS records linked to the specified project
     wbs = frappe.get_all(
         "Work Breakdown Structure",
@@ -104,7 +100,8 @@ def update_original_budget(self,event):
 def create_budget_entry(self,row,event,company):
     if row.get("wbs_id"):
         bgt_ent = frappe.new_doc("Budget Entry")
-        bgt_ent.project = self.project
+        if "projects" in frappe.get_installed_apps():
+            bgt_ent.project = self.project
         bgt_ent.wbs = row.get("wbs_id")
         bgt_ent.wbs_name = row.get("wbs_name")
         bgt_ent.wbs_level = row.get("wbs_level")

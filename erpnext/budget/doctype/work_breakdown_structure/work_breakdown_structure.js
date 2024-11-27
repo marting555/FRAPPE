@@ -13,12 +13,6 @@ frappe.ui.form.on("Work Breakdown Structure", {
     
     },
     onload: function(frm) {
-        frm.set_query("project", function() {
-            return {
-                filters: { "is_wbs": 1 }
-            };
-        });
-
         frm.set_query("parent_work_breakdown_structure", function() {
             return {
                 filters: { 
@@ -27,22 +21,6 @@ frappe.ui.form.on("Work Breakdown Structure", {
                  }
             };
         });
-    },
-
-    project: function(frm) {
-        if (frm.doc.project) {
-            frappe.db.get_value("Project", frm.doc.project, ["project_type", "project_name", "company"], (r) => {
-                if (r) {
-                    frm.set_value("project_type", r.project_type);
-                    frm.set_value("project_name", r.project_name);
-                    frm.set_value("company", r.company);
-                }
-            });
-        } else {
-            frm.set_value("project_type", null);
-            frm.set_value("project_name", null);
-            frm.set_value("company", null);
-        }
     },
 
     parent_work_breakdown_structure: function(frm) {
@@ -77,8 +55,8 @@ frappe.ui.form.on("Work Breakdown Structure", {
             dialog.fields_dict.material_request.$input.on('click', function() {
                 dialog.hide();
                 frappe.new_doc('Material Request', {
-                    custom_project: frm.doc.project,
-                    custom_project_name: frm.doc.project_name,
+                    // custom_project: frm.doc.project,
+                    // custom_project_name: frm.doc.project_name,
                     custom_work_breakdown_structure: frm.doc.name,
                     custom_wbs_name: frm.doc.wbs_name
                 });
@@ -87,8 +65,8 @@ frappe.ui.form.on("Work Breakdown Structure", {
             dialog.fields_dict.purchase_order.$input.on('click', function() {
                 dialog.hide();
                 frappe.new_doc('Purchase Order', {
-                    custom_project: frm.doc.project,
-                    custom_project_name: frm.doc.project_name,
+                    // custom_project: frm.doc.project,
+                    // custom_project_name: frm.doc.project_name,
                     custom_work_breakdown_structure: frm.doc.name,
                     custom_wbs_name: frm.doc.wbs_name
                 });
@@ -97,8 +75,8 @@ frappe.ui.form.on("Work Breakdown Structure", {
             dialog.fields_dict.purchase_invoice.$input.on('click', function() {
                 dialog.hide();
                 frappe.new_doc('Purchase Invoice', {
-                    custom_project: frm.doc.project,
-                    custom_project_name: frm.doc.project_name,
+                    // custom_project: frm.doc.project,
+                    // custom_project_name: frm.doc.project_name,
                     custom_work_breakdown_structure: frm.doc.name,
                     custom_wbs_name: frm.doc.wbs_name
                 });

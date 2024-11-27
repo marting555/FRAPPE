@@ -41,7 +41,7 @@ class WorkBreakdownStructure(Document):
 	# end: auto-generated types
 
 @frappe.whitelist()
-def get_children(doctype, parent, project, is_root=False):
+def get_children(doctype, parent, project = None, is_root=False):
     parent_fieldname = "parent_" + doctype.lower().replace(" ", "_")
     fields = [
         "CONCAT_WS(' : ', name, wbs_name) as value", 
@@ -128,8 +128,9 @@ def after_insert(self):
         data = frappe.new_doc("Work Breakdown Structure")
         data.name = self.name
         print(self.name)
-        data.project_type = self.project_type
-        data.project_name = self.project_name
+        if "projects" in frappe.get_installed_apps():
+            data.project_type = self.project_type
+            data.project_name = self.project_name
         data.company = self.company
         data.insert()
         data.submit()
