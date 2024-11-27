@@ -1396,50 +1396,6 @@
    "fieldname": "named_place",
    "fieldtype": "Data",
    "label": "Named Place"
-<<<<<<< HEAD
-=======
-  },
-  {
-   "fieldname": "delivery_trip",
-   "fieldtype": "Link",
-   "label": "Delivery Trip",
-   "options": "Delivery Trip",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "column_break_pxls",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "utm_medium",
-   "fieldtype": "Link",
-   "label": "Medium",
-   "options": "UTM Medium",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_content",
-   "fieldtype": "Data",
-   "label": "Content",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_source",
-   "fieldtype": "Link",
-   "label": "Source",
-   "oldfieldname": "source",
-   "oldfieldtype": "Select",
-   "options": "UTM Source",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_campaign",
-   "fieldtype": "Link",
-   "label": "Campaign",
-   "oldfieldname": "campaign",
-   "oldfieldtype": "Link",
-   "options": "UTM Campaign",
-   "print_hide": 1
   },
   {
    "fieldname": "company_contact_person",
@@ -1447,18 +1403,13 @@
    "label": "Company Contact Person",
    "options": "Contact",
    "print_hide": 1
->>>>>>> f6776c7d6b (feat: add Company Contact Person in selling transactions (#44362))
   }
  ],
  "icon": "fa fa-truck",
  "idx": 146,
  "is_submittable": 1,
  "links": [],
-<<<<<<< HEAD
- "modified": "2024-03-20 16:05:02.854990",
-=======
  "modified": "2024-11-26 12:44:28.258215",
->>>>>>> f6776c7d6b (feat: add Company Contact Person in selling transactions (#44362))
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note",
