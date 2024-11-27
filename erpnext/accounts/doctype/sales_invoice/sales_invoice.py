@@ -95,7 +95,12 @@ class SalesInvoice(SellingController):
 		commission_rate: DF.Float
 		company: DF.Link
 		company_address: DF.Link | None
+<<<<<<< HEAD
 		company_address_display: DF.SmallText | None
+=======
+		company_address_display: DF.TextEditor | None
+		company_contact_person: DF.Link | None
+>>>>>>> f6776c7d6b (feat: add Company Contact Person in selling transactions (#44362))
 		company_tax_id: DF.Data | None
 		contact_display: DF.SmallText | None
 		contact_email: DF.Data | None

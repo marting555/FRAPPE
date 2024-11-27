@@ -32,12 +32,8 @@ class POSInvoice(SalesInvoice):
 		from erpnext.accounts.doctype.payment_schedule.payment_schedule import PaymentSchedule
 		from erpnext.accounts.doctype.pos_invoice_item.pos_invoice_item import POSInvoiceItem
 		from erpnext.accounts.doctype.pricing_rule_detail.pricing_rule_detail import PricingRuleDetail
-		from erpnext.accounts.doctype.sales_invoice_advance.sales_invoice_advance import (
-			SalesInvoiceAdvance,
-		)
-		from erpnext.accounts.doctype.sales_invoice_payment.sales_invoice_payment import (
-			SalesInvoicePayment,
-		)
+		from erpnext.accounts.doctype.sales_invoice_advance.sales_invoice_advance import SalesInvoiceAdvance
+		from erpnext.accounts.doctype.sales_invoice_payment.sales_invoice_payment import SalesInvoicePayment
 		from erpnext.accounts.doctype.sales_invoice_timesheet.sales_invoice_timesheet import (
 			SalesInvoiceTimesheet,
 		)
@@ -74,7 +70,12 @@ class POSInvoice(SalesInvoice):
 		commission_rate: DF.Float
 		company: DF.Link
 		company_address: DF.Link | None
+<<<<<<< HEAD
 		company_address_display: DF.SmallText | None
+=======
+		company_address_display: DF.TextEditor | None
+		company_contact_person: DF.Link | None
+>>>>>>> f6776c7d6b (feat: add Company Contact Person in selling transactions (#44362))
 		consolidated_invoice: DF.Link | None
 		contact_display: DF.SmallText | None
 		contact_email: DF.Data | None
