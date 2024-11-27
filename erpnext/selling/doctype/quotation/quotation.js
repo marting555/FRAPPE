@@ -390,19 +390,16 @@ frappe.ui.form.on("Quotation Item", "stock_balance", function (frm, cdt, cdn) {
 frappe.ui.form.on('Quotation Item', {
 	item_code: function (frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
-
 		if (row.is_product_bundle) {
-
+			initializeLocalStorage(row);
+			storeOriginalQuantities(row);
 			const exist = validateItemsNotExist(frm, row.item_code, row);
 			if (exist) {
 				frappe.msgprint(__("Product bundle {0} already exists in the quotation. Please remove it before adding a new item.", [row.item_code]));
 				return;
 			}
-
 			const confirmItems = [];
 			let concatenatedDescription = '';
-			initializeLocalStorage(row);
-			storeOriginalQuantities(row);
 			processProductBundle(frm, row, confirmItems, concatenatedDescription);
 		}
 	},
@@ -412,13 +409,22 @@ frappe.ui.form.on('Quotation Item', {
 		if (row.is_product_bundle) {
 			const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
 			const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
+			if (!originalQuantities) return;
 			updateSubItemQuantities(frm, row, originalQuantities);
 		}
 	},
 	discount_percentage: function (frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
 		console.log("discount_percentage: ", row);
-
+		if (row.is_product_bundle) {
+			const rate = row.rate;
+			const discount_percentage = row.discount_percentage;
+			const discount_amount = (rate * discount_percentage) / 100;
+			row.rate = Number((rate - discount_amount).toFixed(2));
+			row.discount_percentage = discount_percentage;
+			row.discount_amount = Number(discount_amount.toFixed(2));
+			refreshQuoatationFields(frm);
+		}
 	}
 });
 
@@ -437,6 +443,7 @@ function initializeLocalStorage(row) {
 }
 
 function storeOriginalQuantities(row) {
+	console.log("row ", row);
 	const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
 	const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
 	originalQuantities[row.item_code] = {
@@ -497,9 +504,7 @@ function updateRowDescription(frm, row, concatenatedDescription) {
 		row.description = concatenatedDescription;
 		const allItems = frm.doc.items.map(item => updateItemRate(item, row));
 		frm.set_value('items', allItems);
-		frm.refresh_field('items');
-		frm.trigger('calculate_taxes_and_totals');
-		frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+		refreshQuoatationFields(frm);
 	}, 1000);
 }
 
@@ -517,7 +522,7 @@ function showDialog(frm, row, confirmItems) {
 	const dialog = new frappe.ui.Dialog({
 		title: __(row.item_code),
 		fields: createDialogFields(row, confirmItems),
-		primary_action_label: __("Add Selected Items"),
+		primary_action_label: __("Add Items"),
 		secondary_action_label: __("Cancel"),
 		primary_action(values) {
 			addSelectedItemsToQuotation(frm, values, confirmItems, row);
@@ -642,9 +647,8 @@ function addSelectedItemsToQuotation(frm, values, confirmItems, row) {
 			});
 		}
 	});
-	frm.refresh_field('items');
-	frm.trigger('calculate_taxes_and_totals');
-	frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+
+	refreshQuoatationFields(frm);
 }
 
 function updateSubItemQuantities(frm, row, originalQuantities) {
@@ -662,9 +666,7 @@ function updateSubItemQuantities(frm, row, originalQuantities) {
 			});
 		}
 	});
-	frm.refresh_field('items');
-	frm.trigger('calculate_taxes_and_totals');
-	frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+	refreshQuoatationFields(frm);
 }
 
 //---------------------------------- Quotation on selling price list change
@@ -744,9 +746,14 @@ function updateItemRates(frm, updatedPrices) {
 		}
 	});
 
+	refreshQuoatationFields(frm);
+}
+
+function refreshQuoatationFields(frm) {
 	frm.refresh_field('items');
 	frm.trigger('calculate_taxes_and_totals');
 	frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
 }
+
 
 
