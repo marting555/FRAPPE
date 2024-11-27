@@ -41,7 +41,7 @@ erpnext.financial_statements = {
 			}
 		}
 
-		if (data && column.fieldname == "stub") {
+		if (data && column.fieldname == "account") {
 			// first column
 			value = data.section_name || data.account_name || value;
 
