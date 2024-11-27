@@ -11,7 +11,6 @@
   "budget_against",
   "company",
   "cost_center",
-  "project",
   "wbs",
   "available_budget",
   "get_gl_accounts",
@@ -46,7 +45,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Budget Against",
-   "options": "\nCost Center\nProject"
+   "options": "\nCost Center"
   },
   {
    "fieldname": "company",
@@ -64,14 +63,6 @@
    "in_standard_filter": 1,
    "label": "Cost Center",
    "options": "Cost Center"
-  },
-  {
-   "depends_on": "eval:doc.budget_against == 'Project'",
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "in_standard_filter": 1,
-   "label": "Project",
-   "options": "Project"
   },
   {
    "fieldname": "wbs",

@@ -6,8 +6,6 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "from_project",
-  "from_project_name",
   "company",
   "column_break_pvng",
   "posting_date",
@@ -35,17 +33,7 @@
  ],
  "fields": [
   {
-   "fieldname": "from_project",
-   "fieldtype": "Link",
-   "label": "From Project",
-   "options": "Project"
-  },
-  {
-   "fieldname": "from_project_name",
-   "fieldtype": "Data",
-   "label": "From Project Name"
-  },
-  {
+   "fetch_from": "from_project.company",
    "fieldname": "company",
    "fieldtype": "Link",
    "label": "Company",
@@ -56,6 +44,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "Today",
    "fieldname": "posting_date",
    "fieldtype": "Date",
    "label": "Posting Date"
@@ -187,7 +176,7 @@
    "link_fieldname": "voucher_no"
   }
  ],
- "modified": "2024-11-21 16:02:27.865100",
+ "modified": "2024-11-26 23:24:18.648805",
  "modified_by": "Administrator",
  "module": "Budget",
  "name": "Budget Transfer",

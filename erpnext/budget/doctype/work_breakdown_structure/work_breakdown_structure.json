@@ -6,12 +6,9 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "project",
-  "project_type",
   "wbs_name",
   "column_break_bcho",
   "locked",
-  "project_name",
   "company",
   "budget_details_section",
   "original_budget",
@@ -34,18 +31,6 @@
  ],
  "fields": [
   {
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "options": "Project",
-   "reqd": 1
-  },
-  {
-   "fieldname": "project_type",
-   "fieldtype": "Data",
-   "label": "Project Type"
-  },
-  {
    "fieldname": "wbs_name",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -63,11 +48,6 @@
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Locked"
-  },
-  {
-   "fieldname": "project_name",
-   "fieldtype": "Data",
-   "label": "Project Name"
   },
   {
    "fieldname": "company",
