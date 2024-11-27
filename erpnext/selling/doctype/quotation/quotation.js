@@ -391,34 +391,34 @@ frappe.ui.form.on('Quotation Item', {
 	item_code: function (frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
 
-		const exist = validateItemsNotExist(frm, row.item_code, row);
-		if (exist) {
-			frappe.msgprint(__("Product bundle {0} already exists in the quotation. Please remove it before adding a new item.", [row.item_code]));
-			return;
-		}
-
-		const confirmItems = [];
-		let concatenatedDescription = '';
-
-		initializeLocalStorage(row);
-
 		if (row.is_product_bundle) {
+
+			const exist = validateItemsNotExist(frm, row.item_code, row);
+			if (exist) {
+				frappe.msgprint(__("Product bundle {0} already exists in the quotation. Please remove it before adding a new item.", [row.item_code]));
+				return;
+			}
+
+			const confirmItems = [];
+			let concatenatedDescription = '';
+			initializeLocalStorage(row);
 			storeOriginalQuantities(row);
-		}
-
-		if (row.is_product_bundle) {
 			processProductBundle(frm, row, confirmItems, concatenatedDescription);
 		}
 	},
 
 	qty: function (frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
-		const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
-		const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
-
 		if (row.is_product_bundle) {
+			const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
+			const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
 			updateSubItemQuantities(frm, row, originalQuantities);
 		}
+	},
+	discount_percentage: function (frm, cdt, cdn) {
+		const row = locals[cdt][cdn];
+		console.log("discount_percentage: ", row);
+
 	}
 });
 
@@ -512,9 +512,6 @@ function updateItemRate(item, row) {
 
 	return item;
 }
-
-
-
 
 function showDialog(frm, row, confirmItems) {
 	const dialog = new frappe.ui.Dialog({
@@ -751,9 +748,5 @@ function updateItemRates(frm, updatedPrices) {
 	frm.trigger('calculate_taxes_and_totals');
 	frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
 }
-
-
-
-
 
 
