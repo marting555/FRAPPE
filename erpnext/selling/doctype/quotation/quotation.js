@@ -415,16 +415,25 @@ frappe.ui.form.on('Quotation Item', {
 	},
 	discount_percentage: function (frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
-		console.log("discount_percentage: ", row);
-		if (row.is_product_bundle) {
-			const rate = row.rate;
-			const discount_percentage = row.discount_percentage;
-			const discount_amount = (rate * discount_percentage) / 100;
-			row.rate = Number((rate - discount_amount).toFixed(2));
-			row.discount_percentage = discount_percentage;
-			row.discount_amount = Number(discount_amount.toFixed(2));
-			refreshQuoatationFields(frm);
-		}
+		const rate = row.rate;
+		if (rate <= 0) return
+		const discount_percentage = row.discount_percentage;
+		const discount_amount = Number(((rate * discount_percentage) / 100).toFixed(2));
+
+		row.rate = rate - discount_amount;
+		row.discount_percentage = discount_percentage;
+		row.discount_amount = discount_amount
+
+		const allItems = frm.doc.items.map(item => {
+			if (item.item_code === row.item_code) {
+				item.discount_percentage = discount_percentage;
+				item.discount_amount = discount_amount;
+			}
+			return item;
+		});
+		frm.set_value('items', allItems);
+		refreshQuoatationFields(frm);
+
 	}
 });
 
