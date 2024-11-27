@@ -452,7 +452,6 @@ function initializeLocalStorage(row) {
 }
 
 function storeOriginalQuantities(row) {
-	console.log("row ", row);
 	const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
 	const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
 	originalQuantities[row.item_code] = {
