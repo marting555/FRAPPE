@@ -87,11 +87,7 @@
  "icon": "fa fa-edit",
  "index_web_pages_for_search": 1,
  "links": [],
-<<<<<<< HEAD
- "modified": "2020-10-02 12:03:02.359202",
-=======
  "modified": "2024-11-26 20:05:29.421714",
->>>>>>> 123e3ef263 (feat: provision to disable item attribute (#44358))
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item Attribute",
