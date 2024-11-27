@@ -432,7 +432,7 @@ frappe.ui.form.on('Quotation Item', {
 			return item;
 		});
 		frm.set_value('items', allItems);
-		refreshQuoatationFields(frm);
+		refreshQuotationFields(frm);
 
 	}
 });
@@ -513,7 +513,7 @@ function updateRowDescription(frm, row, concatenatedDescription) {
 		row.description = concatenatedDescription;
 		const allItems = frm.doc.items.map(item => updateItemRate(item, row));
 		frm.set_value('items', allItems);
-		refreshQuoatationFields(frm);
+		refreshQuotationFields(frm);
 	}, 1000);
 }
 
@@ -657,7 +657,7 @@ function addSelectedItemsToQuotation(frm, values, confirmItems, row) {
 		}
 	});
 
-	refreshQuoatationFields(frm);
+	refreshQuotationFields(frm);
 }
 
 function updateSubItemQuantities(frm, row, originalQuantities) {
@@ -675,7 +675,7 @@ function updateSubItemQuantities(frm, row, originalQuantities) {
 			});
 		}
 	});
-	refreshQuoatationFields(frm);
+	refreshQuotationFields(frm);
 }
 
 //---------------------------------- Quotation on selling price list change
@@ -755,10 +755,10 @@ function updateItemRates(frm, updatedPrices) {
 		}
 	});
 
-	refreshQuoatationFields(frm);
+	refreshQuotationFields(frm);
 }
 
-function refreshQuoatationFields(frm) {
+function refreshQuotationFields(frm) {
 	frm.refresh_field('items');
 	frm.trigger('calculate_taxes_and_totals');
 	frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
