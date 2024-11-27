@@ -1641,59 +1641,6 @@
    "no_copy": 1,
    "print_hide": 1,
    "report_hide": 1
-<<<<<<< HEAD
-=======
-  },
-  {
-   "fieldname": "advance_payment_status",
-   "fieldtype": "Select",
-   "hidden": 1,
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "in_standard_filter": 1,
-   "label": "Advance Payment Status",
-   "no_copy": 1,
-   "options": "Not Requested\nRequested\nPartially Paid\nFully Paid",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "column_break_yvzv",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "utm_medium",
-   "fieldtype": "Link",
-   "label": "Medium",
-   "options": "UTM Medium",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_content",
-   "fieldtype": "Data",
-   "label": "Content",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_source",
-   "fieldtype": "Link",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Source",
-   "oldfieldname": "source",
-   "oldfieldtype": "Select",
-   "options": "UTM Source",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_campaign",
-   "fieldtype": "Link",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Campaign",
-   "oldfieldname": "campaign",
-   "oldfieldtype": "Link",
-   "options": "UTM Campaign",
-   "print_hide": 1
   },
   {
    "fieldname": "company_contact_person",
@@ -1701,18 +1648,13 @@
    "label": "Company Contact Person",
    "options": "Contact",
    "print_hide": 1
->>>>>>> f6776c7d6b (feat: add Company Contact Person in selling transactions (#44362))
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
-<<<<<<< HEAD
- "modified": "2024-05-23 16:35:54.905804",
-=======
  "modified": "2024-11-26 12:42:06.872527",
->>>>>>> f6776c7d6b (feat: add Company Contact Person in selling transactions (#44362))
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
