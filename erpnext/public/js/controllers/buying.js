@@ -17,10 +17,11 @@ erpnext.buying = {
 				this.setup_queries(doc, cdt, cdn);
 				super.onload();
 
-				this.frm.set_query('shipping_rule', function() {
+				this.frm.set_query('shipping_rule', function(doc) {
 					return {
 						filters: {
-							"shipping_rule_type": "Buying"
+							"shipping_rule_type": "Buying",
+							company: doc.company
 						}
 					};
 				});
