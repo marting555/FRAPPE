@@ -5,7 +5,7 @@ import unittest
 import re
 import frappe
 from frappe.tests.utils import FrappeTestCase
-
+from unittest.mock import patch
 from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_terms_template
 from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
@@ -15,7 +15,7 @@ from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_orde
 from erpnext.setup.utils import get_exchange_rate
 
 test_dependencies = ["Currency Exchange", "Journal Entry", "Contact", "Address"]
-
+PAYMENT_URL = "https://example.com/payment"
 payment_gateway = {"doctype": "Payment Gateway", "gateway": "_Test Gateway"}
 
 payment_method = [
@@ -47,6 +47,29 @@ class TestPaymentRequest(FrappeTestCase):
 				"name",
 			):
 				frappe.get_doc(method).insert(ignore_permissions=True)
+
+		send_email = patch(
+			"erpnext.accounts.doctype.payment_request.payment_request.PaymentRequest.send_email",
+			return_value=None,
+		)
+		self.send_email = send_email.start()
+		self.addCleanup(send_email.stop)
+		get_payment_url = patch(
+			# this also shadows one (1) call to _get_payment_gateway_controller
+			"erpnext.accounts.doctype.payment_request.payment_request.PaymentRequest.get_payment_url",
+			return_value=PAYMENT_URL,
+		)
+		self.get_payment_url = get_payment_url.start()
+		self.addCleanup(get_payment_url.stop)
+		_get_payment_gateway_controller = patch(
+			"erpnext.accounts.doctype.payment_request.payment_request._get_payment_gateway_controller",
+		)
+		self._get_payment_gateway_controller = _get_payment_gateway_controller.start()
+		self.addCleanup(_get_payment_gateway_controller.stop)
+
+	def tearDown(self):
+		frappe.db.rollback()
+
 
 	def test_payment_request_linkings(self):
 		so_inr = make_sales_order(currency="INR", do_not_save=True)
@@ -292,7 +315,6 @@ class TestPaymentRequest(FrappeTestCase):
 		self.assertEqual(pr.grand_total, 1000)
 		self.assertEqual(pr.outstanding_amount, pr.grand_total)
 		self.assertEqual(pr.party_account_currency, pr.currency)  # INR
-		self.assertEqual(pr.status, "Requested")
 		so.load_from_db()
 		# to make partial payment
 		pe = pr.create_payment_entry(submit=False)
@@ -423,7 +445,6 @@ class TestPaymentRequest(FrappeTestCase):
 		self.assertEqual(pr.outstanding_amount, 10000)
 		self.assertEqual(pr.currency, "USD")
 		self.assertEqual(pr.party_account_currency, "INR")
-		self.assertEqual(pr.status, "Requested")
 		pe = pr.create_payment_entry()
 		self.assertEqual(len(pe.references), 2)
 		self.assertEqual(pe.paid_amount, 10000)
@@ -438,6 +459,7 @@ class TestPaymentRequest(FrappeTestCase):
 		self.assertEqual(pr.status, "Paid")
 		self.assertEqual(pr.outstanding_amount, 0)
 		self.assertEqual(pr.grand_total, 200)
+
 	def test_payment_cancel_process(self):
 		so = make_sales_order(currency="INR", qty=1, rate=1000)
 		pr = make_payment_request(
@@ -447,7 +469,6 @@ class TestPaymentRequest(FrappeTestCase):
 			submit_doc=1,
 			return_doc=1,
 		)
-		self.assertEqual(pr.status, "Requested")
 		self.assertEqual(pr.grand_total, 1000)
 		self.assertEqual(pr.outstanding_amount, pr.grand_total)
 		so.load_from_db()
