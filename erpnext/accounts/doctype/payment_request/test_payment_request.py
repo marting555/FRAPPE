@@ -4,8 +4,7 @@
 import unittest
 import re
 import frappe
-from frappe.tests.utils import FrappeTestCase
-from unittest.mock import patch
+from frappe.tests.utils import FrappeTestCase, change_settings
 from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_terms_template
 from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
@@ -15,7 +14,6 @@ from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_orde
 from erpnext.setup.utils import get_exchange_rate
 
 test_dependencies = ["Currency Exchange", "Journal Entry", "Contact", "Address"]
-PAYMENT_URL = "https://example.com/payment"
 payment_gateway = {"doctype": "Payment Gateway", "gateway": "_Test Gateway"}
 
 payment_method = [
@@ -47,28 +45,6 @@ class TestPaymentRequest(FrappeTestCase):
 				"name",
 			):
 				frappe.get_doc(method).insert(ignore_permissions=True)
-
-		send_email = patch(
-			"erpnext.accounts.doctype.payment_request.payment_request.PaymentRequest.send_email",
-			return_value=None,
-		)
-		self.send_email = send_email.start()
-		self.addCleanup(send_email.stop)
-		get_payment_url = patch(
-			# this also shadows one (1) call to _get_payment_gateway_controller
-			"erpnext.accounts.doctype.payment_request.payment_request.PaymentRequest.get_payment_url",
-			return_value=PAYMENT_URL,
-		)
-		self.get_payment_url = get_payment_url.start()
-		self.addCleanup(get_payment_url.stop)
-		_get_payment_gateway_controller = patch(
-			"erpnext.accounts.doctype.payment_request.payment_request._get_payment_gateway_controller",
-		)
-		self._get_payment_gateway_controller = _get_payment_gateway_controller.start()
-		self.addCleanup(_get_payment_gateway_controller.stop)
-
-	def tearDown(self):
-		frappe.db.rollback()
 
 
 	def test_payment_request_linkings(self):
@@ -349,8 +325,12 @@ class TestPaymentRequest(FrappeTestCase):
 			submit_doc=1,
 			return_doc=1,
 		)
+
+	@change_settings("Accounts Settings", {"allow_multi_currency_invoices_against_single_party_account": 1})
 	def test_multiple_payment_if_partially_paid_for_multi_currency(self):
-		pi = make_purchase_invoice(currency="USD", conversion_rate=50, qty=1, rate=100)
+		pi = make_purchase_invoice(currency="USD", conversion_rate=50, qty=1, rate=100, do_not_save=1)
+		pi.credit_to = "Creditors - _TC"
+		pi.submit()
 		pr = make_payment_request(
 			dt="Purchase Invoice",
 			dn=pi.name,
@@ -427,9 +407,13 @@ class TestPaymentRequest(FrappeTestCase):
 		self.assertEqual(pr.status, "Paid")
 		self.assertEqual(pr.outstanding_amount, 0)
 		self.assertEqual(pr.grand_total, 20000)
+
+	@change_settings("Accounts Settings", {"allow_multi_currency_invoices_against_single_party_account": 1})
 	def test_single_payment_with_payment_term_for_multi_currency(self):
 		create_payment_terms_template()
-		si = create_sales_invoice(do_not_save=1, currency="USD", qty=1, rate=200, conversion_rate=50)
+		si = create_sales_invoice(
+			do_not_save=1, currency="USD", debit_to="Debtors - _TC", qty=1, rate=200, conversion_rate=50
+		)
 		si.payment_terms_template = "Test Receivable Template"  # 84.746 and 15.254
 		si.save()
 		si.submit()
