@@ -78,7 +78,7 @@ def get_transaction_list(
 	if not filters:
 		filters = {}
 
-	filters["docstatus"] = ["<", "2"] if doctype in ["Supplier Quotation", "Purchase Invoice"] else 1
+	filters["docstatus"] = ["<", 2] if doctype in ["Supplier Quotation", "Purchase Invoice"] else 1
 
 	if (user != "Guest" and is_website_user()) or doctype == "Request for Quotation":
 		parties_doctype = "Request for Quotation Supplier" if doctype == "Request for Quotation" else doctype
