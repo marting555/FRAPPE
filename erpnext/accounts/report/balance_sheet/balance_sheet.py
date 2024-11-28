@@ -8,7 +8,6 @@ from frappe.utils import cint, flt
 
 from erpnext.accounts.report.financial_statements import (
 	compute_growth_view_data,
-	compute_margin_view_data,
 	get_columns,
 	get_data,
 	get_filtered_list_for_consolidated_report,
