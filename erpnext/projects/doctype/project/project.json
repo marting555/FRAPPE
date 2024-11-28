@@ -437,7 +437,9 @@
   {
    "fieldname": "model",
    "fieldtype": "Data",
-   "label": "Model"
+   "in_list_view": 1,
+   "label": "Model",
+   "search_index": 1
   },
   {
    "fieldname": "hp_kw",
@@ -461,7 +463,9 @@
   {
    "fieldname": "dsg_model",
    "fieldtype": "Data",
-   "label": "DSG model"
+   "in_list_view": 1,
+   "label": "DSG model",
+   "search_index": 1
   },
   {
    "fieldname": "dsg_code",
@@ -935,11 +939,12 @@
    "options": "Client Requirements"
   },
   {
-   "default": "0",
    "fieldname": "pickup",
-   "fieldtype": "Check",
+   "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "Pickup"
+   "label": "Dropoff - Pickup service",
+   "options": "\nDropoff service\nPickup service\nDropoff service arranged\nPickup service arranged\nReady",
+   "translatable": 1
   },
   {
    "default": "0",
@@ -955,7 +960,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-11-22 14:48:48.438265",
+ "modified": "2024-11-28 18:22:33.038761",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
