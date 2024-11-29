@@ -205,7 +205,8 @@ def payment_reconciliation_record_on_unreconcile(payment_reconciliation_record_n
 		new_record = frappe.copy_doc(original)
 		new_record.flags.ignore_permissions = True
 		new_record.unreconcile = 1 
-		new_record.clearing_date = clearing_date
+		if clearing_date:
+			new_record.clearing_date = clearing_date
 		filtered_allocations = [alloc for alloc in original.allocation if not alloc.unreconcile]
 		new_record.allocation = []
 		for alloc in filtered_allocations:
@@ -224,6 +225,8 @@ def payment_reconciliation_record_on_unreconcile(payment_reconciliation_record_n
 
 		# Create a new Payment Reconciliation Record using the provided data
 		payment_reconciliation = frappe.new_doc("Payment Reconciliation Record")
+		if header.get("clearing_date"):
+			payment_reconciliation.clearing_date = header.get("clearing_date")
 		payment_reconciliation.company = header.get("company")
 		payment_reconciliation.party_type = header.get("party_type")
 		payment_reconciliation.party = header.get("party")

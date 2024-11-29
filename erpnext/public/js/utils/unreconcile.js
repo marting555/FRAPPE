@@ -185,6 +185,13 @@ erpnext.accounts.unreconcile_payment = {
 			];
 			let unreconcile_dialog_fields = [
 				{
+					label: __("Clearing Date"),
+					fieldname: "clearing_date",
+					fieldtype: "Date",
+					reqd: 1,
+					default: frappe.datetime.get_today(),
+				},
+				{
 					label: __("Allocations"),
 					fieldname: "allocations",
 					fieldtype: "Table",
@@ -193,7 +200,7 @@ erpnext.accounts.unreconcile_payment = {
 				},
 			];
 
-			// get linked payments
+			// Get linked payments
 			frappe.call({
 				method: "erpnext.accounts.doctype.unreconcile_payment.unreconcile_payment.get_linked_payments_for_doc",
 				args: {
@@ -203,12 +210,12 @@ erpnext.accounts.unreconcile_payment = {
 				},
 				callback: function (r) {
 					if (r.message) {
-						// populate child table with allocations
-						unreconcile_dialog_fields[0].data = r.message;
-						unreconcile_dialog_fields[0].get_data = function () {
+						// Populate child table with allocations
+						unreconcile_dialog_fields[1].data = r.message;
+						unreconcile_dialog_fields[1].get_data = function () {
 							return r.message;
 						};
-
+	
 						let d = new frappe.ui.Dialog({
 							title: "UnReconcile Allocations",
 							fields: unreconcile_dialog_fields,
@@ -216,7 +223,9 @@ erpnext.accounts.unreconcile_payment = {
 							cannot_add_rows: true,
 							primary_action_label: "UnReconcile",
 							primary_action(values) {
+								let clearing_date = values.clearing_date;
 								let selected_allocations = values.allocations.filter((x) => x.__checked);
+	
 								if (selected_allocations.length > 0) {
 									let selection_map =
 										erpnext.accounts.unreconcile_payment.build_selection_map(
@@ -225,7 +234,8 @@ erpnext.accounts.unreconcile_payment = {
 										);
 									erpnext.accounts.unreconcile_payment.create_unreconcile_docs(
 										frm,
-										selection_map
+										selection_map,
+										clearing_date // Pass the clearing date
 									);
 									d.hide();
 								} else {
@@ -241,7 +251,7 @@ erpnext.accounts.unreconcile_payment = {
 		}
 	},
 
-	create_unreconcile_docs(frm,selection_map) {
+	create_unreconcile_docs(frm,selection_map,clearing_date) {
 		frappe.call({
 			method: "erpnext.accounts.doctype.unreconcile_payment.unreconcile_payment.create_unreconcile_doc_for_selection",
 			args: {
@@ -251,17 +261,19 @@ erpnext.accounts.unreconcile_payment = {
 				// Call the method to create the Payment Reconciliation Record after UnReconcile
 				erpnext.accounts.unreconcile_payment.create_payment_reconciliation_record_for_other_source_docs(
 					frm, 
-					selection_map
+					selection_map,
+					clearing_date
 				);
 			}
 		});
 	},
 	//Create Payment Reconciliation Record after UnReconcile
-    create_payment_reconciliation_record_for_other_source_docs(frm, selected_allocations) {
+    create_payment_reconciliation_record_for_other_source_docs(frm, selected_allocations, clearing_date) {
 		// Build the data for Payment Reconciliation Record
 		let payment_reconciliation_data = {
 			company: frm.doc.company,
 			unreconcile: 1, // Default value
+			clearing_date: clearing_date
 		};
 		if (frm.doc.doctype === "Sales Invoice") {
 			payment_reconciliation_data.party_type = "Customer";
@@ -278,9 +290,6 @@ erpnext.accounts.unreconcile_payment = {
 		// Handle the allocation mapping for different doctypes
 		if (["Sales Invoice", "Purchase Invoice"].includes(frm.doc.doctype)) {
 			allocations = selected_allocations.map(function (elem) {
-				console.log(elem.voucher_type)
-				console.log(elem.voucher_no)
-				console.log(selected_allocations)
 				return {
 					reference_type: elem.voucher_type,      
 					reference_name: elem.voucher_no,          
