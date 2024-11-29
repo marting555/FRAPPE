@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2024-11-24 09:36+0000\n"
-"PO-Revision-Date: 2024-11-28 10:55\n"
+"PO-Revision-Date: 2024-11-29 11:30\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -39277,19 +39277,19 @@ msgstr "Data per Projekt finns inte tillgängligt för Försäljning Offert"
 #: erpnext/stock/report/stock_projected_qty/stock_projected_qty.py:199
 #: erpnext/templates/emails/reorder_item.html:12
 msgid "Projected Qty"
-msgstr "Uppskatad Kvantitet"
+msgstr "Förväntad Kvantitet"
 
 #: erpnext/stock/report/item_shortage_report/item_shortage_report.py:130
 msgid "Projected Quantity"
-msgstr "Uppskatad Kvantitet"
+msgstr "Förväntad Kvantitet"
 
 #: erpnext/manufacturing/doctype/production_plan/production_plan.js:150
 msgid "Projected Quantity Formula"
-msgstr "Uppskatad Kvantitet Formula"
+msgstr "Förväntad Kvantitet Formel"
 
 #: erpnext/stock/page/stock_balance/stock_balance.js:51
 msgid "Projected qty"
-msgstr "Uppskattad Kvantitet"
+msgstr "Förväntad Kvantitet"
 
 #. Name of a Workspace
 #. Label of a Card Break in the Projects Workspace
@@ -43424,7 +43424,7 @@ msgstr "Reserverad för Parti"
 
 #: erpnext/stock/report/stock_projected_qty/stock_projected_qty.py:192
 msgid "Reserved for POS Transactions"
-msgstr "Reserverad för Kassa"
+msgstr "Reserverad för Kassa Transaktioner"
 
 #: erpnext/stock/report/stock_projected_qty/stock_projected_qty.py:171
 msgid "Reserved for Production"
