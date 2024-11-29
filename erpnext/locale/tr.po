@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2024-11-24 09:36+0000\n"
-"PO-Revision-Date: 2024-11-28 10:55\n"
+"PO-Revision-Date: 2024-11-29 11:30\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Turkish\n"
 "MIME-Version: 1.0\n"
@@ -7048,7 +7048,7 @@ msgstr "Geriye Dönük Stok Hareketi"
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:371
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:621
 msgid "Backflush Materials From WIP"
-msgstr ""
+msgstr "Hammaddeleri Üretimden Geri Akışla Kullan"
 
 #. Label of the backflush_from_wip_warehouse (Check) field in DocType 'BOM
 #. Creator'
@@ -7067,11 +7067,11 @@ msgstr ""
 #: erpnext/manufacturing/doctype/work_order/work_order.js:300
 #: erpnext/manufacturing/doctype/work_order_operation/work_order_operation.json
 msgid "Backflush Materials From WIP Warehouse"
-msgstr ""
+msgstr "Üretim Deposundan Hammaddeleri Geri Akışla Kullan"
 
 #: erpnext/manufacturing/doctype/manufacturing_settings/manufacturing_settings.js:16
 msgid "Backflush Raw Materials"
-msgstr ""
+msgstr "Hammaddeleri Geri Akışla Kullan"
 
 #. Label of the backflush_raw_materials_based_on (Select) field in DocType
 #. 'Manufacturing Settings'
@@ -7693,21 +7693,21 @@ msgstr "Toplu İşlem"
 #. Label of the description (Small Text) field in DocType 'Batch'
 #: erpnext/stock/doctype/batch/batch.json
 msgid "Batch Description"
-msgstr ""
+msgstr "Parti Açıklaması"
 
 #. Label of the sb_batch (Section Break) field in DocType 'Batch'
 #: erpnext/stock/doctype/batch/batch.json
 msgid "Batch Details"
-msgstr ""
+msgstr "Parti Detayları"
 
 #: erpnext/stock/doctype/batch/batch.py:193
 msgid "Batch Expiry Date"
-msgstr ""
+msgstr "Parti Son Kullanma Tarihi"
 
 #. Label of the batch_id (Data) field in DocType 'Batch'
 #: erpnext/stock/doctype/batch/batch.json
 msgid "Batch ID"
-msgstr ""
+msgstr "Parti Kimliği"
 
 #: erpnext/stock/doctype/batch/batch.py:129
 msgid "Batch ID is mandatory"
@@ -7811,7 +7811,7 @@ msgstr "Parti İade İçin Uygun Değil"
 #. Label of the batch_number_series (Data) field in DocType 'Item'
 #: erpnext/stock/doctype/item/item.json
 msgid "Batch Number Series"
-msgstr ""
+msgstr "Parti Numarası Serisi"
 
 #: erpnext/stock/report/serial_and_batch_summary/serial_and_batch_summary.py:153
 msgid "Batch Qty"
@@ -7820,7 +7820,7 @@ msgstr "Parti Miktarı"
 #. Label of the batch_qty (Float) field in DocType 'Batch'
 #: erpnext/stock/doctype/batch/batch.json
 msgid "Batch Quantity"
-msgstr ""
+msgstr "Parti Miktarı"
 
 #. Label of the batch_size (Int) field in DocType 'BOM Operation'
 #. Label of the batch_size (Int) field in DocType 'Operation'
@@ -7837,7 +7837,7 @@ msgstr "Parti Boyutu"
 #. Label of the stock_uom (Link) field in DocType 'Batch'
 #: erpnext/stock/doctype/batch/batch.json
 msgid "Batch UOM"
-msgstr ""
+msgstr "Parti Ölçü Birimi"
 
 #. Label of the batch_and_serial_no_section (Section Break) field in DocType
 #. 'Asset Capitalization Stock Item'
@@ -7883,7 +7883,7 @@ msgstr "Toplu Değerleme"
 #. Reconciliation Item'
 #: erpnext/stock/doctype/stock_reconciliation_item/stock_reconciliation_item.json
 msgid "Before reconciliation"
-msgstr ""
+msgstr "Uzlaştırmadan Önce"
 
 #. Label of the start (Int) field in DocType 'Task'
 #: erpnext/projects/doctype/task/task.json
@@ -25726,7 +25726,7 @@ msgstr "Nakliyeci"
 #. Label of the is_your_company_address (Check) field in DocType 'Address'
 #: erpnext/accounts/custom/address.json
 msgid "Is Your Company Address"
-msgstr "Şirket Adresiniz"
+msgstr "Şirket Adresi"
 
 #. Label of the is_a_subscription (Check) field in DocType 'Payment Request'
 #: erpnext/accounts/doctype/payment_request/payment_request.json
@@ -41266,7 +41266,7 @@ msgstr "Sertifikaya Göre Stopaj Vergisi Oranı"
 #. Batch Entry'
 #: erpnext/stock/doctype/serial_and_batch_entry/serial_and_batch_entry.json
 msgid "Rate Section"
-msgstr ""
+msgstr "Oran Bölümü"
 
 #. Label of the rate_with_margin (Currency) field in DocType 'POS Invoice Item'
 #. Label of the rate_with_margin (Currency) field in DocType 'Purchase Invoice
@@ -43813,7 +43813,7 @@ msgstr "İade Edildi"
 #. Bundle'
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.json
 msgid "Returned Against"
-msgstr ""
+msgstr "Gelen İade"
 
 #: erpnext/accounts/report/delivered_items_to_be_billed/delivered_items_to_be_billed.py:57
 #: erpnext/accounts/report/received_items_to_be_billed/received_items_to_be_billed.py:57
@@ -51894,7 +51894,7 @@ msgstr "Hedef Sabit Varlık Hesabı"
 #. Capitalization'
 #: erpnext/assets/doctype/asset_capitalization/asset_capitalization.json
 msgid "Target Has Batch No"
-msgstr ""
+msgstr "Hedef Parti No'ya Sahip"
 
 #. Label of the target_has_serial_no (Check) field in DocType 'Asset
 #. Capitalization'
@@ -55841,7 +55841,7 @@ msgstr "Ödeme Türü"
 #: erpnext/stock/doctype/inventory_dimension/inventory_dimension.json
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.json
 msgid "Type of Transaction"
-msgstr ""
+msgstr "İşlem Türü"
 
 #. Description of the 'Select DocType' (Select) field in DocType 'Rename Tool'
 #: erpnext/utilities/doctype/rename_tool/rename_tool.json
@@ -56640,7 +56640,7 @@ msgstr "Arka plan işini başlatmak için 'Arka planda yeniden gönder' düğmes
 #. Label of the use_batchwise_valuation (Check) field in DocType 'Batch'
 #: erpnext/stock/doctype/batch/batch.json
 msgid "Use Batch-wise Valuation"
-msgstr ""
+msgstr "Parti Bazında Değerleme Kullan"
 
 #. Label of the use_company_roundoff_cost_center (Check) field in DocType
 #. 'Purchase Invoice'
@@ -57654,7 +57654,7 @@ msgstr "Belge Numarası"
 
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py:934
 msgid "Voucher No is mandatory"
-msgstr ""
+msgstr "Belge No Zorunludur"
 
 #. Label of the voucher_qty (Float) field in DocType 'Stock Reservation Entry'
 #: erpnext/stock/doctype/stock_reservation_entry/stock_reservation_entry.json
