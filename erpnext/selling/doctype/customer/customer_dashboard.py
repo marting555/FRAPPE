@@ -20,7 +20,6 @@ def get_data():
 				"label": _("Support"),
 				"items": ["Issue", "Maintenance Visit", "Installation Note", "Warranty Claim"],
 			},
-			{"label": _("Projects"), "items": ["Project"]},
 			{"label": _("Pricing"), "items": ["Pricing Rule"]},
 			{"label": _("Subscriptions"), "items": ["Subscription"]},
 		],

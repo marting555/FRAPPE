@@ -13,14 +13,13 @@ def get_data():
 		"internal_links": {
 			"Material Request": ["items", "material_request"],
 			"Supplier Quotation": ["items", "supplier_quotation"],
-			"Project": ["items", "project"],
 		},
 		"transactions": [
 			{"label": _("Related"), "items": ["Purchase Receipt", "Purchase Invoice"]},
 			{"label": _("Payment"), "items": ["Payment Entry", "Journal Entry", "Payment Request"]},
 			{
 				"label": _("Reference"),
-				"items": ["Material Request", "Supplier Quotation", "Project", "Auto Repeat"],
+				"items": ["Material Request", "Supplier Quotation", "Auto Repeat"],
 			},
 			{
 				"label": _("Sub-contracting"),
