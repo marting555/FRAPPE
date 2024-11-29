@@ -762,6 +762,3 @@ function refreshQuotationFields(frm) {
 	frm.trigger('calculate_taxes_and_totals');
 	frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
 }
-
-
-
