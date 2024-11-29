@@ -98,6 +98,7 @@ class SalesInvoice(SellingController):
 		company: DF.Link
 		company_address: DF.Link | None
 		company_address_display: DF.TextEditor | None
+		company_contact_person: DF.Link | None
 		company_tax_id: DF.Data | None
 		contact_display: DF.SmallText | None
 		contact_email: DF.Data | None
@@ -153,7 +154,6 @@ class SalesInvoice(SellingController):
 		party_account_currency: DF.Link | None
 		payment_schedule: DF.Table[PaymentSchedule]
 		payment_terms_template: DF.Link | None
-		payment_url: DF.Data | None
 		payments: DF.Table[SalesInvoicePayment]
 		plc_conversion_rate: DF.Float
 		po_date: DF.Date | None
@@ -766,7 +766,11 @@ class SalesInvoice(SellingController):
 				"Company", self.company, "default_cash_account"
 			)
 
-		from erpnext.stock.get_item_details import get_pos_profile, get_pos_profile_item_details
+		from erpnext.stock.get_item_details import (
+			ItemDetailsCtx,
+			get_pos_profile,
+			get_pos_profile_item_details_,
+		)
 
 		if not self.pos_profile and not self.flags.ignore_pos_profile:
 			pos_profile = get_pos_profile(self.company) or {}
@@ -834,8 +838,8 @@ class SalesInvoice(SellingController):
 			# set pos values in items
 			for item in self.get("items"):
 				if item.get("item_code"):
-					profile_details = get_pos_profile_item_details(
-						pos, frappe._dict(item.as_dict()), pos, update_data=True
+					profile_details = get_pos_profile_item_details_(
+						ItemDetailsCtx(item.as_dict()), pos, pos, update_data=True
 					)
 					for fname, val in profile_details.items():
 						if (not for_validate) or (for_validate and not item.get(fname)):
