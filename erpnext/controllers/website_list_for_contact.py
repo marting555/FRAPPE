@@ -178,13 +178,24 @@ def get_list_for_transactions(
 
 
 def rfq_transaction_list(parties_doctype, doctype, parties, limit_start, limit_page_length):
-	data = frappe.db.sql(
-		"""select distinct parent as name, supplier from `tab{doctype}`
-			where supplier = '{supplier}' and docstatus=1  order by modified desc limit {start}, {len}""".format(
-			doctype=parties_doctype, supplier=parties[0], start=limit_start, len=limit_page_length
-		),
-		as_dict=1,
-	)
+	if frappe.db.db_type == 'postgres':
+		data = frappe.db.sql(
+			"""SELECT DISTINCT parent AS name, supplier, modified
+			FROM "tab{doctype}"
+			WHERE supplier = %s AND docstatus = 1
+			ORDER BY modified DESC
+			LIMIT %s OFFSET %s""".format(doctype=parties_doctype),
+			values=(parties[0], limit_page_length, limit_start),
+			as_dict=1,
+		)
+	else:
+		data = frappe.db.sql(
+			"""select distinct parent as name, supplier from `tab{doctype}`
+				where supplier = '{supplier}' and docstatus=1  order by modified desc limit {start}, {len}""".format(
+				doctype=parties_doctype, supplier=parties[0], start=limit_start, len=limit_page_length
+			),
+			as_dict=1,
+		)
 
 	return post_process(doctype, data)
 
