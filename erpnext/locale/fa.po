@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2024-11-24 09:36+0000\n"
-"PO-Revision-Date: 2024-11-27 10:58\n"
+"PO-Revision-Date: 2024-11-30 11:38\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Persian\n"
 "MIME-Version: 1.0\n"
@@ -1802,7 +1802,7 @@ msgstr "دفتر کل حسابداری"
 #. Label of a Card Break in the Accounting Workspace
 #: erpnext/accounts/workspace/accounting/accounting.json
 msgid "Accounting Masters"
-msgstr ""
+msgstr "مدیران حسابداری"
 
 #. Name of a DocType
 #. Label of a Link in the Accounting Workspace
@@ -2879,7 +2879,7 @@ msgstr "هزینه های اضافی"
 #. Label of the additional_data (Code) field in DocType 'Common Code'
 #: erpnext/edi/doctype/common_code/common_code.json
 msgid "Additional Data"
-msgstr ""
+msgstr "اطلاعات بیشتر"
 
 #. Label of the additional_details (Section Break) field in DocType 'Vehicle'
 #: erpnext/setup/doctype/vehicle/vehicle.json
@@ -4831,7 +4831,7 @@ msgstr "مبلغ {0} {1} {2} {3}"
 #. Label of the amounts_section (Section Break) field in DocType 'GL Entry'
 #: erpnext/accounts/doctype/gl_entry/gl_entry.json
 msgid "Amounts"
-msgstr ""
+msgstr "مبالغ"
 
 #. Name of a UOM
 #: erpnext/setup/setup_wizard/data/uom_data.json
@@ -8518,7 +8518,7 @@ msgstr "ساخت همه؟"
 
 #: erpnext/accounts/doctype/bisect_accounting_statements/bisect_accounting_statements.js:20
 msgid "Build Tree"
-msgstr ""
+msgstr "ساختار درختی را بساز"
 
 #: erpnext/manufacturing/report/work_order_stock_report/work_order_stock_report.py:155
 msgid "Buildable Qty"
@@ -9387,7 +9387,7 @@ msgstr ""
 #. Label of the canonical_uri (Data) field in DocType 'Code List'
 #: erpnext/edi/doctype/code_list/code_list.json
 msgid "Canonical URI"
-msgstr ""
+msgstr "آدرس کانونیکال"
 
 #. Label of the capacity (Float) field in DocType 'Putaway Rule'
 #: erpnext/stock/doctype/putaway_rule/putaway_rule.json
@@ -9486,7 +9486,7 @@ msgstr ""
 #. Title of an incoterm
 #: erpnext/setup/doctype/incoterm/incoterms.csv:7
 msgid "Carriage and Insurance Paid to"
-msgstr ""
+msgstr "حمل‌ونقل و بیمه پرداخت شده به"
 
 #. Label of the carrier (Data) field in DocType 'Shipment'
 #: erpnext/stock/doctype/shipment/shipment.json
@@ -9884,7 +9884,7 @@ msgstr "این را علامت بزنید تا کسر مجاز نباشد. (بر
 #. Label of the checked_on (Datetime) field in DocType 'Ledger Health'
 #: erpnext/accounts/doctype/ledger_health/ledger_health.json
 msgid "Checked On"
-msgstr ""
+msgstr "بررسی شد در"
 
 #. Description of the 'Round Off Tax Amount' (Check) field in DocType 'Tax
 #. Withholding Category'
@@ -10306,7 +10306,7 @@ msgstr "کد"
 #: erpnext/edi/doctype/code_list/code_list.json
 #: erpnext/edi/doctype/common_code/common_code.json
 msgid "Code List"
-msgstr ""
+msgstr "لیست کد"
 
 #: erpnext/setup/setup_wizard/data/marketing_source.txt:4
 msgid "Cold Calling"
@@ -12435,7 +12435,7 @@ msgstr "هزینه هر واحد"
 #. Title of an incoterm
 #: erpnext/setup/doctype/incoterm/incoterms.csv:8
 msgid "Cost and Freight"
-msgstr ""
+msgstr "هزینه و حمل‌ونقل"
 
 #: erpnext/accounts/report/asset_depreciations_and_balances/asset_depreciations_and_balances.py:449
 #: erpnext/accounts/report/asset_depreciations_and_balances/asset_depreciations_and_balances.py:479
@@ -13806,7 +13806,7 @@ msgstr "ملاحظات سفارشی"
 #. Import'
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.json
 msgid "Custom delimiters"
-msgstr ""
+msgstr "جداکننده‌های سفارشی"
 
 #. Label of the is_custom (Check) field in DocType 'Supplier Scorecard
 #. Variable'
@@ -14738,7 +14738,7 @@ msgstr ""
 #. Label of the dates_section (Section Break) field in DocType 'GL Entry'
 #: erpnext/accounts/doctype/gl_entry/gl_entry.json
 msgid "Dates"
-msgstr ""
+msgstr "تاریخ‌ها"
 
 #. Option for the 'Billing Interval' (Select) field in DocType 'Subscription
 #. Plan'
@@ -16759,7 +16759,7 @@ msgstr "گزارش تراز حسابها از نظر ابعاد"
 #. Label of the dimensions_section (Section Break) field in DocType 'GL Entry'
 #: erpnext/accounts/doctype/gl_entry/gl_entry.json
 msgid "Dimensions"
-msgstr ""
+msgstr "ابعاد"
 
 #. Option for the 'Account Type' (Select) field in DocType 'Account'
 #: erpnext/accounts/doctype/account/account.json
@@ -17985,7 +17985,7 @@ msgstr "عوارض و مالیات"
 #. Rule'
 #: erpnext/accounts/doctype/pricing_rule/pricing_rule.json
 msgid "Dynamic Condition"
-msgstr ""
+msgstr "شروط متغیر"
 
 #. Name of a UOM
 #: erpnext/setup/setup_wizard/data/uom_data.json
@@ -21673,7 +21673,7 @@ msgstr ""
 #. Label of the generated (Check) field in DocType 'Bisect Nodes'
 #: erpnext/accounts/doctype/bisect_nodes/bisect_nodes.json
 msgid "Generated"
-msgstr ""
+msgstr "تولید شده"
 
 #: erpnext/accounts/doctype/repost_accounting_ledger/repost_accounting_ledger.js:30
 msgid "Generating Preview"
@@ -23510,7 +23510,7 @@ msgstr "نمای تصویر"
 
 #: erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts.py:75
 msgid "Impairment"
-msgstr ""
+msgstr "اختلال"
 
 #: erpnext/setup/setup_wizard/data/sales_partner_type.txt:6
 msgid "Implementation Partner"
@@ -25484,7 +25484,7 @@ msgstr "پرداخت شده"
 #. Label of the is_paused (Check) field in DocType 'Job Card'
 #: erpnext/manufacturing/doctype/job_card/job_card.json
 msgid "Is Paused"
-msgstr ""
+msgstr "متوقف شده"
 
 #. Label of the is_period_closing_voucher_entry (Check) field in DocType
 #. 'Account Closing Balance'
