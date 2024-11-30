@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2024-11-24 09:36+0000\n"
-"PO-Revision-Date: 2024-11-29 11:30\n"
+"PO-Revision-Date: 2024-11-30 11:38\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -4296,7 +4296,7 @@ msgstr "Tillåt att Försäljning Order skapas för Förfallen Försäljning Off
 #. Label of the allow_stale (Check) field in DocType 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Allow Stale Exchange Rates"
-msgstr "Tillåt Inaktuella Valuta Kurser"
+msgstr "Tillåt Inaktuella Valutaväxling Kurser"
 
 #. Label of the allow_discount_change (Check) field in DocType 'POS Profile'
 #: erpnext/accounts/doctype/pos_profile/pos_profile.json
@@ -6300,7 +6300,7 @@ msgstr "Automatiskt Skapa Tillgångar vid Inköp"
 #. 'Company'
 #: erpnext/setup/doctype/company/company.json
 msgid "Auto Create Exchange Rate Revaluation"
-msgstr "Automatiskt Skapa Valuta Växling Kurs Omvärdering"
+msgstr "Automatiskt Skapa Valutaväxling Kurs Omvärdering"
 
 #. Label of the auto_create_purchase_receipt (Check) field in DocType 'Buying
 #. Settings'
@@ -13658,7 +13658,7 @@ msgstr "Valuta"
 #: erpnext/accounts/workspace/accounting/accounting.json
 #: erpnext/setup/doctype/currency_exchange/currency_exchange.json
 msgid "Currency Exchange"
-msgstr "Valuta Växling"
+msgstr "Valutaväxling Kurs"
 
 #. Label of the currency_exchange_section (Section Break) field in DocType
 #. 'Accounts Settings'
@@ -13666,21 +13666,21 @@ msgstr "Valuta Växling"
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 #: erpnext/accounts/doctype/currency_exchange_settings/currency_exchange_settings.json
 msgid "Currency Exchange Settings"
-msgstr "Valuta Växling Inställningar"
+msgstr "Valutaväxling Inställningar"
 
 #. Name of a DocType
 #: erpnext/accounts/doctype/currency_exchange_settings_details/currency_exchange_settings_details.json
 msgid "Currency Exchange Settings Details"
-msgstr "Valuta Växling Inställning Detaljer"
+msgstr "Valutaväxling Inställning Detaljer"
 
 #. Name of a DocType
 #: erpnext/accounts/doctype/currency_exchange_settings_result/currency_exchange_settings_result.json
 msgid "Currency Exchange Settings Result"
-msgstr "Valuta Växling Inställning Resultat"
+msgstr "Valutaväxling Inställning Resultat"
 
 #: erpnext/setup/doctype/currency_exchange/currency_exchange.py:55
 msgid "Currency Exchange must be applicable for Buying or for Selling."
-msgstr "Valuta Växling måste vara tillämplig för Inköp eller Försäljning."
+msgstr "Valutaväxling måste vara tillämplig för Inköp eller Försäljning."
 
 #. Label of the currency_and_price_list (Section Break) field in DocType 'POS
 #. Invoice'
@@ -19344,7 +19344,7 @@ msgstr "Växel Kurs"
 #: erpnext/accounts/doctype/journal_entry_template/journal_entry_template.json
 #: erpnext/accounts/workspace/accounting/accounting.json
 msgid "Exchange Rate Revaluation"
-msgstr "Valuta Kurs Omvärdering"
+msgstr "Valutaväxling Kurs Omvärdering"
 
 #. Label of the accounts (Table) field in DocType 'Exchange Rate Revaluation'
 #. Name of a DocType
@@ -31932,7 +31932,7 @@ msgstr "Inga utestående fakturor hittades"
 
 #: erpnext/accounts/doctype/exchange_rate_revaluation/exchange_rate_revaluation.py:327
 msgid "No outstanding invoices require exchange rate revaluation"
-msgstr "Inga utestående fakturor kräver valuta kurs omvärdering"
+msgstr "Inga utestående fakturor kräver valutaväxling kurs omvärdering"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:2338
 msgid "No outstanding {0} found for the {1} {2} which qualify the filters you have specified."
@@ -34970,7 +34970,7 @@ msgstr "Pausad"
 #: erpnext/accounts/doctype/payment_entry/payment_entry.json
 #: erpnext/templates/pages/order.html:43
 msgid "Pay"
-msgstr "Utbetalning"
+msgstr "Betala "
 
 #. Label of the pay_to_recd_from (Data) field in DocType 'Journal Entry'
 #: erpnext/accounts/doctype/journal_entry/journal_entry.json
@@ -41782,7 +41782,7 @@ msgstr "Fordringar"
 #. Option for the 'Payment Type' (Select) field in DocType 'Payment Entry'
 #: erpnext/accounts/doctype/payment_entry/payment_entry.json
 msgid "Receive"
-msgstr "Inbetalning"
+msgstr "Ta emot"
 
 #. Option for the 'Quote Status' (Select) field in DocType 'Request for
 #. Quotation Supplier'
@@ -44863,7 +44863,7 @@ msgstr "Rad # {0}: Ange plats för Tillgång Artikel {1}"
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:960
 #: erpnext/controllers/taxes_and_totals.py:1167
 msgid "Row {0}: Exchange Rate is mandatory"
-msgstr "Rad # {0}: Valuta Växelkurs erfodras"
+msgstr "Rad # {0}: Valutaväxling kurs erfodras"
 
 #: erpnext/assets/doctype/asset/asset.py:416
 msgid "Row {0}: Expected Value After Useful Life must be less than Gross Purchase Amount"
@@ -45253,7 +45253,7 @@ msgstr "Lönevaluta"
 #. Label of the salary_mode (Select) field in DocType 'Employee'
 #: erpnext/setup/doctype/employee/employee.json
 msgid "Salary Mode"
-msgstr "Lön Utbetalning Sätt"
+msgstr "Löneutbetalning Sätt"
 
 #. Option for the 'Invoice Type' (Select) field in DocType 'Opening Invoice
 #. Creation Tool'
@@ -59950,11 +59950,11 @@ msgstr "{0} är erfodrad för konto {1}"
 
 #: erpnext/public/js/controllers/taxes_and_totals.js:122
 msgid "{0} is mandatory. Maybe Currency Exchange record is not created for {1} to {2}"
-msgstr "{0} är erfodrad. Kanske Valuta Växling Post är inte skapad för {1} till {2}"
+msgstr "{0} är erfordrad. Kanske Valutaväxling Post är inte skapad för {1} till {2}"
 
 #: erpnext/controllers/accounts_controller.py:2712
 msgid "{0} is mandatory. Maybe Currency Exchange record is not created for {1} to {2}."
-msgstr "{0} är erfodrad. Kanske Valuta Växling Post är inte skapad för {1} till {2}."
+msgstr "{0} är erfordrad. Kanske Valutaväxling Post är inte skapad för {1} till {2}."
 
 #: erpnext/selling/doctype/customer/customer.py:200
 msgid "{0} is not a company bank account"
