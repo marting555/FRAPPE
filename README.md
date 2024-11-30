@@ -84,3 +84,43 @@ By contributing to ERPNext, you agree that your contributions will be licensed u
 ## Logo and Trademark Policy
 
 Please read our [Logo and Trademark Policy](TRADEMARK_POLICY.md).
+
+## Running ERPNext
+
+To run ERPNext using Docker, follow these steps:
+
+1. Install Docker on your system. You can find the installation instructions for your operating system on the [Docker website](https://docs.docker.com/get-docker/).
+
+2. Pull the ERPNext Docker image from Docker Hub:
+
+   ```sh
+   docker pull frappe/erpnext
+   ```
+
+3. Create a Docker network for ERPNext:
+
+   ```sh
+   docker network create erpnext-network
+   ```
+
+4. Start the ERPNext container:
+
+   ```sh
+   docker run -d --name erpnext --network erpnext-network -p 80:80 frappe/erpnext
+   ```
+
+5. Access ERPNext in your web browser by navigating to `http://localhost`.
+
+For more detailed instructions, refer to the [ERPNext Docker documentation](docs/user/manual/en/installation/docker.md).
+
+## Using ERPNext
+
+ERPNext provides a comprehensive set of features to manage various aspects of your business. Here is a brief overview of the main features and how to navigate the application:
+
+1. **Dashboard**: The dashboard provides an overview of your business performance, including key metrics and charts. You can customize the dashboard to display the information that is most relevant to you.
+
+2. **Modules**: ERPNext is organized into modules, each representing a specific area of your business, such as Accounting, Sales, Purchase, HR, and more. You can access the modules from the sidebar menu.
+
+3. **Common Tasks**: ERPNext allows you to perform common tasks such as creating invoices, managing inventory, tracking expenses, and more. You can find these tasks within the relevant modules.
+
+For a more detailed overview of ERPNext's features and how to navigate the application, refer to the [ERPNext Getting Started Guide](docs/user/manual/en/getting_started/overview.md).
