@@ -1010,9 +1010,9 @@ class calculate_taxes_and_totals:
 				else payment.base_amount
 			)
 		if total_paid_amount < total_amount_to_pay:
-			pending_amount = total_amount_to_pay
+			pending_amount = flt(total_amount_to_pay)
 		elif total_paid_amount > total_amount_to_pay:
-			pending_amount = total_amount_to_pay - total_paid_amount
+			pending_amount = flt(total_amount_to_pay) - flt(total_paid_amount)
 		else:
 			return
 
