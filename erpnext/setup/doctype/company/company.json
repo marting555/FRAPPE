@@ -66,6 +66,7 @@
   "payment_terms",
   "cost_center",
   "default_finance_book",
+  "asset_account",
   "advance_payments_section",
   "book_advance_payments_in_separate_party_account",
   "reconcile_on_advance_payment_date",
@@ -792,6 +793,12 @@
    "fieldtype": "Link",
    "label": "Round Off for Opening",
    "options": "Account"
+  },
+  {
+   "fieldname": "asset_account",
+   "fieldtype": "Link",
+   "label": "Default Asset Account",
+   "options": "Account"
   }
  ],
  "icon": "fa fa-building",
@@ -799,7 +806,7 @@
  "image_field": "company_logo",
  "is_tree": 1,
  "links": [],
- "modified": "2024-08-02 11:34:46.785377",
+ "modified": "2024-12-01 22:50:06.014077",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Company",

@@ -649,6 +649,7 @@ class Asset(AccountsController):
 
 		cwip_enabled = is_cwip_accounting_enabled(self.asset_category)
 		cwip_account = self.get_cwip_account(cwip_enabled=cwip_enabled)
+		asset_account = get_asset_account("asset_account", self.name, self.asset_category, self.company)
 
 		query = """SELECT name FROM `tabGL Entry` WHERE voucher_no = %s and account = %s"""
 		if asset_bought_with_invoice:
@@ -663,6 +664,8 @@ class Asset(AccountsController):
 				# if cwip is booked from invoice then make gl entries regardless of cwip enabled/disabled
 				return True
 		else:
+			if asset_account and not cwip_enabled:
+				return frappe.db.sql(query, (purchase_document, asset_account), as_dict=1)
 			# with receipt purchase either cwip has been booked or no entries have been made
 			if not cwip_account:
 				# if cwip account isn't available do not make gl entries
@@ -716,7 +719,13 @@ class Asset(AccountsController):
 		gl_entries = []
 
 		purchase_document = self.get_purchase_document()
-		fixed_asset_account, cwip_account = self.get_fixed_asset_account(), self.get_cwip_account()
+		fixed_asset_account = self.get_fixed_asset_account()
+		if not is_cwip_accounting_enabled(self.asset_category):
+			asset_account = get_asset_account("asset_account", self.name, self.asset_category, self.company)
+			cwip_account = None
+		else:
+			cwip_account = self.get_cwip_account()
+			asset_account = None
 
 		if (self.is_composite_asset or (purchase_document and self.purchase_amount)) and getdate(
 			self.available_for_use_date
@@ -724,7 +733,7 @@ class Asset(AccountsController):
 			gl_entries.append(
 				self.get_gl_dict(
 					{
-						"account": cwip_account,
+						"account": cwip_account or asset_account,
 						"against": fixed_asset_account,
 						"remarks": self.get("remarks") or _("Accounting Entry for Asset"),
 						"posting_date": self.available_for_use_date,
@@ -740,7 +749,7 @@ class Asset(AccountsController):
 				self.get_gl_dict(
 					{
 						"account": fixed_asset_account,
-						"against": cwip_account,
+						"against": cwip_account or asset_account,
 						"remarks": self.get("remarks") or _("Accounting Entry for Asset"),
 						"posting_date": self.available_for_use_date,
 						"debit": self.purchase_amount,

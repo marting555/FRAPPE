@@ -15,6 +15,7 @@ class AssetCategoryAccount(Document):
 		from frappe.types import DF
 
 		accumulated_depreciation_account: DF.Link | None
+		asset_account: DF.Link | None
 		capital_work_in_progress_account: DF.Link | None
 		company_name: DF.Link
 		depreciation_expense_account: DF.Link | None

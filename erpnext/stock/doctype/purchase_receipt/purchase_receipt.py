@@ -261,15 +261,22 @@ class PurchaseReceipt(BuyingController):
 
 	def validate_cwip_accounts(self):
 		for item in self.get("items"):
-			if item.is_fixed_asset and is_cwip_accounting_enabled(item.asset_category):
+			if item.is_fixed_asset:
 				# check cwip accounts before making auto assets
 				# Improves UX by not giving messages of "Assets Created" before throwing error of not finding arbnb account
 				self.get_company_default("asset_received_but_not_billed")
-				get_asset_account(
-					"capital_work_in_progress_account",
-					asset_category=item.asset_category,
-					company=self.company,
-				)
+				if is_cwip_accounting_enabled(item.asset_category):
+					get_asset_account(
+						"capital_work_in_progress_account",
+						asset_category=item.asset_category,
+						company=self.company,
+					)
+				else:
+					get_asset_account(
+						"asset_account",
+						asset_category=item.asset_category,
+						company=self.company,
+					)
 				break
 
 	def validate_provisional_expense_account(self):
@@ -675,7 +682,10 @@ class PurchaseReceipt(BuyingController):
 				)
 				landed_cost_entries = get_item_account_wise_additional_cost(self.name)
 				if d.is_fixed_asset:
-					stock_asset_account_name = d.expense_account
+					if is_cwip_accounting_enabled(d.asset_category):
+						stock_asset_account_name = d.expense_account
+					else:
+						stock_asset_account_name = d.asset_account
 					stock_value_diff = (
 						flt(d.base_net_amount) + flt(d.item_tax_amount) + flt(d.landed_cost_voucher_amount)
 					)

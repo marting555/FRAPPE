@@ -82,6 +82,7 @@
   "column_break_13",
   "manufacturer_part_no",
   "accounting",
+  "asset_account",
   "expense_account",
   "wip_composite_asset",
   "col_break5",
@@ -977,12 +978,18 @@
    "fieldtype": "Currency",
    "label": "Distributed Discount Amount",
    "options": "currency"
+  },
+  {
+   "fieldname": "asset_account",
+   "fieldtype": "Link",
+   "label": "Asset Account",
+   "options": "Account"
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-10-28 15:06:19.246141",
+ "modified": "2024-12-01 20:44:05.643955",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Purchase Invoice Item",

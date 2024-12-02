@@ -54,6 +54,9 @@
                 "Buildings": {
                     "account_type": "Fixed Asset"
                 },
+                "Clearing Account": {
+                    "account_type": "Fixed Asset"
+                },
                 "Accumulated Depreciations": {
                     "account_type": "Accumulated Depreciation"
                 }
