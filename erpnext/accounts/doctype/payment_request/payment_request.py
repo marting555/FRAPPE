@@ -51,7 +51,6 @@ class PaymentRequest(Document):
 		cost_center: DF.Link | None
 		currency: DF.Link | None
 		email_to: DF.Data | None
-		failed_reason: DF.Data | None
 		grand_total: DF.Currency
 		iban: DF.ReadOnly | None
 		is_a_subscription: DF.Check
@@ -179,22 +178,25 @@ class PaymentRequest(Document):
 		else:
 			self.outstanding_amount = self.grand_total
 
-		if self.payment_request_type == "Outward":
-			self.status = "Initiated"
-		elif self.payment_request_type == "Inward":
-			self.status = "Requested"
-
-		if self.payment_request_type == "Inward":
-			if self.payment_channel == "Phone":
-				self.request_phone_payment()
-			else:
-				self.set_payment_request_url()
-				if not (self.mute_email or self.flags.mute_email):
-					self.send_email()
-					self.make_communication_entry()
-
 	def on_submit(self):
-		self.update_reference_advance_payment_status()
+		if self.payment_request_type == "Outward":
+			self.db_set("status", "Initiated")
+			return
+		elif self.payment_request_type == "Inward":
+			self.db_set("status", "Requested")
+
+		send_mail = self.payment_gateway_validation() if self.payment_gateway else None
+		ref_doc = frappe.get_doc(self.reference_doctype, self.reference_name)
+		if (
+			hasattr(ref_doc, "order_type") and ref_doc.order_type == "Shopping Cart"
+		) or self.flags.mute_email:
+			send_mail = False
+		if send_mail and self.payment_channel != "Phone":
+			self.set_payment_request_url()
+			self.send_email()
+			self.make_communication_entry()
+		elif self.payment_channel == "Phone":
+			self.request_phone_payment()
 
 	def request_phone_payment(self):
 		controller = _get_payment_gateway_controller(self.payment_gateway)
@@ -233,7 +235,6 @@ class PaymentRequest(Document):
 	def on_cancel(self):
 		self.check_if_payment_entry_exists()
 		self.set_as_cancelled()
-		self.update_reference_advance_payment_status()
 
 	def make_invoice(self):
 		ref_doc = frappe.get_doc(self.reference_doctype, self.reference_name)
@@ -455,14 +456,6 @@ class PaymentRequest(Document):
 				from payments.payment_gateways.stripe_integration import create_stripe_subscription
 
 			return create_stripe_subscription(gateway_controller, data)
-
-	def update_reference_advance_payment_status(self):
-		advance_payment_doctypes = frappe.get_hooks("advance_payment_receivable_doctypes") + frappe.get_hooks(
-			"advance_payment_payable_doctypes"
-		)
-		if self.reference_doctype in advance_payment_doctypes:
-			ref_doc = frappe.get_doc(self.reference_doctype, self.reference_name)
-			ref_doc.set_advance_payment_status()
 
 	def _allocate_payment_request_to_pe_references(self, references):
 		"""
@@ -870,33 +863,6 @@ def validate_payment(doc, method=None):
 			doc.reference_docname
 		)
 	)
-
-
-def get_paid_amount_against_order(dt, dn):
-	pe_ref = frappe.qb.DocType("Payment Entry Reference")
-	if dt == "Sales Order":
-		inv_dt, inv_field = "Sales Invoice Item", "sales_order"
-	else:
-		inv_dt, inv_field = "Purchase Invoice Item", "purchase_order"
-	inv_item = frappe.qb.DocType(inv_dt)
-	return (
-		frappe.qb.from_(pe_ref)
-		.select(
-			Sum(pe_ref.allocated_amount),
-		)
-		.where(
-			(pe_ref.docstatus == 1)
-			& (
-				(pe_ref.reference_name == dn)
-				| pe_ref.reference_name.isin(
-					frappe.qb.from_(inv_item)
-					.select(inv_item.parent)
-					.where(inv_item[inv_field] == dn)
-					.distinct()
-				)
-			)
-		)
-	).run()[0][0] or 0
 
 
 @frappe.whitelist()

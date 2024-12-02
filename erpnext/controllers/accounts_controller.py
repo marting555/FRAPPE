@@ -13,7 +13,7 @@ from frappe.query_builder.custom import ConstantColumn
 from frappe.query_builder.functions import Abs, Sum
 from frappe.utils import (
 	add_days,
-	add_months,
+	add_months,def set_advance_payment_status(self):
 	cint,
 	comma_and,
 	flt,
@@ -1986,32 +1986,6 @@ class AccountsController(TransactionBase):
 				)
 
 			self.db_set("advance_paid", advance_paid)
-		self.set_advance_payment_status()
-	
-	def set_advance_payment_status(self):
-		new_status = None
-		paid_amount = frappe.get_value(
-			doctype="Payment Request",
-			filters={
-				"reference_doctype": self.doctype,
-				"reference_name": self.name,
-				"docstatus": 1,
-			},
-			fieldname="sum(grand_total - outstanding_amount)",
-		)
-		if not paid_amount:
-			if self.doctype in frappe.get_hooks("advance_payment_receivable_doctypes"):
-				new_status = "Not Requested" if paid_amount is None else "Requested"
-			elif self.doctype in frappe.get_hooks("advance_payment_payable_doctypes"):
-				new_status = "Not Initiated" if paid_amount is None else "Initiated"
-		else:
-			total_amount = self.get("rounded_total") or self.get("grand_total")
-			new_status = "Fully Paid" if paid_amount == total_amount else "Partially Paid"
-		if new_status == self.advance_payment_status:
-			return
-		self.db_set("advance_payment_status", new_status, update_modified=False)
-		self.set_status(update=True)
-		self.notify_update()
 
 	@property
 	def company_abbr(self):
@@ -3365,7 +3339,6 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 	items_added_or_removed = False  # updated to true if any new item is added or removed
 	any_conversion_factor_changed = False
 
-	sales_doctypes = ["Sales Order", "Sales Invoice", "Delivery Note", "Quotation"]
 	parent = frappe.get_doc(parent_doctype, parent_doctype_name)
 
 	check_doc_permissions(parent, "write")
@@ -3573,6 +3546,9 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 	parent.update_blanket_order()
 	parent.update_billing_percentage()
 	parent.set_status()
+
+	parent.validate_uom_is_integer("uom", "qty")
+	parent.validate_uom_is_integer("stock_uom", "stock_qty")
 
 	# Cancel and Recreate Stock Reservation Entries.
 	if parent_doctype == "Sales Order":

@@ -452,7 +452,7 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 			}
 			if (doc.status != "Closed") {
 				if (doc.status != "On Hold") {
-					if (flt(doc.per_received, 2) < 100 && allow_receipt) {
+					if (flt(doc.per_received) < 100 && allow_receipt) {
 						cur_frm.add_custom_button(
 							__("Purchase Receipt"),
 							this.make_purchase_receipt,
@@ -478,7 +478,7 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 							}
 						}
 					}
-					if (flt(doc.per_billed, 2) < 100)
+					if (flt(doc.per_billed) < 100)
 						cur_frm.add_custom_button(
 							__("Purchase Invoice"),
 							this.make_purchase_invoice,
