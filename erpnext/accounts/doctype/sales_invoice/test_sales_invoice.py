@@ -4217,6 +4217,50 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertTrue(jv)
 		self.assertEqual(jv[0], si.grand_total)
 
+<<<<<<< HEAD
+=======
+	def test_invoice_remarks(self):
+		si = frappe.copy_doc(self.globalTestRecords["Sales Invoice"][0])
+		si.po_no = "Test PO"
+		si.po_date = nowdate()
+		si.save()
+		si.submit()
+		self.assertEqual(si.remarks, f"Against Customer Order Test PO dated {format_date(nowdate())}")
+
+	def test_gl_voucher_subtype(self):
+		si = create_sales_invoice()
+		gl_entries = frappe.get_all(
+			"GL Entry",
+			filters={"voucher_type": "Sales Invoice", "voucher_no": si.name},
+			pluck="voucher_subtype",
+		)
+
+		self.assertTrue(all([x == "Sales Invoice" for x in gl_entries]))
+
+		si = create_sales_invoice(is_return=1, qty=-1)
+		gl_entries = frappe.get_all(
+			"GL Entry",
+			filters={"voucher_type": "Sales Invoice", "voucher_no": si.name},
+			pluck="voucher_subtype",
+		)
+
+		self.assertTrue(all([x == "Credit Note" for x in gl_entries]))
+
+	def test_total_billed_amount(self):
+		si = create_sales_invoice(do_not_submit=True)
+
+		project = frappe.new_doc("Project")
+		project.project_name = "Test Total Billed Amount"
+		project.save()
+
+		si.project = project.name
+		si.save()
+		si.submit()
+
+		doc = frappe.get_doc("Project", project.name)
+		self.assertEqual(doc.total_billed_amount, si.grand_total)
+
+>>>>>>> 7de9c14a2c (fix: incorrect Gross Margin on project (#44461))
 
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
