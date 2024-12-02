@@ -17,6 +17,7 @@ class PurchaseReceiptItem(Document):
 		allow_zero_valuation_rate: DF.Check
 		amount: DF.Currency
 		apply_tds: DF.Check
+		asset_account: DF.Link | None
 		asset_category: DF.Link | None
 		asset_location: DF.Link | None
 		barcode: DF.Data | None

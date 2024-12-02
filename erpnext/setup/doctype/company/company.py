@@ -30,6 +30,7 @@ class Company(NestedSet):
 		abbr: DF.Data
 		accumulated_depreciation_account: DF.Link | None
 		allow_account_creation_against_child_company: DF.Check
+		asset_account: DF.Link | None
 		asset_received_but_not_billed: DF.Link | None
 		auto_err_frequency: DF.Literal["Daily", "Weekly", "Monthly"]
 		auto_exchange_rate_revaluation: DF.Check

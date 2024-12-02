@@ -572,7 +572,7 @@ class PurchaseInvoice(BuyingController):
 					account_type = (
 						"capital_work_in_progress_account"
 						if is_cwip_accounting_enabled(item.asset_category)
-						else "fixed_asset_account"
+						else "asset_account"
 					)
 					account = get_asset_category_account(
 						account_type, item=item.item_code, company=self.company
@@ -580,14 +580,13 @@ class PurchaseInvoice(BuyingController):
 					if not account:
 						form_link = get_link_to_form("Asset Category", item.asset_category)
 						throw(
-							_("Please set Fixed Asset Account in {} against {}.").format(
-								form_link, self.company
-							),
+							_("Please set Asset Account in {} against {}.").format(form_link, self.company),
 							title=_("Missing Account"),
 						)
-				item.expense_account = account
-			elif not item.expense_account and for_validate:
-				throw(_("Expense account is mandatory for item {0}").format(item.item_code or item.item_name))
+				item.expense_account = None
+				item.asset_account = account
+			elif not (item.expense_account and item.asset_account) and for_validate:
+				throw(_("Asset Account is mandatory for item {0}").format(item.item_code or item.item_name))
 
 	def validate_expense_account(self):
 		for item in self.get("items"):

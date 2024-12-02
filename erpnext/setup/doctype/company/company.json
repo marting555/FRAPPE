@@ -59,19 +59,7 @@
   "payment_terms",
   "cost_center",
   "default_finance_book",
-  "exchange_gain__loss_section",
-  "exchange_gain_loss_account",
-  "column_break_sttp",
-  "unrealized_exchange_gain_loss_account",
-  "round_off_section",
-  "round_off_account",
-  "round_off_cost_center",
-  "column_break_jqfo",
-  "round_off_for_opening",
-  "deferred_accounting_section",
-  "default_deferred_revenue_account",
-  "column_break_dcdl",
-  "default_deferred_expense_account",
+  "asset_account",
   "advance_payments_section",
   "book_advance_payments_in_separate_party_account",
   "reconcile_on_advance_payment_date",
@@ -800,31 +788,10 @@
    "options": "Account"
   },
   {
-   "fieldname": "exchange_gain__loss_section",
-   "fieldtype": "Section Break",
-   "label": "Exchange Gain / Loss"
-  },
-  {
-   "fieldname": "round_off_section",
-   "fieldtype": "Section Break",
-   "label": "Round Off"
-  },
-  {
-   "fieldname": "deferred_accounting_section",
-   "fieldtype": "Section Break",
-   "label": "Deferred Accounting"
-  },
-  {
-   "fieldname": "column_break_sttp",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_jqfo",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_dcdl",
-   "fieldtype": "Column Break"
+   "fieldname": "asset_account",
+   "fieldtype": "Link",
+   "label": "Default Asset Account",
+   "options": "Account"
   }
  ],
  "icon": "fa fa-building",
@@ -832,7 +799,7 @@
  "image_field": "company_logo",
  "is_tree": 1,
  "links": [],
- "modified": "2024-12-02 15:37:32.723176",
+ "modified": "2024-12-01 22:50:06.014077",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Company",

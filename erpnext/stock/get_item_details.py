@@ -287,6 +287,7 @@ def get_basic_details(ctx: ItemDetailsCtx, item, overwrite_warehouse=True) -> It
 		)
 
 	expense_account = None
+	asset_account = None
 
 	if item.is_fixed_asset:
 		from erpnext.assets.doctype.asset.asset import get_asset_account, is_cwip_accounting_enabled
@@ -307,6 +308,9 @@ def get_basic_details(ctx: ItemDetailsCtx, item, overwrite_warehouse=True) -> It
 
 			expense_account = get_asset_category_account(
 				fieldname="fixed_asset_account", item=ctx.item_code, company=ctx.company
+			)
+			asset_account = get_asset_account(
+				"asset_account", asset_category=item.asset_category, company=ctx.company
 			)
 
 	# Set the UOM to the Default Sales UOM or Default Purchase UOM if configured in the Item Master
@@ -338,6 +342,7 @@ def get_basic_details(ctx: ItemDetailsCtx, item, overwrite_warehouse=True) -> It
 			),
 			"expense_account": expense_account
 			or get_default_expense_account(ctx, item_defaults, item_group_defaults, brand_defaults),
+			"asset_account": asset_account or None,
 			"discount_account": get_default_discount_account(
 				ctx, item_defaults, item_group_defaults, brand_defaults
 			),
