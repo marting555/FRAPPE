@@ -3,6 +3,11 @@
 
 frappe.ui.form.on("Handle Parts", {
     upload: async function (frm) {
+        const uploadButton = document.querySelector('.frappe-control[data-fieldname="upload"] button[data-fieldname="upload"]');
+        frm.page.set_indicator(__('Uploading. Please wait...'), 'orange');
+        if (uploadButton) {
+            uploadButton.disabled = true;
+        }
         try {
             if (!frm.doc.excel) {
                 frappe.msgprint({
@@ -12,6 +17,7 @@ frappe.ui.form.on("Handle Parts", {
                 });
                 return;
             }
+
             const data = await frappe.db.get_doc('Handle Parts Config');
             if (!data || !data.date_time_url_created) {
                 frappe.msgprint({
@@ -79,9 +85,16 @@ frappe.ui.form.on("Handle Parts", {
                 message: __('An error occurred during the upload process.'),
                 indicator: 'red',
             });
+        } finally {
+            // Re-enable the button and reset the indicator
+            if (uploadButton) {
+                uploadButton.disabled = false;
+            }
+            frm.page.clear_indicator();
         }
     },
     product_bundle_errors: async function (frm) {
+        frm.page.set_indicator(__('Searching and creating report. Please wait...'), 'orange');
         const data = await frappe.db.get_doc('Handle Parts Config');
         if (!data || !data.product_bundle_errors_url) {
             frappe.msgprint({
@@ -96,7 +109,11 @@ frappe.ui.form.on("Handle Parts", {
         if (response.ok) {
             const errors = await response.json();
             if (!errors.length) {
-                return;
+                return frappe.msgprint({
+                    title: __('Success'),
+                    message: __('No errors found.'),
+                    indicator: 'green',
+                })
             }
             const createdAt = errors.length > 0 ? errors[0].created_at : '';
             console.log("createdAt", createdAt, "-- ", errors[0].created_at);
@@ -121,12 +138,16 @@ frappe.ui.form.on("Handle Parts", {
 
             dialog.show();
             dialog.$wrapper.find('.modal-dialog').css("width", "90%").css("max-width", "90%");
+            frm.page.clear_indicator();
+        } else {
+            frm.page.clear_indicator();
         }
-
     },
 
     download_excel_format: function (frm) {
+        frm.page.set_indicator(__('Downloading...'), 'orange');
         window.location.href = "https://tvs-admin.s3.us-west-2.amazonaws.com/TVS+EXCEL+FORMAT.xlsx";
+        frm.page.clear_indicator();
     }
 
 });
