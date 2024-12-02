@@ -509,6 +509,9 @@ frappe.ui.form.on("Stock Entry", {
 			frm.trigger("toggle_display_account_head");
 
 			erpnext.accounts.dimensions.update_dimension(frm, frm.doctype);
+			erpnext.queries.setup_queries(cur_frm, "Warehouse", function () {
+				return erpnext.queries.warehouse(cur_frm.doc);
+			});
 		}
 	},
 
