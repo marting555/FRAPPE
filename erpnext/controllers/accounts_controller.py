@@ -212,6 +212,18 @@ class AccountsController(TransactionBase):
 		self.validate_currency()
 		self.validate_party_account_currency()
 		self.validate_return_against_account()
+		if (
+			self.doctype in ["Purchase Invoice", 
+				"Sales Invoice", 
+				"Quotation", 
+				"Sales Order", 
+				"Purchase Order", 
+				"Delivery Note", 
+				"Purchase Receipt"
+			]
+			and self.meta.get_field("items")
+		):
+			self.validate_item_tax_template()
 
 		if self.doctype in ["Purchase Invoice", "Sales Invoice"]:
 			if invalid_advances := [x for x in self.advances if not x.reference_type or not x.reference_name]:
@@ -2542,6 +2554,12 @@ class AccountsController(TransactionBase):
 				return True
 
 		return False
+	
+	def validate_item_tax_template(self):
+		for itt in self.get("items"):
+			if itt.get("item_tax_template"):
+				validate_disabled_item_tax_tamplate(itt.get("item_tax_template"))
+				validate_warehouse_company(itt.get("item_tax_template"), self.company)
 
 	@frappe.whitelist()
 	def repost_accounting_entries(self):
@@ -2651,6 +2669,22 @@ def validate_account_head(idx, account, company, context=""):
 		frappe.throw(
 			_("Row {0}: Account {1} is a Group Account").format(idx, frappe.bold(account)),
 			title=_("Invalid Account"),
+		)
+
+
+def validate_warehouse_company(item_tax_tamplate, company):
+	itt_company = frappe.db.get_value("Item Tax Template", item_tax_tamplate, "company", cache=True)
+	if itt_company and itt_company != company:
+		frappe.throw(
+			_("Item Tax Template {0} does not belong to company {1}").format(item_tax_tamplate, company)
+		)
+
+def validate_disabled_item_tax_tamplate(item_tax_tamplate):
+	if frappe.db.get_value("Item Tax Template", item_tax_tamplate, "disabled", cache=True):
+		frappe.throw(
+			_("Disabled Item Tax Template {0} cannot be used for this transaction.").format(
+				get_link_to_form("Item Tax Template", item_tax_tamplate)
+			)
 		)
 
 
