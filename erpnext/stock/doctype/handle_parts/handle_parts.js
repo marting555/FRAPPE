@@ -57,7 +57,7 @@ frappe.ui.form.on("Handle Parts", {
             if (response.ok) {
                 frappe.msgprint({
                     title: __('Success'),
-                    message: __('File uploaded successfully. The process will take 10 minutes or less to complete. You will be notified when the process is complete.'),
+                    message: __('File uploaded successfully. The process will complete within 10 minutes, and you will be notified once it is done.'),
                     indicator: 'green',
                 });
                 frm.set_value('excel', "");
