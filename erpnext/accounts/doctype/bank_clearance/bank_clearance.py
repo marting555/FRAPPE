@@ -164,7 +164,7 @@ def get_payment_entries_for_bank_clearance(
 	payment_entries = frappe.db.sql(
 		f"""
 			select
-				"Payment Entry" as payment_document, name as payment_entry,
+				'Payment Entry' as payment_document, name as payment_entry,
 				reference_no as cheque_number, reference_date as cheque_date,
 				case when paid_from=%(account)s then paid_amount + total_taxes_and_charges else 0 end as credit,
             	case when paid_from=%(account)s then 0 else received_amount end as debit,
