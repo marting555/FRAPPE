@@ -13,7 +13,7 @@ from frappe.query_builder.custom import ConstantColumn
 from frappe.query_builder.functions import Abs, Sum
 from frappe.utils import (
 	add_days,
-	add_months,def set_advance_payment_status(self):
+	add_months,
 	cint,
 	comma_and,
 	flt,
@@ -3339,6 +3339,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 	items_added_or_removed = False  # updated to true if any new item is added or removed
 	any_conversion_factor_changed = False
 
+	sales_doctypes = ["Sales Order", "Sales Invoice", "Delivery Note", "Quotation"]
 	parent = frappe.get_doc(parent_doctype, parent_doctype_name)
 
 	check_doc_permissions(parent, "write")
