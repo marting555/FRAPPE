@@ -1004,15 +1004,15 @@ class calculate_taxes_and_totals:
 	def set_total_amount_to_default_mop(self, total_amount_to_pay):
 		total_paid_amount = 0
 		for payment in self.doc.get("payments"):
-			total_paid_amount += (
+			total_paid_amount += flt(
 				payment.amount
 				if self.doc.party_account_currency == self.doc.currency
 				else payment.base_amount
 			)
-		if total_paid_amount < total_amount_to_pay:
+		if total_paid_amount < flt(total_amount_to_pay):
 			pending_amount = flt(total_amount_to_pay)
-		elif total_paid_amount > total_amount_to_pay:
-			pending_amount = flt(total_amount_to_pay) - flt(total_paid_amount)
+		elif total_paid_amount > flt(total_amount_to_pay):
+			pending_amount = flt(total_amount_to_pay) - total_paid_amount
 		else:
 			return
 
