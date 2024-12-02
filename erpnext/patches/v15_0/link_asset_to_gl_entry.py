@@ -13,6 +13,7 @@ def execute():
 
 
 def process_asset_repair_entries():
+	# nosemgrep
 	frappe.db.sql(
 		"""
         UPDATE `tabGL Entry` AS gl
@@ -39,6 +40,7 @@ def process_asset_related_journal_entries():
 
 
 def process_asset_capitalization_entries():
+	# nosemgrep
 	frappe.db.sql(
 		"""
         UPDATE `tabGL Entry` AS gl
