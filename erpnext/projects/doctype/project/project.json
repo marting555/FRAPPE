@@ -52,6 +52,7 @@
   "vin",
   "brand",
   "model",
+  "model_year",
   "hp_kw",
   "engine_liters",
   "type_of_job",
@@ -953,6 +954,11 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Terms and Conditions accepted"
+  },
+  {
+   "fieldname": "model_year",
+   "fieldtype": "Data",
+   "label": "Model year"
   }
  ],
  "icon": "fa fa-puzzle-piece",
@@ -960,7 +966,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-11-28 18:22:33.038761",
+ "modified": "2024-12-02 20:10:26.515916",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
