@@ -606,10 +606,10 @@ async function insertVinSearchButton(frm) {
 
     const iconSpan = document.createElement('span');
     iconSpan.innerHTML = `
-   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><g fill="none" fill-rule="evenodd">
-    <path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M10.5 4a6.5 6.5 0 1 0 0 13a6.5 6.5 0 0 0 0-13M2 10.5a8.5 8.5 0 1 1 15.176 5.262l3.652 3.652a1 1 0 0 1-1.414 1.414l-3.652-3.652A8.5 8.5 0 0 1 2 10.5M9.5 7a1 1 0 0 1 1-1a4.5 4.5 0 0 1 4.5 4.5a1 1 0 1 1-2 0A2.5 2.5 0 0 0 10.5 8a1 1 0 0 1-1-1"/></g>
-   </svg>
-  `;
+		<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><g fill="none" fill-rule="evenodd">
+			<path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M10.5 4a6.5 6.5 0 1 0 0 13a6.5 6.5 0 0 0 0-13M2 10.5a8.5 8.5 0 1 1 15.176 5.262l3.652 3.652a1 1 0 0 1-1.414 1.414l-3.652-3.652A8.5 8.5 0 0 1 2 10.5M9.5 7a1 1 0 0 1 1-1a4.5 4.5 0 0 1 4.5 4.5a1 1 0 1 1-2 0A2.5 2.5 0 0 0 10.5 8a1 1 0 0 1-1-1"/></g>
+		</svg>
+		`;
 
     button.addEventListener('mouseover', () => {
       tooltip.style.visibility = 'visible';
@@ -621,72 +621,60 @@ async function insertVinSearchButton(frm) {
       tooltip.style.opacity = '0';
     });
 
-    button.addEventListener('click', function () {
+		button.addEventListener('click', async function () {
 			button.setAttribute('hidden', 'true')
 			spinner.removeAttribute('hidden')
-      endpoint = `${vin_search_url}/${vin}`
+			endpoint = `${vin_search_url}/${vin}`
 
-      const options = {
-        method: 'GET',
-      };
- 
-      fetch(endpoint, options)
-        .then(response => response.json())
-        .then(data => {
-           if(data.hasOwnProperty("errors")){
-            vin_field_input.value = initialVin
-            vin = initialVin
-            
-            frappe.msgprint({
-              title: __('Error'),
-              indicator: 'red',
-              message: __(`${data.errors}`)
-            });  
-          }else {
-            const {
-              vehicle_identification_no,
-              model,
-              make,
-              engine_liters,
-              engine_code,
-              dsg,
-              dsg_code,
-              ecu_code,
-              parts
-            } = data
+			const data = await fetch(endpoint).then(response => response.json()).catch(error => {
+				vin_field_input.value = initialVin
+				frappe.throw(__('Error', error));
+			})
+				.finally(() => {
+					button.removeAttribute('hidden')
+					spinner.setAttribute('hidden', 'true')
+				});
 
-            const partsObject = {};
-            initialVin = vehicle_identification_no
+			if (data.errors) {
+				frappe.show_alert({
+					message: __(`${data.errors}`),
+					indicator:'red'
+			}, 5);
 
-            parts.forEach(part => {
-              partsObject[part.name] = part.partNumber;
-            });
+				if(!data.vehicle_identification_no){
+					vin_field_input.value = initialVin
+					vin = initialVin
+					return
+				}
+			}
 
-            frm.set_value({
-              vin:vehicle_identification_no,
-              model,
-              brand: make,
-              engine_liters,
-              engine_code,
-              dsg_model: dsg.join(", "),
-              dsg_code,
-              ecu_number: ecu_code,
-              dsg_gearbox: partsObject["gearbox"] ?? partsObject["speed dual clutch gearbox"] ?? "",
-              mechatronic: partsObject["mechatronic"] ?? partsObject["mechatronic with software"] ?? "",
-              flywheel: partsObject["flywheel"] ?? "",
-              clutch: partsObject["clutch"] ?? partsObject["repair set for multi-coupling"] ?? "",
-            }).then(() => {
-              frm.save();
-            })
-          }  
-        }).catch(error => {
-          vin_field_input.value = initialVin
-          frappe.throw(__('Error', error));
-       }).finally(() => {
-				button.removeAttribute('hidden')
-				spinner.setAttribute('hidden', 'true')
+			console.log(data)
+		 
+			const partsObject = {};
+			initialVin = data.vehicle_identification_no
+		 
+			data.parts?.forEach(part => {
+				partsObject[part.name] = part.partNumber;
 			});
-    });
+		 
+			frm.set_value({
+				vin: data.vehicle_identification_no,
+				model: data.model,
+				model_year: data.year,
+				brand: data.make,
+				engine_liters: data.engine_liters,
+				engine_code: data.engine_code,
+				dsg_model: data.dsg_family || data.dsg ? data.dsg[0] : '',
+				dsg_code: data.dsg_code,
+				ecu_number: data.ecu_code,
+				dsg_gearbox: partsObject["gearbox"] ?? partsObject["speed dual clutch gearbox"] ?? "",
+				mechatronic: partsObject["mechatronic"] ?? partsObject["mechatronic with software"] ?? "",
+				flywheel: partsObject["flywheel"] ?? "",
+				clutch: partsObject["clutch"] ?? partsObject["repair set for multi-coupling"] ?? "",
+			}).then(() => {
+				frm.save();
+			})
+		});
 
     button.appendChild(iconSpan);
     container.appendChild(button);
