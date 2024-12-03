@@ -31,7 +31,6 @@
   "customer",
   "customer_group",
   "territory",
-  "sales_partner",
   "campaign",
   "supplier",
   "supplier_group",
@@ -191,13 +190,6 @@
    "options": "Territory Item"
   },
   {
-   "depends_on": "eval:doc.applicable_for==\"Sales Partner\"",
-   "fieldname": "sales_partner",
-   "fieldtype": "Table MultiSelect",
-   "label": "Sales Partner",
-   "options": "Sales Partner Item"
-  },
-  {
    "depends_on": "eval:doc.applicable_for==\"Campaign\"",
    "fieldname": "campaign",
    "fieldtype": "Table MultiSelect",
@@ -278,7 +270,7 @@
   }
  ],
  "links": [],
- "modified": "2021-05-06 16:20:22.039078",
+ "modified": "2024-12-03 15:34:43.287222",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Promotional Scheme",
@@ -335,5 +327,6 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "track_changes": 1
 }
