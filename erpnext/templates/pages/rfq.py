@@ -61,7 +61,7 @@ def update_supplier_details(context):
 def get_link_quotation(supplier, rfq):
 	quotation = frappe.db.sql(
 		""" select distinct `tabSupplier Quotation Item`.parent as name,
-		`tabSupplier Quotation`.status, `tabSupplier Quotation`.transaction_date from
+		`tabSupplier Quotation`.status, `tabSupplier Quotation`.transaction_date, `tabSupplier Quotation`.creation from
 		`tabSupplier Quotation Item`, `tabSupplier Quotation` where `tabSupplier Quotation`.docstatus < 2 and
 		`tabSupplier Quotation Item`.request_for_quotation =%(name)s and
 		`tabSupplier Quotation Item`.parent = `tabSupplier Quotation`.name and
