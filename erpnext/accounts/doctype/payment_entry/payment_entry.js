@@ -30,6 +30,7 @@ frappe.ui.form.on("Payment Entry", {
 			});
 		}
 		erpnext.accounts.dimensions.setup_dimension_filters(frm, frm.doctype);
+		})
 	},
 
 	setup: function (frm) {
