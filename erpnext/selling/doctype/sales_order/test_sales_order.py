@@ -30,6 +30,7 @@ from erpnext.selling.doctype.sales_order.sales_order import (
 )
 from erpnext.stock.doctype.item.test_item import make_item
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
+from datetime import datetime
 
 
 class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
@@ -164,10 +165,11 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		si.set("taxes", [])
 		si.save()
 
+		transaction_date = datetime.strptime(so.transaction_date, "%Y-%m-%d").date()
 		self.assertEqual(si.payment_schedule[0].payment_amount, 500.0)
-		self.assertEqual(si.payment_schedule[0].due_date, so.transaction_date)
+		self.assertEqual(si.payment_schedule[0].due_date, transaction_date)
 		self.assertEqual(si.payment_schedule[1].payment_amount, 500.0)
-		self.assertEqual(si.payment_schedule[1].due_date, add_days(so.transaction_date, 30))
+		self.assertEqual(si.payment_schedule[1].due_date, add_days(transaction_date, 30))
 
 		si.submit()
 
