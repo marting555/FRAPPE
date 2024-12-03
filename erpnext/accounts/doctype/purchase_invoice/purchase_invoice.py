@@ -231,6 +231,17 @@ class PurchaseInvoice(BuyingController):
 			self.set("tax_withheld_vouchers", [])
 
 	def before_save(self):
+		supplier = frappe.get_doc("Supplier", self.supplier)
+		account = frappe.get_doc("Account", self.credit_to)
+
+		supplier_currency = supplier.default_currency or "INR"
+		account_currency = account.account_currency
+
+		if supplier_currency != account_currency:
+			frappe.throw(f"Party Account <strong>{self.credit_to}</strong> currency ({account_currency}) and document currency ({supplier_currency}) should be the same")
+
+
+
 		if not self.on_hold:
 			self.release_date = ""
 
@@ -2052,3 +2063,4 @@ def validate_available_budget(self):
 						frappe.throw(msg,title=_("Budget Exceeded"))
 					else:
 						frappe.msgprint(msg, indicator="orange", title=_("Budget Exceeded"))
+	
