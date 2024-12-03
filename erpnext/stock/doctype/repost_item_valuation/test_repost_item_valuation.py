@@ -395,7 +395,7 @@ class TestRepostItemValuation(IntegrationTestCase, StockTestMixin):
 			prepare_closing_stock_balance,
 		)
 
-		doc = frappe.new_doc("Closing Stock Balance")
+		doc = frappe.new_doc("Stock Closing Entry")
 		doc.company = "_Test Company"
 		doc.from_date = today()
 		doc.to_date = today()
