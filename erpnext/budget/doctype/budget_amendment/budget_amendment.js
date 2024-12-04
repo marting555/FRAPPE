@@ -25,14 +25,6 @@ frappe.ui.form.on("Budget Amendment", {
         });
     },
     onload: function(frm) {
-        frm.set_query("project", function() {
-            return {};
-        });
-
-        if (!frm.doc.posting_date) {
-            frm.set_value("posting_date", frappe.datetime.get_today());
-        }
-
         frm.savecancel = function(btn, callback, on_error){return frm._cancel(btn, callback, on_error, false);}
     },
 

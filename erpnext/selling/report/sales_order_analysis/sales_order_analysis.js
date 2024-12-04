@@ -48,6 +48,14 @@ frappe.query_reports["Sales Order Analysis"] = {
 			label: __("Warehouse"),
 			fieldtype: "Link",
 			options: "Warehouse",
+			get_query: () => {
+				var company = frappe.query_report.get_filter_value("company");
+				return {
+					filters: {
+						company: company,
+					},
+				};
+			},
 		},
 		{
 			fieldname: "status",

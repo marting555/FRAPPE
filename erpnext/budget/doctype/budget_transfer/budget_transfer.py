@@ -25,8 +25,6 @@ class BudgetTransfer(Document):
 		fr_av_bgt: DF.Currency
 		fr_oa_bgt: DF.Currency
 		fr_og_bgt: DF.Currency
-		from_project: DF.Link | None
-		from_project_name: DF.Data | None
 		from_wbs: DF.Link | None
 		from_wbs_level: DF.Data | None
 		from_wbs_name: DF.Data | None
@@ -59,7 +57,8 @@ class BudgetTransfer(Document):
 
 def create_debit_wbs_budget_entry(self):
 	budget_entry = frappe.new_doc("Budget Entry")
-	budget_entry.project = self.from_project
+	if "projects" in frappe.get_installed_apps():
+		budget_entry.project = self.from_project
 	budget_entry.company = self.company
 	budget_entry.wbs = self.from_wbs
 	budget_entry.wbs_name = self.from_wbs_name
@@ -75,7 +74,8 @@ def create_debit_wbs_budget_entry(self):
 
 def create_credit_wbs_budget_entry(self):
 	budget_entry = frappe.new_doc("Budget Entry")
-	budget_entry.project = self.from_project
+	if "projects" in frappe.get_installed_apps():
+		budget_entry.project = self.from_project
 	budget_entry.company = self.company
 	budget_entry.wbs = self.to_wbs
 	budget_entry.wbs_name = self.to_wbs_name
@@ -110,7 +110,8 @@ def update_credit_wbs(budget_entry):
 
 def create_cancelled_debit_wbs_budget_entry(self):
 	budget_entry = frappe.new_doc("Budget Entry")
-	budget_entry.project = self.from_project
+	if "projects" in frappe.get_installed_apps():
+		budget_entry.project = self.from_project
 	budget_entry.company = self.company
 	budget_entry.wbs = self.from_wbs
 	budget_entry.wbs_name = self.from_wbs_name
@@ -125,7 +126,8 @@ def create_cancelled_debit_wbs_budget_entry(self):
 
 def	create_cancelled_credit_wbs_budget_entry(self):
 	budget_entry = frappe.new_doc("Budget Entry")
-	budget_entry.project = self.from_project
+	if "projects" in frappe.get_installed_apps():
+		budget_entry.project = self.from_project
 	budget_entry.company = self.company
 	budget_entry.wbs = self.to_wbs
 	budget_entry.wbs_name = self.to_wbs_name

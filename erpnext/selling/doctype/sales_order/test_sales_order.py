@@ -8,7 +8,7 @@ import frappe.permissions
 from frappe.core.doctype.user_permission.test_user_permission import create_user
 from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, flt, getdate, nowdate, today
-
+from erpnext.stock.get_item_details import get_bin_details
 from erpnext.accounts.test.accounts_mixin import AccountsTestMixin
 from erpnext.controllers.accounts_controller import update_child_qty_rate
 from erpnext.maintenance.doctype.maintenance_schedule.test_maintenance_schedule import (
@@ -30,6 +30,7 @@ from erpnext.selling.doctype.sales_order.sales_order import (
 )
 from erpnext.stock.doctype.item.test_item import make_item
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
+from datetime import datetime
 
 
 class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
@@ -96,6 +97,12 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(mr.material_request_type, "Purchase")
 		self.assertEqual(len(mr.get("items")), len(so.get("items")))
 
+		for item in mr.get("items"):
+			actual_qty = get_bin_details(item.item_code, item.warehouse, mr.company, True).get(
+				"actual_qty", 0
+			)
+			self.assertEqual(flt(item.actual_qty), actual_qty)
+
 	def test_make_delivery_note(self):
 		so = make_sales_order(do_not_submit=True)
 
@@ -158,10 +165,11 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		si.set("taxes", [])
 		si.save()
 
+		transaction_date = datetime.strptime(so.transaction_date, "%Y-%m-%d").date()
 		self.assertEqual(si.payment_schedule[0].payment_amount, 500.0)
-		self.assertEqual(si.payment_schedule[0].due_date, so.transaction_date)
+		self.assertEqual(si.payment_schedule[0].due_date, transaction_date)
 		self.assertEqual(si.payment_schedule[1].payment_amount, 500.0)
-		self.assertEqual(si.payment_schedule[1].due_date, add_days(so.transaction_date, 30))
+		self.assertEqual(si.payment_schedule[1].due_date, add_days(transaction_date, 30))
 
 		si.submit()
 

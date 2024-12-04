@@ -447,9 +447,11 @@ frappe.ui.form.on("Stock Entry", {
 						source_doctype: "Stock Entry",
 						target: frm,
 						date_field: "posting_date",
+						read_only_setters: ["stock_entry_type", "purpose", "add_to_transit"],
 						setters: {
 							stock_entry_type: "Material Transfer",
 							purpose: "Material Transfer",
+							add_to_transit: 1,
 						},
 						get_query_filters: {
 							docstatus: 1,
@@ -509,6 +511,9 @@ frappe.ui.form.on("Stock Entry", {
 			frm.trigger("toggle_display_account_head");
 
 			erpnext.accounts.dimensions.update_dimension(frm, frm.doctype);
+			erpnext.queries.setup_queries(cur_frm, "Warehouse", function () {
+				return erpnext.queries.warehouse(cur_frm.doc);
+			});
 		}
 	},
 

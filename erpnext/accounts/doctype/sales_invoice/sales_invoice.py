@@ -366,6 +366,15 @@ class SalesInvoice(SellingController):
 		self.calculate_taxes_and_totals()
 
 	def before_save(self):
+		customer = frappe.get_doc("Customer", self.customer)
+		account = frappe.get_doc("Account", self.debit_to)
+
+		customer_currency = customer.default_currency or "INR"
+		account_currency = account.account_currency
+
+		if customer_currency != account_currency:
+			frappe.throw(f"Party Account <strong>{self.debit_to}</strong> currency ({account_currency}) and document currency ({customer_currency}) should be the same")
+
 		self.set_account_for_mode_of_payment()
 		self.set_paid_amount()
 
@@ -858,7 +867,7 @@ class SalesInvoice(SellingController):
 			if self.po_no:
 				self.remarks = _("Against Customer Order {0}").format(self.po_no)
 				if self.po_date:
-					self.remarks += " " + _("dated {0}").format(formatdate(self.po_data))
+					self.remarks += " " + _("dated {0}").format(formatdate(self.po_date))
 			else:
 				self.remarks = _("No Remarks")
 
@@ -1889,7 +1898,7 @@ def make_delivery_note(source_name, target_doc=None):
 				"postprocess": update_item,
 				"condition": lambda doc: doc.delivered_by_supplier != 1,
 			},
-			"Sales Taxes and Charges": {"doctype": "Sales Taxes and Charges", "add_if_empty": True},
+			"Sales Taxes and Charges": {"doctype": "Sales Taxes and Charges", "reset_value": True},
 			"Sales Team": {
 				"doctype": "Sales Team",
 				"field_map": {"incentives": "incentives"},

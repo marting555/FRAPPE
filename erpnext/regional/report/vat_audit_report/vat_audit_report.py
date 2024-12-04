@@ -82,7 +82,7 @@ class VATAuditReport:
 		items = frappe.db.sql(
 			"""
 			SELECT
-				item_code, parent, base_net_amount, is_zero_rated
+				item_code, parent, base_net_amount
 			FROM
 				`tab{} Item`
 			WHERE

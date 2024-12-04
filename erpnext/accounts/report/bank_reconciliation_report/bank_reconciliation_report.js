@@ -1,3 +1,4 @@
+// Bank Reconciliation
 frappe.query_reports["Bank Reconciliation Report"] = {
     filters: [
         {

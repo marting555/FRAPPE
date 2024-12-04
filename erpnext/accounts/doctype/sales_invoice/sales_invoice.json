@@ -161,13 +161,7 @@
   "company_addr_col_break",
   "company_address_display",
   "terms_tab",
-  "payment_schedule_section",
-  "section_break_kvga",
-  "payment_term",
-  "column_break_ccyt",
-  "discount_due_date",
   "section_break_zrni",
-  "payment_discount_terms",
   "ignore_default_payment_terms_template",
   "payment_terms_template",
   "payment_schedule",
@@ -1289,17 +1283,9 @@
    "print_hide": 1
   },
   {
-   "fieldname": "payment_schedule_section",
-   "fieldtype": "Section Break",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Payment Terms"
-  },
-  {
    "depends_on": "eval:(!doc.is_pos && !doc.is_return)",
    "fieldname": "payment_terms_template",
    "fieldtype": "Link",
-   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Payment Terms Template",
@@ -1311,7 +1297,6 @@
    "depends_on": "eval:(!doc.is_pos && !doc.is_return)",
    "fieldname": "payment_schedule",
    "fieldtype": "Table",
-   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Payment Schedule",
@@ -1892,7 +1877,6 @@
    "default": "0",
    "fieldname": "ignore_default_payment_terms_template",
    "fieldtype": "Check",
-   "hidden": 1,
    "label": "Ignore Default Payment Terms Template",
    "read_only": 1
   },
@@ -2047,33 +2031,9 @@
    "print_hide": 1
   },
   {
-   "fieldname": "payment_term",
-   "fieldtype": "Link",
-   "label": "Payment Term",
-   "options": "Payment Term"
-  },
-  {
-   "fieldname": "payment_discount_terms",
-   "fieldtype": "Table",
-   "label": "Payment Discount Terms",
-   "options": "Discount Terms"
-  },
-  {
-   "fieldname": "section_break_kvga",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "column_break_ccyt",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "discount_due_date",
-   "fieldtype": "Date",
-   "label": "Discount Due Date"
-  },
-  {
    "fieldname": "section_break_zrni",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Payment Terms"
   }
  ],
  "icon": "fa fa-file-text",
@@ -2086,7 +2046,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2024-11-13 10:20:09.482861",
+ "modified": "2024-11-26 13:18:36.328508",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

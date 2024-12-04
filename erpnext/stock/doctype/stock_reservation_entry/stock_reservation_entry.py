@@ -1050,7 +1050,7 @@ def create_stock_reservation_entries_for_so_items(
 		sre.reserved_qty = qty_to_be_reserved
 		sre.company = sales_order.company
 		sre.stock_uom = item.stock_uom
-		sre.project = sales_order.project
+		sre.project = sales_order.project if "projects" in frappe.get_installed_apps() else ""
 
 		if from_voucher_type:
 			sre.from_voucher_type = from_voucher_type

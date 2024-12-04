@@ -355,6 +355,7 @@ def get_paid_amount(payment_entry, currency, gl_bank_account):
 				"Journal Entry Account",
 				{"parent": payment_entry.payment_entry, "account": gl_bank_account},
 				"sum(debit_in_account_currency-credit_in_account_currency)",
+				order_by=None
 			)
 			or 0
 		)

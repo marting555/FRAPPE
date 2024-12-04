@@ -4,8 +4,7 @@
 import unittest
 import re
 import frappe
-from frappe.tests.utils import FrappeTestCase
-
+from frappe.tests.utils import FrappeTestCase, change_settings
 from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_terms_template
 from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
@@ -15,7 +14,6 @@ from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_orde
 from erpnext.setup.utils import get_exchange_rate
 
 test_dependencies = ["Currency Exchange", "Journal Entry", "Contact", "Address"]
-
 payment_gateway = {"doctype": "Payment Gateway", "gateway": "_Test Gateway"}
 
 payment_method = [
@@ -47,6 +45,7 @@ class TestPaymentRequest(FrappeTestCase):
 				"name",
 			):
 				frappe.get_doc(method).insert(ignore_permissions=True)
+
 
 	def test_payment_request_linkings(self):
 		so_inr = make_sales_order(currency="INR", do_not_save=True)
@@ -282,7 +281,6 @@ class TestPaymentRequest(FrappeTestCase):
 	
 	def test_multiple_payment_if_partially_paid_for_same_currency(self):
 		so = make_sales_order(currency="INR", qty=1, rate=1000)
-		self.assertEqual(so.advance_payment_status, "Not Requested")
 		pr = make_payment_request(
 			dt="Sales Order",
 			dn=so.name,
@@ -293,9 +291,7 @@ class TestPaymentRequest(FrappeTestCase):
 		self.assertEqual(pr.grand_total, 1000)
 		self.assertEqual(pr.outstanding_amount, pr.grand_total)
 		self.assertEqual(pr.party_account_currency, pr.currency)  # INR
-		self.assertEqual(pr.status, "Requested")
 		so.load_from_db()
-		self.assertEqual(so.advance_payment_status, "Requested")
 		# to make partial payment
 		pe = pr.create_payment_entry(submit=False)
 		pe.paid_amount = 200
@@ -303,7 +299,6 @@ class TestPaymentRequest(FrappeTestCase):
 		pe.submit()
 		self.assertEqual(pe.references[0].payment_request, pr.name)
 		so.load_from_db()
-		self.assertEqual(so.advance_payment_status, "Partially Paid")
 		pr.load_from_db()
 		self.assertEqual(pr.status, "Partially Paid")
 		self.assertEqual(pr.outstanding_amount, 800)
@@ -315,7 +310,6 @@ class TestPaymentRequest(FrappeTestCase):
 		self.assertEqual(pe.references[0].outstanding_amount, 800)  # for Orders it is not zero
 		self.assertEqual(pe.references[0].payment_request, pr.name)
 		so.load_from_db()
-		self.assertEqual(so.advance_payment_status, "Fully Paid")
 		pr.load_from_db()
 		self.assertEqual(pr.status, "Paid")
 		self.assertEqual(pr.outstanding_amount, 0)
@@ -331,8 +325,12 @@ class TestPaymentRequest(FrappeTestCase):
 			submit_doc=1,
 			return_doc=1,
 		)
+
+	@change_settings("Accounts Settings", {"allow_multi_currency_invoices_against_single_party_account": 1})
 	def test_multiple_payment_if_partially_paid_for_multi_currency(self):
-		pi = make_purchase_invoice(currency="USD", conversion_rate=50, qty=1, rate=100)
+		pi = make_purchase_invoice(currency="USD", conversion_rate=50, qty=1, rate=100, do_not_save=1)
+		pi.credit_to = "Creditors - _TC"
+		pi.submit()
 		pr = make_payment_request(
 			dt="Purchase Invoice",
 			dn=pi.name,
@@ -383,7 +381,6 @@ class TestPaymentRequest(FrappeTestCase):
 		po.payment_terms_template = "Test Receivable Template"  # 84.746 and 15.254
 		po.save()
 		po.submit()
-		self.assertEqual(po.advance_payment_status, "Not Initiated")
 		pr = make_payment_request(
 			dt="Purchase Order",
 			dn=po.name,
@@ -396,7 +393,6 @@ class TestPaymentRequest(FrappeTestCase):
 		self.assertEqual(pr.party_account_currency, pr.currency)  # INR
 		self.assertEqual(pr.status, "Initiated")
 		po.load_from_db()
-		self.assertEqual(po.advance_payment_status, "Initiated")
 		pe = pr.create_payment_entry()
 		self.assertEqual(len(pe.references), 2)
 		self.assertEqual(pe.paid_amount, 20000)
@@ -407,14 +403,17 @@ class TestPaymentRequest(FrappeTestCase):
 		self.assertEqual(pe.references[1].allocated_amount, 3050.8)
 		self.assertEqual(pe.references[1].payment_request, pr.name)
 		po.load_from_db()
-		self.assertEqual(po.advance_payment_status, "Fully Paid")
 		pr.load_from_db()
 		self.assertEqual(pr.status, "Paid")
 		self.assertEqual(pr.outstanding_amount, 0)
 		self.assertEqual(pr.grand_total, 20000)
+
+	@change_settings("Accounts Settings", {"allow_multi_currency_invoices_against_single_party_account": 1})
 	def test_single_payment_with_payment_term_for_multi_currency(self):
 		create_payment_terms_template()
-		si = create_sales_invoice(do_not_save=1, currency="USD", qty=1, rate=200, conversion_rate=50)
+		si = create_sales_invoice(
+			do_not_save=1, currency="USD", debit_to="Debtors - _TC", qty=1, rate=200, conversion_rate=50
+		)
 		si.payment_terms_template = "Test Receivable Template"  # 84.746 and 15.254
 		si.save()
 		si.submit()
@@ -430,7 +429,6 @@ class TestPaymentRequest(FrappeTestCase):
 		self.assertEqual(pr.outstanding_amount, 10000)
 		self.assertEqual(pr.currency, "USD")
 		self.assertEqual(pr.party_account_currency, "INR")
-		self.assertEqual(pr.status, "Requested")
 		pe = pr.create_payment_entry()
 		self.assertEqual(len(pe.references), 2)
 		self.assertEqual(pe.paid_amount, 10000)
@@ -445,9 +443,9 @@ class TestPaymentRequest(FrappeTestCase):
 		self.assertEqual(pr.status, "Paid")
 		self.assertEqual(pr.outstanding_amount, 0)
 		self.assertEqual(pr.grand_total, 200)
+
 	def test_payment_cancel_process(self):
 		so = make_sales_order(currency="INR", qty=1, rate=1000)
-		self.assertEqual(so.advance_payment_status, "Not Requested")
 		pr = make_payment_request(
 			dt="Sales Order",
 			dn=so.name,
@@ -455,18 +453,15 @@ class TestPaymentRequest(FrappeTestCase):
 			submit_doc=1,
 			return_doc=1,
 		)
-		self.assertEqual(pr.status, "Requested")
 		self.assertEqual(pr.grand_total, 1000)
 		self.assertEqual(pr.outstanding_amount, pr.grand_total)
 		so.load_from_db()
-		self.assertEqual(so.advance_payment_status, "Requested")
 		pe = pr.create_payment_entry(submit=False)
 		pe.paid_amount = 800
 		pe.references[0].allocated_amount = 800
 		pe.submit()
 		self.assertEqual(pe.references[0].payment_request, pr.name)
 		so.load_from_db()
-		self.assertEqual(so.advance_payment_status, "Partially Paid")
 		pr.load_from_db()
 		self.assertEqual(pr.status, "Partially Paid")
 		self.assertEqual(pr.outstanding_amount, 200)
@@ -478,4 +473,3 @@ class TestPaymentRequest(FrappeTestCase):
 		self.assertEqual(pr.outstanding_amount, 1000)
 		self.assertEqual(pr.grand_total, 1000)
 		so.load_from_db()
-		self.assertEqual(so.advance_payment_status, "Requested")

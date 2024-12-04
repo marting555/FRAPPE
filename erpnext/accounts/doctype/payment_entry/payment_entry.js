@@ -18,7 +18,7 @@ frappe.ui.form.on("Payment Entry", {
 			"Unreconcile Payment",
 			"Unreconcile Payment Entries",
 			"Bank Transaction",
-		];
+		];frm.set_query("payment_request", "references", function (doc, cdt, cdn) {
 
 		if (frm.doc.__islocal) {
 			if (!frm.doc.paid_from) frm.set_value("paid_from_account_currency", null);
@@ -30,6 +30,7 @@ frappe.ui.form.on("Payment Entry", {
 			});
 		}
 		erpnext.accounts.dimensions.setup_dimension_filters(frm, frm.doctype);
+		})
 	},
 
 	setup: function (frm) {

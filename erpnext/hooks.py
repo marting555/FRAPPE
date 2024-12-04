@@ -385,7 +385,6 @@ doc_events = {
 	"Payment Entry": {
 		"on_submit": [
 			"erpnext.regional.create_transaction_log",
-			"erpnext.accounts.doctype.payment_request.payment_request.update_payment_req_status",
 			"erpnext.accounts.doctype.dunning.dunning.resolve_dunning",
 		],
 		"on_cancel": ["erpnext.accounts.doctype.dunning.dunning.resolve_dunning"],
@@ -653,11 +652,12 @@ fields_for_group_similar_items = ["qty", "amount"]
 
 after_migrate = "erpnext.accounts.install.after_migrate"
 
-# doc_events = {
-#     "Project": {
-#         "after_save": "erpnext.public.is_wbs.after_save"
-#     }
-# }
+doc_events = {
+    "Project": {
+		"on_update": "erpnext.public.is_wbs.on_update",
+	
+    }
+}
 
 fixtures =[
     {"dt":"Custom Field","filters":[

@@ -6,8 +6,6 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "project",
-  "project_name",
   "get_wbs",
   "column_break_vewb",
   "company",
@@ -20,17 +18,6 @@
   "amended_from"
  ],
  "fields": [
-  {
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "options": "Project"
-  },
-  {
-   "fieldname": "project_name",
-   "fieldtype": "Data",
-   "label": "Project Name"
-  },
   {
    "fieldname": "get_wbs",
    "fieldtype": "Button",
@@ -46,8 +33,9 @@
    "label": "Company"
   },
   {
+   "default": "Today",
    "fieldname": "posting_date",
-   "fieldtype": "Data",
+   "fieldtype": "Date",
    "label": "Posting Date"
   },
   {
@@ -93,7 +81,7 @@
    "link_fieldname": "voucher_no"
   }
  ],
- "modified": "2024-11-21 16:01:57.968919",
+ "modified": "2024-11-26 22:29:27.031835",
  "modified_by": "Administrator",
  "module": "Budget",
  "name": "Budget Amendment",

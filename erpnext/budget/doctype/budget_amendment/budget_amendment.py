@@ -18,9 +18,7 @@ class BudgetAmendment(Document):
         amended_from: DF.Link | None
         budget_amendment_items: DF.Table[BudgetAmendmentItems]
         company: DF.Data | None
-        posting_date: DF.Data | None
-        project: DF.Link | None
-        project_name: DF.Data | None
+        posting_date: DF.Date | None
         total_decrement_budget: DF.Data | None
         total_increment_budget: DF.Data | None
     # end: auto-generated types
@@ -116,7 +114,8 @@ def update_original_budget(self,event):
 def create_budget_entry(self,row,event,company):
     if row.get("wbs_id"):
         bgt_ent = frappe.new_doc("Budget Entry")
-        bgt_ent.project = self.project
+        if "projects" in frappe.get_installed_apps():
+            bgt_ent.project = self.project
         bgt_ent.wbs = row.get("wbs_id")
         bgt_ent.wbs_name = row.get("wbs_name")
         bgt_ent.wbs_level = row.get("wbs_level")

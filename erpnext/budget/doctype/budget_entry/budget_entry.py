@@ -24,8 +24,7 @@ class BudgetEntry(Document):
 		document_date: DF.Date | None
 		overall_credit: DF.Currency
 		overall_debit: DF.Currency
-		posting_date: DF.Data | None
-		project: DF.Link | None
+		posting_date: DF.Date | None
 		total: DF.Int
 		voucher_no: DF.DynamicLink | None
 		voucher_submit_date: DF.Datetime | None

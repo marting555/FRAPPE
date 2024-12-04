@@ -27,7 +27,8 @@
   "currency",
   "accounting_dimensions_section",
   "cost_center",
-  "dimension_col_break"
+  "dimension_col_break",
+  "unreconcile"
  ],
  "fields": [
   {
@@ -164,7 +165,14 @@
   {
    "fieldname": "dimension_col_break",
    "fieldtype": "Column Break"
-  }
+  },
+  {
+    "fieldname": "unreconcile",
+    "fieldtype": "Check",
+    "label": "UnReconcile",
+    "hidden": 1,
+    "read_only": 1
+ }
  ],
  "istable": 1,
  "links": [],

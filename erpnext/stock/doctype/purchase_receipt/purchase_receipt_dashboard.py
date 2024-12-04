@@ -17,7 +17,7 @@ def get_data():
 		},
 		{
 			"label": _("Reference"),
-			"items": ["Material Request", "Purchase Order", "Quality Inspection", "Project"],
+			"items": ["Material Request", "Purchase Order", "Quality Inspection"],
 		},
 		{"label": _("Returns"), "items": ["Purchase Receipt"]},
 		{"label": _("Subscription"), "items": ["Auto Repeat"]},
@@ -35,7 +35,6 @@ def get_data():
 		"internal_links": {
 			"Material Request": ["items", "material_request"],
 			"Purchase Order": ["items", "purchase_order"],
-			"Project": ["items", "project"],
 			"Quality Inspection": ["items", "quality_inspection"],
 		},
 		"transactions": transactions,
