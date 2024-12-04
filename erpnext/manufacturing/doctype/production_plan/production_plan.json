@@ -439,11 +439,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
-<<<<<<< HEAD
- "modified": "2024-02-27 13:34:20.692211",
-=======
  "modified": "2024-12-04 11:55:03.108971",
->>>>>>> b4534e56e4 (fix: duplicate required items in the CSV (#44498))
  "modified_by": "Administrator",
  "module": "Manufacturing",
  "name": "Production Plan",
