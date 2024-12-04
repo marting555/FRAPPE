@@ -33,6 +33,7 @@ class AssetCategory(Document):
 		self.validate_account_types()
 		self.validate_account_currency()
 		self.valide_cwip_account()
+		self.validate_fixed_asset_clearing_account()
 
 	def validate_finance_books(self):
 		for d in self.finance_books:
@@ -113,6 +114,24 @@ class AssetCategory(Document):
 				msg += "<br><br>"
 				msg += _("You can also set default CWIP account in Company {}").format(
 					", ".join(missing_cwip_accounts_for_company)
+				)
+				frappe.throw(msg, title=_("Missing Account"))
+
+	def validate_fixed_asset_clearing_account(self):
+		if not self.enable_cwip_accounting:
+			missing_asset_accounts_for_company = []
+			for d in self.accounts:
+				if not d.asset_clearing_account and not frappe.db.get_value(
+					"Company", d.company_name, "asset_clearing_account"
+				):
+					missing_asset_accounts_for_company.append(get_link_to_form("Company", d.company_name))
+
+			if missing_asset_accounts_for_company:
+				msg = _("""If Capital Work in Progress Account is disabled,""") + " "
+				msg += _("""you must select Fixed Asset Clearing Account in accounts table""")
+				msg += "<br><br>"
+				msg += _("You can also set default Fixed Asset Clearing Account in Company {}").format(
+					", ".join(missing_asset_accounts_for_company)
 				)
 				frappe.throw(msg, title=_("Missing Account"))
 

@@ -7,7 +7,7 @@
  "field_order": [
   "company_name",
   "fixed_asset_account",
-  "asset_account",
+  "asset_clearing_account",
   "accumulated_depreciation_account",
   "depreciation_expense_account",
   "capital_work_in_progress_account"
@@ -57,15 +57,15 @@
    "options": "Account"
   },
   {
-   "fieldname": "asset_account",
+   "fieldname": "asset_clearing_account",
    "fieldtype": "Link",
-   "label": "Asset Account",
+   "label": "Fixed Asset Clearing Account",
    "options": "Account"
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2024-12-02 01:43:59.760733",
+ "modified": "2024-12-03 01:44:02.544212",
  "modified_by": "Administrator",
  "module": "Assets",
  "name": "Asset Category Account",
