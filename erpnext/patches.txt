@@ -302,6 +302,7 @@ erpnext.patches.v14_0.change_autoname_for_tax_withheld_vouchers
 erpnext.patches.v14_0.set_pick_list_status
 erpnext.patches.v13_0.update_docs_link
 erpnext.patches.v14_0.create_accounting_dimensions_for_closing_balance
+erpnext.patches.v14_0.set_period_start_end_date_in_pcv
 erpnext.patches.v14_0.update_closing_balances #14-07-2023
 execute:frappe.db.set_single_value("Accounts Settings", "merge_similar_account_heads", 0)
 erpnext.patches.v14_0.update_reference_type_in_journal_entry_accounts

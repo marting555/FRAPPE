@@ -421,8 +421,10 @@ class ReceivablePayableReport:
 				select name, due_date, po_no
 				from `tabSales Invoice`
 				where posting_date <= %s
+				and company = %s
+				and docstatus = 1
 			""",
-				self.filters.report_date,
+				(self.filters.report_date, self.filters.company),
 				as_dict=1,
 			)
 			for d in si_list:
@@ -450,7 +452,7 @@ class ReceivablePayableReport:
 				from `tabPurchase Invoice`
 				where posting_date <= %s
 			""",
-				self.filters.report_date,
+				(self.filters.report_date, self.filters.company),
 				as_dict=1,
 			):
 				self.invoice_details.setdefault(pi.name, pi)
@@ -460,9 +462,12 @@ class ReceivablePayableReport:
 			"""
 			select name, due_date, bill_no, bill_date
 			from `tabJournal Entry`
-			where posting_date <= %s
+			where
+				posting_date <= %s
+				and company = %s
+				and docstatus = 1
 		""",
-			self.filters.report_date,
+			(self.filters.report_date, self.filters.company),
 			as_dict=1,
 		)
 
@@ -471,6 +476,8 @@ class ReceivablePayableReport:
 				self.invoice_details.setdefault(je.name, je)
 
 	def set_party_details(self, row):
+		if not row.party:
+			return
 		# customer / supplier name
 		party_details = self.get_party_details(row.party) or {}
 		row.update(party_details)
@@ -711,6 +718,7 @@ class ReceivablePayableReport:
 	def get_return_entries(self):
 		doctype = "Sales Invoice" if self.account_type == "Receivable" else "Purchase Invoice"
 		filters = {
+			"posting_date": ("<=", self.filters.report_date),
 			"is_return": 1,
 			"docstatus": 1,
 			"company": self.filters.company,
