@@ -1512,7 +1512,6 @@ def get_serial_and_batch_ledger(**kwargs):
 
 	if kwargs.fetch_incoming_rate:
 		query = query.where(sle_table.actual_qty > 0)
-		print(query.run(as_dict=True))
 
 	return query.run(as_dict=True)
 
