@@ -516,6 +516,8 @@ def get_accountwise_gle(filters, accounting_dimensions, gl_entries, gle_map, tot
 					gle.get("account"),
 					gle.get("party_type"),
 					gle.get("party"),
+					gle.get("against_voucher_type"),
+					gle.get("against_voucher_no"),
 				]
 
 				if immutable_ledger:
