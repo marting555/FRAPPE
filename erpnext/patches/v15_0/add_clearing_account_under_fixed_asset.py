@@ -2,7 +2,7 @@ import frappe
 
 
 def execute():
-	account_name = "Clearing Account"
+	account_name = "Fixed Asset Clearing Account"
 	account_type = "Fixed Asset"
 	parent_group = "Fixed Assets"
 	is_group = 0
@@ -29,11 +29,11 @@ def execute():
 
 			account.insert(ignore_permissions=True)
 
-			frappe.db.set_value("Company", company, "asset_account", account.name)
+			frappe.db.set_value("Company", company, "asset_clearing_account", account.name)
 
 			aca = frappe.qb.DocType("Asset Category Account")
 			(
 				frappe.qb.update(aca)
-				.set(aca.asset_account, account.name)
-				.where((aca.company_name == company.name) & (aca.asset_account.isnull()))
+				.set(aca.asset_clearing_account, account.name)
+				.where((aca.company_name == company.name) & (aca.asset_clearing_account.isnull()))
 			).run()

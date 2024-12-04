@@ -293,7 +293,7 @@ def get_basic_details(ctx: ItemDetailsCtx, item, overwrite_warehouse=True) -> It
 		from erpnext.assets.doctype.asset.asset import get_asset_account, is_cwip_accounting_enabled
 
 		if is_cwip_accounting_enabled(item.asset_category):
-			expense_account = get_asset_account(
+			asset_account = get_asset_account(
 				"capital_work_in_progress_account",
 				asset_category=item.asset_category,
 				company=ctx.company,
@@ -306,11 +306,8 @@ def get_basic_details(ctx: ItemDetailsCtx, item, overwrite_warehouse=True) -> It
 		):
 			from erpnext.assets.doctype.asset_category.asset_category import get_asset_category_account
 
-			expense_account = get_asset_category_account(
-				fieldname="fixed_asset_account", item=ctx.item_code, company=ctx.company
-			)
 			asset_account = get_asset_account(
-				"asset_account", asset_category=item.asset_category, company=ctx.company
+				"asset_clearing_account", asset_category=item.asset_category, company=ctx.company
 			)
 
 	# Set the UOM to the Default Sales UOM or Default Purchase UOM if configured in the Item Master

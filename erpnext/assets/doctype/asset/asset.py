@@ -649,32 +649,22 @@ class Asset(AccountsController):
 
 		cwip_enabled = is_cwip_accounting_enabled(self.asset_category)
 		cwip_account = self.get_cwip_account(cwip_enabled=cwip_enabled)
-		asset_account = get_asset_account("asset_account", self.name, self.asset_category, self.company)
+		asset_clearing_account = None
+		if not cwip_enabled:
+			asset_clearing_account = get_asset_account(
+				"asset_clearing_account", self.name, self.asset_category, self.company
+			)
 
 		query = """SELECT name FROM `tabGL Entry` WHERE voucher_no = %s and account = %s"""
 		if asset_bought_with_invoice:
-			# with invoice purchase either expense or cwip has been booked
 			expense_booked = frappe.db.sql(query, (purchase_document, fixed_asset_account), as_dict=1)
 			if expense_booked:
-				# if expense is already booked from invoice then do not make gl entries regardless of cwip enabled/disabled
 				return False
+		if not cwip_enabled:
+			return frappe.db.sql(query, (purchase_document, asset_clearing_account), as_dict=1)
 
-			cwip_booked = frappe.db.sql(query, (purchase_document, cwip_account), as_dict=1)
-			if cwip_booked:
-				# if cwip is booked from invoice then make gl entries regardless of cwip enabled/disabled
-				return True
-		else:
-			if asset_account and not cwip_enabled:
-				return frappe.db.sql(query, (purchase_document, asset_account), as_dict=1)
-			# with receipt purchase either cwip has been booked or no entries have been made
-			if not cwip_account:
-				# if cwip account isn't available do not make gl entries
-				return False
-
-			cwip_booked = frappe.db.sql(query, (purchase_document, cwip_account), as_dict=1)
-			# if cwip is not booked from receipt then do not make gl entries
-			# if cwip is booked from receipt then make gl entries
-			return cwip_booked
+		cwip_booked = frappe.db.sql(query, (purchase_document, cwip_account), as_dict=1)
+		return cwip_booked
 
 	def get_purchase_document(self):
 		asset_bought_with_invoice = self.purchase_invoice and frappe.db.get_value(
@@ -720,12 +710,14 @@ class Asset(AccountsController):
 
 		purchase_document = self.get_purchase_document()
 		fixed_asset_account = self.get_fixed_asset_account()
+		cwip_account = None
+		asset_clearing_account = None
 		if not is_cwip_accounting_enabled(self.asset_category):
-			asset_account = get_asset_account("asset_account", self.name, self.asset_category, self.company)
-			cwip_account = None
+			asset_clearing_account = get_asset_account(
+				"asset_clearing_account", self.name, self.asset_category, self.company
+			)
 		else:
 			cwip_account = self.get_cwip_account()
-			asset_account = None
 
 		if (self.is_composite_asset or (purchase_document and self.purchase_amount)) and getdate(
 			self.available_for_use_date
@@ -733,7 +725,7 @@ class Asset(AccountsController):
 			gl_entries.append(
 				self.get_gl_dict(
 					{
-						"account": cwip_account or asset_account,
+						"account": cwip_account or asset_clearing_account,
 						"against": fixed_asset_account,
 						"remarks": self.get("remarks") or _("Accounting Entry for Asset"),
 						"posting_date": self.available_for_use_date,
@@ -749,7 +741,7 @@ class Asset(AccountsController):
 				self.get_gl_dict(
 					{
 						"account": fixed_asset_account,
-						"against": cwip_account or asset_account,
+						"against": cwip_account or asset_clearing_account,
 						"remarks": self.get("remarks") or _("Accounting Entry for Asset"),
 						"posting_date": self.available_for_use_date,
 						"debit": self.purchase_amount,
@@ -870,17 +862,16 @@ def make_post_gl_entry():
 	asset_categories = frappe.db.get_all("Asset Category", fields=["name", "enable_cwip_accounting"])
 
 	for asset_category in asset_categories:
-		if cint(asset_category.enable_cwip_accounting):
-			assets = frappe.db.sql_list(
-				""" select name from `tabAsset`
-				where asset_category = %s and ifnull(booked_fixed_asset, 0) = 0
-				and available_for_use_date = %s""",
-				(asset_category.name, nowdate()),
-			)
+		assets = frappe.db.sql_list(
+			""" select name from `tabAsset`
+			where asset_category = %s and ifnull(booked_fixed_asset, 0) = 0
+			and available_for_use_date = %s""",
+			(asset_category.name, nowdate()),
+		)
 
-			for asset in assets:
-				doc = frappe.get_doc("Asset", asset)
-				doc.make_gl_entries()
+		for asset in assets:
+			doc = frappe.get_doc("Asset", asset)
+			doc.make_gl_entries()
 
 
 def get_asset_naming_series():

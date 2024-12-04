@@ -66,7 +66,6 @@
   "payment_terms",
   "cost_center",
   "default_finance_book",
-  "asset_account",
   "advance_payments_section",
   "book_advance_payments_in_separate_party_account",
   "reconcile_on_advance_payment_date",
@@ -82,6 +81,7 @@
   "fixed_asset_defaults",
   "accumulated_depreciation_account",
   "depreciation_expense_account",
+  "asset_clearing_account",
   "series_for_depreciation_entry",
   "column_break_40",
   "disposal_account",
@@ -795,9 +795,9 @@
    "options": "Account"
   },
   {
-   "fieldname": "asset_account",
+   "fieldname": "asset_clearing_account",
    "fieldtype": "Link",
-   "label": "Default Asset Account",
+   "label": "Fixed Asset Clearing Account",
    "options": "Account"
   }
  ],
@@ -806,7 +806,7 @@
  "image_field": "company_logo",
  "is_tree": 1,
  "links": [],
- "modified": "2024-12-01 22:50:06.014077",
+ "modified": "2024-12-03 01:44:50.616975",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Company",
