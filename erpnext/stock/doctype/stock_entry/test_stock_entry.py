@@ -1727,6 +1727,129 @@ class TestStockEntry(FrappeTestCase):
 			mr.cancel()
 			mr.delete()
 
+<<<<<<< HEAD
+=======
+	def test_auto_reorder_level_with_lead_time_days(self):
+		from erpnext.stock.reorder_item import reorder_item
+
+		item_doc = make_item(
+			"Test Auto Reorder Item - 002",
+			properties={"stock_uom": "Kg", "purchase_uom": "Nos", "is_stock_item": 1, "lead_time_days": 2},
+			uoms=[{"uom": "Nos", "conversion_factor": 5}],
+		)
+
+		if not frappe.db.exists("Item Reorder", {"parent": item_doc.name}):
+			item_doc.append(
+				"reorder_levels",
+				{
+					"warehouse_reorder_level": 0,
+					"warehouse_reorder_qty": 10,
+					"warehouse": "_Test Warehouse - _TC",
+					"material_request_type": "Purchase",
+				},
+			)
+
+		item_doc.save(ignore_permissions=True)
+
+		frappe.db.set_single_value("Stock Settings", "auto_indent", 1)
+
+		mr_list = reorder_item()
+
+		frappe.db.set_single_value("Stock Settings", "auto_indent", 0)
+		mrs = frappe.get_all(
+			"Material Request Item",
+			fields=["schedule_date"],
+			filters={"item_code": item_doc.name, "uom": "Nos"},
+		)
+
+		for mri in mrs:
+			self.assertEqual(getdate(mri.schedule_date), getdate(add_days(today(), 2)))
+
+		for mr in mr_list:
+			mr.cancel()
+			mr.delete()
+
+	def test_use_serial_and_batch_fields(self):
+		item = make_item(
+			"Test Use Serial and Batch Item SN Item",
+			{"has_serial_no": 1, "is_stock_item": 1},
+		)
+
+		serial_nos = [
+			"Test Use Serial and Batch Item SN Item - SN 001",
+			"Test Use Serial and Batch Item SN Item - SN 002",
+		]
+
+		se = make_stock_entry(
+			item_code=item.name,
+			qty=2,
+			to_warehouse="_Test Warehouse - _TC",
+			use_serial_batch_fields=1,
+			serial_no="\n".join(serial_nos),
+		)
+
+		self.assertTrue(se.items[0].use_serial_batch_fields)
+		self.assertTrue(se.items[0].serial_no)
+		self.assertTrue(se.items[0].serial_and_batch_bundle)
+
+		for serial_no in serial_nos:
+			self.assertTrue(frappe.db.exists("Serial No", serial_no))
+			self.assertEqual(frappe.db.get_value("Serial No", serial_no, "status"), "Active")
+
+		se1 = make_stock_entry(
+			item_code=item.name,
+			qty=2,
+			from_warehouse="_Test Warehouse - _TC",
+			use_serial_batch_fields=1,
+			serial_no="\n".join(serial_nos),
+		)
+
+		se1.reload()
+
+		self.assertTrue(se1.items[0].use_serial_batch_fields)
+		self.assertTrue(se1.items[0].serial_no)
+		self.assertTrue(se1.items[0].serial_and_batch_bundle)
+
+		for serial_no in serial_nos:
+			self.assertTrue(frappe.db.exists("Serial No", serial_no))
+			self.assertEqual(frappe.db.get_value("Serial No", serial_no, "status"), "Delivered")
+
+	def test_serial_batch_bundle_type_of_transaction(self):
+		item = make_item(
+			"Test Use Serial and Batch Item SN Item",
+			{
+				"has_batch_no": 1,
+				"is_stock_item": 1,
+				"create_new_batch": 1,
+				"batch_naming_series": "Test-SBBTYT-NNS.#####",
+			},
+		).name
+
+		se = make_stock_entry(
+			item_code=item,
+			qty=2,
+			target="_Test Warehouse - _TC",
+			use_serial_batch_fields=1,
+		)
+
+		batch_no = get_batch_from_bundle(se.items[0].serial_and_batch_bundle)
+
+		se = make_stock_entry(
+			item_code=item,
+			qty=2,
+			source="_Test Warehouse - _TC",
+			target="Stores - _TC",
+			use_serial_batch_fields=0,
+			batch_no=batch_no,
+			do_not_submit=True,
+		)
+
+		se.reload()
+		sbb = se.items[0].serial_and_batch_bundle
+		frappe.db.set_value("Serial and Batch Bundle", sbb, "type_of_transaction", "Inward")
+		self.assertRaises(frappe.ValidationError, se.submit)
+
+>>>>>>> 4001166ecc (fix: required by date in the reorder material request (#44497))
 	def test_stock_entry_for_same_posting_date_and_time(self):
 		warehouse = "_Test Warehouse - _TC"
 		item_code = "Test Stock Entry For Same Posting Datetime 1"
