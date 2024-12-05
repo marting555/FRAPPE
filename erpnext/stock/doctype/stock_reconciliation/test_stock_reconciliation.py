@@ -1323,6 +1323,34 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
             },
         )
 		return sr
+	
+	def test_create_stock_reconciliation_invalid(self):
+		sr = frappe.new_doc("Stock Reconciliation")
+		sr.purpose = "Opening Stock"
+		sr.posting_date = "2024-04-01"
+		sr.posting_time = nowtime()
+		sr.set_posting_time = 1
+		sr.company = "PP Ltd"
+		sr.expense_account = frappe.db.get_value("Account", {"is_group": 0, "company": sr.company, "account_type": "Temporary"}, "name") #get_difference_account API ref.
+		sr.append(
+            "items",
+            {
+                "item_code": "Book",
+                "warehouse": "Stores - PP Ltd",
+                "qty": -10,
+                "valuation_rate": -100,
+            },
+        )
+		sr.append(
+            "items",
+			{
+                "item_code": "Book",
+                "warehouse": "Stores - PP Ltd",
+                "qty": "ABC",
+                "valuation_rate": "ABC",
+            },
+        )
+		self.assertRaises(frappe.ValidationError, sr.save)
 
 def create_batch_item_with_batch(item_name, batch_id):
 	batch_item_doc = create_item(item_name, is_stock_item=1)
