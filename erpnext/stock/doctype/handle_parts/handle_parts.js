@@ -44,13 +44,23 @@ frappe.ui.form.on("Handle Parts", {
             }
 
             if (!data.submit_file_url || !data.binary_data) {
+                let errorMessage = '';
+
+                if (!data.submit_file_url) {
+                    errorMessage += __('The file URL is missing.') + '<br>';
+                }
+                if (!data.binary_data) {
+                    errorMessage += __('The file has not finished uploading properly. Please wait and try again.') + '<br>';
+                }
+
                 frappe.msgprint({
                     title: __('Validation Error'),
-                    message: __('File upload details are missing or incomplete.'),
+                    message: errorMessage || __('File upload details are missing or incomplete.'),
                     indicator: 'red',
                 });
                 return;
             }
+
 
             const response = await fetch(data.submit_file_url, {
                 method: 'PUT',
@@ -144,9 +154,18 @@ frappe.ui.form.on("Handle Parts", {
         }
     },
 
-    download_excel_format: function (frm) {
+    download_excel_format: async function (frm) {
         frm.page.set_indicator(__('Downloading...'), 'orange');
-        window.location.href = "https://tvs-admin.s3.us-west-2.amazonaws.com/TVS+EXCEL+FORMAT.xlsx";
+        const data = await frappe.db.get_doc('Handle Parts Config');
+        if (!data || !data.excel_format_url) {
+            frappe.msgprint({
+                title: __('Validation Error'),
+                message: __('The URL for the Excel format is missing or invalid.'),
+                indicator: 'red',
+            });
+            return;
+        }
+        window.location.href = data.excel_format_url;
         frm.page.clear_indicator();
     }
 
