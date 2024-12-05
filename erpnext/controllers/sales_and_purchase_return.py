@@ -22,6 +22,9 @@ def validate_return(doc):
 	if not doc.meta.get_field("is_return") or not doc.is_return:
 		return
 
+	if doc.doctype in ("Sales Invoice", "Purchase Invoice") and not doc.update_stock:
+		return
+
 	if doc.return_against:
 		validate_return_against(doc)
 		validate_returned_items(doc)
