@@ -657,13 +657,15 @@ class Asset(AccountsController):
 
 		query = """SELECT name FROM `tabGL Entry` WHERE voucher_no = %s and account = %s"""
 		if asset_bought_with_invoice:
-			expense_booked = frappe.db.sql(query, (purchase_document, fixed_asset_account), as_dict=1)
+			expense_booked = frappe.db.sql(
+				query, (purchase_document, fixed_asset_account), as_dict=1
+			)  # nosemgrep
 			if expense_booked:
 				return False
 		if not cwip_enabled:
-			return frappe.db.sql(query, (purchase_document, asset_clearing_account), as_dict=1)
+			return frappe.db.sql(query, (purchase_document, asset_clearing_account), as_dict=1)  # nosemgrep
 
-		cwip_booked = frappe.db.sql(query, (purchase_document, cwip_account), as_dict=1)
+		cwip_booked = frappe.db.sql(query, (purchase_document, cwip_account), as_dict=1)  # nosemgrep
 		return cwip_booked
 
 	def get_purchase_document(self):
