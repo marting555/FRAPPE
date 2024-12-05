@@ -10,6 +10,7 @@ from frappe.custom.doctype.custom_field.custom_field import create_custom_field
 from frappe.model import core_doctypes_list
 from frappe.model.document import Document
 from frappe.utils import cstr
+from frappe.database.schema import validate_column_name
 
 from erpnext.accounts.doctype.repost_accounting_ledger.repost_accounting_ledger import (
 	get_allowed_types_from_settings,
@@ -60,6 +61,7 @@ class AccountingDimension(Document):
 		if not self.is_new():
 			self.validate_document_type_change()
 
+		validate_column_name(self.fieldname)
 		self.validate_dimension_defaults()
 
 	def validate_document_type_change(self):

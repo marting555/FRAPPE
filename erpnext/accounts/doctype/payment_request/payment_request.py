@@ -62,6 +62,7 @@ class PaymentRequest(Document):
 		outstanding_amount: DF.Currency
 		party: DF.DynamicLink | None
 		party_account_currency: DF.Link | None
+		party_name: DF.Data | None
 		party_type: DF.Link | None
 		payment_account: DF.ReadOnly | None
 		payment_channel: DF.Literal["", "Email", "Phone", "Other"]
@@ -592,6 +593,7 @@ def make_payment_request(**args):
 				"party_type": party_type,
 				"party": args.get("party") or ref_doc.get("customer"),
 				"bank_account": bank_account,
+				"party_name": args.get("party_name") or ref_doc.get("customer_name"),
 			}
 		)
 
