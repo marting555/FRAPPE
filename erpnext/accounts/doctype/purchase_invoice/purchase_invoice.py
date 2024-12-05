@@ -585,8 +585,8 @@ class PurchaseInvoice(BuyingController):
 						)
 				item.expense_account = None
 				item.asset_account = account
-			elif not (item.expense_account and item.asset_account) and for_validate:
-				throw(_("Asset Account is mandatory for item {0}").format(item.item_code or item.item_name))
+			elif not (item.expense_account or item.asset_account) and for_validate:
+				throw(_("Expense Account is mandatory for item {0}").format(item.item_code or item.item_name))
 
 	def validate_expense_account(self):
 		for item in self.get("items"):
