@@ -7,8 +7,6 @@ import frappe
 from frappe import _
 from frappe.model.meta import get_field_precision
 from frappe.utils import cint, flt, format_datetime, get_datetime
-from frappe.query_builder import DocType
-from frappe.query_builder.functions import Sum, Abs
 
 import erpnext
 from erpnext.stock.serial_batch_bundle import get_batches_from_bundle
@@ -116,6 +114,7 @@ def validate_returned_items(doc):
 			if d.get(field):
 				key = (d.item_code, d.get(field))
 				raise_exception = True
+
 		if d.item_code and (flt(d.qty) < 0 or flt(d.get("received_qty")) < 0):
 			if key not in valid_items:
 				frappe.msgprint(
@@ -291,39 +290,38 @@ def get_returned_qty_map_for_row(return_against, party, row_name, doctype):
 	else:
 		party_type = "customer"
 
-	parent = DocType(doctype)
-	child = DocType(child_doctype)
-
-	query = frappe.qb.from_(parent).from_(child)
-
-	query = query.select(Sum(Abs(child.qty)).as_("qty"))
+	fields = [
+		f"sum(abs(`tab{child_doctype}`.qty)) as qty",
+	]
 
 	if doctype != "Subcontracting Receipt":
-		query = query.select(Sum(Abs(child.stock_qty)).as_("stock_qty"))
+		fields += [
+			f"sum(abs(`tab{child_doctype}`.stock_qty)) as stock_qty",
+		]
 
 	if doctype in ("Purchase Receipt", "Purchase Invoice", "Subcontracting Receipt"):
-		query = query.select(
-			Sum(Abs(child.rejected_qty)).as_("rejected_qty"),
-			Sum(Abs(child.received_qty)).as_("received_qty")
-		)
+		fields += [
+			f"sum(abs(`tab{child_doctype}`.rejected_qty)) as rejected_qty",
+			f"sum(abs(`tab{child_doctype}`.received_qty)) as received_qty",
+		]
 
 		if doctype == "Purchase Receipt":
-			query = query.select(Sum(Abs(child.received_stock_qty)).as_("received_stock_qty"))
+			fields += [f"sum(abs(`tab{child_doctype}`.received_stock_qty)) as received_stock_qty"]
 
-	# Apply filters
-	query = query.where(
-		(parent.return_against == return_against)
-		& (parent[party_type] == party)
-		& (parent.docstatus == 1)
-		& (parent.is_return == 1)
-		& (child[reference_field] == row_name)
+	# Used retrun against and supplier and is_retrun because there is an index added for it
+	data = frappe.get_all(
+		doctype,
+		fields=fields,
+		filters=[
+			[doctype, "return_against", "=", return_against],
+			[doctype, party_type, "=", party],
+			[doctype, "docstatus", "=", 1],
+			[doctype, "is_return", "=", 1],
+			[child_doctype, reference_field, "=", row_name],
+		],
 	)
 
-	query = query.where(child.parent == parent.name)
-
-	data = query.run(as_dict=True)
-
-	return data[0] if data else {}
+	return data[0]
 
 
 def make_return_doc(doctype: str, source_name: str, target_doc=None, return_against_rejected_qty=False):
@@ -353,9 +351,6 @@ def make_return_doc(doctype: str, source_name: str, target_doc=None, return_agai
 			doc.select_print_heading = frappe.get_cached_value("Print Heading", _("Debit Note"))
 			if source.tax_withholding_category:
 				doc.set_onload("supplier_tds", source.tax_withholding_category)
-		elif doctype == "Delivery Note":
-			# manual additions to the return should hit the return warehous, too
-			doc.set_warehouse = default_warehouse_for_sales_return
 
 		for tax in doc.get("taxes") or []:
 			if tax.charge_type == "Actual":
@@ -601,6 +596,10 @@ def make_return_doc(doctype: str, source_name: str, target_doc=None, return_agai
 
 			if default_warehouse_for_sales_return:
 				target_doc.warehouse = default_warehouse_for_sales_return
+
+		if not source_doc.use_serial_batch_fields and source_doc.serial_and_batch_bundle:
+			target_doc.serial_no = None
+			target_doc.batch_no = None
 
 		if (
 			(source_doc.serial_no or source_doc.batch_no)
@@ -904,6 +903,7 @@ def get_serial_batches_based_on_bundle(field, _bundle_ids):
 			"`tabSerial and Batch Entry`.`serial_no`",
 			"`tabSerial and Batch Entry`.`batch_no`",
 			"`tabSerial and Batch Entry`.`qty`",
+			"`tabSerial and Batch Entry`.`incoming_rate`",
 			"`tabSerial and Batch Bundle`.`voucher_detail_no`",
 			"`tabSerial and Batch Bundle`.`voucher_type`",
 			"`tabSerial and Batch Bundle`.`voucher_no`",
@@ -925,15 +925,23 @@ def get_serial_batches_based_on_bundle(field, _bundle_ids):
 
 		if key not in available_dict:
 			available_dict[key] = frappe._dict(
-				{"qty": 0.0, "serial_nos": defaultdict(float), "batches": defaultdict(float)}
+				{
+					"qty": 0.0,
+					"serial_nos": defaultdict(float),
+					"batches": defaultdict(float),
+					"serial_nos_valuation": defaultdict(float),
+					"batches_valuation": defaultdict(float),
+				}
 			)
 
 		available_dict[key]["qty"] += row.qty
 
 		if row.serial_no:
 			available_dict[key]["serial_nos"][row.serial_no] += row.qty
+			available_dict[key]["serial_nos_valuation"][row.serial_no] = row.incoming_rate
 		elif row.batch_no:
 			available_dict[key]["batches"][row.batch_no] += row.qty
+			available_dict[key]["batches_valuation"][row.batch_no] = row.incoming_rate
 
 	return available_dict
 
@@ -969,12 +977,13 @@ def get_serial_and_batch_bundle(field, doctype, reference_ids, is_rejected=False
 			)
 		)
 	else:
-		fields = [
-			"serial_and_batch_bundle",
-		]
+		fields = ["serial_and_batch_bundle"]
 
 		if is_rejected:
-			fields.extend(["rejected_serial_and_batch_bundle", "return_qty_from_rejected_warehouse"])
+			fields.append("rejected_serial_and_batch_bundle")
+
+			if doctype == "Purchase Receipt Item":
+				fields.append("return_qty_from_rejected_warehouse")
 
 		del filters["rejected_serial_and_batch_bundle"]
 		data = frappe.get_all(
@@ -1008,7 +1017,14 @@ def filter_serial_batches(parent_doc, data, row, warehouse_field=None, qty_field
 	warehouse = row.get(warehouse_field)
 	qty = abs(row.get(qty_field))
 
-	filterd_serial_batch = frappe._dict({"serial_nos": [], "batches": defaultdict(float)})
+	filterd_serial_batch = frappe._dict(
+		{
+			"serial_nos": [],
+			"batches": defaultdict(float),
+			"serial_nos_valuation": data.get("serial_nos_valuation"),
+			"batches_valuation": data.get("batches_valuation"),
+		}
+	)
 
 	if data.serial_nos:
 		available_serial_nos = []
@@ -1018,7 +1034,7 @@ def filter_serial_batches(parent_doc, data, row, warehouse_field=None, qty_field
 
 		if available_serial_nos:
 			if parent_doc.doctype in ["Purchase Invoice", "Purchase Reecipt"]:
-				available_serial_nos = get_available_serial_nos(available_serial_nos)
+				available_serial_nos = get_available_serial_nos(available_serial_nos, warehouse)
 
 			if len(available_serial_nos) > qty:
 				filterd_serial_batch["serial_nos"] = sorted(available_serial_nos[0 : cint(qty)])
@@ -1103,6 +1119,8 @@ def make_serial_batch_bundle_for_return(data, child_doc, parent_doc, warehouse_f
 			"warehouse": warehouse,
 			"serial_nos": data.get("serial_nos"),
 			"batches": data.get("batches"),
+			"serial_nos_valuation": data.get("serial_nos_valuation"),
+			"batches_valuation": data.get("batches_valuation"),
 			"posting_date": parent_doc.posting_date,
 			"posting_time": parent_doc.posting_time,
 			"voucher_type": parent_doc.doctype,

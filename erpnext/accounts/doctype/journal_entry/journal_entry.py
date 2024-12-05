@@ -184,6 +184,7 @@ class JournalEntry(AccountsController):
 		self.validate_cheque_info()
 		self.check_credit_limit()
 		self.make_gl_entries()
+		self.make_advance_payment_ledger_entries()
 		self.update_advance_paid()
 		self.update_inter_company_jv()
 		self.update_invoice_discounting()
@@ -211,8 +212,10 @@ class JournalEntry(AccountsController):
 			"Repost Accounting Ledger Items",
 			"Unreconcile Payment",
 			"Unreconcile Payment Entries",
+			"Advance Payment Ledger Entry",
 		)
 		self.make_gl_entries(1)
+		self.make_advance_payment_ledger_entries()
 		self.update_advance_paid()
 		self.unlink_advance_entry_reference()
 		self.unlink_inter_company_jv()

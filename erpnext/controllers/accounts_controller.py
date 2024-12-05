@@ -345,9 +345,22 @@ class AccountsController(TransactionBase):
 					repost_doc.flags.ignore_links = True
 					repost_doc.save(ignore_permissions=True)
 
+
+	def _remove_advance_payment_ledger_entries(self):
+		adv = qb.DocType("Advance Payment Ledger Entry")
+		qb.from_(adv).delete().where(adv.voucher_type.eq(self.doctype) & adv.voucher_no.eq(self.name)).run()
+
+		advance_payment_doctypes = frappe.get_hooks("advance_payment_doctypes")
+		
+		if self.doctype in advance_payment_doctypes:
+			qb.from_(adv).delete().where(
+				adv.against_voucher_type.eq(self.doctype) & adv.against_voucher_no.eq(self.name)
+			).run()
+
 	def on_trash(self):
 		from erpnext.accounts.utils import delete_exchange_gain_loss_journal
 
+		self._remove_advance_payment_ledger_entries()
 		self._remove_references_in_repost_doctypes()
 		self._remove_references_in_unreconcile()
 		self.remove_serial_and_batch_bundle()
