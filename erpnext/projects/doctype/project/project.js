@@ -73,6 +73,12 @@ frappe.ui.form.on("Project", {
 				insertCarousel(frm)
 			}
 		})
+
+		const sidebar = $(".layout-side-section");
+		
+		if (sidebar.is(':visible')) {
+				sidebar.hide();
+		}
 	},
 
 	refresh: async function (frm) {
