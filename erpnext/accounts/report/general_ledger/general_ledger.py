@@ -378,7 +378,7 @@ def get_data_with_opening_closing(filters, account_details, accounting_dimension
 				data += acc_dict.entries
 
 				# totals
-				if not (not filters.get("group_by") and filters.voucher_no):
+				if filters.get("group_by") or not filters.voucher_no:
 					data.append(acc_dict.totals.total)
 
 				# closing
