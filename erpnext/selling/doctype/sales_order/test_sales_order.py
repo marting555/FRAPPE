@@ -3,6 +3,7 @@
 
 import json
 
+from erpnext.selling.doctype.customer.customer import get_customer_outstanding
 import frappe
 import frappe.permissions
 from frappe.core.doctype.user_permission.test_user_permission import create_user
@@ -2102,9 +2103,19 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		# set credit limit
 		company = "_Test Company"
 		customer = frappe.get_doc("Customer", self.customer)
+		# dynamic credit limit
+		credit_amt = frappe.db.sql(
+						"""
+						SELECT SUM(grand_total) AS total
+						FROM `tabSales Order`
+						WHERE customer = %s AND company = %s AND docstatus = 1
+						""",(customer.name, company),as_dict=True)
+		so_amt = frappe.db.get_value("Sales Order", {"customer": self.customer, "company": company}, "grand_total")
+		customer_credit_amt = credit_amt[0].get("total") + so_amt
+		
 		customer.credit_limits = []
 		customer.append(
-			"credit_limits", {"company": company, "credit_limit": 6000, "bypass_credit_limit_check": False}
+			"credit_limits", {"company": company, "credit_limit": customer_credit_amt, "bypass_credit_limit_check": False}
 		)
 		customer.save()
 
