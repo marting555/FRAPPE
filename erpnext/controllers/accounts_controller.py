@@ -351,7 +351,7 @@ class AccountsController(TransactionBase):
 		qb.from_(adv).delete().where(adv.voucher_type.eq(self.doctype) & adv.voucher_no.eq(self.name)).run()
 
 		advance_payment_doctypes = frappe.get_hooks("advance_payment_doctypes")
-		
+
 		if self.doctype in advance_payment_doctypes:
 			qb.from_(adv).delete().where(
 				adv.against_voucher_type.eq(self.doctype) & adv.against_voucher_no.eq(self.name)
@@ -1090,9 +1090,11 @@ class AccountsController(TransactionBase):
 			return "Purchase Return"
 		elif self.doctype == "Delivery Note" and self.is_return:
 			return "Sales Return"
-		elif (self.doctype == "Sales Invoice" and self.is_return) or self.doctype == "Purchase Invoice":
+		elif self.doctype == "Sales Invoice" and self.is_return:
 			return "Credit Note"
-		elif (self.doctype == "Purchase Invoice" and self.is_return) or self.doctype == "Sales Invoice":
+		elif self.doctype == "Sales Invoice" and self.is_debit_note:
+			return "Debit Note"
+		elif self.doctype == "Purchase Invoice" and self.is_return:
 			return "Debit Note"
 		return self.doctype
 

@@ -19,6 +19,7 @@ from erpnext.buying.doctype.supplier.test_supplier import create_supplier
 from erpnext.controllers.accounts_controller import get_payment_terms
 from erpnext.controllers.buying_controller import QtyMismatchError
 from erpnext.exceptions import InvalidCurrency
+from erpnext.projects.doctype.project.test_project import make_project
 from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.stock.doctype.material_request.material_request import make_purchase_order
 from erpnext.stock.doctype.material_request.test_material_request import make_material_request
@@ -129,7 +130,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 		for d in gl_entries:
 			self.assertEqual([d.debit, d.credit], expected_gl_entries.get(d.account))
-			
+
 	def test_gl_entries_with_perpetual_inventory(self):
 		pi = make_purchase_invoice(
 			company="_Test Company with perpetual inventory",
@@ -406,17 +407,11 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			as_dict=1,
 		)
 		self.assertTrue(gl_entries)
-		if frappe.db.db_type == 'postgres':
-			expected_values = [
-				["Creditors - TCP1", 0, 250],
-				["_Test Account Cost for Goods Sold - TCP1", 250.0, 0],
-				
-			]
-		else:
-			expected_values = [
-				["_Test Account Cost for Goods Sold - TCP1", 250.0, 0],
-				["Creditors - TCP1", 0, 250],
-			]
+
+		expected_values = [
+			["_Test Account Cost for Goods Sold - TCP1", 250.0, 0],
+			["Creditors - TCP1", 0, 250],
+		]
 
 		for i, gle in enumerate(gl_entries):
 			self.assertEqual(expected_values[i][0], gle.account)
@@ -572,6 +567,43 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				"reference_name=%s",
 				pi.name,
 			)
+		)
+
+	def test_total_purchase_cost_for_project(self):
+		if not frappe.db.exists("Project", {"project_name": "_Test Project for Purchase"}):
+			project = make_project({"project_name": "_Test Project for Purchase"})
+		else:
+			project = frappe.get_doc("Project", {"project_name": "_Test Project for Purchase"})
+
+		existing_purchase_cost = frappe.db.sql(
+			f"""select sum(base_net_amount)
+			from `tabPurchase Invoice Item`
+			where project = '{project.name}'
+			and docstatus=1"""
+		)
+		existing_purchase_cost = existing_purchase_cost and existing_purchase_cost[0][0] or 0
+
+		pi = make_purchase_invoice(currency="USD", conversion_rate=60, project=project.name)
+		self.assertEqual(
+			frappe.db.get_value("Project", project.name, "total_purchase_cost"),
+			existing_purchase_cost + 15000,
+		)
+
+		pi1 = make_purchase_invoice(qty=10, project=project.name)
+		self.assertEqual(
+			frappe.db.get_value("Project", project.name, "total_purchase_cost"),
+			existing_purchase_cost + 15500,
+		)
+
+		pi1.cancel()
+		self.assertEqual(
+			frappe.db.get_value("Project", project.name, "total_purchase_cost"),
+			existing_purchase_cost + 15000,
+		)
+
+		pi.cancel()
+		self.assertEqual(
+			frappe.db.get_value("Project", project.name, "total_purchase_cost"), existing_purchase_cost
 		)
 
 	def test_return_purchase_invoice_with_perpetual_inventory(self):
@@ -792,26 +824,14 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 
 		gl_entries = frappe.db.sql(
-			"""SELECT 
-				account, 
-				ARRAY_AGG(account_currency) AS account_currency,
-				SUM(debit) AS debit,
-				SUM(credit) AS credit, 
-				SUM(debit_in_account_currency) AS debit_in_account_currency, 
-				SUM(credit_in_account_currency) AS credit_in_account_currency
-			FROM 
-				`tabGL Entry` 
-			WHERE 
-				voucher_type = 'Purchase Invoice' 
-				AND voucher_no = %s
-			GROUP BY 
-				account, 
-				voucher_no 
-			ORDER BY 
-				account ASC;""",
-			(pi.name,),
+			"""select account, account_currency, sum(debit) as debit,
+				sum(credit) as credit, debit_in_account_currency, credit_in_account_currency
+			from `tabGL Entry` where voucher_type='Purchase Invoice' and voucher_no=%s
+			group by account, voucher_no order by account asc;""",
+			pi.name,
 			as_dict=1,
 		)
+
 		stock_in_hand_account = get_inventory_account(pi.company, pi.get("items")[0].warehouse)
 		self.assertTrue(gl_entries)
 
@@ -1112,6 +1132,47 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		for gle in gl_entries:
 			self.assertEqual(expected_values[gle.account]["cost_center"], gle.cost_center)
 
+	def test_purchase_invoice_with_project_link(self):
+		project = make_project(
+			{
+				"project_name": "Purchase Invoice Project",
+				"project_template_name": "Test Project Template",
+				"start_date": "2020-01-01",
+			}
+		)
+		item_project = make_project(
+			{
+				"project_name": "Purchase Invoice Item Project",
+				"project_template_name": "Test Project Template",
+				"start_date": "2019-06-01",
+			}
+		)
+
+		pi = make_purchase_invoice(credit_to="Creditors - _TC", do_not_save=1)
+		pi.items[0].project = item_project.name
+		pi.project = project.name
+
+		pi.submit()
+
+		expected_values = {
+			"Creditors - _TC": {"project": project.name},
+			"_Test Account Cost for Goods Sold - _TC": {"project": item_project.name},
+		}
+
+		gl_entries = frappe.db.sql(
+			"""select account, cost_center, project, account_currency, debit, credit,
+			debit_in_account_currency, credit_in_account_currency
+			from `tabGL Entry` where voucher_type='Purchase Invoice' and voucher_no=%s
+			order by account asc""",
+			pi.name,
+			as_dict=1,
+		)
+
+		self.assertTrue(gl_entries)
+
+		for gle in gl_entries:
+			self.assertEqual(expected_values[gle.account]["project"], gle.project)
+
 	def test_deferred_expense_via_journal_entry(self):
 		deferred_account = create_account(
 			account_name="Deferred Expense", parent_account="Current Assets - _TC", company="_Test Company"
@@ -1324,10 +1385,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		for i, gle in enumerate(gl_entries):
 			self.assertEqual(expected_gle[i][0], gle.account)
 			self.assertEqual(expected_gle[i][1], gle.balance)
-		if frappe.db.db_type=='postgres':
-			expected_gle = [["Cash - _TC", -70000.0],["_Test Payable USD - _TC", 70000.0]]
-		else:
-			expected_gle = [["_Test Payable USD - _TC", 70000.0], ["Cash - _TC", -70000.0]]
+
+		expected_gle = [["_Test Payable USD - _TC", 70000.0], ["Cash - _TC", -70000.0]]
 
 		gl_entries = frappe.db.sql(
 			"""
@@ -1461,10 +1520,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		# Check GLE for Purchase Invoice
 		# Zero net effect on final TDS payable on invoice
-		if frappe.db.db_type =='postgres':
-			expected_gle = [["Creditors - _TC", -30000],["_Test Account Cost for Goods Sold - _TC", 30000]]
-		else:
-			expected_gle = [["_Test Account Cost for Goods Sold - _TC", 30000], ["Creditors - _TC", -30000]]
+		expected_gle = [["_Test Account Cost for Goods Sold - _TC", 30000], ["Creditors - _TC", -30000]]
 
 		gl_entries = frappe.db.sql(
 			"""select account, sum(debit - credit) as amount
@@ -1487,6 +1543,61 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		payment_entry.load_from_db()
 		self.assertEqual(payment_entry.taxes[0].allocated_amount, 0)
+
+	def test_purchase_gl_with_tax_withholding_tax(self):
+		company = "_Test Company"
+
+		tds_account_args = {
+			"doctype": "Account",
+			"account_name": "TDS Payable",
+			"account_type": "Tax",
+			"parent_account": frappe.db.get_value(
+				"Account", {"account_name": "Duties and Taxes", "company": company}
+			),
+			"company": company,
+		}
+
+		tds_account = create_account(**tds_account_args)
+		tax_withholding_category = "Test TDS - 194 - Dividends - Individual"
+
+		# Update tax withholding category with current fiscal year and rate details
+		create_tax_witholding_category(tax_withholding_category, company, tds_account)
+
+		# create a new supplier to test
+		supplier = create_supplier(
+			supplier_name="_Test TDS Advance Supplier",
+			tax_withholding_category=tax_withholding_category,
+		)
+
+		pi = make_purchase_invoice(
+			supplier=supplier.name,
+			rate=3000,
+			qty=1,
+			item="_Test Non Stock Item",
+			do_not_submit=1,
+		)
+		pi.apply_tds = 1
+		pi.tax_withholding_category = tax_withholding_category
+		pi.save()
+		pi.submit()
+
+		self.assertEqual(pi.taxes[0].tax_amount, 300)
+		self.assertEqual(pi.taxes[0].account_head, tds_account)
+
+		gl_entries = frappe.get_all(
+			"GL Entry",
+			filters={"voucher_no": pi.name, "voucher_type": "Purchase Invoice", "account": "Creditors - _TC"},
+			fields=["account", "against", "debit", "credit"],
+		)
+
+		for gle in gl_entries:
+			if gle.debit:
+				# GL Entry with TDS Amount
+				self.assertEqual(gle.against, tds_account)
+				self.assertEqual(gle.debit, 300)
+			else:
+				# GL Entry with Purchase Invoice Amount
+				self.assertEqual(gle.credit, 3000)
 
 	def test_provisional_accounting_entry(self):
 		setup_provisional_accounting()
@@ -1913,10 +2024,10 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi.submit()
 
 		expected_gle = [
+			["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate(), branch2.branch],
 			["Creditors - _TC", 0.0, 1000, nowdate(), branch1.branch],
 			["Offsetting - _TC", 1000, 0.0, nowdate(), branch1.branch],
 			["Offsetting - _TC", 0.0, 1000, nowdate(), branch2.branch],
-			["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate(), branch2.branch]
 		]
 
 		check_gl_entries(
@@ -1942,17 +2053,10 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			price_list_rate=1000,
 			qty=1,
 		)
-		if frappe.db.db_type=='postgres':
-			expected_gle = [
+		expected_gle = [
+			["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate()],
 			["Creditors - _TC", 0.0, 1000, nowdate()],
-			["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate()]
 		]
-		else:
-
-			expected_gle = [
-				["_Test Account Cost for Goods Sold - _TC", 1000, 0.0, nowdate()],
-				["Creditors - _TC", 0.0, 1000, nowdate()],
-			]
 		check_gl_entries(self, pi.name, expected_gle, nowdate())
 
 		pi.items[0].expense_account = "Service - _TC"
@@ -2137,6 +2241,56 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				self.assertEqual(row.serial_no, "\n".join(serial_nos[:2]))
 				self.assertEqual(row.rejected_serial_no, serial_nos[2])
 
+	def test_make_pr_and_pi_from_po(self):
+		from erpnext.assets.doctype.asset.test_asset import create_asset_category
+
+		if not frappe.db.exists("Asset Category", "Computers"):
+			create_asset_category()
+
+		item = create_item(
+			item_code="_Test_Item", is_stock_item=0, is_fixed_asset=1, asset_category="Computers"
+		)
+		po = create_purchase_order(item_code=item.item_code)
+		pr = create_pr_against_po(po.name, 10)
+		pi = make_pi_from_po(po.name)
+		pi.insert()
+		pi.submit()
+
+		pr_gl_entries = frappe.db.sql(
+			"""select account, debit, credit
+			from `tabGL Entry` where voucher_type='Purchase Receipt' and voucher_no=%s
+			order by account asc""",
+			pr.name,
+			as_dict=1,
+		)
+
+		pr_expected_values = [
+			["Asset Received But Not Billed - _TC", 0, 5000],
+			["CWIP Account - _TC", 5000, 0],
+		]
+
+		for i, gle in enumerate(pr_gl_entries):
+			self.assertEqual(pr_expected_values[i][0], gle.account)
+			self.assertEqual(pr_expected_values[i][1], gle.debit)
+			self.assertEqual(pr_expected_values[i][2], gle.credit)
+
+		pi_gl_entries = frappe.db.sql(
+			"""select account, debit, credit
+			from `tabGL Entry` where voucher_type='Purchase Invoice' and voucher_no=%s
+			order by account asc""",
+			pi.name,
+			as_dict=1,
+		)
+		pi_expected_values = [
+			["Asset Received But Not Billed - _TC", 5000, 0],
+			["Creditors - _TC", 0, 5000],
+		]
+
+		for i, gle in enumerate(pi_gl_entries):
+			self.assertEqual(pi_expected_values[i][0], gle.account)
+			self.assertEqual(pi_expected_values[i][1], gle.debit)
+			self.assertEqual(pi_expected_values[i][2], gle.credit)
+
 	def test_adjust_incoming_rate_from_pi_with_multi_currency(self):
 		from erpnext.stock.doctype.landed_cost_voucher.test_landed_cost_voucher import (
 			make_landed_cost_voucher,
@@ -2198,12 +2352,15 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi1 = make_purchase_invoice(item_code=item.item_code, qty=10, rate=100)
 		item.reload()
 		self.assertEqual(item.last_purchase_rate, 100)
+
 		pi2 = make_purchase_invoice(item_code=item.item_code, qty=10, rate=200)
 		item.reload()
 		self.assertEqual(item.last_purchase_rate, 200)
+
 		pi2.cancel()
 		item.reload()
 		self.assertEqual(item.last_purchase_rate, 100)
+
 		pi1.cancel()
 		item.reload()
 		self.assertEqual(item.last_purchase_rate, 0)
