@@ -276,7 +276,6 @@ def install(country=None):
 	for doctype, title_field, filename in (
 		("Designation", "designation_name", "designation.txt"),
 		("Industry Type", "industry", "industry_type.txt"),
-		("Sales Partner Type", "sales_partner_type", "sales_partner_type.txt"),
 	):
 		records += [{"doctype": doctype, title_field: title} for title in read_lines(filename)]
 
