@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2024-12-01 09:35+0000\n"
-"PO-Revision-Date: 2024-12-05 14:22\n"
+"PO-Revision-Date: 2024-12-06 14:24\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -9980,11 +9980,11 @@ msgstr "Om vald avrundas moms belopp till närmaste heltal"
 #: erpnext/selling/page/point_of_sale/pos_item_cart.js:92
 #: erpnext/selling/page/point_of_sale/pos_item_cart.js:148
 msgid "Checkout"
-msgstr "Slutför"
+msgstr "Kassa"
 
 #: erpnext/selling/page/point_of_sale/pos_item_cart.js:250
 msgid "Checkout Order / Submit Order / New Order"
-msgstr "Slutför Order / Godkänn Order / Ny Order"
+msgstr "Kassa / Betala / Ny"
 
 #: erpnext/setup/setup_wizard/data/industry_type.txt:12
 msgid "Chemical"
@@ -11274,7 +11274,7 @@ msgstr "Slutför Jobb"
 
 #: erpnext/selling/page/point_of_sale/pos_payment.js:19
 msgid "Complete Order"
-msgstr "Slutför Order"
+msgstr "Betala"
 
 #. Option for the 'GL Entry Processing Status' (Select) field in DocType
 #. 'Period Closing Voucher'
@@ -28577,7 +28577,7 @@ msgstr "Lojalitet Poäng Post Inlösen"
 #: erpnext/selling/doctype/sales_order/sales_order.json
 #: erpnext/selling/page/point_of_sale/pos_item_cart.js:914
 msgid "Loyalty Points"
-msgstr "Bonus Poäng"
+msgstr "Lojalitet Poäng"
 
 #. Label of the loyalty_points_redemption (Section Break) field in DocType 'POS
 #. Invoice'
@@ -28611,7 +28611,7 @@ msgstr "Lojalitet Poäng: {0}"
 #: erpnext/selling/page/point_of_sale/pos_item_cart.js:907
 #: erpnext/selling/workspace/selling/selling.json
 msgid "Loyalty Program"
-msgstr "Bonus Program"
+msgstr "Lojalitet Program"
 
 #. Name of a DocType
 #: erpnext/accounts/doctype/loyalty_program_collection/loyalty_program_collection.json
@@ -28640,7 +28640,7 @@ msgstr "Lojalitet Program Nivå"
 #. Program'
 #: erpnext/accounts/doctype/loyalty_program/loyalty_program.json
 msgid "Loyalty Program Type"
-msgstr "Bonus Program Typ"
+msgstr "Lojalitet Program Typ"
 
 #: erpnext/manufacturing/report/downtime_analysis/downtime_analysis.js:23
 #: erpnext/manufacturing/report/downtime_analysis/downtime_analysis.py:78
@@ -47807,7 +47807,7 @@ msgstr "Ange Landad Kostnad baserat på Inköp Faktura Pris"
 
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.js:1094
 msgid "Set Loyalty Program"
-msgstr "Ange Bonus Program"
+msgstr "Ange Lojalitet Program"
 
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.js:295
 msgid "Set New Release Date"
@@ -49916,7 +49916,7 @@ msgstr "Lager Planering"
 #: erpnext/stock/report/stock_projected_qty/stock_projected_qty.json
 #: erpnext/stock/workspace/stock/stock.json
 msgid "Stock Projected Qty"
-msgstr "Lager Projicerad Kvantitet"
+msgstr "Lager Förväntad Kvantitet"
 
 #. Label of the stock_qty (Float) field in DocType 'BOM Creator Item'
 #. Label of the stock_qty (Float) field in DocType 'BOM Explosion Item'
