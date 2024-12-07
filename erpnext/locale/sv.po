@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2024-12-01 09:35+0000\n"
-"PO-Revision-Date: 2024-12-06 14:24\n"
+"PO-Revision-Date: 2024-12-07 15:14\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -25815,7 +25815,7 @@ msgstr "Utfärdade Artiklar mot Arbetsorder"
 #: erpnext/support/doctype/support_settings/support_settings.json
 #: erpnext/support/workspace/support/support.json
 msgid "Issues"
-msgstr "Ärende"
+msgstr "Ärenden"
 
 #. Label of the issuing_date (Date) field in DocType 'Driver'
 #. Label of the issuing_date (Date) field in DocType 'Driving License Category'
@@ -31229,7 +31229,7 @@ msgstr "Nettovinst"
 
 #: erpnext/accounts/report/profit_and_loss_statement/profit_and_loss_statement.py:182
 msgid "Net Profit/Loss"
-msgstr "Nettoresultat"
+msgstr "Intäkt"
 
 #. Label of the net_rate (Currency) field in DocType 'POS Invoice Item'
 #. Label of the net_rate (Currency) field in DocType 'Purchase Invoice Item'
@@ -32739,11 +32739,11 @@ msgstr "Öppna Formulär Vy"
 #. Label of the issue (Check) field in DocType 'Email Digest'
 #: erpnext/setup/doctype/email_digest/email_digest.json
 msgid "Open Issues"
-msgstr "Öppna Ärende"
+msgstr "Öppna Ärenden"
 
 #: erpnext/setup/doctype/email_digest/templates/default.html:46
 msgid "Open Issues "
-msgstr "Öppna Ärende"
+msgstr "Öppna Ärenden "
 
 #: erpnext/manufacturing/doctype/bom/bom_item_preview.html:25
 #: erpnext/manufacturing/doctype/work_order/work_order_preview.html:28
