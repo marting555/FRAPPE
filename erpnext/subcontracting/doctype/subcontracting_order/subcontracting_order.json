@@ -465,11 +465,7 @@
  "icon": "fa fa-file-text",
  "is_submittable": 1,
  "links": [],
-<<<<<<< HEAD
- "modified": "2024-01-03 20:56:04.670380",
-=======
  "modified": "2024-12-06 15:21:49.924146",
->>>>>>> 8806d17ef1 (fix: currency symbol in SCO and SCR (#44577))
  "modified_by": "Administrator",
  "module": "Subcontracting",
  "name": "Subcontracting Order",
