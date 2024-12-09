@@ -2,7 +2,7 @@ import frappe
 
 
 def execute():
-	account_name = "Fixed Asset Clearing Account"
+	account_name = "Clearing Account"
 	account_type = "Fixed Asset"
 	parent_group = "Fixed Assets"
 	is_group = 0

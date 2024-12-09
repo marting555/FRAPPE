@@ -540,7 +540,7 @@ class TestAsset(AssetSetup):
 		pr = make_purchase_receipt(item_code="Macbook Pro", qty=2, rate=200000.0, location="Test Location")
 		doc = make_invoice(pr.name)
 
-		self.assertEqual("Asset Received But Not Billed - _TC", doc.items[0].expense_account)
+		self.assertEqual("Asset Received But Not Billed - _TC", doc.items[0].asset_account)
 
 	# Capital Work In Progress
 	def test_cwip_accounting(self):
@@ -576,8 +576,8 @@ class TestAsset(AssetSetup):
 
 		expected_gle = (
 			("_Test Account Shipping Charges - _TC", 0.0, 250.0),
+			("_Test Clearing Account - _TC", 5250.0, 0.0),
 			("Asset Received But Not Billed - _TC", 0.0, 5000.0),
-			("CWIP Account - _TC", 5250.0, 0.0),
 		)
 
 		pr_gle = get_gl_entries("Purchase Receipt", pr.name)
@@ -618,7 +618,10 @@ class TestAsset(AssetSetup):
 		)
 		asset_doc.submit()
 
-		expected_gle = (("_Test Fixed Asset - _TC", 5250.0, 0.0), ("CWIP Account - _TC", 0.0, 5250.0))
+		expected_gle = (
+			("_Test Clearing Account - _TC", 0.0, 5250.0),
+			("_Test Fixed Asset - _TC", 5250.0, 0.0),
+		)
 
 		gle = get_gl_entries("Asset", asset_doc.name)
 		self.assertSequenceEqual(gle, expected_gle)
@@ -643,8 +646,12 @@ class TestAsset(AssetSetup):
 		asset_doc.available_for_use_date = nowdate()
 		asset_doc.calculate_depreciation = 0
 		asset_doc.submit()
+		expected_gle = (
+			("_Test Clearing Account - _TC", 0.0, 200000.0),
+			("_Test Fixed Asset - _TC", 200000.0, 0.0),
+		)
 		gle = get_gl_entries("Asset", asset_doc.name)
-		self.assertFalse(gle)
+		self.assertEqual(gle, expected_gle)
 
 		# case 1 -- PR with cwip disabled, Asset with cwip enabled
 		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=200000.0, location="Test Location")

@@ -242,7 +242,7 @@ class PurchaseReceipt(BuyingController):
 		self.validate_items_quality_inspection()
 		self.validate_with_previous_doc()
 		self.validate_uom_is_integer()
-		self.validate_cwip_accounts()
+		self.validate_asset_and_cwip_accounts()
 		self.validate_provisional_expense_account()
 
 		self.check_on_hold_or_closed_status()
@@ -259,7 +259,7 @@ class PurchaseReceipt(BuyingController):
 		super().validate_uom_is_integer("uom", ["qty", "received_qty"], "Purchase Receipt Item")
 		super().validate_uom_is_integer("stock_uom", "stock_qty", "Purchase Receipt Item")
 
-	def validate_cwip_accounts(self):
+	def validate_asset_and_cwip_accounts(self):
 		for item in self.get("items"):
 			if item.is_fixed_asset:
 				# check cwip accounts before making auto assets

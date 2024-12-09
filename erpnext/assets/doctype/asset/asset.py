@@ -650,10 +650,6 @@ class Asset(AccountsController):
 		cwip_enabled = is_cwip_accounting_enabled(self.asset_category)
 		cwip_account = self.get_cwip_account(cwip_enabled=cwip_enabled)
 		asset_clearing_account = None
-		if not cwip_enabled:
-			asset_clearing_account = get_asset_account(
-				"asset_clearing_account", self.name, self.asset_category, self.company
-			)
 
 		query = """SELECT name FROM `tabGL Entry` WHERE voucher_no = %s and account = %s"""
 		if asset_bought_with_invoice:
@@ -663,6 +659,9 @@ class Asset(AccountsController):
 			if expense_booked:
 				return False
 		if not cwip_enabled:
+			asset_clearing_account = get_asset_account(
+				"asset_clearing_account", self.name, self.asset_category, self.company
+			)
 			return frappe.db.sql(query, (purchase_document, asset_clearing_account), as_dict=1)  # nosemgrep
 
 		cwip_booked = frappe.db.sql(query, (purchase_document, cwip_account), as_dict=1)  # nosemgrep
