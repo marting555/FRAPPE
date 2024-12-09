@@ -183,7 +183,7 @@ class TestItem(IntegrationTestCase):
 				}
 			)
 		)
-		self.assertEqual(details.get("expense_account"), "_Test Fixed Asset - _TC")
+		self.assertEqual(details.get("asset_account"), "_Test Clearing Account - _TC")
 
 		frappe.db.set_value("Asset Category", "Computers", "enable_cwip_accounting", "1")
 		details = get_item_details(
@@ -196,7 +196,7 @@ class TestItem(IntegrationTestCase):
 				}
 			)
 		)
-		self.assertEqual(details.get("expense_account"), "CWIP Account - _TC")
+		self.assertEqual(details.get("asset_account"), "CWIP Account - _TC")
 
 	def test_item_tax_template(self):
 		expected_item_tax_template = [

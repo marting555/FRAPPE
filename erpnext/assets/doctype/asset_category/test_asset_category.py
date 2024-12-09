@@ -20,6 +20,7 @@ class TestAssetCategory(IntegrationTestCase):
 			{
 				"company_name": "_Test Company",
 				"fixed_asset_account": "_Test Fixed Asset - _TC",
+				"asset_clearing_account": "_Test Clearing Account - _TC",
 				"accumulated_depreciation_account": "_Test Accumulated Depreciations - _TC",
 				"depreciation_expense_account": "_Test Depreciations - _TC",
 			},
