@@ -868,30 +868,34 @@ def make_inter_company_sales_order(source_name, target_doc=None):
 
 	return make_inter_company_transaction("Purchase Order", source_name, target_doc)
 
-
 @frappe.whitelist()
 def make_subcontracting_order(source_name, target_doc=None, save=False, submit=False, notify=False):
-	target_doc = get_mapped_subcontracting_order(source_name, target_doc)
+	is_sco_full = all(po_item.qty == po_item.sco_qty for po_item in frappe.get_doc("Purchase Order", source_name).items)
+	
+	if not is_sco_full:
+		target_doc = get_mapped_subcontracting_order(source_name, target_doc)
 
-	if (save or submit) and frappe.has_permission(target_doc.doctype, "create"):
-		target_doc.save()
+		if (save or submit) and frappe.has_permission(target_doc.doctype, "create"):
+			target_doc.save()
 
-		if submit and frappe.has_permission(target_doc.doctype, "submit", target_doc):
-			try:
-				target_doc.submit()
-			except Exception as e:
-				target_doc.add_comment("Comment", _("Submit Action Failed") + "<br><br>" + str(e))
+			if submit and frappe.has_permission(target_doc.doctype, "submit", target_doc):
+				try:
+					target_doc.submit()
+				except Exception as e:
+					target_doc.add_comment("Comment", _("Submit Action Failed") + "<br><br>" + str(e))
 
-		if notify:
-			frappe.msgprint(
-				_("Subcontracting Order {0} created.").format(
-					get_link_to_form(target_doc.doctype, target_doc.name)
-				),
-				indicator="green",
-				alert=True,
-			)
+			if notify:
+				frappe.msgprint(
+					_("Subcontracting Order {0} created.").format(
+						get_link_to_form(target_doc.doctype, target_doc.name)
+					),
+					indicator="green",
+					alert=True,
+				)
 
-	return target_doc
+		return target_doc
+	else:
+		frappe.throw("This PO has been fully subcontracted.")
 
 
 def get_mapped_subcontracting_order(source_name, target_doc=None):
@@ -908,7 +912,7 @@ def get_mapped_subcontracting_order(source_name, target_doc=None):
 			else:
 				for idx, item in enumerate(target_doc.items):
 					item.warehouse = source_doc.items[idx].warehouse
-
+		
 		for idx, item in enumerate(target_doc.items):
 			item.job_card = source_doc.items[idx].job_card
 			if not target_doc.supplier_warehouse:
@@ -941,9 +945,10 @@ def get_mapped_subcontracting_order(source_name, target_doc=None):
 				"field_map": {
 					"name": "purchase_order_item",
 					"material_request": "material_request",
-					"material_request_item": "material_request_item",
+					"material_request_item": "material_request_item"
 				},
-				"field_no_map": [],
+				"field_no_map": ["qty", "fg_item_qty", "amount"],
+				"condition": lambda item: item.qty != item.sco_qty
 			},
 		},
 		target_doc,
@@ -951,12 +956,3 @@ def get_mapped_subcontracting_order(source_name, target_doc=None):
 	)
 
 	return target_doc
-
-
-@frappe.whitelist()
-def is_subcontracting_order_created(po_name) -> bool:
-	return (
-		True
-		if frappe.db.exists("Subcontracting Order", {"purchase_order": po_name, "docstatus": ["=", 1]})
-		else False
-	)

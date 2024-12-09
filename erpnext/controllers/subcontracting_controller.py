@@ -18,7 +18,6 @@ from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 from erpnext.stock.serial_batch_bundle import SerialBatchCreation, get_serial_nos_from_bundle
 from erpnext.stock.utils import get_incoming_rate
 
-
 class SubcontractingController(StockController):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -102,6 +101,18 @@ class SubcontractingController(StockController):
 					frappe.throw(
 						_("Row {0}: Item {1} must be a subcontracted item.").format(item.idx, item.item_name)
 					)
+
+				po_item = frappe.get_doc("Purchase Order Item", item.purchase_order_item)
+				conversion_factor = frappe.db.get_value(
+						"Subcontracting BOM",
+						{"finished_good": item.name, "is_active": 1},
+						"conversion_factor",
+					) or po_item.qty / po_item.fg_item_qty
+				if self.doctype not in "Subcontracting Receipt" and item.qty > ((po_item.qty - po_item.sco_qty) / conversion_factor):
+					frappe.throw(
+						_("Row {0}: Item {1}'s quantity cannot be higher than the available quantity.").format(item.idx, item.item_name)
+					)
+				item.amount = item.qty * item.rate
 
 				if item.bom:
 					is_active, bom_item = frappe.get_value("BOM", item.bom, ["is_active", "item"])

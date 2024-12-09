@@ -6,12 +6,10 @@ from frappe import _
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils import flt
 
-from erpnext.buying.doctype.purchase_order.purchase_order import is_subcontracting_order_created
 from erpnext.buying.utils import check_on_hold_or_closed_status
 from erpnext.controllers.subcontracting_controller import SubcontractingController
 from erpnext.stock.stock_balance import update_bin_qty
 from erpnext.stock.utils import get_bin
-
 
 class SubcontractingOrder(SubcontractingController):
 	# begin: auto-generated types
@@ -120,20 +118,15 @@ class SubcontractingOrder(SubcontractingController):
 	def on_submit(self):
 		self.update_prevdoc_status()
 		self.update_status()
+		self.update_sco_qty_in_po()
 
 	def on_cancel(self):
 		self.update_prevdoc_status()
 		self.update_status()
+		self.update_sco_qty_in_po(cancel=True)
 
 	def validate_purchase_order_for_subcontracting(self):
 		if self.purchase_order:
-			if is_subcontracting_order_created(self.purchase_order):
-				frappe.throw(
-					_(
-						"Only one Subcontracting Order can be created against a Purchase Order, cancel the existing Subcontracting Order to create a new one."
-					)
-				)
-
 			po = frappe.get_doc("Purchase Order", self.purchase_order)
 
 			if not po.is_subcontracted:
@@ -154,10 +147,27 @@ class SubcontractingOrder(SubcontractingController):
 			frappe.throw(_("Please select a Subcontracting Purchase Order."))
 
 	def validate_service_items(self):
-		for item in self.service_items:
-			if frappe.get_value("Item", item.item_code, "is_stock_item"):
-				msg = f"Service Item {item.item_name} must be a non-stock item."
+		purchase_order_items = [item.purchase_order_item for item in self.items]
+
+		for service_item in self.service_items:
+			if frappe.get_value("Item", service_item.item_code, "is_stock_item"):
+				msg = f"Service Item {service_item.item_name} must be a non-stock item."
 				frappe.throw(_(msg))
+
+			if service_item.purchase_order_item not in purchase_order_items:
+				self.service_items.remove(service_item)
+				continue
+
+			item = next(item for item in self.items if item.purchase_order_item == service_item.purchase_order_item)
+			po_item = frappe.get_doc("Purchase Order Item", item.purchase_order_item)
+			conversion_factor = frappe.db.get_value(
+						"Subcontracting BOM",
+						{"finished_good": item.name, "is_active": 1},
+						"conversion_factor",
+					) or po_item.qty / po_item.fg_item_qty
+			service_item.qty = conversion_factor * item.qty
+			service_item.fg_item_qty = item.qty
+			service_item.amount = service_item.qty * service_item.rate
 
 	def validate_supplied_items(self):
 		if self.supplier_warehouse:
@@ -174,7 +184,7 @@ class SubcontractingOrder(SubcontractingController):
 
 	def calculate_service_costs(self):
 		for idx, item in enumerate(self.get("service_items")):
-			self.items[idx].service_cost_per_qty = item.amount / self.items[idx].qty
+			self.items[idx].service_cost_per_qty = item.amount / item.qty
 
 	def calculate_supplied_items_qty_and_amount(self):
 		for item in self.get("items"):
@@ -241,6 +251,13 @@ class SubcontractingOrder(SubcontractingController):
 		for si in self.service_items:
 			if si.fg_item:
 				item = frappe.get_doc("Item", si.fg_item)
+
+				po_item = frappe.get_doc("Purchase Order Item", si.purchase_order_item)
+				available_qty = po_item.qty - po_item.sco_qty
+
+				if available_qty == 0:
+					continue
+
 				bom = (
 					frappe.db.get_value(
 						"Subcontracting BOM",
@@ -249,6 +266,15 @@ class SubcontractingOrder(SubcontractingController):
 					)
 					or item.default_bom
 				)
+
+				si.qty = available_qty
+				conversion_factor = frappe.db.get_value(
+						"Subcontracting BOM",
+						{"finished_good": item.name, "is_active": 1},
+						"conversion_factor",
+					) or po_item.qty / po_item.fg_item_qty
+				si.fg_item_qty = available_qty / conversion_factor
+				si.amount = available_qty * si.rate
 
 				items.append(
 					{
@@ -310,6 +336,11 @@ class SubcontractingOrder(SubcontractingController):
 		self.update_ordered_qty_for_subcontracting()
 		self.update_reserved_qty_for_subcontracting()
 
+	def update_sco_qty_in_po(self, cancel=False):
+		for service_item in self.service_items:
+			doc = frappe.get_doc("Purchase Order Item", service_item.purchase_order_item)
+			doc.sco_qty = (doc.sco_qty + service_item.qty) if not cancel else (doc.sco_qty - service_item.qty)
+			doc.save()
 
 @frappe.whitelist()
 def make_subcontracting_receipt(source_name, target_doc=None):
