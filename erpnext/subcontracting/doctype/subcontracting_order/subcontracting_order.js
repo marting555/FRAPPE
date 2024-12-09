@@ -150,6 +150,7 @@ frappe.ui.form.on("Subcontracting Order", {
 	refresh: function (frm) {
 		for (const item of frm.doc.items) {
 			conversion_factor.push(frm.doc.service_items[item.idx - 1].qty / item.qty)
+			console.log(conversion_factor)
 		}
 
 		frappe.dynamic_link = { doc: frm.doc, fieldname: "supplier", doctype: "Supplier" };

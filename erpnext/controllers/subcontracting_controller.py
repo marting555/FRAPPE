@@ -103,12 +103,7 @@ class SubcontractingController(StockController):
 					)
 
 				po_item = frappe.get_doc("Purchase Order Item", item.purchase_order_item)
-				conversion_factor = frappe.db.get_value(
-						"Subcontracting BOM",
-						{"finished_good": item.name, "is_active": 1},
-						"conversion_factor",
-					) or po_item.qty / po_item.fg_item_qty
-				if self.doctype not in "Subcontracting Receipt" and item.qty > ((po_item.qty - po_item.sco_qty) / conversion_factor):
+				if self.doctype not in "Subcontracting Receipt" and item.qty > ((po_item.qty - po_item.sco_qty) / (po_item.qty / po_item.fg_item_qty)):
 					frappe.throw(
 						_("Row {0}: Item {1}'s quantity cannot be higher than the available quantity.").format(item.idx, item.item_name)
 					)

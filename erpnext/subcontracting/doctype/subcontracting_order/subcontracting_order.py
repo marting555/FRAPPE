@@ -160,12 +160,7 @@ class SubcontractingOrder(SubcontractingController):
 
 			item = next(item for item in self.items if item.purchase_order_item == service_item.purchase_order_item)
 			po_item = frappe.get_doc("Purchase Order Item", item.purchase_order_item)
-			conversion_factor = frappe.db.get_value(
-						"Subcontracting BOM",
-						{"finished_good": item.name, "is_active": 1},
-						"conversion_factor",
-					) or po_item.qty / po_item.fg_item_qty
-			service_item.qty = conversion_factor * item.qty
+			service_item.qty = item.qty * (po_item.qty / po_item.fg_item_qty)
 			service_item.fg_item_qty = item.qty
 			service_item.amount = service_item.qty * service_item.rate
 
@@ -184,7 +179,7 @@ class SubcontractingOrder(SubcontractingController):
 
 	def calculate_service_costs(self):
 		for idx, item in enumerate(self.get("service_items")):
-			self.items[idx].service_cost_per_qty = item.amount / item.qty
+			self.items[idx].service_cost_per_qty = item.amount / self.items[idx].qty
 
 	def calculate_supplied_items_qty_and_amount(self):
 		for item in self.get("items"):
@@ -268,12 +263,7 @@ class SubcontractingOrder(SubcontractingController):
 				)
 
 				si.qty = available_qty
-				conversion_factor = frappe.db.get_value(
-						"Subcontracting BOM",
-						{"finished_good": item.name, "is_active": 1},
-						"conversion_factor",
-					) or po_item.qty / po_item.fg_item_qty
-				si.fg_item_qty = available_qty / conversion_factor
+				si.fg_item_qty = available_qty / (po_item.qty / po_item.fg_item_qty)
 				si.amount = available_qty * si.rate
 
 				items.append(
