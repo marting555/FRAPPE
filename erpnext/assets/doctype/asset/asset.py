@@ -7,6 +7,7 @@ import math
 
 import frappe
 from frappe import _
+from frappe.query_builder import DocType
 from frappe.utils import (
 	cint,
 	flt,
@@ -649,23 +650,33 @@ class Asset(AccountsController):
 
 		cwip_enabled = is_cwip_accounting_enabled(self.asset_category)
 		cwip_account = self.get_cwip_account(cwip_enabled=cwip_enabled)
-		asset_clearing_account = None
+		asset_clearing_account = get_asset_account(
+			"asset_clearing_account", self.name, self.asset_category, self.company
+		)
 
-		query = """SELECT name FROM `tabGL Entry` WHERE voucher_no = %s and account = %s"""
+		GL_Entry = DocType("GL Entry")
 		if asset_bought_with_invoice:
-			expense_booked = frappe.db.sql(
-				query, (purchase_document, fixed_asset_account), as_dict=1
-			)  # nosemgrep
+			expense_booked = (
+				frappe.qb.from_(GL_Entry)
+				.select(GL_Entry.name)
+				.where((GL_Entry.voucher_no == purchase_document) & (GL_Entry.account == fixed_asset_account))
+			).run(as_dict=True)
 			if expense_booked:
 				return False
-		if not cwip_enabled:
-			asset_clearing_account = get_asset_account(
-				"asset_clearing_account", self.name, self.asset_category, self.company
-			)
-			return frappe.db.sql(query, (purchase_document, asset_clearing_account), as_dict=1)  # nosemgrep
 
-		cwip_booked = frappe.db.sql(query, (purchase_document, cwip_account), as_dict=1)  # nosemgrep
-		return cwip_booked
+		clearing_account_recorded = (
+			frappe.qb.from_(GL_Entry)
+			.select(GL_Entry.name)
+			.where((GL_Entry.voucher_no == purchase_document) & (GL_Entry.account == asset_clearing_account))
+		).run(as_dict=True)
+
+		cwip_booked = (
+			frappe.qb.from_(GL_Entry)
+			.select(GL_Entry.name)
+			.where((GL_Entry.voucher_no == purchase_document) & (GL_Entry.account == cwip_account))
+		).run(as_dict=True)
+
+		return cwip_booked or clearing_account_recorded
 
 	def get_purchase_document(self):
 		asset_bought_with_invoice = self.purchase_invoice and frappe.db.get_value(

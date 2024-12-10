@@ -576,8 +576,8 @@ class TestAsset(AssetSetup):
 
 		expected_gle = (
 			("_Test Account Shipping Charges - _TC", 0.0, 250.0),
-			("_Test Clearing Account - _TC", 5250.0, 0.0),
 			("Asset Received But Not Billed - _TC", 0.0, 5000.0),
+			("CWIP Account - _TC", 5250.0, 0.0),
 		)
 
 		pr_gle = get_gl_entries("Purchase Receipt", pr.name)
@@ -619,8 +619,8 @@ class TestAsset(AssetSetup):
 		asset_doc.submit()
 
 		expected_gle = (
-			("_Test Clearing Account - _TC", 0.0, 5250.0),
 			("_Test Fixed Asset - _TC", 5250.0, 0.0),
+			("CWIP Account - _TC", 0.0, 5250.0),
 		)
 
 		gle = get_gl_entries("Asset", asset_doc.name)
@@ -663,7 +663,7 @@ class TestAsset(AssetSetup):
 		asset_doc.calculate_depreciation = 0
 		asset_doc.submit()
 		gle = get_gl_entries("Asset", asset_doc.name)
-		self.assertFalse(gle)
+		self.assertTrue(gle)
 
 		# case 2 -- PR with cwip enabled, Asset with cwip disabled
 		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=200000.0, location="Test Location")
@@ -687,7 +687,7 @@ class TestAsset(AssetSetup):
 		asset_doc.calculate_depreciation = 0
 		asset_doc.submit()
 		gle = get_gl_entries("Asset", asset_doc.name)
-		self.assertFalse(gle)
+		self.assertTrue(gle)
 
 		# case 4 -- PI with cwip enabled, Asset with cwip disabled
 		pi = make_purchase_invoice(

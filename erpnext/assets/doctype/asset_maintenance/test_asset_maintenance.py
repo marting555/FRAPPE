@@ -100,6 +100,7 @@ def set_depreciation_settings_in_company():
 	company = frappe.get_doc("Company", "_Test Company")
 	company.accumulated_depreciation_account = "_Test Accumulated Depreciations - _TC"
 	company.depreciation_expense_account = "_Test Depreciations - _TC"
+	company.asset_clearing_account = "_Test Clearing Account - _TC"
 	company.disposal_account = "_Test Gain/Loss on Asset Disposal - _TC"
 	company.depreciation_cost_center = "_Test Cost Center - _TC"
 	company.save()
