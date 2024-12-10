@@ -2107,8 +2107,74 @@ class TestDeliveryNote(FrappeTestCase):
 			"stock_value_difference",
 		)
 		self.assertEqual(stock_value_difference, 100.0 * 5)
+  
+	def test_delivery_note_with_shipping_rule(self):
+		delivery_note = frappe.get_doc({
+			"doctype": "Delivery Note",
+			"customer": "CUS-12500",
+			"company": "PP Ltd",
+			"items": [
+				{
+					"item_code": "Monitor",
+					"qty": 1,
+					"rate": 5000,
+					"warehouse": "Stores - PP Ltd"
+				}
+			],
+			"shipping_rule": "New Jio Shipping Rule"
+		})
 
+		delivery_note.insert()
+		delivery_note.submit()
+  
+		delivery_note = frappe.get_doc("Delivery Note", delivery_note.name)
 
+		taxes = delivery_note.taxes
+		self.assertTrue(
+			any(
+				tax.charge_type == "Actual" and tax.tax_amount == 500
+				for tax in taxes
+			),
+			"Shipping charges are not applied correctly"
+		)
+		item_rate = delivery_note.items[0].get("net_rate")
+  
+		self.assertEqual(delivery_note.total, item_rate, "Net Total is incorrect")
+		self.assertEqual(
+			delivery_note.grand_total, 5500, "Grand Total is incorrect")
+
+		sle_entries = frappe.get_all(
+			"Stock Ledger Entry",
+			filters={"voucher_no": delivery_note.name},
+			fields=["warehouse", "actual_qty"]
+		)
+		self.assertTrue(
+			any(
+				sle["actual_qty"] == -1 and sle["warehouse"] == "Stores - PP Ltd"
+				for sle in sle_entries
+			),
+			"Stock Ledger Entry not created correctly"
+		)
+
+		gl_entries = frappe.get_all(
+			"GL Entry",
+			filters={"voucher_no": delivery_note.name},
+			fields=["account", "debit", "credit"]
+		)
+		self.assertTrue(
+			any(
+				entry["account"] == "Stock In Hand - PP Ltd" and entry["credit"] == 3000
+				for entry in gl_entries
+			),
+			"Stock In Hand GL Entry not created correctly"
+		)
+		self.assertTrue(
+			any(
+				entry["account"] == "Cost of Goods Sold - PP Ltd" and entry["debit"] == 3000
+				for entry in gl_entries
+			),
+			"Cost of Goods Sold GL Entry not created correctly"
+		)
 
 def create_delivery_note(**args):
 	dn = frappe.new_doc("Delivery Note")
