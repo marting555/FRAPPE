@@ -118,16 +118,17 @@ def get_accounting_dimensions_for_offsetting_entry(gl_map, company):
 def validate_disabled_accounts(gl_map):
 	accounts = [d.account for d in gl_map if d.account]
 
-	disabled_accounts = frappe.get_all(
-		"Account",
-		filters={"disabled": 1, "is_group": 0, "company": gl_map[0].company},
-		fields=["name"],
-	)
+	Account = frappe.qb.DocType("Account")
 
-	used_disabled_accounts = set(accounts).intersection(set([d.name for d in disabled_accounts]))
-	if used_disabled_accounts:
+	disabled_accounts = (
+		frappe.qb.from_(Account)
+		.where(Account.name.isin(accounts) & Account.disabled == 1 & Account.is_group == 1 & Account.company == gl_map[0].company)
+		.select(Account.name, Account.disabled)
+	).run(as_dict=True)
+	
+	if disabled_accounts:
 		account_list = "<br>"
-		account_list += ", ".join([frappe.bold(d) for d in used_disabled_accounts])
+		account_list += ", ".join([frappe.bold(d.name) for d in disabled_accounts])
 		frappe.throw(
 			_("Cannot create accounting entries against disabled accounts: {0}").format(account_list),
 			title=_("Disabled Account Selected"),
