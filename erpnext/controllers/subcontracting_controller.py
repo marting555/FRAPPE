@@ -18,6 +18,8 @@ from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 from erpnext.stock.serial_batch_bundle import SerialBatchCreation, get_serial_nos_from_bundle
 from erpnext.stock.utils import get_incoming_rate
 
+from frappe.query_builder import DocType
+
 class SubcontractingController(StockController):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -88,6 +90,13 @@ class SubcontractingController(StockController):
 				item.conversion_factor = 1
 
 	def validate_items(self):
+		table = DocType("Purchase Order Item")
+		query = (
+			frappe.qb.from_(table)
+					 .select(table.name, table.qty, table.sco_qty, table.fg_item_qty)
+					 .where(table.parent == self.purchase_order)
+		)
+		po_items = query.run(as_dict=True)
 		for item in self.items:
 			is_stock_item, is_sub_contracted_item = frappe.get_value(
 				"Item", item.item_code, ["is_stock_item", "is_sub_contracted_item"]
@@ -102,8 +111,8 @@ class SubcontractingController(StockController):
 						_("Row {0}: Item {1} must be a subcontracted item.").format(item.idx, item.item_name)
 					)
 
-				po_item = frappe.get_doc("Purchase Order Item", item.purchase_order_item)
-				if self.doctype not in "Subcontracting Receipt" and item.qty > ((po_item.qty - po_item.sco_qty) / (po_item.qty / po_item.fg_item_qty)):
+				po_item = next(po_item for po_item in po_items if po_item.name == item.purchase_order_item)
+				if self.doctype not in "Subcontracting Receipt" and item.qty > ((po_item.qty - po_item.sco_qty) / item.sc_conversion_factor):
 					frappe.throw(
 						_("Row {0}: Item {1}'s quantity cannot be higher than the available quantity.").format(item.idx, item.item_name)
 					)

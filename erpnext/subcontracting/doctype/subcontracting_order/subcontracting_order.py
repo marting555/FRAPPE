@@ -148,19 +148,16 @@ class SubcontractingOrder(SubcontractingController):
 
 	def validate_service_items(self):
 		purchase_order_items = [item.purchase_order_item for item in self.items]
+		self.service_items = list(filter(lambda item: item.purchase_order_item in purchase_order_items, self.service_items))
 
 		for service_item in self.service_items:
 			if frappe.get_value("Item", service_item.item_code, "is_stock_item"):
 				msg = f"Service Item {service_item.item_name} must be a non-stock item."
 				frappe.throw(_(msg))
 
-			if service_item.purchase_order_item not in purchase_order_items:
-				self.service_items.remove(service_item)
-				continue
-
 			item = next(item for item in self.items if item.purchase_order_item == service_item.purchase_order_item)
 			po_item = frappe.get_doc("Purchase Order Item", item.purchase_order_item)
-			service_item.qty = item.qty * (po_item.qty / po_item.fg_item_qty)
+			service_item.qty = item.qty * item.sc_conversion_factor
 			service_item.fg_item_qty = item.qty
 			service_item.amount = service_item.qty * service_item.rate
 
@@ -254,7 +251,8 @@ class SubcontractingOrder(SubcontractingController):
 					continue
 
 				si.qty = available_qty
-				si.fg_item_qty = available_qty / (po_item.qty / po_item.fg_item_qty)
+				conversion_factor = po_item.qty / po_item.fg_item_qty
+				si.fg_item_qty = available_qty / conversion_factor
 				si.amount = available_qty * si.rate
 
 				bom = (
@@ -273,6 +271,7 @@ class SubcontractingOrder(SubcontractingController):
 						"schedule_date": self.schedule_date,
 						"description": item.description,
 						"qty": si.fg_item_qty,
+						"sc_conversion_factor": conversion_factor,
 						"stock_uom": item.stock_uom,
 						"bom": bom,
 						"purchase_order_item": si.purchase_order_item,

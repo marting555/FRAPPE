@@ -54,7 +54,8 @@
   "column_break_nfod",
   "section_break_34",
   "purchase_order_item",
-  "page_break"
+  "page_break",
+  "sc_conversion_factor"
  ],
  "fields": [
   {
@@ -397,13 +398,20 @@
   {
    "fieldname": "column_break_nfod",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sc_conversion_factor",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "SC Conversion Factor",
+   "read_only": 1
   }
  ],
  "idx": 1,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-12-06 12:31:41.829954",
+ "modified": "2024-12-10 18:22:57.808305",
  "modified_by": "Administrator",
  "module": "Subcontracting",
  "name": "Subcontracting Order Item",
