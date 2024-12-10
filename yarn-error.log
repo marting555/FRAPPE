@@ -14,7 +14,7 @@ Platform:
   linux x64
 
 Trace: 
-  Error: EACCES: permission denied, unlink '/home/erpuser/frappe-bench/apps/erpnext/node_modules/@babel/helper-string-parser/README.md'
+  Error: EACCES: permission denied, unlink '/home/erpuser/frappe-bench/apps/erpnext/node_modules/@babel/helper-string-parser/LICENSE'
 
 npm manifest: 
   {
