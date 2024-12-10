@@ -611,7 +611,7 @@ class TestItem(FrappeTestCase):
 		item_doc = frappe.get_doc("Item", item_code)
 		new_barcode = item_doc.append("barcodes")
 		new_barcode.update(barcode_properties_list[0])
-		self.assertRaises(frappe.UniqueValidationError, item_doc.save)
+		self.assertRaises(frappe.DuplicateEntryError, item_doc.save)
 
 		# Add invalid barcode - should cause InvalidBarcode
 		item_doc = frappe.get_doc("Item", item_code)
