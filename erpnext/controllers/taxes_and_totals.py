@@ -97,6 +97,14 @@ class calculate_taxes_and_totals:
 
 		for item in self.doc.items:
 			if item.item_code and item.get("item_tax_template"):
+				tax_company = frappe.get_cached_value("Item Tax Template", item.item_tax_template, "company")
+				if tax_company != self.doc.get("company"):
+					frappe.throw(
+						_("Row {0}: Item Tax Template {1} does not belong to company {2}").format(
+							item.idx, frappe.bold(item.item_tax_template), frappe.bold(self.doc.get("company"))
+						)
+					)
+
 				item_doc = frappe.get_cached_doc("Item", item.item_code)
 				args = {
 					"net_rate": item.net_rate or item.rate,
@@ -126,6 +134,12 @@ class calculate_taxes_and_totals:
 
 				if taxes:
 					if item.item_tax_template not in taxes:
+						if frappe.flags.in_import:
+							frappe.throw(
+							_("Row {0}: Item Tax template not match for Item {1}").format(
+								item.idx, frappe.bold(item.item_code)
+							)
+						)
 						item.item_tax_template = taxes[0]
 						frappe.msgprint(
 							_("Row {0}: Item Tax template updated as per validity and rate applied").format(
