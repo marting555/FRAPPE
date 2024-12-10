@@ -100,7 +100,7 @@ class RepostItemValuation(Document):
 		# Stock Closing Balance
 		closing_stock = self.get_closing_stock_balance()
 		if closing_stock and closing_stock[0].name:
-			name = get_link_to_form("Stock Closing Entry", closing_stock[0].stock_closing_entry)
+			name = get_link_to_form("Stock Closing Entry", closing_stock[0].name)
 			to_date = frappe.format(closing_stock[0].posting_date, "Date")
 			frappe.throw(
 				_("Due to stock closing entry {0}, you cannot repost item valuation before {1}").format(
@@ -111,11 +111,12 @@ class RepostItemValuation(Document):
 	def get_closing_stock_balance(self):
 		filters = {
 			"company": self.company,
-			"posting_date": (">=", self.posting_date),
+			"to_date": (">=", self.posting_date),
+			"status": "Completed",
 		}
 
 		return frappe.get_all(
-			"Stock Closing Balance", fields=["stock_closing_entry", "posting_date"], filters=filters, limit=1
+			"Stock Closing Entry", fields=["name", "to_date as posting_date"], filters=filters, limit=1
 		)
 
 	@staticmethod

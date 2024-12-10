@@ -8,7 +8,7 @@ from frappe import _
 from frappe.core.doctype.prepared_report.prepared_report import create_json_gz_file
 from frappe.desk.form.load import get_attachments
 from frappe.model.document import Document
-from frappe.utils import add_days, get_link_to_form, nowtime, parse_json
+from frappe.utils import add_days, get_date_str, get_link_to_form, nowtime, parse_json
 from frappe.utils.background_jobs import enqueue
 
 from erpnext.stock.doctype.inventory_dimension.inventory_dimension import get_inventory_dimensions
@@ -111,12 +111,14 @@ class StockClosingEntry(Document):
 		stk_cl_obj = StockClosing(self.company, self.from_date, self.to_date)
 
 		entries = stk_cl_obj.get_stock_closing_entries()
-
 		for key in entries:
 			row = entries[key]
 
 			if row.actual_qty == 0.0 and row.stock_value_difference == 0.0:
 				continue
+
+			if row.fifo_queue is not None:
+				row.fifo_queue = json.dumps(row.fifo_queue)
 
 			new_doc = frappe.new_doc("Stock Closing Balance")
 			new_doc.update(row)
@@ -143,7 +145,6 @@ class StockClosingEntry(Document):
 
 def prepare_closing_stock_balance(name):
 	doc = frappe.get_doc("Stock Closing Entry", name)
-
 	doc.db_set("status", "In Progress")
 
 	try:
@@ -174,38 +175,64 @@ class StockClosing:
 					key = dimension_values
 
 					if key in closing_stock:
-						closing_stock[key].actual_qty += row.sabb_qty or row.actual_qty
+						actual_qty = row.sabb_qty or row.actual_qty
+						closing_stock[key].actual_qty += actual_qty
 						closing_stock[key].stock_value_difference += (
 							row.sabb_stock_value_difference or row.stock_value_difference
 						)
 
 						if not row.actual_qty and row.qty_after_transaction:
 							closing_stock[key].actual_qty = row.qty_after_transaction
+
+						fifo_queue = closing_stock[key].fifo_queue
+						if fifo_queue:
+							self.update_fifo_queue(fifo_queue, actual_qty, row.posting_date)
+							closing_stock[key].fifo_queue = fifo_queue
 					else:
 						entries = self.get_initialized_entry(row, dimension_fields)
 						closing_stock[key] = entries
 
 		return closing_stock
 
+	def update_fifo_queue(self, fifo_queue, actual_qty, posting_date):
+		if actual_qty > 0:
+			fifo_queue.append([actual_qty, get_date_str(posting_date)])
+		else:
+			remaining_qty = actual_qty
+			for idx, queue in enumerate(fifo_queue):
+				if queue[0] + remaining_qty >= 0:
+					queue[0] += remaining_qty
+					if queue[0] == 0:
+						fifo_queue.pop(idx)
+					break
+				else:
+					remaining_qty += queue[0]
+					fifo_queue.pop(0)
+
 	def get_initialized_entry(self, row, dimension_fields):
 		item_details = frappe.get_cached_value(
-			"Item", row.item_code, ["item_group", "item_name", "stock_uom"], as_dict=1
+			"Item", row.item_code, ["item_group", "item_name", "stock_uom", "has_serial_no"], as_dict=1
 		)
 
 		inventory_dimension_key = None
 		if dimension_fields not in [("item_code", "warehouse"), ("item_code", "warehouse", "batch_no")]:
 			inventory_dimension_key = json.dumps(dimension_fields)
 
+		actual_qty = row.sabb_qty or row.actual_qty or row.qty_after_transaction
+
 		entry = frappe._dict(
 			{
 				"item_code": row.item_code,
 				"warehouse": row.warehouse,
-				"actual_qty": row.sabb_qty or row.actual_qty or row.qty_after_transaction,
+				"actual_qty": actual_qty,
 				"stock_value_difference": row.sabb_stock_value_difference or row.stock_value_difference,
 				"item_group": item_details.item_group,
 				"item_name": item_details.item_name,
 				"stock_uom": item_details.stock_uom,
 				"inventory_dimension_key": inventory_dimension_key,
+				"fifo_queue": [[actual_qty, get_date_str(row.posting_date)]]
+				if not item_details.has_serial_no
+				else [],
 			}
 		)
 
@@ -224,7 +251,7 @@ class StockClosing:
 		if self.last_closing_balance:
 			self.from_date = add_days(self.last_closing_balance.to_date, 1)
 			sl_entries += self.get_entries(
-				"Stock Closing Voucher",
+				"Stock Closing Balance",
 				fields=[
 					"item_code",
 					"warehouse",
@@ -377,7 +404,12 @@ class StockClosing:
 		query = frappe.qb.from_(table).select("*").where(table.stock_closing_entry == stock_closing_entry)
 
 		for key, value in kwargs.items():
-			if isinstance(value, list) or isinstance(value, tuple):
+			if key == "inventory_dimension_key":
+				if isinstance(value, tuple) and value[0] == "is" and value[1] == "not set":
+					query = query.where(
+						table.inventory_dimension_key.isnull() | (table.inventory_dimension_key == "")
+					)
+			elif isinstance(value, list) or isinstance(value, tuple):
 				query = query.where(table[key].isin(value))
 			else:
 				query = query.where(table[key] == value)

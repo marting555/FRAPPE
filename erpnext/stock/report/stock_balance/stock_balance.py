@@ -93,7 +93,7 @@ class StockBalanceReport:
 					"item_name": entry.item_name,
 					"opening_qty": entry.actual_qty,
 					"opening_val": entry.stock_value_difference,
-					"opening_fifo_queue": [],
+					"opening_fifo_queue": json.loads(entry.fifo_queue) if entry.fifo_queue else [],
 					"in_qty": 0.0,
 					"in_val": 0.0,
 					"out_qty": 0.0,
@@ -124,6 +124,8 @@ class StockBalanceReport:
 
 		if dimenion_keys:
 			query_filters["inventory_dimension_key"] = json.dumps(("item_code", "warehouse", *dimenion_keys))
+		else:
+			query_filters["inventory_dimension_key"] = ("is", "not set")
 
 		opening_entries = stk_cl_obj.get_stock_closing_balance(query_filters)
 		if not opening_entries:
@@ -210,7 +212,7 @@ class StockBalanceReport:
 	def prepare_new_data(self):
 		if self.filters.get("show_stock_ageing_data"):
 			self.filters["show_warehouse_wise_stock"] = True
-			item_wise_fifo_queue = FIFOSlots(self.filters, self.sle_entries).generate()
+			item_wise_fifo_queue = FIFOSlots(self.filters).generate()
 
 		_func = itemgetter(1)
 
@@ -237,6 +239,7 @@ class StockBalanceReport:
 					opening_fifo_queue.extend(fifo_queue)
 
 				stock_ageing_data = {"average_age": 0, "earliest_age": 0, "latest_age": 0}
+
 				if opening_fifo_queue:
 					fifo_queue = sorted(filter(_func, opening_fifo_queue), key=_func)
 					if not fifo_queue:

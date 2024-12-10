@@ -29,7 +29,9 @@
   "item_group",
   "column_break_ljle",
   "stock_uom",
-  "inventory_dimension_key"
+  "inventory_dimension_key",
+  "stock_ageing_section",
+  "fifo_queue"
  ],
  "fields": [
   {
@@ -216,6 +218,17 @@
    "options": "Batch",
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "stock_ageing_section",
+   "fieldtype": "Section Break",
+   "label": "Stock Ageing"
+  },
+  {
+   "fieldname": "fifo_queue",
+   "fieldtype": "Long Text",
+   "label": "FIFO Queue",
+   "read_only": 1
   }
  ],
  "hide_toolbar": 1,
@@ -223,7 +236,7 @@
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-12-10 11:54:58.522295",
+ "modified": "2024-12-10 21:56:36.633567",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Closing Balance",

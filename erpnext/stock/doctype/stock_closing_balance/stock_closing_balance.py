@@ -17,6 +17,7 @@ class StockClosingBalance(Document):
 		actual_qty: DF.Float
 		batch_no: DF.Link | None
 		company: DF.Link | None
+		fifo_queue: DF.LongText | None
 		inventory_dimension_key: DF.SmallText | None
 		item_code: DF.Link | None
 		item_group: DF.Link | None
