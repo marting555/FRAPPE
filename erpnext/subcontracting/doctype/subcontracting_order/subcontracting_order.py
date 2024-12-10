@@ -253,6 +253,10 @@ class SubcontractingOrder(SubcontractingController):
 				if available_qty == 0:
 					continue
 
+				si.qty = available_qty
+				si.fg_item_qty = available_qty / (po_item.qty / po_item.fg_item_qty)
+				si.amount = available_qty * si.rate
+
 				bom = (
 					frappe.db.get_value(
 						"Subcontracting BOM",
@@ -261,10 +265,6 @@ class SubcontractingOrder(SubcontractingController):
 					)
 					or item.default_bom
 				)
-
-				si.qty = available_qty
-				si.fg_item_qty = available_qty / (po_item.qty / po_item.fg_item_qty)
-				si.amount = available_qty * si.rate
 
 				items.append(
 					{
@@ -335,7 +335,6 @@ class SubcontractingOrder(SubcontractingController):
 @frappe.whitelist()
 def make_subcontracting_receipt(source_name, target_doc=None):
 	return get_mapped_subcontracting_receipt(source_name, target_doc)
-
 
 def get_mapped_subcontracting_receipt(source_name, target_doc=None):
 	def update_item(source, target, source_parent):
