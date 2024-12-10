@@ -345,9 +345,22 @@ class AccountsController(TransactionBase):
 					repost_doc.flags.ignore_links = True
 					repost_doc.save(ignore_permissions=True)
 
+
+	def _remove_advance_payment_ledger_entries(self):
+		adv = qb.DocType("Advance Payment Ledger Entry")
+		qb.from_(adv).delete().where(adv.voucher_type.eq(self.doctype) & adv.voucher_no.eq(self.name)).run()
+
+		advance_payment_doctypes = frappe.get_hooks("advance_payment_doctypes")
+
+		if self.doctype in advance_payment_doctypes:
+			qb.from_(adv).delete().where(
+				adv.against_voucher_type.eq(self.doctype) & adv.against_voucher_no.eq(self.name)
+			).run()
+
 	def on_trash(self):
 		from erpnext.accounts.utils import delete_exchange_gain_loss_journal
 
+		self._remove_advance_payment_ledger_entries()
 		self._remove_references_in_repost_doctypes()
 		self._remove_references_in_unreconcile()
 		self.remove_serial_and_batch_bundle()
@@ -448,6 +461,10 @@ class AccountsController(TransactionBase):
 					)
 
 	def validate_invoice_documents_schedule(self):
+		if self.is_return:
+			self.payment_terms_template = ""
+			self.payment_schedule = []
+			return
 		self.validate_payment_schedule_dates()
 		self.set_due_date()
 		self.set_payment_schedule()
@@ -462,7 +479,7 @@ class AccountsController(TransactionBase):
 		self.validate_payment_schedule_amount()
 
 	def validate_all_documents_schedule(self):
-		if self.doctype in ("Sales Invoice", "Purchase Invoice") and not self.is_return:
+		if self.doctype in ("Sales Invoice", "Purchase Invoice"):
 			self.validate_invoice_documents_schedule()
 		elif self.doctype in ("Quotation", "Purchase Order", "Sales Order"):
 			self.validate_non_invoice_documents_schedule()
@@ -1073,9 +1090,11 @@ class AccountsController(TransactionBase):
 			return "Purchase Return"
 		elif self.doctype == "Delivery Note" and self.is_return:
 			return "Sales Return"
-		elif (self.doctype == "Sales Invoice" and self.is_return) or self.doctype == "Purchase Invoice":
+		elif self.doctype == "Sales Invoice" and self.is_return:
 			return "Credit Note"
-		elif (self.doctype == "Purchase Invoice" and self.is_return) or self.doctype == "Sales Invoice":
+		elif self.doctype == "Sales Invoice" and self.is_debit_note:
+			return "Debit Note"
+		elif self.doctype == "Purchase Invoice" and self.is_return:
 			return "Debit Note"
 		return self.doctype
 
