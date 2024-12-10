@@ -103,8 +103,7 @@ class StockClosingEntry(Document):
 	@frappe.whitelist()
 	def regenerate_closing_balance(self):
 		self.remove_stock_closing()
-		# self.enqueue_job()
-		self.create_stock_closing_balance_entries()
+		self.enqueue_job()
 
 	def create_stock_closing_balance_entries(self):
 		from erpnext.stock.utils import get_combine_datetime
@@ -113,14 +112,14 @@ class StockClosingEntry(Document):
 
 		entries = stk_cl_obj.get_stock_closing_entries()
 
-		for row in entries:
-			data = entries[row]
+		for key in entries:
+			row = entries[key]
 
-			if data.actual_qty == 0.0 and data.stock_value_difference == 0.0:
+			if row.actual_qty == 0.0 and row.stock_value_difference == 0.0:
 				continue
 
 			new_doc = frappe.new_doc("Stock Closing Balance")
-			new_doc.update(data)
+			new_doc.update(row)
 			new_doc.posting_date = self.to_date
 			new_doc.posting_time = nowtime()
 			new_doc.posting_datetime = get_combine_datetime(self.to_date, new_doc.posting_time)
@@ -169,10 +168,10 @@ class StockClosing:
 
 		closing_stock = frappe._dict()
 		for row in sl_entries:
-			keys = self.get_keys(row)
-			for data in keys:
-				for fields, values in data.items():
-					key = values
+			dimensions_keys = self.get_keys(row)
+			for dimension_key in dimensions_keys:
+				for dimension_fields, dimension_values in dimension_key.items():
+					key = dimension_values
 
 					if key in closing_stock:
 						closing_stock[key].actual_qty += row.sabb_qty or row.actual_qty
@@ -183,36 +182,42 @@ class StockClosing:
 						if not row.actual_qty and row.qty_after_transaction:
 							closing_stock[key].actual_qty = row.qty_after_transaction
 					else:
-						item_details = frappe.get_cached_value(
-							"Item", row.item_code, ["item_group", "item_name", "stock_uom"], as_dict=1
-						)
-
-						inventory_dimension_key = ""
-						if fields not in [("item_code", "warehouse"), ("item_code", "warehouse", "batch_no")]:
-							inventory_dimension_key = json.dumps(fields)
-
-						closing_stock[key] = frappe._dict(
-							{
-								"item_code": row.item_code,
-								"warehouse": row.warehouse,
-								"actual_qty": row.sabb_qty or row.actual_qty or row.qty_after_transaction,
-								"stock_value_difference": (
-									row.sabb_stock_value_difference or row.stock_value_difference
-								),
-								"item_group": item_details.item_group,
-								"item_name": item_details.item_name,
-								"stock_uom": item_details.stock_uom,
-								"inventory_dimension_key": inventory_dimension_key,
-								"batch_no": row.batch_no or row.sabb_batch_no,
-							}
-						)
-
-						# To update dimensions
-						for field in fields:
-							if row.get(field):
-								closing_stock[key][field] = row.get(field)
+						entries = self.get_initialized_entry(row, dimension_fields)
+						closing_stock[key] = entries
 
 		return closing_stock
+
+	def get_initialized_entry(self, row, dimension_fields):
+		item_details = frappe.get_cached_value(
+			"Item", row.item_code, ["item_group", "item_name", "stock_uom"], as_dict=1
+		)
+
+		inventory_dimension_key = None
+		if dimension_fields not in [("item_code", "warehouse"), ("item_code", "warehouse", "batch_no")]:
+			inventory_dimension_key = json.dumps(dimension_fields)
+
+		entry = frappe._dict(
+			{
+				"item_code": row.item_code,
+				"warehouse": row.warehouse,
+				"actual_qty": row.sabb_qty or row.actual_qty or row.qty_after_transaction,
+				"stock_value_difference": row.sabb_stock_value_difference or row.stock_value_difference,
+				"item_group": item_details.item_group,
+				"item_name": item_details.item_name,
+				"stock_uom": item_details.stock_uom,
+				"inventory_dimension_key": inventory_dimension_key,
+			}
+		)
+
+		if row.sabb_batch_no:
+			row.batch_no = row.sabb_batch_no
+
+		# To update dimensions
+		for field in dimension_fields:
+			if row.get(field):
+				entry[field] = row.get(field)
+
+		return entry
 
 	def get_sle_entries(self):
 		sl_entries = []
@@ -330,7 +335,7 @@ class StockClosing:
 				{("item_code", "warehouse", "batch_no"): (row.item_code, row.warehouse, row.sabb_batch_no)}
 			)
 
-		dimensions_has_value = []
+		dimension_fields = []
 		dimension_values = []
 		for dimension in self.inv_dimensions:
 			if row.get(dimension.fieldname):
@@ -344,13 +349,13 @@ class StockClosing:
 					}
 				)
 
-				dimensions_has_value.append(dimension.fieldname)
+				dimension_fields.append(dimension.fieldname)
 				dimension_values.append(row.get(dimension.fieldname))
 
-		if dimensions_has_value and len(dimensions_has_value) > 1:
+		if dimension_fields and len(dimension_fields) > 1:
 			keys.append(
 				{
-					("item_code", "warehouse", *dimensions_has_value): (
+					("item_code", "warehouse", *dimension_fields): (
 						row.item_code,
 						row.warehouse,
 						*dimension_values,
@@ -360,7 +365,7 @@ class StockClosing:
 
 		return keys
 
-	def get_stock_closing_balance(self, kwargs):
+	def get_stock_closing_balance(self, kwargs, for_batch=False):
 		if not self.last_closing_balance:
 			return []
 
@@ -376,5 +381,11 @@ class StockClosing:
 				query = query.where(table[key].isin(value))
 			else:
 				query = query.where(table[key] == value)
+
+		if for_batch:
+			query = query.where(table.batch_no.isnotnull())
+			query = query.where(
+				table.inventory_dimension_key.isnull() | (table.inventory_dimension_key == "")
+			)
 
 		return query.run(as_dict=True)
