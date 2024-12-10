@@ -1322,6 +1322,79 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 		)
 		self.assertEqual(stock_value_difference, 1500.00 * -1)
 
+	def test_create_stock_reconciliation_for_opening(self):
+		from erpnext.accounts.utils import get_company_default
+		
+		frappe.db.rollback()
+		sr = self.create_stock_reconciliation_for_opening()
+		
+		try:
+			sr.save()
+			sr.submit()
+		except Exception as e:
+			frappe.db.rollback()
+			assert False, f"An error occurred while saving the document: {str(e)}\n{frappe.get_traceback()}"
+			
+		self.assertEqual(sr.expense_account, "Temporary Opening - PP Ltd")
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Temporary Opening - PP Ltd'},'credit')#get_difference_account API ref.
+		
+		self.assertEqual(gl_temp_credit, 1000)
+		
+		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Stock In Hand - PP Ltd'},'debit')#get_difference_account API ref.
+		self.assertEqual(gl_stock_debit, 1000)
+		
+		actual_qty,incoming_rate = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':sr.name, 'voucher_type':'Stock Reconciliation'},['qty_after_transaction','valuation_rate'])#get_difference_account API ref.
+		self.assertEqual(actual_qty, 10)
+		self.assertEqual(incoming_rate, 100)
+
+		frappe.db.rollback()
+		
+	def create_stock_reconciliation_for_opening(self):
+		sr = frappe.new_doc("Stock Reconciliation")
+		sr.purpose = "Opening Stock"
+		sr.posting_date = "2024-04-01"
+		sr.posting_time = nowtime()
+		sr.set_posting_time = 1
+		sr.company = "PP Ltd"
+		sr.expense_account = frappe.db.get_value("Account", {"is_group": 0, "company": sr.company, "account_type": "Temporary"}, "name") #get_difference_account API ref.
+		sr.append(
+            "items",
+            {
+                "item_code": "Book",
+                "warehouse": "Stores - PP Ltd",
+                "qty": 10,
+                "valuation_rate": 100,
+            },
+        )
+		return sr
+	
+	def test_create_stock_reconciliation_invalid(self):
+		sr = frappe.new_doc("Stock Reconciliation")
+		sr.purpose = "Opening Stock"
+		sr.posting_date = "2024-04-01"
+		sr.posting_time = nowtime()
+		sr.set_posting_time = 1
+		sr.company = "PP Ltd"
+		sr.expense_account = frappe.db.get_value("Account", {"is_group": 0, "company": sr.company, "account_type": "Temporary"}, "name") #get_difference_account API ref.
+		sr.append(
+            "items",
+            {
+                "item_code": "Book",
+                "warehouse": "Stores - PP Ltd",
+                "qty": -10,
+                "valuation_rate": -100,
+            },
+        )
+		sr.append(
+            "items",
+			{
+                "item_code": "Book",
+                "warehouse": "Stores - PP Ltd",
+                "qty": "ABC",
+                "valuation_rate": "ABC",
+            },
+        )
+		self.assertRaises(frappe.ValidationError, sr.save)
 
 def create_batch_item_with_batch(item_name, batch_id):
 	batch_item_doc = create_item(item_name, is_stock_item=1)
