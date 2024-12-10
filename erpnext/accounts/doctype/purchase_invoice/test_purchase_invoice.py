@@ -19,7 +19,6 @@ from erpnext.buying.doctype.supplier.test_supplier import create_supplier
 from erpnext.controllers.accounts_controller import get_payment_terms
 from erpnext.controllers.buying_controller import QtyMismatchError
 from erpnext.exceptions import InvalidCurrency
-from erpnext.projects.doctype.project.test_project import make_project
 from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.stock.doctype.material_request.material_request import make_purchase_order
 from erpnext.stock.doctype.material_request.test_material_request import make_material_request
@@ -408,10 +407,17 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 		self.assertTrue(gl_entries)
 
-		expected_values = [
-			["_Test Account Cost for Goods Sold - TCP1", 250.0, 0],
-			["Creditors - TCP1", 0, 250],
-		]
+		if frappe.db.db_type == 'postgres':
+			expected_values = [
+				["Creditors - TCP1", 0, 250],
+				["_Test Account Cost for Goods Sold - TCP1", 250.0, 0],
+
+			]
+		else:
+			expected_values = [
+				["_Test Account Cost for Goods Sold - TCP1", 250.0, 0],
+				["Creditors - TCP1", 0, 250],
+			]
 
 		for i, gle in enumerate(gl_entries):
 			self.assertEqual(expected_values[i][0], gle.account)
