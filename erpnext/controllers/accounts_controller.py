@@ -1438,7 +1438,7 @@ class AccountsController(TransactionBase):
 							.where(
 								(je.docstatus == 1)
 								& (je.name.isin(parents))
-								& (je.voucher_type == "Exchange Gain or Loss")
+								& (je.voucher_type == "Exchange Gain Or Loss")
 							)
 							.run()
 						)

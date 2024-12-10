@@ -1278,6 +1278,113 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 		qty = get_batch_qty(batch_id, warehouse, batch_item_code)
 		self.assertEqual(qty, 110)
 
+	def test_create_stock_reconciliation_for_opening(self):
+		from erpnext.accounts.utils import get_company_default
+		
+		frappe.db.rollback()
+		sr = self.create_stock_reconciliation_for_opening()
+		
+		try:
+			sr.save()
+			sr.submit()
+		except Exception as e:
+			frappe.db.rollback()
+			assert False, f"An error occurred while saving the document: {str(e)}\n{frappe.get_traceback()}"
+			
+		self.assertEqual(sr.expense_account, "Temporary Opening - PP Ltd")
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Temporary Opening - PP Ltd'},'credit')#get_difference_account API ref.
+		
+		self.assertEqual(gl_temp_credit, 1000)
+		
+		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Stock In Hand - PP Ltd'},'debit')#get_difference_account API ref.
+		self.assertEqual(gl_stock_debit, 1000)
+		
+		actual_qty,incoming_rate = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':sr.name, 'voucher_type':'Stock Reconciliation'},['qty_after_transaction','valuation_rate'])#get_difference_account API ref.
+		self.assertEqual(actual_qty, 10)
+		self.assertEqual(incoming_rate, 100)
+
+		frappe.db.rollback()
+		
+	def create_stock_reconciliation_for_opening(self):
+		sr = frappe.new_doc("Stock Reconciliation")
+		sr.purpose = "Opening Stock"
+		sr.posting_date = "2024-04-01"
+		sr.posting_time = nowtime()
+		sr.set_posting_time = 1
+		sr.company = "PP Ltd"
+		sr.expense_account = frappe.db.get_value("Account", {"is_group": 0, "company": sr.company, "account_type": "Temporary"}, "name") #get_difference_account API ref.
+		sr.append(
+            "items",
+            {
+                "item_code": "Book",
+                "warehouse": "Stores - PP Ltd",
+                "qty": 10,
+                "valuation_rate": 100,
+            },
+        )
+		return sr
+	
+	def test_create_stock_reconciliation_invalid(self):
+		sr = frappe.new_doc("Stock Reconciliation")
+		sr.purpose = "Opening Stock"
+		sr.posting_date = "2024-04-01"
+		sr.posting_time = nowtime()
+		sr.set_posting_time = 1
+		sr.company = "PP Ltd"
+		sr.expense_account = frappe.db.get_value("Account", {"is_group": 0, "company": sr.company, "account_type": "Temporary"}, "name") #get_difference_account API ref.
+		sr.append(
+            "items",
+            {
+                "item_code": "Book",
+                "warehouse": "Stores - PP Ltd",
+                "qty": -10,
+                "valuation_rate": -100,
+            },
+        )
+		sr.append(
+            "items",
+			{
+                "item_code": "Book",
+                "warehouse": "Stores - PP Ltd",
+                "qty": "ABC",
+                "valuation_rate": "ABC",
+            },
+        )
+		self.assertRaises(frappe.ValidationError, sr.save)
+
+	#Verify Impact on Balance Sheet Reports
+	def test_create_stock_reco_match_balance_sheet(self):
+		from erpnext.accounts.utils import get_balance_on
+
+		pre_stock_in_hand = get_balance_on(account="Stock In Hand - _TC")
+
+		sr = frappe.new_doc("Stock Reconciliation")
+		sr.purpose = "Opening Stock"
+		sr.posting_date = "2024-04-01"
+		sr.posting_time = nowtime()
+		sr.set_posting_time = 1
+		sr.company = "_Test Company"
+		sr.expense_account = frappe.db.get_value("Account", {"is_group": 0, "company": sr.company, "account_type": "Temporary"}, "name")
+		sr.append(
+            "items",
+            {
+                "item_code": "Book",
+                "warehouse": "_Test Warehouse - _TC",
+                "qty": 14,
+                "valuation_rate": 120,
+            },
+        )
+
+		sr.save()
+		sr.submit()
+		
+		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Stock In Hand - _TC'},'debit_in_account_currency')
+		if not gl_stock_debit:
+			gl_stock_debit = 0
+
+		expected_stock_in_hand = pre_stock_in_hand + gl_stock_debit
+		current_stock_in_hand = get_balance_on(account="Stock In Hand - _TC")
+		self.assertEqual(current_stock_in_hand, expected_stock_in_hand)
 
 def create_batch_item_with_batch(item_name, batch_id):
 	batch_item_doc = create_item(item_name, is_stock_item=1)

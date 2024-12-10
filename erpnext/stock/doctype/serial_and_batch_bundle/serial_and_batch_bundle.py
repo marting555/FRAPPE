@@ -8,6 +8,7 @@ from collections import Counter, defaultdict
 import frappe
 from frappe import _, _dict, bold
 from frappe.model.document import Document
+from frappe.query_builder import DocType
 from frappe.query_builder.functions import CombineDatetime, Sum
 from frappe.utils import (
 	add_days,
@@ -1279,6 +1280,10 @@ def get_filters_for_bundle(item_code=None, docstatus=None, voucher_no=None, name
 			filters.append(["Serial and Batch Entry", "parent", "in", name])
 		else:
 			filters.append(["Serial and Batch Entry", "parent", "=", name])
+	
+	excluded_serial_nos = get_excluded_serial_numbers(child_row)
+	if excluded_serial_nos:
+		filters.append(["Serial and Batch Entry", "serial_no", "not in", excluded_serial_nos])
 
 	return filters
 
@@ -1294,6 +1299,40 @@ def get_reference_serial_and_batch_bundle(child_row):
 
 	if field:
 		return frappe.get_cached_value(child_row.doctype, child_row.get(field), "serial_and_batch_bundle")
+
+
+def get_excluded_serial_numbers(child_row):
+    """
+    Fetch serial numbers already returned for the given child_row in any previous return if existing.
+    """
+    if not child_row or not child_row.get("doctype"):
+        return []
+	
+    field = {
+        "Sales Invoice Item": "sales_invoice_item",
+        "Delivery Note Item": "dn_detail",
+        "Purchase Receipt Item": "purchase_receipt_item",
+        "Purchase Invoice Item": "purchase_invoice_item",
+        "POS Invoice Item": "pos_invoice_item",
+    }.get(child_row.get("doctype"))
+
+    if not field or not child_row.get(field):
+        return []
+    reference_name = child_row.get(field)
+	
+    SerialAndBatchBundle = DocType("Serial and Batch Bundle")
+    SerialAndBatchEntry = DocType("Serial and Batch Entry")
+    query = (
+        frappe.qb.from_(SerialAndBatchBundle)
+        .join(SerialAndBatchEntry)
+        .on(SerialAndBatchBundle.name == SerialAndBatchEntry.parent)
+        .select((SerialAndBatchEntry.serial_no))
+        .where(SerialAndBatchBundle.returned_against == reference_name)
+    )
+
+    # Execute and return results as a list
+    excluded_serial_nos = list(set(query.run(pluck=True)))
+    return excluded_serial_nos
 
 
 @frappe.whitelist()
