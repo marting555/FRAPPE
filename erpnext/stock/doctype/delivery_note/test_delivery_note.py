@@ -2339,6 +2339,39 @@ class TestDeliveryNote(FrappeTestCase):
 				for d in bundle_data:
 					self.assertEqual(d.incoming_rate, serial_no_valuation[d.serial_no])
 
+	def test_pricing_rule_application_in_delivery_note(self):
+		make_pricing_rule()
+		create_item_price()
+		delivery_note = frappe.get_doc({
+			"doctype": "Delivery Note",
+			"customer": "CUS-12500",
+			"company": "PP Ltd",
+			"selling_price_list": "Standard Selling",
+			"items": [{
+				"item_code": "CPU",
+				"warehouse": "Stores - PP Ltd",
+				"qty": 10 
+			}]
+		})
+  
+		delivery_note.insert(ignore_permissions=True)
+		delivery_note.submit()
+		
+		self.assertEqual(delivery_note.items[0].rate, 2700, "Pricing Rule not applied correctly.")
+
+
+		stock_ledger = frappe.get_all("Stock Ledger Entry", filters={
+			"voucher_no": delivery_note.name,
+			"warehouse": "Stores - PP Ltd",
+			"item_code": "CPU"
+		})
+		self.assertTrue(stock_ledger, "Stock Ledger not created.")
+
+		gl_entries = frappe.get_all("GL Entry", filters={
+			"voucher_no": delivery_note.name
+		})
+		self.assertTrue(gl_entries, "General Ledger entries not created.")
+
 
 def create_delivery_note(**args):
 	dn = frappe.new_doc("Delivery Note")
@@ -2416,3 +2449,41 @@ def create_delivery_note(**args):
 
 
 test_dependencies = ["Product Bundle"]
+
+def make_pricing_rule():
+		if not frappe.db.exists('Pricing Rule', {'title': 'Test Pricing Rule'}):
+			pricing_rule_doc = frappe.new_doc('Pricing Rule')
+			pricing_rule_data = {
+				"title": 'Test Pricing Rule',
+				"apply_on": 'Item Code',
+				"price_or_product_discount": 'Price',
+				"selling": 1,
+				"min_qty": 10,
+				"company": 'PP Ltd',
+				"margin_type": 'Percentage',
+				"discount_percentage": 10,
+				"for_price_list": 'Standard Selling',
+				"warehouse": "Stores - PP Ltd",
+				"items": [{"item_code": "CPU", "uom": 'Nos'}]
+			}
+			
+			pricing_rule_doc.update(pricing_rule_data)
+			pricing_rule_doc.save()
+	
+			return pricing_rule_doc
+
+def create_item_price():
+	if not frappe.db.exists('Item Price', {'item_code': 'CPU', 'price_list_rate': 3000}):
+		item_price = frappe.new_doc('Item Price')
+		item_price_data = {
+			'item_code': 'CPU',
+			'uom': 'Nos',
+			'price_list': 'Standard Selling',
+			'selling': 1,
+			'price_list_rate': 3000
+		}
+		
+		item_price.update(item_price_data)
+		item_price.save()
+		
+		return item_price
