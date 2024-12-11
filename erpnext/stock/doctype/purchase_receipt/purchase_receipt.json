@@ -888,7 +888,7 @@
    "no_copy": 1,
    "oldfieldname": "status",
    "oldfieldtype": "Select",
-   "options": "\nDraft\nTo Bill\nCompleted\nReturn Issued\nCancelled\nClosed",
+   "options": "\nDraft\nPartly Billed\nTo Bill\nCompleted\nReturn Issued\nCancelled\nClosed",
    "print_hide": 1,
    "print_width": "150px",
    "read_only": 1,
@@ -1271,7 +1271,7 @@
    "link_fieldname": "voucher_no"
   }
  ],
- "modified": "2024-11-12 09:59:21.000382",
+ "modified": "2024-11-13 16:55:14.129055",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Purchase Receipt",
