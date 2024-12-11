@@ -122,7 +122,7 @@ def validate_disabled_accounts(gl_map):
 
 	disabled_accounts = (
 		frappe.qb.from_(Account)
-		.where(Account.name.isin(accounts) & Account.disabled == 1 & Account.is_group == 1 & Account.company == gl_map[0].company)
+		.where(Account.name.isin(accounts) & (Account.disabled == 1) & (Account.is_group == 1) & (Account.company == gl_map[0].company))
 		.select(Account.name, Account.disabled)
 	).run(as_dict=True)
 	
