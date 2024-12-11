@@ -1515,7 +1515,9 @@ class AccountsController(TransactionBase):
 						je = create_gain_loss_journal(
 							self.company,
 							args.get("difference_posting_date")
-							if "difference_posting_date" in args and args.get("difference_posting_date")
+							if args
+							and "difference_posting_date" in args
+							and args.get("difference_posting_date")
 							else self.posting_date,
 							self.party_type,
 							self.party,
