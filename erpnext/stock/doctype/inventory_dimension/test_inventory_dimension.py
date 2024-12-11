@@ -5,7 +5,7 @@ import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_field
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import nowdate, nowtime
-
+from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import InventoryDimensionNegativeStockError
 from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 from erpnext.stock.doctype.inventory_dimension.inventory_dimension import (
 	CanNotBeChildDoc,
@@ -428,7 +428,7 @@ class TestInventoryDimension(FrappeTestCase):
 
 		doc = make_stock_entry(item_code=item_code, source=warehouse, qty=10, do_not_submit=True)
 		doc.items[0].inv_site = "Site 1"
-		self.assertRaises(frappe.ValidationError, doc.submit)
+		self.assertRaises(InventoryDimensionNegativeStockError, doc.submit)
 		doc.reload()
 		if doc.docstatus == 1:
 			doc.cancel()
@@ -444,10 +444,15 @@ class TestInventoryDimension(FrappeTestCase):
 
 		self.assertEqual(site_name, "Site 1")
 
+		# Receive another 100 qty without inventory dimension
+		doc = make_stock_entry(item_code=item_code, target=warehouse, qty=100)
+
+		# Try issuing 100 qty, more than available stock against inventory dimension
+		# Note: total available qty for the item is 110, but against inventory dimension, only 10 qty is available
 		doc = make_stock_entry(item_code=item_code, source=warehouse, qty=100, do_not_submit=True)
 
 		doc.items[0].inv_site = "Site 1"
-		self.assertRaises(frappe.ValidationError, doc.submit)
+		self.assertRaises(InventoryDimensionNegativeStockError, doc.submit)
 
 		inv_dimension.reload()
 		inv_dimension.db_set("validate_negative_stock", 0)
