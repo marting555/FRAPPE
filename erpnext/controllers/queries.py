@@ -575,9 +575,6 @@ def get_blanket_orders(doctype, txt, searchfield, start, page_len, filters):
 def get_income_account(doctype, txt, searchfield, start, page_len, filters):
 	from erpnext.controllers.queries import get_match_cond
 
-	# income account can be any Credit account,
-	# but can also be a Asset account with account_type='Income Account' in special circumstances.
-	# Hence the first condition is an "OR"
 	if not filters:
 		filters = {}
 
@@ -586,23 +583,31 @@ def get_income_account(doctype, txt, searchfield, start, page_len, filters):
 	if filters.get("company"):
 		condition += " AND account.company = %(company)s"
 
-	condition += " AND account.disabled = %(disabled)s"
+	condition += f" AND account.disabled = %(disabled)s"
+	match_condition_str = get_match_cond(doctype)
+	if match_condition_str and frappe.db.db_type == "postgres":
+		if "ifnull" in match_condition_str:
+			match_condition_str = match_condition_str.replace('ifnull', 'COALESCE')
+
+		# Adjust match condition string to replace 'tabAccount' with alias 'account'
+		match_condition_str = match_condition_str.replace('tabAccount', 'account')
+		match_condition_str = match_condition_str.replace("`", "")
 
 	return frappe.db.sql(
 		f"""SELECT account.name 
-			FROM tabAccount AS account
+			FROM "tabAccount" AS account
 			WHERE (account.report_type = 'Profit and Loss'
 					OR account.account_type IN ('Income Account', 'Temporary'))
 				AND account.is_group = 0
 				AND account.{searchfield} LIKE %(txt)s
-				{condition} {get_match_cond(doctype)}
+				{condition} {match_condition_str}
 			ORDER BY account.idx DESC, account.name""",
 		{
-			"txt": "%" + txt + "%",
+			"txt": f"%{txt}%",
 			"company": filters.get("company", ""),
 			"disabled": filters.get("disabled", 0),
 		},
-)
+	)
 
 
 @frappe.whitelist()
