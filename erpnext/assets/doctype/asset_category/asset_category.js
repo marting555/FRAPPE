@@ -52,4 +52,18 @@ frappe.ui.form.on("Asset Category", {
 			};
 		});
 	},
+
+	enable_cwip_accounting: function (frm) {
+		if (!frm.doc.enable_cwip_accounting) {
+			frappe.call({
+				method: "erpnext.assets.doctype.asset_category.asset_category.validate_cwip_disable",
+				args: {
+					accounts: frm.doc.accounts,
+				},
+				error: function (err) {
+					frm.set_value("enable_cwip_accounting", 1);
+				},
+			});
+		}
+	},
 });

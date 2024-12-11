@@ -5,7 +5,8 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import cint, get_link_to_form
+from frappe.query_builder import DocType, functions
+from frappe.utils import cint, flt, get_link_to_form
 
 
 class AssetCategory(Document):
@@ -103,10 +104,14 @@ class AssetCategory(Document):
 		if self.enable_cwip_accounting:
 			missing_cwip_accounts_for_company = []
 			for d in self.accounts:
-				if not d.capital_work_in_progress_account and not frappe.db.get_value(
-					"Company", d.company_name, "capital_work_in_progress_account"
-				):
-					missing_cwip_accounts_for_company.append(get_link_to_form("Company", d.company_name))
+				if not d.capital_work_in_progress_account:
+					default_cwip_account = frappe.db.get_value(
+						"Company", d.company_name, "capital_work_in_progress_account"
+					)
+					if default_cwip_account:
+						d.capital_work_in_progress_account = default_cwip_account
+					else:
+						missing_cwip_accounts_for_company.append(get_link_to_form("Company", d.company_name))
 
 			if missing_cwip_accounts_for_company:
 				msg = _("""To enable Capital Work in Progress Accounting,""") + " "
@@ -158,3 +163,35 @@ def get_asset_category_account(
 	)
 
 	return account
+
+
+@frappe.whitelist()
+def validate_cwip_disable(accounts):
+	accounts = frappe.parse_json(accounts)
+	for account in accounts:
+		cwip_account = account.get("capital_work_in_progress_account")
+
+		if cwip_account:
+			GL_Entry = DocType("GL Entry")
+			gl_entries = (
+				frappe.qb.from_(GL_Entry)
+				.select(
+					functions.Sum(GL_Entry.debit).as_("total_debit"),
+					functions.Sum(GL_Entry.credit).as_("total_credit"),
+				)
+				.where(GL_Entry.account == cwip_account)
+			).run(as_dict=True)
+
+			if gl_entries:
+				total_debit = flt(gl_entries[0].get("total_debit", 0))
+				total_credit = flt(gl_entries[0].get("total_credit", 0))
+				balance = total_debit - total_credit
+
+				if balance != 0:
+					frappe.throw(
+						_(
+							f"Cannot disable Capital Work in Progress Accounting. "
+							f"The CWIP account ({cwip_account}) has a balance of {balance:.2f}. "
+							f"Please ensure the balance is cleared."
+						)
+					)
