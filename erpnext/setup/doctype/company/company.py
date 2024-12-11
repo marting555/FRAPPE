@@ -85,6 +85,7 @@ class Company(NestedSet):
 		rgt: DF.Int
 		round_off_account: DF.Link | None
 		round_off_cost_center: DF.Link | None
+		round_off_for_opening: DF.Link | None
 		sales_monthly_history: DF.SmallText | None
 		stock_adjustment_account: DF.Link | None
 		stock_received_but_not_billed: DF.Link | None
