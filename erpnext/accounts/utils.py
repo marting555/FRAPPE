@@ -774,10 +774,9 @@ def update_reference_in_payment_entry(
 		)
 	payment_entry.set_amounts()
 
-	args = frappe._dict()
-	if d.difference_posting_date:
-		args.update({"difference_posting_date": d.difference_posting_date})
-	payment_entry.make_exchange_gain_loss_journal(args, dimensions_dict)
+	payment_entry.make_exchange_gain_loss_journal(
+		frappe._dict({"difference_posting_date": d.difference_posting_date}), dimensions_dict
+	)
 
 	if not do_not_save:
 		payment_entry.save(ignore_permissions=True)
