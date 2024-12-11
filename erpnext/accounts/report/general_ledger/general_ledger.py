@@ -370,8 +370,8 @@ def get_data_with_opening_closing(filters, account_details, accounting_dimension
 			if acc_dict.entries:
 				# opening
 				data.append({"debit_in_transaction_currency": None, "credit_in_transaction_currency": None})
-				if (not filters.group_by and not filters.voucher_no) or (
-					filters.group_by and filters.group_by != "Group by Voucher"
+				if (not filters.get("group_by") and not filters.get("voucher_no")) or (
+					filters.get("group_by") and filters.get("group_by") != "Group by Voucher"
 				):
 					data.append(acc_dict.totals.opening)
 
@@ -382,8 +382,8 @@ def get_data_with_opening_closing(filters, account_details, accounting_dimension
 					data.append(acc_dict.totals.total)
 
 				# closing
-				if (not filters.group_by and not filters.voucher_no) or (
-					filters.group_by and filters.group_by != "Group by Voucher"
+				if (not filters.get("group_by") and not filters.get("voucher_no")) or (
+					filters.get("group_by") and filters.get("group_by") != "Group by Voucher"
 				):
 					data.append(acc_dict.totals.closing)
 
