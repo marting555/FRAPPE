@@ -110,6 +110,7 @@ class PaymentEntry(AccountsController):
 		self.update_outstanding_amounts()
 		self.update_payment_schedule()
 		self.update_payment_requests()
+		self.make_advance_payment_ledger_entries()
 		self.update_advance_paid()  # advance_paid_status depends on the payment request amount
 		self.set_status()
 
@@ -190,6 +191,7 @@ class PaymentEntry(AccountsController):
 			"Repost Accounting Ledger Items",
 			"Unreconcile Payment",
 			"Unreconcile Payment Entries",
+			"Advance Payment Ledger Entry",
 		)
 		super().on_cancel()
 		self.make_gl_entries(cancel=1)
@@ -197,6 +199,7 @@ class PaymentEntry(AccountsController):
 		self.delink_advance_entry_references()
 		self.update_payment_schedule(cancel=1)
 		self.update_payment_requests(cancel=True)
+		self.make_advance_payment_ledger_entries()
 		self.update_advance_paid()  # advance_paid_status depends on the payment request amount
 		self.set_status()
 
@@ -1830,6 +1833,26 @@ class PaymentEntry(AccountsController):
 					allocated_negative_outstanding,
 				)
 
+
+	def make_advance_payment_ledger_entries(self):
+		if self.docstatus == 1 or self.docstatus == 2:
+			advance_payment_doctypes = frappe.get_hooks(
+				"advance_payment_receivable_doctypes"
+			) + frappe.get_hooks("advance_payment_payable_doctypes")
+			advance_doctype_references = [
+				x for x in self.references if x.reference_doctype in advance_payment_doctypes
+			]
+			for x in advance_doctype_references:
+				doc = frappe.new_doc("Advance Payment Ledger Entry")
+				doc.company = self.company
+				doc.voucher_type = self.doctype
+				doc.voucher_no = self.name
+				doc.against_voucher_type = x.reference_doctype
+				doc.against_voucher_no = x.reference_name
+				doc.amount = x.allocated_amount if self.docstatus == 1 else -1 * x.allocated_amount
+				doc.event = "Submit" if self.docstatus == 1 else "Cancel"
+				doc.save()
+
 	@frappe.whitelist()
 	def set_matched_payment_requests(self, matched_payment_requests):
 		"""
@@ -2476,7 +2499,9 @@ def get_party_details(company, party_type, party, date, cost_center=None):
 	account_balance = get_balance_on(party_account, date, cost_center=cost_center)
 	_party_name = "title" if party_type == "Shareholder" else party_type.lower() + "_name"
 	party_name = frappe.db.get_value(party_type, party, _party_name)
-	party_balance = get_balance_on(party_type=party_type, party=party, cost_center=cost_center)
+	party_balance = get_balance_on(
+		party_type=party_type, party=party, company=company, cost_center=cost_center
+	)
 	if party_type in ["Customer", "Supplier"]:
 		party_bank_account = get_party_bank_account(party_type, party)
 		bank_account = get_default_company_bank_account(company, party_type, party)

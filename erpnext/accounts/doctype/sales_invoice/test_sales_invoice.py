@@ -1959,7 +1959,7 @@ class TestSalesInvoice(FrappeTestCase):
 
 		# Check if SO is unlinked/replaced by SI in PE & if SO advance paid is 0
 		self.assertEqual(pe.references[0].reference_name, si.name)
-		self.assertEqual(sales_order.advance_paid, 0.0)
+		self.assertEqual(sales_order.advance_paid, 300.0)
 
 		# check outstanding after advance allocation
 		self.assertEqual(
@@ -3824,6 +3824,22 @@ class TestSalesInvoice(FrappeTestCase):
 		si.save()
 		si.submit()
 		self.assertEqual(si.remarks, f"Against Customer Order Test PO dated {format_date(nowdate())}")
+
+	def test_gl_voucher_subtype(self):
+		si = create_sales_invoice()
+		gl_entries = frappe.get_all(
+			"GL Entry",
+			filters={"voucher_type": "Sales Invoice", "voucher_no": si.name},
+			pluck="voucher_subtype",
+		)
+		self.assertTrue(all([x == "Sales Invoice" for x in gl_entries]))
+		si = create_sales_invoice(is_return=1, qty=-1)
+		gl_entries = frappe.get_all(
+			"GL Entry",
+			filters={"voucher_type": "Sales Invoice", "voucher_no": si.name},
+			pluck="voucher_subtype",
+		)
+		self.assertTrue(all([x == "Credit Note" for x in gl_entries]))
 
 
 def set_advance_flag(company, flag, default_account):

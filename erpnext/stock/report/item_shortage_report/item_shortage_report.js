@@ -15,11 +15,17 @@ frappe.query_reports["Item Shortage Report"] = {
 		{
 			fieldname: "warehouse",
 			label: __("Warehouse"),
-			fieldtype: "MultiSelectList",
-			width: "100",
-			get_data: function (txt) {
-				return frappe.db.get_link_options("Warehouse", txt);
-			},
-		},
+			fieldtype: "Link",
+			width: "80",
+			options: "Warehouse",
+			get_query: function () {
+				return {
+					filters: {
+						company: frappe.query_report.get_filter_value("company")
+					}
+				};
+			}
+		}
+		
 	],
 };

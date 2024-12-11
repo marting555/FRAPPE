@@ -2408,7 +2408,6 @@ class TestDeliveryNote(FrappeTestCase):
 		)
 
 
-
 def create_delivery_note(**args):
 	dn = frappe.new_doc("Delivery Note")
 	args = frappe._dict(args)
