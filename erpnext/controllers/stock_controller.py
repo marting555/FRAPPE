@@ -816,6 +816,15 @@ class StockController(AccountsController):
 		for dimension in dimensions:
 			if not dimension:
 				continue
+			
+			if (
+				self.doctype in ["Purchase Invoice", "Purchase Receipt"]
+				and row.get("rejected_warehouse")
+				and sl_dict.get("warehouse") == row.get("rejected_warehouse")
+			):
+				fieldname = f"rejected_{dimension.source_fieldname}"
+				sl_dict[dimension.target_fieldname] = row.get(fieldname)
+				continue
 
 			if self.doctype in [
 				"Purchase Invoice",
