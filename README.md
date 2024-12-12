@@ -48,7 +48,7 @@ You can try [Frappe Cloud](https://frappecloud.com), a simple, user-friendly and
 It takes care of installation, setup, upgrades, monitoring, maintenance and support of your Frappe deployments. It is a fully featured developer platform with an ability to manage and control multiple Frappe deployments.
 
 <div>
-	<a href="https://frappecloud.com/insights/signup" target="_blank">
+	<a href="https://erpnext-demo.frappe.cloud/app/home" target="_blank">
 		<picture>
 			<source media="(prefers-color-scheme: dark)" srcset="https://frappe.io/files/try-on-fc-white.png">
 			<img src="https://frappe.io/files/try-on-fc-black.png" alt="Try on Frappe Cloud" height="28" />
@@ -88,9 +88,9 @@ To setup the repository locally follow the steps mentioned below:
    bench --site erpnext.dev add-to-hosts
    ```
 	
-3. Get the Insights app and install it
+3. Get the ERPNext app and install it
    ```
-   # Get the Insights app
+   # Get the ERPNext app
    bench get-app https://github.com/frappe/erpnext
    
    # Install the app
