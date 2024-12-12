@@ -7,7 +7,8 @@ import frappe
 from frappe import _
 from frappe.model.meta import get_field_precision
 from frappe.utils import cint, flt, format_datetime, get_datetime
-
+from frappe.query_builder import DocType
+from frappe.query_builder.functions import Sum, Abs
 import erpnext
 from erpnext.stock.serial_batch_bundle import get_batches_from_bundle
 from erpnext.stock.serial_batch_bundle import get_serial_nos as get_serial_nos_from_bundle
