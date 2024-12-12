@@ -149,14 +149,15 @@ class SubcontractingOrder(SubcontractingController):
 
 	def validate_service_items(self):
 		purchase_order_items = [item.purchase_order_item for item in self.items]
-		self.service_items = list(
-			filter(lambda item: item.purchase_order_item in purchase_order_items, self.service_items)
-		)
+		self.service_items = [
+			service_item
+			for service_item in self.service_items
+			if service_item.purchase_order_item in purchase_order_items
+		]
 
 		for service_item in self.service_items:
 			if frappe.get_value("Item", service_item.item_code, "is_stock_item"):
-				msg = f"Service Item {service_item.item_name} must be a non-stock item."
-				frappe.throw(_(msg))
+				frappe.throw(_(f"Service Item {service_item.item_name} must be a non-stock item."))
 
 			item = next(
 				item for item in self.items if item.purchase_order_item == service_item.purchase_order_item

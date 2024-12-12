@@ -9,19 +9,29 @@ erpnext.landed_cost_taxes_and_charges.setup_triggers("Subcontracting Order");
 // this is just so that the user does not get potentially confused
 frappe.ui.form.on("Subcontracting Order Item", {
 	qty(frm, cdt, cdn) {
-		let row = locals[cdt][cdn];
+		const row = locals[cdt][cdn];
 		frappe.model.set_value(cdt, cdn, "amount", row.qty * row.rate);
-		service_item = frm.doc.service_items[row.idx - 1];
-		frappe.model.set_value(service_item.doctype, service_item.name, "qty", row.qty * row.sc_conversion_factor);
+		const service_item = frm.doc.service_items[row.idx - 1];
+		frappe.model.set_value(
+			service_item.doctype,
+			service_item.name,
+			"qty",
+			row.qty * row.sc_conversion_factor
+		);
 		frappe.model.set_value(service_item.doctype, service_item.name, "fg_item_qty", row.qty);
-		frappe.model.set_value(service_item.doctype, service_item.name, "amount", (row.qty * row.sc_conversion_factor) * service_item.rate);
+		frappe.model.set_value(
+			service_item.doctype,
+			service_item.name,
+			"amount",
+			row.qty * row.sc_conversion_factor * service_item.rate
+		);
 	},
 	before_items_remove(frm, cdt, cdn) {
-		let row = locals[cdt][cdn];
+		const row = locals[cdt][cdn];
 		frm.toggle_enable(["service_items"], true);
 		frm.get_field("service_items").grid.grid_rows[row.idx - 1].remove();
 		frm.toggle_enable(["service_items"], false);
-	}
+	},
 });
 
 frappe.ui.form.on("Subcontracting Order", {

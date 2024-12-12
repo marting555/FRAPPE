@@ -1025,7 +1025,7 @@ class TestPurchaseOrder(IntegrationTestCase):
 		)
 
 		def update_items(po, qty):
-			trans_items = [po.items[0].as_dict()]
+			trans_items = [po.items[0].as_dict().update({"docname": po.items[0].name})]
 			trans_items[0]["qty"] = qty
 			trans_items[0]["fg_item_qty"] = qty
 			trans_items = json.dumps(trans_items, default=str)
@@ -1112,7 +1112,7 @@ class TestPurchaseOrder(IntegrationTestCase):
 		self.assertEqual(sco.service_items[1].qty, 12.5)
 
 		sco = make_subcontracting_order(po.name)
-		
+
 		sco.items[0].qty = 6
 
 		# Test - 6: Saving document should not be allowed if Quantity exceeds available Subcontracting Quantity of any Purchase Order Item
@@ -1143,7 +1143,7 @@ class TestPurchaseOrder(IntegrationTestCase):
 		sco = make_subcontracting_order(po.name)
 		sco.save()
 		sco.submit()
-		
+
 		# Test - 8: Since this PO is now fully subcontracted, creating a new SCO from it should throw error
 		self.assertRaises(frappe.ValidationError, make_subcontracting_order, po.name)
 
@@ -1239,6 +1239,7 @@ class TestPurchaseOrder(IntegrationTestCase):
 		po.reload()
 		self.assertEqual(po.per_billed, 100)
 
+
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
@@ -1284,6 +1285,7 @@ def create_po_for_sc_testing():
 		is_subcontracted=1,
 		supplier_warehouse="_Test Warehouse 1 - _TC",
 	)
+
 
 def prepare_data_for_internal_transfer():
 	from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_internal_supplier
