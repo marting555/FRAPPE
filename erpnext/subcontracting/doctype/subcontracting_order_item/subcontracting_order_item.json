@@ -189,7 +189,7 @@
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Rate",
-   "options": "currency",
+   "options": "Company:company:default_currency",
    "read_only": 1,
    "reqd": 1
   },
@@ -203,7 +203,7 @@
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Amount",
-   "options": "currency",
+   "options": "Company:company:default_currency",
    "read_only": 1,
    "reqd": 1
   },
@@ -273,6 +273,7 @@
    "fieldname": "service_cost_per_qty",
    "fieldtype": "Currency",
    "label": "Service Cost Per Qty",
+   "options": "Company:company:default_currency",
    "read_only": 1,
    "reqd": 1
   },
@@ -281,6 +282,7 @@
    "fieldname": "additional_cost_per_qty",
    "fieldtype": "Currency",
    "label": "Additional Cost Per Qty",
+   "options": "Company:company:default_currency",
    "read_only": 1
   },
   {
@@ -288,6 +290,7 @@
    "fieldtype": "Currency",
    "label": "Raw Material Cost Per Qty",
    "no_copy": 1,
+   "options": "Company:company:default_currency",
    "read_only": 1
   },
   {
