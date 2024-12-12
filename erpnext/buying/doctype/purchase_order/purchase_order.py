@@ -868,6 +868,7 @@ def make_inter_company_sales_order(source_name, target_doc=None):
 
 	return make_inter_company_transaction("Purchase Order", source_name, target_doc)
 
+
 @frappe.whitelist()
 def make_subcontracting_order(source_name, target_doc=None, save=False, submit=False, notify=False):
 	if not is_po_fully_subcontracted(source_name):
@@ -895,14 +896,16 @@ def make_subcontracting_order(source_name, target_doc=None, save=False, submit=F
 	else:
 		frappe.throw("This PO has been fully subcontracted.")
 
+
 def is_po_fully_subcontracted(po_name):
 	table = frappe.qb.DocType("Purchase Order Item")
 	query = (
 		frappe.qb.from_(table)
-				 .select(table.name)
-				 .where((table.parent == po_name) & (table.qty != table.sco_qty))
+		.select(table.name)
+		.where((table.parent == po_name) & (table.qty != table.sco_qty))
 	)
 	return not query.run(as_dict=True)
+
 
 def get_mapped_subcontracting_order(source_name, target_doc=None):
 	def post_process(source_doc, target_doc):
@@ -918,7 +921,7 @@ def get_mapped_subcontracting_order(source_name, target_doc=None):
 			else:
 				for idx, item in enumerate(target_doc.items):
 					item.warehouse = source_doc.items[idx].warehouse
-		
+
 		for idx, item in enumerate(target_doc.items):
 			item.job_card = source_doc.items[idx].job_card
 			if not target_doc.supplier_warehouse:
@@ -951,10 +954,10 @@ def get_mapped_subcontracting_order(source_name, target_doc=None):
 				"field_map": {
 					"name": "purchase_order_item",
 					"material_request": "material_request",
-					"material_request_item": "material_request_item"
+					"material_request_item": "material_request_item",
 				},
 				"field_no_map": ["qty", "fg_item_qty", "amount"],
-				"condition": lambda item: item.qty != item.sco_qty
+				"condition": lambda item: item.qty != item.sco_qty,
 			},
 		},
 		target_doc,
