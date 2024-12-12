@@ -252,6 +252,9 @@ frappe.ui.form.on("BOM", {
 					};
 				},
 			});
+		}
+
+		if (!skip_qty_field) {
 			fields.push({
 				fieldtype: "Check",
 				label: __("Use Multi-Level BOM"),
@@ -304,6 +307,13 @@ frappe.ui.form.on("BOM", {
 						fieldtype: "Link",
 						in_list_view: 1,
 						reqd: 1,
+						get_query() {
+							return {
+								filters: {
+									has_variants: 1,
+								},
+							};
+						},
 					},
 					{
 						fieldname: "variant_item_code",
@@ -323,6 +333,13 @@ frappe.ui.form.on("BOM", {
 									variant_of: data.item_code,
 								},
 							};
+						},
+						change() {
+							let doc = this.doc;
+							if (!doc.qty) {
+								doc.qty = 1.0;
+								this.grid.set_value("qty", 1.0, doc);
+							}
 						},
 					},
 					{
