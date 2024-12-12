@@ -158,10 +158,17 @@ class WorkOrder(Document):
 		self.validate_operation_time()
 		self.status = self.get_status()
 		self.validate_workstation_type()
+		if self.source_warehouse:
+			self.set_warehouses()
 
 		validate_uom_is_integer(self, "stock_uom", ["qty", "produced_qty"])
 
 		self.set_required_items(reset_only_qty=len(self.get("required_items")))
+
+	def set_warehouses(self):
+		for row in self.required_items:
+			if not row.source_warehouse:
+				row.source_warehouse = self.source_warehouse
 
 	def validate_workstation_type(self):
 		if not self.docstatus.is_submitted():

@@ -422,7 +422,6 @@ class SerialandBatchBundle(Document):
 				valuation_field = "rate"
 				child_table = "Subcontracting Receipt Item"
 
-		precision = frappe.get_precision(child_table, valuation_field) or 2
 
 		if not rate and self.voucher_detail_no and self.voucher_no:
 			rate = frappe.db.get_value(child_table, self.voucher_detail_no, valuation_field)
@@ -433,9 +432,9 @@ class SerialandBatchBundle(Document):
 			elif (d.incoming_rate == rate) and d.qty and d.stock_value_difference:
 				continue
 
-			d.incoming_rate = flt(rate, precision)
+			d.incoming_rate = rate
 			if d.qty:
-				d.stock_value_difference = flt(d.qty) * flt(d.incoming_rate)
+				d.stock_value_difference = d.qty * d.incoming_rate
 
 			if save:
 				d.db_set(
@@ -960,6 +959,9 @@ class SerialandBatchBundle(Document):
 			self.voucher_type in ["Purchase Invoice", "Purchase Receipt"]
 			and frappe.db.get_value(self.voucher_type, self.voucher_no, "docstatus") == 1
 		):
+			return
+		
+		if self.voucher_type in ["Sales Invoice", "Delivery Note"] and self.type_of_transaction == "Inward":
 			return
 
 		if not self.has_batch_no:

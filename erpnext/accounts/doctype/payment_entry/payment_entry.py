@@ -1938,6 +1938,7 @@ def get_matched_payment_request_of_references(references=None):
 		.where(Tuple(PR.reference_doctype, PR.reference_name, PR.outstanding_amount).isin(refs))
 		.where(PR.status != "Paid")
 		.where(PR.docstatus == 1)
+		.where(PR.outstanding_amount > 0)  # to avoid old PRs with 0 outstanding amount
 		.groupby(PR.reference_doctype, PR.reference_name, PR.outstanding_amount, PR.name  )
 	)
 
