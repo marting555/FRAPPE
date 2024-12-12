@@ -13,9 +13,9 @@
 </div>
 
 <div align="center">
-	<img src="./erpnext/public/images/v16/p_l_graph.png" alt="Profit and Loss"/>
-	<img src="./erpnext/public/images/v16/bom_browser.jpg" alt="BOM Browser"/>
-	<img src="./erpnext/public/images/v16/tasks.png" alt="Tasks"/>
+	<img src="./erpnext/public/images/v16/p_l_graph.png" alt="Profit and Loss" width="72%"/>
+	<img src="./erpnext/public/images/v16/bom_browser.jpg" alt="BOM Browser" width="72%"/>
+	<img src="./erpnext/public/images/v16/tasks.png" alt="Tasks" width="72%"/>
 </div>
 
 <br />
