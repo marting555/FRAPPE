@@ -11,6 +11,14 @@
 [![docker pulls](https://img.shields.io/docker/pulls/frappe/erpnext-worker.svg)](https://hub.docker.com/r/frappe/erpnext-worker)
 
 </div>
+
+<div align="center">
+	<img src="./erpnext/public/images/v16/p_l_graph.png" alt="Profit and Loss"/>
+	<img src="./erpnext/public/images/v16/bom_browser.jpg" alt="BOM Browser"/>
+	<img src="./erpnext/public/images/v16/tasks.png" alt="Tasks"/>
+</div>
+
+<br />
 <div align="center">
 	<a href="https://erpnext-demo.frappe.cloud/app/home">Live Demo</a>
 	-
