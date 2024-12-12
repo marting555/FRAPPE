@@ -65,6 +65,7 @@
   "grand_total",
   "rounding_adjustment",
   "rounded_total",
+  "disable_rounded_total",
   "in_words",
   "section_break_44",
   "apply_discount_on",
@@ -650,6 +651,7 @@
    "width": "200px"
   },
   {
+   "depends_on": "eval:!doc.disable_rounded_total",
    "fieldname": "base_rounding_adjustment",
    "fieldtype": "Currency",
    "label": "Rounding Adjustment (Company Currency)",
@@ -698,6 +700,7 @@
    "width": "200px"
   },
   {
+   "depends_on": "eval:!doc.disable_rounded_total",
    "fieldname": "rounding_adjustment",
    "fieldtype": "Currency",
    "label": "Rounding Adjustment",
