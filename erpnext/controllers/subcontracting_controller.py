@@ -93,10 +93,11 @@ class SubcontractingController(StockController):
 		table = DocType("Purchase Order Item")
 		query = (
 			frappe.qb.from_(table)
-					 .select(table.name, table.qty, table.sco_qty, table.fg_item_qty)
+					 .select(table.name, table.qty, table.sco_qty)
 					 .where(table.parent == self.purchase_order)
 		)
-		po_items = query.run(as_dict=True)
+		po_wise_qty = {item.name: item.qty - item.sco_qty for item in query.run(as_dict=True)}
+
 		for item in self.items:
 			is_stock_item, is_sub_contracted_item = frappe.get_value(
 				"Item", item.item_code, ["is_stock_item", "is_sub_contracted_item"]
@@ -111,8 +112,7 @@ class SubcontractingController(StockController):
 						_("Row {0}: Item {1} must be a subcontracted item.").format(item.idx, item.item_name)
 					)
 
-				po_item = next(po_item for po_item in po_items if po_item.name == item.purchase_order_item)
-				if self.doctype not in "Subcontracting Receipt" and item.qty > ((po_item.qty - po_item.sco_qty) / item.sc_conversion_factor):
+				if self.doctype not in "Subcontracting Receipt" and item.qty > flt(po_wise_qty.get(item.purchase_order_item)) / item.sc_conversion_factor:
 					frappe.throw(
 						_("Row {0}: Item {1}'s quantity cannot be higher than the available quantity.").format(item.idx, item.item_name)
 					)
