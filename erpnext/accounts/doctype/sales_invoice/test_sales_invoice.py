@@ -2925,6 +2925,18 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertTrue(jv)
 		self.assertEqual(jv[0], si.grand_total)
 
+	def test_total_billed_amount(self):
+		si = create_sales_invoice(do_not_submit=True)
+		project = frappe.new_doc("Project")
+		project.project_name = "Test Total Billed Amount"
+		project.save()
+		si.project = project.name
+		si.save()
+		si.submit()
+		doc = frappe.get_doc("Project", project.name)
+		self.assertEqual(doc.total_billed_amount, si.grand_total)
+
+
 		party_link.delete()
 		frappe.db.set_single_value("Accounts Settings", "enable_common_party_accounting", 0)
 
