@@ -1999,7 +1999,7 @@ class QueryPaymentLedger:
 			.where(Criterion.all(self.common_filter))
 			.where(Criterion.all(self.dimensions_filter))
 			.where(Criterion.all(self.voucher_posting_date))
-			.groupby(ple.account, ple.voucher_type, ple.voucher_no, ple.party_type, ple.party, ple.posting_date, ple.due_date, ple.account_currency, ple.cost_center)
+			.groupby(ple.account, ple.voucher_type, ple.voucher_no, ple.party_type, ple.party, ple.posting_date, ple.due_date, ple.account_currency, ple.cost_center, ple.remarks)
 		)
 
 		# build query for voucher outstanding
@@ -2070,7 +2070,8 @@ class QueryPaymentLedger:
 				Table("vouchers").amount,
 				Table("outstanding").amount,
 				Table("vouchers").amount_in_account_currency,
-				Table("outstanding").amount_in_account_currency
+				Table("outstanding").amount_in_account_currency,
+				Table("vouchers").remarks
 					)
 			.where(Criterion.all(filter_on_outstanding_amount))
 		)
