@@ -870,9 +870,7 @@ def make_inter_company_sales_order(source_name, target_doc=None):
 
 @frappe.whitelist()
 def make_subcontracting_order(source_name, target_doc=None, save=False, submit=False, notify=False):
-	is_sco_full = all(po_item.qty == po_item.sco_qty for po_item in frappe.get_doc("Purchase Order", source_name).items)
-	
-	if not is_sco_full:
+	if not is_po_fully_subcontracted(source_name):
 		target_doc = get_mapped_subcontracting_order(source_name, target_doc)
 
 		if (save or submit) and frappe.has_permission(target_doc.doctype, "create"):
@@ -897,6 +895,14 @@ def make_subcontracting_order(source_name, target_doc=None, save=False, submit=F
 	else:
 		frappe.throw("This PO has been fully subcontracted.")
 
+def is_po_fully_subcontracted(po_name):
+	table = frappe.qb.DocType("Purchase Order Item")
+	query = (
+		frappe.qb.from_(table)
+				 .select(table.name)
+				 .where((table.parent == po_name) & (table.qty != table.sco_qty))
+	)
+	return not query.run(as_dict=True)
 
 def get_mapped_subcontracting_order(source_name, target_doc=None):
 	def post_process(source_doc, target_doc):

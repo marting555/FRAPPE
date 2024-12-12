@@ -18,8 +18,6 @@ from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 from erpnext.stock.serial_batch_bundle import SerialBatchCreation, get_serial_nos_from_bundle
 from erpnext.stock.utils import get_incoming_rate
 
-from frappe.query_builder import DocType
-
 class SubcontractingController(StockController):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -90,14 +88,7 @@ class SubcontractingController(StockController):
 				item.conversion_factor = 1
 
 	def validate_items(self):
-		table = DocType("Purchase Order Item")
-		query = (
-			frappe.qb.from_(table)
-					 .select(table.name, table.qty, table.sco_qty)
-					 .where(table.parent == self.purchase_order)
-		)
-		po_wise_qty = {item.name: item.qty - item.sco_qty for item in query.run(as_dict=True)}
-
+		pending_sco_qty = get_pending_sco_qty(self.purchase_order)
 		for item in self.items:
 			is_stock_item, is_sub_contracted_item = frappe.get_value(
 				"Item", item.item_code, ["is_stock_item", "is_sub_contracted_item"]
@@ -112,7 +103,7 @@ class SubcontractingController(StockController):
 						_("Row {0}: Item {1} must be a subcontracted item.").format(item.idx, item.item_name)
 					)
 
-				if self.doctype not in "Subcontracting Receipt" and item.qty > flt(po_wise_qty.get(item.purchase_order_item)) / item.sc_conversion_factor:
+				if self.doctype not in "Subcontracting Receipt" and item.qty > flt(pending_sco_qty.get(item.purchase_order_item)) / item.sc_conversion_factor:
 					frappe.throw(
 						_("Row {0}: Item {1}'s quantity cannot be higher than the available quantity.").format(item.idx, item.item_name)
 					)
@@ -1130,6 +1121,14 @@ def get_item_details(items):
 
 	return item_details
 
+def get_pending_sco_qty(po_name):
+	table = frappe.qb.DocType("Purchase Order Item")
+	query = (
+		frappe.qb.from_(table)
+				 .select(table.name, table.qty, table.sco_qty)
+				 .where(table.parent == po_name)
+	)
+	return {item.name: item.qty - item.sco_qty for item in query.run(as_dict=True)}
 
 @frappe.whitelist()
 def make_rm_stock_entry(
