@@ -958,8 +958,11 @@ class TestPaymentEntry(FrappeTestCase):
 
 
 	def test_gl_of_multi_currency_payment_transaction(self):
-		from erpnext.setup.doctype.currency_exchange.test_currency_exchange import save_new_records
-		save_new_records(self.globalTestRecords["Currency Exchange"])
+		from erpnext.setup.doctype.currency_exchange.test_currency_exchange import (
+			save_new_records,
+			test_records,
+		)
+		save_new_records(test_records)
 		paid_from = create_account(
 			parent_account="Current Liabilities - _TC",
 			account_name="_Test Cash USD",
@@ -995,8 +998,8 @@ class TestPaymentEntry(FrappeTestCase):
 			.run()
 		)
 		expected_gl_entries = (
-			(paid_from, 0.0, 8440.0, 0.0, 100.0, 0.0, 8440.0),
-			("_Test Payable USD - _TC", 8440.0, 0.0, 100.0, 0.0, 8440.0, 0.0),
+			(paid_from, 0.0, 8440.0, 0.0, 100.0, 0.0, 100.0),
+			("_Test Payable USD - _TC", 8440.0, 0.0, 100.0, 0.0, 100.0, 0.0),
 		)
 		self.assertEqual(gl_entries, expected_gl_entries)
 
