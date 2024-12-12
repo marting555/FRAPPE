@@ -894,7 +894,7 @@ def make_subcontracting_order(source_name, target_doc=None, save=False, submit=F
 
 		return target_doc
 	else:
-		frappe.throw("This PO has been fully subcontracted.")
+		frappe.throw(_("This PO has been fully subcontracted."))
 
 
 def is_po_fully_subcontracted(po_name):

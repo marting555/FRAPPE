@@ -89,7 +89,6 @@ class SubcontractingController(StockController):
 				item.conversion_factor = 1
 
 	def validate_items(self):
-		pending_sco_qty = get_pending_sco_qty(self.purchase_order)
 		for item in self.items:
 			is_stock_item, is_sub_contracted_item = frappe.get_value(
 				"Item", item.item_code, ["is_stock_item", "is_sub_contracted_item"]
@@ -107,7 +106,8 @@ class SubcontractingController(StockController):
 				if (
 					self.doctype not in "Subcontracting Receipt"
 					and item.qty
-					> flt(pending_sco_qty.get(item.purchase_order_item)) / item.sc_conversion_factor
+					> flt(get_pending_sco_qty(self.purchase_order).get(item.purchase_order_item))
+					/ item.sc_conversion_factor
 				):
 					frappe.throw(
 						_(
