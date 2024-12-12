@@ -7,7 +7,8 @@ import frappe
 from frappe import _
 from frappe.model.meta import get_field_precision
 from frappe.utils import cint, flt, format_datetime, get_datetime
-
+from frappe.query_builder import DocType
+from frappe.query_builder.functions import Sum, Abs
 import erpnext
 from erpnext.stock.serial_batch_bundle import get_batches_from_bundle
 from erpnext.stock.serial_batch_bundle import get_serial_nos as get_serial_nos_from_bundle
@@ -600,7 +601,7 @@ def make_return_doc(doctype: str, source_name: str, target_doc=None, return_agai
 			if default_warehouse_for_sales_return:
 				target_doc.warehouse = default_warehouse_for_sales_return
 
-		if not source_doc.use_serial_batch_fields and source_doc.serial_and_batch_bundle:
+		# if not source_doc.use_serial_batch_fields and source_doc.serial_and_batch_bundle:
 			target_doc.serial_no = None
 			target_doc.batch_no = None
 
