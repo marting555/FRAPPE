@@ -73,11 +73,6 @@ class SellingController(StockController):
 		if customer:
 			from erpnext.accounts.party import _get_party_details
 
-			fetch_payment_terms_template = False
-			if self.get("__islocal") or self.company != frappe.db.get_value(
-				self.doctype, self.name, "company"
-			):
-				fetch_payment_terms_template = True
 
 			party_details = _get_party_details(
 				customer,
@@ -85,7 +80,7 @@ class SellingController(StockController):
 				doctype=self.doctype,
 				company=self.company,
 				posting_date=self.get("posting_date"),
-				fetch_payment_terms_template=fetch_payment_terms_template,
+				fetch_payment_terms_template=self.has_value_changed("company"),
 				party_address=self.customer_address,
 				shipping_address=self.shipping_address_name,
 				company_address=self.get("company_address"),
