@@ -6,7 +6,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import get_link_to_form
-
+from frappe.query_builder import Criterion
 
 class ProductBundle(Document):
 	# begin: auto-generated types
@@ -90,6 +90,10 @@ class ProductBundle(Document):
 @frappe.validate_and_sanitize_search_inputs
 def get_new_item_code(doctype, txt, searchfield, start, page_len, filters):
 	product_bundles = frappe.db.get_list("Product Bundle", {"disabled": 0}, pluck="name")
+	if not searchfield or searchfield == "name":
+		searchfield = frappe.get_meta("Item").get("search_fields")
+	searchfield = searchfield.split(",")
+	searchfield.append("name")
 
 	item = frappe.qb.DocType("Item")
 	conditions = (item.is_stock_item == 0) & (item[searchfield].like(f"%{txt}%"))
@@ -104,6 +108,9 @@ def get_new_item_code(doctype, txt, searchfield, start, page_len, filters):
 		.limit(page_len)
 		.offset(start)
 	)
+
+	if searchfield:
+		query = query.where(Criterion.any([item[fieldname].like(f"%{txt}%") for fieldname in searchfield]))
 
 	if product_bundles:
 		query = query.where(item.name.notin(product_bundles))
