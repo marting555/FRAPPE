@@ -176,8 +176,13 @@ class BOM(WebsiteGenerator):
 
 		search_key = f"{self.doctype}-{self.item}%"
 		existing_boms = frappe.get_all(
-			"BOM", filters={"name": ("like", search_key), "amended_from": ["is", "not set"]}, pluck="name"
+			"BOM", filters={"name": search_key, "amended_from": ["is", "not set"]}, pluck="name"
 		)
+
+		if not existing_boms:
+			existing_boms = frappe.get_all(
+				"BOM", filters={"name": ("like", search_key), "amended_from": ["is", "not set"]}, pluck="name"
+			)
 
 		if existing_boms:
 			index = self.get_next_version_index(existing_boms)
@@ -200,20 +205,21 @@ class BOM(WebsiteGenerator):
 			name = f"{prefix}-{truncated_item_name}-{suffix}"
 
 		if frappe.db.exists("BOM", name):
-			conflicting_bom = frappe.get_doc("BOM", name)
+			existing_boms = frappe.get_all(
+				"BOM", filters={"name": ("like", search_key), "amended_from": ["is", "not set"]}, pluck="name"
+			)
 
-			if conflicting_bom.item != self.item:
-				msg = _("A BOM with name {0} already exists for item {1}.").format(
-					frappe.bold(name), frappe.bold(conflicting_bom.item)
-				)
-
-				frappe.throw(
-					_("{0}{1} Did you rename the item? Please contact Administrator / Tech support").format(
-						msg, "<br>"
-					)
-				)
+			index = self.get_index_for_bom(existing_boms)
+			suffix = "%.3i" % index
+			name = f"{prefix}-{self.item}-{suffix}"
 
 		self.name = name
+	
+	def get_index_for_bom(self, existing_boms):
+		index = 1
+		if existing_boms:
+			index = self.get_next_version_index(existing_boms)
+		return index
 
 	@staticmethod
 	def get_next_version_index(existing_boms: list[str]) -> int:
