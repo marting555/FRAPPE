@@ -103,7 +103,10 @@ frappe.ui.form.on("Purchase Order", {
 	get_materials_from_supplier: function (frm) {
 		let po_details = [];
 
-		if (frm.doc.supplied_items && (flt(frm.doc.per_received, 2) == 100 || frm.doc.status === "Closed")) {
+		if (
+			frm.doc.supplied_items &&
+			(flt(frm.doc.per_received, precision("per_received")) == 100 || frm.doc.status === "Closed")
+		) {
 			frm.doc.supplied_items.forEach((d) => {
 				if (d.total_supplied_qty && d.total_supplied_qty != d.consumed_qty) {
 					po_details.push(d.name);
@@ -399,8 +402,8 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 			if (!["Closed", "Delivered"].includes(doc.status)) {
 				if (
 					this.frm.doc.status !== "Closed" &&
-					flt(this.frm.doc.per_received, 2) < 100 &&
-					flt(this.frm.doc.per_billed, 2) < 100
+					flt(this.frm.doc.per_received, precision("per_received")) < 100 &&
+					flt(this.frm.doc.per_billed, precision("per_billed")) < 100
 				) {
 					if (!this.frm.doc.__onload || this.frm.doc.__onload.can_update_items) {
 						this.frm.add_custom_button(__("Update Items"), () => {
@@ -414,7 +417,10 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 					}
 				}
 				if (this.frm.has_perm("submit")) {
-					if (flt(doc.per_billed, 2) < 100 || flt(doc.per_received, 2) < 100) {
+					if (
+						flt(doc.per_billed, precision("per_billed")) < 100 ||
+						flt(doc.per_received, precision("per_received")) < 100
+					) {
 						if (doc.status != "On Hold") {
 							this.frm.add_custom_button(
 								__("Hold"),
@@ -454,6 +460,7 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 				if (doc.status != "On Hold") {
 					if (flt(doc.per_received) < 100 && allow_receipt) {
 						cur_frm.add_custom_button(
+							
 							__("Purchase Receipt"),
 							this.make_purchase_receipt,
 							__("Create")
@@ -485,7 +492,7 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 							__("Create")
 						);
 
-					if (flt(doc.per_billed, 2) < 100 && doc.status != "Delivered") {
+						if (flt(doc.per_billed, precision("per_billed")) < 100 && doc.status != "Delivered") {
 						this.frm.add_custom_button(
 							__("Payment"),
 							() => this.make_payment_entry(),
@@ -493,7 +500,7 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 						);
 					}
 
-					if (flt(doc.per_billed, 2) < 100) {
+					if (flt(doc.per_billed, precision("per_billed")) < 100) {
 						this.frm.add_custom_button(
 							__("Payment Request"),
 							function () {
