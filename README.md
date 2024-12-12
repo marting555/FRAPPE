@@ -1,6 +1,6 @@
 <div align="center">
     <a href="https://erpnext.com">
-	<img src="./erpnext/public/images/v16/erpnext.svg" alt="ERPNext Logo"/>
+	<img src="./erpnext/public/images/v16/erpnext.svg" alt="ERPNext Logo" height="80px" width="80xp"/>
     </a>
     <h2>ERPNext</h2>
     <p align="center">
@@ -13,12 +13,14 @@
 </div>
 
 <div align="center">
-	<img src="./erpnext/public/images/v16/p_l_graph.png" alt="Profit and Loss" width="72%" style="border-radius: 10px"/>
-	<img src="./erpnext/public/images/v16/bom_browser.jpg" alt="BOM Browser" width="72%" style="border-radius: 10px"/>
-	<img src="./erpnext/public/images/v16/tasks.png" alt="Tasks" width="72%" style="border-radius: 10px"/>
+<details>
+<summary>Screenshots</summary>
+	<img src="./erpnext/public/images/v16/p_l_graph.png" alt="Profit and Loss" width="72%"/>
+	<img src="./erpnext/public/images/v16/bom_browser.jpg" alt="BOM Browser" width="72%"/>
+	<img src="./erpnext/public/images/v16/tasks.png" alt="Tasks" width="72%"/>
 </div>
+</details>
 
-<br />
 <div align="center">
 	<a href="https://erpnext-demo.frappe.cloud/app/home">Live Demo</a>
 	-
@@ -31,7 +33,7 @@
 
 100% Open-Source ERP system to help you run your business.
 
-## Key Features
+### Key Features
 
 - **Accounting**: All the tools you need to manage cash flow in one place, right from recording transactions to summarizing and analyzing financial reports.
 - **Order Management**: Track inventory levels, replenish stock, and manage sales orders, customers, suppliers, shipments, deliverables, and order fulfillment.
@@ -41,7 +43,7 @@
 
 <a href="https://erpnext.com">And More</a>
 
-## Under the Hood
+### Under the Hood
 
 - [**Frappe Framework**](https://github.com/frappe/frappe): A full-stack web application framework written in Python and Javascript. The framework provides a robust foundation for building web applications, including a database abstraction layer, user authentication, and a REST API.
 
@@ -126,7 +128,8 @@ To setup the repository locally follow the steps mentioned below:
 
 Please read our [Logo and Trademark Policy](TRADEMARK_POLICY.md).
 
-<h2></h2>
+<br />
+<br />
 <div align="center" style="padding-top: 0.75rem;">
 	<a href="https://frappe.io" target="_blank">
 		<picture>
