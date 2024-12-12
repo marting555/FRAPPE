@@ -601,7 +601,7 @@ def make_return_doc(doctype: str, source_name: str, target_doc=None, return_agai
 			if default_warehouse_for_sales_return:
 				target_doc.warehouse = default_warehouse_for_sales_return
 
-		# if not source_doc.use_serial_batch_fields and source_doc.serial_and_batch_bundle:
+		if not source_doc.use_serial_batch_fields and source_doc.serial_and_batch_bundle:
 			target_doc.serial_no = None
 			target_doc.batch_no = None
 
