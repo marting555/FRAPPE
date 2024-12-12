@@ -1177,7 +1177,10 @@ def get_events(start, end, filters=None):
 		""",
 		{"start": start, "end": end},
 		as_dict=True,
-		update={"allDay": 0},
+		update={
+			"allDay": 0,
+			"convertToUserTz": 0,
+		},
 	)
 	return data
 
