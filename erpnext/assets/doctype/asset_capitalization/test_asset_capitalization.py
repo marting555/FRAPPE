@@ -1,9 +1,9 @@
 # Copyright (c) 2021, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
-
 import unittest
 
 import frappe
+from frappe.tests import IntegrationTestCase
 from frappe.utils import cint, flt, getdate, now_datetime
 
 from erpnext.assets.doctype.asset.depreciation import post_depreciation_entries
@@ -21,7 +21,7 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 )
 
 
-class TestAssetCapitalization(unittest.TestCase):
+class TestAssetCapitalization(IntegrationTestCase):
 	def setUp(self):
 		set_depreciation_settings_in_company()
 		create_asset_data()
@@ -31,6 +31,12 @@ class TestAssetCapitalization(unittest.TestCase):
 	def test_capitalization_with_perpetual_inventory(self):
 		company = "_Test Company with perpetual inventory"
 		set_depreciation_settings_in_company(company=company)
+		name = frappe.db.get_value(
+			"Asset Category Account",
+			filters={"parent": "Computers", "company_name": company},
+			fieldname=["name"],
+		)
+		frappe.db.set_value("Asset Category Account", name, "capital_work_in_progress_account", "")
 
 		# Variables
 		consumed_asset_value = 100000
@@ -215,6 +221,12 @@ class TestAssetCapitalization(unittest.TestCase):
 	def test_capitalization_with_wip_composite_asset(self):
 		company = "_Test Company with perpetual inventory"
 		set_depreciation_settings_in_company(company=company)
+		name = frappe.db.get_value(
+			"Asset Category Account",
+			filters={"parent": "Computers", "company_name": company},
+			fieldname=["name"],
+		)
+		frappe.db.set_value("Asset Category Account", name, "capital_work_in_progress_account", "")
 
 		stock_rate = 1000
 		stock_qty = 2

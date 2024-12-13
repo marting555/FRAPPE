@@ -176,16 +176,39 @@ class WorkOrder(Document):
 		self.validate_operation_time()
 		self.status = self.get_status()
 		self.validate_workstation_type()
+		self.reset_use_multi_level_bom()
+
+		if self.source_warehouse:
+			self.set_warehouses()
 
 		validate_uom_is_integer(self, "stock_uom", ["qty", "produced_qty"])
 
 		self.set_required_items(reset_only_qty=len(self.get("required_items")))
 
+	def set_warehouses(self):
+		for row in self.required_items:
+			if not row.source_warehouse:
+				row.source_warehouse = self.source_warehouse
+
+	def reset_use_multi_level_bom(self):
+		if self.is_new():
+			return
+
+		before_save_obj = self.get_doc_before_save()
+		if before_save_obj.use_multi_level_bom != self.use_multi_level_bom:
+			self.get_items_and_operations_from_bom()
+
 	def validate_workstation_type(self):
+		if not self.docstatus.is_submitted():
+			return
+
 		for row in self.operations:
 			if not row.workstation and not row.workstation_type:
-				msg = f"Row {row.idx}: Workstation or Workstation Type is mandatory for an operation {row.operation}"
-				frappe.throw(_(msg))
+				frappe.throw(
+					_("Row {0}: Workstation or Workstation Type is mandatory for an operation {1}").format(
+						row.idx, row.operation
+					)
+				)
 
 	def validate_sales_order(self):
 		if self.sales_order:
@@ -543,7 +566,6 @@ class WorkOrder(Document):
 	def delete_auto_created_batch_and_serial_no(self):
 		for row in frappe.get_all("Serial No", filters={"work_order": self.name}):
 			frappe.delete_doc("Serial No", row.name)
-			self.db_set("serial_no", "")
 
 		for row in frappe.get_all("Batch", filters={"reference_name": self.name}):
 			frappe.delete_doc("Batch", row.name)
@@ -1315,7 +1337,7 @@ def get_item_details(item, project=None, skip_bom_info=False, throw=True):
 
 
 @frappe.whitelist()
-def make_work_order(bom_no, item, qty=0, project=None, variant_items=None):
+def make_work_order(bom_no, item, qty=0, project=None, variant_items=None, use_multi_level_bom=None):
 	if not frappe.has_permission("Work Order", "write"):
 		frappe.throw(_("Not permitted"), frappe.PermissionError)
 
@@ -1326,12 +1348,13 @@ def make_work_order(bom_no, item, qty=0, project=None, variant_items=None):
 	wo_doc.production_item = item
 	wo_doc.update(item_details)
 	wo_doc.bom_no = bom_no
+	wo_doc.use_multi_level_bom = cint(use_multi_level_bom)
 
 	if flt(qty) > 0:
 		wo_doc.qty = flt(qty)
 		wo_doc.get_items_and_operations_from_bom()
 
-	if variant_items:
+	if variant_items and not wo_doc.use_multi_level_bom:
 		add_variant_item(variant_items, wo_doc, bom_no, "required_items")
 
 	return wo_doc
@@ -1375,7 +1398,20 @@ def add_variant_item(variant_items, wo_doc, bom_no, table_name="items"):
 
 		args["amount"] = flt(args.get("required_qty")) * flt(args.get("rate"))
 		args["uom"] = item_data.stock_uom
-		wo_doc.append(table_name, args)
+
+		existing_row = (
+			get_template_rm_item(wo_doc, item.get("item_code")) if table_name == "required_items" else None
+		)
+		if existing_row:
+			existing_row.update(args)
+		else:
+			wo_doc.append(table_name, args)
+
+
+def get_template_rm_item(wo_doc, item_code):
+	for row in wo_doc.required_items:
+		if row.item_code == item_code:
+			return row
 
 
 @frappe.whitelist()
@@ -1631,6 +1667,7 @@ def create_job_card(work_order, row, enable_capacity_planning=False, auto_create
 			"sequence_id": row.get("sequence_id"),
 			"hour_rate": row.get("hour_rate"),
 			"serial_no": row.get("serial_no"),
+			"time_required": row.get("time_in_mins"),
 			"source_warehouse": row.get("source_warehouse"),
 			"target_warehouse": row.get("fg_warehouse"),
 			"wip_warehouse": work_order.wip_warehouse or row.get("wip_warehouse"),

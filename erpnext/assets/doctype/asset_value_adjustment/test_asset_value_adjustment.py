@@ -1,9 +1,9 @@
 # Copyright (c) 2018, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
-
 import unittest
 
 import frappe
+from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, cstr, get_last_day, getdate, nowdate
 
 from erpnext.assets.doctype.asset.asset import get_asset_value_after_depreciation
@@ -16,7 +16,7 @@ from erpnext.assets.doctype.asset_repair.test_asset_repair import create_asset_r
 from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 
 
-class TestAssetValueAdjustment(unittest.TestCase):
+class TestAssetValueAdjustment(IntegrationTestCase):
 	def setUp(self):
 		create_asset_data()
 		frappe.db.set_value(
@@ -93,8 +93,8 @@ class TestAssetValueAdjustment(unittest.TestCase):
 		self.assertEqual(first_asset_depr_schedule.status, "Cancelled")
 
 		expected_gle = (
-			("_Test Accumulated Depreciations - _TC", 0.0, 4625.29),
-			("_Test Depreciations - _TC", 4625.29, 0.0),
+			("_Test Difference Account - _TC", 4625.29, 0.0),
+			("_Test Fixed Asset - _TC", 0.0, 4625.29),
 		)
 
 		gle = frappe.db.sql(
@@ -153,7 +153,9 @@ class TestAssetValueAdjustment(unittest.TestCase):
 		post_depreciation_entries(getdate("2023-08-21"))
 
 		# create asset repair
-		asset_repair = create_asset_repair(asset=asset_doc, capitalize_repair_cost=1, submit=1)
+		asset_repair = create_asset_repair(
+			asset=asset_doc, capitalize_repair_cost=1, item="_Test Non Stock Item", submit=1
+		)
 
 		first_asset_depr_schedule = get_asset_depr_schedule_doc(asset_doc.name, "Active")
 		self.assertEqual(first_asset_depr_schedule.status, "Active")
@@ -177,8 +179,8 @@ class TestAssetValueAdjustment(unittest.TestCase):
 
 		# Test gl entry creted from asset value adjustemnet
 		expected_gle = (
-			("_Test Accumulated Depreciations - _TC", 0.0, 5625.29),
-			("_Test Depreciations - _TC", 5625.29, 0.0),
+			("_Test Difference Account - _TC", 5175.29, 0.0),
+			("_Test Fixed Asset - _TC", 0.0, 5175.29),
 		)
 
 		gle = frappe.db.sql(
@@ -244,12 +246,12 @@ class TestAssetValueAdjustment(unittest.TestCase):
 			["2023-05-31", 9983.33, 45408.05],
 			["2023-06-30", 9983.33, 55391.38],
 			["2023-07-31", 9983.33, 65374.71],
-			["2023-08-31", 8133.33, 73508.04],
-			["2023-09-30", 8133.33, 81641.37],
-			["2023-10-31", 8133.33, 89774.7],
-			["2023-11-30", 8133.33, 97908.03],
-			["2023-12-31", 8133.33, 106041.36],
-			["2024-01-15", 8133.35, 114174.71],
+			["2023-08-31", 8208.33, 73583.04],
+			["2023-09-30", 8208.33, 81791.37],
+			["2023-10-31", 8208.33, 89999.7],
+			["2023-11-30", 8208.33, 98208.03],
+			["2023-12-31", 8208.33, 106416.36],
+			["2024-01-15", 8208.35, 114624.71],
 		]
 
 		schedules = [
@@ -258,6 +260,39 @@ class TestAssetValueAdjustment(unittest.TestCase):
 		]
 
 		self.assertEqual(schedules, expected_schedules)
+
+	def test_difference_amount(self):
+		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=120000.0, location="Test Location")
+
+		asset_name = frappe.db.get_value("Asset", {"purchase_receipt": pr.name}, "name")
+		asset_doc = frappe.get_doc("Asset", asset_name)
+		asset_doc.calculate_depreciation = 1
+		asset_doc.available_for_use_date = "2023-01-15"
+		asset_doc.purchase_date = "2023-01-15"
+
+		asset_doc.append(
+			"finance_books",
+			{
+				"expected_value_after_useful_life": 200,
+				"depreciation_method": "Straight Line",
+				"total_number_of_depreciations": 12,
+				"frequency_of_depreciation": 1,
+				"depreciation_start_date": "2023-01-31",
+			},
+		)
+		asset_doc.submit()
+
+		adj_doc = make_asset_value_adjustment(
+			asset=asset_doc.name,
+			current_asset_value=54000,
+			new_asset_value=50000.0,
+			date="2023-08-21",
+		)
+		adj_doc.submit()
+		difference_amount = adj_doc.new_asset_value - adj_doc.current_asset_value
+		self.assertEqual(difference_amount, -4000)
+		asset_doc.load_from_db()
+		self.assertEqual(asset_doc.value_after_depreciation, 50000.0)
 
 
 def make_asset_value_adjustment(**args):
@@ -272,7 +307,22 @@ def make_asset_value_adjustment(**args):
 			"new_asset_value": args.new_asset_value,
 			"current_asset_value": args.current_asset_value,
 			"cost_center": args.cost_center or "Main - _TC",
+			"difference_account": make_difference_account(),
 		}
 	).insert()
 
 	return doc
+
+
+def make_difference_account(**args):
+	account = "_Test Difference Account - _TC"
+	if not frappe.db.exists("Account", account):
+		acc = frappe.new_doc("Account")
+		acc.account_name = "_Test Difference Account"
+		acc.parent_account = "Direct Income - _TC"
+		acc.company = "_Test Company"
+		acc.is_group = 0
+		acc.insert()
+		return acc.name
+	else:
+		return account

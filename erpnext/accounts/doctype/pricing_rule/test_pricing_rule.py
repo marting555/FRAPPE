@@ -5,6 +5,7 @@
 import unittest
 
 import frappe
+from frappe.tests import IntegrationTestCase, UnitTestCase
 
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
 from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
@@ -14,10 +15,20 @@ from erpnext.stock.doctype.item.test_item import make_item
 from erpnext.stock.get_item_details import get_item_details
 
 
-class TestPricingRule(unittest.TestCase):
+class UnitTestPricingRule(UnitTestCase):
+	"""
+	Unit tests for PricingRule.
+	Use this class for testing individual functions and methods.
+	"""
+
+	pass
+
+
+class TestPricingRule(IntegrationTestCase):
 	def setUp(self):
 		delete_existing_pricing_rules()
 		setup_pricing_rule_data()
+		self.enterClassContext(self.change_settings("Selling Settings", validate_selling_price=0))
 
 	def tearDown(self):
 		delete_existing_pricing_rules()
@@ -1130,6 +1141,51 @@ class TestPricingRule(unittest.TestCase):
 		self.assertEqual(so.items[1].item_code, "_Test Item")
 		self.assertEqual(so.items[1].qty, 3)
 
+		so = make_sales_order(item_code="_Test Item", qty=5, do_not_submit=1)
+		so.items[0].qty = 1
+		del so.items[-1]
+		so.save()
+		self.assertEqual(len(so.items), 1)
+
+	def test_pricing_rule_for_product_free_item_round_free_qty(self):
+		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
+		test_record = {
+			"doctype": "Pricing Rule",
+			"title": "_Test Pricing Rule",
+			"apply_on": "Item Code",
+			"currency": "USD",
+			"items": [
+				{
+					"item_code": "_Test Item",
+				}
+			],
+			"selling": 1,
+			"rate": 0,
+			"min_qty": 100,
+			"max_qty": 0,
+			"price_or_product_discount": "Product",
+			"same_item": 1,
+			"free_qty": 10,
+			"round_free_qty": 1,
+			"is_recursive": 1,
+			"recurse_for": 100,
+			"company": "_Test Company",
+		}
+		frappe.get_doc(test_record.copy()).insert()
+
+		# With pricing rule
+		so = make_sales_order(item_code="_Test Item", qty=100)
+		so.load_from_db()
+		self.assertEqual(so.items[1].is_free_item, 1)
+		self.assertEqual(so.items[1].item_code, "_Test Item")
+		self.assertEqual(so.items[1].qty, 10)
+
+		so = make_sales_order(item_code="_Test Item", qty=150)
+		so.load_from_db()
+		self.assertEqual(so.items[1].is_free_item, 1)
+		self.assertEqual(so.items[1].item_code, "_Test Item")
+		self.assertEqual(so.items[1].qty, 10)
+
 	def test_apply_multiple_pricing_rules_for_discount_percentage_and_amount(self):
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule 1")
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule 2")
@@ -1377,7 +1433,7 @@ class TestPricingRule(unittest.TestCase):
 		pi.cancel()
 
 
-test_dependencies = ["Campaign"]
+EXTRA_TEST_RECORD_DEPENDENCIES = ["UTM Campaign"]
 
 
 def make_pricing_rule(**args):
@@ -1437,9 +1493,9 @@ def make_pricing_rule(**args):
 
 
 def setup_pricing_rule_data():
-	if not frappe.db.exists("Campaign", "_Test Campaign"):
+	if not frappe.db.exists("UTM Campaign", "_Test Campaign"):
 		frappe.get_doc(
-			{"doctype": "Campaign", "campaign_name": "_Test Campaign", "name": "_Test Campaign"}
+			{"doctype": "UTM Campaign", "description": "_Test Campaign", "name": "_Test Campaign"}
 		).insert()
 
 

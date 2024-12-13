@@ -342,6 +342,9 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 				account: this.frm.doc.debit_to,
 				price_list: this.frm.doc.selling_price_list,
 				pos_profile: pos_profile,
+				fetch_payment_terms_template: cint(
+					(this.frm.doc.is_return == 0) & !this.frm.doc.ignore_default_payment_terms_template
+				),
 			},
 			function () {
 				me.apply_pricing_rule();
@@ -737,20 +740,6 @@ frappe.ui.form.on("Sales Invoice", {
 			};
 		});
 
-		frm.set_query("company_address", function (doc) {
-			if (!doc.company) {
-				frappe.throw(__("Please set Company"));
-			}
-
-			return {
-				query: "frappe.contacts.doctype.address.address.address_query",
-				filters: {
-					link_doctype: "Company",
-					link_name: doc.company,
-				},
-			};
-		});
-
 		frm.set_query("pos_profile", function (doc) {
 			if (!doc.company) {
 				frappe.throw(__("Please set Company"));
@@ -838,7 +827,9 @@ frappe.ui.form.on("Sales Invoice", {
 			"project",
 			"due_date",
 			"is_opening",
-			"source",
+			"utm_source",
+			"utm_campaign",
+			"utm_medium",
 			"total_advance",
 			"get_advances",
 			"advances",

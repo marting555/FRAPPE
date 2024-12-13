@@ -651,11 +651,23 @@ def get_product_discount_rule(pricing_rule, item_details, args=None, doc=None):
 
 	qty = pricing_rule.free_qty or 1
 	if pricing_rule.is_recursive:
-		transaction_qty = (args.get("qty") if args else doc.total_qty) - pricing_rule.apply_recursion_over
-		if transaction_qty:
+		transaction_qty = sum(
+			[
+				row.qty
+				for row in doc.items
+				if not row.is_free_item
+				and row.item_code == args.item_code
+				and row.pricing_rules == args.pricing_rules
+			]
+		)
+		transaction_qty = transaction_qty - pricing_rule.apply_recursion_over
+		if transaction_qty and transaction_qty > 0:
 			qty = flt(transaction_qty) * qty / pricing_rule.recurse_for
 			if pricing_rule.round_free_qty:
-				qty = math.floor(qty)
+				qty = (flt(transaction_qty) // pricing_rule.recurse_for) * (pricing_rule.free_qty or 1)
+
+	if not qty:
+		return
 
 	free_item_data_args = {
 		"item_code": free_item,
@@ -725,13 +737,11 @@ def get_pricing_rule_items(pr_doc, other_items=False) -> list:
 
 def validate_coupon_code(coupon_name):
 	coupon = frappe.get_doc("Coupon Code", coupon_name)
-	if coupon.valid_from:
-		if coupon.valid_from > getdate(today()):
-			frappe.throw(_("Sorry, this coupon code's validity has not started"))
-	elif coupon.valid_upto:
-		if coupon.valid_upto < getdate(today()):
-			frappe.throw(_("Sorry, this coupon code's validity has expired"))
-	elif coupon.used >= coupon.maximum_use:
+	if coupon.valid_from and coupon.valid_from > getdate(today()):
+		frappe.throw(_("Sorry, this coupon code's validity has not started"))
+	elif coupon.valid_upto and coupon.valid_upto < getdate(today()):
+		frappe.throw(_("Sorry, this coupon code's validity has expired"))
+	elif coupon.maximum_use and coupon.used >= coupon.maximum_use:
 		frappe.throw(_("Sorry, this coupon code is no longer valid"))
 
 
@@ -739,7 +749,10 @@ def update_coupon_code_count(coupon_name, transaction_type):
 	coupon = frappe.get_doc("Coupon Code", coupon_name)
 	if coupon:
 		if transaction_type == "used":
-			if coupon.used < coupon.maximum_use:
+			if not coupon.maximum_use:
+				coupon.used = coupon.used + 1
+				coupon.save(ignore_permissions=True)
+			elif coupon.used < coupon.maximum_use:
 				coupon.used = coupon.used + 1
 				coupon.save(ignore_permissions=True)
 			else:

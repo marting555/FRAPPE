@@ -40,6 +40,7 @@ from erpnext.stock.doctype.stock_reconciliation.stock_reconciliation import (
 	OpeningEntryAccountError,
 )
 from erpnext.stock.get_item_details import (
+	ItemDetailsCtx,
 	get_barcode_data,
 	get_bin_details,
 	get_conversion_factor,
@@ -235,6 +236,7 @@ class StockEntry(StockController):
 		self.validate_serialized_batch()
 		self.calculate_rate_and_amount()
 		self.validate_putaway_capacity()
+		self.validate_component_quantities()
 
 		if self.get("purpose") != "Manufacture":
 			# ignore scrap item wh difference and empty source/target wh
@@ -764,6 +766,34 @@ class StockEntry(StockController):
 					title=_("Insufficient Stock"),
 				)
 
+	def validate_component_quantities(self):
+		if self.purpose not in ["Manufacture", "Material Transfer for Manufacture"]:
+			return
+
+		if not frappe.db.get_single_value("Manufacturing Settings", "validate_components_quantities_per_bom"):
+			return
+
+		if not self.fg_completed_qty:
+			return
+
+		raw_materials = self.get_bom_raw_materials(self.fg_completed_qty)
+
+		precision = frappe.get_precision("Stock Entry Detail", "qty")
+		for row in self.items:
+			if not row.s_warehouse:
+				continue
+
+			if details := raw_materials.get(row.item_code):
+				if flt(details.get("qty"), precision) != flt(row.qty, precision):
+					frappe.throw(
+						_("For the item {0}, the quantity should be {1} according to the BOM {2}.").format(
+							frappe.bold(row.item_code),
+							flt(details.get("qty"), precision),
+							get_link_to_form("BOM", self.bom_no),
+						),
+						title=_("Incorrect Component Quantity"),
+					)
+
 	@frappe.whitelist()
 	def get_stock_and_rate(self):
 		"""
@@ -782,9 +812,6 @@ class StockEntry(StockController):
 		self.update_valuation_rate()
 		self.set_total_incoming_outgoing_value()
 		self.set_total_amount()
-
-		if not reset_outgoing_rate:
-			self.set_serial_and_batch_bundle()
 
 	def set_basic_rate(self, reset_outgoing_rate=True, raise_error_if_no_rate=True):
 		"""
@@ -1297,10 +1324,10 @@ class StockEntry(StockController):
 		3. Check FG Item and Qty against WO if present (mfg)
 		"""
 		production_item, wo_qty, finished_items = None, 0, []
-
-		wo_details = frappe.db.get_value("Work Order", self.work_order, ["production_item", "qty"])
-		if wo_details:
-			production_item, wo_qty = wo_details
+		if self.work_order:
+			wo_details = frappe.db.get_value("Work Order", self.work_order, ["production_item", "qty"])
+			if wo_details:
+				production_item, wo_qty = wo_details
 
 		for d in self.get("items"):
 			if d.is_finished_item:
@@ -1582,10 +1609,6 @@ class StockEntry(StockController):
 			if pro_doc.status == "Stopped":
 				msg = f"Transaction not allowed against stopped Work Order {self.work_order}"
 
-			if self.is_return and pro_doc.status not in ["Completed", "Closed"]:
-				title = _("Stock Return")
-				msg = f"Work Order {self.work_order} must be completed or closed"
-
 			if msg:
 				frappe.throw(_(msg), title=title)
 
@@ -1614,7 +1637,7 @@ class StockEntry(StockController):
 				pro_doc.set_actual_dates()
 
 	@frappe.whitelist()
-	def get_item_details(self, args=None, for_update=False):
+	def get_item_details(self, args: ItemDetailsCtx = None, for_update=False):
 		item = frappe.db.sql(
 			"""select i.name, i.stock_uom, i.description, i.image, i.item_name, i.item_group,
 				i.has_batch_no, i.sample_quantity, i.has_serial_no, i.allow_alternative_item,
@@ -3142,11 +3165,13 @@ def get_available_materials(work_order) -> dict:
 
 			if row.serial_no:
 				for serial_no in get_serial_nos(row.serial_no):
-					item_data.serial_nos.remove(serial_no)
+					if serial_no in item_data.serial_nos:
+						item_data.serial_nos.remove(serial_no)
 
 			elif row.serial_nos:
 				for serial_no in get_serial_nos(row.serial_nos):
-					item_data.serial_nos.remove(serial_no)
+					if serial_no in item_data.serial_nos:
+						item_data.serial_nos.remove(serial_no)
 
 	return available_materials
 
@@ -3263,6 +3288,9 @@ def create_serial_and_batch_bundle(parent_doc, row, child, type_of_transaction=N
 		doc.has_batch_no = 1
 		for batch_no, qty in row.batches_to_be_consume.items():
 			doc.append("entries", {"batch_no": batch_no, "warehouse": row.warehouse, "qty": qty * -1})
+
+	if not doc.entries:
+		return None
 
 	return doc.insert(ignore_permissions=True).name
 
