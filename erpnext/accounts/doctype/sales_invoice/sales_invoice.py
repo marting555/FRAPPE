@@ -2479,7 +2479,7 @@ def create_dunning(source_name, target_doc=None, ignore_permissions=False):
 				target.language = letter_text.get("language")
 
 		# update outstanding
-		if source.payment_schedule and len(source.payment_schedule) == 1:
+		if source.payment_schedule and len(source.payment_schedule) == 1 and target.overdue_payments:
 			target.overdue_payments[0].outstanding = source.get("outstanding_amount")
 
 		target.validate()
@@ -2496,7 +2496,7 @@ def create_dunning(source_name, target_doc=None, ignore_permissions=False):
 			"Payment Schedule": {
 				"doctype": "Overdue Payment",
 				"field_map": {"name": "payment_schedule", "parent": "sales_invoice"},
-				"condition": lambda doc: doc.outstanding > 0 and getdate(doc.due_date) < getdate(),
+				"condition": lambda doc: doc.outstanding > 0 and getdate(doc.due_date) <= getdate(),
 			},
 		},
 		postprocess=postprocess_dunning,
