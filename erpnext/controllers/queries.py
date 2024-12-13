@@ -680,7 +680,15 @@ def get_expense_account(doctype, txt, searchfield, start, page_len, filters):
     condition = ""
     if filters.get("company"):
         condition += " AND account.company = %(company)s"
+	
+    match_condition_str = get_match_cond("Account")
+    if match_condition_str and frappe.db.db_type == "postgres":
+        if "ifnull" in match_condition_str:
+            match_condition_str = match_condition_str.replace('ifnull', 'COALESCE')
 
+        match_condition_str = match_condition_str.replace('tabAccount', 'account')
+        match_condition_str = match_condition_str.replace("`", "")
+		
     return frappe.db.sql(
 		f"""SELECT account.name 
 			FROM tabAccount AS account
@@ -689,7 +697,7 @@ def get_expense_account(doctype, txt, searchfield, start, page_len, filters):
 				AND account.is_group = 0
 				AND account.docstatus != 2
 				AND account.{searchfield} LIKE %(txt)s
-				{condition} {get_match_cond('Account')}""",
+				{condition} {match_condition_str}""",
 		{"company": filters.get("company", ""), "txt": "%" + txt + "%"},
 	)
 
