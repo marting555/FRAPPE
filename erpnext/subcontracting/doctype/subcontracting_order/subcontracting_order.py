@@ -157,7 +157,8 @@ class SubcontractingOrder(SubcontractingController):
 
 		for service_item in self.service_items:
 			if frappe.get_value("Item", service_item.item_code, "is_stock_item"):
-				frappe.throw(_("Service Item {0} must be a non-stock item.".format(service_item.item_name)))
+				msg = f"Service Item {item.item_name} must be a non-stock item."
+				frappe.throw(_(msg))
 
 			item = next(
 				item for item in self.items if item.purchase_order_item == service_item.purchase_order_item
