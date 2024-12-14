@@ -93,6 +93,22 @@ class AccountsTestMixin:
 					"parent_account": "Bank Accounts - " + abbr,
 				}
 			),
+			frappe._dict(
+				{
+					"attribute_name": "advance_received",
+					"account_name": "Advance Received",
+					"parent_account": "Current Liabilities - " + abbr,
+					"account_type": "Receivable",
+				}
+			),
+			frappe._dict(
+				{
+					"attribute_name": "advance_paid",
+					"account_name": "Advance Paid",
+					"parent_account": "Current Assets - " + abbr,
+					"account_type": "Payable",
+				}
+			),
 		]
 		for acc in other_accounts:
 			acc_name = acc.account_name + " - " + abbr
@@ -107,10 +123,24 @@ class AccountsTestMixin:
 						"company": self.company,
 					}
 				)
+				new_acc.account_type = acc.get("account_type", None)
 				new_acc.save()
 				setattr(self, acc.attribute_name, new_acc.name)
 
 		self.identify_default_warehouses()
+
+	def enable_advance_as_liability(self):
+		company = frappe.get_doc("Company", self.company)
+		company.book_advance_payments_in_separate_party_account = True
+		company.default_advance_received_account = self.advance_received
+		company.default_advance_paid_account = self.advance_paid
+		company.save()
+
+	def disable_advance_as_liability(self):
+		company = frappe.get_doc("Company", self.company)
+		company.book_advance_payments_in_separate_party_account = False
+		company.default_advance_paid_account = company.default_advance_received_account = None
+		company.save()
 
 	def identify_default_warehouses(self):
 		for w in frappe.db.get_all(
@@ -177,3 +207,23 @@ class AccountsTestMixin:
 		]
 		for doctype in doctype_list:
 			qb.from_(qb.DocType(doctype)).delete().where(qb.DocType(doctype).company == self.company).run()
+
+	def create_price_list(self):
+		pl_name = "Mixin Price List"
+		if not frappe.db.exists("Price List", pl_name):
+			self.price_list = (
+				frappe.get_doc(
+					{
+						"doctype": "Price List",
+						"currency": "INR",
+						"enabled": True,
+						"selling": True,
+						"buying": True,
+						"price_list_name": pl_name,
+					}
+				)
+				.insert()
+				.name
+			)
+		else:
+			self.price_list = frappe.get_doc("Price List", pl_name).name

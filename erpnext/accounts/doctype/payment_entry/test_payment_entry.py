@@ -4,7 +4,7 @@
 
 import frappe
 from frappe import qb
-from frappe.tests.utils import FrappeTestCase, change_settings
+from frappe.tests import IntegrationTestCase, UnitTestCase
 from frappe.utils import add_days, flt, nowdate
 
 from erpnext.accounts.doctype.account.test_account import create_account
@@ -25,10 +25,19 @@ from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import (
 from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
 from erpnext.setup.doctype.employee.test_employee import make_employee
 
-test_dependencies = ["Item"]
+EXTRA_TEST_RECORD_DEPENDENCIES = ["Item", "Currency Exchange"]
 
 
-class TestPaymentEntry(FrappeTestCase):
+class UnitTestPaymentEntry(UnitTestCase):
+	"""
+	Unit tests for PaymentEntry.
+	Use this class for testing individual functions and methods.
+	"""
+
+	pass
+
+
+class TestPaymentEntry(IntegrationTestCase):
 	def tearDown(self):
 		frappe.db.rollback()
 
@@ -383,7 +392,7 @@ class TestPaymentEntry(FrappeTestCase):
 		self.assertEqual(si.payment_schedule[0].outstanding, 0)
 		self.assertEqual(si.payment_schedule[0].discounted_amount, 50)
 
-	@change_settings(
+	@IntegrationTestCase.change_settings(
 		"Accounts Settings",
 		{
 			"allow_multi_currency_invoices_against_single_party_account": 1,
@@ -479,16 +488,9 @@ class TestPaymentEntry(FrappeTestCase):
 		self.assertEqual(pe.deductions[0].account, "Write Off - _TC")
 
 		# Exchange loss
-		self.assertEqual(pe.difference_amount, 300.0)
-
-		pe.append(
-			"deductions",
-			{
-				"account": "_Test Exchange Gain/Loss - _TC",
-				"cost_center": "_Test Cost Center - _TC",
-				"amount": 300.0,
-			},
-		)
+		self.assertEqual(pe.deductions[-1].amount, 300.0)
+		pe.deductions[-1].account = "_Test Exchange Gain/Loss - _TC"
+		pe.deductions[-1].cost_center = "_Test Cost Center - _TC"
 
 		pe.insert()
 		pe.submit()
@@ -552,16 +554,10 @@ class TestPaymentEntry(FrappeTestCase):
 		pe.reference_no = "1"
 		pe.reference_date = "2016-01-01"
 
-		self.assertEqual(pe.difference_amount, 100)
+		self.assertEqual(pe.deductions[0].amount, 100)
+		pe.deductions[0].account = "_Test Exchange Gain/Loss - _TC"
+		pe.deductions[0].cost_center = "_Test Cost Center - _TC"
 
-		pe.append(
-			"deductions",
-			{
-				"account": "_Test Exchange Gain/Loss - _TC",
-				"cost_center": "_Test Cost Center - _TC",
-				"amount": 100,
-			},
-		)
 		pe.insert()
 		pe.submit()
 
@@ -610,12 +606,9 @@ class TestPaymentEntry(FrappeTestCase):
 		self.assertEqual(flt(pe.references[0].exchange_gain_loss, 2), -94.74)
 
 	def test_payment_entry_retrieves_last_exchange_rate(self):
-		from erpnext.setup.doctype.currency_exchange.test_currency_exchange import (
-			save_new_records,
-			test_records,
-		)
+		from erpnext.setup.doctype.currency_exchange.test_currency_exchange import save_new_records
 
-		save_new_records(test_records)
+		save_new_records(self.globalTestRecords["Currency Exchange"])
 
 		pe = frappe.new_doc("Payment Entry")
 		pe.payment_type = "Pay"
@@ -654,16 +647,9 @@ class TestPaymentEntry(FrappeTestCase):
 		pe.set_exchange_rate()
 		pe.set_amounts()
 
-		self.assertEqual(pe.difference_amount, 500)
-
-		pe.append(
-			"deductions",
-			{
-				"account": "_Test Exchange Gain/Loss - _TC",
-				"cost_center": "_Test Cost Center - _TC",
-				"amount": 500,
-			},
-		)
+		self.assertEqual(pe.deductions[0].amount, 500)
+		pe.deductions[0].account = "_Test Exchange Gain/Loss - _TC"
+		pe.deductions[0].cost_center = "_Test Cost Center - _TC"
 
 		pe.insert()
 		pe.submit()
@@ -956,6 +942,50 @@ class TestPaymentEntry(FrappeTestCase):
 		self.assertEqual(flt(expected_party_balance), party_balance)
 		self.assertEqual(flt(expected_party_account_balance, 2), flt(party_account_balance, 2))
 
+	def test_gl_of_multi_currency_payment_transaction(self):
+		from erpnext.setup.doctype.currency_exchange.test_currency_exchange import save_new_records
+
+		save_new_records(self.globalTestRecords["Currency Exchange"])
+		paid_from = create_account(
+			parent_account="Current Liabilities - _TC",
+			account_name="_Test Cash USD",
+			company="_Test Company",
+			account_type="Cash",
+			account_currency="USD",
+		)
+		payment_entry = create_payment_entry(
+			party="_Test Supplier USD",
+			paid_from=paid_from,
+			paid_to="_Test Payable USD - _TC",
+			paid_amount=100,
+			save=True,
+		)
+		payment_entry.source_exchange_rate = 84.4
+		payment_entry.target_exchange_rate = 84.4
+		payment_entry.save()
+		payment_entry = payment_entry.submit()
+		gle = qb.DocType("GL Entry")
+		gl_entries = (
+			qb.from_(gle)
+			.select(
+				gle.account,
+				gle.debit,
+				gle.credit,
+				gle.debit_in_account_currency,
+				gle.credit_in_account_currency,
+				gle.debit_in_transaction_currency,
+				gle.credit_in_transaction_currency,
+			)
+			.orderby(gle.account)
+			.where(gle.voucher_no == payment_entry.name)
+			.run()
+		)
+		expected_gl_entries = (
+			(paid_from, 0.0, 8440.0, 0.0, 100.0, 0.0, 100.0),
+			("_Test Payable USD - _TC", 8440.0, 0.0, 100.0, 0.0, 100.0, 0.0),
+		)
+		self.assertEqual(gl_entries, expected_gl_entries)
+
 	def test_multi_currency_payment_entry_with_taxes(self):
 		payment_entry = create_payment_entry(
 			party="_Test Supplier USD", paid_to="_Test Payable USD - _TC", save=True
@@ -1090,7 +1120,7 @@ class TestPaymentEntry(FrappeTestCase):
 		}
 		self.assertDictEqual(ref_details, expected_response)
 
-	@change_settings(
+	@IntegrationTestCase.change_settings(
 		"Accounts Settings",
 		{
 			"unlink_payment_on_cancellation_of_invoice": 1,
@@ -1185,7 +1215,7 @@ class TestPaymentEntry(FrappeTestCase):
 		si3.cancel()
 		si3.delete()
 
-	@change_settings(
+	@IntegrationTestCase.change_settings(
 		"Accounts Settings",
 		{
 			"unlink_payment_on_cancellation_of_invoice": 1,
@@ -1791,7 +1821,7 @@ class TestPaymentEntry(FrappeTestCase):
 		# 'Is Opening' should always be 'No' for normal advance payments
 		self.assertEqual(gl_with_opening_set, [])
 
-	@change_settings("Accounts Settings", {"delete_linked_ledger_entries": 1})
+	@IntegrationTestCase.change_settings("Accounts Settings", {"delete_linked_ledger_entries": 1})
 	def test_delete_linked_exchange_gain_loss_journal(self):
 		from erpnext.accounts.doctype.account.test_account import create_account
 		from erpnext.accounts.doctype.opening_invoice_creation_tool.test_opening_invoice_creation_tool import (

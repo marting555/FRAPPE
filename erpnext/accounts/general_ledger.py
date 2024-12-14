@@ -38,13 +38,14 @@ def make_gl_entries(
 			validate_disabled_accounts(gl_map)
 			gl_map = process_gl_map(gl_map, merge_entries)
 			if gl_map and len(gl_map) > 1:
-				create_payment_ledger_entry(
-					gl_map,
-					cancel=0,
-					adv_adj=adv_adj,
-					update_outstanding=update_outstanding,
-					from_repost=from_repost,
-				)
+				if gl_map[0].voucher_type != "Period Closing Voucher":
+					create_payment_ledger_entry(
+						gl_map,
+						cancel=0,
+						adv_adj=adv_adj,
+						update_outstanding=update_outstanding,
+						from_repost=from_repost,
+					)
 				save_entries(gl_map, adv_adj, update_outstanding, from_repost)
 			# Post GL Map process there may no be any GL Entries
 			elif gl_map:
@@ -117,17 +118,16 @@ def get_accounting_dimensions_for_offsetting_entry(gl_map, company):
 def validate_disabled_accounts(gl_map):
 	accounts = [d.account for d in gl_map if d.account]
 
-	Account = frappe.qb.DocType("Account")
+	disabled_accounts = frappe.get_all(
+		"Account",
+		filters={"disabled": 1, "is_group": 0, "company": gl_map[0].company},
+		fields=["name"],
+	)
 
-	disabled_accounts = (
-		frappe.qb.from_(Account)
-		.where(Account.name.isin(accounts) & Account.disabled == 1)
-		.select(Account.name, Account.disabled)
-	).run(as_dict=True)
-
-	if disabled_accounts:
+	used_disabled_accounts = set(accounts).intersection(set([d.name for d in disabled_accounts]))
+	if used_disabled_accounts:
 		account_list = "<br>"
-		account_list += ", ".join([frappe.bold(d.name) for d in disabled_accounts])
+		account_list += ", ".join([frappe.bold(d) for d in used_disabled_accounts])
 		frappe.throw(
 			_("Cannot create accounting entries against disabled accounts: {0}").format(account_list),
 			title=_("Disabled Account Selected"),
@@ -235,6 +235,10 @@ def merge_similar_entries(gl_map, precision=None):
 	merge_properties = get_merge_properties(accounting_dimensions)
 
 	for entry in gl_map:
+		if entry._skip_merge:
+			merged_gl_map.append(entry)
+			continue
+
 		entry.merge_key = get_merge_key(entry, merge_properties)
 		# if there is already an entry in this account then just add it
 		# to that entry
@@ -312,64 +316,46 @@ def check_if_in_list(gle, gl_map):
 
 
 def toggle_debit_credit_if_negative(gl_map):
+	debit_credit_field_map = {
+		"debit": "credit",
+		"debit_in_account_currency": "credit_in_account_currency",
+		"debit_in_transaction_currency": "credit_in_transaction_currency",
+	}
+
 	for entry in gl_map:
 		# toggle debit, credit if negative entry
-		if flt(entry.debit) < 0 and flt(entry.credit) < 0 and flt(entry.debit) == flt(entry.credit):
-			entry.credit *= -1
-			entry.debit *= -1
+		for debit_field, credit_field in debit_credit_field_map.items():
+			debit = flt(entry.get(debit_field))
+			credit = flt(entry.get(credit_field))
 
-		if (
-			flt(entry.debit_in_account_currency) < 0
-			and flt(entry.credit_in_account_currency) < 0
-			and flt(entry.debit_in_account_currency) == flt(entry.credit_in_account_currency)
-		):
-			entry.credit_in_account_currency *= -1
-			entry.debit_in_account_currency *= -1
+			if debit < 0 and credit < 0 and debit == credit:
+				debit *= -1
+				credit *= -1
 
-		if flt(entry.debit) < 0:
-			entry.credit = flt(entry.credit) - flt(entry.debit)
-			entry.debit = 0.0
+			if debit < 0:
+				credit = credit - debit
+				debit = 0.0
 
-		if flt(entry.debit_in_account_currency) < 0:
-			entry.credit_in_account_currency = flt(entry.credit_in_account_currency) - flt(
-				entry.debit_in_account_currency
-			)
-			entry.debit_in_account_currency = 0.0
+			if credit < 0:
+				debit = debit - credit
+				credit = 0.0
 
-		if flt(entry.credit) < 0:
-			entry.debit = flt(entry.debit) - flt(entry.credit)
-			entry.credit = 0.0
+			# update net values
+			# In some scenarios net value needs to be shown in the ledger
+			# This method updates net values as debit or credit
+			if entry.post_net_value and debit and credit:
+				if debit > credit:
+					debit = debit - credit
+					credit = 0.0
 
-		if flt(entry.credit_in_account_currency) < 0:
-			entry.debit_in_account_currency = flt(entry.debit_in_account_currency) - flt(
-				entry.credit_in_account_currency
-			)
-			entry.credit_in_account_currency = 0.0
+				else:
+					credit = credit - debit
+					debit = 0.0
 
-		update_net_values(entry)
+			entry[debit_field] = debit
+			entry[credit_field] = credit
 
 	return gl_map
-
-
-def update_net_values(entry):
-	# In some scenarios net value needs to be shown in the ledger
-	# This method updates net values as debit or credit
-	if entry.post_net_value and entry.debit and entry.credit:
-		if entry.debit > entry.credit:
-			entry.debit = entry.debit - entry.credit
-			entry.debit_in_account_currency = (
-				entry.debit_in_account_currency - entry.credit_in_account_currency
-			)
-			entry.credit = 0
-			entry.credit_in_account_currency = 0
-		else:
-			entry.credit = entry.credit - entry.debit
-			entry.credit_in_account_currency = (
-				entry.credit_in_account_currency - entry.debit_in_account_currency
-			)
-
-			entry.debit = 0
-			entry.debit_in_account_currency = 0
 
 
 def save_entries(gl_map, adv_adj, update_outstanding, from_repost=False):
@@ -740,7 +726,7 @@ def validate_against_pcv(is_opening, posting_date, company):
 		)
 
 	last_pcv_date = frappe.db.get_value(
-		"Period Closing Voucher", {"docstatus": 1, "company": company}, "max(posting_date)"
+		"Period Closing Voucher", {"docstatus": 1, "company": company}, "max(period_end_date)"
 	)
 
 	if last_pcv_date and getdate(posting_date) <= getdate(last_pcv_date):

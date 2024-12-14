@@ -5,7 +5,7 @@
 import frappe
 from frappe import qb
 from frappe.query_builder.functions import Sum
-from frappe.tests.utils import FrappeTestCase, change_settings
+from frappe.tests import IntegrationTestCase
 from frappe.utils import add_days, getdate, nowdate
 
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
@@ -46,7 +46,7 @@ def make_supplier(supplier_name, currency=None):
 		return supplier_name
 
 
-class TestAccountsController(FrappeTestCase):
+class TestAccountsController(IntegrationTestCase):
 	"""
 	Test Exchange Gain/Loss booking on various scenarios.
 	Test Cases are numbered for better organization
@@ -805,8 +805,11 @@ class TestAccountsController(FrappeTestCase):
 		self.assertEqual(exc_je_for_si, [])
 		self.assertEqual(exc_je_for_pe, [])
 
-	@change_settings("Stock Settings", {"allow_internal_transfer_at_arms_length_price": 1})
+	@IntegrationTestCase.change_settings(
+		"Stock Settings", {"allow_internal_transfer_at_arms_length_price": 1}
+	)
 	def test_16_internal_transfer_at_arms_length_price(self):
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_inter_company_purchase_invoice
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
 		prepare_data_for_internal_transfer()
@@ -839,6 +842,31 @@ class TestAccountsController(FrappeTestCase):
 		si.save()
 		# rate should reset to incoming rate
 		self.assertEqual(si.items[0].rate, 100)
+
+		si.update_stock = 0
+		si.save()
+		si.submit()
+
+		pi = make_inter_company_purchase_invoice(si.name)
+		pi.update_stock = 1
+		pi.items[0].rate = arms_length_price
+		pi.items[0].warehouse = target_warehouse
+		pi.items[0].from_warehouse = warehouse
+		pi.save()
+
+		self.assertEqual(pi.items[0].rate, 100)
+		self.assertEqual(pi.items[0].valuation_rate, 100)
+
+		frappe.db.set_single_value("Stock Settings", "allow_internal_transfer_at_arms_length_price", 1)
+		pi = make_inter_company_purchase_invoice(si.name)
+		pi.update_stock = 1
+		pi.items[0].rate = arms_length_price
+		pi.items[0].warehouse = target_warehouse
+		pi.items[0].from_warehouse = warehouse
+		pi.save()
+
+		self.assertEqual(pi.items[0].rate, arms_length_price)
+		self.assertEqual(pi.items[0].valuation_rate, 100)
 
 	def test_20_journal_against_sales_invoice(self):
 		# Invoice in Foreign Currency

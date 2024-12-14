@@ -385,6 +385,7 @@ class ReceivablePayableReport:
 			self.delivery_notes = frappe._dict()
 
 			# delivery note link inside sales invoice
+			# nosemgrep
 			si_against_dn = frappe.db.sql(
 				"""
 				select parent, delivery_note
@@ -400,6 +401,7 @@ class ReceivablePayableReport:
 				if d.delivery_note:
 					self.delivery_notes.setdefault(d.parent, set()).add(d.delivery_note)
 
+			# nosemgrep
 			dn_against_si = frappe.db.sql(
 				"""
 				select distinct parent, against_sales_invoice
@@ -417,13 +419,16 @@ class ReceivablePayableReport:
 	def get_invoice_details(self):
 		self.invoice_details = frappe._dict()
 		if self.account_type == "Receivable":
+			# nosemgrep
 			si_list = frappe.db.sql(
 				"""
 				select name, due_date, po_no
 				from `tabSales Invoice`
 				where posting_date <= %s
+					and company = %s
+					and docstatus = 1
 			""",
-				self.filters.report_date,
+				(self.filters.report_date, self.filters.company),
 				as_dict=1,
 			)
 			for d in si_list:
@@ -431,6 +436,7 @@ class ReceivablePayableReport:
 
 			# Get Sales Team
 			if self.filters.show_sales_person:
+				# nosemgrep
 				sales_team = frappe.db.sql(
 					"""
 					select parent, sales_person
@@ -445,25 +451,33 @@ class ReceivablePayableReport:
 					)
 
 		if self.account_type == "Payable":
+			# nosemgrep
 			for pi in frappe.db.sql(
 				"""
 				select name, due_date, bill_no, bill_date
 				from `tabPurchase Invoice`
-				where posting_date <= %s
+				where
+					posting_date <= %s
+					and company = %s
+					and docstatus = 1
 			""",
-				self.filters.report_date,
+				(self.filters.report_date, self.filters.company),
 				as_dict=1,
 			):
 				self.invoice_details.setdefault(pi.name, pi)
 
 		# Invoices booked via Journal Entries
+		# nosemgrep
 		journal_entries = frappe.db.sql(
 			"""
 			select name, due_date, bill_no, bill_date
 			from `tabJournal Entry`
-			where posting_date <= %s
+			where
+				posting_date <= %s
+				and company = %s
+				and docstatus = 1
 		""",
-			self.filters.report_date,
+			(self.filters.report_date, self.filters.company),
 			as_dict=1,
 		)
 
@@ -472,6 +486,8 @@ class ReceivablePayableReport:
 				self.invoice_details.setdefault(je.name, je)
 
 	def set_party_details(self, row):
+		if not row.party:
+			return
 		# customer / supplier name
 		party_details = self.get_party_details(row.party) or {}
 		row.update(party_details)
@@ -496,6 +512,7 @@ class ReceivablePayableReport:
 
 	def get_payment_terms(self, row):
 		# build payment_terms for row
+		# nosemgrep
 		payment_terms_details = frappe.db.sql(
 			f"""
 			select
@@ -505,7 +522,8 @@ class ReceivablePayableReport:
 			from `tab{row.voucher_type}` si, `tabPayment Schedule` ps
 			where
 				si.name = ps.parent and
-				si.name = %s
+				si.name = %s and
+				si.is_return = 0
 			order by ps.paid_amount desc, due_date
 		""",
 			row.voucher_no,
@@ -533,9 +551,7 @@ class ReceivablePayableReport:
 			self.append_payment_term(row, d, term)
 
 	def append_payment_term(self, row, d, term):
-		if (
-			self.filters.get("customer") or self.filters.get("supplier")
-		) and d.currency == d.party_account_currency:
+		if d.currency == d.party_account_currency:
 			invoiced = d.payment_amount
 		else:
 			invoiced = d.base_payment_amount
@@ -708,6 +724,7 @@ class ReceivablePayableReport:
 	def get_return_entries(self):
 		doctype = "Sales Invoice" if self.account_type == "Receivable" else "Purchase Invoice"
 		filters = {
+			"posting_date": ("<=", self.filters.report_date),
 			"is_return": 1,
 			"docstatus": 1,
 			"company": self.filters.company,
@@ -815,6 +832,7 @@ class ReceivablePayableReport:
 		if self.filters.get("sales_person"):
 			lft, rgt = frappe.db.get_value("Sales Person", self.filters.get("sales_person"), ["lft", "rgt"])
 
+			# nosemgrep
 			records = frappe.db.sql(
 				"""
 				select distinct parent, parenttype
@@ -993,22 +1011,29 @@ class ReceivablePayableReport:
 
 	def get_columns(self):
 		self.columns = []
-		self.add_column("Posting Date", fieldtype="Date")
+		self.add_column(_("Posting Date"), fieldname="posting_date", fieldtype="Date")
 		self.add_column(
-			label="Party Type",
+			label=_("Party Type"),
 			fieldname="party_type",
 			fieldtype="Data",
 			width=100,
 		)
 		self.add_column(
-			label="Party",
+			label=_("Party"),
 			fieldname="party",
 			fieldtype="Dynamic Link",
 			options="party_type",
 			width=180,
 		)
+		if self.account_type == "Receivable":
+			label = _("Receivable Account")
+		elif self.account_type == "Payable":
+			label = _("Payable Account")
+		else:
+			label = _("Party Account")
+
 		self.add_column(
-			label=self.account_type + " Account",
+			label=label,
 			fieldname="party_account",
 			fieldtype="Link",
 			options="Account",
@@ -1017,10 +1042,10 @@ class ReceivablePayableReport:
 
 		if self.party_naming_by == "Naming Series":
 			if self.account_type == "Payable":
-				label = "Supplier Name"
+				label = _("Supplier Name")
 				fieldname = "supplier_name"
 			else:
-				label = "Customer Name"
+				label = _("Customer Name")
 				fieldname = "customer_name"
 			self.add_column(
 				label=label,
@@ -1046,7 +1071,7 @@ class ReceivablePayableReport:
 			width=180,
 		)
 
-		self.add_column(label="Due Date", fieldtype="Date")
+		self.add_column(label=_("Due Date"), fieldname="due_date", fieldtype="Date")
 
 		if self.account_type == "Payable":
 			self.add_column(label=_("Bill No"), fieldname="bill_no", fieldtype="Data")

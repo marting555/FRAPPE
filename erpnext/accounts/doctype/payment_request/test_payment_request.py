@@ -6,8 +6,9 @@ import unittest
 from unittest.mock import patch
 
 import frappe
-from frappe.tests.utils import FrappeTestCase
+from frappe.tests import IntegrationTestCase, UnitTestCase
 
+from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_terms_template
 from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
@@ -16,7 +17,7 @@ from erpnext.buying.doctype.purchase_order.test_purchase_order import create_pur
 from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
 from erpnext.setup.utils import get_exchange_rate
 
-test_dependencies = ["Currency Exchange", "Journal Entry", "Contact", "Address"]
+EXTRA_TEST_RECORD_DEPENDENCIES = ["Currency Exchange", "Journal Entry", "Contact", "Address"]
 
 PAYMENT_URL = "https://example.com/payment"
 
@@ -57,7 +58,16 @@ payment_method = [
 ]
 
 
-class TestPaymentRequest(FrappeTestCase):
+class UnitTestPaymentRequest(UnitTestCase):
+	"""
+	Unit tests for PaymentRequest.
+	Use this class for testing individual functions and methods.
+	"""
+
+	pass
+
+
+class TestPaymentRequest(IntegrationTestCase):
 	def setUp(self):
 		for payment_gateway in payment_gateways:
 			if not frappe.db.get_value("Payment Gateway", payment_gateway["gateway"], "name"):
@@ -218,7 +228,7 @@ class TestPaymentRequest(FrappeTestCase):
 
 	def test_payment_entry_against_purchase_invoice(self):
 		si_usd = make_purchase_invoice(
-			customer="_Test Supplier USD",
+			supplier="_Test Supplier USD",
 			debit_to="_Test Payable USD - _TC",
 			currency="USD",
 			conversion_rate=50,
@@ -243,7 +253,7 @@ class TestPaymentRequest(FrappeTestCase):
 
 	def test_multiple_payment_entry_against_purchase_invoice(self):
 		purchase_invoice = make_purchase_invoice(
-			customer="_Test Supplier USD",
+			supplier="_Test Supplier USD",
 			debit_to="_Test Payable USD - _TC",
 			currency="USD",
 			conversion_rate=50,
@@ -483,8 +493,13 @@ class TestPaymentRequest(FrappeTestCase):
 			return_doc=1,
 		)
 
+	@IntegrationTestCase.change_settings(
+		"Accounts Settings", {"allow_multi_currency_invoices_against_single_party_account": 1}
+	)
 	def test_multiple_payment_if_partially_paid_for_multi_currency(self):
-		pi = make_purchase_invoice(currency="USD", conversion_rate=50, qty=1, rate=100)
+		pi = make_purchase_invoice(currency="USD", conversion_rate=50, qty=1, rate=100, do_not_save=1)
+		pi.credit_to = "Creditors - _TC"
+		pi.submit()
 
 		pr = make_payment_request(
 			dt="Purchase Invoice",
@@ -585,10 +600,15 @@ class TestPaymentRequest(FrappeTestCase):
 		self.assertEqual(pr.outstanding_amount, 0)
 		self.assertEqual(pr.grand_total, 20000)
 
+	@IntegrationTestCase.change_settings(
+		"Accounts Settings", {"allow_multi_currency_invoices_against_single_party_account": 1}
+	)
 	def test_single_payment_with_payment_term_for_multi_currency(self):
 		create_payment_terms_template()
 
-		si = create_sales_invoice(do_not_save=1, currency="USD", qty=1, rate=200, conversion_rate=50)
+		si = create_sales_invoice(
+			do_not_save=1, currency="USD", debit_to="Debtors - _TC", qty=1, rate=200, conversion_rate=50
+		)
 		si.payment_terms_template = "Test Receivable Template"  # 84.746 and 15.254
 		si.save()
 		si.submit()
@@ -670,3 +690,48 @@ class TestPaymentRequest(FrappeTestCase):
 
 		so.load_from_db()
 		self.assertEqual(so.advance_payment_status, "Requested")
+
+	def test_partial_paid_invoice_with_payment_request(self):
+		si = create_sales_invoice(currency="INR", qty=1, rate=5000)
+		si.save()
+		si.submit()
+
+		pe = get_payment_entry("Sales Invoice", si.name, bank_account="_Test Bank - _TC")
+		pe.reference_no = "PAYEE0002"
+		pe.reference_date = frappe.utils.nowdate()
+		pe.paid_amount = 2500
+		pe.references[0].allocated_amount = 2500
+		pe.save()
+		pe.submit()
+
+		si.load_from_db()
+		pr = make_payment_request(dt="Sales Invoice", dn=si.name, mute_email=1)
+
+		self.assertEqual(pr.grand_total, si.outstanding_amount)
+
+
+def test_partial_paid_invoice_with_submitted_payment_entry(self):
+	pi = make_purchase_invoice(currency="INR", qty=1, rate=5000)
+	pi.save()
+	pi.submit()
+
+	pe = get_payment_entry("Purchase Invoice", pi.name, bank_account="_Test Bank - _TC")
+	pe.reference_no = "PURINV0001"
+	pe.reference_date = frappe.utils.nowdate()
+	pe.paid_amount = 2500
+	pe.references[0].allocated_amount = 2500
+	pe.save()
+	pe.submit()
+	pe.cancel()
+
+	pe = get_payment_entry("Purchase Invoice", pi.name, bank_account="_Test Bank - _TC")
+	pe.reference_no = "PURINV0002"
+	pe.reference_date = frappe.utils.nowdate()
+	pe.paid_amount = 2500
+	pe.references[0].allocated_amount = 2500
+	pe.save()
+	pe.submit()
+
+	pi.load_from_db()
+	pr = make_payment_request(dt="Purchase Invoice", dn=pi.name, mute_email=1)
+	self.assertEqual(pr.grand_total, pi.outstanding_amount)
