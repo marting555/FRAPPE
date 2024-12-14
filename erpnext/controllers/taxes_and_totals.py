@@ -789,7 +789,7 @@ class calculate_taxes_and_totals:
 			grand_total = self.doc.base_rounded_total or self.doc.base_grand_total
 
 			invoice_total = flt(
-				grand_total - self.doc.base_write_off_amount, self.doc.precision("grand_total")
+				grand_total - flt(self.doc.base_write_off_amount), self.doc.precision("grand_total")
 			)
 
 			if invoice_total > 0 and self.doc.total_advance > invoice_total:
