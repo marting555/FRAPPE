@@ -7,7 +7,6 @@ from frappe import _
 
 
 def execute(filters=None):
-	# if frappe.db.get_value("Comapny",frappe.defaults.get_user_default("Company"),"country")== "United Arab Emirates":
 	columns = get_columns()
 	data, emirates, amounts_by_emirate = get_data(filters)
 	return columns, data
