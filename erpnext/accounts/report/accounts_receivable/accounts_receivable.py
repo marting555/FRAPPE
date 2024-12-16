@@ -450,7 +450,7 @@ class ReceivablePayableReport:
 				"""
 				select name, due_date, bill_no, bill_date
 				from `tabPurchase Invoice`
-				where posting_date <= %s
+				where posting_date <= %s AND company = %s
 			""",
 				(self.filters.report_date, self.filters.company),
 				as_dict=1,
