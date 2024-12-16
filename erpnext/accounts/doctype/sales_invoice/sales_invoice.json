@@ -158,8 +158,9 @@
   "dispatch_address",
   "company_address_section",
   "company_address",
-  "company_addr_col_break",
   "company_address_display",
+  "company_addr_col_break",
+  "company_contact_person",
   "terms_tab",
   "section_break_zrni",
   "ignore_default_payment_terms_template",
@@ -2031,6 +2032,13 @@
    "print_hide": 1
   },
   {
+   "fieldname": "company_contact_person",
+   "fieldtype": "Link",
+   "label": "Company Contact Person",
+   "options": "Contact",
+   "print_hide": 1
+  },
+  {
    "fieldname": "section_break_zrni",
    "fieldtype": "Section Break",
    "label": "Payment Terms"
@@ -2046,7 +2054,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2024-11-26 13:18:36.328508",
+ "modified": "2024-11-26 12:34:09.110690",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

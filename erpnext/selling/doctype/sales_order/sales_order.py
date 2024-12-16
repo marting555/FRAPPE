@@ -76,6 +76,7 @@ class SalesOrder(SellingController):
 		company: DF.Link
 		company_address: DF.Link | None
 		company_address_display: DF.SmallText | None
+		company_contact_person: DF.Link | None
 		contact_display: DF.SmallText | None
 		contact_email: DF.Data | None
 		contact_mobile: DF.SmallText | None
@@ -1177,7 +1178,10 @@ def get_events(start, end, filters=None):
 		""",
 		{"start": start, "end": end},
 		as_dict=True,
-		update={"allDay": 0},
+		update={
+			"allDay": 0,
+			"convertToUserTz": 0,
+		},
 	)
 	return data
 
@@ -1349,9 +1353,16 @@ def make_purchase_order(source_name, selected_items=None, target_doc=None):
 		target.payment_schedule = []
 
 		if is_drop_ship_order(target):
-			target.customer = source.customer
-			target.customer_name = source.customer_name
-			target.shipping_address = source.shipping_address_name
+			if source.shipping_address_name:
+				target.shipping_address = source.shipping_address_name
+				target.shipping_address_display = source.shipping_address
+			else:
+				target.shipping_address = source.customer_address
+				target.shipping_address_display = source.address_display
+			target.customer_contact_person = source.contact_person
+			target.customer_contact_display = source.contact_display
+			target.customer_contact_mobile = source.contact_mobile
+			target.customer_contact_email = source.contact_email
 		else:
 			target.customer = target.customer_name = target.shipping_address = None
 

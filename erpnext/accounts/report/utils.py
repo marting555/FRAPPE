@@ -255,7 +255,9 @@ def get_journal_entries(filters, args):
 		)
 		.orderby(je.posting_date, je.name, order=Order.desc)
 	)
-	query = apply_common_conditions(filters, query, doctype="Journal Entry", child_doctype="Journal Entry Account", payments=True)
+	query = apply_common_conditions(
+		filters, query, doctype="Journal Entry", child_doctype="Journal Entry Account", payments=True
+	)
 
 	journal_entries = query.run(as_dict=True)
 	return journal_entries

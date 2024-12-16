@@ -63,6 +63,7 @@ class POSInvoice(SalesInvoice):
 		company: DF.Link
 		company_address: DF.Link | None
 		company_address_display: DF.SmallText | None
+		company_contact_person: DF.Link | None
 		consolidated_invoice: DF.Link | None
 		contact_display: DF.SmallText | None
 		contact_email: DF.Data | None
