@@ -565,7 +565,7 @@ def get_tds_amount(ldc, parties, inv, tax_details, vouchers):
 				or 0.0
 			)
 			net_total += inv.tax_withholding_net_total
-			supp_credit_amt = net_total - cumulative_threshold
+			supp_credit_amt = net_total + tax_withholding_net_total - cumulative_threshold
 
 		if ldc and is_valid_certificate(ldc, inv.get("posting_date") or inv.get("transaction_date"), 0):
 			tds_amount = get_lower_deduction_amount(

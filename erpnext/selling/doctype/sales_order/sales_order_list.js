@@ -27,7 +27,7 @@ frappe.listview_settings["Sales Order"] = {
 			} else if (flt(doc.grand_total) === 0) {
 				// not delivered (zeroount order)
 				return [__("To Deliver"), "orange", "per_delivered,<,100|grand_total,=,0|status,!=,Closed"];
-			} else if (flt(doc.per_billed, 2) < 100) {
+			} else if (flt(doc.per_billed) < 100) {
 				// not delivered & not billed
 				return [
 					__("To Deliver and Bill"),
@@ -39,13 +39,13 @@ frappe.listview_settings["Sales Order"] = {
 				return [__("To Deliver"), "orange", "per_delivered,<,100|per_billed,=,100|status,!=,Closed"];
 			}
 		} else if (
-			flt(doc.per_delivered, 2) === 100 &&
+			flt(doc.per_delivered) === 100 &&
 			flt(doc.grand_total) !== 0 &&
-			flt(doc.per_billed, 2) < 100
+			flt(doc.per_billed) < 100
 		) {
 			// to bill
 			return [__("To Bill"), "orange", "per_delivered,=,100|per_billed,<,100|status,!=,Closed"];
-		} else if (doc.skip_delivery_note && flt(doc.per_billed, 2) < 100) {
+		} else if (doc.skip_delivery_note && flt(doc.per_billed) < 100) {
 			return [__("To Bill"), "orange", "per_billed,<,100|status,!=,Closed"];
 		}
 	},
