@@ -1338,18 +1338,25 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 		self.assertEqual(sr.expense_account, "Temporary Opening - PP Ltd")
 		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Temporary Opening - PP Ltd'},'credit')#get_difference_account API ref.
 		
-		self.assertEqual(gl_temp_credit, 1000)
+		self.assertEqual(gl_temp_credit, 4000)
 		
 		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Stock In Hand - PP Ltd'},'debit')#get_difference_account API ref.
-		self.assertEqual(gl_stock_debit, 1000)
-		
-		actual_qty,incoming_rate = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':sr.name, 'voucher_type':'Stock Reconciliation'},['qty_after_transaction','valuation_rate'])#get_difference_account API ref.
+		self.assertEqual(gl_stock_debit, 4000)
+
+		actual_qty,incoming_rate = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':sr.name, 'voucher_type':'Stock Reconciliation','warehouse':'Stores - PP Ltd'},['qty_after_transaction','valuation_rate'])#get_difference_account API ref.
 		self.assertEqual(actual_qty, 10)
 		self.assertEqual(incoming_rate, 100)
+
+		actual_qty1,incoming_rate1 = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':sr.name, 'voucher_type':'Stock Reconciliation','warehouse':'Finished Goods - PP Ltd'},['qty_after_transaction','valuation_rate'])#get_difference_account API ref.
+		self.assertEqual(actual_qty1, 20)
+		self.assertEqual(incoming_rate1, 150)
 
 		frappe.db.rollback()
 		
 	def create_stock_reconciliation_for_opening(self):
+		item1 = create_item("_Test_reco1")
+		item2 = create_item("_Test_reco2")
+		
 		sr = frappe.new_doc("Stock Reconciliation")
 		sr.purpose = "Opening Stock"
 		sr.posting_date = "2024-04-01"
@@ -1360,10 +1367,19 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 		sr.append(
             "items",
             {
-                "item_code": "Book",
+                "item_code": item1,
                 "warehouse": "Stores - PP Ltd",
                 "qty": 10,
                 "valuation_rate": 100,
+            },
+        )
+		sr.append(
+            "items",
+            {
+                "item_code": item2,
+                "warehouse": "Finished Goods - PP Ltd",
+                "qty": 20,
+                "valuation_rate": 150,
             },
         )
 		return sr
