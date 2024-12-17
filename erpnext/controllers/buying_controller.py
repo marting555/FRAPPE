@@ -149,7 +149,8 @@ class BuyingController(SubcontractingController):
 		self.set_missing_item_details(for_validate)
 
 	def set_supplier_from_item_default(self):
-		if self.meta.get_field("supplier") and not self.supplier:
+		is_scpo_from_mr = all([item.material_request for item in self.items]) if self.doctype == "Purchase Order" else False
+		if self.meta.get_field("supplier") and not self.supplier and (frappe.flags.args.default_supplier if is_scpo_from_mr else True):
 			for d in self.get("items"):
 				supplier = frappe.db.get_value(
 					"Item Default", {"parent": d.item_code, "company": self.company}, "default_supplier"

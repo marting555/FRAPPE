@@ -469,7 +469,7 @@ class PurchaseOrder(BuyingController):
 		if self.is_against_so():
 			self.update_status_updater()
 
-		self.update_prevdoc_status()
+		self.update_prevdoc_status(source_field="fg_item_qty")
 		if not self.is_subcontracted or self.is_old_subcontracting_flow:
 			self.update_requested_qty()
 
