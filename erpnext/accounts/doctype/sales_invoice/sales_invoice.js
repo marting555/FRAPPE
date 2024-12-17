@@ -619,6 +619,7 @@ cur_frm.set_query("asset", "items", function (doc, cdt, cdn) {
 
 frappe.ui.form.on('Sales Invoice', {
 	setup: function (frm) {
+		frm.set_value('selling_price_list', "Retail");
 		frm.add_fetch('customer', 'tax_id', 'tax_id');
 		frm.add_fetch('payment_term', 'invoice_portion', 'invoice_portion');
 		frm.add_fetch('payment_term', 'description', 'description');
@@ -746,7 +747,6 @@ frappe.ui.form.on('Sales Invoice', {
 				}
 			}
 		};
-		frm.set_value('selling_price_list', "Retail");
 	},
 	// When multiple companies are set up. in case company name is changed set default company address
 	company: function (frm) {
