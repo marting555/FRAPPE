@@ -4,12 +4,25 @@ from frappe.query_builder.functions import Coalesce
 
 
 def execute():
-	if not frappe.db.has_column("GL Entry", "asset"):
-		frappe.db.add_column("GL Entry", "asset", "Link", options="Asset")
+	if frappe.db.has_column("GL Entry", "asset"):
+		process_asset_submission_entries()
+		process_asset_repair_entries()
+		process_asset_related_journal_entries()  # Revaluation and Depreciation
+		process_asset_capitalization_entries()
 
-	process_asset_repair_entries()
-	process_asset_related_journal_entries()
-	process_asset_capitalization_entries()
+
+def process_asset_submission_entries():
+	gl_entry = DocType("GL Entry")
+	asset = DocType("Asset")
+
+	query = (
+		frappe.qb.update(gl_entry)
+		.join(asset)
+		.on(gl_entry.voucher_no == asset.name)
+		.set(gl_entry.asset, Coalesce(asset.name, ""))
+		.where((gl_entry.voucher_type == "Asset") & (gl_entry.debit > 0) & (gl_entry.is_cancelled == 0))
+	)
+	query.run()
 
 
 def process_asset_repair_entries():
@@ -30,13 +43,14 @@ def process_asset_related_journal_entries():
 	gl_entry = DocType("GL Entry")
 	asset = DocType("Asset")
 
-	(
+	query = (
 		frappe.qb.update(gl_entry)
 		.join(asset)
 		.on(gl_entry.against_voucher == asset.name)
 		.set(gl_entry.asset, Coalesce(asset.name, ""))
 		.where((gl_entry.voucher_type == "Journal Entry") & (gl_entry.against_voucher_type == "Asset"))
-	).run()
+	)
+	query.run()
 
 
 def process_asset_capitalization_entries():
