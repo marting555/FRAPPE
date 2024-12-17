@@ -409,7 +409,7 @@ def get_doc_info(vouchers, doctype, tax_category_map, net_total_map=None):
 			"paid_amount_after_tax",
 			"base_paid_amount",
 		],
-		"Journal Entry": ["total_amount"],
+		"Journal Entry": ["total_amount", "tax_withholding_category"],
 	}
 
 	entries = frappe.get_all(
