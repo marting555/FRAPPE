@@ -382,8 +382,6 @@
    "no_copy": 1,
    "read_only": 1,
    "search_index": 1
-<<<<<<< HEAD
-=======
   },
   {
    "fieldname": "references_section",
@@ -407,7 +405,6 @@
    "hidden": 1,
    "label": "SC Conversion Factor",
    "read_only": 1
->>>>>>> 3eba6bf3dd (feat(subcontracting): Added provision to create multiple Subcontracting Orders against a single Purchase Order (#44711))
   }
  ],
  "idx": 1,
