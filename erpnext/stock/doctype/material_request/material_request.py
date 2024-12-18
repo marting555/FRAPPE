@@ -398,15 +398,16 @@ def update_item(obj, target, source_parent):
 		if sc_bom := get_subcontracting_boms_for_finished_goods(target.fg_item):
 			target.item_code = sc_bom.service_item
 			target.uom = sc_bom.service_item_uom
-			target.conversion_factor = frappe.db.get_value(
-				"UOM Conversion Detail",
-				{"parent": sc_bom.service_item, "uom": sc_bom.service_item_uom},
-				"conversion_factor",
+			target.conversion_factor = (
+				frappe.db.get_value(
+					"UOM Conversion Detail",
+					{"parent": sc_bom.service_item, "uom": sc_bom.service_item_uom},
+					"conversion_factor",
+				)
+				or 1
 			)
 			target.qty = target.fg_item_qty * sc_bom.conversion_factor
-			target.stock_qty = target.qty / sc_bom.conversion_factor
-		else:
-			target.uom = "Nos"
+			target.stock_qty = target.qty * target.conversion_factor
 
 
 def get_list_context(context=None):
@@ -466,6 +467,22 @@ def make_purchase_order(source_name, target_doc=None, args=None):
 
 		return qty < d.stock_qty and child_filter
 
+	def generate_field_map():
+		field_map = [
+			["name", "material_request_item"],
+			["parent", "material_request"],
+			["sales_order", "sales_order"],
+			["sales_order_item", "sales_order_item"],
+			["wip_composite_asset", "wip_composite_asset"],
+		]
+
+		if is_subcontracted:
+			field_map.extend([["item_code", "fg_item"], ["qty", "fg_item_qty"]])
+		else:
+			field_map.extend([["uom", "stock_uom"], ["uom", "uom"]])
+
+		return field_map
+
 	doclist = get_mapped_doc(
 		"Material Request",
 		source_name,
@@ -479,21 +496,7 @@ def make_purchase_order(source_name, target_doc=None, args=None):
 			},
 			"Material Request Item": {
 				"doctype": "Purchase Order Item",
-				"field_map": [
-					item
-					for item in [
-						["name", "material_request_item"],
-						["parent", "material_request"],
-						["qty", "fg_item_qty"] if is_subcontracted else [],
-						["item_code", "fg_item"] if is_subcontracted else [],
-						["uom", "stock_uom"] if not is_subcontracted else [],
-						["uom", "uom"] if not is_subcontracted else [],
-						["sales_order", "sales_order"],
-						["sales_order_item", "sales_order_item"],
-						["wip_composite_asset", "wip_composite_asset"],
-					]
-					if item
-				],  # this list comprehension will remove all empty lists
+				"field_map": generate_field_map(),
 				"field_no_map": ["item_code", "item_name", "qty"] if is_subcontracted else [],
 				"postprocess": update_item,
 				"condition": select_item,

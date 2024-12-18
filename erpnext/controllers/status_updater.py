@@ -171,11 +171,7 @@ class StatusUpdater(Document):
 	Installation Note: Update Installed Qty, Update Percent Qty and Validate over installation
 	"""
 
-	def update_prevdoc_status(self, source_field=None):
-		if source_field:
-			for item in self.status_updater:
-				item.update({"source_field": source_field})
-
+	def update_prevdoc_status(self):
 		self.update_qty()
 		self.validate_qty()
 
@@ -424,6 +420,13 @@ class StatusUpdater(Document):
 		for d in self.get_all_children():
 			if d.doctype != args["source_dt"]:
 				continue
+
+			if (
+				hasattr(d, "material_request")
+				and frappe.db.get_value("Material Request", d.material_request, "material_request_type")
+				== "Subcontracting"
+			):
+				args.update({"source_field": "fg_item_qty"})
 
 			self._update_modified(args, update_modified)
 
