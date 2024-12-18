@@ -270,6 +270,20 @@ class AccountsController(TransactionBase):
 		self.set_total_in_words()
 		self.set_default_letter_head()
 
+		if self.get("docstatus") == 1 and self.get("company"):
+			accounting_dimensions = ["Cost Center", "Project"]
+			accounting_dimensions += frappe.get_all("Accounting Dimension", pluck="name")
+
+			for dimension in accounting_dimensions:
+				if self.get(frappe.scrub(dimension)):
+					doc = frappe.get_doc(dimension, self.get(frappe.scrub(dimension)))
+					if hasattr(doc, "company") and doc.company != self.company:
+						frappe.throw(
+							_("{0} {1} is not part of the current company").format(
+								dimension, frappe.bold(self.get(frappe.scrub(dimension)))
+							)
+						)
+
 	def set_default_letter_head(self):
 		if hasattr(self, "letter_head") and not self.letter_head:
 			self.letter_head = frappe.db.get_value("Company", self.company, "default_letter_head")
