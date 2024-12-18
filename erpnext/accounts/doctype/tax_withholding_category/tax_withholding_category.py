@@ -219,21 +219,42 @@ def get_tax_row_for_tcs(inv, tax_details, tax_amount, tax_deducted):
 		# TCS already deducted on previous invoices
 		# So, TCS will be calculated by 'Previous Row Total'
 
-		taxes_excluding_tcs = [d for d in inv.taxes if d.account_head != tax_details.account_head]
+		taxes_excluding_tcs, tcs_tax = separate_taxe_and_tax_with_holding(inv, tax_details.account_head)
 		if taxes_excluding_tcs:
-			# chargeable amount is the total amount after other charges are applied
-			row.update(
-				{
-					"charge_type": "On Previous Row Total",
-					"row_id": len(taxes_excluding_tcs),
-					"rate": tax_details.rate,
-				}
-			)
+			if tcs_tax and tcs_tax.charge_type == "On Net Total":
+				# chargeable amount is the Net total
+				row.update(
+					{
+						"charge_type": tcs_tax.charge_type,
+						"row_id": None,
+						"rate": tax_details.rate,
+					}
+				)
+			else:
+				# chargeable amount is the total amount after other charges are applied
+				row.update(
+					{
+						"charge_type": "On Previous Row Total",
+						"row_id": len(taxes_excluding_tcs),
+						"rate": tax_details.rate,
+					}
+				)
 		else:
 			# if only TCS is to be charged, then net total is chargeable amount
 			row.update({"charge_type": "On Net Total", "rate": tax_details.rate})
 
 	return row
+
+
+def separate_taxe_and_tax_with_holding(inv, tcs_account_head):
+	taxes_excluding_tcs = []
+	tcs_tax = {}
+	for tax in inv.taxes:
+		if tax.account_head != tcs_account_head:
+			taxes_excluding_tcs.append(tax)
+		else:
+			tcs_tax = tax
+	return taxes_excluding_tcs, tcs_tax
 
 
 def get_tax_row_for_tds(tax_details, tax_amount):
