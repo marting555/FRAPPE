@@ -330,6 +330,10 @@ doc_events = {
 		
 		],
 	},
+    "Project": {
+		"on_update": "erpnext.public.is_wbs.on_update",
+	
+    },
 	
     # "Material Request": {
     #     "on_submit": "erpnext.public.material_request.on_submit",
@@ -652,12 +656,6 @@ fields_for_group_similar_items = ["qty", "amount"]
 
 after_migrate = "erpnext.accounts.install.after_migrate"
 
-doc_events = {
-    "Project": {
-		"on_update": "erpnext.public.is_wbs.on_update",
-	
-    }
-}
 
 fixtures =[
     {"dt":"Custom Field","filters":[
