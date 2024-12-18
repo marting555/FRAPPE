@@ -207,7 +207,6 @@ def get_tax_withholding_rates(tax_withholding, posting_date):
 
 
 def get_tax_row_for_tcs(inv, tax_details, tax_amount, tax_deducted):
-	print("tax_deducted", tax_deducted)
 	row = {
 		"category": "Total",
 		"charge_type": "Actual",

@@ -9,6 +9,9 @@ from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 from frappe.tests import IntegrationTestCase, UnitTestCase
 from frappe.utils import add_days, today
 
+from erpnext.accounts.doctype.opening_invoice_creation_tool.test_opening_invoice_creation_tool import (
+	make_customer,
+)
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 from erpnext.accounts.utils import get_fiscal_year
 from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_invoice
@@ -70,6 +73,35 @@ class TestTaxWithholdingCategory(IntegrationTestCase):
 		# delete invoices to avoid clashing
 		for d in reversed(invoices):
 			d.cancel()
+
+	def test_change_charge_type_to_net_total(self):
+		customer = make_customer(customer="_Test Charge Type")
+		cust_doc = frappe.get_doc("Customer", customer)
+		si = create_sales_invoice(
+			customer=cust_doc.name,
+			do_not_save=1,
+			qty=100,
+			rate=10000,
+		)
+		si.append(
+			"taxes",
+			{
+				"charge_type": "On Net Total",
+				"account_head": "Freight and Forwarding Charges - _TC",
+				"description": "movement charges",
+				"tax_amount": 20,
+			},
+		)
+
+		cust_doc.tax_withholding_category = "Test Service Category"
+		cust_doc.save()
+		si.save()
+		for tax_row in si.taxes:
+			if tax_row.account_head == "TDS - _TC":
+				tax_row.charge_type = "On Net Total"
+		si.save()
+		si.submit()
+		self.assertEqual(len(si.taxes), 2)
 
 	def test_single_threshold_tds(self):
 		invoices = []
