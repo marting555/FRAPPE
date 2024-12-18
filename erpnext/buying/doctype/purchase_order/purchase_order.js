@@ -400,11 +400,23 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 									);
 								}
 							} else {
+<<<<<<< HEAD
 								cur_frm.add_custom_button(
 									__("Subcontracting Order"),
 									this.make_subcontracting_order,
 									__("Create")
 								);
+=======
+								if (!doc.items.every((item) => item.qty == item.sco_qty)) {
+									this.frm.add_custom_button(
+										__("Subcontracting Order"),
+										() => {
+											me.make_subcontracting_order();
+										},
+										__("Create")
+									);
+								}
+>>>>>>> 3eba6bf3dd (feat(subcontracting): Added provision to create multiple Subcontracting Orders against a single Purchase Order (#44711))
 							}
 						}
 					}
