@@ -25,6 +25,10 @@ def validate_return(doc):
 
 	if doc.return_against:
 		validate_return_against(doc)
+
+		if doc.doctype in ("Sales Invoice", "Purchase Invoice") and not doc.update_stock:
+			return
+		
 		if doc.doctype in ("Sales Invoice", "Purchase Invoice") and not doc.update_stock:
 			return
 		validate_returned_items(doc)
