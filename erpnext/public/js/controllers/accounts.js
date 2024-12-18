@@ -147,6 +147,8 @@ erpnext.accounts.taxes = {
 				me.validate_taxes_and_charges(cdt, cdn);
 			},
 			charge_type: function(frm, cdt, cdn) {
+				let row_tax_value = locals[cdt][cdn];
+				row_tax_value.row_id = null
 				me.validate_taxes_and_charges(cdt, cdn);
 				let open_form = frm.open_grid_row();
 				if(open_form) {
