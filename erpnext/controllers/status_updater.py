@@ -171,7 +171,7 @@ class StatusUpdater(Document):
 	Installation Note: Update Installed Qty, Update Percent Qty and Validate over installation
 	"""
 
-	def update_prevdoc_status(self, source_field = None):
+	def update_prevdoc_status(self, source_field=None):
 		if source_field:
 			for item in self.status_updater:
 				item.update({"source_field": source_field})
