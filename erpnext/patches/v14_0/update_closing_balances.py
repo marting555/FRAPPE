@@ -13,23 +13,24 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 )
 
 def execute():
-	frappe.db.truncate("Account Closing Balance")
-	gle_fields = get_gle_fields()
+	return
+	# frappe.db.truncate("Account Closing Balance")
+	# gle_fields = get_gle_fields()
 
-	for company in frappe.get_all("Company", pluck="name"):
-		i = 0
-		company_wise_order = {}
-		for pcv in get_period_closing_vouchers(company):
-			company_wise_order.setdefault(pcv.company, [])
-			if pcv.period_end_date not in company_wise_order[pcv.company]:
-				pcv_doc = frappe.get_doc("Period Closing Voucher", pcv.name)
-				pcv_doc.pl_accounts_reverse_gle = get_pcv_gl_entries_for_pl_accounts(pcv, gle_fields)
-				pcv_doc.closing_account_gle = get_pcv_gl_entries_for_closing_accounts(pcv, gle_fields)
-				closing_entries = pcv_doc.get_account_closing_balances()
-				make_closing_entries(closing_entries, pcv.name, pcv.company, pcv.period_end_date)
+	# for company in frappe.get_all("Company", pluck="name"):
+	# 	i = 0
+	# 	company_wise_order = {}
+	# 	for pcv in get_period_closing_vouchers(company):
+	# 		company_wise_order.setdefault(pcv.company, [])
+	# 		if pcv.period_end_date not in company_wise_order[pcv.company]:
+	# 			pcv_doc = frappe.get_doc("Period Closing Voucher", pcv.name)
+	# 			pcv_doc.pl_accounts_reverse_gle = get_pcv_gl_entries_for_pl_accounts(pcv, gle_fields)
+	# 			pcv_doc.closing_account_gle = get_pcv_gl_entries_for_closing_accounts(pcv, gle_fields)
+	# 			closing_entries = pcv_doc.get_account_closing_balances()
+	# 			make_closing_entries(closing_entries, pcv.name, pcv.company, pcv.period_end_date)
 
-				company_wise_order[pcv.company].append(pcv.period_end_date)
-				i += 1
+	# 			company_wise_order[pcv.company].append(pcv.period_end_date)
+	# 			i += 1
 
 def get_gle_fields():
 	default_diemnsion_fields = ["cost_center", "finance_book", "project"]
