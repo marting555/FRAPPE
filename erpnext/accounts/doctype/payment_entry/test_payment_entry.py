@@ -1620,6 +1620,7 @@ class TestPaymentEntry(FrappeTestCase):
 		pr.party_type = "Customer"
 		pr.party = customer
 		pr.receivable_payable_account = "Debtors - _TC"
+		pr.clearing_date = frappe.utils.nowdate()
 		pr.get_unreconciled_entries()
 		self.assertEqual(len(pr.invoices), 1)
 		self.assertEqual(len(pr.payments), 1)
