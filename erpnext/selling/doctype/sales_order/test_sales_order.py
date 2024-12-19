@@ -2157,6 +2157,51 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		so.save()
 		self.assertEqual(so.items[0].margin_rate_or_amount,10)	
   
+	def test_sales_order_full_qty_process(self):
+		so = make_sales_order(
+      			customer='Indra', company='French Connections', cost_center='Main - FC', selling_price_list='Standard Selling',
+         		item_list=[
+				{"item_code": "CPU", "qty": 5, "rate": 3000, "warehouse": "Stores - FC"},
+				{"item_code": "Monitor", "qty": 3, "rate": 5000, "warehouse": "Stores - FC"}
+				]
+           )
+
+		so.save()
+		so.submit()
+  
+		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
+  
+		dn = make_delivery_note(so.name)
+		dn.save()
+		dn.submit()
+  
+		self.assertEqual(dn.status, "To Bill", "Delivery Note not created")
+  
+		qty_change_cpu = frappe.db.get_value('Stock Ledger Entry', {'item_code': 'CPU', 'voucher_no': dn.name, 'warehouse': 'Stores - FC'}, 'actual_qty')
+		self.assertEqual(qty_change_cpu, -5)
+  
+		qty_change_monitor = frappe.db.get_value('Stock Ledger Entry', {'item_code': 'Monitor', 'voucher_no': dn.name, 'warehouse': 'Stores - FC'}, 'actual_qty')
+		self.assertEqual(qty_change_monitor, -3)
+  
+		accounting_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Stock In Hand - FC'}, 'credit')
+		self.assertEqual(accounting_credit, 38000)
+  
+		accounting_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Cost of Goods Sold - FC'}, 'debit')
+		self.assertEqual(accounting_debit, 38000)
+  
+		from erpnext.stock.doctype.delivery_note.delivery_note import (make_sales_invoice)
+  
+		si = make_sales_invoice(dn.name)
+		si.save()
+		si.submit()
+    
+    si_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Sales - FC'}, 'credit')
+		self.assertEqual(si_acc_credit, 30000)
+  
+		si_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Debtors - FC'}, 'debit')
+		self.assertEqual(si_acc_debit, 30000)
+    
+
 	def test_sales_order_with_advance_payment(self):
 		so = make_sales_order(qty=1, rate=3000, do_not_save=True)
 		so.save()
@@ -2207,7 +2252,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
   
 		gl_entries = frappe.get_all('GL Entry', filters={'voucher_type': 'Sales Invoice', 'voucher_no': si.name})
 		self.assertGreater(len(gl_entries), 0)
-
+  
 def automatically_fetch_payment_terms(enable=1):
 	accounts_settings = frappe.get_doc("Accounts Settings")
 	accounts_settings.automatically_fetch_payment_terms = enable
@@ -2235,6 +2280,8 @@ def make_sales_order(**args):
 	so.po_no = args.po_no or ""
 	if args.selling_price_list:
 		so.selling_price_list = args.selling_price_list
+	if args.cost_center:
+		so.cost_center = args.cost_center
 
 	if "warehouse" not in args:
 		args.warehouse = "_Test Warehouse - _TC"
