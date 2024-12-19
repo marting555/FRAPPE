@@ -1900,15 +1900,15 @@ class StockEntry(StockController):
 
 					self.add_to_stock_entry_detail(item_dict)
 
-			# fetch the serial_no of the first stock entry for the second stock entry
-			if self.work_order and self.purpose == "Manufacture":
-				work_order = frappe.get_doc("Work Order", self.work_order)
-				add_additional_cost(self, work_order)
-
 			# add finished goods item
 			if self.purpose in ("Manufacture", "Repack"):
 				self.set_process_loss_qty()
 				self.load_items_from_bom()
+
+			# fetch the serial_no of the first stock entry for the second stock entry
+			if self.work_order and self.purpose == "Manufacture":
+				work_order = frappe.get_doc("Work Order", self.work_order)
+				add_additional_cost(self, work_order)
 
 		self.set_scrap_items()
 		self.set_actual_qty()
