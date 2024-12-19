@@ -51,7 +51,6 @@ class PurchaseOrderItem(Document):
 		item_name: DF.Data
 		item_tax_rate: DF.Code | None
 		item_tax_template: DF.Link | None
-		job_card: DF.Link | None
 		last_purchase_rate: DF.Currency
 		manufacturer: DF.Link | None
 		manufacturer_part_no: DF.Data | None

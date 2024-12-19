@@ -1059,9 +1059,6 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.items[0].qty, 30)
 		self.assertEqual(po.items[0].fg_item_qty, 30)
 
-<<<<<<< HEAD
-	@change_settings("Buying Settings", {"auto_create_subcontracting_order": 1})
-=======
 	def test_new_sc_flow(self):
 		from erpnext.buying.doctype.purchase_order.purchase_order import make_subcontracting_order
 
@@ -1129,8 +1126,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		# Test - 8: Since this PO is now fully subcontracted, creating a new SCO from it should throw error
 		self.assertRaises(frappe.ValidationError, make_subcontracting_order, po.name)
 
-	@IntegrationTestCase.change_settings("Buying Settings", {"auto_create_subcontracting_order": 1})
->>>>>>> 3eba6bf3dd (feat(subcontracting): Added provision to create multiple Subcontracting Orders against a single Purchase Order (#44711))
+	@change_settings("Buying Settings", {"auto_create_subcontracting_order": 1})
 	def test_auto_create_subcontracting_order(self):
 		from erpnext.controllers.tests.test_subcontracting_controller import (
 			make_bom_for_subcontracted_items,

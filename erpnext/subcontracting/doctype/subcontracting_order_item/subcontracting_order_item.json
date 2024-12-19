@@ -384,22 +384,6 @@
    "search_index": 1
   },
   {
-   "fieldname": "references_section",
-   "fieldtype": "Section Break",
-   "label": "References"
-  },
-  {
-   "fieldname": "job_card",
-   "fieldtype": "Link",
-   "label": "Job Card",
-   "options": "Job Card",
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_nfod",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "sc_conversion_factor",
    "fieldtype": "Float",
    "hidden": 1,

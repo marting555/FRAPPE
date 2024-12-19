@@ -912,23 +912,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "column_break_pjyo",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "job_card",
-   "fieldtype": "Link",
-   "label": "Job Card",
-   "options": "Job Card",
-   "search_index": 1
-  },
-  {
-   "fieldname": "distributed_discount_amount",
-   "fieldtype": "Currency",
-   "label": "Distributed Discount Amount",
-   "options": "currency"
-  },
-  {
    "allow_on_submit": 1,
    "fieldname": "sco_qty",
    "fieldtype": "Float",
