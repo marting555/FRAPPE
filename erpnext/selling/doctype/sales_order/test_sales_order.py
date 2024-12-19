@@ -2248,11 +2248,88 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
   
 		self.assertEqual(si.status, 'Paid')
 		self.assertEqual(si.outstanding_amount, 0)
-		self.assertEqual(si.advance_paid, 3000)
+		self.assertEqual(si.total_advance, 3000)
   
 		gl_entries = frappe.get_all('GL Entry', filters={'voucher_type': 'Sales Invoice', 'voucher_no': si.name})
 		self.assertGreater(len(gl_entries), 0)
+
+	def test_sales_order_with_partial_advance_payment(self):
+		so = make_sales_order(company='PP Ltd', warehouse='Stores - PP Ltd', customer='Krishna', item_code='Monitor', qty=1, rate=5000, do_not_save=True)
+		so.save()
+		so.submit()
+
+		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
   
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (get_payment_entry)
+		pe = get_payment_entry("Sales Order", so.name)
+		pe.reference_no = "1"
+		pe.reference_date = nowdate()
+		pe.paid_from_account_currency = so.currency
+		pe.paid_to_account_currency = so.currency
+		pe.source_exchange_rate = 1
+		pe.target_exchange_rate = 1
+		pe.paid_amount = 2000
+		pe.difference_amount = 0
+		pe.save(ignore_permissions=True)
+		pe.submit()
+
+		self.assertEqual(pe.status, 'Submitted', 'Payment Entry not submitted')	
+
+		so.reload()
+		self.assertEqual(so.advance_paid, 2000)
+  
+		pe_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Payment Entry', 'voucher_no': pe.name, 'account': 'Debtors - PP Ltd'}, 'credit')
+		self.assertEqual(pe_acc_credit, 2000)
+
+		pe_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Payment Entry', 'voucher_no': pe.name, 'account': 'Cash - PP Ltd'}, 'debit')
+		self.assertEqual(pe_acc_debit, 2000)
+  
+		dn = make_delivery_note(so.name)
+		dn.submit()
+
+		# check if the stock ledger and general ledger are updated
+		qty_change = frappe.db.get_value('Stock Ledger Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'warehouse': 'Stores - PP Ltd', 'item_code': 'Monitor'}, 'actual_qty')
+		self.assertEqual(qty_change, -1)
+  
+		from erpnext.stock.doctype.delivery_note.delivery_note import (make_sales_invoice)
+
+		si = make_sales_invoice(dn.name)
+		si.allocate_advances_automatically = 1
+		si.save()
+		si.submit()
+
+		self.assertEqual(si.status, 'Partly Paid')
+		self.assertEqual(si.outstanding_amount, 3000)
+		self.assertEqual(si.total_advance, 2000)
+  
+		si_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Sales - PP Ltd'}, 'credit')
+		self.assertEqual(si_acc_credit, 5000)
+
+		si_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Debtors - PP Ltd'}, 'debit')
+		self.assertEqual(si_acc_debit, 5000)
+  
+		# creating payment entry for remaining payment
+		pe2 = get_payment_entry("Sales Order", so.name)
+		pe.reference_no = "1"
+		pe.reference_date = nowdate()
+		pe2.paid_from_account_currency = so.currency
+		pe2.paid_to_account_currency = so.currency
+		pe.source_exchange_rate = 1
+		pe.target_exchange_rate = 1
+		pe2.save(ignore_permissions=True)
+		pe2.submit()
+  
+		pe2_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Payment Entry', 'voucher_no': pe2.name, 'account': 'Debtors - PP Ltd'}, 'credit')
+		self.assertEqual(pe2_acc_credit, 3000)
+
+		pe2_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Payment Entry', 'voucher_no': pe2.name, 'account': 'Cash - PP Ltd'}, 'debit')
+		self.assertEqual(pe2_acc_debit, 3000)
+  
+		# check updated sales invoice
+		si.reload()
+		self.assertEqual(si.status, 'Paid')
+		self.assertEqual(si.outstanding_amount, 0)
+
 def automatically_fetch_payment_terms(enable=1):
 	accounts_settings = frappe.get_doc("Accounts Settings")
 	accounts_settings.automatically_fetch_payment_terms = enable
