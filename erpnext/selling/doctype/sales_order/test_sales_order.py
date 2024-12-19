@@ -2194,12 +2194,64 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		si = make_sales_invoice(dn.name)
 		si.save()
 		si.submit()
-
-		si_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Sales - FC'}, 'credit')
+    
+    si_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Sales - FC'}, 'credit')
 		self.assertEqual(si_acc_credit, 30000)
   
 		si_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Debtors - FC'}, 'debit')
 		self.assertEqual(si_acc_debit, 30000)
+    
+
+	def test_sales_order_with_advance_payment(self):
+		so = make_sales_order(qty=1, rate=3000, do_not_save=True)
+		so.save()
+		so.submit()
+		
+		self.assertEqual(so.status, 'To Deliver and Bill')
+  
+		# create payment entry
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (get_payment_entry)
+  
+		pe = get_payment_entry("Sales Order", so.name)
+		pe.reference_no = "1"
+		pe.reference_date = nowdate()
+		pe.paid_from_account_currency = so.currency
+		pe.paid_to_account_currency = so.currency
+		pe.source_exchange_rate = 1
+		pe.target_exchange_rate = 1
+		pe.paid_amount = so.grand_total
+		pe.save(ignore_permissions=True)
+		pe.submit()
+  
+		self.assertEqual(pe.status, 'Submitted')
+        
+        # check if the advance payment is recorded in the Sales Order
+		so.reload()
+		self.assertEqual(so.advance_paid, 3000)
+  
+		#create delivery note
+		dn = make_delivery_note(so.name)
+		dn.submit()
+  
+		# assert that 1 quantity is deducted from the warehouse stock
+		ordered_qty = frappe.db.get_value('Bin', {'item_code': '_Test Item', 'warehouse': '_Test Warehouse - _TC'}, 'ordered_qty')
+		self.assertEqual(ordered_qty, 1)
+
+		# check if the stock ledger and general ledger are updated
+		stock_ledger = frappe.get_all('Stock Ledger Entry', filters={'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'warehouse': '_Test Warehouse - _TC'})
+		self.assertGreater(len(stock_ledger), 0)
+  
+		from erpnext.stock.doctype.delivery_note.delivery_note import (make_sales_invoice)
+
+		si = make_sales_invoice(dn.name)
+		si.submit()
+  
+		self.assertEqual(si.status, 'Paid')
+		self.assertEqual(si.outstanding_amount, 0)
+		self.assertEqual(si.advance_paid, 3000)
+  
+		gl_entries = frappe.get_all('GL Entry', filters={'voucher_type': 'Sales Invoice', 'voucher_no': si.name})
+		self.assertGreater(len(gl_entries), 0)
   
 def automatically_fetch_payment_terms(enable=1):
 	accounts_settings = frappe.get_doc("Accounts Settings")

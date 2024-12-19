@@ -1795,6 +1795,21 @@ class TestStockEntry(FrappeTestCase):
 			self.assertEqual(sle.stock_value_difference, 100)
 			self.assertEqual(sle.stock_value, 100 * i)
 
+	def test_stock_entry_for_mr_purpose(self):
+		company = frappe.db.get_value("Warehouse", "Stores - TCP1", "company")
+
+		se = make_stock_entry(item_code="_Test Item",is_opening="Yes", expense_account="Temporary Opening - TCP1",company = company ,purpose="Material Receipt", target="Stores - TCP1", qty=10, basic_rate=100)
+		
+		self.assertEqual(se.stock_entry_type, "Material Receipt")
+
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':se.name, 'account': 'Temporary Opening - TCP1'},'credit')
+		self.assertEqual(gl_temp_credit, 1000)
+		
+		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':se.name, 'account': 'Stock In Hand - TCP1'},'debit')
+		self.assertEqual(gl_stock_debit, 1000)
+
+		actual_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':se.name, 'voucher_type':'Stock Entry','warehouse':'Stores - TCP1'},['qty_after_transaction'])
+		self.assertEqual(actual_qty, 10)
 
 def make_serialized_item(**args):
 	args = frappe._dict(args)
