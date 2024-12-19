@@ -697,9 +697,9 @@ def validate_against_pcv(is_opening, posting_date, company):
 	# )
 
 	last_pcv_date = frappe.db.sql(
-			"""SELECT posting_date FROM `tabPeriod Closing Voucher`
+			"""SELECT period_start_date FROM `tabPeriod Closing Voucher`
 			WHERE `docstatus` = 1 AND `company` = %s
-			ORDER BY posting_date DESC 
+			ORDER BY period_start_date DESC 
        		LIMIT 1""",
 			(company,),
 			as_dict=True
