@@ -377,13 +377,19 @@ class Item(Document):
 	def validate_naming_series(self):
 		for field in ["serial_no_series", "batch_number_series"]:
 			series = self.get(field)
-			if series and "#" in series and "." not in series:
-				frappe.throw(
-					_("Invalid naming series (. missing) for {0}").format(
-						frappe.bold(self.meta.get_field(field).label)
+			if series and "#" in series:
+				if "." not in series:
+					frappe.throw(
+						_("Invalid naming series (. missing) for {0}").format(
+							frappe.bold(self.meta.get_field(field).label)
+						)
 					)
-				)
-
+				if ". #" in series:
+					frappe.throw(
+						_("Invalid naming series (avoid spaces between '.' and '#') for {0}.").format(
+							frappe.bold(self.meta.get_field(field).label)
+						)
+					)
 	def check_for_active_boms(self):
 		if self.default_bom:
 			bom_item = frappe.db.get_value("BOM", self.default_bom, "item")
