@@ -341,7 +341,7 @@ async function installChat(frm) {
 		
 		const {aws_url} = await frappe.db.get_doc('Whatsapp Config')
 		chat.setAttribute('url', aws_url)
-		chat.setAttribute('user-name', frappe.user.full_name())
+		chat.setAttribute('user-name', frappe.user_info().fullname)
 		
 		frappe.realtime.on(`msg-${conversation.name}`, (data) => {
 			chat._instance.exposed.addMessage(data); 
