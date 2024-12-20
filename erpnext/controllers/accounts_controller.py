@@ -270,17 +270,47 @@ class AccountsController(TransactionBase):
 		self.set_total_in_words()
 		self.set_default_letter_head()
 
-		if self.get("docstatus") == 1 and self.get("company"):
-			accounting_dimensions = ["Cost Center", "Project"]
-			accounting_dimensions += frappe.get_all("Accounting Dimension", pluck="name")
+		self.validate_accounting_dimensions()
 
-			for dimension in accounting_dimensions:
-				if self.get(frappe.scrub(dimension)):
-					doc = frappe.get_doc(dimension, self.get(frappe.scrub(dimension)))
+	def validate_accounting_dimensions(self):
+		if not self.company:
+			return
+		parent_doctype = frappe.get_meta(self.doctype).__dict__
+		parent_doctype = frappe._dict(parent_doctype)
+		accounting_dimensions_doctypes = frappe.get_hooks("accounting_dimension_doctypes")
+		child_table_list = []
+		for field in parent_doctype.get("fields"):
+			field = frappe._dict(field.__dict__)
+			if field.fieldtype == "Table" and field.options in accounting_dimensions_doctypes:
+				child_table_list.append(field.fieldname)
+		accounting_dimensions = ["Cost Center", "Project"]
+		accounting_dimensions.extend(frappe.get_all("Accounting Dimension", pluck="name"))
+
+		for dimension in accounting_dimensions:
+			if dimension_value := self.get(frappe.scrub(dimension)):
+				doc = frappe.get_doc(dimension, dimension_value)
+				if hasattr(doc, "company") and doc.company != self.company:
+					frappe.throw(
+						_("{0}: {1} does not belong to the Company: {2}").format(
+							dimension, frappe.bold(dimension_value), self.company
+						)
+					)
+		if child_table_list:
+			self.validate_child_accounting_dimensions(accounting_dimensions, child_table_list)
+
+	def validate_child_accounting_dimensions(self, accounting_dimensions, child_table_list):
+		for child_table in child_table_list:
+			for child in self.get(child_table, []):
+				for dimension in accounting_dimensions:
+					dimension_field = frappe.scrub(dimension)
+					dimension_value = child.get(dimension_field)
+					if not dimension_value:
+						continue
+					doc = frappe.get_doc(dimension, dimension_value)
 					if hasattr(doc, "company") and doc.company != self.company:
 						frappe.throw(
-							_("{0} {1} is not part of the current company").format(
-								dimension, frappe.bold(self.get(frappe.scrub(dimension)))
+							_("Row {0}: {1} {2} does not belong to the Company: {3}").format(
+								child.idx, dimension, frappe.bold(dimension_value), self.company
 							)
 						)
 
