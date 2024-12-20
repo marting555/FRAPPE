@@ -545,7 +545,7 @@ $.extend(erpnext.item, {
 
 		function make_fields_from_attribute_values(attr_dict) {
 			let fields = [];
-			let att_key = frm.doc.attributes.map(idx => idx.attribute);
+			let att_key = frm.doc.attributes.map((idx) => idx.attribute);
 			att_key.forEach((name, i) => {
 				if (i % 3 === 0) {
 					fields.push({ fieldtype: "Section Break" });
