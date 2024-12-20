@@ -809,7 +809,7 @@ class calculate_taxes_and_totals:
 					)
 				)
 
-			if self.doc.docstatus.is_draft():
+			if self.doc.docstatus < 2:
 				if self.doc.get("write_off_outstanding_amount_automatically"):
 					self.doc.write_off_amount = 0
 
@@ -888,13 +888,9 @@ class calculate_taxes_and_totals:
 				self.doc.doctype in ["Sales Invoice", "POS Invoice"]
 				and self.doc.get("is_pos")
 				and self.doc.get("pos_profile")
-				and self.doc.get("is_consolidated")
+				and self.doc.docstatus == 1
 			):
-				write_off_limit = flt(
-					frappe.db.get_value("POS Profile", self.doc.pos_profile, "write_off_limit")
-				)
-				if write_off_limit and abs(self.doc.outstanding_amount) <= write_off_limit:
-					self.doc.write_off_outstanding_amount_automatically = 1
+				self.validate_write_off_amount(base_grand_total)
 
 			if (
 				self.doc.doctype in ["Sales Invoice", "POS Invoice"]
@@ -904,6 +900,17 @@ class calculate_taxes_and_totals:
 			):
 				self.set_total_amount_to_default_mop(total_amount_to_pay)
 				self.calculate_paid_amount()
+
+	def validate_write_off_amount(self, base_grand_total):
+		write_off_limit = flt(frappe.db.get_value("POS Profile", self.doc.pos_profile, "write_off_limit"))
+		actual_write_off_limit = abs(base_grand_total) * (write_off_limit / 100)
+		if self.doc.get("is_consolidated"):
+			# Write off the entire outstanding amount if it is less than the write-off limit
+			if abs(self.doc.outstanding_amount) <= actual_write_off_limit:
+				self.doc.write_off_outstanding_amount_automatically = 1
+		else:
+			if self.doc.base_write_off_amount > actual_write_off_limit:
+				frappe.throw(_("Write off amount cannot be greater than {0}").format(actual_write_off_limit))
 
 	def calculate_paid_amount(self):
 		paid_amount = base_paid_amount = 0.0
