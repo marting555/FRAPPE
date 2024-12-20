@@ -346,6 +346,10 @@ async function installChat(frm) {
 		frappe.realtime.on(`msg-${conversation.name}`, (data) => {
 			chat._instance.exposed.addMessage(data); 
 		})
+		frappe.realtime.on(`translation-${frm.doc.name}`, (data) => {
+			console.log('on Translate')
+			chat._instance.exposed.onTranslate(data);
+		})
 		frappe.require('erp-whatsapp-chat.bundle.js')
 			.then(() => {
 				chatContainer.appendChild(chat)
