@@ -199,6 +199,9 @@ erpnext.payments = class payments extends erpnext.stock.StockController {
 	}
 
 	write_off_amount(write_off_amount) {
+		if (typeof write_off_amount === "object") {
+			write_off_amount = write_off_amount.write_off_amount;
+		}
 		this.frm.doc.write_off_amount = flt(write_off_amount, precision("write_off_amount"));
 		this.frm.doc.base_write_off_amount = flt(
 			this.frm.doc.write_off_amount * this.frm.doc.conversion_rate,
