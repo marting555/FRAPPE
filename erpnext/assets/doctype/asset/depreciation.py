@@ -720,6 +720,7 @@ def get_gl_entries_on_asset_disposal(
 				"credit": asset.gross_purchase_amount,
 				"cost_center": depreciation_cost_center,
 				"posting_date": date,
+				"asset": asset.name,
 			},
 			item=asset,
 		),
