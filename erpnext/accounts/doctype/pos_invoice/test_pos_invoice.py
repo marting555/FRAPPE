@@ -24,7 +24,7 @@ class TestPOSInvoice(IntegrationTestCase):
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
-		cls.enterClassContext(cls.change_settings("Selling Settings", validate_selling_price=0))
+		# cls.enterClassContext(cls.change_settings("Selling Settings", validate_selling_price=0))
 		make_stock_entry(target="_Test Warehouse - _TC", item_code="_Test Item", qty=800, basic_rate=100)
 		frappe.db.sql("delete from `tabTax Rule`")
 
@@ -590,8 +590,13 @@ class TestPOSInvoice(IntegrationTestCase):
 			"Test Loyalty Customer", company="_Test Company", loyalty_program="Test Single Loyalty"
 		)
 
-		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=10000)
-
+		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=10000, do_not_save=True)
+		inv.append(
+			"payments",
+			{"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 10000},
+		)
+		inv.insert()
+		inv.submit()
 		lpe = frappe.get_doc(
 			"Loyalty Point Entry",
 			{"invoice_type": "POS Invoice", "invoice": inv.name, "customer": inv.customer},
@@ -616,8 +621,7 @@ class TestPOSInvoice(IntegrationTestCase):
 		)
 
 		# add 10 loyalty points
-		create_pos_invoice(customer="Test Loyalty Customer", rate=10000)
-
+		create_pos_invoice(customer="Test Loyalty Customer", rate=10000, do_not_save=True)
 		before_lp_details = get_loyalty_program_details_with_points(
 			"Test Loyalty Customer", company="_Test Company", loyalty_program="Test Single Loyalty"
 		)
@@ -785,6 +789,8 @@ class TestPOSInvoice(IntegrationTestCase):
 		pos_inv1 = create_pos_invoice(item="_BATCH ITEM Test For Reserve", rate=300, qty=15, do_not_save=1)
 
 		pos_inv1.items[0].batch_no = batch_no
+		pos_inv1.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 4500})
+
 		pos_inv1.save()
 		pos_inv1.submit()
 		pos_inv1.reload()
@@ -799,8 +805,12 @@ class TestPOSInvoice(IntegrationTestCase):
 
 		# POS Invoice 2, for the batch with bundle
 		pos_inv2 = create_pos_invoice(
-			item="_BATCH ITEM Test For Reserve", rate=300, qty=10, batch_no=batch_no
+			item="_BATCH ITEM Test For Reserve", rate=300, qty=10, batch_no=batch_no, do_not_save=True
 		)
+		pos_inv2.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 3000})
+		pos_inv2.insert()
+		pos_inv2.submit()
+
 		pos_inv2.reload()
 		self.assertTrue(pos_inv2.items[0].serial_and_batch_bundle)
 
@@ -835,10 +845,13 @@ class TestPOSInvoice(IntegrationTestCase):
 		pos_inv1 = create_pos_invoice(
 			item=item.name, rate=300, qty=1, do_not_submit=1, batch_no="TestBatch 01"
 		)
+		pos_inv1.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 300})
 		pos_inv1.save()
 		pos_inv1.submit()
 
 		pos_inv2 = create_pos_invoice(item=item.name, rate=300, qty=2, do_not_submit=1)
+		pos_inv2.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 300})
+		pos_inv2.save()
 
 		sn_doc = SerialBatchCreation(
 			{
@@ -934,12 +947,29 @@ class TestPOSInvoice(IntegrationTestCase):
 			frappe.db.rollback(save_point="before_test_delivered_serial_no_case")
 			frappe.set_user("Administrator")
 
-	def test_validate_paid_amount(self):
-		inv = create_pos_invoice(qty=10, rate=5, do_not_save=True)
-		inv.payments = []
-		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 45})
-		inv.insert()
-		self.assertRaises(PaymentValidationError, inv.submit)
+	def test_validate_paid_amount_with_write_off(self):
+		inv_1 = create_pos_invoice(qty=10, rate=5, do_not_save=True)
+		inv_1.payments = []
+		inv_1.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 45})
+		inv_1.insert()
+		self.assertRaises(PaymentValidationError, inv_1.submit)
+
+		# write off limit maximum as 1%
+		inv_2 = create_pos_invoice(qty=10, rate=5, do_not_save=True)
+		inv_2.payments = []
+		inv_2.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 49.5})
+		inv_2.write_off_amount = 0.5
+		inv_2.insert()
+		inv_2.submit()
+		self.assertEqual(inv_2.outstanding_amount, 0)
+		self.assertEqual(inv_2.status, "Paid")
+
+		inv_3 = create_pos_invoice(qty=10, rate=5, do_not_save=True)
+		inv_3.payments = []
+		inv_3.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 49})
+		inv_3.write_off_amount = 1
+		inv_3.insert()
+		self.assertRaises(frappe.ValidationError, inv_3.submit)
 
 
 def create_pos_invoice(**args):
