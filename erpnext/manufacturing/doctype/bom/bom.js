@@ -290,6 +290,13 @@ frappe.ui.form.on("BOM", {
 					cur_dialog.refresh();
 				},
 			});
+
+			fields.push({
+				fieldtype: "Check",
+				label: __("Use Multi-Level BOM"),
+				fieldname: "use_multi_level_bom",
+				default: frm.doc?.__onload.use_multi_level_bom,
+			});
 		}
 
 		var has_template_rm = frm.doc.items.filter((d) => d.has_variants === 1) || [];

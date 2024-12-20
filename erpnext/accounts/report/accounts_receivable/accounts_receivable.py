@@ -20,7 +20,7 @@ from erpnext.accounts.utils import get_currency_precision, get_party_types_from_
 
 #  1. Invoice can be booked via Sales/Purchase Invoice or Journal Entry
 #  2. Report handles both receivable and payable
-#  3. Key balances for each row are "Invoiced Amount", "Paid Amount", "Credit/Debit Note Amount", "Oustanding Amount"
+#  3. Key balances for each row 
 #  4. For explicit payment terms in invoice (example: 30% advance, 30% on delivery, 40% post delivery),
 #     the invoice will be broken up into multiple rows, one for each payment term
 #  5. If there are payments after the report date (post dated), these will be updated in additional columns
@@ -450,7 +450,7 @@ class ReceivablePayableReport:
 				"""
 				select name, due_date, bill_no, bill_date
 				from `tabPurchase Invoice`
-				where posting_date <= %s
+				where posting_date <= %s AND company = %s
 			""",
 				(self.filters.report_date, self.filters.company),
 				as_dict=1,
@@ -540,9 +540,7 @@ class ReceivablePayableReport:
 			self.append_payment_term(row, d, term)
 
 	def append_payment_term(self, row, d, term):
-		if (
-			self.filters.get("customer") or self.filters.get("supplier")
-		) and d.currency == d.party_account_currency:
+		if d.currency == d.party_account_currency:
 			invoiced = d.payment_amount
 		else:
 			invoiced = d.base_payment_amount

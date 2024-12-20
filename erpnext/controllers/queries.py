@@ -625,7 +625,6 @@ def get_filtered_dimensions(doctype, txt, searchfield, start, page_len, filters,
 	from erpnext.accounts.doctype.accounting_dimension_filter.accounting_dimension_filter import (
 		get_dimension_filter_map,
 	)
-
 	dimension_filters = get_dimension_filter_map()
 	dimension_filters = dimension_filters.get((filters.get("dimension"), filters.get("account")))
 	query_filters = []
@@ -647,9 +646,8 @@ def get_filtered_dimensions(doctype, txt, searchfield, start, page_len, filters,
 	for field in searchfields:
 		field_meta = meta.get_field(field)
 		if field_meta and field_meta.fieldtype in ["Data", "Text", "Small Text", "Long Text"]:
-			or_filters.append([field, "ILIKE", "%%%s%%" % txt])  # ILIKE for case-insensitive search
+			or_filters.append([field, "like", f"%{txt}%"])
 			fields.append(field)
-
 	if dimension_filters:
 		if dimension_filters["allow_or_restrict"] == "Allow":
 			query_selector = "in"
@@ -686,7 +684,15 @@ def get_expense_account(doctype, txt, searchfield, start, page_len, filters):
     condition = ""
     if filters.get("company"):
         condition += " AND account.company = %(company)s"
+	
+    match_condition_str = get_match_cond("Account")
+    if match_condition_str and frappe.db.db_type == "postgres":
+        if "ifnull" in match_condition_str:
+            match_condition_str = match_condition_str.replace('ifnull', 'COALESCE')
 
+        match_condition_str = match_condition_str.replace('tabAccount', 'account')
+        match_condition_str = match_condition_str.replace("`", "")
+		
     return frappe.db.sql(
 		f"""SELECT account.name 
 			FROM tabAccount AS account
@@ -695,7 +701,7 @@ def get_expense_account(doctype, txt, searchfield, start, page_len, filters):
 				AND account.is_group = 0
 				AND account.docstatus != 2
 				AND account.{searchfield} LIKE %(txt)s
-				{condition} {get_match_cond('Account')}""",
+				{condition} {match_condition_str}""",
 		{"company": filters.get("company", ""), "txt": "%" + txt + "%"},
 	)
 

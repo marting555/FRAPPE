@@ -96,7 +96,10 @@ def get_new_item_code(doctype, txt, searchfield, start, page_len, filters):
 	searchfield.append("name")
 
 	item = frappe.qb.DocType("Item")
-	conditions = (item.is_stock_item == 0) & (item[searchfield].like(f"%{txt}%"))
+	conditions = (item.is_stock_item == 0) 
+	if txt:
+		search_criteria = Criterion.any([item[fieldname.strip()].like(f"%{txt}%") for fieldname in searchfield])
+		conditions &= search_criteria
 	# Check if the "assets" app is installed
 	if "assets" in frappe.get_installed_apps():
 		conditions &= (item.is_fixed_asset == 0)
@@ -108,9 +111,6 @@ def get_new_item_code(doctype, txt, searchfield, start, page_len, filters):
 		.limit(page_len)
 		.offset(start)
 	)
-
-	if searchfield:
-		query = query.where(Criterion.any([item[fieldname].like(f"%{txt}%") for fieldname in searchfield]))
 
 	if product_bundles:
 		query = query.where(item.name.notin(product_bundles))

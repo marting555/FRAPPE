@@ -35,9 +35,14 @@ def get_columns():
 def get_data(filters=None):
 	"""Returns the list of dictionaries. Each dictionary is a row in the datatable and chart data."""
 	data = []
-	emirates, amounts_by_emirate = append_vat_on_sales(data, filters)
-	append_vat_on_expenses(data, filters)
-	return data, emirates, amounts_by_emirate
+	if frappe.db.get_value("Company",filters.get('company'),"country")== "United Arab Emirates":
+		emirates, amounts_by_emirate = append_vat_on_sales(data, filters)
+		append_vat_on_expenses(data, filters)
+		return data, emirates, amounts_by_emirate
+	else:
+		frappe.msgprint(_("{} not belong to United Arab Emirates").format(filters.get('company')))
+		return data,[],{}
+		
 
 
 def append_vat_on_sales(data, filters):
@@ -174,7 +179,7 @@ def get_filters(filters):
 def get_reverse_charge_total(filters):
 	"""Returns the sum of the total of each Purchase invoice made."""
 	query_filters = get_filters(filters)
-	query_filters.append(["reverse_charge", "=", "Y"])
+	query_filters.append(["reverse_charge", "=", 'Y'])
 	query_filters.append(["docstatus", "=", 1])
 	try:
 		return (
@@ -198,7 +203,7 @@ def get_reverse_charge_tax(filters):
 		on
 			gl.voucher_no =  p.name
 		where
-			p.reverse_charge = "Y"
+			p.reverse_charge = 'Y'
 			and p.docstatus = 1
 			and gl.docstatus = 1
 			and account in (select account from `tabUAE VAT Account` where  parent=%(company)s)
@@ -213,7 +218,7 @@ def get_reverse_charge_tax(filters):
 def get_reverse_charge_recoverable_total(filters):
 	"""Returns the sum of the total of each Purchase invoice made with recoverable reverse charge."""
 	query_filters = get_filters(filters)
-	query_filters.append(["reverse_charge", "=", "Y"])
+	query_filters.append(["reverse_charge", "=", 'Y'])
 	query_filters.append(["recoverable_reverse_charge", ">", "0"])
 	query_filters.append(["docstatus", "=", 1])
 	try:
@@ -240,7 +245,7 @@ def get_reverse_charge_recoverable_tax(filters):
 		on
 			gl.voucher_no = p.name
 		where
-			p.reverse_charge = "Y"
+			p.reverse_charge = 'Y'
 			and p.docstatus = 1
 			and p.recoverable_reverse_charge > 0
 			and gl.docstatus = 1
