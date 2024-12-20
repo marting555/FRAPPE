@@ -55,13 +55,19 @@ class TestTimesheet(IntegrationTestCase):
 
 	def test_timesheet_billing_based_on_project(self):
 		emp = make_employee("test_employee_6@salary.com")
-		project = frappe.get_value("Project", {"project_name": "_Test Project"})
+		project = frappe.get_doc("Project", "_T-Project-00001")
+		project.company = "_Test Company"
+		project.save()
+
+		location = frappe.get_doc("Accounting Dimension", "Location")
+		location.dimension_defaults[0].mandatory_for_bs = 0
+		location.save()
 
 		timesheet = make_timesheet(
-			emp, simulate=True, is_billable=1, project=project, company="_Test Company"
+			emp, simulate=True, is_billable=1, project=project.name, company="_Test Company"
 		)
 		sales_invoice = create_sales_invoice(do_not_save=True)
-		sales_invoice.project = project
+		sales_invoice.project = project.name
 		sales_invoice.submit()
 
 		ts = frappe.get_doc("Timesheet", timesheet.name)

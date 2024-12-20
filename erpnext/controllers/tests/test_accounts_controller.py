@@ -1467,6 +1467,13 @@ class TestAccountsController(IntegrationTestCase):
 		"""
 		self.setup_dimensions()
 		rate_in_account_currency = 1
+		department = frappe.get_all(
+			"Department",
+			{"name": ["in", ["Management", "Operations", "Legal", "Research & Development"]]},
+			["name", "company"],
+		)
+		for dept in department:
+			frappe.db.set_value("Department", dept.name, "company", "_Test Company")
 
 		# Invoices
 		si1 = self.create_sales_invoice(qty=1, rate=rate_in_account_currency, do_not_submit=True)
@@ -1535,6 +1542,7 @@ class TestAccountsController(IntegrationTestCase):
 	def test_91_cr_note_should_inherit_dimension(self):
 		self.setup_dimensions()
 		rate_in_account_currency = 1
+		frappe.db.set_value("Department", "Management", "company", "_Test Company")
 
 		# Invoice
 		si = self.create_sales_invoice(qty=1, rate=rate_in_account_currency, do_not_submit=True)
@@ -1581,6 +1589,7 @@ class TestAccountsController(IntegrationTestCase):
 		self.setup_dimensions()
 		rate_in_account_currency = 1
 		dpt = "Research & Development"
+		frappe.db.set_value("Department", dpt, "company", "_Test Company")
 
 		si = self.create_sales_invoice(qty=1, rate=rate_in_account_currency, do_not_save=True)
 		si.department = dpt
@@ -1616,6 +1625,7 @@ class TestAccountsController(IntegrationTestCase):
 	def test_93_dimension_inheritance_on_advance(self):
 		self.setup_dimensions()
 		dpt = "Research & Development"
+		frappe.db.set_value("Department", dpt, "company", "_Test Company")
 
 		adv = self.create_payment_entry(amount=1, source_exc_rate=85)
 		adv.department = dpt

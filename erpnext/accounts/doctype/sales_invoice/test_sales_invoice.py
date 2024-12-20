@@ -77,7 +77,7 @@ class TestSalesInvoice(IntegrationTestCase):
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
-		cls.enterClassContext(cls.change_settings("Selling Settings", validate_selling_price=0))
+		# cls.enterClassContext(cls.change_settings("Selling Settings", validate_selling_price=0))
 		unlink_payment_on_cancel_of_invoice()
 
 	@classmethod
@@ -3115,6 +3115,15 @@ class TestSalesInvoice(IntegrationTestCase):
 		# enable common party accounting
 		frappe.db.set_single_value("Accounts Settings", "enable_common_party_accounting", 1)
 
+		department = frappe.new_doc("Department")
+		department.department_name = "Test Department"
+		department.company = "_Test Company"
+		department.save()
+
+		location = frappe.get_doc("Accounting Dimension", "Location")
+		location.dimension_defaults[0].mandatory_for_bs = 0
+		location.save()
+
 		# create a dimension and make it mandatory
 		if not frappe.get_all("Accounting Dimension", filters={"document_type": "Department"}):
 			dim = frappe.get_doc(
@@ -3139,7 +3148,7 @@ class TestSalesInvoice(IntegrationTestCase):
 		si = create_sales_invoice(
 			customer=customer, parent_cost_center="_Test Cost Center - _TC", do_not_submit=True
 		)
-		si.department = "All Departments"
+		si.department = "Test Department - _TC"
 		si.save().submit()
 
 		# check outstanding of sales invoice
@@ -3156,7 +3165,7 @@ class TestSalesInvoice(IntegrationTestCase):
 				"party": si.customer,
 				"reference_type": si.doctype,
 				"reference_name": si.name,
-				"department": "All Departments",
+				"department": "Test Department - _TC",
 			},
 			pluck="credit_in_account_currency",
 		)
@@ -4281,8 +4290,12 @@ class TestSalesInvoice(IntegrationTestCase):
 
 		project = frappe.new_doc("Project")
 		project.project_name = "Test Total Billed Amount"
+		project.company = "_Test Company"
 		project.save()
 
+		location = frappe.get_doc("Accounting Dimension", "Location")
+		location.dimension_defaults[0].mandatory_for_bs = 0
+		location.save()
 		si.project = project.name
 		si.save()
 		si.submit()
