@@ -218,6 +218,7 @@ class POSInvoice(SalesInvoice):
 		self.validate_payment_amount()
 		self.validate_loyalty_transaction()
 		self.validate_company_with_pos_company()
+		self.calculate_taxes_and_totals()
 		if self.coupon_code:
 			from erpnext.accounts.doctype.pricing_rule.utils import validate_coupon_code
 
@@ -467,13 +468,16 @@ class POSInvoice(SalesInvoice):
 		total_amount_in_payments = flt(total_amount_in_payments, self.precision("grand_total"))
 		if self.loyalty_amount:
 			total_amount_in_payments += flt(self.loyalty_amount, self.precision("grand_total"))
-		if self.docstatus != 0 and total_amount_in_payments and total_amount_in_payments < invoice_total:
-			if self.is_return:
-				frappe.throw(
-					_("Total payments amount can't be greater than {}").format(-invoice_total),
-					PaymentValidationError,
-				)
-			else:
+
+		if self.docstatus != 0:
+			if total_amount_in_payments < invoice_total:
+				if self.is_return:
+					frappe.throw(
+						_("Total payments amount can't be greater than {}").format(-invoice_total),
+						PaymentValidationError,
+					)
+
+			if (total_amount_in_payments + self.write_off_amount) < invoice_total:
 				frappe.throw(
 					_("Total payments amount can't be less than {}").format(invoice_total),
 					PaymentValidationError,

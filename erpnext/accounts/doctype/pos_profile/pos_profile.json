@@ -361,7 +361,7 @@
    "default": "1",
    "description": "Auto write off precision loss while consolidation",
    "fieldname": "write_off_limit",
-   "fieldtype": "Currency",
+   "fieldtype": "Percent",
    "label": "Write Off Limit",
    "reqd": 1
   },
@@ -374,24 +374,24 @@
   },
   {
    "fieldname": "utm_campaign",
-   "print_hide": 1,
    "fieldtype": "Link",
    "label": "Campaign",
-   "options": "UTM Campaign"
+   "options": "UTM Campaign",
+   "print_hide": 1
   },
   {
    "fieldname": "utm_source",
-   "print_hide": 1,
    "fieldtype": "Link",
    "label": "Source",
-   "options": "UTM Source"
+   "options": "UTM Source",
+   "print_hide": 1
   },
   {
    "fieldname": "utm_medium",
-   "print_hide": 1,
    "fieldtype": "Link",
    "label": "Medium",
-   "options": "UTM Campaign"
+   "options": "UTM Campaign",
+   "print_hide": 1
   }
  ],
  "icon": "icon-cog",
@@ -419,7 +419,7 @@
    "link_fieldname": "pos_profile"
   }
  ],
- "modified": "2024-06-28 10:51:48.543766",
+ "modified": "2024-12-19 12:32:29.075136",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "POS Profile",

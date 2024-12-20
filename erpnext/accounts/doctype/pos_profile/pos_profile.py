@@ -59,7 +59,7 @@ class POSProfile(Document):
 		warehouse: DF.Link
 		write_off_account: DF.Link
 		write_off_cost_center: DF.Link
-		write_off_limit: DF.Currency
+		write_off_limit: DF.Percent
 	# end: auto-generated types
 
 	def validate(self):
