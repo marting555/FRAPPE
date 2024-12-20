@@ -81,6 +81,52 @@ class TestAccountingDimension(IntegrationTestCase):
 		frappe.flags.accounting_dimensions_details = None
 		frappe.flags.dimension_filter_map = None
 
+	def test_company_level_accounting_dimension_validation(self):
+		company = frappe.new_doc("Company")
+		company.company_name = "_Test New Company"
+		company.abbr = "TNC"
+		company.default_currency = "INR"
+		company.country = "India"
+		company.save()
+
+		cost_center = frappe.get_doc(
+			{
+				"doctype": "Cost Center",
+				"cost_center_name": "Main - TNC",
+				"parent_cost_center": "_Test New Company - TNC",
+				"is_group": 0,
+				"company": "_Test New Company",
+			}
+		)
+		cost_center.save()
+
+		company1 = frappe.new_doc("Company")
+		company1.company_name = "_Test Demo Company"
+		company1.abbr = "TDC"
+		company1.default_currency = "INR"
+		company1.country = "India"
+		company1.save()
+
+		cost_center1 = frappe.get_doc(
+			{
+				"doctype": "Cost Center",
+				"cost_center_name": "Main - TDC",
+				"parent_cost_center": "_Test Demo Company - TDC",
+				"is_group": 0,
+				"company": "_Test Demo Company",
+			}
+		)
+		cost_center1.save()
+
+		si = create_sales_invoice(
+			company="_Test New Company", customer="_Test Customer", cost_center="Main - TDC", do_not_save=True
+		)
+		self.assertRaises(frappe.ValidationError, si.save)
+
+		si.update({"cost_center": "Main - TNC"})
+		si.get("items")[0].update({"cost_center": "Main - TDC"})
+		self.assertRaises(frappe.ValidationError, si.save)
+
 
 def create_dimension():
 	frappe.set_user("Administrator")
