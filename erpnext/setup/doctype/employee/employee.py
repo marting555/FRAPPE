@@ -33,7 +33,7 @@ class Employee(NestedSet):
 	def validate(self):
 		from erpnext.controllers.status_updater import validate_status
 
-		validate_status(self.status, ["Active", "Inactive", "Suspended", "Left"])
+		validate_status(self.status, ["Active", "Inactive", "Suspended", "Ended"])
 
 		self.employee = self.name
 		self.set_employee_name()
@@ -165,7 +165,7 @@ class Employee(NestedSet):
 			self.prefered_email = preferred_email
 
 	def validate_status(self):
-		if self.status == "Left":
+		if self.status == "Ended":
 			reports_to = frappe.db.get_all(
 				"Employee",
 				filters={"reports_to": self.name, "status": "Active"},
@@ -314,7 +314,7 @@ def is_holiday(employee, date=None, raise_exception=True, only_non_weekly=False,
 
 @frappe.whitelist()
 def deactivate_sales_person(status=None, employee=None):
-	if status == "Left":
+	if status == "Ended":
 		sales_person = frappe.db.get_value("Sales Person", {"Employee": employee})
 		if sales_person:
 			frappe.db.set_value("Sales Person", sales_person, "enabled", 0)

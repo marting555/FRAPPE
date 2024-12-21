@@ -212,7 +212,7 @@
    "label": "Status",
    "oldfieldname": "status",
    "oldfieldtype": "Select",
-   "options": "Active\nInactive\nSuspended\nLeft",
+   "options": "Active\nInactive\nSuspended\nEnded",
    "reqd": 1,
    "search_index": 1
   },
@@ -616,7 +616,7 @@
    "fieldname": "relieving_date",
    "fieldtype": "Date",
    "label": "Relieving Date",
-   "mandatory_depends_on": "eval:doc.status == \"Left\"",
+   "mandatory_depends_on": "eval:doc.status == \"Ended\"",
    "no_copy": 1,
    "oldfieldname": "relieving_date",
    "oldfieldtype": "Date"
