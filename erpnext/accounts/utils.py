@@ -76,6 +76,48 @@ def get_fiscal_years(
 	as_dict=False,
 	boolean=False,
 ):
+<<<<<<< HEAD
+=======
+	if transaction_date:
+		transaction_date = getdate(transaction_date)
+	# backwards compat
+	if boolean is not None:
+		raise_on_missing = not boolean
+
+	all_fiscal_years = _get_fiscal_years(company=company)
+
+	# No restricting selectors
+	if not transaction_date and not fiscal_year:
+		return all_fiscal_years
+
+	for fy in all_fiscal_years:
+		if (fiscal_year and fy.name == fiscal_year) or (
+			transaction_date
+			and getdate(fy.year_start_date) <= transaction_date
+			and getdate(fy.year_end_date) >= transaction_date
+		):
+			if as_dict:
+				return (fy,)
+			else:
+				return ((fy.name, fy.year_start_date, fy.year_end_date),)
+
+	# No match for restricting selectors
+	if raise_on_missing:
+		error_msg = _("""{0} {1} is not in any active Fiscal Year""").format(
+			_(label), formatdate(transaction_date)
+		)
+		if company:
+			error_msg = _("""{0} for {1}""").format(error_msg, frappe.bold(company))
+
+		if verbose == 1:
+			frappe.msgprint(error_msg)
+
+		raise FiscalYearError(error_msg)
+	return []
+
+
+def _get_fiscal_years(company=None):
+>>>>>>> 3be633f6f1 (fix: strings for translation)
 	fiscal_years = frappe.cache().hget("fiscal_years", company) or []
 
 	if not fiscal_years:
