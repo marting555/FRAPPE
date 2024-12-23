@@ -6,6 +6,7 @@
 
 
 import frappe
+import json
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import flt, today
 
@@ -17,7 +18,8 @@ from erpnext.stock.doctype.material_request.material_request import (
 	make_supplier_quotation,
 	raise_work_orders,
 )
-
+from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+from erpnext.stock.doctype.pick_list.pick_list import create_stock_entry as pl_stock_entry
 
 class TestMaterialRequest(FrappeTestCase):
 	def test_make_purchase_order(self):
@@ -816,6 +818,230 @@ class TestMaterialRequest(FrappeTestCase):
 		for perm in permissions:
 			perm.delete()
 
+	def test_material_request_transfer_to_stock_entry(self):
+		item = create_item("OP-MB-001")
+		mr = frappe.new_doc("Material Request")
+		mr.company = "_Test Company"
+		mr.scheduled_date = today()
+		from_warehouse = create_warehouse("Source Warehouse", properties=None, company=mr.company)
+		target_warehouse = create_warehouse("Target Warehouse", properties=None, company=mr.company)
+		mr.append(
+			"items",
+			{
+				"item_code": item.item_code,
+				"item_name": item.name,
+				"qty": 10,
+				"rate": 120,
+				"schedule_date": today(),
+				"uom": "Nos",
+				"from_warehouse": from_warehouse,
+				"warehouse": target_warehouse,
+			},
+		)
+		mr.material_request_type = "Material Transfer"
+		mr.insert()
+		mr.submit()
+		self.assertEqual(mr.status, "Pending")
+
+		se = make_stock_entry(mr.name)
+		se.insert()
+		se.submit()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Transferred")
+		
+		from_warehouse_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':se.name, 'voucher_type':'Stock Entry','warehouse':from_warehouse},['qty_after_transaction'])
+		target_warehouse_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':se.name, 'voucher_type':'Stock Entry','warehouse':target_warehouse},['qty_after_transaction'])
+		self.assertEqual(from_warehouse_qty, -10)
+		self.assertEqual(target_warehouse_qty, 10)
+
+	def test_material_request_issue_to_stock_entry(self):
+		item = create_item("OP-MB-001")
+		mr = frappe.new_doc("Material Request")
+		mr.company = "_Test Company"
+		mr.scheduled_date = today()
+		target_warehouse = create_warehouse("Target Warehouse", properties=None, company=mr.company)
+		mr.append(
+			"items",
+			{
+				"item_code": item.item_code,
+				"item_name": item.name,
+				"qty": 5,
+				"schedule_date": today(),
+				"uom": "Nos",
+				"warehouse": target_warehouse,
+			},
+		)
+		mr.material_request_type = "Material Issue"
+		mr.insert()
+		mr.submit()
+		self.assertEqual(mr.status, "Pending")
+
+		se = make_stock_entry(mr.name)
+		se.insert()
+		se.submit()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Issued")
+		
+		warehouse_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':se.name},['qty_after_transaction'])
+		self.assertEqual(warehouse_qty, -5)
+		
+	def test_material_request_transfer_to_stock_entry_partial(self):
+		item = create_item("OP-MB-001")
+		mr = frappe.new_doc("Material Request")
+		mr.company = "_Test Company"
+		mr.scheduled_date = today()
+		from_warehouse = create_warehouse("Source Warehouse", properties=None, company=mr.company)
+		target_warehouse = create_warehouse("Target Warehouse", properties=None, company=mr.company)
+		mr.append(
+			"items",
+			{
+				"item_code": item.item_code,
+				"item_name": item.name,
+				"qty": 10,
+				"rate": 120,
+				"schedule_date": today(),
+				"uom": "Nos",
+				"from_warehouse": from_warehouse,
+				"warehouse": target_warehouse,
+			},
+		)
+		mr.material_request_type = "Material Transfer"
+		mr.insert()
+		mr.submit()
+		self.assertEqual(mr.status, "Pending")
+
+		se = make_stock_entry(mr.name)
+		se.get("items")[0].update({"qty": 5.0})
+		se.insert()
+		se.submit()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Partially Ordered")
+
+		from_warehouse_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':se.name, 'voucher_type':'Stock Entry','warehouse':from_warehouse},['qty_after_transaction'])
+		target_warehouse_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':se.name, 'voucher_type':'Stock Entry','warehouse':target_warehouse},['qty_after_transaction'])
+		self.assertEqual(from_warehouse_qty, -5.0)
+		self.assertEqual(target_warehouse_qty, 5.0)
+
+		se = make_stock_entry(mr.name)
+		se.get("items")[0].update({"qty": 5.0})
+		se.insert()
+		se.submit()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Transferred")
+		
+		from_warehouse_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':se.name, 'voucher_type':'Stock Entry','warehouse':from_warehouse},['qty_after_transaction'])
+		target_warehouse_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':se.name, 'voucher_type':'Stock Entry','warehouse':target_warehouse},['qty_after_transaction'])
+		self.assertEqual(from_warehouse_qty, -10)
+		self.assertEqual(target_warehouse_qty, 10)
+
+	def test_material_request_issue_to_stock_entry_partial(self):
+		item = create_item("OP-MB-001")
+		mr = frappe.new_doc("Material Request")
+		mr.company = "_Test Company"
+		mr.scheduled_date = today()
+		target_warehouse = create_warehouse("Target Warehouse", properties=None, company=mr.company)
+		mr.append(
+			"items",
+			{
+				"item_code": item.item_code,
+				"item_name": item.name,
+				"qty": 10,
+				"rate": 120,
+				"schedule_date": today(),
+				"uom": "Nos",
+				"warehouse": target_warehouse,
+			},
+		)
+		mr.material_request_type = "Material Issue"
+		mr.insert()
+		mr.submit()
+		self.assertEqual(mr.status, "Pending")
+
+		se = make_stock_entry(mr.name)
+		se.get("items")[0].update({"qty": 5.0})
+		se.insert()
+		se.submit()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Partially Ordered")
+
+		target_warehouse_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':se.name, 'voucher_type':'Stock Entry','warehouse':target_warehouse},['qty_after_transaction'])
+		self.assertEqual(target_warehouse_qty, -5.0)
+
+		se = make_stock_entry(mr.name)
+		se.get("items")[0].update({"qty": 5.0})
+		se.insert()
+		se.submit()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Issued")
+		
+		target_warehouse_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':se.name, 'voucher_type':'Stock Entry','warehouse':target_warehouse},['qty_after_transaction'])
+		self.assertEqual(target_warehouse_qty, -10)
+
+	def test_make_material_req_to_pick_list_to_stock_entry(self):
+		item = create_item("OP-MB-001")
+		mr = frappe.new_doc("Material Request")
+		mr.company = "_Test Company"
+		mr.scheduled_date = today()
+		from_warehouse = create_warehouse("Source Warehouse", properties=None, company=mr.company)
+		target_warehouse = create_warehouse("Target Warehouse", properties=None, company=mr.company)
+		mr.append(
+			"items",
+			{
+				"item_code": item.item_code,
+				"item_name": item.name,
+				"qty": 10,
+				"rate": 120,
+				"schedule_date": today(),
+				"uom": "Nos",
+				"from_warehouse": from_warehouse,
+				"warehouse": target_warehouse,
+			},
+		)
+		mr.material_request_type = "Material Transfer"
+		mr.insert()
+		mr.submit()
+		self.assertEqual(mr.status, "Pending")
+
+		pl = frappe.new_doc("Pick List")
+		pl.purpose = "Material Transfer"
+		pl.material_request = mr.name
+		pl.company = mr.company
+		pl.ignore_pricing_rule = 1
+		pl.warehouse = from_warehouse
+		pl.append("locations", {
+			"item_code": item.item_code,
+			"item_name": item.name,
+			"qty": 10,
+			"uom": "Nos",
+			"warehouse": from_warehouse,
+			"stock_qty": 10,
+			"stock_reserved_qty": 10,
+			"conversion_factor": 1,
+			"stock_uom": "Nos",
+			"use_serial_batch_fields":1,
+			"material_request": mr.name,
+			"material_request_item": mr.get("items")[0].name,
+			"picked_qty": 0,
+			"allow_zero_valuation_rate" : 1,
+		})
+		pl.submit()
+
+		import json
+		# Set valutaion rate of temporary test item 
+		frappe.db.set_value("Item",item.name,"valuation_rate",10)
+		se_data = pl_stock_entry(json.dumps(pl.as_dict()))
+		se = frappe.get_doc(se_data)
+		se.company = mr.company
+		se.save()
+		se.submit()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Transferred")
+		
+		from_warehouse_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':se.name, 'voucher_type':'Stock Entry','warehouse':se.get("items")[0].s_warehouse},['qty_after_transaction'])
+		target_warehouse_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':se.name, 'voucher_type':'Stock Entry','warehouse':se.get("items")[0].t_warehouse},['qty_after_transaction'])
+		self.assertEqual(from_warehouse_qty, -10)
+		self.assertEqual(target_warehouse_qty, 10)
+		
 
 def get_in_transit_warehouse(company):
 	if not frappe.db.exists("Warehouse Type", "Transit"):
