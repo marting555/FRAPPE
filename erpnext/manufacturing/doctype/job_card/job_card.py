@@ -944,8 +944,9 @@ class JobCard(Document):
 			if doc.transfer_material_against == "Job Card" and not doc.skip_transfer:
 				min_qty = []
 				for d in doc.operations:
-					if d.completed_qty:
-						min_qty.append(d.completed_qty)
+					completed_qty = flt(d.completed_qty) + flt(d.process_loss_qty)
+					if completed_qty:
+						min_qty.append(completed_qty)
 					else:
 						min_qty = []
 						break
@@ -957,33 +958,6 @@ class JobCard(Document):
 
 		self.set_status(update_status)
 
-<<<<<<< HEAD
-=======
-		if self.work_order and not frappe.get_cached_value(
-			"Work Order", self.work_order, "track_semi_finished_goods"
-		):
-			self.set_transferred_qty_in_work_order()
-
-	def set_transferred_qty_in_work_order(self):
-		doc = frappe.get_doc("Work Order", self.work_order)
-
-		qty = 0.0
-		if doc.transfer_material_against == "Job Card" and not doc.skip_transfer:
-			min_qty = []
-			for d in doc.operations:
-				completed_qty = flt(d.completed_qty) + flt(d.process_loss_qty)
-				if completed_qty:
-					min_qty.append(completed_qty)
-				else:
-					min_qty = []
-					break
-
-			if min_qty:
-				qty = min(min_qty)
-
-			doc.db_set("material_transferred_for_manufacturing", qty)
-
->>>>>>> fe0036e707 (fix: incorrect Material Transferred for Manufacturing qty (#44823))
 	def set_status(self, update_status=False):
 		if self.status == "On Hold" and self.docstatus == 0:
 			return
