@@ -17,9 +17,7 @@ from erpnext.stock.doctype.material_request.material_request import (
 	make_stock_entry,
 	make_supplier_quotation,
 	raise_work_orders,
-	create_pick_list,
 )
-from erpnext.setup.doctype.company.test_company import create_child_company
 from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 from erpnext.stock.doctype.pick_list.pick_list import create_stock_entry as pl_stock_entry
 
