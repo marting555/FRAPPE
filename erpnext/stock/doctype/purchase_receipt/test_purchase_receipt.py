@@ -3901,6 +3901,15 @@ class TestPurchaseReceipt(FrappeTestCase):
 		batch_return.save()
 		batch_return.submit()
 
+	def test_direct_create_purchase_receipt(self):
+		item = create_item("OP-MB-001")
+		pr = make_purchase_receipt(qty=10, item_code=item,rate=10000)
+
+		self.assertEqual(pr.status, "To Bill")
+		se = frappe.get_doc("Stock Ledger Entry",{"voucher_type": "Purchase Receipt", "voucher_no": pr.name})
+		self.assertEqual(se.get("qty_after_transaction"), 10)
+		self.assertEqual(se.get("valuation_rate"), 10000)
+		self.assertEqual(se.get("warehouse"), pr.get("items")[0].warehouse)
 
 def prepare_data_for_internal_transfer():
 	from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_internal_supplier
