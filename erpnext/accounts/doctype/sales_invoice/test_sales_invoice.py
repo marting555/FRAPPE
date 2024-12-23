@@ -2937,7 +2937,7 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertEqual(doc.total_billed_amount, si.grand_total)
 
 
-		party_link.delete()
+		# party_link.delete()
 		frappe.db.set_single_value("Accounts Settings", "enable_common_party_accounting", 0)
 
 	def test_sales_invoice_against_supplier_usd_with_dimensions(self):
@@ -3957,7 +3957,37 @@ class TestSalesInvoice(FrappeTestCase):
 		]
 		self.assertEqual(len(actual), 4)
 		self.assertEqual(expected, actual)
+  
+	def test_sales_invoice_without_sales_order(self):
+		setting = frappe.get_doc("Selling Settings")
+		setting.so_required = 'No'
+		setting.save()
+  
+		self.assertEqual(setting.so_required, 'No')
+  
+		si = create_sales_invoice(customer='Indra', company='French Connections', cost_center='Main - FC', selling_price_list='Standard Selling', 
+                            	item_code='CPU', qty=5, rate=3000, income_account='Sales - FC', expense_account='Cost of Goods Sold - FC', do_not_save=1)
+		si.save()
+		si.submit()
+  
+		self.assertEqual(si.status, 'Unpaid', 'Sales Invoice not submitted')
+  
+		si_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Sales - FC'}, 'credit')
+		self.assertEqual(si_acc_credit, 15000)
 
+		si_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Debtors - FC'}, 'debit')
+		self.assertEqual(si_acc_debit, 15000)
+  
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
+		dn =  make_delivery_note(si.name)
+  
+		dn.save()
+		dn.submit()
+  
+		self.assertEqual(dn.status, 'Completed', 'Delivery Note not submitted')
+  
+		qty_change_cpu = frappe.db.get_value('Stock Ledger Entry', {'item_code': 'CPU', 'voucher_no': dn.name, 'warehouse': 'Stores - FC'}, 'actual_qty')
+		self.assertEqual(qty_change_cpu, -5)
 
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
