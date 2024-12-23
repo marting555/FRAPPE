@@ -1446,6 +1446,54 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 		current_stock_in_hand = get_balance_on(account="Stock In Hand - _TC")
 		self.assertEqual(current_stock_in_hand, expected_stock_in_hand)
 
+	def test_stock_reconciliation_for_opening(self):
+		from erpnext.accounts.utils import get_company_default
+		
+		frappe.db.rollback()
+		sr = self.create_stock_reconciliation_for_opening()
+		
+		try:
+			sr.save()
+			sr.submit()
+		except Exception as e:
+			frappe.db.rollback()
+			assert False, f"An error occurred while saving the document: {str(e)}\n{frappe.get_traceback()}"
+			
+		self.assertEqual(sr.expense_account, "Temporary Opening - PP Ltd")
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Temporary Opening - PP Ltd'},'credit')#get_difference_account API ref.
+		
+		self.assertEqual(gl_temp_credit, 50000)
+		
+		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Stock In Hand - PP Ltd'},'debit')#get_difference_account API ref.
+		self.assertEqual(gl_stock_debit, 50000)
+
+		actual_qty,incoming_rate = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':sr.name, 'voucher_type':'Stock Reconciliation','warehouse':'Stores - PP Ltd'},['qty_after_transaction','valuation_rate'])#get_difference_account API ref.
+		self.assertEqual(actual_qty, 100)
+		self.assertEqual(incoming_rate, 500)
+
+		frappe.db.rollback()
+		
+	def create_stock_reconciliation_for_opening(self):
+		item1 = create_item("OP-MB-001")
+		
+		sr = frappe.new_doc("Stock Reconciliation")
+		sr.purpose = "Opening Stock"
+		sr.posting_date = "2024-04-01"
+		sr.posting_time = nowtime()
+		sr.set_posting_time = 1
+		sr.company = "PP Ltd"
+		sr.expense_account = frappe.db.get_value("Account", {"is_group": 0, "company": sr.company, "account_type": "Temporary"}, "name") #get_difference_account API ref.
+		sr.append(
+            "items",
+            {
+                "item_code": item1,
+                "warehouse": "Stores - PP Ltd",
+                "qty": 100,
+                "valuation_rate": 500,
+            },
+        )
+		return sr
+
 def create_batch_item_with_batch(item_name, batch_id):
 	batch_item_doc = create_item(item_name, is_stock_item=1)
 	if not batch_item_doc.has_batch_no:
