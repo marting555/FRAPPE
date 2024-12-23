@@ -1680,6 +1680,7 @@ class TestPaymentEntry(FrappeTestCase):
 		pr.company = company
 		pr.party_type = "Customer"
 		pr.party = customer
+		pr.clearing_date = frappe.utils.nowdate()
 		pr.receivable_payable_account = "Debtors - _TC"
 		pr.default_advance_account = advance_account
 		pr.get_unreconciled_entries()
