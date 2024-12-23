@@ -422,7 +422,7 @@ class StatusUpdater(Document):
 				continue
 
 			if (
-				hasattr(d, "material_request")
+				d.get("material_request")
 				and frappe.db.get_value("Material Request", d.material_request, "material_request_type")
 				== "Subcontracting"
 			):
