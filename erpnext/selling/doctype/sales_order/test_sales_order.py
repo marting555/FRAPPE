@@ -2443,6 +2443,39 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		si2_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si2.name, 'account': 'Debtors - FC'}, 'debit')
 		self.assertEqual(si2_acc_debit, 10000)
+  
+	def test_sales_order_with_update_stock_in_si(self):
+		so = make_sales_order(company='PP Ltd', warehouse='Stores - PP Ltd', customer='Krishna', cost_center='Main - PP Ltd', 
+                        selling_price_list='Standard Selling', item_code='Monitor', qty=4, rate=5000, do_not_save=True)
+		so.save()
+		so.submit()
+  
+		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
+  
+		si = make_sales_invoice(so.name)
+		si.update_stock = 1
+		si.save()
+		si.submit()
+
+		self.assertEqual(si.status, "Unpaid", "Sales Invoice not created")
+
+		monitor_sl = frappe.get_all('Stock Ledger Entry', {'item_code': 'Monitor', 'voucher_no': si.name, 'warehouse': 'Stores - PP Ltd'}, ['actual_qty', 'valuation_rate'])
+		self.assertEqual(monitor_sl[0].get("actual_qty"), -4)
+  
+		si1_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Stock In Hand - PP Ltd'}, 'credit')
+		self.assertEqual(si1_acc_credit, monitor_sl[0].get("valuation_rate") * 4)
+
+		si1_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Cost of Goods Sold - PP Ltd'}, 'debit')
+		self.assertEqual(si1_acc_debit, monitor_sl[0].get("valuation_rate") * 4)
+
+		si2_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Sales - PP Ltd'}, 'credit')
+		self.assertEqual(si2_acc_credit, 20000)
+
+		si2_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Debtors - PP Ltd'}, 'debit')
+		self.assertEqual(si2_acc_debit, 20000)
+  
+		so.reload()
+		self.assertEqual(so.status, 'Completed')
 
 def automatically_fetch_payment_terms(enable=1):
 	accounts_settings = frappe.get_doc("Accounts Settings")
