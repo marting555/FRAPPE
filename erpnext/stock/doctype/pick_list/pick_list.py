@@ -1163,6 +1163,10 @@ def create_dn_with_so(sales_dict, pick_list):
 
 
 def map_pl_locations(pick_list, item_mapper, delivery_note, sales_order=None):
+	delivery_note.pick_list = pick_list.name
+	delivery_note.company = pick_list.company
+	delivery_note.customer = frappe.get_value("Sales Order", sales_order, "customer")
+
 	for location in pick_list.locations:
 		if location.sales_order != sales_order or location.product_bundle_item:
 			continue
@@ -1188,10 +1192,6 @@ def map_pl_locations(pick_list, item_mapper, delivery_note, sales_order=None):
 
 	add_product_bundles_to_delivery_note(pick_list, delivery_note, item_mapper)
 	set_delivery_note_missing_values(delivery_note)
-
-	delivery_note.pick_list = pick_list.name
-	delivery_note.company = pick_list.company
-	delivery_note.customer = frappe.get_value("Sales Order", sales_order, "customer")
 
 
 def add_product_bundles_to_delivery_note(pick_list: "PickList", delivery_note, item_mapper) -> None:
@@ -1307,6 +1307,8 @@ def update_delivery_note_item(source, target, delivery_note):
 	if not cost_center:
 		cost_center = get_cost_center(source.item_group, "Item Group", delivery_note.company)
 
+	if not cost_center:
+		cost_center = frappe.get_cached_value("Company", delivery_note.company, "cost_center")
 	target.cost_center = cost_center
 
 
