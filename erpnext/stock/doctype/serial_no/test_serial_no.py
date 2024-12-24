@@ -111,6 +111,7 @@ class TestSerialNo(IntegrationTestCase):
 			qty=1,
 			serial_no=[serial_nos[0]],
 			company="_Test Company 1",
+			cost_center="_Test Company 1 - _TC1",
 			warehouse=wh,
 		)
 		sn_doc.reload()
@@ -126,6 +127,7 @@ class TestSerialNo(IntegrationTestCase):
 			qty=1,
 			serial_no=[serial_nos[0]],
 			company="_Test Company 1",
+			cost_center="_Test Company 1 - _TC1",
 			warehouse=wh,
 		)
 		sn_doc.reload()
@@ -161,6 +163,7 @@ class TestSerialNo(IntegrationTestCase):
 			qty=1,
 			serial_no=[serial_nos[0]],
 			company="_Test Company 1",
+			cost_center="_Test Company 1 - _TC1",
 			warehouse=wh,
 		)
 
@@ -170,6 +173,7 @@ class TestSerialNo(IntegrationTestCase):
 			qty=1,
 			serial_no=[serial_nos[0]],
 			company="_Test Company 1",
+			cost_center="_Test Company 1 - _TC1",
 			warehouse=wh,
 		)
 		sn_doc.reload()

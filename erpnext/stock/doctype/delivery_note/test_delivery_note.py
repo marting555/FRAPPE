@@ -1408,6 +1408,7 @@ class TestDeliveryNote(IntegrationTestCase):
 			qty=4,
 			warehouse=warehouse,
 			target_warehouse=target,
+			cost_center="_Test Company with perpetual inventory - TCP1",
 		)
 		self.assertFalse(frappe.db.exists("GL Entry", {"voucher_no": dn.name, "voucher_type": dn.doctype}))
 

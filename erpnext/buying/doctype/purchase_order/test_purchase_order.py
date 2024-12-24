@@ -957,7 +957,10 @@ class TestPurchaseOrder(IntegrationTestCase):
 		supplier = "_Test Internal Supplier 2"
 
 		mr = make_material_request(
-			qty=2, company="_Test Company with perpetual inventory", warehouse="Stores - TCP1"
+			qty=2,
+			company="_Test Company with perpetual inventory",
+			warehouse="Stores - TCP1",
+			cost_center="_Test Company with perpetual inventory - TCP1",
 		)
 
 		po = create_purchase_order(
