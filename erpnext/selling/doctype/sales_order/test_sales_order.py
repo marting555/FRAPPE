@@ -2444,10 +2444,46 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		si2_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si2.name, 'account': 'Debtors - FC'}, 'debit')
 		self.assertEqual(si2_acc_debit, 10000)
   
+	def test_sales_order_via_sales_invoice(self):
+		so = make_sales_order(company='French Connections', warehouse='Stores - FC', customer='Krishna', cost_center='Main - FC', 
+                        selling_price_list='Standard Selling', item_code='Monitor', qty=4, rate=5000)
+		so.save()
+		so.submit()
+  
+		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
+  
+		si = make_sales_invoice(so.name)
+    si.save()
+		si.submit()
+  
+		self.assertEqual(si.status, "Unpaid", "Sales Invoice not created")
+  
+		si_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Sales - FC'}, 'credit')
+		self.assertEqual(si_acc_credit, 20000)
+
+		si_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Debtors - FC'}, 'debit')
+		self.assertEqual(si_acc_debit, 20000)
+  
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
+		dn = make_delivery_note(si.name)
+		dn.save()
+		dn.submit()
+  
+		self.assertEqual(dn.status, "Completed", "Delivery Note not created")
+  
+		monitor_sl = frappe.get_all('Stock Ledger Entry', {'item_code': 'Monitor', 'voucher_no': dn.name, 'warehouse': 'Stores - FC'}, ['actual_qty', 'valuation_rate'])
+		self.assertEqual(monitor_sl[0].get("actual_qty"), -4)
+  
+		dn_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Stock In Hand - FC'}, 'credit')
+		self.assertEqual(dn_acc_credit, monitor_sl[0].get("valuation_rate") * 4)
+
+		dn_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Cost of Goods Sold - FC'}, 'debit')
+		self.assertEqual(dn_acc_debit, monitor_sl[0].get("valuation_rate") * 4)
+    
 	def test_sales_order_with_update_stock_in_si(self):
 		so = make_sales_order(company='PP Ltd', warehouse='Stores - PP Ltd', customer='Krishna', cost_center='Main - PP Ltd', 
                         selling_price_list='Standard Selling', item_code='Monitor', qty=4, rate=5000, do_not_save=True)
-		so.save()
+    so.save()
 		so.submit()
   
 		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
