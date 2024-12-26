@@ -415,7 +415,7 @@ frappe.ui.form.on('Quotation Item', {
 	},
 	discount_percentage: function (frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
-		const rate = row.rate;
+		const rate = row.base_price_list_rate;
 		if (rate <= 0) return
 		const discount_percentage = row.discount_percentage;
 		const discount_amount = Number(((rate * discount_percentage) / 100).toFixed(2));
@@ -434,6 +434,27 @@ frappe.ui.form.on('Quotation Item', {
 		frm.set_value('items', allItems);
 		refreshQuotationFields(frm);
 
+	},
+	discount_amount: function (frm, cdt, cdn){
+		const row = locals[cdt][cdn];
+		const rate = row.base_price_list_rate;
+		if (rate <= 0) return
+		const discount_amount = row.discount_amount;
+		const discount_percentage = Number(((100 * discount_amount) / rate).toFixed(2));
+
+		row.rate = rate - discount_amount;
+		row.discount_percentage = discount_percentage;
+		row.discount_amount = discount_amount
+
+		const allItems = frm.doc.items.map(item => {
+			if (item.item_code === row.item_code) {
+				item.discount_percentage = discount_percentage;
+				item.discount_amount = discount_amount;
+			}
+			return item;
+		});
+		frm.set_value('items', allItems);
+		refreshQuotationFields(frm);
 	}
 });
 
