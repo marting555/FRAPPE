@@ -388,7 +388,11 @@ erpnext.PointOfSale.Payment = class {
 		this.$payment_modes.html(
 			`${payments
 				.map((p, i) => {
-					const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
+					const mode = p.mode_of_payment
+						.replace(/ +/g, "_")
+						.replace(/[^-_a-zA-Z0-9]/g, "")
+						.replace(/^[^_a-zA-Z]+/, "")
+						.toLowerCase();
 					const payment_type = p.type;
 					const margin = i % 2 === 0 ? "pr-2" : "pl-2";
 					const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
@@ -407,7 +411,11 @@ erpnext.PointOfSale.Payment = class {
 		);
 
 		payments.forEach((p) => {
-			const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
+			const mode = p.mode_of_payment
+				.replace(/ +/g, "_")
+				.replace(/[^-_a-zA-Z0-9]/g, "")
+				.replace(/^[^_a-zA-Z]+/, "")
+				.toLowerCase();
 			const me = this;
 			this[`${mode}_control`] = frappe.ui.form.make_control({
 				df: {
@@ -442,7 +450,11 @@ erpnext.PointOfSale.Payment = class {
 		const doc = this.events.get_frm().doc;
 		const payments = doc.payments;
 		payments.forEach((p) => {
-			const mode = p.mode_of_payment.replace(/ +/g, "_").toLowerCase();
+			const mode = p.mode_of_payment
+				.replace(/ +/g, "_")
+				.replace(/[^-_a-zA-Z0-9]/g, "")
+				.replace(/^[^_a-zA-Z]+/, "")
+				.toLowerCase();
 			if (p.default) {
 				setTimeout(() => {
 					this.$payment_modes.find(`.${mode}.mode-of-payment-control`).parent().click();
