@@ -63,7 +63,7 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_partial_make_stock_entry(self):
 		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry as _make_stock_entry
 
-		mr = frappe.copy_doc(self.globalTestRecords["Material Request"][0]).insert()
+		mr = frappe.copy_doc(test_records[0]).insert()
 
 		source_wh = create_warehouse(
 			warehouse_name="_Test Source Warehouse",
