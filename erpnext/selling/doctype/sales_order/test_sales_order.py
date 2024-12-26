@@ -2621,7 +2621,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		so.reload()
 		self.assertEqual(so.status, 'Completed')
   
-	def test_sales_order_for_supply_item(self):
+	def test_sales_order_for_service_item(self):
 		make_service_item()
   
 		so = make_sales_order(company='French Connections', warehouse='Stores - FC', customer='Indra', cost_center='Main - FC', 
