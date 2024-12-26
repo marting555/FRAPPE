@@ -4,11 +4,32 @@
 
 import frappe
 from frappe import _, scrub
+from frappe.desk.reportview import build_match_conditions
 from frappe.query_builder import DocType
 from frappe.query_builder.functions import IfNull
 from frappe.utils import add_days, add_to_date, flt, getdate
 
 from erpnext.accounts.utils import get_fiscal_year
+
+
+def apply_doctype_permission(query, doctype):
+	"""
+	Modifies the given query to include permission conditions based on the specified doctype.
+
+	Args:
+	        query (object): The query object to be modified.
+	        doctype (str): The name of the doctype for which permission conditions are to be applied.
+
+	Returns:
+	        tuple: A tuple containing the modified query and its parameters.
+	"""
+	query, params = query.walk()
+	match_conditions = build_match_conditions(doctype)
+
+	if match_conditions:
+		query += "and" + match_conditions
+
+	return query, params
 
 
 def execute(filters=None):
@@ -199,7 +220,7 @@ class Analytics:
 
 		doctype = DocType(self.filters.doc_type)
 
-		self.entries = (
+		query = (
 			frappe.qb.from_(doctype)
 			.select(
 				doctype.order_type.as_("entity"),
@@ -213,7 +234,11 @@ class Analytics:
 				& (IfNull(doctype.order_type, "") != "")
 			)
 			.orderby(doctype.order_type)
-		).run(as_dict=True)
+		)
+
+		query, params = apply_doctype_permission(query, self.filters.doc_type)
+
+		self.entries = frappe.db.sql(query, params, as_dict=True)
 
 		self.get_teams()
 
@@ -241,7 +266,7 @@ class Analytics:
 				entity_name = "party_name as entity_name"
 				value_field = "base_paid_amount as value_field"
 
-		self.entries = frappe.get_all(
+		self.entries = frappe.get_list(
 			self.filters.doc_type,
 			fields=[entity, entity_name, value_field, self.date_field],
 			filters={
@@ -264,7 +289,7 @@ class Analytics:
 		doctype = DocType(self.filters.doc_type)
 		doctype_item = DocType(f"{self.filters.doc_type} Item")
 
-		self.entries = (
+		query = (
 			frappe.qb.from_(doctype_item)
 			.join(doctype)
 			.on(doctype.name == doctype_item.parent)
@@ -280,7 +305,11 @@ class Analytics:
 				& (doctype.company.isin(self.filters.company))
 				& (doctype[self.date_field].between(self.filters.from_date, self.filters.to_date))
 			)
-		).run(as_dict=True)
+		)
+
+		query, params = apply_doctype_permission(query, self.filters.doc_type)
+
+		self.entries = frappe.db.sql(query, params, as_dict=True)
 
 		self.entity_names = {}
 		for d in self.entries:
@@ -300,7 +329,7 @@ class Analytics:
 		else:
 			entity_field = "territory as entity"
 
-		self.entries = frappe.get_all(
+		self.entries = frappe.get_list(
 			self.filters.doc_type,
 			fields=[entity_field, value_field, self.date_field],
 			filters={
@@ -320,7 +349,7 @@ class Analytics:
 		doctype = DocType(self.filters.doc_type)
 		doctype_item = DocType(f"{self.filters.doc_type} Item")
 
-		self.entries = (
+		query = (
 			frappe.qb.from_(doctype_item)
 			.join(doctype)
 			.on(doctype.name == doctype_item.parent)
@@ -334,7 +363,11 @@ class Analytics:
 				& (doctype.company.isin(self.filters.company))
 				& (doctype[self.date_field].between(self.filters.from_date, self.filters.to_date))
 			)
-		).run(as_dict=True)
+		)
+
+		query, params = apply_doctype_permission(query, self.filters.doc_type)
+
+		self.entries = frappe.db.sql(query, params, as_dict=True)
 
 		self.get_groups()
 
@@ -349,7 +382,7 @@ class Analytics:
 
 		entity = "project as entity"
 
-		self.entries = frappe.get_all(
+		self.entries = frappe.get_list(
 			self.filters.doc_type,
 			fields=[entity, value_field, self.date_field],
 			filters={
@@ -473,10 +506,10 @@ class Analytics:
 
 		self.depth_map = frappe._dict()
 
-		self.group_entries = frappe.db.sql(
-			f"""select name, lft, rgt , {parent} as parent
-			from `tab{self.filters.tree_type}` order by lft""",
-			as_dict=1,
+		self.group_entries = frappe.get_list(
+			self.filters.tree_type,
+			["name", "lft", "rgt", f"{parent} as parent"],
+			order_by="lft",
 		)
 
 		for d in self.group_entries:
@@ -488,13 +521,19 @@ class Analytics:
 	def get_teams(self):
 		self.depth_map = frappe._dict()
 
-		self.group_entries = frappe.db.sql(
-			f""" select * from (select "Order Types" as name, 0 as lft,
-			2 as rgt, '' as parent union select distinct order_type as name, 1 as lft, 1 as rgt, "Order Types" as parent
-			from `tab{self.filters.doc_type}` where ifnull(order_type, '') != '') as b order by lft, name
-		""",
-			as_dict=1,
+		# Define the parent node for order types
+		parent_node = frappe._dict({"name": "Order Types", "lft": 0, "rgt": 2, "parent": ""})
+
+		# Fetch distinct order types from the specified doctype
+		order_types = frappe.get_list(
+			self.filters.doc_type,
+			filters={"order_type": ["!=", ""]},
+			fields=["DISTINCT order_type as name, 1 as lft, 1 as rgt, 'Order Types' as parent"],
+			order_by="lft, name",
 		)
+
+		# Combine parent node with fetched order types
+		self.group_entries = [parent_node, *order_types]
 
 		for d in self.group_entries:
 			if d.parent:
@@ -504,7 +543,7 @@ class Analytics:
 
 	def get_supplier_parent_child_map(self):
 		self.parent_child_map = frappe._dict(
-			frappe.db.sql(""" select name, supplier_group from `tabSupplier`""")
+			frappe.get_list("Supplier", ["name", "supplier_group"], as_list=True)
 		)
 
 	def get_chart_data(self):
