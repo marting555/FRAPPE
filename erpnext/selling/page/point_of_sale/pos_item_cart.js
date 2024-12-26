@@ -392,7 +392,7 @@ erpnext.PointOfSale.ItemCart = class {
 					this.value = flt(this.value);
 					if (this.value > 100) {
 						frappe.msgprint({
-							title: __("Point of Sale"),
+							title: __("Invalid Discount"),
 							indicator: "red",
 							message: __("Discount cannot be greater than 100%."),
 						});
