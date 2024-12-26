@@ -273,7 +273,9 @@ class SalesInvoice(SellingController):
 			self.indicator_title = _("Paid")
 
 	def validate(self):
+		self.update_temp_key_to_permanent_key()
 		super().validate()
+		# update temp key with permanent key
 		self.validate_auto_set_posting_time()
 
 		if not (self.is_pos or self.is_debit_note):

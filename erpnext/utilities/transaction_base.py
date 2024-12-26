@@ -287,6 +287,35 @@ class TransactionBase(StatusUpdater):
 			)
 		)
 
+	def update_temp_key_to_permanent_key(self):
+		def print_item(x):
+			print(
+				(
+					x.item_code,
+					("name", x.name),
+					("__temporary_name", x.get("__temporary_name")),
+					("parent_item_row", x.get("parent_item_row")),
+					("__is_local", x.get("__is_local")),
+				)
+			)
+
+		print("----------before----------")
+		for x in self.items:
+			print_item(x)
+
+		tk_to_pk = {}
+		for x in self.items:
+			if x.name and x.get("__temporary_name"):
+				tk_to_pk[x.get("__temporary_name")] = x.name
+
+		print(tk_to_pk)
+		for x in self.items:
+			if x.get("__islocal") and x.parent_item_row:
+				x.parent_item_row = tk_to_pk[x.parent_item_row]
+		print("----------after----------")
+		for x in self.items:
+			print_item(x)
+
 	@frappe.whitelist()
 	def process_item_selection(self, item_idx):
 		# Server side 'item' doc. Update this to reflect in UI
@@ -378,13 +407,14 @@ class TransactionBase(StatusUpdater):
 					x
 					for x in existing_free_items
 					if x.item_code == free_item.get("item_code")
-					and x.pricing_rules == free_item.get("pricing_rules")
+					and x.get("parent_item_row") == item_obj.get("__temporary_name")
 				]
 				if _matches:
 					row_to_modify = _matches[0]
 				else:
 					row_to_modify = self.append("items")
 
+				setattr(row_to_modify, "parent_item_row", item_obj.get("__temporary_name"))
 				for k, _v in free_item.items():
 					setattr(row_to_modify, k, free_item.get(k))
 

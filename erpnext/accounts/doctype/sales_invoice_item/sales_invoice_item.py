@@ -69,6 +69,7 @@ class SalesInvoiceItem(Document):
 		net_rate: DF.Currency
 		page_break: DF.Check
 		parent: DF.Data
+		parent_item_row: DF.Data | None
 		parentfield: DF.Data
 		parenttype: DF.Data
 		pos_invoice: DF.Link | None

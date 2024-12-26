@@ -1874,24 +1874,20 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 	}
 
 	apply_product_discount(args) {
-		const items = this.frm.doc.items.filter(d => (d.is_free_item)) || [];
-
-		const exist_items = items.map(row => { return {item_code: row.item_code, pricing_rules: row.pricing_rules};});
+		// Note: somehow free items are removed even before this point
+		let existing_free_items_for_trigger = this.frm.doc.items.filter(d => { return d.is_free_item && d.parent_item_row == args.name}) || [];
 
 		args.free_item_data.forEach(async pr_row => {
 			let row_to_modify = {};
 
-			// If there are no free items, or if the current free item doesn't exist in the table, add it
-			if (!items || !exist_items.filter(e_row => {
-				return e_row.item_code == pr_row.item_code && e_row.pricing_rules == pr_row.pricing_rules;
-			}).length) {
-				row_to_modify = frappe.model.add_child(this.frm.doc,
-					this.frm.doc.doctype + ' Item', 'items');
-
-			} else if(items) {
-				row_to_modify = items.filter(d => (d.item_code === pr_row.item_code
-					&& d.pricing_rules === pr_row.pricing_rules))[0];
+			let _match = existing_free_items_for_trigger.filter(d => {return d.item_code == pr_row.item_code && d.pricing_rules == pr_row.pricing_rules})
+			if(_match.length) {
+				row_to_modify = _match[0];
+			} else {
+				row_to_modify = frappe.model.add_child(this.frm.doc, this.frm.doc.doctype + ' Item', 'items');
 			}
+
+			console.log(row_to_modify);
 
 			for (let key in pr_row) {
 				row_to_modify[key] = pr_row[key];
@@ -1904,6 +1900,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 				}
 			}
 
+			row_to_modify["parent_item_row"] = args.name;
 			this.frm.script_manager.copy_from_first_row("items", row_to_modify, ["expense_account", "income_account"]);
 		});
 
