@@ -388,11 +388,7 @@ erpnext.PointOfSale.Payment = class {
 		this.$payment_modes.html(
 			`${payments
 				.map((p, i) => {
-					const mode = p.mode_of_payment
-						.replace(/ +/g, "_")
-						.replace(/[^\p{L}\p{N}_-]/gu, "")
-						.replace(/^[^_a-zA-Z\p{L}]+/u, "")
-						.toLowerCase();
+					const mode = this.mode_of_payment_to_class_name(p.mode_of_payment);
 					const payment_type = p.type;
 					const margin = i % 2 === 0 ? "pr-2" : "pl-2";
 					const amount = p.amount > 0 ? format_currency(p.amount, currency) : "";
