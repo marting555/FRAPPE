@@ -235,11 +235,7 @@ erpnext.PointOfSale.Payment = class {
 		frappe.ui.form.on("Sales Invoice Payment", "amount", (frm, cdt, cdn) => {
 			// for setting correct amount after loyalty points are redeemed
 			const default_mop = locals[cdt][cdn];
-			const mode = default_mop.mode_of_payment
-				.replace(/ +/g, "_")
-				.replace(/[^\p{L}\p{N}_-]/gu, "")
-				.replace(/^[^_a-zA-Z\p{L}]+/u, "")
-				.toLowerCase();
+			const mode = this.mode_of_payment_to_class_name(default_mop.mode_of_payment);
 			if (this[`${mode}_control`] && this[`${mode}_control`].get_value() != default_mop.amount) {
 				this[`${mode}_control`].set_value(default_mop.amount);
 			}
@@ -415,11 +411,7 @@ erpnext.PointOfSale.Payment = class {
 		);
 
 		payments.forEach((p) => {
-			const mode = p.mode_of_payment
-				.replace(/ +/g, "_")
-				.replace(/[^\p{L}\p{N}_-]/gu, "")
-				.replace(/^[^_a-zA-Z\p{L}]+/u, "")
-				.toLowerCase();
+			const mode = this.mode_of_payment_to_class_name(p.mode_of_payment);
 			const me = this;
 			this[`${mode}_control`] = frappe.ui.form.make_control({
 				df: {
@@ -454,11 +446,7 @@ erpnext.PointOfSale.Payment = class {
 		const doc = this.events.get_frm().doc;
 		const payments = doc.payments;
 		payments.forEach((p) => {
-			const mode = p.mode_of_payment
-				.replace(/ +/g, "_")
-				.replace(/[^\p{L}\p{N}_-]/gu, "")
-				.replace(/^[^_a-zA-Z\p{L}]+/u, "")
-				.toLowerCase();
+			const mode = this.mode_of_payment_to_class_name(p.mode_of_payment);
 			if (p.default) {
 				setTimeout(() => {
 					this.$payment_modes.find(`.${mode}.mode-of-payment-control`).parent().click();
@@ -627,5 +615,13 @@ erpnext.PointOfSale.Payment = class {
 
 	toggle_component(show) {
 		show ? this.$component.css("display", "flex") : this.$component.css("display", "none");
+	}
+
+	mode_of_payment_to_class_name(mode_of_payment) {
+		return mode_of_payment
+			.replace(/ +/g, "_")
+			.replace(/[^\p{L}\p{N}_-]/gu, "")
+			.replace(/^[^_a-zA-Z\p{L}]+/u, "")
+			.toLowerCase();
 	}
 };
