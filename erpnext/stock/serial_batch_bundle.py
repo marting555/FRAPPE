@@ -643,7 +643,10 @@ class BatchNoValuation(DeprecatedBatchNoValuation):
 		child = frappe.qb.DocType("Serial and Batch Entry")
 
 		timestamp_condition = ""
-		if self.sle.posting_date and self.sle.posting_time:
+		if self.sle.posting_date:
+			if self.sle.posting_time is None:
+				self.sle.posting_time = nowtime()
+				
 			timestamp_condition = CombineDatetime(parent.posting_date, parent.posting_time) < CombineDatetime(
 				self.sle.posting_date, self.sle.posting_time
 			)
@@ -944,7 +947,7 @@ class SerialBatchCreation:
 			doc.submit()
 		else:
 			doc.save()
-			
+
 		self.validate_qty(doc)
 
 		return doc
