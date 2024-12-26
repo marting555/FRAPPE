@@ -1123,6 +1123,45 @@ class TestPurchaseOrder(FrappeTestCase):
 		po.reload()
 		self.assertEqual(po.per_billed, 100)
 
+	def test_single_po_pi(self):
+		# Scenario : PO => PR => 1PI
+		args = frappe._dict()
+		args['po'] = [{
+			"company" : "PP Ltd",
+			"item_code" : "test item 01",
+			"warehouse" : "Stores - PP Ltd",
+			"qty" : 6,
+			"rate" : 100,
+		}]
+
+		args['pr'] = [6]
+		args['pi'] = [6]
+
+		create_po_pi(**args)
+
+	def test_multi_po_pi(self):
+		# Scenario : 2PO => 2PR => 1PI
+		args = frappe._dict()
+		args['po'] = [{
+			"company" : "PP Ltd",
+			"item_code" : "test item 01",
+			"warehouse" : "Stores - PP Ltd",
+			"qty" : 3,
+			"rate" : 100,
+		},
+		{
+			"company" : "PP Ltd",
+			"item_code" : "test item 01",
+			"warehouse" : "Stores - PP Ltd",
+			"qty" : 3,
+			"rate" : 100,
+		}]
+
+		args['pr'] = [3, 3]
+		args['pi'] = [6]
+
+		create_po_pi(**args)
+
 
 def prepare_data_for_internal_transfer():
 	from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_internal_supplier
@@ -1262,3 +1301,43 @@ def get_requested_qty(item_code="_Test Item", warehouse="_Test Warehouse - _TC")
 test_dependencies = ["BOM", "Item Price"]
 
 test_records = frappe.get_test_records("Purchase Order")
+
+
+def make_pi_with_qty(pr_name, received_qty):
+	
+	# Check received_qty after making PI from PR without update_stock checked
+	pi1 = make_pi_from_pr(pr_name)
+	pi1.get("items")[0].qty = received_qty or 2
+	pi1.insert()
+	pi1.submit()
+	return pi1
+
+@frappe.whitelist()
+def create_po_pi(**args):
+	self = TestPurchaseOrder()
+	args = frappe._dict(args)
+	pr_qty_list = None
+	pi_qty_list = None
+
+	for po in args['po']:
+		doc_po =  create_purchase_order(**po)
+		self.assertEqual(doc_po.docstatus, 1)
+
+		pr_qty_list  = pr_qty_list if pr_qty_list else args['pr']
+		for index in range(0, len(pr_qty_list)):
+			doc_pr =  create_pr_against_po(doc_po.name, pr_qty_list[index])
+			self.assertEqual(doc_pr.docstatus, 1)
+
+			pi_qty_list  = pi_qty_list if pi_qty_list else args['pi']
+			for pi_index in range(0, len(pi_qty_list)):
+				doc_pi = make_pi_with_qty(doc_pr.name, pi_qty_list[pi_index])
+				self.assertEqual(doc_pi.docstatus, 1)
+
+				if len(pi_qty_list) > 1 and len(pi_qty_list) <= len(pr_qty_list):
+					pi_qty_list.pop(0)
+					break
+
+			if len(pr_qty_list) > 1 and len(args['po']) >= len(pr_qty_list):
+				pi_qty_list.pop(0)
+				break
+
