@@ -40,6 +40,7 @@ from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import
 )
 from erpnext.stock.doctype.warehouse.test_warehouse import get_warehouse
 from erpnext.stock.stock_ledger import get_previous_sle
+from erpnext.stock.doctype.item.test_item import create_item
 
 
 class TestDeliveryNote(FrappeTestCase):
@@ -2440,6 +2441,13 @@ class TestDeliveryNote(FrappeTestCase):
 		})
 		self.assertTrue(gl_entries, "General Ledger entries not created.")
 
+	def test_delivery_note(self):
+		item = create_item("OP-MB-001")
+		dn = create_delivery_note(qty = 10, rate = 10000, item =item.item_code)
+		self.assertEqual(dn.status,"To Bill")
+		sle = frappe.get_doc("Stock Ledger Entry", {"voucher_type": "Delivery Note", "voucher_no": dn.name})
+		self.assertEqual(sle.get("actual_qty"),-10)
+		self.assertEqual(sle.get("warehouse"),"_Test Warehouse - _TC")
 
 def create_delivery_note(**args):
 	dn = frappe.new_doc("Delivery Note")
