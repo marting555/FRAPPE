@@ -1005,6 +1005,70 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertEqual(pos_return.get("payments")[0].amount, -500)
 		self.assertEqual(pos_return.get("payments")[1].amount, -500)
 
+
+	def validate_ledger_entries(self, payment_entry, debit_account, credit_account, amount):
+		"""Validate GL entries for the given payment entry."""
+		ledger_entries = frappe.get_all(
+			"GL Entry",
+			filters={"voucher_no": payment_entry.name},
+			fields=["account", "debit", "credit"]
+		)
+		# Validate debit entry
+		assert any(
+			entry["account"] == debit_account and entry["debit"] == amount for entry in ledger_entries
+		), f"Debit entry missing for account: {debit_account} with amount: {amount}"
+
+		# Validate credit entry
+		assert any(
+			entry["account"] == credit_account and entry["credit"] == amount for entry in ledger_entries
+		), f"Credit entry missing for account: {credit_account} with amount: {amount}"
+
+	def test_sales_invoice_payment(self):
+		"""Test payment against a Sales Invoice."""
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
+		today = nowdate()
+
+		# Step 1: Create and Submit Sales Invoice
+		sales_invoice = create_sales_invoice(
+			customer="_Test Customer",
+			company="_Test Company",
+			item="_Test Item",
+			qty=1,
+			rate=100,
+			warehouse="_Test Warehouse - _TC",
+			currency="INR",
+			naming_series="T-SINV-"
+		)
+
+		# Step 2: Create Payment Entry
+		payment_entry = get_payment_entry(
+			"Sales Invoice", sales_invoice.name, bank_account="Cash - _TC"
+		)
+		payment_entry.reference_no = f"Test-{sales_invoice.name}"
+		payment_entry.reference_date = today
+		payment_entry.paid_from_account_currency = sales_invoice.currency
+		payment_entry.paid_to_account_currency = sales_invoice.currency
+		payment_entry.source_exchange_rate = 1
+		payment_entry.target_exchange_rate = 1
+		payment_entry.paid_amount = sales_invoice.grand_total
+
+		payment_entry.insert()
+		payment_entry.submit()
+
+		# Step 3: Validate Outstanding Amount
+		sales_invoice.reload()
+		self.assertEqual(sales_invoice.outstanding_amount, 0, "Outstanding amount is not zero.")
+		self.assertEqual(sales_invoice.status, "Paid", "Sales Invoice status is not 'Paid'.")
+
+		# Step 4: Validate Ledger Entries
+		self.validate_ledger_entries(
+			payment_entry,
+			debit_account="Cash - _TC",
+			credit_account=sales_invoice.debit_to,
+			amount=sales_invoice.grand_total
+		)
+
+
 	def test_pos_change_amount(self):
 		make_pos_profile(
 			company="_Test Company with perpetual inventory",
