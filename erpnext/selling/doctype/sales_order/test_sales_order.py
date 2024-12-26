@@ -2564,6 +2564,62 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		dn_acc_debit2 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn2.name, 'account': 'Cost of Goods Sold - FC'}, 'debit')
 		self.assertEqual(dn_acc_debit2, monitor_sl2[0].get("valuation_rate") * 2)
+  
+	def test_sales_order_with_update_stock_in_partial_si(self):
+		so = make_sales_order(company='PP Ltd', warehouse='Stores - PP Ltd', customer='Krishna', cost_center='Main - PP Ltd', 
+                        selling_price_list='Standard Selling', item_code='Monitor', qty=4, rate=5000, do_not_save=True)
+		so.save()
+		so.submit()
+
+		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
+
+		si1 = make_sales_invoice(so.name)
+		si1.get("items")[0].qty = 2
+		si1.update_stock = 1
+		si1.save()
+		si1.submit()
+
+		self.assertEqual(si1.status, "Unpaid", "Sales Invoice not created")
+
+		monitor_sl1 = frappe.get_all('Stock Ledger Entry', {'item_code': 'Monitor', 'voucher_no': si1.name, 'warehouse': 'Stores - PP Ltd'}, ['actual_qty', 'valuation_rate'])
+		self.assertEqual(monitor_sl1[0].get("actual_qty"), -2)
+
+		si1_acc_credit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si1.name, 'account': 'Stock In Hand - PP Ltd'}, 'credit')
+		self.assertEqual(si1_acc_credit1, monitor_sl1[0].get("valuation_rate") * 2)
+
+		si1_acc_debit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si1.name, 'account': 'Cost of Goods Sold - PP Ltd'}, 'debit')
+		self.assertEqual(si1_acc_debit1, monitor_sl1[0].get("valuation_rate") * 2)
+
+		si2_acc_credit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si1.name, 'account': 'Sales - PP Ltd'}, 'credit')
+		self.assertEqual(si2_acc_credit1, 10000)
+
+		si2_acc_debit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si1.name, 'account': 'Debtors - PP Ltd'}, 'debit')
+		self.assertEqual(si2_acc_debit1, 10000)
+  
+		si2 = make_sales_invoice(so.name)
+		si2.update_stock = 1
+		si2.save()
+		si2.submit()
+
+		self.assertEqual(si2.status, "Unpaid", "Sales Invoice not created")
+
+		monitor_sl2 = frappe.get_all('Stock Ledger Entry', {'item_code': 'Monitor', 'voucher_no': si2.name, 'warehouse': 'Stores - PP Ltd'}, ['actual_qty', 'valuation_rate'])
+		self.assertEqual(monitor_sl2[0].get("actual_qty"), -2)
+
+		si1_acc_credit2 = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si2.name, 'account': 'Stock In Hand - PP Ltd'}, 'credit')
+		self.assertEqual(si1_acc_credit2, monitor_sl2[0].get("valuation_rate") * 2)
+
+		si1_acc_debit2 = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si2.name, 'account': 'Cost of Goods Sold - PP Ltd'}, 'debit')
+		self.assertEqual(si1_acc_debit2, monitor_sl2[0].get("valuation_rate") * 2)
+
+		si2_acc_credit2 = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si2.name, 'account': 'Sales - PP Ltd'}, 'credit')
+		self.assertEqual(si2_acc_credit2, 10000)
+
+		si2_acc_debit2 = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si2.name, 'account': 'Debtors - PP Ltd'}, 'debit')
+		self.assertEqual(si2_acc_debit2, 10000)
+
+		so.reload()
+		self.assertEqual(so.status, 'Completed')
 
 def automatically_fetch_payment_terms(enable=1):
 	accounts_settings = frappe.get_doc("Accounts Settings")
