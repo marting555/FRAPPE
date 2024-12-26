@@ -138,7 +138,7 @@ class StockController(AccountsController):
 		from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 
 		is_material_issue = False
-		if self.doctype == "Stock Entry" and self.purpose == "Material Issue":
+		if self.doctype == "Stock Entry" and self.purpose in ["Material Issue", "Material Transfer"]:
 			is_material_issue = True
 
 		for d in self.get("items"):
@@ -976,6 +976,9 @@ class StockController(AccountsController):
 				qi_required = True
 			elif self.doctype == "Stock Entry" and row.t_warehouse:
 				qi_required = True  # inward stock needs inspection
+			
+			if row.get("is_scrap_item"):
+				continue
 
 			if qi_required:  # validate row only if inspection is required on item level
 				self.validate_qi_presence(row)
