@@ -524,21 +524,6 @@
             "insert_after":"custom_brand_name_trademark",
             "fieldtype":"Section Break",
             "module": "Buying"
-        },
-        {
-            "fieldname": "custom_gst_registration_category",
-            "fieldtype": "Select",
-            "insert_after": "tax_id",
-            "label": "GST Registration Category",
-            "options": "\nRegistered Regular\nRegistered Composition\nUnregistered\nSEZ\nOverseas\nDeemed Export\nUIN Holders\nTax Deductor",
-            "module": "Buying"
-        },
-        {
-            "fieldname": "custom_gst_no",
-            "fieldtype": "Data",
-            "insert_after": "custom_gst_registration_category",
-            "label": "Gst No",
-            "module": "Buying"
         }
     ]
 }

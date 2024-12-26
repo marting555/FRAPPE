@@ -1,6 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "format:DP-{####}",
  "creation": "2024-12-23 13:40:29.388302",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -808,10 +809,11 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-12-23 13:46:43.202947",
+ "modified": "2024-12-26 16:43:09.063286",
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Vendor Registration",
+ "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [
   {
