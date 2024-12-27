@@ -352,7 +352,10 @@ class TestBudget(IntegrationTestCase):
 
 def set_total_expense_zero(posting_date, budget_against_field=None, budget_against_CC=None):
 	if budget_against_field == "project":
-		budget_against = frappe.db.get_value("Project", {"project_name": "_Test Project"})
+		project = frappe.get_doc("Project", {"project_name": "_Test Project"})
+		project.company = "_Test Company"
+		project.save()
+		budget_against = project.name
 	else:
 		budget_against = budget_against_CC or "_Test Cost Center - _TC"
 
