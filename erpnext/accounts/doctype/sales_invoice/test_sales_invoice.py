@@ -39,6 +39,7 @@ from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import
 	create_stock_reconciliation,
 )
 from erpnext.stock.utils import get_incoming_rate, get_stock_balance
+from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
 
 
 class TestSalesInvoice(FrappeTestCase):
@@ -1005,27 +1006,55 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertEqual(pos_return.get("payments")[0].amount, -500)
 		self.assertEqual(pos_return.get("payments")[1].amount, -500)
 
-
-	def validate_ledger_entries(self, payment_entry, debit_account, credit_account, amount):
-		"""Validate GL entries for the given payment entry."""
+			
+	def validate_ledger_entries(self, payment_entries, sales_invoices):
+		"""
+		Validate GL entries for the given payment entries and sales invoices.
+		- payment_entries: A list of Payment Entry objects.
+		- sales_invoices: A list of Sales Invoice objects.
+		"""
+		# Collect all ledger entries related to the payment entries
 		ledger_entries = frappe.get_all(
 			"GL Entry",
-			filters={"voucher_no": payment_entry.name},
+			filters={"voucher_no": ["in", [pe.name for pe in payment_entries]]},
 			fields=["account", "debit", "credit"]
 		)
-		# Validate debit entry
-		assert any(
-			entry["account"] == debit_account and entry["debit"] == amount for entry in ledger_entries
-		), f"Debit entry missing for account: {debit_account} with amount: {amount}"
 
-		# Validate credit entry
-		assert any(
-			entry["account"] == credit_account and entry["credit"] == amount for entry in ledger_entries
-		), f"Credit entry missing for account: {credit_account} with amount: {amount}"
+		# Collect the total credit amounts for Debtors account
+		debtor_account_credits = {}
+		for entry in ledger_entries:
+			if entry["account"] not in debtor_account_credits:
+				debtor_account_credits[entry["account"]] = 0
+			debtor_account_credits[entry["account"]] += entry["credit"]
+
+		# Validate debit entries for each Payment Entry (Bank account)
+		for pe in payment_entries:
+			debit_account = pe.paid_to  # Bank account
+			debit_amount = pe.paid_amount
+			assert any(
+				entry["account"] == debit_account and entry["debit"] == debit_amount
+				for entry in ledger_entries
+			), f"Debit entry missing for account: {debit_account} with amount: {debit_amount}"
+
+		# Validate credit entries for the receivable accounts of each Sales Invoice (Debtors account)
+		for si in sales_invoices:
+			total_credit = sum(pe.paid_amount for pe in payment_entries if any(
+				ref.reference_doctype == "Sales Invoice" and ref.reference_name == si.name
+				for ref in pe.references
+			))
+
+			# Get the total credit for the Debtors account associated with the Sales Invoice
+			credit_account = si.debit_to  # Debtors account
+			total_ledger_credit = debtor_account_credits.get(credit_account, 0)
+
+			# Assert that the total credit matches the calculated total credit
+			assert total_ledger_credit == total_credit, (
+				f"Total credit for Debtors account: {credit_account} should be equal to the total paid amount. "
+				f"Total Ledger Credit: {total_ledger_credit}, Total Paid: {total_credit}"
+			)
 
 	def test_sales_invoice_payment(self):
-		"""Test payment against a Sales Invoice."""
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
+		"""Test payment against a single Sales Invoice."""
 		today = nowdate()
 
 		# Step 1: Create and Submit Sales Invoice
@@ -1061,13 +1090,157 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertEqual(sales_invoice.status, "Paid", "Sales Invoice status is not 'Paid'.")
 
 		# Step 4: Validate Ledger Entries
-		self.validate_ledger_entries(
-			payment_entry,
-			debit_account="Cash - _TC",
-			credit_account=sales_invoice.debit_to,
-			amount=sales_invoice.grand_total
-		)
+		self.validate_ledger_entries(payment_entries=[payment_entry], sales_invoices=[sales_invoice])
 
+
+	def test_single_payment_multiple_sales_invoices(self):
+		# Step 1: Create multiple Sales Invoices
+		sales_invoice1 = create_sales_invoice()
+		sales_invoice2 = create_sales_invoice()
+		total_payment_amount = sales_invoice1.grand_total + sales_invoice2.grand_total
+
+		# Step 3: Create Payment Entry and allocate payment to both invoices
+		payment_entry = get_payment_entry(
+			"Sales Invoice", sales_invoice1.name, bank_account="_Test Bank - _TC"
+		)
+		payment_entry.append(
+			"references",
+			{
+				"reference_doctype": "Sales Invoice",
+				"reference_name": sales_invoice2.name,
+				"allocated_amount": sales_invoice2.grand_total,
+			}
+		)
+		payment_entry.reference_no = f"Test-{sales_invoice1.name}-{sales_invoice2.name}"
+		payment_entry.reference_date = nowdate()
+		payment_entry.paid_from_account_currency = sales_invoice1.currency
+		payment_entry.paid_to_account_currency = sales_invoice1.currency
+		payment_entry.source_exchange_rate = 1
+		payment_entry.target_exchange_rate = 1
+		payment_entry.paid_amount = total_payment_amount
+
+		payment_entry.insert()
+		payment_entry.submit()
+
+		# Step 4: Reload Sales Invoices to get updated data
+		sales_invoice1.reload()
+		sales_invoice2.reload()
+
+		# Step 5: Assertions for Sales Invoices
+		for si in [sales_invoice1, sales_invoice2]:
+			self.assertEqual(si.outstanding_amount, 0)
+			self.assertEqual(si.status, "Paid")
+
+		# Step 6: Validate Ledger Entries
+		self.validate_ledger_entries(payment_entries=[payment_entry], sales_invoices=[sales_invoice1, sales_invoice2])
+
+	def test_multiple_payment_entries_single_sales_invoice(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
+
+		today = nowdate()
+
+		# Step 1: Create and Submit Sales Invoice without payment schedule
+		si = create_sales_invoice(
+			customer="_Test Customer",
+			company="_Test Company",
+			item="_Test Item",
+			qty=1,
+			rate=300,
+			warehouse="_Test Warehouse - _TC",
+			currency="INR",
+			naming_series="T-SINV-"
+		)
+		si.submit()
+
+		# Step 2: Test - No Payments Yet
+		self.assertEqual(si.status, "Unpaid")
+
+		# Step 3: Create Payment Entry 1 with less than the due amount
+		pe1 = get_payment_entry("Sales Invoice", si.name, bank_account="_Test Bank - _TC")
+		pe1.reference_no = "PE1-001"
+		pe1.reference_date = today
+		pe1.paid_amount = 1  # Less than the total due
+		pe1.references[0].allocated_amount = pe1.paid_amount  # Allocate 1 as the paid amount
+		pe1.submit()
+		
+		# After Payment Entry 1: Sales Invoice should still be Overdue
+		si.reload()
+		self.assertEqual(si.status, "Partly Paid")
+
+		# Step 4: Create Payment Entry 2 (Partly Paid - 50% of grand total)
+		pe2 = frappe.copy_doc(pe1)  # Copy of Payment Entry 1 for simplicity
+		pe2.paid_amount = si.grand_total / 2  # Pay 50% of the total amount
+		pe2.references[0].allocated_amount = pe2.paid_amount  # Allocate the paid amount
+		pe2.submit()
+		
+		# After Payment Entry 2: Sales Invoice should be Partly Paid
+		si.reload()
+		self.assertEqual(si.status, "Partly Paid")
+
+		# Step 5: Create Payment Entry 3 (Fully Paid)
+		pe3 = get_payment_entry("Sales Invoice", si.name, bank_account="_Test Bank - _TC")
+		pe3.reference_no = "PE3-001"
+		pe3.reference_date = today
+		pe3.paid_amount = si.outstanding_amount  # Pay the remaining outstanding amount
+		pe3.references[0].allocated_amount = pe3.paid_amount  # Allocate the remaining amount
+		pe3.submit()
+		
+		# After Payment Entry 3: Sales Invoice should be Paid
+		si.reload()
+		self.assertEqual(si.status, "Paid")
+
+		# Step 6: Validate Ledger Entries (You can include additional checks to validate the ledger entries if necessary)
+		self.validate_ledger_entries(payment_entries=[pe1, pe2, pe3], sales_invoices=[si])
+
+	def test_multiple_invoices_multiple_payments(self):
+		"""Test payments against multiple Sales Invoices and validate ledger entries."""
+		today = nowdate()
+
+		# Step 1: Create and Submit Sales Invoices and Payment Entries
+		sales_invoices, payment_entries = [], []
+		for i in range(3):
+			si = create_sales_invoice(
+				customer="_Test Customer", company="_Test Company", item="_Test Item", qty=1, rate=100,
+				warehouse="_Test Warehouse - _TC", currency="INR", naming_series=f"T-SINV-{i+1}-"
+			)
+			sales_invoices.append(si)
+
+			pe = get_payment_entry("Sales Invoice", si.name, bank_account="Cash - _TC")
+			pe.update({
+				"reference_no": f"Test-{si.name}", "reference_date": today, "paid_from_account_currency": si.currency,
+				"paid_to_account_currency": si.currency, "source_exchange_rate": 1, "target_exchange_rate": 1,
+				"paid_amount": si.grand_total
+			})
+			pe.insert()
+			pe.submit()
+			payment_entries.append(pe)
+
+		# Step 2: Validate Outstanding Amounts and Ledger Entries
+		for si in sales_invoices:
+			si.reload()
+			self.assertEqual(si.outstanding_amount, 0, f"Outstanding amount is not zero for {si.name}.")
+			self.assertEqual(si.status, "Paid", f"Sales Invoice status is not 'Paid' for {si.name}.")
+
+		# Step 3: Validate Ledger Entries
+		ledger_entries = frappe.get_all(
+			"GL Entry", filters={"voucher_no": ["in", [pe.name for pe in payment_entries]]}, fields=["account", "debit", "credit"]
+		)
+		for pe in payment_entries:
+			debit_account, debit_amount = pe.paid_to, pe.paid_amount
+			credit_account = sales_invoices[0].debit_to if pe.party_type == "Customer" else pe.paid_from
+			credit_amount = pe.paid_amount
+
+			# Assert debit entry for Cash/Bank and credit entry for Debtors/Creditors
+			assert any(entry["account"] == debit_account and entry["debit"] == debit_amount for entry in ledger_entries), (
+				f"Debit entry missing for account: {debit_account} with amount: {debit_amount}.")
+			assert any(entry["account"] == credit_account and entry["credit"] == credit_amount for entry in ledger_entries), (
+				f"Credit entry missing for account: {credit_account} with amount: {credit_amount}.")
+
+		# Step 4: Validate total debit and credit balance
+		total_paid_amount = sum(pe.paid_amount for pe in payment_entries)
+		total_debit = sum(entry["debit"] for entry in ledger_entries if entry["account"] == debit_account)
+		total_credit = sum(entry["credit"] for entry in ledger_entries if entry["account"] == credit_account)
+		assert total_debit == total_credit, f"Total debit ({total_debit}) does not match total credit ({total_credit})."
 
 	def test_pos_change_amount(self):
 		make_pos_profile(

@@ -2284,6 +2284,139 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		self.assertEqual(len(actual), 3)
 		self.assertEqual(expected, actual)
 
+	def validate_ledger_entries(self, payment_entries, purchase_invoices):
+		"""
+		Validate GL entries for the given payment entries and purchase invoices.
+		- payment_entries: A list of Payment Entry objects.
+		- purchase_invoices: A list of Purchase Invoice objects.
+		"""
+		ledger_entries = frappe.get_all(
+			"GL Entry",
+			filters={"voucher_no": ["in", [pe.name for pe in payment_entries]]},
+			fields=["account", "debit", "credit"]
+		)
+
+		# Validate debit entries for Creditors account
+		creditor_account_debits = {}
+		for entry in ledger_entries:
+			if entry["account"] not in creditor_account_debits:
+				creditor_account_debits[entry["account"]] = 0
+			creditor_account_debits[entry["account"]] += entry["debit"]
+
+		for pe in payment_entries:
+			# Validate credit entries for Bank account
+			credit_account, credit_amount = pe.paid_from, pe.paid_amount
+			assert any(
+				entry["account"] == credit_account and entry["credit"] == credit_amount
+				for entry in ledger_entries
+			), f"Credit entry missing for account: {credit_account} with amount: {credit_amount}"
+
+		for pi in purchase_invoices:
+			total_debit = sum(pe.paid_amount for pe in payment_entries if any(
+				ref.reference_doctype == "Purchase Invoice" and ref.reference_name == pi.name
+				for ref in pe.references
+			))
+			debit_account, total_ledger_debit = pi.credit_to, creditor_account_debits.get(pi.credit_to, 0)
+			assert total_ledger_debit == total_debit, (
+				f"Total debit for Creditors account: {debit_account} should match total paid amount. "
+				f"Total Ledger Debit: {total_ledger_debit}, Total Paid: {total_debit}"
+			)
+
+	def test_purchase_invoice_payment(self):
+		"""Test payment against a single Purchase Invoice."""
+		today = nowdate()
+
+		# Step 1: Create and Submit Purchase Invoice
+		purchase_invoice = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item="_Test Item",
+			qty=1,
+			rate=100,
+			warehouse="_Test Warehouse - _TC",
+			currency="INR",
+			naming_series="T-PINV-"
+		)
+
+		# Step 2: Create Payment Entry
+		payment_entry = get_payment_entry(
+			"Purchase Invoice", purchase_invoice.name, bank_account="Cash - _TC"
+		)
+		payment_entry.reference_no = f"Test-{purchase_invoice.name}"
+		payment_entry.reference_date = today
+		payment_entry.paid_amount = purchase_invoice.grand_total
+		payment_entry.insert()
+		payment_entry.submit()
+
+		# Step 3: Validate Outstanding Amount
+		purchase_invoice.reload()
+		self.assertEqual(purchase_invoice.outstanding_amount, 0)
+		self.assertEqual(purchase_invoice.status, "Paid")
+
+		# Step 4: Validate Ledger Entries
+		self.validate_ledger_entries(payment_entries=[payment_entry], purchase_invoices=[purchase_invoice])
+
+
+	def test_multiple_purchase_invoices_single_payment(self):
+		"""Test single payment against multiple Purchase Invoices."""
+		today = nowdate()
+
+		# Step 1: Create multiple Purchase Invoices
+		pi1 = make_purchase_invoice()
+		pi2 = make_purchase_invoice()
+		total_payment_amount = pi1.grand_total + pi2.grand_total
+
+		# Step 2: Create Payment Entry for both invoices
+		payment_entry = get_payment_entry("Purchase Invoice", pi1.name, bank_account="Cash - _TC")
+		payment_entry.append(
+			"references",
+			{
+				"reference_doctype": "Purchase Invoice",
+				"reference_name": pi2.name,
+				"allocated_amount": pi2.grand_total,
+			}
+		)
+		payment_entry.paid_amount = total_payment_amount
+		payment_entry.insert()
+		payment_entry.submit()
+
+		# Step 3: Validate Outstanding Amounts
+		for pi in [pi1, pi2]:
+			pi.reload()
+			self.assertEqual(pi.outstanding_amount, 0)
+			self.assertEqual(pi.status, "Paid")
+
+		# Step 4: Validate Ledger Entries
+		self.validate_ledger_entries(payment_entries=[payment_entry], purchase_invoices=[pi1, pi2])
+
+
+	def test_multiple_payment_entries_single_purchase_invoice(self):
+		"""Test multiple payments against a single Purchase Invoice."""
+		today = nowdate()
+
+		# Step 1: Create and Submit Purchase Invoice
+		pi = make_purchase_invoice(qty=1, rate=300)
+		pi.submit()
+
+		# Step 2: Create Payment Entry 1 (Part Payment)
+		pe1 = get_payment_entry("Purchase Invoice", pi.name, bank_account="Cash - _TC")
+		pe1.paid_amount = 100
+		pe1.references[0].allocated_amount = pe1.paid_amount
+		pe1.submit()
+
+		# Step 3: Create Payment Entry 2 (Remaining Payment)
+		pe2 = frappe.copy_doc(pe1)
+		pe2.paid_amount = 200
+		pe2.references[0].allocated_amount = pe2.paid_amount
+		pe2.submit()
+
+		# Step 4: Validate Outstanding Amount
+		pi.reload()
+		self.assertEqual(pi.outstanding_amount, 0)
+		self.assertEqual(pi.status, "Paid")
+
+		# Step 5: Validate Ledger Entries
+		self.validate_ledger_entries(payment_entries=[pe1, pe2], purchase_invoices=[pi])
 
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
