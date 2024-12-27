@@ -2620,6 +2620,28 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		so.reload()
 		self.assertEqual(so.status, 'Completed')
+  
+	def test_sales_order_for_service_item(self):
+		make_service_item()
+  
+		so = make_sales_order(company='French Connections', warehouse='Stores - FC', customer='Indra', cost_center='Main - FC', 
+                        selling_price_list='Standard Selling', item_code='consultancy', qty=1, rate=5000)
+		so.save()
+		so.submit()
+
+		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
+  
+		si = make_sales_invoice(so.name)
+		si.save()
+		si.submit()
+
+		self.assertEqual(si.status, "Unpaid", "Sales Invoice not created")
+  
+		si_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Sales - FC'}, 'credit')
+		self.assertEqual(si_acc_credit, 5000)
+
+		si_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Debtors - FC'}, 'debit')
+		self.assertEqual(si_acc_debit, 5000)
 
 def automatically_fetch_payment_terms(enable=1):
 	accounts_settings = frappe.get_doc("Accounts Settings")
@@ -2685,6 +2707,25 @@ def make_sales_order(**args):
 		so.payment_schedule = []
 
 	return so
+
+def make_service_item():
+	if not frappe.db.exists('Item', {'item_code': 'consultancy'}):
+		si_doc = frappe.new_doc("Item")
+		item_price_data = {
+			"item_code": 'consultancy',
+			"stock_uom": 'Hrs',
+			"in_stock_item": 0,
+			"item_group": "Services",
+			"gst_hsn_code": "01011020",
+			"description": "Consultancy",
+			"is_purchase_item": 1,
+			"grant_commission": 1,
+			"is_sales_item": 1
+		}
+		si_doc.update(item_price_data)
+		# si_doc.append('item_defaults', {"company": "French Connections", "default_warehouse": "Stores - FC"})
+		si_doc.save()
+		return si_doc
 
 def make_item_price():
     if not frappe.db.exists('Item Price', {'item_code': '_Test Item'}):
