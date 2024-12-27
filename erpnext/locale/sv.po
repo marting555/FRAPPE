@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2024-12-22 09:34+0000\n"
-"PO-Revision-Date: 2024-12-26 13:05\n"
+"PO-Revision-Date: 2024-12-27 13:02\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -11399,7 +11399,7 @@ msgstr "Klar Av"
 #. Label of the completed_on (Date) field in DocType 'Task'
 #: erpnext/projects/doctype/task/task.json
 msgid "Completed On"
-msgstr "Slutförd"
+msgstr "Klar"
 
 #: erpnext/projects/doctype/task/task.py:173
 msgid "Completed On cannot be greater than Today"
@@ -23729,7 +23729,7 @@ msgstr "Import Varningar"
 
 #: erpnext/edi/doctype/code_list/code_list_import.js:130
 msgid "Import completed. {0} common codes created."
-msgstr "Import slutförd. {0} gemensamma koder skapade."
+msgstr "Import klar. {0} gemensamma koder skapade."
 
 #. Label of the google_sheets_url (Data) field in DocType 'Bank Statement
 #. Import'
@@ -45582,7 +45582,7 @@ msgstr "Försäljning Möjligheter per Medium"
 
 #: erpnext/selling/page/sales_funnel/sales_funnel.js:148
 msgid "Sales Opportunities by Source"
-msgstr "Försäljningsmöjligheter efter Källa"
+msgstr "Försäljning Möjligheter efter Källa"
 
 #. Option for the 'Reference Type' (Select) field in DocType 'Journal Entry
 #. Account'
