@@ -3,7 +3,7 @@ from collections import defaultdict
 
 import frappe
 from frappe.query_builder.functions import CombineDatetime, Sum
-from frappe.utils import flt
+from frappe.utils import flt, nowtime
 from frappe.utils.deprecations import deprecated
 from pypika import Order
 
@@ -112,7 +112,10 @@ class DeprecatedBatchNoValuation:
 		sle = frappe.qb.DocType("Stock Ledger Entry")
 
 		timestamp_condition = None
-		if self.sle.posting_date and self.sle.posting_time:
+		if self.sle.posting_date:
+			if self.sle.posting_time is None:
+				self.sle.posting_time = nowtime()
+
 			posting_datetime = get_combine_datetime(self.sle.posting_date, self.sle.posting_time)
 			if not self.sle.creation:
 				posting_datetime = posting_datetime + datetime.timedelta(milliseconds=1)
