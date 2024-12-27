@@ -76,6 +76,7 @@ class GLEntry(Document):
 		self.flags.ignore_submit_comment = True
 		self.validate_and_set_fiscal_year()
 		self.pl_must_have_cost_center()
+		self.validate_company_in_accounting_dimension()
 
 		if not self.flags.from_repost and self.voucher_type != "Period Closing Voucher":
 			self.check_mandatory()
@@ -172,6 +173,22 @@ class GLEntry(Document):
 			).format(self.voucher_type)
 
 			frappe.throw(msg, title=_("Missing Cost Center"))
+
+	def validate_company_in_accounting_dimension(self):
+		if not self.company:
+			return
+		accounting_dimensions = ["Project"]
+		accounting_dimensions.extend(frappe.get_all("Accounting Dimension", pluck="name"))
+
+		for dimension in accounting_dimensions:
+			if dimension_value := self.get(frappe.scrub(dimension)):
+				doc = frappe.get_doc(dimension, dimension_value)
+				if hasattr(doc, "company") and doc.company and doc.company != self.company:
+					frappe.throw(
+						_("{0}: {1} does not belong to the Company: {2}").format(
+							dimension, frappe.bold(dimension_value), self.company
+						)
+					)
 
 	def validate_dimensions_for_pl_and_bs(self):
 		account_type = frappe.get_cached_value("Account", self.account, "report_type")
