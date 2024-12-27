@@ -8,6 +8,7 @@ from frappe.tests import IntegrationTestCase
 
 from erpnext.accounts.doctype.gl_entry.gl_entry import rename_gle_sle_docs
 from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
+from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
 
 
 class TestGLEntry(IntegrationTestCase):
@@ -78,3 +79,23 @@ class TestGLEntry(IntegrationTestCase):
 			"SELECT current from tabSeries where name = %s", naming_series
 		)[0][0]
 		self.assertEqual(old_naming_series_current_value + 2, new_naming_series_current_value)
+
+	def test_company_validation_in_dimensions(self):
+		si = create_sales_invoice(do_not_submit=True)
+		project = frappe.get_doc(
+			{
+				"doctype": "Project",
+				"project_name": "_Test Demo Project1",
+				"status": "Open",
+				"company": "_Test Company 1",
+			}
+		).insert()
+
+		si.project = project.name
+		si.save()
+		self.assertRaises(frappe.ValidationError, si.submit)
+
+		si_1 = create_sales_invoice(do_not_submit=True)
+		si_1.items[0].project = project.name
+		si_1.save()
+		self.assertRaises(frappe.ValidationError, si_1.submit)
