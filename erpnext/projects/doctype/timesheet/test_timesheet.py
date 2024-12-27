@@ -60,7 +60,14 @@ class TestTimesheet(IntegrationTestCase):
 		timesheet = make_timesheet(
 			emp, simulate=True, is_billable=1, project=project, company="_Test Company"
 		)
-		sales_invoice = create_sales_invoice(do_not_save=True)
+		sales_invoice = create_sales_invoice(
+			company="Wind Power LLC",
+			currency="USD",
+			cost_center="Main - WP",
+			income_account="Sales - WP",
+			debit_to="Debtors - WP",
+			do_not_save=True,
+		)
 		sales_invoice.project = project
 		sales_invoice.submit()
 
