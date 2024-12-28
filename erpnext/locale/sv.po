@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2024-12-22 09:34+0000\n"
-"PO-Revision-Date: 2024-12-27 13:02\n"
+"PO-Revision-Date: 2024-12-28 13:48\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -8288,7 +8288,7 @@ msgstr "Huvudtext"
 #: erpnext/accounts/doctype/dunning/dunning.json
 #: erpnext/accounts/doctype/dunning_letter_text/dunning_letter_text.json
 msgid "Body Text"
-msgstr "Huvud Text"
+msgstr "Huvudtext"
 
 #. Label of the body_and_closing_text_help (HTML) field in DocType 'Dunning
 #. Letter Text'
