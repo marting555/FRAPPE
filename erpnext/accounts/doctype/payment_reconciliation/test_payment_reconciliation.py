@@ -144,7 +144,7 @@ class TestPaymentReconciliation(FrappeTestCase):
 			setattr(self, x.attribute, acc.name)
 
 	def create_sales_invoice(
-		self, qty=1, rate=100, posting_date=None, do_not_save=False, do_not_submit=False
+		self, qty=1, rate=100, posting_date=None, do_not_save=False, do_not_submit=False , is_return = 0
 	):
 		"""
 		Helper function to populate default values in sales invoice
@@ -166,7 +166,7 @@ class TestPaymentReconciliation(FrappeTestCase):
 			update_stock=0,
 			currency="INR",
 			is_pos=0,
-			is_return=0,
+			is_return=is_return,
 			return_against=None,
 			income_account=self.income_account,
 			expense_account=self.expense_account,
@@ -541,6 +541,52 @@ class TestPaymentReconciliation(FrappeTestCase):
 				self.assertEqual(ref.allocated_amount, 150)
 			elif ref.reference_name == si2.name:
 				self.assertEqual(ref.allocated_amount, 250)
+
+	def test_payment_with_sales_invoice_return(self):
+		# Step 1: Create a Sales Invoice
+		si = self.create_sales_invoice(qty=2, rate=100)  # Total amount = 200
+		self.assertEqual(si.status, "Unpaid")
+		self.assertEqual(si.outstanding_amount, 200)
+
+		# Step 2: Create a Payment Entry (Receive)
+		pe = self.create_payment_entry(amount=100)  # Partial payment
+		pe.save().submit()
+
+		# Step 3: Create a Sales Invoice Return - Credit Note
+		si_return = self.create_sales_invoice(qty=-1, is_return=1)
+		
+		# Step 4: Create a Payment Reconciliation
+		pr = self.create_payment_reconciliation()
+
+		# Fetch unreconciled entries
+		pr.get_unreconciled_entries()
+		invoices = [x.as_dict() for x in pr.get("invoices")]
+		payments = [x.as_dict() for x in pr.get("payments")]
+		pr.allocate_entries(frappe._dict({"invoices": invoices, "payments": payments}))
+
+		# Step 5: Assert allocation  and reconsile
+		for row in pr.allocation:
+			self.assertEqual(flt(row.get("difference_amount")), 0.0)
+		pr.reconcile()
+
+		# Step 7: Reload documents and validate statuses
+		si.reload()
+		si_return.reload()
+		pe.reload()
+
+		# Ensure the original Sales Invoice status is "Paid" if outstanding amount is 0
+		self.assertEqual(si.status, "Paid", "Sales Invoice status should be marked as Paid")
+		self.assertEqual(si.outstanding_amount, 0, "Sales Invoice outstanding amount should be 0")
+
+		# Ensure the Sales Invoice Return status is still "Return"
+		self.assertEqual(si_return.status, "Return", "Sales Invoice Return should remain as Return")
+
+		# Ensure the Sales Invoice Return is linked to the Payment Entry
+		self.assertIn(
+			si.name,
+			[x.reference_name for x in pe.references if x.reference_doctype == "Sales Invoice"],
+			"Sales Invoice Return should be linked to the Payment Entry"
+		)
 
 	def test_payment_against_journal(self):
 		transaction_date = nowdate()
