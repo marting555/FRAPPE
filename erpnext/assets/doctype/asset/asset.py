@@ -888,6 +888,7 @@ def get_asset_naming_series():
 
 @frappe.whitelist()
 def make_sales_invoice(asset, item_code, company, serial_no=None):
+	asset_doc = frappe.get_doc("Asset", asset)
 	si = frappe.new_doc("Sales Invoice")
 	si.company = company
 	si.currency = frappe.get_cached_value("Company", company, "default_currency")
@@ -904,8 +905,29 @@ def make_sales_invoice(asset, item_code, company, serial_no=None):
 			"qty": 1,
 		},
 	)
+
+	accounting_dimensions = get_accounting_dimensions()
+	for dimension in accounting_dimensions:
+		si.update(
+			{
+				dimension["fieldname"]: asset_doc.get(dimension["fieldname"])
+				or dimension.get("default_dimension")
+			}
+		)
+
 	si.set_missing_values()
 	return si
+
+
+def get_accounting_dimensions():
+	accounting_dimensions = frappe.db.sql(
+		"""SELECT p.label, p.disabled, p.fieldname, c.default_dimension, c.company
+		FROM `tabAccounting Dimension`p ,`tabAccounting Dimension Detail` c
+		WHERE p.name = c.parent""",
+		as_dict=1,
+	)
+
+	return accounting_dimensions
 
 
 @frappe.whitelist()
