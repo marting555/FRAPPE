@@ -19,6 +19,7 @@ from frappe.utils import (
 )
 
 import erpnext
+from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import get_dimensions
 from erpnext.accounts.general_ledger import make_reverse_gl_entries
 from erpnext.assets.doctype.asset.depreciation import (
 	get_comma_separated_links,
@@ -906,7 +907,7 @@ def make_sales_invoice(asset, item_code, company, serial_no=None):
 		},
 	)
 
-	accounting_dimensions = get_accounting_dimensions()
+	accounting_dimensions = get_dimensions(True)
 	for dimension in accounting_dimensions:
 		si.update(
 			{
@@ -917,26 +918,6 @@ def make_sales_invoice(asset, item_code, company, serial_no=None):
 
 	si.set_missing_values()
 	return si
-
-
-def get_accounting_dimensions():
-	AccountingDimension = frappe.query_builder.DocType("Accounting Dimension")
-	AccountingDimensionDetail = frappe.query_builder.DocType("Accounting Dimension Detail")
-
-	accounting_dimensions = (
-		frappe.qb.from_(AccountingDimension)
-		.join(AccountingDimensionDetail)
-		.on(AccountingDimension.name == AccountingDimensionDetail.parent)
-		.select(
-			AccountingDimension.label,
-			AccountingDimension.disabled,
-			AccountingDimension.fieldname,
-			AccountingDimensionDetail.default_dimension,
-			AccountingDimensionDetail.company,
-		)
-	).run(as_dict=True)
-
-	return accounting_dimensions
 
 
 @frappe.whitelist()

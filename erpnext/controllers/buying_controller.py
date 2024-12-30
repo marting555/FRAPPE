@@ -9,11 +9,9 @@ from frappe.utils import cint, flt, getdate
 from frappe.utils.data import nowtime
 
 import erpnext
+from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import get_dimensions
 from erpnext.accounts.doctype.budget.budget import validate_expense_against_budget
 from erpnext.accounts.party import get_party_details
-from erpnext.assets.doctype.asset.asset import (
-	get_accounting_dimensions,
-)
 from erpnext.buying.utils import update_last_purchase_rate, validate_for_items
 from erpnext.controllers.sales_and_purchase_return import get_rate_for_return
 from erpnext.controllers.subcontracting_controller import SubcontractingController
@@ -748,7 +746,7 @@ class BuyingController(SubcontractingController):
 		items_data = get_asset_item_details(asset_items)
 		messages = []
 		alert = False
-		accounting_dimensions = get_accounting_dimensions()
+		accounting_dimensions = get_dimensions(True)
 
 		for d in self.items:
 			if d.is_fixed_asset:
@@ -834,7 +832,7 @@ class BuyingController(SubcontractingController):
 				"purchase_invoice_item": row.name if self.doctype == "Purchase Invoice" else None,
 			}
 		)
-		for dimension in accounting_dimensions:
+		for dimension in accounting_dimensions[0]:
 			asset.update(
 				{
 					dimension["fieldname"]: self.get(dimension["fieldname"])
