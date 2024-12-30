@@ -920,12 +920,21 @@ def make_sales_invoice(asset, item_code, company, serial_no=None):
 
 
 def get_accounting_dimensions():
-	accounting_dimensions = frappe.db.sql(
-		"""SELECT p.label, p.disabled, p.fieldname, c.default_dimension, c.company
-		FROM `tabAccounting Dimension`p ,`tabAccounting Dimension Detail` c
-		WHERE p.name = c.parent""",
-		as_dict=1,
-	)
+	AccountingDimension = frappe.query_builder.DocType("Accounting Dimension")
+	AccountingDimensionDetail = frappe.query_builder.DocType("Accounting Dimension Detail")
+
+	accounting_dimensions = (
+		frappe.qb.from_(AccountingDimension)
+		.join(AccountingDimensionDetail)
+		.on(AccountingDimension.name == AccountingDimensionDetail.parent)
+		.select(
+			AccountingDimension.label,
+			AccountingDimension.disabled,
+			AccountingDimension.fieldname,
+			AccountingDimensionDetail.default_dimension,
+			AccountingDimensionDetail.company,
+		)
+	).run(as_dict=True)
 
 	return accounting_dimensions
 
