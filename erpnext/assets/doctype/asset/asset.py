@@ -908,7 +908,7 @@ def make_sales_invoice(asset, item_code, company, serial_no=None):
 	)
 
 	accounting_dimensions = get_dimensions(True)
-	for dimension in accounting_dimensions:
+	for dimension in accounting_dimensions[0]:
 		si.update(
 			{
 				dimension["fieldname"]: asset_doc.get(dimension["fieldname"])
