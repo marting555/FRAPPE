@@ -499,6 +499,49 @@ class TestPaymentReconciliation(FrappeTestCase):
 		self.assertEqual(len(pr.get("payments")), 0)
 		self.assertEqual(pr.get("invoices")[0].get("outstanding_amount"), 165)
 
+	def test_payment_against_multiple_invoices(self):
+		# Create multiple Sales Invoices
+		si1 = self.create_sales_invoice(qty=1, rate=150)
+		si2 = self.create_sales_invoice(qty=2, rate=200)
+
+		# Create a Payment Entry with an amount that partially pays both invoices
+		pe = self.create_payment_entry(amount=400).save().submit()
+
+		# Create Payment Reconciliation Record
+		pr = self.create_payment_reconciliation()
+
+		# Reconcile the single payment against multiple invoices
+		pr.get_unreconciled_entries()
+		invoices = [x.as_dict() for x in pr.get("invoices")]
+		payments = [x.as_dict() for x in pr.get("payments")]
+		pr.allocate_entries(frappe._dict({"invoices": invoices, "payments": payments}))
+
+		# Check that the outstanding amounts are correctly reduced
+		pr.reconcile()
+
+		si1.reload()
+		si2.reload()
+
+		# Validate status of Sales Invoices
+		self.assertEqual(si1.status, "Paid")
+		self.assertEqual(si2.status, "Partly Paid")
+
+		# Check outstanding amounts for Sales Invoices
+		self.assertEqual(si1.outstanding_amount, 0)
+		self.assertEqual(si2.outstanding_amount, 150)
+
+		# Check Payment Entry references
+		pe.reload()
+		references = [ref for ref in pe.references if ref.reference_doctype == "Sales Invoice"]
+		self.assertEqual(len(references), 2, "Sales Invoice references not found in Payment Entry references")
+
+		# Verify correct references and allocated amounts
+		for ref in references:
+			if ref.reference_name == si1.name:
+				self.assertEqual(ref.allocated_amount, 150)
+			elif ref.reference_name == si2.name:
+				self.assertEqual(ref.allocated_amount, 250)
+
 	def test_payment_against_journal(self):
 		transaction_date = nowdate()
 
