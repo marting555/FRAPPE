@@ -4,6 +4,7 @@
 
 import frappe
 from frappe import qb
+from unittest.mock import patch
 from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, add_years, flt, getdate, nowdate, today
 
@@ -469,6 +470,25 @@ class TestPaymentReconciliation(FrappeTestCase):
 		self.assertEqual(len(pr.get("invoices")), 1)
 		self.assertEqual(pr.get("invoices")[0].get("outstanding_amount"), 110)
 		self.assertEqual(pr.get("payments"), [])
+		
+		# Check for reference of S.Inv in PE after reconciliation
+		pe.reload()
+		references = [ref for ref in pe.references if ref.reference_doctype == "Sales Invoice"]
+		self.assertEqual(len(references), 1, "Sales Invoice reference not found in Payment Entry references")
+		self.assertEqual(references[0].reference_name, si.name, "Incorrect Sales Invoice referenced in Payment Entry")
+
+		# Cancel the Payment Reconciliation Record
+		party = si.customer
+		payment_reconciliation_record = frappe.get_all(
+			"Payment Reconciliation Record",
+			filters={"party": party},
+			fields=["name"],
+			order_by="creation desc",
+			limit_page_length=1,
+		)
+		with patch("erpnext.accounts.doctype.payment_reconciliation_record.payment_reconciliation_record.PaymentReconciliationRecord.on_cancel", lambda x: None):
+			prr_doc = frappe.get_doc("Payment Reconciliation Record", payment_reconciliation_record[0].name)
+			prr_doc.cancel()
 
 		# cancel one PE
 		pe.reload()
