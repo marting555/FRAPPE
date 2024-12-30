@@ -110,8 +110,15 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 			"AND bin.warehouse = %(warehouse)s AND bin.item_code = item.name AND bin.actual_qty > 0"
 		)
 
-	items_data = frappe.db.sql(
-		"""
+	#custom changes
+	company = frappe.db.get_value(
+		"User Permission",
+		{"user": frappe.session.user, "allow": "Company"},
+		"for_value"
+	)
+
+	# Define the query and use parameterized inputs
+	query = """
 		SELECT
 			item.name AS item_code,
 			item.item_name,
@@ -125,25 +132,72 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 			item.disabled = 0
 			AND item.has_variants = 0
 			AND item.is_sales_item = 1
+			AND item.custom_company = %(company)s
 			AND item.is_fixed_asset = 0
-			AND item.item_group in (SELECT name FROM `tabItem Group` WHERE lft >= {lft} AND rgt <= {rgt})
+			AND item.item_group IN (
+				SELECT name
+				FROM `tabItem Group`
+				WHERE lft >= %(lft)s AND rgt <= %(rgt)s
+			)
 			AND {condition}
 			{bin_join_condition}
 		ORDER BY
-			item.name asc
+			item.name ASC
 		LIMIT
-			{page_length} offset {start}""".format(
-			start=cint(start),
-			page_length=cint(page_length),
-			lft=cint(lft),
-			rgt=cint(rgt),
-			condition=condition,
-			bin_join_selection=bin_join_selection,
-			bin_join_condition=bin_join_condition,
-		),
-		{"warehouse": warehouse},
+			%(page_length)s OFFSET %(start)s
+	""".format(
+		bin_join_selection=bin_join_selection,
+		bin_join_condition=bin_join_condition,
+		condition=condition,
+	)
+
+	# Execute the query with parameterized inputs
+	items_data = frappe.db.sql(
+		query,
+		{
+			"company": company,
+			"lft": cint(lft),
+			"rgt": cint(rgt),
+			"start": cint(start),
+			"page_length": cint(page_length),
+			"warehouse": warehouse,
+		},
 		as_dict=1,
 	)
+	# items_data = frappe.db.sql(
+	# 	"""
+	# 	SELECT
+	# 		item.name AS item_code,
+	# 		item.item_name,
+	# 		item.description,
+	# 		item.stock_uom,
+	# 		item.image AS item_image,
+	# 		item.is_stock_item
+	# 	FROM
+	# 		`tabItem` item {bin_join_selection}
+	# 	WHERE
+	# 		item.disabled = 0
+	# 		AND item.has_variants = 0
+	# 		AND item.is_sales_item = 1
+	# 		AND item.is_fixed_asset = 0
+	# 		AND item.item_group in (SELECT name FROM `tabItem Group` WHERE lft >= {lft} AND rgt <= {rgt})
+	# 		AND {condition}
+	# 		{bin_join_condition}
+	# 	ORDER BY
+	# 		item.name asc
+	# 	LIMIT
+	# 		{page_length} offset {start}""".format(
+	# 		start=cint(start),
+	# 		page_length=cint(page_length),
+	# 		lft=cint(lft),
+	# 		rgt=cint(rgt),
+	# 		condition=condition,
+	# 		bin_join_selection=bin_join_selection,
+	# 		bin_join_condition=bin_join_condition,
+	# 	),
+	# 	{"warehouse": warehouse},
+	# 	as_dict=1,
+	# )
 
 	if items_data:
 		items = [d.item_code for d in items_data]
