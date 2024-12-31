@@ -530,7 +530,65 @@ class TestJournalEntry(unittest.TestCase):
 			{"account": "_Test Receivable USD - _TC", "transaction_exchange_rate": 85.0},
 		]
 		self.assertEqual(expected, actual)
+	
+	def test_select_tds_payable_and_creditors_account(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_records
 
+		create_records()
+
+		supplier = frappe.get_doc("Supplier", "_Test Supplier TDS")
+		account = frappe.get_doc("Account", "Test TDS Payable - _TC")
+		
+		if supplier and account:
+			jv=frappe.new_doc("Journal Entry")
+			jv.posting_date = nowdate()
+			jv.company = "_Test Company"
+			jv.set('accounts',
+				[ 
+     				{
+						"account": account.name,
+						"debit_in_account_currency": 0,
+						"credit_in_account_currency": 1000
+					},
+					{
+						"account": 'Test Creditors - _TC',
+						"party_type": "Supplier",
+						"party": supplier.name,
+						"debit_in_account_currency": 1000,
+						"credit_in_account_currency": 0
+					},
+     			]
+			)
+			jv.save()
+			jv.submit()
+			self.voucher_no = jv.name
+
+			self.fields = [
+				"account",
+				"debit_in_account_currency",
+				"credit_in_account_currency",
+				"cost_center",
+			]
+
+			self.expected_gle = [
+				{
+					"account": 'Test Creditors - _TC',
+					"debit_in_account_currency": 1000,
+					"credit_in_account_currency": 0,
+					"cost_center": "Main - _TC",
+				},
+				{
+					"account": account.name,
+					"debit_in_account_currency": 0,
+					"credit_in_account_currency": 1000,
+					"cost_center": "Main - _TC",
+				},
+			]
+
+			self.check_gl_entries()
+			
+  
+   
 
 def make_journal_entry(
 	account1,

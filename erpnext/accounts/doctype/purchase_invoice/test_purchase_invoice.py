@@ -2417,6 +2417,51 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		# Step 5: Validate Ledger Entries
 		self.validate_ledger_entries(payment_entries=[pe1, pe2], purchase_invoices=[pi])
+	
+	def test_tax_withholding_with_supplier(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (create_records as records_for_pi,create_purchase_invoice,make_test_item)
+		records_for_pi()
+		supplier=frappe.get_doc("Supplier","_Test Supplier TDS")
+		if supplier:
+			self.assertEqual(supplier.tax_withholding_category,"Test - TDS - 194C - Company")
+		
+		item=make_test_item()
+		pi=create_purchase_invoice(supplier=supplier.name,item_code=item.name)
+		pi.apply_tds=1
+		pi.tax_withholding_category="Test - TDS - 194C - Company"
+		pi.save()
+		pi.submit()
+		gl_entries = frappe.db.sql(
+			"""select account, sum(debit) as debit, sum(credit) as credit , against_voucher
+			from `tabGL Entry` where voucher_type='Purchase Invoice' and voucher_no=%s
+			group by account,against_voucher""",
+			pi.name,
+			as_dict=1,
+		)
+		
+		expected_result = [
+				{
+					"account": "Creditors - _TC",
+					"debit": 1800.0,
+					"credit": 90000.0,
+					"against_voucher": pi.name
+				},
+				{
+					"account": "Stock Received But Not Billed - _TC",
+					"debit": 90000.0,
+					"credit": 0.0,
+					"against_voucher": None
+				},
+				{
+					"account": "Test TDS Payable - _TC",
+					"debit": 0.0,
+					"credit": 1800.0,
+					"against_voucher": None
+				}
+			]
+		self.assertEqual(gl_entries,expected_result)
+
+		
 
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
