@@ -177,6 +177,7 @@ def _get_party_details(
 				   .where(
 					   (sales_person.enabled == 1)
 					   & (sales_team.parent == party.name)
+					   & (sales_team.parenttype == "Customer")
 			  		)
 				).run(as_dict=True)
 		
