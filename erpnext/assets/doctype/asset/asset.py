@@ -907,7 +907,7 @@ def make_sales_invoice(asset, item_code, company, serial_no=None):
 		},
 	)
 
-	accounting_dimensions = get_dimensions(True)
+	accounting_dimensions = get_dimensions(with_cost_center_and_project=True)
 	for dimension in accounting_dimensions[0]:
 		si.update(
 			{

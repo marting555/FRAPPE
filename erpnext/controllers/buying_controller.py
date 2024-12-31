@@ -746,7 +746,7 @@ class BuyingController(SubcontractingController):
 		items_data = get_asset_item_details(asset_items)
 		messages = []
 		alert = False
-		accounting_dimensions = get_dimensions(True)
+		accounting_dimensions = get_dimensions(with_cost_center_and_project=True)
 
 		for d in self.items:
 			if d.is_fixed_asset:
