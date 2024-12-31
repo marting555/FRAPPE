@@ -243,9 +243,6 @@ class DeprecatedBatchNoValuation:
 		for d in batch_data:
 			self.available_qty[d.batch_no] += flt(d.batch_qty)
 
-<<<<<<< HEAD
-	@deprecated
-=======
 		last_sle = self.get_last_sle_for_non_batch()
 		for d in batch_data:
 			self.non_batchwise_balance_value[d.batch_no] += flt(last_sle.stock_value)
@@ -295,13 +292,7 @@ class DeprecatedBatchNoValuation:
 		data = query.run(as_dict=True)
 		return data[0] if data else {}
 
-	@deprecated(
-		"erpnext.stock.serial_batch_bundle.BatchNoValuation.set_balance_value_from_bundle",
-		"unknown",
-		"v16",
-		"No known instructions.",
-	)
->>>>>>> 7c4aecf834 (fix: negative stock balance (#44990))
+	@deprecated
 	def set_balance_value_from_bundle(self) -> None:
 		bundle = frappe.qb.DocType("Serial and Batch Bundle")
 		bundle_child = frappe.qb.DocType("Serial and Batch Entry")
