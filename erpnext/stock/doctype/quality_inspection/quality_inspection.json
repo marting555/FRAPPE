@@ -255,11 +255,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
-<<<<<<< HEAD
- "modified": "2023-08-23 11:56:50.282878",
-=======
  "modified": "2024-12-30 19:08:16.611192",
->>>>>>> b84c8ff960 (fix: incorrect quality inspection linked in purchase receipt (#44985))
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Quality Inspection",
