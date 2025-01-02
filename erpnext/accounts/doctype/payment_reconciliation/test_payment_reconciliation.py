@@ -29,6 +29,7 @@ class TestPaymentReconciliation(FrappeTestCase):
 		self.create_account()
 		self.create_cost_center()
 		self.clear_old_entries()
+		self.link_test_company_to_fiscal_year()
 
 	def tearDown(self):
 		frappe.db.rollback()
@@ -75,9 +76,16 @@ class TestPaymentReconciliation(FrappeTestCase):
 			self.bank = bank_acc.name
 
 	def create_item(self):
-		item = create_item(
-			item_code="_Test PR Item", is_stock_item=0, company=self.company, warehouse=self.warehouse
-		)
+		if "india_compliance" in frappe.get_installed_apps():
+			# Temporarily disable the validation in the India Compliance app
+			with patch("india_compliance.gst_india.overrides.item.validate_hsn_code"):
+				item = create_item(
+					item_code="_Test PR Item", is_stock_item=0, company=self.company, warehouse=self.warehouse
+				)
+		else:
+			item = create_item(
+				item_code="_Test PR Item", is_stock_item=0, company=self.company, warehouse=self.warehouse
+			)
 		self.item = item if isinstance(item, str) else item.item_code
 
 	def create_customer(self):
@@ -269,6 +277,21 @@ class TestPaymentReconciliation(FrappeTestCase):
 		]
 		for doctype in doctype_list:
 			qb.from_(qb.DocType(doctype)).delete().where(qb.DocType(doctype).company == self.company).run()
+	
+	def link_test_company_to_fiscal_year(self):
+		current_date = nowdate()
+		from erpnext.accounts.utils import get_fiscal_years
+		fiscal_years = get_fiscal_years(current_date, as_dict=True)
+		# Ensure at least one fiscal year is found
+		if not fiscal_years:
+			return
+		for fiscal_year in fiscal_years:
+			fiscal_year_doc = frappe.get_doc("Fiscal Year", fiscal_year["name"])
+			if any(company.company == self.company for company in fiscal_year_doc.companies):
+				break  # Company is already linked; no further action needed
+			fiscal_year_doc.append("companies", {"company": self.company})
+			fiscal_year_doc.save(ignore_permissions=True)
+			break 
 
 	def create_payment_reconciliation(self, party_is_customer=True):
 		pr = frappe.new_doc("Payment Reconciliation")
