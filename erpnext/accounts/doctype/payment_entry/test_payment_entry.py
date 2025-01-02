@@ -1970,7 +1970,7 @@ class TestPaymentEntry(FrappeTestCase):
 
         
     def test_link_advance_payment_with_purchase_invoice(self):
-        create_records()
+        create_records('_Test Supplier TDS')
         supplier=frappe.get_doc("Supplier","_Test Supplier TDS")
         if supplier:
         
@@ -2208,8 +2208,13 @@ def create_supplier(**args):
             "default_currency": args.default_currency,
             "supplier_type": args.supplier_type or "Company",
             "tax_withholding_category": args.tax_withholding_category,
+            "pan":"DAJPC4150P"       
         }
     )
+    doc.append('accounts',{
+        'company': args.company,
+        'account': '_Test Payable USD - _TC' if args.default_currency == 'USD' else 'Test TDS Payable',
+    })
     if not args.without_supplier_group:
         doc.supplier_group = args.supplier_group or "Services"
 
@@ -2223,8 +2228,9 @@ def create_account():
         {"name": "Duties and Taxes", "parent": "Current Liabilities - _TC"},
         {"name": "Test TDS Payable", "parent": "Duties and Taxes - _TC"},
         {"name": "Test Creditors", "parent": "Accounts Payable - _TC"},
+        {"name": "_Test Payable USD", "parent": "Current Liabilities - _TC"},
     ]
-
+    
     for account in accounts:
         if not frappe.db.exists("Account", f"{account['name']} - _TC"):  # Ensure proper check with "- _TC"
             try:
@@ -2235,12 +2241,13 @@ def create_account():
                     "parent_account": account["parent"],
                     "report_type": "Balance Sheet",
                     "root_type": "Liability",
+                    "account_currency": "USD" if account["name"] == "_Test Payable USD" else "INR",
                 }).insert()
                 frappe.db.commit()
             except Exception as e:
                 frappe.log_error(f"Failed to insert {account['name']}", str(e))
 
-def create_records():
+def create_records(supplier):
     from erpnext.accounts.doctype.tax_withholding_category.test_tax_withholding_category import create_tax_withholding_category
 
     create_account()
@@ -2256,9 +2263,10 @@ def create_records():
             consider_party_ledger_amount=1,
     )
     create_supplier(
-        supplier_name="_Test Supplier TDS",
+        supplier_name=supplier,
         company="_Test Company",
-        tax_withholding_category="Test - TDS - 194C - Company"
+        tax_withholding_category="Test - TDS - 194C - Company",
+        default_currency="USD" if supplier == "_Test Supplier USD" else "INR",
         )
 
     frappe.db.commit()
@@ -2310,8 +2318,8 @@ def create_purchase_invoice(**args):
 			"supplier": args.supplier,
 			"company": "_Test Company",
 			"taxes_and_charges": "",
-			"currency": "INR",
-			"credit_to": "Creditors - _TC",
+			"currency": args.currency or "INR",
+			"credit_to": args.credit_to or "Creditors - _TC",
 			"taxes": [],
 			"items": [
 				{

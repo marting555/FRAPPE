@@ -534,7 +534,7 @@ class TestJournalEntry(unittest.TestCase):
 	def test_select_tds_payable_and_creditors_account(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_records
 
-		create_records()
+		create_records('_Test Supplier TDS')
 
 		supplier = frappe.get_doc("Supplier", "_Test Supplier TDS")
 		account = frappe.get_doc("Account", "Test TDS Payable - _TC")
