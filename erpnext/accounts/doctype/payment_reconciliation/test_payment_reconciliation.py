@@ -565,6 +565,95 @@ class TestPaymentReconciliation(FrappeTestCase):
 			elif ref.reference_name == si2.name:
 				self.assertEqual(ref.allocated_amount, 250)
 
+	def test_matching_credit_note_with_sales_invoiceTC_ACC_009(self):
+		si = self.create_sales_invoice(qty=2, rate=150)  # Total amount = 300
+		si_return = self.create_sales_invoice(qty=-2, rate=150, is_return=1)  # Total return = 300
+		pr = self.create_payment_reconciliation()
+
+		# Fetch unreconciled entries
+		pr.get_unreconciled_entries()
+		invoices = [x.as_dict() for x in pr.get("invoices")]
+		payments = [x.as_dict() for x in pr.get("payments")]
+		pr.allocate_entries(frappe._dict({"invoices": invoices, "payments": payments}))
+		
+		# Step 4: Assert allocation
+		for row in pr.allocation:
+			self.assertEqual(flt(row.get("difference_amount")), 0.0)
+
+		# Step 5: Reconcile entries
+		pr.reconcile()
+		si.reload()
+		si_return.reload()
+
+		# Ensure the original Sales Invoice status is "Paid" if outstanding amount is 0
+		self.assertEqual(si.outstanding_amount, 0, "Sales Invoice outstanding amount should be 0")
+		self.assertEqual(si.status, "Paid", "Sales Invoice status should be marked as Paid")
+
+	def test_payment_adjustment_after_invoice_cancellation_TC_ACC_013(self):
+		si1 = self.create_sales_invoice(qty=1, rate=500)  # Total = 500
+		pe = self.create_payment_entry(amount=500)  # Full payment
+		pe.save().submit()
+		self.assertEqual(pe.status, "Submitted")
+
+		# Step 1: Reconcile the Payment Entry with the Sales Invoice
+		pr = self.create_payment_reconciliation()
+		pr.get_unreconciled_entries()
+
+		# Fetch unreconciled invoices and payments
+		invoices = [x.as_dict() for x in pr.get("invoices")]
+		payments = [x.as_dict() for x in pr.get("payments")]
+		pr.allocate_entries(frappe._dict({"invoices": invoices, "payments": payments}))
+		pr.reconcile()
+
+		# Step 2: Reload documents and validate reconciliation
+		si1.reload()
+		pe.reload()
+		self.assertEqual(si1.outstanding_amount, 0, "Sales Invoice should be fully paid after reconciliation")
+		self.assertEqual(si1.status, "Paid", "Sales Invoice status should be 'Paid' after reconciliation")
+		references = [ref for ref in pe.references if ref.reference_doctype == "Sales Invoice"]
+		self.assertEqual(len(references), 1, "Sales Invoice should be referenced in Payment Entry after reconciliation")
+		self.assertEqual(references[0].reference_name, si1.name, "Incorrect Sales Invoice referenced in Payment Entry")
+
+		# Step 3: Cancel the reconciled Sales Invoice
+		with patch("erpnext.accounts.doctype.payment_reconciliation_record.payment_reconciliation_record.PaymentReconciliationRecord.on_cancel", lambda x: None):
+			frappe.get_last_doc("Payment Reconciliation Record").cancel()
+		si1.cancel()
+		self.assertEqual(si1.docstatus, 2, "Sales Invoice should be cancelled")
+		pe.reload()
+
+		# Verify the Payment Entry becomes a Standalone Advance Payment
+		self.assertEqual(pe.references, [], "Payment Entry references should be cleared after Sales Invoice cancellation")
+		self.assertEqual(pe.payment_type, "Receive", "Payment Entry should remain as type 'Receive'")
+		self.assertEqual(pe.unallocated_amount, 500, "Unallocated amount should match the Payment Entry amount")
+
+		# Step 6: Create a New Sales Invoice for the same customer
+		si2 = self.create_sales_invoice(qty=2, rate=250)  # Total = 500
+		self.assertEqual(si2.status, "Unpaid")
+		self.assertEqual(si2.outstanding_amount, 500)
+
+		# Step 7: Adjust the Advance Payment with the New Sales Invoice
+		pr = self.create_payment_reconciliation()
+		pr.get_unreconciled_entries()
+
+		# Fetch unreconciled invoices and payments
+		invoices = [x.as_dict() for x in pr.get("invoices")]
+		payments = [x.as_dict() for x in pr.get("payments")]
+		pr.allocate_entries(frappe._dict({"invoices": invoices, "payments": payments}))
+		pr.reconcile()
+
+		# Step 8: Reload documents and validate adjustment
+		si2.reload()
+		pe.reload()
+
+		# Ensure the New Sales Invoice's outstanding amount is reduced
+		self.assertEqual(si2.outstanding_amount, 0, "New Sales Invoice should be fully paid")
+		self.assertEqual(si2.status, "Paid", "New Sales Invoice status should be marked as Paid")
+
+		# Ensure the Payment Entry now references the New Sales Invoice
+		references = [ref for ref in pe.references if ref.reference_doctype == "Sales Invoice"]
+		self.assertEqual(len(references), 1, "New Sales Invoice reference not found in Payment Entry references")
+		self.assertEqual(references[0].reference_name, si2.name, "Incorrect Sales Invoice referenced in Payment Entry")
+
 	def test_payment_with_sales_invoice_return(self):
 		# Step 1: Create a Sales Invoice
 		si = self.create_sales_invoice(qty=2, rate=100)  # Total amount = 200
