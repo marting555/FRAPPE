@@ -882,6 +882,49 @@ class TestPaymentReconciliation(FrappeTestCase):
 		self.assertEqual(len(pr.get("invoices")), 0)
 		self.assertEqual(len(pr.get("payments")), 0)
 
+	def test_matching_credit_note_through_jv_TC_ACC_014(self):
+		transaction_date = nowdate()
+		amount = 100
+
+		# Step 1: Create a Sales Invoice for the customer
+		si = self.create_sales_invoice(qty=1, rate=amount, posting_date=transaction_date)
+
+		# Step 2: Create a Journal Entry with voucher_type as "Credit Note"
+		je = self.create_journal_entry(
+			self.bank,
+			self.debit_to,
+			amount,
+			transaction_date,
+		)
+		je.accounts[1].party_type = "Customer"
+		je.accounts[1].party = si.customer
+		je.voucher_type = "Credit Note"
+		je.save()
+		je.submit()
+
+		# Step 3: Create a Payment Reconciliation to reconcile the Credit Note with the Sales Invoice
+		pr = self.create_payment_reconciliation()
+		pr.get_unreconciled_entries()
+		invoices = [x.as_dict() for x in pr.get("invoices")]
+		payments = [x.as_dict() for x in pr.get("payments")]
+
+		# Allocate entries for reconciliation
+		pr.allocate_entries(frappe._dict({"invoices": invoices, "payments": payments}))
+		for row in pr.allocation:
+			self.assertEqual(flt(row.get("difference_amount")), 0.0)
+		# Step 4: Reconcile the entries
+		pr.reconcile()
+
+		# Step 5: Verify the Sales Invoice status and outstanding amount
+		si.reload()
+		self.assertEqual(si.status, "Paid", "Sales Invoice should be marked as Paid after reconciliation")
+		self.assertEqual(si.outstanding_amount, 0, "Sales Invoice outstanding amount should be 0 after reconciliation")
+		# Step 7: Check that reconciled invoices and payments are no longer listed as unreconciled
+		pr.get_unreconciled_entries()
+		self.assertEqual(len(pr.get("invoices")), 0)
+		self.assertEqual(len(pr.get("payments")), 0)
+
+
 	def test_journal_against_journal(self):
 		transaction_date = nowdate()
 		sales = "Sales - _PR"
