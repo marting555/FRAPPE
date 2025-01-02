@@ -266,6 +266,16 @@ def repost(doc):
 			frappe.db.commit()
 
 
+<<<<<<< HEAD
+=======
+def remove_attached_file(docname):
+	if file_name := frappe.db.get_value(
+		"File", {"attached_to_name": docname, "attached_to_doctype": "Repost Item Valuation"}, "name"
+	):
+		frappe.delete_doc("File", file_name, ignore_permissions=True, delete_permanently=True, force=True)
+
+
+>>>>>>> 4f690affc9 (perf: Skip link checking on repost's remove_attached_file (#45061))
 def repost_sl_entries(doc):
 	if doc.based_on == "Transaction":
 		repost_future_sle(
