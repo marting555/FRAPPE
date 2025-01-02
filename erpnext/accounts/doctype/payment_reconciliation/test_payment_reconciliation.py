@@ -565,7 +565,7 @@ class TestPaymentReconciliation(FrappeTestCase):
 			elif ref.reference_name == si2.name:
 				self.assertEqual(ref.allocated_amount, 250)
 
-	def test_matching_credit_note_with_sales_invoiceTC_ACC_009(self):
+	def test_matching_credit_note_with_sales_invoice_TC_ACC_009(self):
 		si = self.create_sales_invoice(qty=2, rate=150)  # Total amount = 300
 		si_return = self.create_sales_invoice(qty=-2, rate=150, is_return=1)  # Total return = 300
 		pr = self.create_payment_reconciliation()
