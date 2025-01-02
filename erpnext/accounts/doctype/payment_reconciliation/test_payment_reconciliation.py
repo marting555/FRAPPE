@@ -1558,6 +1558,7 @@ class TestPaymentReconciliation(FrappeTestCase):
 		pr.company = self.company
 		pr.party_type = "Supplier"
 		pr.party = self.supplier
+		pr.clearing_date = nowdate()
 		pr.receivable_payable_account = self.creditors_usd
 		pr.from_invoice_date = pr.to_invoice_date = pr.from_payment_date = pr.to_payment_date = nowdate()
 		pr.get_unreconciled_entries()
@@ -1578,6 +1579,77 @@ class TestPaymentReconciliation(FrappeTestCase):
 
 		# Should not raise frappe.exceptions.ValidationError: Total Debit must be equal to Total Credit.
 		pr.reconcile()
+
+	def test_reconciliation_purchase_invoice_against_return_nums_TC_ACC_015(self):
+		self.supplier = "_Test Supplier USD"
+		
+		# Step 1: Create a Purchase Invoice
+		pi = self.create_purchase_invoice(qty=5, rate=50, do_not_submit=True)
+		pi.supplier = self.supplier
+		pi.currency = "USD"
+		pi.conversion_rate = 50
+		pi.credit_to = self.creditors_usd
+		pi.save().submit()
+
+		# Step 2: Create a Purchase Invoice Return (Debit Note)
+		pi_return = frappe.get_doc(pi.as_dict())
+		pi_return.name = None
+		pi_return.docstatus = 0
+		pi_return.is_return = 1
+		pi_return.conversion_rate = 80
+		pi_return.items[0].qty = -pi_return.items[0].qty
+		pi_return.submit()
+
+		# Step 3: Perform Payment Reconciliation
+		pr = frappe.get_doc("Payment Reconciliation")
+		pr.company = self.company
+		pr.party_type = "Supplier"
+		pr.party = self.supplier
+		pr.clearing_date = nowdate()
+		pr.receivable_payable_account = self.creditors_usd
+		pr.from_invoice_date = pr.to_invoice_date = pr.from_payment_date = pr.to_payment_date = nowdate()
+		pr.get_unreconciled_entries()
+
+		invoices = []
+		payments = []
+		for invoice in pr.invoices:
+			if invoice.invoice_number == pi.name:
+				invoices.append(invoice.as_dict())
+				break
+
+		for payment in pr.payments:
+			if payment.reference_name == pi_return.name:
+				payments.append(payment.as_dict())
+				break
+
+		pr.allocate_entries(frappe._dict({"invoices": invoices, "payments": payments}))
+
+		# Should not raise frappe.exceptions.ValidationError: Total Debit must be equal to Total Credit.
+		pr.reconcile()
+
+		# Step 4: Additional Checks
+		# Check outstanding amount of the Purchase Invoice
+		pi.reload()
+		self.assertEqual(
+			pi.outstanding_amount,0,
+			"The outstanding amount of the Purchase Invoice should be reduced by the amount of the Debit Note."
+		)
+
+		# Ensure a Journal Entry is created
+		journal_entry = frappe.db.get_all(
+			"Journal Entry",
+			filters={
+				"docstatus": 1,
+				"voucher_type": "Debit Note",
+				"reference_type": pi_return.doctype,
+				"reference_name": pi_return.name,
+			},
+			pluck="name",
+		)
+		self.assertTrue(
+			journal_entry,
+			"A system-generated Journal Entry should be created after the reconciliation."
+		)
 
 	def test_reconciliation_from_purchase_order_to_multiple_invoices(self):
 		"""
