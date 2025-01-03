@@ -2418,7 +2418,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		# Step 5: Validate Ledger Entries
 		self.validate_ledger_entries(payment_entries=[pe1, pe2], purchase_invoices=[pi])
 		
-	def test_tax_withholding_with_supplier(self):
+	def test_tax_withholding_with_supplier_TC_ACC_023(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (create_records as records_for_pi,create_purchase_invoice,make_test_item)
 		records_for_pi('_Test Supplier TDS')
 		supplier=frappe.get_doc("Supplier","_Test Supplier TDS")

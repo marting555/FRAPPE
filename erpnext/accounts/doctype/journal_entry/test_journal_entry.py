@@ -531,7 +531,7 @@ class TestJournalEntry(unittest.TestCase):
 		]
 		self.assertEqual(expected, actual)
 	
-	def test_select_tds_payable_and_creditors_account(self):
+	def test_select_tds_payable_and_creditors_account_TC_ACC_024(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_records
 
 		create_records('_Test Supplier TDS')
