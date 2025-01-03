@@ -40,7 +40,7 @@ def after_install():
 	frappe.db.commit()
 
 def after_migrate():
-	create_custom_fields()
+	generate_custom_fields()
 
 
 def check_setup_wizard_not_completed():
@@ -253,10 +253,10 @@ def create_default_role_profiles():
 		role_profile.insert(ignore_permissions=True)
 
 
-def create_custom_fields():
+def generate_custom_fields():
 	CUSTOM_FIELDS = {}
 	print("Creating/Updating Custom Fields For Erpnext....")
-	path = os.path.join(os.path.dirname(__file__), "../custom_fields")
+	path = os.path.join(os.path.dirname(__file__), "../buying/custom_fields")
 	for file in os.listdir(path):
 		with open(os.path.join(path, file), "r") as f:
 			CUSTOM_FIELDS.update(json.load(f))
