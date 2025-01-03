@@ -1343,7 +1343,7 @@ class update_entries_after:
 
 			# Get valuation rate from previous SLE or Item master, if item does not have the
 			# allow zero valuration rate flag set
-			if not self.wh_data.valuation_rate and sle.voucher_detail_no:
+			if self.wh_data.valuation_rate is None and sle.voucher_detail_no:
 				allow_zero_valuation_rate = self.check_if_allow_zero_valuation_rate(
 					sle.voucher_type, sle.voucher_detail_no
 				)
