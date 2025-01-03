@@ -161,15 +161,32 @@ def _get_party_details(
 	if not party_details.get("currency"):
 		party_details["currency"] = currency
 
-	# sales team
 	if party_type == "Customer":
+		sales_person = frappe.qb.DocType("Sales Person")
+		sales_team = frappe.qb.DocType("Sales Team")
+		sales_persons = (frappe.qb.from_(sales_person)
+				   .inner_join(sales_team)
+				   .on(sales_team.sales_person == sales_person.name)
+				   .select(
+					   sales_person.enabled,
+					   sales_team.sales_person,
+					   sales_team.allocated_percentage,
+                       sales_team.commission_rate,
+				   )
+				   .where(
+					   (sales_person.enabled == 1)
+					   & (sales_team.parent == party.name)
+					   & (sales_team.parenttype == "Customer")
+			  		)
+				).run(as_dict=True)
+		
 		party_details["sales_team"] = [
 			{
 				"sales_person": d.sales_person,
 				"allocated_percentage": d.allocated_percentage or None,
 				"commission_rate": d.commission_rate,
 			}
-			for d in party.get("sales_team")
+			for d in sales_persons
 		]
 
 	# supplier tax withholding category
