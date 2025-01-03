@@ -5,8 +5,8 @@ from frappe.utils import cstr
 def execute():
 	reposts = frappe.get_all(
 		"Repost Item Valuation",
-		{"status": "Failed", "modified": [">", "2021-10-05"]},
 		["name", "modified", "error_log"],
+		{"status": "Failed", "modified": [">", "2021-10-05"]},
 	)
 
 	for repost in reposts:
