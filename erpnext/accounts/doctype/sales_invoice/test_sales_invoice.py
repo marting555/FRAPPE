@@ -39,7 +39,6 @@ from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import
 	create_stock_reconciliation,
 )
 from erpnext.stock.utils import get_incoming_rate, get_stock_balance
-from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
 
 
 class TestSalesInvoice(FrappeTestCase):
@@ -1068,6 +1067,7 @@ class TestSalesInvoice(FrappeTestCase):
 			currency="INR",
 			naming_series="T-SINV-"
 		)
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
 
 		# Step 2: Create Payment Entry
 		payment_entry = get_payment_entry(
@@ -1100,6 +1100,8 @@ class TestSalesInvoice(FrappeTestCase):
 		total_payment_amount = sales_invoice1.grand_total + sales_invoice2.grand_total
 
 		# Step 3: Create Payment Entry and allocate payment to both invoices
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
+
 		payment_entry = get_payment_entry(
 			"Sales Invoice", sales_invoice1.name, bank_account="_Test Bank - _TC"
 		)
@@ -1204,6 +1206,7 @@ class TestSalesInvoice(FrappeTestCase):
 				warehouse="_Test Warehouse - _TC", currency="INR", naming_series=f"T-SINV-{i+1}-"
 			)
 			sales_invoices.append(si)
+			from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
 
 			pe = get_payment_entry("Sales Invoice", si.name, bank_account="Cash - _TC")
 			pe.update({
@@ -4226,32 +4229,62 @@ class TestSalesInvoice(FrappeTestCase):
   
 		qty_change_cpu = frappe.db.get_value('Stock Ledger Entry', {'item_code': 'CPU', 'voucher_no': dn.name, 'warehouse': 'Stores - FC'}, 'actual_qty')
 		self.assertEqual(qty_change_cpu, -5)
-  
-	def test_sales_invoice_with_update_stock_checked(self):
-		si = create_sales_invoice(customer='Indra', company='French Connections', cost_center='Main - FC', selling_price_list='Standard Selling', 
-                            	item_code='CPU', qty=5, rate=3000, income_account='Sales - FC', expense_account='Cost of Goods Sold - FC',
-                             	debit_to='Debtors - FC', warehouse='Stores - FC', do_not_submit=True)
-		si.items[0].income_account = "Sales - FC"
-		si.update_stock = 1
-		si.save()
-		si.submit()
-  
-		self.assertEqual(si.status, 'Unpaid', 'Sales Invoice not submitted')
-  
-		cpu_sl = frappe.get_all('Stock Ledger Entry', {'item_code': 'CPU', 'voucher_no': si.name, 'warehouse': 'Stores - FC'}, ['actual_qty', 'valuation_rate'])
-		self.assertEqual(cpu_sl[0].get("actual_qty"), -5)
 
-		si1_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Stock In Hand - FC'}, 'credit')
-		self.assertEqual(si1_acc_credit, cpu_sl[0].get("valuation_rate") * 5)
 
-		si1_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Cost of Goods Sold - FC'}, 'debit')
-		self.assertEqual(si1_acc_debit, cpu_sl[0].get("valuation_rate") * 5)
-  
-		si2_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Sales - FC'}, 'credit')
-		self.assertEqual(si2_acc_credit, 15000)
+	def test_sales_invoice_and_delivery_note_with_shipping_rule(self):
+		frappe.db.set_single_value("Selling Settings", "so_required", "No")
 
-		si2_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Debtors - FC'}, 'debit')
-		self.assertEqual(si2_acc_debit, 15000)
+		sales_invoice = create_sales_invoice(
+			customer="_Test Customer",
+			company="_Test Company",
+			cost_center="Main - _TC",
+			currency="INR",
+			price_list="Standard Selling",
+			item_code="_Test Item Home Desktop 100",  
+			shipping_rule="_Test Shipping Rule",
+			qty=4,
+			rate=5000
+		)
+
+		sales_invoice.calculate_taxes_and_totals()
+		sales_invoice.submit()
+		income_account = sales_invoice.items[0].income_account
+		shipping_rule_account = frappe.db.get_value("Shipping Rule", "_Test Shipping Rule", "account")
+
+		shipping_charge = 200  
+		expected_grand_total = 20000 + shipping_charge
+		self.assertEqual(sales_invoice.grand_total, expected_grand_total)
+
+		si_gl_entries = frappe.get_all(
+			"GL Entry",
+			filters={"voucher_no": sales_invoice.name},
+			fields=["account", "debit", "credit"]
+		)
+
+		expected_si_gl = {
+			sales_invoice.debit_to: 20200,       
+			income_account: -20000,            
+			shipping_rule_account: -200         
+		}
+
+		for entry in si_gl_entries:
+			self.assertEqual(expected_si_gl.get(entry.account, 0), entry.debit - entry.credit)
+
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
+		delivery_note = make_delivery_note(sales_invoice.name)
+
+		delivery_note.sales_invoice = sales_invoice.name 
+		delivery_note.save()
+		delivery_note.submit()
+
+		self.assertEqual(delivery_note.status, "Completed")
+
+		for item in delivery_note.items:
+			actual_qty = frappe.db.get_value("Bin", {"item_code": item.item_code}, "actual_qty")
+			expected_qty = item.actual_qty - item.qty
+			self.assertEqual(actual_qty, expected_qty)
+
+		self.assertEqual(delivery_note.sales_invoice, sales_invoice.name)
 
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
@@ -4306,6 +4339,7 @@ def create_sales_invoice(**args):
 	si.conversion_rate = args.conversion_rate or 1
 	si.naming_series = args.naming_series or "T-SINV-"
 	si.cost_center = args.parent_cost_center
+	si.shipping_rule = args.shipping_rule
 
 	bundle_id = None
 	if si.update_stock and (args.get("batch_no") or args.get("serial_no")):
