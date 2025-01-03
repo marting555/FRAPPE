@@ -955,7 +955,6 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 			['Purchase Order', 'Purchase Receipt', 'Purchase Invoice'].includes(this.frm.doctype)) {
 				let is_drop_ship = me.frm.doc.items.some(item => item.delivered_by_supplier);
 				if (!is_drop_ship) {
-					console.log('get_shipping_address');
 					erpnext.utils.get_shipping_address(this.frm, function() {
 						set_party_account(set_pricing);
 					});
