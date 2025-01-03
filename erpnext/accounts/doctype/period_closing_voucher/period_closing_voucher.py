@@ -249,18 +249,15 @@ class PeriodClosingVoucher(AccountsController):
 			gl_entry[dimension] = dimensions[i]
 
 	def get_account_balances_based_on_dimensions(self, report_type):
-		"""Get balance for dimension-wise pl accounts"""
+		"""Get balance for dimension-wise PL accounts"""
 		self.get_accounting_dimension_fields()
 		acc_bal_dict = frappe._dict()
-		gl_entries = []
 
-		with frappe.db.unbuffered_cursor():
-			gl_entries = self.get_gl_entries_for_current_period(report_type, as_iterator=True)
-			for gle in gl_entries:
-				acc_bal_dict = self.set_account_balance_dict(gle, acc_bal_dict)
-
+		gl_entries = self.get_gl_entries_for_current_period(report_type, as_iterator=True)
+		for gle in gl_entries:
+			acc_bal_dict = self.set_account_balance_dict(gle, acc_bal_dict)
 		if report_type == "Balance Sheet" and self.is_first_period_closing_voucher():
-			opening_entries = self.get_gl_entries_for_current_period(report_type, only_opening_entries=True)
+			opening_entries = self.get_gl_entries_for_current_period(report_type, only_opening_entries=True, as_iterator=True)
 			for gle in opening_entries:
 				acc_bal_dict = self.set_account_balance_dict(gle, acc_bal_dict)
 
