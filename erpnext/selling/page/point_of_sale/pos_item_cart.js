@@ -928,9 +928,13 @@ erpnext.PointOfSale.ItemCart = class {
 		const me = this;
 		dfs.forEach((df) => {
 			this[`customer_${df.fieldname}_field`] = frappe.ui.form.make_control({
-				df: { ...df, onchange: handle_customer_field_change },
+				df: df,
 				parent: $customer_form.find(`.${df.fieldname}-field`),
 				render_input: true,
+			});
+			console.log(this[`customer_${df.fieldname}_field`].$input);
+			this[`customer_${df.fieldname}_field`].$input?.on("blur", () => {
+				handle_customer_field_change.apply(this[`customer_${df.fieldname}_field`]);
 			});
 			this[`customer_${df.fieldname}_field`].set_value(this.customer_info[df.fieldname]);
 		});
