@@ -4230,7 +4230,32 @@ class TestSalesInvoice(FrappeTestCase):
 		qty_change_cpu = frappe.db.get_value('Stock Ledger Entry', {'item_code': 'CPU', 'voucher_no': dn.name, 'warehouse': 'Stores - FC'}, 'actual_qty')
 		self.assertEqual(qty_change_cpu, -5)
 
+	def test_sales_invoice_with_update_stock_checked(self):
+		si = create_sales_invoice(customer='Indra', company='French Connections', cost_center='Main - FC', selling_price_list='Standard Selling', 
+                            	item_code='CPU', qty=5, rate=3000, income_account='Sales - FC', expense_account='Cost of Goods Sold - FC',
+                             	debit_to='Debtors - FC', warehouse='Stores - FC', do_not_submit=True)
+		si.items[0].income_account = "Sales - FC"
+		si.update_stock = 1
+		si.save()
+		si.submit()
+  
+		self.assertEqual(si.status, 'Unpaid', 'Sales Invoice not submitted')
+  
+		cpu_sl = frappe.get_all('Stock Ledger Entry', {'item_code': 'CPU', 'voucher_no': si.name, 'warehouse': 'Stores - FC'}, ['actual_qty', 'valuation_rate'])
+		self.assertEqual(cpu_sl[0].get("actual_qty"), -5)
 
+		si1_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Stock In Hand - FC'}, 'credit')
+		self.assertEqual(si1_acc_credit, cpu_sl[0].get("valuation_rate") * 5)
+
+		si1_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Cost of Goods Sold - FC'}, 'debit')
+		self.assertEqual(si1_acc_debit, cpu_sl[0].get("valuation_rate") * 5)
+  
+		si2_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Sales - FC'}, 'credit')
+		self.assertEqual(si2_acc_credit, 15000)
+
+		si2_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Debtors - FC'}, 'debit')
+		self.assertEqual(si2_acc_debit, 15000)
+		
 	def test_sales_invoice_and_delivery_note_with_shipping_rule(self):
 		frappe.db.set_single_value("Selling Settings", "so_required", "No")
 
