@@ -161,6 +161,7 @@ def _get_party_details(
 	if not party_details.get("currency"):
 		party_details["currency"] = currency
 
+	# sales team
 	if party_type == "Customer":
 		sales_person = frappe.qb.DocType("Sales Person")
 		sales_team = frappe.qb.DocType("Sales Team")
@@ -168,7 +169,6 @@ def _get_party_details(
 				   .inner_join(sales_team)
 				   .on(sales_team.sales_person == sales_person.name)
 				   .select(
-					   sales_person.enabled,
 					   sales_team.sales_person,
 					   sales_team.allocated_percentage,
                        sales_team.commission_rate,
