@@ -270,12 +270,12 @@ class TestPaymentReconciliation(FrappeTestCase):
 		for doctype in doctype_list:
 			qb.from_(qb.DocType(doctype)).delete().where(qb.DocType(doctype).company == self.company).run()
 
-	def create_payment_reconciliation(self, party_is_customer=True):
+	def create_payment_reconciliation(self, party_is_customer=True, receivable_payable_account=None):
 		pr = frappe.new_doc("Payment Reconciliation")
 		pr.company = self.company
 		pr.party_type = "Customer" if party_is_customer else "Supplier"
 		pr.party = self.customer if party_is_customer else self.supplier
-		pr.receivable_payable_account = get_party_account(pr.party_type, pr.party, pr.company)
+		pr.receivable_payable_account = receivable_payable_account or get_party_account(pr.party_type, pr.party, pr.company)
 		pr.from_invoice_date = pr.to_invoice_date = pr.from_payment_date = pr.to_payment_date = nowdate()
 		return pr
 
@@ -1657,8 +1657,7 @@ class TestPaymentReconciliation(FrappeTestCase):
 		reverse_pe.paid_from = self.advance_payable_account
 		reverse_pe.paid_to = self.cash
 		reverse_pe.save().submit()
-
-		pr = self.create_payment_reconciliation(party_is_customer=False)
+		pr = self.create_payment_reconciliation(party_is_customer=False, receivable_payable_account=self.advance_payable_account)
 		pr.default_advance_account = self.advance_payable_account
 		pr.get_unreconciled_entries()
 		self.assertEqual(len(pr.invoices), 1)
