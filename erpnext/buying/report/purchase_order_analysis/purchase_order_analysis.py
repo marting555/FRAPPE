@@ -18,10 +18,12 @@ def execute(filters=None):
 
 	columns = get_columns(filters)
 	data = get_data(filters)
-	update_received_amount(data)
+	
 
 	if not data:
 		return [], [], None, []
+	
+	update_received_amount(data)
 
 	data, chart_data = prepare_data(data, filters)
 
@@ -131,7 +133,7 @@ def get_received_amount_data(data):
 		.where((pr.docstatus == 1) & (pr_item.purchase_order_item.isin(po_items)))
 		.groupby(pr_item.purchase_order_item)
 	)
-	
+
 	data = query.run()
 	if not data:
 		return frappe._dict()
