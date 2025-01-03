@@ -1822,6 +1822,90 @@ class TestPaymentReconciliation(FrappeTestCase):
 		self.assertEqual(pi1_ref.reference_name, pi1.name, "Incorrect Purchase Invoice referenced in Payment Entry")
 		self.assertEqual(pi2_ref.reference_name, pi2.name, "Incorrect Purchase Invoice referenced in Payment Entry")
 
+	def test_reconciliation_purchase_invoice_against_partial_return_and_payment_TC_ACC_018(self):
+		self.supplier = "_Test Supplier USD"
+		
+		# Step 1: Create a Purchase Invoice
+		pi = self.create_purchase_invoice(qty=10, rate=50, do_not_submit=True)
+		pi.supplier = self.supplier
+		pi.currency = "USD"
+		pi.conversion_rate = 50
+		pi.credit_to = self.creditors_usd
+		pi.save().submit()
+
+		# Step 2: Create a Purchase Invoice Return (Debit Note) for partial quantity
+		pi_return = frappe.get_doc(pi.as_dict())
+		pi_return.name = None
+		pi_return.docstatus = 0
+		pi_return.is_return = 1
+		pi_return.conversion_rate = 80
+		pi_return.items[0].qty = -5  # Return 5 items (partial return)
+		pi_return.submit()
+
+		# Step 3: Create a Payment Entry (PE) for the remaining quantity of the Purchase Invoice
+		pe = frappe.get_doc({
+			"doctype": "Payment Entry",
+			"payment_type": "Pay",
+			"party_type": "Supplier",
+			"party": self.supplier,
+			"paid_amount": pi.base_grand_total - pi_return.base_grand_total,  # Paid amount for remaining items
+			"received_amount": pi.base_grand_total - pi_return.base_grand_total,  # Received amount for remaining items
+			"paid_from": self.cash,
+			"paid_to": self.creditors_usd,
+			"company": self.company,
+			"currency": "USD",
+			"posting_date": nowdate(),
+			"mode_of_payment": "Cash",
+			"reference_no": "PE-002",
+			"reference_date": nowdate(),
+			"party_balance": pi.base_grand_total - pi_return.base_grand_total,
+			"allocated_amount": pi.base_grand_total - pi_return.base_grand_total,
+			"invoice_details": [
+				{
+					"invoice_type": "Purchase Invoice",
+					"invoice_no": pi.name,
+					"outstanding_amount": pi.base_grand_total - pi_return.base_grand_total,
+					"allocated_amount": pi.base_grand_total - pi_return.base_grand_total,
+				}
+			]
+		})
+		pe.insert().submit()
+
+		# Step 4: Perform Payment Reconciliation
+		pr = frappe.get_doc("Payment Reconciliation")
+		pr.company = self.company
+		pr.party_type = "Supplier"
+		pr.party = self.supplier
+		pr.clearing_date = nowdate()
+		pr.receivable_payable_account = self.creditors_usd
+		pr.from_invoice_date = pr.to_invoice_date = pr.from_payment_date = pr.to_payment_date = nowdate()
+		pr.get_unreconciled_entries()
+
+		invoices = []
+		payments = []
+		for invoice in pr.invoices:
+			if invoice.invoice_number == pi.name:
+				invoices.append(invoice.as_dict())
+				break
+
+		for payment in pr.payments:
+			if payment.reference_name == pe.name:
+				payments.append(payment.as_dict())
+				break
+
+		pr.allocate_entries(frappe._dict({"invoices": invoices, "payments": payments}))
+		
+		# Should not raise frappe.exceptions.ValidationError: Total Debit must be equal to Total Credit.
+		pr.reconcile()
+
+		# Step 5: Additional Checks
+		# Check outstanding amount of the Purchase Invoice
+		pi.reload()
+		pi_return.reload()
+		self.assertEqual(
+			pi.outstanding_amount, pi.base_grand_total - (pi_return.base_grand_total + pe.paid_amount),
+			"The outstanding amount of the Purchase Invoice should be reduced by the amount of the Debit Note."
+		)
 
 	def test_reconciliation_from_purchase_order_to_multiple_invoices(self):
 		"""
