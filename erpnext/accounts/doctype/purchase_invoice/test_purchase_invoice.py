@@ -2644,7 +2644,128 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				voucher_type="Journal Entry"
 			)
 
-		
+	
+	def test_advance_payment_TC_ACC_028(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			create_records as records_for_pi,
+			create_purchase_invoice,
+			make_test_item,
+			create_payment_entry
+		)
+
+		records_for_pi('_Test Supplier USD')
+		supplier = frappe.get_doc('Supplier', '_Test Supplier USD')
+
+		if supplier:
+			pe = create_payment_entry(
+				party_type="Supplier",
+				party=supplier.name,
+				company="_Test Company",
+				payment_type="Pay",
+				paid_from="_Test Cash - _TC",
+				paid_to="_Test Payable USD - _TC",
+				paid_amount=6000,
+				save=True
+			)
+			
+			pe.target_exchange_rate = 60
+			pe.received_amount = 100
+			pe.tax_withholding_category = "Test - TDS - 194C - Company"
+			
+			pe.append(
+				"taxes",
+				{
+					"account_head": "Test TDS Payable - _TC",
+					"charge_type": "On Paid Amount",
+					"rate": 0,
+					"add_deduct_tax": "Deduct",
+					"description": "Cash",
+				},
+			)
+			
+			pe.save()
+			pe.submit()
+
+			item = make_test_item()
+			
+			pi = create_purchase_invoice(
+				supplier=supplier.name,
+				currency="USD",
+				rate=120,
+				item_code=item.name,
+				credit_to="_Test Payable USD - _TC"
+			)
+			
+			pe.apply_tds = 1
+			pi.tax_withholding_category = 'Test - TDS - 194C - Company'
+			pi.conversion_rate = 63
+			
+			pi.append(
+				'advances',
+				{
+					'reference_type': 'Payment Entry',
+					'reference_name': pe.name,
+					'advance_amount': 100,
+					'allocated_amount': 100,
+					"ref_exchange_rate": 60
+				}
+			)
+			
+			pi.save()
+			pi.submit()
+			
+			jea_parent = get_jv_entry_account(
+				credit_to=pi.credit_to,
+				reference_name=pi.name,
+				party_type="Supplier",
+				party=supplier.name,
+				debit=300
+			)
+			
+			self.assertEqual(
+				frappe.db.get_value("Journal Entry", jea_parent.parent, "voucher_type"),
+				"Exchange Gain Or Loss"
+			)
+			
+			expected_jv_entries = [
+				["Exchange Gain/Loss - _TC", 0.0, 300.0, pe.posting_date],
+				["_Test Payable USD - _TC", 300.0, 0.0, pe.posting_date]
+			]
+			
+			check_gl_entries(
+				doc=self,
+				voucher_no=jea_parent.parent,
+				expected_gle=expected_jv_entries,
+				posting_date=pi.posting_date,
+				voucher_type="Journal Entry"
+			)
+
+			_pe = get_payment_entry('Purchase Invoice', pi.name)
+			_pe.target_exchange_rate = 62
+			_pe.save()
+			_pe.submit()
+			
+			jea_parent = get_jv_entry_account(
+				credit_to=pi.credit_to,
+				reference_name=pi.name,
+				party_type="Supplier",
+				party=supplier.name,
+				debit=20
+			)
+			
+			expected_jv_entries = [
+				["Exchange Gain/Loss - _TC", 0.0, 20.0, pe.posting_date],
+				["_Test Payable USD - _TC", 20.0, 0.0, pe.posting_date]
+			]
+			
+			check_gl_entries(
+				doc=self,
+				voucher_no=jea_parent.parent,
+				expected_gle=expected_jv_entries,
+				posting_date=pi.posting_date,
+				voucher_type="Journal Entry"
+			)
+
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
@@ -2681,7 +2802,7 @@ def check_gl_entries(
 		for col in additional_columns:
 			query = query.select(gl[col])
 	gl_entries = query.run(as_dict=True)
- 
+	
 	for i, gle in enumerate(gl_entries):
 		doc.assertEqual(expected_gle[i][0], gle.account)
 		doc.assertEqual(expected_gle[i][1], gle.debit)
@@ -2942,6 +3063,19 @@ def create_ldc(supplier):
     else:
         return frappe.get_doc('Lower Deduction Certificate', 'LTC12345 Test')
 
-  
-		
-  
+def get_jv_entry_account(**args):
+	jea_parent = frappe.db.get_all(
+		"Journal Entry Account",
+		filters={
+			"account": args.get("credit_to"),
+			"docstatus": 1,
+			"reference_name": args.get("reference_name"),
+			"party_type": args.get("party_type"),
+			"party": args.get("party"),
+			"debit": args.get("debit") if args.get("debit") else 0,
+			"credit": args.get("credit") if args.get("credit") else 0
+		},
+		fields=["parent"]
+	)[0]
+
+	return jea_parent

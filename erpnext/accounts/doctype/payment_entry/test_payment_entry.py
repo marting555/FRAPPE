@@ -2229,6 +2229,7 @@ def create_account():
         {"name": "Test TDS Payable", "parent": "Duties and Taxes - _TC"},
         {"name": "Test Creditors", "parent": "Accounts Payable - _TC"},
         {"name": "_Test Payable USD", "parent": "Current Liabilities - _TC"},
+        {"name": "_Test Cash", "parent": "Cash In Hand - _TC"},
     ]
     
     for account in accounts:
@@ -2241,7 +2242,7 @@ def create_account():
                     "parent_account": account["parent"],
                     "report_type": "Balance Sheet",
                     "root_type": "Liability",
-                    "account_currency": "USD" if account["name"] == "_Test Payable USD" else "INR",
+                    "account_currency": "USD" if account["name"] == "_Test Payable USD"  else "INR",
                 }).insert()
                 frappe.db.commit()
             except Exception as e:
@@ -2273,10 +2274,10 @@ def create_records(supplier):
 
 
 
-def make_test_item():
+def make_test_item(item_name=None):
     from erpnext.stock.doctype.item.test_item import make_item
-    
-    if not frappe.db.exists("Item", "Test Item with Tax"):
+
+    if not frappe.db.exists("Item", item_name or "Test Item with Tax"):
         app_name = "india_compliance"
         
         if app_name in frappe.get_installed_apps():
@@ -2289,7 +2290,7 @@ def make_test_item():
                 frappe.db.commit()
             
             item= make_item(
-                "Test TDS Item",
+                item_name or "Test Item with Tax",
                 {
                     "is_stock_item": 1,
                     "gst_hsn_code": "888890",
@@ -2306,6 +2307,8 @@ def make_test_item():
                 },
             )
             return item
+    else:
+        return frappe.get_doc("Item", item_name or "Test Item with Tax")
         
 def create_purchase_invoice(**args):
 	# return sales invoice doc object
