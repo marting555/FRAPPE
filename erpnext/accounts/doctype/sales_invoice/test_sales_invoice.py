@@ -4255,8 +4255,8 @@ class TestSalesInvoice(FrappeTestCase):
 
 		si2_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Debtors - FC'}, 'debit')
 		self.assertEqual(si2_acc_debit, 15000)
-		
-	def test_sales_invoice_and_delivery_note_with_shipping_rule(self):
+
+	def test_sales_invoice_and_delivery_note_with_shipping_rule_TC_S_026(self):
 		frappe.db.set_single_value("Selling Settings", "so_required", "No")
 
 		sales_invoice = create_sales_invoice(
