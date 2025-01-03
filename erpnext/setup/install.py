@@ -256,7 +256,7 @@ def create_default_role_profiles():
 def create_custom_fields():
 	CUSTOM_FIELDS = {}
 	print("Creating/Updating Custom Fields For Erpnext....")
-	path = os.path.join(os.path.dirname(__file__), "../custom_fields")
+	path = os.path.join(os.path.dirname(__file__), "../buying/custom_fields")
 	for file in os.listdir(path):
 		with open(os.path.join(path, file), "r") as f:
 			CUSTOM_FIELDS.update(json.load(f))
