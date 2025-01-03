@@ -112,6 +112,7 @@ class Asset(AccountsController):
 			"Receipt",
 			"Capitalized",
 			"Decapitalized",
+			"Work in Progress",
 		]
 		supplier: DF.Link | None
 		total_asset_cost: DF.Currency
