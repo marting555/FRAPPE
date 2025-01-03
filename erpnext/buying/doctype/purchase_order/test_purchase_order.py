@@ -1249,7 +1249,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit')
 			self.assertEqual(gl_stock_debit, 100000)
 
-	def test_pi_return(self):
+	def test_pi_return_TC_B_043(self):
 		from erpnext.accounts.doctype.purchase_invoice.purchase_invoice import make_debit_note
 		from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import check_gl_entries
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import get_qty_after_transaction
@@ -1297,10 +1297,9 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
 		self.assertEqual(pi_status, "Debit Note Issued")
 
-	def test_payment_entry(self):
+	def test_payment_entry_TC_B_037(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
 		from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import check_gl_entries
-		from erpnext.stock.doctype.stock_entry.test_stock_entry import get_qty_after_transaction
   
 		po = create_purchase_order(		
 			warehouse="Finished Goods - _TC",
@@ -1332,7 +1331,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		]
 		check_payment_gl_entries(self, pe.name, expected_gle)
   
-	def test_purchase_invoice_cancellation(self):
+	def test_purchase_invoice_cancellation_TC_B_041(self):
 		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
   
 		po = create_purchase_order(		
@@ -1365,7 +1364,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pr_status = frappe.db.get_value("Purchase Receipt", pr.name, "status")
 		self.assertEqual(pr_status, "To Bill")
     
-	def test_purchase_invoice_return(self):
+	def test_purchase_invoice_return_TC_B_042(self):
 		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
 		from erpnext.accounts.doctype.purchase_invoice.purchase_invoice import make_debit_note
 
@@ -1391,9 +1390,8 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
 		self.assertEqual(pi_status, "Debit Note Issued")  
   
-	def test_50_50_payment_terms(self):
+	def test_50_50_payment_terms_TC_B_045(self):
 		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
-		from erpnext.accounts.doctype.purchase_invoice.purchase_invoice import make_debit_note
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
   
 		po = create_purchase_order(		
