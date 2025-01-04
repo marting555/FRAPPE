@@ -1609,10 +1609,3 @@ def make_pr_for_po(source_name, received_qty=0, item_dict_list = None):
 	doc_pr.insert()
 	doc_pr.submit()
 	return doc_pr
-
-
-@frappe.whitelist()
-def run_test():
-	po_obj = TestPurchaseOrder()
-	po_obj.test_single_po_pi_multi_pr_TC_B_005()
-	return 1
