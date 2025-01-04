@@ -1190,45 +1190,6 @@ class TestPurchaseOrder(FrappeTestCase):
 		po.reload()
 		self.assertEqual(po.per_billed, 100)
 
-	def test_single_po_pi(self):
-		# Scenario : PO => PR => 1PI
-		args = frappe._dict()
-		args['po'] = [{
-			"company" : "PP Ltd",
-			"item_code" : "test item 01",
-			"warehouse" : "Stores - PP Ltd",
-			"qty" : 6,
-			"rate" : 100,
-		}]
-
-		args['pr'] = [6]
-		args['pi'] = [6]
-
-		create_po_pi(**args)
-
-	def test_multi_po_pi(self):
-		# Scenario : 2PO => 2PR => 1PI
-		args = frappe._dict()
-		args['po'] = [{
-			"company" : "PP Ltd",
-			"item_code" : "test item 01",
-			"warehouse" : "Stores - PP Ltd",
-			"qty" : 3,
-			"rate" : 100,
-		},
-		{
-			"company" : "PP Ltd",
-			"item_code" : "test item 01",
-			"warehouse" : "Stores - PP Ltd",
-			"qty" : 3,
-			"rate" : 100,
-		}]
-
-		args['pr'] = [3, 3]
-		args['pi'] = [6]
-
-		create_po_pi(**args)
-
 	def test_create_purchase_receipt(self):
 		po = create_purchase_order(rate=10000,qty=10)
 		po.submit()
@@ -1248,7 +1209,195 @@ class TestPurchaseOrder(FrappeTestCase):
 		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
 			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit')
 			self.assertEqual(gl_stock_debit, 100000)
+	
+	def test_single_po_pi_TC_B_001(self):
+		# Scenario : PO => PR => 1PI
+		args = frappe._dict()
+		po_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 6,
+			"rate" : 100,
+		}
+		
+		doc_po = create_purchase_order(**po_data)
+		self.assertEqual(doc_po.docstatus, 1)
+		
+		doc_pr = make_pr_for_po(doc_po.name)
+		self.assertEqual(doc_pr.docstatus, 1)
 
+		doc_pi = make_pi_against_pr(doc_pr.name)
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_pi.items[0].qty, doc_po.items[0].qty)
+		self.assertEqual(doc_pi.grand_total, doc_po.grand_total)
+	
+	def test_multi_po_pr_TC_B_008(self):
+		# Scenario : 2PO => 2PR => 1PI
+		args = frappe._dict()
+		purchase_order_list = [{
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 3,
+			"rate" : 100,
+		},
+		{
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 3,
+			"rate" : 100,
+		}]
+
+		pur_receipt_name_list = []
+		pur_order_dict = frappe._dict({
+			"total_amount" : 0,
+			"total_qty" : 0
+		})
+
+		for order in purchase_order_list:
+			doc_po = create_purchase_order(**order)
+			pur_order_dict.update({"total_amount" : pur_order_dict.total_amount + doc_po.grand_total })
+			pur_order_dict.update({"total_qty" : pur_order_dict.total_qty + doc_po.total_qty })
+			
+			self.assertEqual(doc_po.docstatus, 1)
+
+			doc_pr = make_pr_for_po(doc_po.name)
+			self.assertEqual(doc_pr.docstatus, 1)
+			self.assertEqual(doc_pr.grand_total, doc_po.grand_total)
+
+			pur_receipt_name_list.append(doc_pr.name)
+
+		item_dict = [
+					{"item_code" : "_Test Item",
+					"warehouse" : "Stores - _TC",
+					"qty" : 3,
+					"rate" : 100,
+					"purchase_receipt":pur_receipt_name_list[1]
+					}]
+		
+		doc_pi = make_pi_against_pr(pur_receipt_name_list[0], item_dict_list = item_dict)
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_pi.total_qty, pur_order_dict.total_qty)
+		self.assertEqual(doc_pi.grand_total, pur_order_dict.total_amount)
+
+	def test_multi_po_single_pr_pi_TC_B_007(self):
+		# Scenario : 2PO => 1PR => 1PI
+		args = frappe._dict()
+		purchase_order_list = [{
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 3,
+			"rate" : 100,
+		},
+		{
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 3,
+			"rate" : 100,
+		}]
+
+		pur_order_name_list = []
+		pur_order_dict = frappe._dict({
+			"total_amount" : 0,
+			"total_qty" : 0
+		})
+
+		for order in purchase_order_list:
+			doc_po = create_purchase_order(**order)
+			pur_order_dict.update({"total_amount" : pur_order_dict.total_amount + doc_po.grand_total })
+			pur_order_dict.update({"total_qty" : pur_order_dict.total_qty + doc_po.total_qty })
+			
+			self.assertEqual(doc_po.docstatus, 1)
+			pur_order_name_list.append(doc_po.name)
+
+		item_dict = [
+					{"item_code" : "_Test Item",
+					"warehouse" : "Stores - _TC",
+					"qty" : 3,
+					"rate" : 100,
+					"purchase_receipt":pur_order_name_list[1]
+					}]
+
+		doc_pr = make_pr_for_po(pur_order_name_list[0], item_dict_list = item_dict)
+
+		doc_pi = make_pi_against_pr(doc_pr.name)
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_pi.total_qty, pur_order_dict.total_qty)
+		self.assertEqual(doc_pi.grand_total, pur_order_dict.total_amount)
+	
+	def test_single_po_multi_pr_pi_TC_B_006(self):
+		# Scenario : 1PO => 2PR => 2PI
+		
+		purchase_order_list = [{
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 6,
+			"rate" : 100,
+		}]
+
+		pur_invoice_dict = frappe._dict({
+			"total_amount" : 0,
+			"total_qty" : 0
+		})
+		pur_receipt_qty = [3, 3]
+		doc_po = create_purchase_order(**purchase_order_list[0])
+		self.assertEqual(doc_po.docstatus, 1)
+
+		for received_qty in pur_receipt_qty:
+			doc_pr = make_pr_for_po(doc_po.name, received_qty)
+			self.assertEqual(doc_pr.docstatus, 1)
+			
+			doc_pi = make_pi_against_pr(doc_pr.name)
+			self.assertEqual(doc_pi.docstatus, 1)
+
+			pur_invoice_dict.update({"total_amount" : pur_invoice_dict.total_amount + doc_pi.grand_total })
+			pur_invoice_dict.update({"total_qty" : pur_invoice_dict.total_qty + doc_pi.total_qty })
+		
+		self.assertEqual(doc_po.total_qty, pur_invoice_dict.total_qty)
+		self.assertEqual(doc_po.grand_total, pur_invoice_dict.total_amount)
+	
+	def test_single_po_pi_multi_pr_TC_B_005(self):
+		# Scenario : 1PO => 2PR => 1PI
+		
+		purchase_order_list = [{
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 6,
+			"rate" : 100,
+		}]
+
+		pur_receipt_qty = [3, 3]
+		pur_receipt_name_list = []
+
+		doc_po = create_purchase_order(**purchase_order_list[0])
+		self.assertEqual(doc_po.docstatus, 1)
+
+		for received_qty in pur_receipt_qty:
+			doc_pr = make_pr_for_po(doc_po.name, received_qty)
+			self.assertEqual(doc_pr.docstatus, 1)
+			
+			pur_receipt_name_list.append(doc_pr.name)
+		
+		item_dict = [
+					{"item_code" : "_Test Item",
+					"warehouse" : "Stores - _TC",
+					"qty" : 3,
+					"rate" : 100,
+					"purchase_receipt":pur_receipt_name_list[1]
+					}]
+		
+		doc_pi = make_pi_against_pr(pur_receipt_name_list[0], item_dict_list= item_dict)
+		
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_po.total_qty, doc_pi.total_qty)
+		self.assertEqual(doc_po.grand_total, doc_pi.grand_total)
+	
 
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
@@ -1295,7 +1444,6 @@ def create_po_for_sc_testing():
 		is_subcontracted=1,
 		supplier_warehouse="_Test Warehouse 1 - _TC",
 	)
-
 
 def prepare_data_for_internal_transfer():
 	from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_internal_supplier
@@ -1436,42 +1584,35 @@ test_dependencies = ["BOM", "Item Price"]
 
 test_records = frappe.get_test_records("Purchase Order")
 
-
-def make_pi_with_qty(pr_name, received_qty):
+def make_pi_against_pr(source_name, received_qty=0, item_dict_list = None):
+	doc_pi =  make_pi_from_pr(source_name)
+	if received_qty != 0: doc_pi.get("items")[0].qty = received_qty
 	
-	# Check received_qty after making PI from PR without update_stock checked
-	pi1 = make_pi_from_pr(pr_name)
-	pi1.get("items")[0].qty = received_qty or 2
-	pi1.insert()
-	pi1.submit()
-	return pi1
+	if item_dict_list is not None:
+		for item in item_dict_list:
+			doc_pi.append("items", item)
+
+	doc_pi.insert()
+	doc_pi.submit()
+	return doc_pi
+
+
+def make_pr_for_po(source_name, received_qty=0, item_dict_list = None):
+	doc_pr = make_purchase_receipt(source_name)
+	if received_qty != 0: doc_pr.get("items")[0].qty = received_qty
+	
+	if item_dict_list is not None:
+		for item in item_dict_list:
+			doc_pr.append("items", item)
+
+	
+	doc_pr.insert()
+	doc_pr.submit()
+	return doc_pr
+
 
 @frappe.whitelist()
-def create_po_pi(**args):
-	self = TestPurchaseOrder()
-	args = frappe._dict(args)
-	pr_qty_list = None
-	pi_qty_list = None
-
-	for po in args['po']:
-		doc_po =  create_purchase_order(**po)
-		self.assertEqual(doc_po.docstatus, 1)
-
-		pr_qty_list  = pr_qty_list if pr_qty_list else args['pr']
-		for index in range(0, len(pr_qty_list)):
-			doc_pr =  create_pr_against_po(doc_po.name, pr_qty_list[index])
-			self.assertEqual(doc_pr.docstatus, 1)
-
-			pi_qty_list  = pi_qty_list if pi_qty_list else args['pi']
-			for pi_index in range(0, len(pi_qty_list)):
-				doc_pi = make_pi_with_qty(doc_pr.name, pi_qty_list[pi_index])
-				self.assertEqual(doc_pi.docstatus, 1)
-
-				if len(pi_qty_list) > 1 and len(pi_qty_list) <= len(pr_qty_list):
-					pi_qty_list.pop(0)
-					break
-
-			if len(pr_qty_list) > 1 and len(args['po']) >= len(pr_qty_list):
-				pi_qty_list.pop(0)
-				break
-
+def run_test():
+	po_obj = TestPurchaseOrder()
+	po_obj.test_single_po_pi_multi_pr_TC_B_005()
+	return 1
