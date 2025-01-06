@@ -8,8 +8,8 @@ frappe.listview_settings["Asset"] = {
 			return [__("Partially Depreciated"), "grey", "status,=,Partially Depreciated"];
 		} else if (doc.status === "Sold") {
 			return [__("Sold"), "green", "status,=,Sold"];
-		} else if (doc.status === "Work in Progress") {
-			return [__("Work in Progress"), "orange", "status,=,Work in Progress"];
+		} else if (doc.status === "Work In Progress") {
+			return [__("Work In Progress"), "orange", "status,=,Work In Progress"];
 		} else if (["Capitalized", "Decapitalized"].includes(doc.status)) {
 			return [__(doc.status), "grey", "status,=," + doc.status];
 		} else if (doc.status === "Scrapped") {
