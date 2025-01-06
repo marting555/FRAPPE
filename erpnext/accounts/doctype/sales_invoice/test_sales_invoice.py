@@ -4483,7 +4483,6 @@ class TestSalesInvoice(FrappeTestCase):
 			price_list="Standard Selling",
 			item_code="_Test Item Home Desktop 100",  
 			shipping_rule="_Test Shipping Rule",
-			update_stock = 1,
 			qty=4,
 			rate=5000
 		)
