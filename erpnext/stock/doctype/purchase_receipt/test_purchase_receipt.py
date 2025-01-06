@@ -3911,6 +3911,20 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(se.get("valuation_rate"), 10000)
 		self.assertEqual(se.get("warehouse"), pr.get("items")[0].warehouse)
 
+	def test_direct_create_purchase_return_partial_TC_SCK_039(self):
+		pr = make_purchase_receipt(qty=10,rate=10000)
+		from erpnext.controllers.sales_and_purchase_return import make_return_doc
+		return_pr = make_return_doc("Purchase Receipt", pr.name)
+		bin_qty = frappe.db.get_value("Bin", {"item_code": return_pr.items[0].item_code, "warehouse": return_pr.items[0].warehouse}, "actual_qty")
+		return_pr.items[0].qty = -5
+		return_pr.items[0].received_qty = -5
+		return_pr.submit()
+
+		self.assertEqual(pr.status, "To Bill")
+		se = frappe.get_doc("Stock Ledger Entry",{"voucher_type": "Purchase Receipt", "voucher_no": pr.name})
+		self.assertEqual(se.get("qty_after_transaction"), bin_qty )
+		self.assertEqual(se.get("warehouse"), pr.get("items")[0].warehouse)
+
 def prepare_data_for_internal_transfer():
 	from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_internal_supplier
 	from erpnext.selling.doctype.customer.test_customer import create_internal_customer
