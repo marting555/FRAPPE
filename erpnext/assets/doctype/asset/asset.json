@@ -479,6 +479,7 @@
    "fieldname": "total_asset_cost",
    "fieldtype": "Currency",
    "label": "Total Asset Cost",
+   "no_copy": 1,
    "options": "Company:company:default_currency",
    "read_only": 1
   },
@@ -487,6 +488,7 @@
    "fieldname": "additional_asset_cost",
    "fieldtype": "Currency",
    "label": "Additional Asset Cost",
+   "no_copy": 1,
    "options": "Company:company:default_currency",
    "read_only": 1
   },
@@ -592,7 +594,7 @@
    "link_fieldname": "target_asset"
   }
  ],
- "modified": "2024-11-29 14:25:56.436124",
+ "modified": "2025-01-06 17:15:28.341490",
  "modified_by": "Administrator",
  "module": "Assets",
  "name": "Asset",

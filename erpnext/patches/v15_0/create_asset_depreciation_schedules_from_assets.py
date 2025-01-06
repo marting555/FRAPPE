@@ -20,7 +20,7 @@ def execute():
 		for fb_row in asset_finance_books_map[asset.name]:
 			asset_depr_schedule_doc = frappe.new_doc("Asset Depreciation Schedule")
 
-			asset_depr_schedule_doc.set_draft_asset_depr_schedule_details(asset, fb_row)
+			asset_depr_schedule_doc.fetch_asset_details(asset, fb_row)
 
 			asset_depr_schedule_doc.insert()
 
