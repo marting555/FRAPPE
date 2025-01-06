@@ -932,7 +932,6 @@ erpnext.PointOfSale.ItemCart = class {
 				parent: $customer_form.find(`.${df.fieldname}-field`),
 				render_input: true,
 			});
-			console.log(this[`customer_${df.fieldname}_field`].$input);
 			this[`customer_${df.fieldname}_field`].$input?.on("blur", () => {
 				handle_customer_field_change.apply(this[`customer_${df.fieldname}_field`]);
 			});
