@@ -61,16 +61,8 @@ def search_by_term(search_term, warehouse, price_list):
 
 	price = frappe.get_list(
 		doctype="Item Price",
-<<<<<<< HEAD
-		filters={
-			"price_list": price_list,
-			"item_code": item_code,
-		},
-		fields=["uom", "currency", "price_list_rate"],
-=======
 		filters=price_filters,
 		fields=["uom", "currency", "price_list_rate", "batch_no"],
->>>>>>> 4b6cae156e (fix: load price list rate for pos search term)
 	)
 
 	def __sort(p):
