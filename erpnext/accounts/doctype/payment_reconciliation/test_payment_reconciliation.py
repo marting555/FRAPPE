@@ -2263,7 +2263,15 @@ class TestPaymentReconciliation(FrappeTestCase):
 			self.assertEqual(allocation.cost_center, allocations[i]["cost_center"])
 
 	def test_reconciliation_on_closed_period_payment(self):
-		first_fy_start_date = frappe.db.get_value("Fiscal Year", {"disabled": 0}, "min(year_start_date)")
+		# first_fy_start_date = frappe.db.get_value("Fiscal Year", {"disabled": 0}, "min(year_start_date)")
+		result = frappe.db.sql("""
+			SELECT MIN(year_start_date)
+			FROM `tabFiscal Year`
+			WHERE disabled = 0
+		""", as_dict=False)
+
+		# Extract the result (it will be a list of tuples)
+		first_fy_start_date = result[0][0] if result else None
 		prev_fy_start_date = add_years(first_fy_start_date, -1)
 		prev_fy_end_date = add_days(first_fy_start_date, -1)
 		create_fiscal_year(
