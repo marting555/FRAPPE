@@ -3912,19 +3912,11 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(se.get("warehouse"), pr.get("items")[0].warehouse)
 
 	def test_direct_create_purchase_receipt_return_TC_SCK_030(self):
-		item = create_item("OP-MB-002")
 		pr = make_purchase_receipt(
-			qty=10,item_code=item,rate=10,
-			company="PP Ltd",
-			warehouse="Stores - PP Ltd",
-			supplier="Bella Vita"
+			qty=10,rate=10,
 		)
 
 		return_pr = make_purchase_receipt(
-			company="PP Ltd",
-			warehouse="Stores - PP Ltd",
-			supplier="Bella Vita",
-			item_code=item,
 			is_return=1,
 			return_against=pr.name,
 			qty=-10,
