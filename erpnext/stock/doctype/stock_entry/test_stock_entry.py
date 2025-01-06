@@ -1870,13 +1870,12 @@ class TestStockEntry(FrappeTestCase):
 			self.assertEqual(sle.stock_value_difference, 100)
 			self.assertEqual(sle.stock_value, 100 * i)
 	
-	def create_partial_material_transfer_stock_entry(self):
+	def test_create_partial_material_transfer_stock_entry(self):
 		from erpnext.stock.doctype.material_request.material_request import make_stock_entry as _make_stock_entry
 		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry as __make_stock_entry
 		
 		source_warehouse = create_warehouse("_Test Source Warehouse", properties=None, company="_Test Company")
 		target_warehouse = create_warehouse("_Test Warehouse", properties=None, company="_Test Company")
-		stock_in_hand_account = get_inventory_account("_Test Company", target_warehouse)
 		qty = 5
 		__make_stock_entry(
 			item_code="_Test Item",
@@ -1885,42 +1884,35 @@ class TestStockEntry(FrappeTestCase):
 			company="_Test Company",
 			rate=100,
 		)
+		s_bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": source_warehouse}, "actual_qty") or 0
 
 		mr = make_material_request(material_request_type="Material Transfer", qty=qty, warehouse=target_warehouse, from_warehouse=source_warehouse, item="_Test Item")
 		self.assertEqual(mr.status, "Pending")
 		se = _make_stock_entry(mr.name)
 		se.get("items")[0].qty = 3
-		se.get("items")[0].expense_account = "Stock Adjustment - TC"
 		se.insert()
 		se.submit()
 		mr.load_from_db()
 		self.assertEqual(mr.status, "Partially Received")
-		self.check_stock_ledger_entries("Stock Entry", mr.name, [["_Test Item", target_warehouse, 3]])
-
-		# self.check_gl_entries(
-		# 	"Stock Entry",
-		# 	se.name,
-		# 	sorted([[stock_in_hand_account, 5000.0, 0.0], ["Stock Adjustment - TC", 0.0, 5000.0]]),
-		# )
+		self.check_stock_ledger_entries("Stock Entry", se.name, [["_Test Item", target_warehouse, 3], ["_Test Item", source_warehouse, -3]])
 
 		se1 = _make_stock_entry(mr.name)
 		se1.get("items")[0].qty = 2
-		se.get("items")[0].expense_account = "Stock Adjustment - TC"
 		se1.insert()
 		se1.submit()
 		mr.load_from_db()
 		self.assertEqual(mr.status, "Transferred")
-		self.check_stock_ledger_entries("Stock Entry", mr.name, [["_Test Item", target_warehouse, 5]])
+		self.check_stock_ledger_entries("Stock Entry", se1.name, [["_Test Item", target_warehouse, 2], ["_Test Item", source_warehouse, -2]])
 
 		se1.cancel()
 		mr.load_from_db()
 		self.assertEqual(mr.status, "Partially Received")
-		self.check_stock_ledger_entries("Stock Entry", mr.name, [["_Test Item", target_warehouse, 3]])
 
 		se.cancel()
 		mr.load_from_db()
 		self.assertEqual(mr.status, "Pending")
-		self.check_stock_ledger_entries("Stock Entry", mr.name, [["_Test Item", target_warehouse, 1]])
+		current_s_bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": source_warehouse}, "actual_qty") or 0
+		self.assertEqual(current_s_bin_qty, s_bin_qty)
 
 	def test_stock_entry_for_mr_purpose(self):
 		company = frappe.db.get_value("Warehouse", "Stores - TCP1", "company")
