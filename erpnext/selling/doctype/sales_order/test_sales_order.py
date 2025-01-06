@@ -3505,7 +3505,89 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		qty_change2 = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn2.name, 'warehouse': '_Test Warehouse - _TC'}, ['actual_qty', 'valuation_rate'])
 		self.assertEqual(qty_change2[0].get("actual_qty"), -2)
 
-  
+	def test_so_with_qi_flow_TC_S_032(self):
+		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+		from erpnext.stock.doctype.quality_inspection.test_quality_inspection import create_quality_inspection
+
+		item = frappe.get_doc({
+			"doctype": "Item",
+			"item_code": "_Test Item for quality inspection",
+			"item_name": "_Test Item for quality inspection",
+			"stock_uom": "Nos",
+			"is_stock_item": 1,
+			"opening_stock": 1000,
+			"valuation_rate": 100,
+			"inspection_required_before_delivery": 1,
+			"gst_hsn_code": "90183100"
+		}).insert()
+
+		parameters = ["_Test Needle Shape", "_Test Syringe Shape", "_Test Plastic Clarity", "_Test Syringe Length"]
+		for param in parameters:
+			frappe.get_doc({
+				"doctype": "Quality Inspection Parameter",
+				"parameter": param
+			}).insert()
+
+		template = frappe.get_doc({
+			"doctype": "Quality Inspection Template",
+			"quality_inspection_template_name": "_Test Syringe",
+			"item_quality_inspection_parameter": [
+				{"specification": "_Test Needle Shape", "value": "OK"},
+				{"specification": "_Test Syringe Shape", "value": "OK"},
+				{"specification": "_Test Plastic Clarity", "value": "OK"},
+				{"specification": "_Test Syringe Length", "numeric": 1, "min_value": 4, "max_value": 6}
+			]
+		}).insert()
+
+		frappe.db.set_value("Item", item.name, "quality_inspection_template", template.name)
+		item.reload()
+
+		sales_order = make_sales_order(item_code=item.name, qty=5, rate=200)
+
+		delivery_note = make_delivery_note(sales_order.name)
+		delivery_note.save()
+		
+		with self.assertRaises(frappe.ValidationError):
+			delivery_note.submit()
+		
+		quality_inspection = create_quality_inspection(
+			reference_type="Delivery Note", 
+			reference_name=delivery_note.name,
+			item_code=item.name,
+			do_not_save=True,
+			readings=[
+				{"specification": "_Test Needle Shape", "value": "OK"},
+				{"specification": "_Test Syringe Shape", "value": "OK"},
+				{"specification": "_Test Plastic Clarity", "value": "OK"},
+				{"specification": "_Test Syringe Length", "numeric": 1, "reading_1": 5, "manual_inspection": 1}
+			]
+		)
+		self.assertEqual(quality_inspection.status, "Accepted")
+
+		quality_inspection.child_row_reference = True
+		quality_inspection.save()
+		quality_inspection.submit()
+
+		delivery_note.reload()
+		delivery_note.submit()
+
+		self.assertEqual(delivery_note.status, "To Bill")
+		
+		stock_entry = frappe.get_doc({
+			"doctype": "Stock Ledger Entry",
+			"item_code": item.name,
+			"qty": -5,
+			"warehouse": "Stores - _TC",
+			"valuation_rate": 100,
+			"stock_uom": "Nos"
+		})
+		self.assertTrue(stock_entry)
+		sales_invoice = make_sales_invoice(delivery_note.name)
+		sales_invoice.insert()
+		sales_invoice.submit()
+		self.assertEqual(sales_invoice.status, "Unpaid")
+
 def automatically_fetch_payment_terms(enable=1):
 	accounts_settings = frappe.get_doc("Accounts Settings")
 	accounts_settings.automatically_fetch_payment_terms = enable

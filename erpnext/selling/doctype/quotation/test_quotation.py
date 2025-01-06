@@ -717,7 +717,88 @@ class TestQuotation(FrappeTestCase):
 		self.assertEqual(quotation.rounding_adjustment, 0)
 		self.assertEqual(quotation.rounded_total, 0)
 
+	def test_quotation_to_sales_invoice_with_sr_TC_S_030(self):
+		from erpnext.selling.doctype.quotation.quotation import make_sales_order
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
+		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
 
+		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=10, rate=4000)
+		quotation = make_quotation(
+			party_name="_Test Customer",
+			company="_Test Company",
+			cost_center="Main - _TC",
+			item="_Test Item Home Desktop 100",
+			qty=4,
+			rate=5000,
+			warehouse="Stores - _TC",
+			currency="INR",
+			selling_price_list="Standard Selling",
+			shipping_rule="_Test Shipping Rule",
+			update_stock=1,
+			do_not_submit=True
+		)
+		quotation.append(
+			"taxes",
+			{
+				"charge_type": "Actual",
+				"account_head": "_Test Account Shipping Charges - _TC",
+				"cost_center": "Main - _TC",
+				"rate": 0,
+				"tax_amount": 200,
+				"description": "Shipping Charges",
+			}
+		)
+		quotation.save()
+		quotation.submit()
+		self.assertEqual(quotation.status, "Open")
+		self.assertEqual(quotation.grand_total, 20200)
+
+		sales_order = make_sales_order(quotation.name)
+		sales_order.update_stock = 1
+		sales_order.delivery_date = add_days(nowdate(), 5)
+
+		sales_order.insert()
+		sales_order.submit()
+
+		self.assertEqual(sales_order.status, "To Deliver and Bill")  
+		quotation.reload()
+		self.assertEqual(quotation.status, "Ordered")
+
+		delivery_note = make_delivery_note(sales_order.name)
+		delivery_note.insert()
+		delivery_note.submit()
+
+		self.assertEqual(delivery_note.status, "To Bill")
+		for item in delivery_note.items:
+				actual_qty = frappe.db.get_value("Bin", {"item_code": item.item_code, "warehouse": item.warehouse}, "actual_qty")
+				expected_qty = item.actual_qty - item.qty
+				self.assertEqual(actual_qty, expected_qty)
+		
+		sales_invoice = make_sales_invoice(delivery_note.name)
+		sales_invoice.insert()
+		sales_invoice.submit()
+
+		sales_order.reload()
+		delivery_note.reload()
+		sales_order.reload()
+		self.assertEqual(sales_invoice.status, "Unpaid") 
+		self.assertEqual(delivery_note.status, "Completed")  
+		self.assertEqual(sales_order.status, "Completed")  
+
+		debtor_account = frappe.db.get_value("Company", "_Test Company", "default_receivable_account")
+		sales_account = frappe.db.get_value("Company", "_Test Company", "default_income_account")
+		shipping_account = frappe.db.get_value("Shipping Rule", "_Test Shipping Rule", "account")
+
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": sales_invoice.name}, fields=["account", "debit", "credit"])
+		gl_debits = {entry.account: entry.debit for entry in gl_entries}
+		gl_credits = {entry.account: entry.credit for entry in gl_entries}
+
+		self.assertAlmostEqual(gl_debits[debtor_account], 20200)  
+		self.assertAlmostEqual(gl_credits[sales_account], 20000)  
+		self.assertAlmostEqual(gl_credits[shipping_account], 200)  
+		shipping_rule_amount = frappe.db.get_value("Sales Taxes and Charges", {"parent": sales_invoice.name, "account_head": shipping_account}, "tax_amount")
+		self.assertAlmostEqual(shipping_rule_amount, 200)
 test_records = frappe.get_test_records("Quotation")
 
 
@@ -748,6 +829,7 @@ def make_quotation(**args):
 
 	qo.company = args.company or "_Test Company"
 	qo.party_name = args.party_name or "_Test Customer"
+	qo.shiping_rule = args.shiping_rule
 	qo.currency = args.currency or "INR"
 	if args.selling_price_list:
 		qo.selling_price_list = args.selling_price_list
