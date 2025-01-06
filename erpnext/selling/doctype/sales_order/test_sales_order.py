@@ -3587,6 +3587,106 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		sales_invoice.insert()
 		sales_invoice.submit()
 		self.assertEqual(sales_invoice.status, "Unpaid")
+  
+	def test_sales_order_update_stock_in_si_with_shipping_rule_TC_S_028(self):
+		so = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', qty=4, rate=5000, do_not_save=True)
+		so.shipping_rule = "_Test Shipping Rule"
+		so.save()
+		so.submit()
+
+		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
+		self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
+  
+		si = make_sales_invoice(so.name)
+		si.update_stock = 1
+		si.save()
+		si.submit()
+
+		self.assertEqual(si.status, "Unpaid", "Sales Invoice not created")
+  
+		qty_change = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': si.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change, -4)
+  
+		voucher_params_si = {
+			'voucher_type': 'Sales Invoice', 'voucher_no': si.name
+		}
+		gl_accounts_si = {
+			'Sales - _TC': 'credit',
+			'Debtors - _TC': 'debit',
+			'_Test Account Shipping Charges - _TC': 'credit'
+		}
+		gl_entries_si = {
+			account: frappe.db.get_value('GL Entry', {**voucher_params_si, 'account': account}, field)
+			for account, field in gl_accounts_si.items()
+		}
+		self.assertEqual(gl_entries_si['Sales - _TC'], 20000)
+		self.assertEqual(gl_entries_si['Debtors - _TC'], 20200)
+		self.assertEqual(gl_entries_si['_Test Account Shipping Charges - _TC'], 200)
+  
+	def test_sales_order_update_stock_in_partial_si_with_shipping_rule_TC_S_029(self):
+		so = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', qty=4, rate=5000, do_not_save=True)
+		so.shipping_rule = "_Test Shipping Rule"
+		so.save()
+		so.submit()
+
+		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
+		self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
+  
+		si1 = make_sales_invoice(so.name)
+		si1.get("items")[0].qty = 2
+		si1.update_stock = 1
+		si1.save()
+		si1.submit()
+
+		self.assertEqual(si1.status, "Unpaid", "Sales Invoice not created")
+  
+		qty_change1 = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': si1.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change1, -2)
+  
+		voucher_params_si1 = {
+			'voucher_type': 'Sales Invoice',
+			'voucher_no': si1.name
+		}
+		gl_accounts_si1 = {
+			'Sales - _TC': 'credit',
+			'Debtors - _TC': 'debit',
+			'_Test Account Shipping Charges - _TC': 'credit'
+		}
+		gl_entries_si1 = {
+			account: frappe.db.get_value('GL Entry', {**voucher_params_si1, 'account': account}, field)
+			for account, field in gl_accounts_si1.items()
+		}
+		self.assertEqual(gl_entries_si1['Sales - _TC'], 10000)
+		self.assertEqual(gl_entries_si1['Debtors - _TC'], 10200)
+		self.assertEqual(gl_entries_si1['_Test Account Shipping Charges - _TC'], 200)
+  
+		si2 = make_sales_invoice(so.name)
+		si2.update_stock = 1
+		si2.save()
+		si2.submit()
+
+		self.assertEqual(si2.status, "Unpaid", "Sales Invoice not created")
+  
+		qty_change2 = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': si2.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change2, -2)
+  
+		voucher_params_si2 = {
+			'voucher_type': 'Sales Invoice',
+			'voucher_no': si2.name
+		}
+		gl_accounts_si2 = {
+			'Sales - _TC': 'credit',
+			'Debtors - _TC': 'debit',
+			'_Test Account Shipping Charges - _TC': 'credit'
+		}
+		gl_entries_si2 = {
+			account: frappe.db.get_value('GL Entry', {**voucher_params_si2, 'account': account}, field)
+			for account, field in gl_accounts_si2.items()
+		}
+		self.assertEqual(gl_entries_si2['Sales - _TC'], 10000)
+		self.assertEqual(gl_entries_si2['Debtors - _TC'], 10200)
+		self.assertEqual(gl_entries_si2['_Test Account Shipping Charges - _TC'], 200)
+
 
 def automatically_fetch_payment_terms(enable=1):
 	accounts_settings = frappe.get_doc("Accounts Settings")
