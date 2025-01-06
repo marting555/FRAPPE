@@ -22,6 +22,7 @@ from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 from erpnext.stock.doctype.pick_list.pick_list import create_stock_entry as pl_stock_entry
 from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
 from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+from erpnext.accounts.doctype.account.test_account import get_inventory_account
 
 class TestMaterialRequest(FrappeTestCase):
 	def test_make_purchase_order(self):
@@ -1288,7 +1289,72 @@ class TestMaterialRequest(FrappeTestCase):
 		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
 			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pr.name, 'account': 'Stock In Hand - _TC'},'credit')
 			self.assertEqual(gl_stock_debit, 1000)
+	
+	def test_create_material_issue_and_check_status(self):
+		company = "_Test Company"
+		qty = 10
+		target_warehouse = create_warehouse("_Test Warehouse", properties=None, company=company)
+		
+		mr = make_material_request(material_request_type="Material Issue", qty=qty, warehouse=target_warehouse, item="_Test Item")
+		self.assertEqual(mr.status, "Pending")
+		
+		frappe.db.set_value("Company", company,"enable_perpetual_inventory", 1)
+		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": target_warehouse}, "actual_qty") or 0
+		stock_in_hand_account = get_inventory_account(company, target_warehouse)
 
+		# Make stock entry against material request issue
+		se = make_stock_entry(mr.name)
+		se.items[0].expense_account = "Cost of Goods Sold - _TC"
+		se.insert()
+		se.submit()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Issued")
+
+		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no': se.name})
+		rate = frappe.db.get_value("Item", "_Test Item", "valuation_rate") or 0
+		gle = frappe.get_doc("GL Entry", {'voucher_no':se.name, 'account': stock_in_hand_account})
+		gle1 = frappe.get_doc("GL Entry", {'voucher_no':se.name, 'account': 'Cost of Goods Sold - _TC'})
+		self.assertEqual(sle.qty_after_transaction, bin_qty-qty)
+		self.assertEqual(gle.credit, rate*qty)
+		self.assertEqual(gle1.debit, rate*qty)
+		se.cancel()
+		mr.load_from_db()
+
+		# After stock entry cancel
+		current_bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": target_warehouse}, "actual_qty") or 0
+		sh_gle = (
+			frappe.db.get_value(
+				"GL Entry",
+				{
+					"company": company,
+					"voucher_no": se.name,
+					'account': stock_in_hand_account
+				},
+				["sum(debit)", "sum(credit)"],
+				order_by=None
+			)
+			or 0.0
+		)
+		
+		cogs_gle = (
+			frappe.db.get_value(
+				"GL Entry",
+				{
+					"company": company,
+					"voucher_no": se.name,
+					'account': "Cost of Goods Sold - _TC"
+				},
+				["sum(debit)", "sum(credit)"],
+				order_by=None
+			)
+			or 0.0
+		)
+		
+		self.assertEqual(sh_gle[0], sh_gle[1])
+		self.assertEqual(cogs_gle[0], cogs_gle[1])
+		self.assertEqual(current_bin_qty, bin_qty)
+
+	
 def get_in_transit_warehouse(company):
 	if not frappe.db.exists("Warehouse Type", "Transit"):
 		frappe.get_doc(
