@@ -29,6 +29,7 @@ class QualityInspection(Document):
 		amended_from: DF.Link | None
 		batch_no: DF.Link | None
 		bom_no: DF.Link | None
+		child_row_reference: DF.Data | None
 		description: DF.SmallText | None
 		inspected_by: DF.Link
 		inspection_type: DF.Literal["", "Incoming", "Outgoing", "In Process"]
@@ -74,6 +75,53 @@ class QualityInspection(Document):
 			self.inspect_and_set_status()
 		
 		self.validate_inspection_required()
+		self.set_child_row_reference()
+	def set_child_row_reference(self):
+		if self.child_row_reference:
+			return
+		if not (self.reference_type and self.reference_name):
+			return
+		doctype = self.reference_type + " Item"
+		if self.reference_type == "Stock Entry":
+			doctype = "Stock Entry Detail"
+		child_row_references = frappe.get_all(
+			doctype,
+			filters={"parent": self.reference_name, "item_code": self.item_code},
+			pluck="name",
+		)
+		if not child_row_references:
+			return
+		if len(child_row_references) == 1:
+			self.child_row_reference = child_row_references[0]
+		else:
+			self.distribute_child_row_reference(child_row_references)
+	def distribute_child_row_reference(self, child_row_references):
+		quality_inspections = frappe.get_all(
+			"Quality Inspection",
+			filters={
+				"reference_name": self.reference_name,
+				"item_code": self.item_code,
+				"docstatus": ("<", 2),
+			},
+			fields=["name", "child_row_reference", "docstatus"],
+			order_by="child_row_reference desc",
+		)
+		for row in quality_inspections:
+			if not child_row_references:
+				break
+			if row.child_row_reference and row.child_row_reference in child_row_references:
+				child_row_references.remove(row.child_row_reference)
+				continue
+			if row.docstatus == 1:
+				continue
+			if row.name == self.name:
+				self.child_row_reference = child_row_references[0]
+			else:
+				frappe.db.set_value(
+					"Quality Inspection", row.name, "child_row_reference", child_row_references[0]
+				)
+			child_row_references.remove(child_row_references[0])
+			
 	def validate_inspection_required(self):
 		if self.reference_type in ["Purchase Receipt", "Purchase Invoice"] and not frappe.get_cached_value(
 			"Item", self.item_code, "inspection_required_before_purchase"
