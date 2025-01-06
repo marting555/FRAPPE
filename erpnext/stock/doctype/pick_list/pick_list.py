@@ -766,7 +766,7 @@ def get_items_with_location_and_quantity(item_doc, item_location_map, docstatus)
 			qty = floor(qty)
 			stock_qty = qty * item_doc.conversion_factor
 			if not stock_qty:
-				break
+				continue
 
 		serial_nos = None
 		if item_location.serial_nos:
