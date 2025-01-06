@@ -2356,6 +2356,43 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		# Step 4: Validate Ledger Entries
 		self.validate_ledger_entries(payment_entries=[payment_entry], purchase_invoices=[purchase_invoice])
 
+	def test_purchase_invoice_payment_and_cancel_invoice_TC_ACC_019(self):
+		"""Test payment against Purchase Invoices with advance adjustment."""
+
+		today = nowdate()
+		# Step 1: Create and Submit the First Purchase Invoice
+		first_purchase_invoice = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item="_Test Item",
+			qty=1,
+			rate=100,
+			warehouse="_Test Warehouse - _TC",
+			currency="INR",
+			naming_series="T-PINV-",
+		)
+
+		# Step 2: Create and Submit Payment Entry for the First Purchase Invoice
+		payment_entry = get_payment_entry(
+			"Purchase Invoice", first_purchase_invoice.name, bank_account="Cash - _TC"
+		)
+		payment_entry.reference_no = f"Test-{first_purchase_invoice.name}"
+		payment_entry.reference_date = today
+		payment_entry.paid_amount = first_purchase_invoice.grand_total
+		payment_entry.insert()
+		payment_entry.submit()
+
+		# Step 3: Validate Outstanding Amount for the First Purchase Invoice
+		first_purchase_invoice.reload()
+		self.assertEqual(first_purchase_invoice.outstanding_amount, 0)
+		self.assertEqual(first_purchase_invoice.status, "Paid")
+
+		# Step 4: Cancel the First Purchase Invoice
+		first_purchase_invoice.cancel()
+
+		# Reload Payment Entry to Validate It Is Unlinked
+		payment_entry.reload()
+		self.assertEqual(payment_entry.references, [])
 
 	def test_multiple_purchase_invoices_single_payment(self):
 		"""Test single payment against multiple Purchase Invoices."""

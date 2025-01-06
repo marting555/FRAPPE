@@ -5,7 +5,7 @@
 import frappe
 from frappe import qb
 from frappe.tests.utils import FrappeTestCase, change_settings
-from frappe.utils import add_days, flt, nowdate
+from frappe.utils import add_days, flt, nowdate,get_date_str
 
 from erpnext.accounts.doctype.account.test_account import create_account
 from erpnext.accounts.doctype.payment_entry.payment_entry import (
@@ -1481,7 +1481,7 @@ class TestPaymentEntry(FrappeTestCase):
 			parent_account="Current Liabilities - _TC",
 			account_name="Advances Paid",
 			company=company,
-			account_type="Liability",
+			account_type="Payable",
 		)
 
 		frappe.db.set_value(
@@ -2196,31 +2196,32 @@ def create_customer(name="_Test Customer 2 USD", currency="USD"):
 		customer = customer.name
 	return customer
 def create_supplier(**args):
-    args = frappe._dict(args)
+	args = frappe._dict(args)
 
-    if frappe.db.exists("Supplier", args.supplier_name):
-        return frappe.get_doc("Supplier", args.supplier_name)
+	if frappe.db.exists("Supplier", args.supplier_name):
+		return frappe.get_doc("Supplier", args.supplier_name)
+	doc = frappe.get_doc(
+		{
+			"doctype": "Supplier",
+			"supplier_name": args.supplier_name,
+			"default_currency": args.default_currency,
+			"supplier_type": args.supplier_type or "Company",
+			"tax_withholding_category": args.tax_withholding_category,
+			"pan":"DAJPC4150P"       
+		}
+	)
+	doc.append('accounts',{
+		'company': args.company,
+		'account': '_Test Payable USD - _TC' if args.default_currency == 'USD' else 'Test TDS Payable',
+	})
 
-    doc = frappe.get_doc(
-        {
-            "doctype": "Supplier",
-            "supplier_name": args.supplier_name,
-            "default_currency": args.default_currency,
-            "supplier_type": args.supplier_type or "Company",
-            "tax_withholding_category": args.tax_withholding_category,
-            "pan":"DAJPC4150P"       
-        }
-    )
-    doc.append('accounts',{
-        'company': args.company,
-        'account': '_Test Payable USD - _TC' if args.default_currency == 'USD' else 'Test TDS Payable',
-    })
-    if not args.without_supplier_group:
-        doc.supplier_group = args.supplier_group or "Services"
+	if not args.without_supplier_group:
+		doc.supplier_group = args.supplier_group or "Services"
 
-    doc.insert()
-
-    return doc
+	doc.insert()
+	doc.save()
+	frappe.db.commit()
+	return doc
 
 def create_account():
     accounts = [
@@ -2316,7 +2317,8 @@ def create_purchase_invoice(**args):
 	pi = frappe.get_doc(
 		{
 			"doctype": "Purchase Invoice",
-			"posting_date": frappe.utils.today(),
+			"set_posting_time": 1,
+			"posting_date": args.posting_date or frappe.utils.today(),
 			"apply_tds": 0 if args.do_not_apply_tds else 1,
 			"supplier": args.supplier,
 			"company": "_Test Company",
