@@ -270,11 +270,14 @@ def get_project_name(doctype, txt, searchfield, start, page_len, filters):
 	proj = qb.DocType("Project")
 	qb_filter_and_conditions = []
 	qb_filter_or_conditions = []
+	ifelse = CustomFunction("IF", ["condition", "then", "else"])
 
-	# Apply filters for customer and company if present
 	if filters:
 		if filters.get("customer"):
-			qb_filter_and_conditions.append(proj.customer == filters.get("customer"))
+			qb_filter_and_conditions.append(
+				(proj.customer == filters.get("customer")) | proj.customer.isnull() | proj.customer == ""
+			)
+
 		if filters.get("company"):
 			qb_filter_and_conditions.append(proj.company == filters.get("company"))
 
