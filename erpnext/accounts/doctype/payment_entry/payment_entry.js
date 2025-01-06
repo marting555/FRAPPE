@@ -6,7 +6,6 @@ cur_frm.cscript.tax_table = "Advance Taxes and Charges";
 
 erpnext.accounts.taxes.setup_tax_validations("Payment Entry");
 erpnext.accounts.taxes.setup_tax_filters("Advance Taxes and Charges");
-
 frappe.ui.form.on("Payment Entry", {
 	onload: function (frm) {
 		frm.ignore_doctypes_on_cancel_all = [
@@ -18,19 +17,27 @@ frappe.ui.form.on("Payment Entry", {
 			"Unreconcile Payment",
 			"Unreconcile Payment Entries",
 			"Bank Transaction",
-		];frm.set_query("payment_request", "references", function (doc, cdt, cdn) {
+		];
 
 		if (frm.doc.__islocal) {
 			if (!frm.doc.paid_from) frm.set_value("paid_from_account_currency", null);
 			if (!frm.doc.paid_to) frm.set_value("paid_to_account_currency", null);
 		}
-		if (frm.doc.docstatus !== 1) {
-			frm.add_custom_button("Get Discount Eligible Invoice", ()=>{
-				check_conditions_get_invoice(frm)
-			});
-		}
+
 		erpnext.accounts.dimensions.setup_dimension_filters(frm, frm.doctype);
-		})
+
+		// project excluded in setup_dimension_filters
+		frm.set_query("project", function (doc) {
+			let filters = {
+				company: doc.company,
+			};
+			if (doc.party_type == "Customer") filters.customer = doc.party;
+			return {
+				query: "erpnext.controllers.queries.get_project_name",
+				filters,
+			};
+		});
+
 		if (frm.is_new()) {
 			set_default_party_type(frm);
 		}
