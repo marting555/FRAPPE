@@ -150,6 +150,7 @@ def get_received_amount_data(data):
 		.where((pr.docstatus == 1) & (pr_item.purchase_order_item.isin(po_items)))
 		.groupby(pr_item.purchase_order_item)
 	)
+
 	data = query.run()
 	if not data:
 		return frappe._dict()
