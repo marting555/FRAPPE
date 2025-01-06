@@ -4206,7 +4206,7 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertEqual(setting.so_required, 'No')
   
 		si = create_sales_invoice(customer='Indra', company='French Connections', cost_center='Main - FC', selling_price_list='Standard Selling', 
-                            	item_code='CPU', qty=5, income_account='Sales - FC', warehouse='Stores - FC',debit_to='Debtors - FC', rate=3000, do_not_submit=True)
+								item_code='CPU', qty=5, income_account='Sales - FC', warehouse='Stores - FC',debit_to='Debtors - FC', rate=3000, do_not_submit=True)
 		si.items[0].income_account = "Sales - FC"
 		si.save()
 		si.submit()
@@ -4267,6 +4267,7 @@ class TestSalesInvoice(FrappeTestCase):
 			price_list="Standard Selling",
 			item_code="_Test Item Home Desktop 100",  
 			shipping_rule="_Test Shipping Rule",
+			update_stock = 1,
 			qty=4,
 			rate=5000
 		)
@@ -4310,6 +4311,55 @@ class TestSalesInvoice(FrappeTestCase):
 			self.assertEqual(actual_qty, expected_qty)
 
 		self.assertEqual(delivery_note.sales_invoice, sales_invoice.name)
+	
+	def test_sales_invoice_with_update_stock_and_SR_TC_S_027(self):
+		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=10, rate=4000)
+
+		sales_invoice = create_sales_invoice(
+			customer="_Test Customer",
+			company="_Test Company",
+			cost_center="Main - _TC",
+			item="_Test Item Home Desktop 100",
+			qty=4,
+			rate=5000,
+			warehouse="Stores - _TC",
+			currency="INR",
+			selling_price_list="Standard Selling",
+			shipping_rule="_Test Shipping Rule",
+			update_stock=1,
+		)
+
+		self.assertEqual(sales_invoice.docstatus, 1)
+		self.assertEqual(sales_invoice.status, "Unpaid")
+
+		debtor_account = frappe.db.get_value("Company", "_Test Company", "default_receivable_account")
+		sales_account = frappe.db.get_value("Company", "_Test Company", "default_income_account")
+		cogs_account = frappe.db.get_value("Company", "_Test Company", "stock_adjustment_account")
+		shipping_account = frappe.db.get_value("Shipping Rule", "_Test Shipping Rule", "account")
+
+		stock_in_hand_account = frappe.db.get_value(
+			"Warehouse", "Stores - _TC", "account"
+		)
+		if not stock_in_hand_account:
+			stock_in_hand_account = frappe.db.get_single_value("Stock Settings", "stock_in_hand_account")
+
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": sales_invoice.name}, fields=["account", "debit", "credit"])
+		gl_debits = {entry.account: entry.debit for entry in gl_entries}
+		gl_credits = {entry.account: entry.credit for entry in gl_entries}
+
+		self.assertAlmostEqual(gl_debits[debtor_account], 20200)  
+		self.assertAlmostEqual(gl_credits[sales_account], 20000)  
+		self.assertAlmostEqual(gl_credits[shipping_account], 200)  
+		self.assertTrue(stock_in_hand_account in gl_credits)  
+		self.assertTrue(cogs_account in gl_debits)  
+		shipping_rule_amount = frappe.db.get_value("Sales Taxes and Charges", {"parent": sales_invoice.name, "account_head": shipping_account}, "tax_amount")
+		self.assertAlmostEqual(shipping_rule_amount, 200)  
+		sle = frappe.get_all(
+			"Stock Ledger Entry",
+			filters={"voucher_no": sales_invoice.name, "warehouse": "Stores - _TC"},
+			fields=["actual_qty"]
+		)
+		self.assertEqual(sum([entry.actual_qty for entry in sle]), -4)  
 
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
