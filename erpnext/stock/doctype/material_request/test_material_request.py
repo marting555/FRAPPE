@@ -1354,6 +1354,49 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(cogs_gle[0], cogs_gle[1])
 		self.assertEqual(current_bin_qty, bin_qty)
 
+	def test_partial_material_transfer_to_stock_entry(self):
+		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry as _make_stock_entry
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import TestStockEntry as tse
+
+		source_warehouse = create_warehouse("_Test Source Warehouse", properties=None, company="_Test Company")
+		target_warehouse = create_warehouse("_Test Warehouse", properties=None, company="_Test Company")
+		qty = 5
+		_make_stock_entry(
+			item_code="_Test Item",
+			qty=qty,
+			to_warehouse=source_warehouse,
+			company="_Test Company",
+			rate=100,
+		)
+		s_bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": source_warehouse}, "actual_qty") or 0
+
+		mr = make_material_request(material_request_type="Material Transfer", qty=qty, warehouse=target_warehouse, from_warehouse=source_warehouse, item="_Test Item")
+		self.assertEqual(mr.status, "Pending")
+		se = make_stock_entry(mr.name)
+		se.get("items")[0].qty = 3
+		se.insert()
+		se.submit()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Partially Received")
+		tse.check_stock_ledger_entries(self,"Stock Entry", se.name, [["_Test Item", target_warehouse, 3], ["_Test Item", source_warehouse, -3]])
+
+		se1 = make_stock_entry(mr.name)
+		se1.get("items")[0].qty = 2
+		se1.insert()
+		se1.submit()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Transferred")
+		tse.check_stock_ledger_entries(self,"Stock Entry", se1.name, [["_Test Item", target_warehouse, 2], ["_Test Item", source_warehouse, -2]])
+
+		se1.cancel()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Partially Received")
+
+		se.cancel()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Pending")
+		current_s_bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": source_warehouse}, "actual_qty") or 0
+		self.assertEqual(current_s_bin_qty, s_bin_qty)
 	
 def get_in_transit_warehouse(company):
 	if not frappe.db.exists("Warehouse Type", "Transit"):
@@ -1399,6 +1442,7 @@ def make_material_request(**args):
 			"schedule_date": args.schedule_date or today(),
 			"warehouse": args.warehouse or "_Test Warehouse - _TC",
 			"cost_center": args.cost_center or "_Test Cost Center - _TC",
+			"from_warehouse": args.from_warehouse or ""
 		},
 	)
 	mr.insert()

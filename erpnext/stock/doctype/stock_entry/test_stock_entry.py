@@ -18,6 +18,8 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 	get_serial_nos_from_bundle,
 	make_serial_batch_bundle,
 )
+from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 from erpnext.stock.doctype.serial_no.serial_no import *
 from erpnext.stock.doctype.stock_entry.stock_entry import FinishedGoodError, make_stock_in_entry
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
@@ -1867,6 +1869,58 @@ class TestStockEntry(FrappeTestCase):
 			self.assertEqual(sle.incoming_rate, 100)
 			self.assertEqual(sle.stock_value_difference, 100)
 			self.assertEqual(sle.stock_value, 100 * i)
+	
+	def create_partial_material_transfer_stock_entry(self):
+		from erpnext.stock.doctype.material_request.material_request import make_stock_entry as _make_stock_entry
+		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry as __make_stock_entry
+		
+		source_warehouse = create_warehouse("_Test Source Warehouse", properties=None, company="_Test Company")
+		target_warehouse = create_warehouse("_Test Warehouse", properties=None, company="_Test Company")
+		stock_in_hand_account = get_inventory_account("_Test Company", target_warehouse)
+		qty = 5
+		__make_stock_entry(
+			item_code="_Test Item",
+			qty=qty,
+			to_warehouse=source_warehouse,
+			company="_Test Company",
+			rate=100,
+		)
+
+		mr = make_material_request(material_request_type="Material Transfer", qty=qty, warehouse=target_warehouse, from_warehouse=source_warehouse, item="_Test Item")
+		self.assertEqual(mr.status, "Pending")
+		se = _make_stock_entry(mr.name)
+		se.get("items")[0].qty = 3
+		se.get("items")[0].expense_account = "Stock Adjustment - TC"
+		se.insert()
+		se.submit()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Partially Received")
+		self.check_stock_ledger_entries("Stock Entry", mr.name, [["_Test Item", target_warehouse, 3]])
+
+		# self.check_gl_entries(
+		# 	"Stock Entry",
+		# 	se.name,
+		# 	sorted([[stock_in_hand_account, 5000.0, 0.0], ["Stock Adjustment - TC", 0.0, 5000.0]]),
+		# )
+
+		se1 = _make_stock_entry(mr.name)
+		se1.get("items")[0].qty = 2
+		se.get("items")[0].expense_account = "Stock Adjustment - TC"
+		se1.insert()
+		se1.submit()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Transferred")
+		self.check_stock_ledger_entries("Stock Entry", mr.name, [["_Test Item", target_warehouse, 5]])
+
+		se1.cancel()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Partially Received")
+		self.check_stock_ledger_entries("Stock Entry", mr.name, [["_Test Item", target_warehouse, 3]])
+
+		se.cancel()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Pending")
+		self.check_stock_ledger_entries("Stock Entry", mr.name, [["_Test Item", target_warehouse, 1]])
 
 	def test_stock_entry_for_mr_purpose(self):
 		company = frappe.db.get_value("Warehouse", "Stores - TCP1", "company")
