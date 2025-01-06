@@ -39,6 +39,7 @@ from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import
 	create_stock_reconciliation,
 )
 from erpnext.stock.utils import get_incoming_rate, get_stock_balance
+from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
 
 class TestSalesInvoice(FrappeTestCase):
@@ -4257,6 +4258,210 @@ class TestSalesInvoice(FrappeTestCase):
 
 		si2_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Debtors - _TC'}, 'debit')
 		self.assertEqual(si2_acc_debit, 15000)
+  
+	def test_jv_records_creation_diff_ex_rate_TC_ACC_029(self):
+		from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import get_jv_entry_account
+
+		create_cost_center(
+			cost_center_name="_Test Cost Center - _TC",
+			company="_Test Company",
+			parent_cost_center="_Test Company - _TC"
+		)
+
+		create_account(
+			account_name="_Test Receivable USD - _TC",
+			parent_account="Current Assets - _TC",
+			company="_Test Company",
+			account_currency="USD",
+			account_type="Receivable",
+			roroot_type="Asset"
+		)
+
+		create_customer(
+			customer_name="_Test Customer USD",
+			currency="USD",
+			company="_Test Company",
+			account="_Test Receivable USD - _TC"
+		)
+
+		item = make_test_item(item_name="_Test Item USD")
+		
+		if item.is_new():
+			item.append(
+				"item_defaults",
+				{
+					"default_warehouse": '_Test Warehouse - _TC',
+					"company": "_Test Company",
+					"selling_cost_center": "_Test Cost Center - _TC",
+				},
+			)
+			item.save()
+		
+		frappe.db.commit()
+
+		si = create_sales_invoice(
+			customer="_Test Customer USD",
+			company="_Test Company",
+			parent_cost_center="_Test Cost Center - _TC",
+			conversion_rate=63,
+			currency="USD",
+			debit_to="_Test Receivable USD - _TC",
+			item_code=item.name,
+			qty=1,
+			rate=100,
+		)
+		si.save()
+		si.submit()
+
+		pe = get_payment_entry("Sales Invoice", si.name)    
+		pe.source_exchange_rate = 60
+		pe.save()
+		pe.submit()
+
+		jv_name = get_jv_entry_account(
+			credit_to=si.debit_to,
+			reference_name=si.name,
+			party_type='Customer',
+			party=pe.party,
+			credit=300
+		)
+		print(jv_name)
+		self.assertEqual(
+			frappe.db.get_value("Journal Entry", jv_name.parent, "voucher_type"),
+			"Exchange Gain Or Loss"
+		)
+
+		expected_jv_entries = [
+			["Exchange Gain/Loss - _TC", 300.0, 0.0, pe.posting_date],
+			["_Test Receivable USD - _TC", 0.0, 300.0, pe.posting_date]
+		]
+
+		check_gl_entries(
+			doc=self,
+			voucher_no=jv_name.parent,
+			expected_gle=expected_jv_entries,
+			posting_date=pe.posting_date,
+			voucher_type="Journal Entry"
+		)
+    
+	def test_jv_records_creation_diff_ex_rate_TC_ACC_030(self):
+		from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item,create_payment_entry
+		from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import get_jv_entry_account 
+
+		create_cost_center(
+			cost_center_name="_Test Cost Center - _TC",
+			company="_Test Company",
+			parent_cost_center="_Test Company - _TC"
+		)
+
+		create_account(
+			account_name="_Test Receivable USD - _TC",
+			parent_account="Current Assets - _TC",
+			company="_Test Company",
+			account_currency="USD",
+			account_type="Receivable",
+		)
+		create_account(
+			account_name="_Test Cash - _TC",
+			parent_account="Cash In Hand - _TC",
+			company="_Test Company",
+			account_currency="INR",
+			account_type="Cash",
+		)
+
+		create_customer(
+			customer_name="_Test Customer USD",
+			currency="USD",
+			company="_Test Company",
+			account="_Test Receivable USD - _TC"
+		)
+
+		item = make_test_item(item_name="_Test Item USD")
+		
+		if item.is_new():
+			item.append(
+				"item_defaults",
+				{
+					"default_warehouse": '_Test Warehouse - _TC',
+					"company": "_Test Company",
+					"selling_cost_center": "_Test Cost Center - _TC",
+				},
+			)
+			item.save()
+		
+		frappe.db.commit()
+
+		customer =frappe.get_doc("Customer", "_Test Customer USD")
+
+		if customer:
+			pe = create_payment_entry(
+				party_type="Customer",
+				party=customer.name,
+				company="_Test Company",
+				payment_type="Receive",
+				paid_from="_Test Receivable USD - _TC",
+				paid_to="_Test Cash - _TC",
+				paid_amount=100,
+				save=True
+			)
+			
+			pe.source_exchange_rate = 60
+			pe.received_amount = 6000
+			pe.save()
+			pe.submit()
+
+			si = create_sales_invoice(
+				customer="_Test Customer USD",
+				company="_Test Company",
+				parent_cost_center="_Test Cost Center - _TC",
+				conversion_rate=63,
+				currency="USD",	
+				debit_to="_Test Receivable USD - _TC",
+				item_code=item.name,
+				qty=1,
+				rate=120,
+				do_not_submit=True
+			)
+			si.append("advances",{
+				"reference_type": "Payment Entry",
+				"reference_name": pe.name,
+				"advance_amount": 100,
+				"allocated_amount": 100,
+				"ref_exchange_rate": 60
+			})
+			si.save()
+			si.submit()
+		
+			jv_name = get_jv_entry_account(
+				credit_to=si.debit_to,
+				reference_name=si.name,
+				party_type='Customer',
+				party=pe.party,
+				credit=300
+			)
+
+			self.assertEqual(
+				frappe.db.get_value("Journal Entry", jv_name.parent, "voucher_type"),
+				"Exchange Gain Or Loss"
+			)
+
+			expected_jv_entries = [
+				["Exchange Gain/Loss - _TC", 300.0, 0.0, pe.posting_date],
+				["_Test Receivable USD - _TC", 0.0, 300.0, pe.posting_date]
+			]
+
+			check_gl_entries(
+				doc=self,
+				voucher_no=jv_name.parent,
+				expected_gle=expected_jv_entries,
+				posting_date=pe.posting_date,
+				voucher_type="Journal Entry"
+			)
+
+		
 
 	def test_sales_invoice_without_sales_order_with_gst_TC_S_016(self):
 		setting = frappe.get_doc("Selling Settings")
@@ -4507,7 +4712,6 @@ def check_gl_entries(doc, voucher_no, expected_gle, posting_date, voucher_type="
 		.orderby(gl.posting_date, gl.account, gl.creation)
 	)
 	gl_entries = q.run(as_dict=True)
-
 	expected_gle = sorted(expected_gle, key=lambda x: x[0])
 	gl_entries = sorted(gl_entries, key=lambda x: x['account'])
 
@@ -4784,3 +4988,39 @@ def add_taxes(doc):
 			"rate": 12,
 		},
 	)
+
+def create_customer(**args):
+		if not frappe.db.exists("Customer", args.get("customer_name")):
+			customer = frappe.new_doc("Customer")
+			customer.customer_name = args.get("customer_name")
+			customer.type = "Individual"
+
+			if args.get("currency"):
+				customer.default_currency = args.get("currency")
+			if args.get("company") and args.get('account'):
+				customer.append("accounts",{
+					"company": args.get("company"),
+					"account": args.get("account")
+				})
+			customer.save()
+			frappe.db.commit()
+   
+def create_accounts(**args):
+     if not frappe.db.exists("Account", f"{args.get('account_name')} - _TC"):  # Ensure proper check with "- _TC"
+            try:
+                frappe.get_doc({
+                    "doctype": "Account",
+                    "company": args.get('company') or "_Test Company",
+                    "account_name": args.get('account_name'),
+                    "parent_account": args.get('parent_account'),
+                    "report_type": "Balance Sheet",
+                    "root_type": args.get('root_type') or "Liability",
+                    "account_currency": args.get('account_currency') or "INR",
+                }).insert()
+                frappe.db.commit()
+            except Exception as e:
+                frappe.log_error(f"Failed to insert {args.get('account_name')}", str(e))
+    
+			
+
+
