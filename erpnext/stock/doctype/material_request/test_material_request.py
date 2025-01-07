@@ -1908,12 +1908,12 @@ class TestMaterialRequest(FrappeTestCase):
 			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pr.name, 'account': 'Stock In Hand - _TC'},'credit')
 			self.assertEqual(gl_stock_debit, 1000)
 
-	def test_create_material_issue_and_check_status(self):
+	def test_create_material_issue_and_check_status_and_TC_SCK_047(self):
 		company = "_Test Company"
 		qty = 10
 		target_warehouse = create_warehouse("_Test Warehouse", properties=None, company=company)
 		
-		mr = make_material_request(material_request_type="Material Issue", qty=qty, warehouse=target_warehouse, item="_Test Item")
+		mr = make_material_request(material_request_type="Material Issue", qty=qty, warehouse=target_warehouse, item_code="_Test Item")
 		self.assertEqual(mr.status, "Pending")
 		
 		frappe.db.set_value("Company", company,"enable_perpetual_inventory", 1)
@@ -1953,12 +1953,12 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(cogs_gle[0], cogs_gle[1])
 		self.assertEqual(current_bin_qty, bin_qty)
 	
-	def test_create_material_req_issue_to_2stock_entry(self):
+	def test_create_material_req_issue_to_2stock_entry_and_TC_SCK_049(self):
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import TestStockEntry as tse
 
 		company = "_Test Company"
 		target_warehouse = create_warehouse("_Test Warehouse", properties=None, company=company)
-		mr = make_material_request(material_request_type="Material Issue", qty=10, warehouse=target_warehouse, item="_Test Item")
+		mr = make_material_request(material_request_type="Material Issue", qty=10, warehouse=target_warehouse, item_code="_Test Item")
 		self.assertEqual(mr.status, "Pending")
 		
 		frappe.db.set_value("Company", company,"enable_perpetual_inventory", 1)
@@ -2025,6 +2025,60 @@ class TestMaterialRequest(FrappeTestCase):
 
 		current_bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": target_warehouse}, "actual_qty") or 0
 		self.assertEqual(current_bin_qty, bin_qty)
+
+	def test_material_transfer_pick_list_to_stock_and_TC_SCK_050(self):
+		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry as _make_stock_entry
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import TestStockEntry as tse
+		from erpnext.stock.doctype.putaway_rule.test_putaway_rule import create_putaway_rule
+		from erpnext.stock.doctype.material_request.material_request import create_pick_list
+
+		item = create_item("OP-MB-001")
+		source_warehouse = create_warehouse("_Test Source Warehouse", properties=None, company="_Test Company")
+		t_warehouse = create_warehouse(warehouse_name="_Test Warehouse 1", properties=None, company="_Test Company")
+		t_warehouse1 = create_warehouse(warehouse_name="_Test Warehouse 2", properties=None, company="_Test Company")
+		create_putaway_rule(item_code=item.name, warehouse=t_warehouse, capacity=5, uom="Nos")
+		create_putaway_rule(item_code=item.name, warehouse=t_warehouse1, capacity=5, uom="Nos")
+		_make_stock_entry(
+			item_code=item.name,
+			qty=10,
+			to_warehouse=source_warehouse,
+			company="_Test Company",
+			rate=120,
+		)
+		s_bin_qty = frappe.db.get_value("Bin", {"item_code": item.name, "warehouse": source_warehouse}, "actual_qty") or 0
+
+		mr = make_material_request(material_request_type="Material Transfer", qty=10, warehouse=t_warehouse, from_warehouse=source_warehouse, item_code=item.name)
+		self.assertEqual(mr.status, "Pending")
+		pl = create_pick_list(mr.name)
+		pl.save()
+		pl.submit()
+
+		se_data = pl_stock_entry(json.dumps(pl.as_dict()))
+		se = frappe.get_doc(se_data)
+		se.apply_putaway_rule = 1
+		se.save()
+		se.submit()
+		tse.check_stock_ledger_entries(
+			self, 
+			"Stock Entry", 
+			se.name, 
+			[
+				[item.name, t_warehouse, 5], 
+				[item.name, source_warehouse, -5], 
+				[item.name, t_warehouse1, 5], 
+				[item.name, source_warehouse, -5]
+			]
+		)
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Transferred")
+		self.assertEqual(se.items[0].qty, 5)
+		self.assertEqual(len(se.items), 2)
+
+		se.cancel()
+		mr.load_from_db()
+		current_qty = frappe.db.get_value("Bin", {"item_code": item.name, "warehouse": source_warehouse}, "actual_qty") or 0
+		self.assertEqual(current_qty, s_bin_qty)
+		self.assertEqual(mr.status, "Pending")
 
 	
 def get_in_transit_warehouse(company):

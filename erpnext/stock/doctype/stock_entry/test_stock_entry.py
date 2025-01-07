@@ -1870,7 +1870,7 @@ class TestStockEntry(FrappeTestCase):
 			self.assertEqual(sle.stock_value_difference, 100)
 			self.assertEqual(sle.stock_value, 100 * i)
 	
-	def test_create_partial_material_transfer_stock_entry(self):
+	def test_create_partial_material_transfer_stock_entry_and_TC_SCK_048(self):
 		from erpnext.stock.doctype.material_request.material_request import make_stock_entry as _make_stock_entry
 		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry as __make_stock_entry
 		
