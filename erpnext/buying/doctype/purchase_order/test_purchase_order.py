@@ -1398,7 +1398,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(doc_po.total_qty, doc_pi.total_qty)
 		self.assertEqual(doc_po.grand_total, doc_pi.grand_total)
 	
-  def test_create_purchase_receipt_partial_TC_SCK_037(self):
+	def test_create_purchase_receipt_partial_TC_SCK_037(self):
 		po = create_purchase_order(rate=10000,qty=10)
 		po.submit()
 
