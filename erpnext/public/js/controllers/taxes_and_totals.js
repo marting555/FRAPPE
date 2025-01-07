@@ -860,11 +860,21 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 			);
 		}
 
-		this.frm.doc.payments.find(payment => {
+		// set the default payment method amount
+		// adjust the total_amount_to_pay based on non-default payment methods
+		let default_payment_index;
+		this.frm.doc.payments.find((payment, index) => {
 			if (payment.default) {
+				default_payment_index = index
 				payment.amount = total_amount_to_pay;
-			} else {
-				payment.amount = 0
+
+			} else if (payment.amount) {
+				// calculate remaining amount and update it to default mop
+				total_amount_to_pay -= payment.amount
+
+				if (default_payment_index !== undefined) {
+				this.frm.doc.payments[default_payment_index].amount = total_amount_to_pay
+				}
 			}
 		});
 
