@@ -39,6 +39,7 @@ from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import
 	create_stock_reconciliation,
 )
 from erpnext.stock.utils import get_incoming_rate, get_stock_balance
+from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
 
 class TestSalesInvoice(FrappeTestCase):
@@ -4209,25 +4210,24 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertEqual(len(actual), 4)
 		self.assertEqual(expected, actual)
   
-	def test_sales_invoice_without_sales_order(self):
+	def test_sales_invoice_without_sales_order_TC_S_006(self):
 		setting = frappe.get_doc("Selling Settings")
 		setting.so_required = 'No'
 		setting.save()
   
 		self.assertEqual(setting.so_required, 'No')
   
-		si = create_sales_invoice(customer='Indra', company='French Connections', cost_center='Main - FC', selling_price_list='Standard Selling', 
-								item_code='CPU', qty=5, income_account='Sales - FC', warehouse='Stores - FC',debit_to='Debtors - FC', rate=3000, do_not_submit=True)
-		si.items[0].income_account = "Sales - FC"
+		si = create_sales_invoice(cost_center='Main - _TC', selling_price_list='Standard Selling', income_account='Sales - _TC', expense_account='Cost of Goods Sold - _TC',
+                            debit_to='Debtors - _TC', qty=5, rate=3000, do_not_save=True)
 		si.save()
 		si.submit()
   
 		self.assertEqual(si.status, 'Unpaid', 'Sales Invoice not submitted')
   
-		si_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Sales - FC'}, 'credit')
+		si_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Sales - _TC'}, 'credit')
 		self.assertEqual(si_acc_credit, 15000)
 
-		si_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Debtors - FC'}, 'debit')
+		si_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Debtors - _TC'}, 'debit')
 		self.assertEqual(si_acc_debit, 15000)
   
 		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
@@ -4238,35 +4238,351 @@ class TestSalesInvoice(FrappeTestCase):
   
 		self.assertEqual(dn.status, 'Completed', 'Delivery Note not submitted')
   
-		qty_change_cpu = frappe.db.get_value('Stock Ledger Entry', {'item_code': 'CPU', 'voucher_no': dn.name, 'warehouse': 'Stores - FC'}, 'actual_qty')
-		self.assertEqual(qty_change_cpu, -5)
+		qty_change = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change, -5)
 
-	def test_sales_invoice_with_update_stock_checked(self):
-		si = create_sales_invoice(customer='Indra', company='French Connections', cost_center='Main - FC', selling_price_list='Standard Selling', 
-                            	item_code='CPU', qty=5, rate=3000, income_account='Sales - FC', expense_account='Cost of Goods Sold - FC',
-                             	debit_to='Debtors - FC', warehouse='Stores - FC', do_not_submit=True)
-		si.items[0].income_account = "Sales - FC"
+	def test_sales_invoice_with_update_stock_checked_TC_S_007(self):
+		si = create_sales_invoice(cost_center='Main - _TC', selling_price_list='Standard Selling', income_account='Sales - _TC', expense_account='Cost of Goods Sold - _TC',
+                            debit_to='Debtors - _TC', qty=5, rate=3000, do_not_save=True)
 		si.update_stock = 1
 		si.save()
 		si.submit()
   
 		self.assertEqual(si.status, 'Unpaid', 'Sales Invoice not submitted')
   
-		cpu_sl = frappe.get_all('Stock Ledger Entry', {'item_code': 'CPU', 'voucher_no': si.name, 'warehouse': 'Stores - FC'}, ['actual_qty', 'valuation_rate'])
-		self.assertEqual(cpu_sl[0].get("actual_qty"), -5)
-
-		si1_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Stock In Hand - FC'}, 'credit')
-		self.assertEqual(si1_acc_credit, cpu_sl[0].get("valuation_rate") * 5)
-
-		si1_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Cost of Goods Sold - FC'}, 'debit')
-		self.assertEqual(si1_acc_debit, cpu_sl[0].get("valuation_rate") * 5)
+		qty_change = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': si.name, 'warehouse': '_Test Warehouse - _TC'}, ['actual_qty', 'valuation_rate'])
+		self.assertEqual(qty_change[0].get("actual_qty"), -5)
   
-		si2_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Sales - FC'}, 'credit')
+		si2_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Sales - _TC'}, 'credit')
 		self.assertEqual(si2_acc_credit, 15000)
 
-		si2_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Debtors - FC'}, 'debit')
+		si2_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Debtors - _TC'}, 'debit')
 		self.assertEqual(si2_acc_debit, 15000)
+  
+	def test_jv_records_creation_diff_ex_rate_TC_ACC_029(self):
+		from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import get_jv_entry_account
 
+		create_cost_center(
+			cost_center_name="_Test Cost Center - _TC",
+			company="_Test Company",
+			parent_cost_center="_Test Company - _TC"
+		)
+
+		create_account(
+			account_name="_Test Receivable USD - _TC",
+			parent_account="Current Assets - _TC",
+			company="_Test Company",
+			account_currency="USD",
+			account_type="Receivable",
+			roroot_type="Asset"
+		)
+
+		create_customer(
+			customer_name="_Test Customer USD",
+			currency="USD",
+			company="_Test Company",
+			account="_Test Receivable USD - _TC"
+		)
+
+		item = make_test_item(item_name="_Test Item USD")
+		
+		if item.is_new():
+			item.append(
+				"item_defaults",
+				{
+					"default_warehouse": '_Test Warehouse - _TC',
+					"company": "_Test Company",
+					"selling_cost_center": "_Test Cost Center - _TC",
+				},
+			)
+			item.save()
+		
+		frappe.db.commit()
+
+		si = create_sales_invoice(
+			customer="_Test Customer USD",
+			company="_Test Company",
+			parent_cost_center="_Test Cost Center - _TC",
+			conversion_rate=63,
+			currency="USD",
+			debit_to="_Test Receivable USD - _TC",
+			item_code=item.name,
+			qty=1,
+			rate=100,
+		)
+		si.save()
+		si.submit()
+
+		pe = get_payment_entry("Sales Invoice", si.name)    
+		pe.source_exchange_rate = 60
+		pe.save()
+		pe.submit()
+
+		jv_name = get_jv_entry_account(
+			credit_to=si.debit_to,
+			reference_name=si.name,
+			party_type='Customer',
+			party=pe.party,
+			credit=300
+		)
+		print(jv_name)
+		self.assertEqual(
+			frappe.db.get_value("Journal Entry", jv_name.parent, "voucher_type"),
+			"Exchange Gain Or Loss"
+		)
+
+		expected_jv_entries = [
+			["Exchange Gain/Loss - _TC", 300.0, 0.0, pe.posting_date],
+			["_Test Receivable USD - _TC", 0.0, 300.0, pe.posting_date]
+		]
+
+		check_gl_entries(
+			doc=self,
+			voucher_no=jv_name.parent,
+			expected_gle=expected_jv_entries,
+			posting_date=pe.posting_date,
+			voucher_type="Journal Entry"
+		)
+    
+	def test_jv_records_creation_diff_ex_rate_TC_ACC_030(self):
+		from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item,create_payment_entry
+		from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import get_jv_entry_account 
+
+		create_cost_center(
+			cost_center_name="_Test Cost Center - _TC",
+			company="_Test Company",
+			parent_cost_center="_Test Company - _TC"
+		)
+
+		create_account(
+			account_name="_Test Receivable USD - _TC",
+			parent_account="Current Assets - _TC",
+			company="_Test Company",
+			account_currency="USD",
+			account_type="Receivable",
+		)
+		create_account(
+			account_name="_Test Cash - _TC",
+			parent_account="Cash In Hand - _TC",
+			company="_Test Company",
+			account_currency="INR",
+			account_type="Cash",
+		)
+
+		create_customer(
+			customer_name="_Test Customer USD",
+			currency="USD",
+			company="_Test Company",
+			account="_Test Receivable USD - _TC"
+		)
+
+		item = make_test_item(item_name="_Test Item USD")
+		
+		if item.is_new():
+			item.append(
+				"item_defaults",
+				{
+					"default_warehouse": '_Test Warehouse - _TC',
+					"company": "_Test Company",
+					"selling_cost_center": "_Test Cost Center - _TC",
+				},
+			)
+			item.save()
+		
+		frappe.db.commit()
+
+		customer =frappe.get_doc("Customer", "_Test Customer USD")
+
+		if customer:
+			pe = create_payment_entry(
+				party_type="Customer",
+				party=customer.name,
+				company="_Test Company",
+				payment_type="Receive",
+				paid_from="_Test Receivable USD - _TC",
+				paid_to="_Test Cash - _TC",
+				paid_amount=100,
+				save=True
+			)
+			
+			pe.source_exchange_rate = 60
+			pe.received_amount = 6000
+			pe.save()
+			pe.submit()
+
+			si = create_sales_invoice(
+				customer="_Test Customer USD",
+				company="_Test Company",
+				parent_cost_center="_Test Cost Center - _TC",
+				conversion_rate=63,
+				currency="USD",	
+				debit_to="_Test Receivable USD - _TC",
+				item_code=item.name,
+				qty=1,
+				rate=120,
+				do_not_submit=True
+			)
+			si.append("advances",{
+				"reference_type": "Payment Entry",
+				"reference_name": pe.name,
+				"advance_amount": 100,
+				"allocated_amount": 100,
+				"ref_exchange_rate": 60
+			})
+			si.save()
+			si.submit()
+		
+			jv_name = get_jv_entry_account(
+				credit_to=si.debit_to,
+				reference_name=si.name,
+				party_type='Customer',
+				party=pe.party,
+				credit=300
+			)
+
+			self.assertEqual(
+				frappe.db.get_value("Journal Entry", jv_name.parent, "voucher_type"),
+				"Exchange Gain Or Loss"
+			)
+
+			expected_jv_entries = [
+				["Exchange Gain/Loss - _TC", 300.0, 0.0, pe.posting_date],
+				["_Test Receivable USD - _TC", 0.0, 300.0, pe.posting_date]
+			]
+
+			check_gl_entries(
+				doc=self,
+				voucher_no=jv_name.parent,
+				expected_gle=expected_jv_entries,
+				posting_date=pe.posting_date,
+				voucher_type="Journal Entry"
+			)
+
+		
+
+	def test_sales_invoice_without_sales_order_with_gst_TC_S_016(self):
+		setting = frappe.get_doc("Selling Settings")
+		setting.so_required = 'No'
+		setting.save()
+
+		self.assertEqual(setting.so_required, 'No')
+
+		company = frappe.get_all("Company", {"name": "_Test Indian Registered Company"}, ["gstin", "gst_category"])
+		customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
+		company_add = frappe.get_all("Address", {"name": "_Test Indian Registered Company-Billing"}, ["name", "gstin", "gst_category"])
+		customer_add = frappe.get_all("Address", {"name": "_Test Registered Customer-Billing"}, ["name", "gstin", "gst_category"])
+  
+		if company[0].get("gst_category") == "Registered Regular" and customer[0].get("gst_category") == "Registered Regular" and customer[0].get("gstin") and customer[0].get("gstin"):
+			if company_add[0].get("gst_category") == "Registered Regular" and customer_add[0].get("gst_category") == "Registered Regular" and company_add[0].get("gstin") and customer_add[0].get("gstin"):
+				si = create_sales_invoice(company='_Test Indian Registered Company', customer='_Test Registered Customer', warehouse='Stores - _TIRC' ,cost_center='Main - _TIRC', selling_price_list='Standard Selling', 
+                              income_account='Sales - _TIRC', expense_account='Cost of Goods Sold - _TIRC', debit_to='Debtors - _TIRC', qty=4, rate=5000, do_not_save=True)
+				si.tax_category = 'In-State'
+				si.taxes_and_charges = 'Output GST In-state - _TIRC'
+				si.customer_address = customer_add[0].get("name")
+				si.billing_address_gstin = customer_add[0].get("gstin")
+				si.company_address = company_add[0].get("name")
+				si.company_gstin = company_add[0].get("gstin")
+				si.save()
+				si.submit()
+
+				self.assertEqual(si.status, 'Unpaid', 'Sales Invoice not submitted')
+				self.assertEqual(si.grand_total, si.total + si.total_taxes_and_charges)
+    
+				voucher_params = {
+					'voucher_type': 'Sales Invoice',
+					'voucher_no': si.name
+				}
+
+				accounts = {
+					'Sales - _TIRC': 'credit',
+					'Debtors - _TIRC': 'debit',
+					'Output Tax SGST - _TIRC': 'credit',
+					'Output Tax CGST - _TIRC': 'credit'
+				}
+
+				gl_entries = {
+					account: frappe.db.get_value('GL Entry', {**voucher_params, 'account': account}, field)
+					for account, field in accounts.items()
+				}
+
+				self.assertEqual(gl_entries['Sales - _TIRC'], 20000)
+				self.assertEqual(gl_entries['Debtors - _TIRC'], 23600)
+				self.assertEqual(gl_entries['Output Tax SGST - _TIRC'], 1800)
+				self.assertEqual(gl_entries['Output Tax CGST - _TIRC'], 1800)
+
+				from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
+				dn =  make_delivery_note(si.name)
+
+				dn.insert()
+				dn.submit()
+
+				self.assertEqual(dn.status, 'Completed', 'Delivery Note not submitted')
+
+				qty_change = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn.name, 'warehouse': 'Stores - _TIRC'}, ['actual_qty', 'valuation_rate'])
+				self.assertEqual(qty_change[0].get("actual_qty"), -4)
+
+				dn_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Stock In Hand - _TIRC'}, 'credit')
+				self.assertEqual(dn_acc_credit, qty_change[0].get("valuation_rate") * 4)
+
+				dn_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
+				self.assertEqual(dn_acc_debit, qty_change[0].get("valuation_rate") * 4)
+    
+	def test_sales_invoice_with_update_stock_checked_with_gst_TC_S_017(self): 
+		company = frappe.get_all("Company", {"name": "_Test Indian Registered Company"}, ["gstin", "gst_category"])
+		customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
+		company_add = frappe.get_all("Address", {"name": "_Test Indian Registered Company-Billing"}, ["name", "gstin", "gst_category"])
+		customer_add = frappe.get_all("Address", {"name": "_Test Registered Customer-Billing"}, ["name", "gstin", "gst_category"])
+  
+		if company[0].get("gst_category") == "Registered Regular" and customer[0].get("gst_category") == "Registered Regular" and customer[0].get("gstin") and customer[0].get("gstin"):
+			if company_add[0].get("gst_category") == "Registered Regular" and customer_add[0].get("gst_category") == "Registered Regular" and company_add[0].get("gstin") and customer_add[0].get("gstin"):
+				si = create_sales_invoice(company='_Test Indian Registered Company', customer='_Test Registered Customer', warehouse='Stores - _TIRC' ,cost_center='Main - _TIRC', selling_price_list='Standard Selling', 
+                              income_account='Sales - _TIRC', expense_account='Cost of Goods Sold - _TIRC', debit_to='Debtors - _TIRC', qty=4, rate=5000, do_not_save=True)
+				si.tax_category = 'In-State'
+				si.taxes_and_charges = 'Output GST In-state - _TIRC'
+				si.customer_address = customer_add[0].get("name")
+				si.billing_address_gstin = customer_add[0].get("gstin")
+				si.company_address = company_add[0].get("name")
+				si.company_gstin = company_add[0].get("gstin")
+				si.update_stock = 1
+				si.save()
+				si.submit()
+
+				self.assertEqual(si.status, 'Unpaid', 'Sales Invoice not submitted')
+				self.assertEqual(si.grand_total, si.total + si.total_taxes_and_charges)
+
+				qty_change = frappe.get_all(
+					'Stock Ledger Entry',
+					{'item_code': '_Test Item', 'voucher_no': si.name, 'warehouse': 'Stores - _TIRC'},
+					['actual_qty', 'valuation_rate']
+				)
+
+				if qty_change:
+					actual_qty = qty_change[0].get("actual_qty")
+					valuation_rate = qty_change[0].get("valuation_rate")
+
+					self.assertEqual(actual_qty, -4)
+					gl_entries = frappe.db.get_all(
+						'GL Entry',
+						{
+							'voucher_type': 'Sales Invoice',
+							'voucher_no': si.name,
+							'account': ['in', ['Sales - _TIRC', 'Debtors - _TIRC', 'Output Tax SGST - _TIRC', 'Output Tax CGST - _TIRC', 'Stock In Hand - _TIRC', 'Cost of Goods Sold - _TIRC']]
+						},
+						['account', 'credit', 'debit']
+					)
+					gl_entry_dict = {entry.account: entry for entry in gl_entries}
+
+					self.assertEqual(gl_entry_dict.get('Sales - _TIRC', {}).get('credit', 0), 20000)
+					self.assertEqual(gl_entry_dict.get('Debtors - _TIRC', {}).get('debit', 0), 23600)
+					self.assertEqual(gl_entry_dict.get('Output Tax SGST - _TIRC', {}).get('credit', 0), 1800)
+					self.assertEqual(gl_entry_dict.get('Output Tax CGST - _TIRC', {}).get('credit', 0), 1800)
+					self.assertEqual(gl_entry_dict.get('Stock In Hand - _TIRC', {}).get('credit', 0), valuation_rate * 4)
+					self.assertEqual(gl_entry_dict.get('Cost of Goods Sold - _TIRC', {}).get('debit', 0), valuation_rate * 4)
+
+ 
 	def test_sales_invoice_and_delivery_note_with_shipping_rule_TC_S_026(self):
 		frappe.db.set_single_value("Selling Settings", "so_required", "No")
 
@@ -4278,7 +4594,6 @@ class TestSalesInvoice(FrappeTestCase):
 			price_list="Standard Selling",
 			item_code="_Test Item Home Desktop 100",  
 			shipping_rule="_Test Shipping Rule",
-			update_stock = 1,
 			qty=4,
 			rate=5000
 		)
@@ -4397,7 +4712,6 @@ def check_gl_entries(doc, voucher_no, expected_gle, posting_date, voucher_type="
 		.orderby(gl.posting_date, gl.account, gl.creation)
 	)
 	gl_entries = q.run(as_dict=True)
-
 	expected_gle = sorted(expected_gle, key=lambda x: x[0])
 	gl_entries = sorted(gl_entries, key=lambda x: x['account'])
 
@@ -4674,3 +4988,39 @@ def add_taxes(doc):
 			"rate": 12,
 		},
 	)
+
+def create_customer(**args):
+		if not frappe.db.exists("Customer", args.get("customer_name")):
+			customer = frappe.new_doc("Customer")
+			customer.customer_name = args.get("customer_name")
+			customer.type = "Individual"
+
+			if args.get("currency"):
+				customer.default_currency = args.get("currency")
+			if args.get("company") and args.get('account'):
+				customer.append("accounts",{
+					"company": args.get("company"),
+					"account": args.get("account")
+				})
+			customer.save()
+			frappe.db.commit()
+   
+def create_accounts(**args):
+     if not frappe.db.exists("Account", f"{args.get('account_name')} - _TC"):  # Ensure proper check with "- _TC"
+            try:
+                frappe.get_doc({
+                    "doctype": "Account",
+                    "company": args.get('company') or "_Test Company",
+                    "account_name": args.get('account_name'),
+                    "parent_account": args.get('parent_account'),
+                    "report_type": "Balance Sheet",
+                    "root_type": args.get('root_type') or "Liability",
+                    "account_currency": args.get('account_currency') or "INR",
+                }).insert()
+                frappe.db.commit()
+            except Exception as e:
+                frappe.log_error(f"Failed to insert {args.get('account_name')}", str(e))
+    
+			
+
+

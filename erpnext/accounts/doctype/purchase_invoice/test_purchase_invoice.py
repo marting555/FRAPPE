@@ -2454,7 +2454,52 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		# Step 5: Validate Ledger Entries
 		self.validate_ledger_entries(payment_entries=[pe1, pe2], purchase_invoices=[pi])
-	
+		
+	def test_tax_withholding_with_supplier_TC_ACC_023(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (create_records as records_for_pi,create_purchase_invoice,make_test_item)
+		records_for_pi('_Test Supplier TDS')
+		supplier=frappe.get_doc("Supplier","_Test Supplier TDS")
+		if supplier:
+			self.assertEqual(supplier.tax_withholding_category,"Test - TDS - 194C - Company")
+		
+		item=make_test_item()
+		pi=create_purchase_invoice(supplier=supplier.name,item_code=item.name)
+		pi.apply_tds=1
+		pi.tax_withholding_category="Test - TDS - 194C - Company"
+		pi.save()
+		pi.submit()
+		gl_entries = frappe.db.sql(
+			"""select account, sum(debit) as debit, sum(credit) as credit , against_voucher
+			from `tabGL Entry` where voucher_type='Purchase Invoice' and voucher_no=%s
+			group by account,against_voucher""",
+			pi.name,
+			as_dict=1,
+		)
+		
+		expected_result = [
+				{
+					"account": "Creditors - _TC",
+					"debit": 1800.0,
+					"credit": 90000.0,
+					"against_voucher": pi.name
+				},
+				{
+					"account": "Stock Received But Not Billed - _TC",
+					"debit": 90000.0,
+					"credit": 0.0,
+					"against_voucher": None
+				},
+				{
+					"account": "Test TDS Payable - _TC",
+					"debit": 0.0,
+					"credit": 1800.0,
+					"against_voucher": None
+				}
+			]
+		self.assertEqual(gl_entries,expected_result)
+
+		
+
 	def test_multiple_purchase_invoices_multiple_payments(self):
 		"""Test payments against multiple Purchase Invoices and validate ledger entries."""
 		today = nowdate()
@@ -2512,6 +2557,252 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			f"Total credit ({total_credit}) does not match total debit ({total_debit})."
 		)
 		
+	def test_lower_tax_deduction_TC_ACC_025_and_TC_ACC_026(self):
+		from erpnext.accounts.utils import get_fiscal_year
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			create_records as records_for_pi,
+			create_purchase_invoice,
+			make_test_item
+		)
+
+		records_for_pi('_Test Supplier LDC')
+		supplier = frappe.get_doc('Supplier', '_Test Supplier LDC')
+		
+		if supplier:
+			update_ldc_details(supplier=supplier)
+			self.assertEqual(supplier.tax_withholding_category, "Test - TDS - 194C - Company")
+			fiscal_year, valid_from, valid_upto = get_fiscal_year(date=nowdate())
+			ldc = create_ldc(supplier=supplier.name)
+			filtered_data = {
+				key: getattr(ldc, key)
+				for key in ['tax_withholding_category', 'fiscal_year', 'supplier', 'certificate_limit', 'rate','valid_from','valid_upto']
+			}
+			
+			exepected_data = {
+				'tax_withholding_category': 'Test - TDS - 194C - Company',
+				'fiscal_year': fiscal_year,
+				'valid_from': valid_from,
+				'valid_upto': valid_upto,
+				'supplier': supplier.name,
+				'certificate_limit': 40000,
+				'rate': 1
+			}
+
+			self.assertEqual(filtered_data, exepected_data)
+
+			item = make_test_item()
+			
+			pi = create_purchase_invoice(supplier=supplier.name, rate=50000, item_code=item.name)
+			pi.apply_tds = 1
+			pi.tax_withholding_category = "Test - TDS - 194C - Company"
+			pi.save()
+			pi.submit()
+			
+			expected_gle = [
+				["Creditors - _TC", 0.0, 50000.0, pi.posting_date],
+				["Creditors - _TC", 600.0, 0.0, pi.posting_date],
+				["Stock Received But Not Billed - _TC", 50000.0, 0.0, pi.posting_date],
+				["Test TDS Payable - _TC", 0.0, 600.0, pi.posting_date]
+			]
+			
+			check_gl_entries(self, pi.name, expected_gle, pi.posting_date)
+
+	def test_currency_exchange_with_pi_TC_ACC_027(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			create_records as records_for_pi,
+			create_purchase_invoice,
+			make_test_item
+		)
+		
+		records_for_pi('_Test Supplier USD')
+		supplier = frappe.get_doc('Supplier', '_Test Supplier USD')
+		
+		if supplier:
+			item = make_test_item()
+			
+			pi = create_purchase_invoice(
+				supplier=supplier.name,
+				currency="USD",
+				rate=100,
+				item_code=item.name,
+				credit_to="_Test Payable USD - _TC"
+			)
+			pi.conversion_rate = 63
+			pi.save()
+			pi.submit()
+			
+			pe = get_payment_entry("Purchase Invoice", pi.name)
+			pe.target_exchange_rate = 60
+			pe.save()
+			pe.submit()
+			
+			expected_gle = [
+				["Cash - _TC", 0.0, 6300.0, pe.posting_date],
+				["Exchange Gain/Loss - _TC", 300.0, 0.0, pe.posting_date],
+				["_Test Payable USD - _TC", 6000.0, 0.0, pe.posting_date]
+			]
+			
+			check_gl_entries(
+				doc=self,
+				voucher_no=pe.name,
+				expected_gle=expected_gle,
+				posting_date=pe.posting_date,
+				voucher_type="Payment Entry"
+			)
+			
+			jea_parent = frappe.db.get_all(
+				"Journal Entry Account",
+				filters={
+					"account": pi.credit_to,
+					"docstatus": 1,
+					"reference_name": pi.name,
+					"party_type": "Supplier",
+					"party": "_Test Supplier USD",
+					"debit": 300
+				},
+				fields=["parent"]
+			)[0]
+			
+			self.assertEqual(
+				frappe.db.get_value("Journal Entry", jea_parent.parent, "voucher_type"),
+				"Exchange Gain Or Loss"
+			)
+			
+			expected_jv_entries = [
+				["Exchange Gain/Loss - _TC", 0.0, 300.0, pe.posting_date],
+				["_Test Payable USD - _TC", 300.0, 0.0, pe.posting_date]
+			]
+			
+			check_gl_entries(
+				doc=self,
+				voucher_no=jea_parent.parent,
+				expected_gle=expected_jv_entries,
+				posting_date=pe.posting_date,
+				voucher_type="Journal Entry"
+			)
+
+	
+	def test_advance_payment_TC_ACC_028(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			create_records as records_for_pi,
+			create_purchase_invoice,
+			make_test_item,
+			create_payment_entry
+		)
+
+		records_for_pi('_Test Supplier USD')
+		supplier = frappe.get_doc('Supplier', '_Test Supplier USD')
+
+		if supplier:
+			pe = create_payment_entry(
+				party_type="Supplier",
+				party=supplier.name,
+				company="_Test Company",
+				payment_type="Pay",
+				paid_from="_Test Cash - _TC",
+				paid_to="_Test Payable USD - _TC",
+				paid_amount=6000,
+				save=True
+			)
+			
+			pe.target_exchange_rate = 60
+			pe.received_amount = 100
+			pe.tax_withholding_category = "Test - TDS - 194C - Company"
+			
+			pe.append(
+				"taxes",
+				{
+					"account_head": "Test TDS Payable - _TC",
+					"charge_type": "On Paid Amount",
+					"rate": 0,
+					"add_deduct_tax": "Deduct",
+					"description": "Cash",
+				},
+			)
+			
+			pe.save()
+			pe.submit()
+
+			item = make_test_item()
+			
+			pi = create_purchase_invoice(
+				supplier=supplier.name,
+				currency="USD",
+				rate=120,
+				item_code=item.name,
+				credit_to="_Test Payable USD - _TC"
+			)
+			
+			pe.apply_tds = 1
+			pi.tax_withholding_category = 'Test - TDS - 194C - Company'
+			pi.conversion_rate = 63
+			
+			pi.append(
+				'advances',
+				{
+					'reference_type': 'Payment Entry',
+					'reference_name': pe.name,
+					'advance_amount': 100,
+					'allocated_amount': 100,
+					"ref_exchange_rate": 60
+				}
+			)
+			
+			pi.save()
+			pi.submit()
+			
+			jea_parent = get_jv_entry_account(
+				credit_to=pi.credit_to,
+				reference_name=pi.name,
+				party_type="Supplier",
+				party=supplier.name,
+				debit=300
+			)
+			
+			self.assertEqual(
+				frappe.db.get_value("Journal Entry", jea_parent.parent, "voucher_type"),
+				"Exchange Gain Or Loss"
+			)
+			
+			expected_jv_entries = [
+				["Exchange Gain/Loss - _TC", 0.0, 300.0, pe.posting_date],
+				["_Test Payable USD - _TC", 300.0, 0.0, pe.posting_date]
+			]
+			
+			check_gl_entries(
+				doc=self,
+				voucher_no=jea_parent.parent,
+				expected_gle=expected_jv_entries,
+				posting_date=pi.posting_date,
+				voucher_type="Journal Entry"
+			)
+
+			_pe = get_payment_entry('Purchase Invoice', pi.name)
+			_pe.target_exchange_rate = 62
+			_pe.save()
+			_pe.submit()
+			
+			jea_parent = get_jv_entry_account(
+				credit_to=pi.credit_to,
+				reference_name=pi.name,
+				party_type="Supplier",
+				party=supplier.name,
+				debit=20
+			)
+			
+			expected_jv_entries = [
+				["Exchange Gain/Loss - _TC", 0.0, 20.0, pe.posting_date],
+				["_Test Payable USD - _TC", 20.0, 0.0, pe.posting_date]
+			]
+			
+			check_gl_entries(
+				doc=self,
+				voucher_no=jea_parent.parent,
+				expected_gle=expected_jv_entries,
+				posting_date=pi.posting_date,
+				voucher_type="Journal Entry"
+			)
+
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
@@ -2547,9 +2838,8 @@ def check_gl_entries(
 	if additional_columns:
 		for col in additional_columns:
 			query = query.select(gl[col])
-
 	gl_entries = query.run(as_dict=True)
-
+	
 	for i, gle in enumerate(gl_entries):
 		doc.assertEqual(expected_gle[i][0], gle.account)
 		doc.assertEqual(expected_gle[i][1], gle.debit)
@@ -2779,3 +3069,50 @@ def toggle_provisional_accounting_setting(**args):
 
 
 test_records = frappe.get_test_records("Purchase Invoice")
+
+def update_ldc_details(supplier):
+    if supplier:
+        setattr(supplier,'custom_lower_tds_deduction_applicable','Yes')
+        if not supplier.pan:
+            setattr(supplier,'pan','DAJPC4150P')
+        supplier.save()
+        frappe.db.commit()
+
+def create_ldc(supplier):
+    from erpnext.accounts.utils import get_fiscal_year
+    fiscal_year, valid_from, valid_upto = get_fiscal_year(date=nowdate())
+    
+    if not frappe.db.exists('Lower Deduction Certificate', 'LTC12345 Test'):
+        doc = frappe.get_doc({
+            'doctype': 'Lower Deduction Certificate',
+            'tax_withholding_category': 'Test - TDS - 194C - Company',
+            'company': '_Test Company',
+            'supplier': supplier,
+            'certificate_no': 'LTC12345 Test',
+            'fiscal_year': fiscal_year,
+            'valid_from': valid_from,
+            'valid_upto': valid_upto,
+            'rate': 1,
+            'certificate_limit': 40000
+        }).insert()
+        
+        return doc
+    else:
+        return frappe.get_doc('Lower Deduction Certificate', 'LTC12345 Test')
+
+def get_jv_entry_account(**args):
+	jea_parent = frappe.db.get_all(
+		"Journal Entry Account",
+		filters={
+			"account": args.get("credit_to"),
+			"docstatus": 1,
+			"reference_name": args.get("reference_name"),
+			"party_type": args.get("party_type"),
+			"party": args.get("party"),
+			"debit": args.get("debit") if args.get("debit") else 0,
+			"credit": args.get("credit") if args.get("credit") else 0
+		},
+		fields=["parent"]
+	)[0]
+
+	return jea_parent
