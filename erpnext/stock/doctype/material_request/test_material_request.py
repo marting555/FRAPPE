@@ -2084,6 +2084,135 @@ class TestMaterialRequest(FrappeTestCase):
 			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pr.name, 'account': 'Stock In Hand - _TC'},'credit')
 			self.assertEqual(gl_stock_debit, 1000)
 
+	def test_mr_to_partial_pi_TC_B_027(self):
+		# 2MR => 2RFQ => 2SQ => 2PO => 1PR => 1PI
+		args = frappe._dict()
+		args['mr'] = [{
+				"company" : "_Test Company",
+				"item_code" : "Testing-31",
+				"warehouse" : "Stores - _TC",
+				"qty" : 10,
+				"rate" : 100,
+			},
+			{
+				"company" : "_Test Company",
+				"item_code" : "Testing-31",
+				"warehouse" : "Stores - _TC",
+				"qty" : 10,
+				"rate" : 100,
+			}
+		]
+
+		po_name_list = []
+		total_mr_qty = 0
+		for mr_dict in args['mr']:
+			doc_mr = make_material_request(**mr_dict)
+			doc_rfq = make_test_rfq(doc_mr.name)
+			self.assertEqual(doc_mr.docstatus, 1)
+			total_mr_qty += doc_mr.items[0].qty
+			
+			doc_sq= make_test_sq(doc_rfq.name, 100)
+			doc_po = make_test_po(doc_sq.name, type='Supplier Quotation')
+			self.assertEqual(doc_po.docstatus, 1)
+			po_name_list.append(doc_po.name)
+
+
+		item_dict = {
+			"item_code" : "Testing-31",
+			"warehouse" : "Stores - _TC",
+			"qty" : 10,
+			"rate" : 100,
+			"purchase_order" : po_name_list[1]
+		}
+		
+		doc_pr = make_test_pr(po_name_list[0], item_dict=item_dict)
+		doc_pi = make_test_pi(doc_pr.name)
+		
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_pi.total_qty, total_mr_qty)
+
+	def test_mr_to_partial_pi_TC_B_028(self):
+		# 2MR => 2RFQ => 2SQ => 2PO => 2PR => 1PI
+		args = frappe._dict()
+		args['mr'] = [{
+				"company" : "_Test Company",
+				"item_code" : "Testing-31",
+				"warehouse" : "Stores - _TC",
+				"qty" : 10,
+				"rate" : 100,
+			},
+			{
+				"company" : "_Test Company",
+				"item_code" : "Testing-31",
+				"warehouse" : "Stores - _TC",
+				"qty" : 10,
+				"rate" : 100,
+			}
+		]
+
+		pr_name_list = []
+		total_mr_qty = 0
+		for mr_dict in args['mr']:
+			doc_mr = make_material_request(**mr_dict)
+			doc_rfq = make_test_rfq(doc_mr.name)
+			self.assertEqual(doc_mr.docstatus, 1)
+			total_mr_qty += doc_mr.items[0].qty
+			
+			doc_sq= make_test_sq(doc_rfq.name, 100)
+			doc_po = make_test_po(doc_sq.name, type='Supplier Quotation')
+			doc_pr = make_test_pr(doc_po.name)
+			self.assertEqual(doc_pr.docstatus, 1)
+			pr_name_list.append(doc_pr.name)
+
+
+		item_dict = {
+			"item_code" : "Testing-31",
+			"warehouse" : "Stores - _TC",
+			"qty" : 10,
+			"rate" : 100,
+			"purchase_receipt" : pr_name_list[1]
+		}
+		
+		
+		doc_pi = make_test_pi(pr_name_list[0], item_dict=item_dict)
+		
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_pi.total_qty, total_mr_qty)
+	
+	def test_mr_to_partial_pi_TC_B_029(self):
+		# 1MR => 1RFQ => 1SQ => 1PO => 1PR => 2PI
+		args = frappe._dict()
+		args['mr'] = [{
+				"company" : "_Test Company",
+				"item_code" : "Testing-31",
+				"warehouse" : "Stores - _TC",
+				"qty" : 20,
+				"rate" : 100,
+			}
+		]
+
+		pi_received_qty = [10, 10]
+		total_pi_qty = 0
+		
+		doc_mr = make_material_request(**args['mr'][0])
+		doc_rfq = make_test_rfq(doc_mr.name)
+		self.assertEqual(doc_mr.docstatus, 1)
+		
+		doc_sq= make_test_sq(doc_rfq.name, 100)
+		doc_po = make_test_po(doc_sq.name, type='Supplier Quotation')
+		doc_pr = make_test_pr(doc_po.name)
+		self.assertEqual(doc_pr.docstatus, 1)
+		
+		for received_qty in pi_received_qty:
+			doc_pi = make_test_pi(doc_pr.name, received_qty=received_qty)
+			total_pi_qty += doc_pi.total_qty
+			self.assertEqual(doc_pi.docstatus, 1)
+
+		self.assertEqual(doc_mr.items[0].qty, total_pi_qty)
+		doc_mr.reload()
+		self.assertEqual(doc_mr.status, 'Received')
+
+
 def get_in_transit_warehouse(company):
 	if not frappe.db.exists("Warehouse Type", "Transit"):
 		frappe.get_doc(
@@ -2182,7 +2311,7 @@ def make_test_po(source_name, type = "Material Request", received_qty = 0, item_
 	if type == "Material Request":
 		doc_po = make_purchase_order(source_name)
 
-	if type == 'Supplier Quotation':
+	elif type == 'Supplier Quotation':
 		doc_po = create_po_aganist_sq(source_name)
 
 	if doc_po.supplier is None:
@@ -2240,10 +2369,3 @@ def create_mr_to_pi(**args):
 		source_name_pr = make_test_pr(source_name_po)
 		source_name_pi = make_test_pi(source_name_pr)
 		return source_name_pi
-
-
-@frappe.whitelist()
-def run_test():
-	mr_test_obj = TestMaterialRequest()
-	mr_test_obj.test_mr_to_partial_pi_TC_B_026()
-	return 1
