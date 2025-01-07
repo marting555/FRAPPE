@@ -1398,6 +1398,26 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(doc_po.total_qty, doc_pi.total_qty)
 		self.assertEqual(doc_po.grand_total, doc_pi.grand_total)
 	
+  def test_create_purchase_receipt_partial_TC_SCK_037(self):
+		po = create_purchase_order(rate=10000,qty=10)
+		po.submit()
+
+		pr = create_pr_against_po(po.name, received_qty=5)
+		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "_Test Warehouse - _TC"}, "actual_qty")
+		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':pr.name})
+		self.assertEqual(sle.qty_after_transaction, bin_qty)
+		self.assertEqual(sle.warehouse, po.get("items")[0].warehouse)
+
+		#if account setup in company
+		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
+			self.assertEqual(gl_temp_credit, 50000)
+
+		#if account setup in company
+		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit')
+			self.assertEqual(gl_stock_debit, 50000)
+      
 	def test_pi_return_TC_B_043(self):
 		from erpnext.accounts.doctype.purchase_invoice.purchase_invoice import make_debit_note
 		from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import check_gl_entries
