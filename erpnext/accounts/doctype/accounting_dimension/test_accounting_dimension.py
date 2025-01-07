@@ -41,6 +41,59 @@ class TestAccountingDimension(unittest.TestCase):
 
 		self.assertEqual(gle.get("department"), "_Test Department - _TC")
 
+	def test_cost_center_in_gl_and_reports_TC_ACC_067(self):
+		# Step 1: Create a Sales Invoice (SI) with a Cost Center
+		si = create_sales_invoice(do_not_save=1)
+		si.cost_center = "_Test Cost Center - _TC"
+		si.location = "Block 1"
+		si.append(
+			"items",
+			{
+				"item_code": "_Test Item",
+				"warehouse": "_Test Warehouse - _TC",
+				"qty": 1,
+				"rate": 100,
+				"income_account": "Sales - _TC",
+				"expense_account": "Cost of Goods Sold - _TC",
+				"cost_center": "_Test Cost Center - _TC",
+				"department": "_Test Department - _TC",
+				"location": "Block 1",
+			},
+		)
+
+		si.save()
+		si.submit()
+
+		# Step 2: Verify Cost Center appears in the General Ledger
+		gl_entries = frappe.db.get_all(
+			"GL Entry",
+			filters={"voucher_no": si.name},
+			fields=["account", "cost_center", "debit", "credit"],
+		)
+
+		# Assert that GL Entries include the specified Cost Center
+		self.assertTrue(
+			any(entry["cost_center"] == "_Test Cost Center - _TC" for entry in gl_entries),
+			"Cost Center not reflected in GL Entries",
+		)
+
+		# Step 3: Verify Cost Center in Profit and Loss Report
+		profit_and_loss_data = frappe.get_list(
+			"GL Entry",
+			filters={"account": "Sales - _TC", "cost_center": "_Test Cost Center - _TC"},
+			fields=["account", "debit", "credit", "cost_center"],
+		)
+		self.assertGreater(len(profit_and_loss_data), 0, "Cost Center not reflected in P&L Report")
+
+		# Step 4: Verify Cost Center in Balance Sheet Report
+		balance_sheet_data = frappe.get_list(
+			"GL Entry",
+			filters={"cost_center": "_Test Cost Center - _TC"},
+			fields=["account", "debit", "credit", "cost_center"],
+		)
+		self.assertGreater(len(balance_sheet_data), 0, "Cost Center not reflected in Balance Sheet")
+
+
 	def test_dimension_against_journal_entry(self):
 		je = make_journal_entry("Sales - _TC", "Sales Expenses - _TC", 500, save=False)
 		je.accounts[0].update({"department": "_Test Department - _TC"})
