@@ -671,21 +671,16 @@ class AccountsController(TransactionBase):
 		if frappe.flags.in_import and getdate(self.due_date) < getdate(posting_date):
 			self.due_date = posting_date
 
-		elif self.doctype == "Sales Invoice":
-			if not self.due_date:
+		elif self.doctype in ["Sales Invoice", "Purchase Invoice"]:
+			if self.doctype == "Sales Invoice" and not self.due_date:
 				frappe.throw(_("Due Date is mandatory"))
+
+			bill_date = self.bill_date if self.doctype == "Purchase Invoice" else None
 
 			validate_due_date(
 				posting_date=posting_date,
 				due_date=self.due_date,
-				template_name=self.payment_terms_template,
-				doctype=self.doctype,
-			)
-		elif self.doctype == "Purchase Invoice":
-			validate_due_date(
-				posting_date=posting_date,
-				due_date=self.due_date,
-				bill_date=self.bill_date,
+				bill_date=bill_date,
 				template_name=self.payment_terms_template,
 				doctype=self.doctype,
 			)
