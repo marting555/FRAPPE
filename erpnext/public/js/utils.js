@@ -670,7 +670,6 @@ erpnext.utils.update_child_items = function (opts) {
 			},
 			onchange: function () {
 				const me = this;
-				const row_index = me.doc.idx;
 
 				frm.call({
 					method: "erpnext.stock.get_item_details.get_item_details",
@@ -710,7 +709,7 @@ erpnext.utils.update_child_items = function (opts) {
 							const { qty, price_list_rate: rate, uom, conversion_factor } = r.message;
 
 							const row = dialog.fields_dict.trans_items.df.data.find(
-								(doc) => doc.idx == row_index
+								(doc) => doc.idx == me.doc.idx
 							);
 							if (row) {
 								Object.assign(row, {
