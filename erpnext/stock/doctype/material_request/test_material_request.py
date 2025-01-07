@@ -2079,6 +2079,130 @@ class TestMaterialRequest(FrappeTestCase):
 			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pr1.name, 'account': 'Stock In Hand - _TC'},'credit')
 			self.assertEqual(gl_stock_debit, 500)
 
+	def test_mr_to_partial_pr_TC_B_023(self):
+		# MR => 1RFQ => 2SQ => 2PO => 1PR => 1PI
+		args = frappe._dict()
+		args['mr'] = [{
+			"company": "_Test Company",
+			"item_code": "Testing-31",
+			"warehouse": "Stores - _TC",
+			"qty": 20,
+			"rate": 100,
+		}]
+		args['sq'] = [10, 10]
+		total_po_qty = sum(args['sq'])
+		total_pi_qty = 0
+		doc_mr = make_material_request(**args['mr'][0])
+		doc_rfq = make_test_rfq(doc_mr.name, received_qty=args['mr'][0]["qty"])
+		for sq_qty in args['sq']:
+			doc_sq = make_test_sq(doc_rfq.name, rate=100, received_qty=sq_qty)
+			doc_po = make_test_po(doc_sq.name, type='Supplier Quotation', received_qty=sq_qty)
+		doc_pr = make_test_pr(doc_po.name, received_qty=total_po_qty)
+		doc_pi = make_test_pi(doc_pr.name, received_qty=total_po_qty)
+		total_pi_qty += doc_pi.items[0].qty
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_mr.items[0].qty, total_pi_qty)
+		doc_mr.reload()
+		self.assertEqual(doc_mr.status, "Received")
+
+	def test_mr_to_partial_pi_TC_B_024(self):
+		# 2MR => 1RFQ => 1SQ => 1PO => 1PR => 1PI
+		args = frappe._dict()
+		args['mr'] = [
+			{
+				"company": "_Test Company",
+				"item_code": "Testing-31",
+				"warehouse": "Stores - _TC",
+				"qty": 10,
+				"rate": 100,
+			},
+			{
+				"company": "_Test Company",
+				"item_code": "Testing-31",
+				"warehouse": "Stores - _TC",
+				"qty": 15,
+				"rate": 100,
+			}
+		]
+		total_mr_qty = 0
+		rfq_name = None
+		for mr_dict in args['mr']:
+			doc_mr = make_material_request(**mr_dict)
+			self.assertEqual(doc_mr.docstatus, 1)
+			total_mr_qty += doc_mr.items[0].qty
+
+			if not rfq_name:
+					doc_rfq = make_test_rfq(doc_mr.name)
+					rfq_name = doc_rfq.name
+
+		doc_sq = make_test_sq(rfq_name, 100)
+		self.assertEqual(doc_sq.docstatus, 1)
+		item_dict = {
+			"item_code": "Testing-31",
+			"warehouse": "Stores - _TC",
+			"qty": total_mr_qty,
+			"rate": 100,
+			"supplier_quotation": doc_sq.name
+		}
+		doc_po = make_test_po(doc_sq.name, type='Supplier Quotation', item_dict=item_dict)
+		self.assertEqual(doc_po.docstatus, 1)
+
+		doc_pr = make_test_pr(doc_po.name)
+		self.assertEqual(doc_pr.docstatus, 1)
+
+		doc_pi = make_test_pi(doc_pr.name)
+		self.assertEqual(doc_pi.docstatus, 1)
+
+	def test_mr_to_partial_pi_TC_B_025(self):
+		# 2MR => 2RFQ => 1SQ => 1PO => 1PR => 1PI
+		args = frappe._dict()
+		args['mr'] = [
+			{
+				"company": "_Test Company",
+				"item_code": "Testing-31",
+				"warehouse": "Stores - _TC",
+				"qty": 10,
+				"rate": 100,
+			},
+			{
+				"company": "_Test Company",
+				"item_code": "Testing-31",
+				"warehouse": "Stores - _TC",
+				"qty": 15,
+				"rate": 100,
+			}
+		]
+
+		rfq_name_list = []
+		total_mr_qty = 0
+		for mr_dict in args['mr']:
+			doc_mr = make_material_request(**mr_dict)
+			self.assertEqual(doc_mr.docstatus, 1)
+			total_mr_qty += doc_mr.items[0].qty
+
+			doc_rfq = make_test_rfq(doc_mr.name)
+			self.assertEqual(doc_rfq.docstatus, 1)
+			rfq_name_list.append(doc_rfq.name)
+
+		doc_sq = make_test_sq(rfq_name_list, 100)
+		self.assertEqual(doc_sq.docstatus, 1)
+
+		item_dict = {
+			"item_code": "Testing-31",
+			"warehouse": "Stores - _TC",
+			"qty": total_mr_qty,
+			"rate": 100,
+			"supplier_quotation": doc_sq.name
+		}
+		doc_po = make_test_po(doc_sq.name, type='Supplier Quotation', item_dict=item_dict)
+		self.assertEqual(doc_po.docstatus, 1)
+
+		doc_pr = make_test_pr(doc_po.name)
+		self.assertEqual(doc_pr.docstatus, 1)
+
+		doc_pi = make_test_pi(doc_pr.name)
+		self.assertEqual(doc_pi.docstatus, 1)
+
 def get_in_transit_warehouse(company):
 	if not frappe.db.exists("Warehouse Type", "Transit"):
 		frappe.get_doc(
