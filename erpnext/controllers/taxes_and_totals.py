@@ -967,7 +967,6 @@ class calculate_taxes_and_totals:
 
 				# If only one pricing rule is applied
 				if len(applied_pricing_rules) == 1:
-
 					for d in applied_pricing_rules:
 						pricing_rule = frappe.get_cached_doc("Pricing Rule", d)
 
@@ -984,14 +983,11 @@ class calculate_taxes_and_totals:
 
 				# If multiple pricing rules are applied
 				if len(applied_pricing_rules) > 1:
-					
 					item.margin_rate_or_amount = 0
 					for d in applied_pricing_rules:
 						pricing_rule = frappe.get_cached_doc("Pricing Rule", d)
 
-						if (
-							pricing_rule.margin_rate_or_amount
-						):
+						if pricing_rule.margin_rate_or_amount:
 							if pricing_rule.margin_type == "Percentage":
 								item.margin_type = "Amount"
 								item.margin_rate_or_amount += item.price_list_rate * (
@@ -999,11 +995,12 @@ class calculate_taxes_and_totals:
 								)
 								has_margin = True
 
-							elif pricing_rule.margin_type == "Amount" and pricing_rule.currency == self.doc.currency:
+							elif (
+								pricing_rule.margin_type == "Amount"
+								and pricing_rule.currency == self.doc.currency
+							):
 								item.margin_type = "Amount"
-								item.margin_rate_or_amount += (
-									pricing_rule.margin_rate_or_amount
-								)
+								item.margin_rate_or_amount += pricing_rule.margin_rate_or_amount
 								has_margin = True
 
 				if not has_margin:
