@@ -676,16 +676,18 @@ class AccountsController(TransactionBase):
 				frappe.throw(_("Due Date is mandatory"))
 
 			validate_due_date(
-				posting_date,
-				self.due_date,
-				self.payment_terms_template,
+				posting_date=posting_date,
+				due_date=self.due_date,
+				template_name=self.payment_terms_template,
+				doctype=self.doctype,
 			)
 		elif self.doctype == "Purchase Invoice":
 			validate_due_date(
-				posting_date,
-				self.due_date,
-				self.bill_date,
-				self.payment_terms_template,
+				posting_date=posting_date,
+				due_date=self.due_date,
+				bill_date=self.bill_date,
+				template_name=self.payment_terms_template,
+				doctype=self.doctype,
 			)
 
 	def set_price_list_currency(self, buying_or_selling):
