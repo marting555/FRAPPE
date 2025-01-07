@@ -382,6 +382,7 @@ class TestPricingRule(IntegrationTestCase):
 			margin_type="Percentage",
 			margin_rate_or_amount=10,
 			rate_or_discount="Discount Amount",
+			apply_multiple_pricing_rules=1,
 			discount_amount=0,
 		)
 		make_pricing_rule(
@@ -389,6 +390,7 @@ class TestPricingRule(IntegrationTestCase):
 			margin_type="Percentage",
 			margin_rate_or_amount=5,
 			rate_or_discount="Discount Amount",
+			apply_multiple_pricing_rules=1,
 			discount_amount=0,
 		)
 		make_pricing_rule(
@@ -396,6 +398,7 @@ class TestPricingRule(IntegrationTestCase):
 			margin_type="Amount",
 			margin_rate_or_amount=100,
 			rate_or_discount="Discount Amount",
+			apply_multiple_pricing_rules=1,
 			discount_amount=0,
 		)
 
