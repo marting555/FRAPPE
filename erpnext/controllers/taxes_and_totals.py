@@ -962,28 +962,49 @@ class calculate_taxes_and_totals:
 		if item.price_list_rate:
 			if item.pricing_rules and not self.doc.ignore_pricing_rule:
 				has_margin = False
-				item.margin_rate_or_amount = 0
 
-				for d in get_applied_pricing_rules(item.pricing_rules):
-					pricing_rule = frappe.get_cached_doc("Pricing Rule", d)
+				applied_pricing_rules = get_applied_pricing_rules(item.pricing_rules)
 
-					if (
-						pricing_rule.margin_rate_or_amount
-						and pricing_rule.currency == self.doc.currency
-					):
-						if pricing_rule.margin_type == "Percentage":
-							item.margin_type = "Amount"
-							item.margin_rate_or_amount += item.price_list_rate * (
-								pricing_rule.margin_rate_or_amount / 100
+				# If only one pricing rule is applied
+				if len(applied_pricing_rules) == 1:
+
+					for d in applied_pricing_rules:
+						pricing_rule = frappe.get_cached_doc("Pricing Rule", d)
+
+						if pricing_rule.margin_rate_or_amount and (
+							(
+								pricing_rule.currency == self.doc.currency
+								and pricing_rule.margin_type in ["Amount", "Percentage"]
 							)
+							or pricing_rule.margin_type == "Percentage"
+						):
+							item.margin_type = pricing_rule.margin_type
+							item.margin_rate_or_amount = pricing_rule.margin_rate_or_amount
 							has_margin = True
 
-						elif pricing_rule.margin_type == "Amount":
-							item.margin_type = "Amount"
-							item.margin_rate_or_amount += (
-								pricing_rule.margin_rate_or_amount
-							)
-							has_margin = True
+				# If multiple pricing rules are applied
+				if len(applied_pricing_rules) > 1:
+					
+					item.margin_rate_or_amount = 0
+					for d in applied_pricing_rules:
+						pricing_rule = frappe.get_cached_doc("Pricing Rule", d)
+
+						if (
+							pricing_rule.margin_rate_or_amount
+						):
+							if pricing_rule.margin_type == "Percentage":
+								item.margin_type = "Amount"
+								item.margin_rate_or_amount += item.price_list_rate * (
+									pricing_rule.margin_rate_or_amount / 100
+								)
+								has_margin = True
+
+							elif pricing_rule.margin_type == "Amount" and pricing_rule.currency == self.doc.currency:
+								item.margin_type = "Amount"
+								item.margin_rate_or_amount += (
+									pricing_rule.margin_rate_or_amount
+								)
+								has_margin = True
 
 				if not has_margin:
 					item.margin_type = None
