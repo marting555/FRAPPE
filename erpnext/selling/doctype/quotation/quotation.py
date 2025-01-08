@@ -257,11 +257,6 @@ class Quotation(SellingController):
 
 		else:
 			frappe.throw(_("Cannot set as Lost as Sales Order is made."))
-	def before_save(self):
-		print("Befor saving #################################")
-	
-	def on_update_after_submit(self):
-		print("on update after submit saving #################################")
 
 		
 

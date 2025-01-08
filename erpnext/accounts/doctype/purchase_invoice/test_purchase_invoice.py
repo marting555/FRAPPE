@@ -2957,6 +2957,206 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi_status_after_reconcile = frappe.db.get_value("Purchase Invoice", pi.name, "status")
 		self.assertEqual(pi_status_after_reconcile, "Unpaid")
 
+	def test_partly_paid_of_pi_to_pr_to_pe_TC_B_081(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
+		pi = make_purchase_invoice(
+			qty=1,
+			item_code="_Test Item",
+			supplier = "_Test Supplier",
+			company = "_Test Company",
+			rate = 500
+		)
+
+		pi.save()
+		pi.submit()
+
+		pr = frappe.new_doc('Payment Request')
+		pr.payment_request_type = "Outward"
+		pr.party_type = "Supplier"
+		pr.party = "_Test Supplier"
+		pr.reference_doctype = "Purchase Invoice"
+		pr.reference_name = pi.name
+		pr.grand_total = 250
+
+		pr.save()
+		pr.submit()
+
+		pe = create_payment_entry(
+			company="_Test Company",
+			payment_type="Pay",
+			party_type="Supplier",
+			party=f"_Test Supplier",
+			paid_to="Creditors - _TC",
+			paid_from ="Cash - _TC",
+			paid_amount=pr.grand_total,
+		)
+		pe.append("references", {"reference_doctype": "Purchase Invoice", "reference_name": pi.name,"allocated_amount":pr.grand_total})
+		pe.save()
+		pe.submit()
+
+		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
+		self.assertEqual(pi_status, "Partly Paid")
+
+	def test_fully_paid_of_pi_to_pr_to_pe_TC_B_082(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
+		pi = make_purchase_invoice(
+			qty=1,
+			item_code="_Test Item",
+			supplier = "_Test Supplier",
+			company = "_Test Company",
+			rate = 500
+		)
+
+		pi.save()
+		pi.submit()
+
+		pr = frappe.new_doc('Payment Request')
+		pr.payment_request_type = "Outward"
+		pr.party_type = "Supplier"
+		pr.party = "_Test Supplier"
+		pr.reference_doctype = "Purchase Invoice"
+		pr.reference_name = pi.name
+		pr.grand_total = 500
+
+		pr.save()
+		pr.submit()
+
+		pe = create_payment_entry(
+			company="_Test Company",
+			payment_type="Pay",
+			party_type="Supplier",
+			party="_Test Supplier",
+			paid_to="Creditors - _TC",
+			paid_from ="Cash - _TC",
+			paid_amount=pr.grand_total,
+		)
+		pe.append("references", {"reference_doctype": "Purchase Invoice", "reference_name": pi.name,"allocated_amount":pr.grand_total})
+		pe.save()
+		pe.submit()
+
+		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
+		self.assertEqual(pi_status, "Paid")
+
+	def test_partly_paid_of_pi_to_pr_to_pe_with_gst_TC_B_083(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
+
+		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
+		purchase_tax.title = "TEST"
+		purchase_tax.company = "_Test Company"
+		purchase_tax.tax_category = "_Test Tax Category 1"
+
+		purchase_tax.append("taxes",{
+			"category":"Total",
+			"add_deduct_tax":"Add",
+			"charge_type":"On Net Total",
+			"account_head":"_Test Account Excise Duty - _TC",
+			"_Test Account Excise Duty":"_Test Account Excise Duty",
+			"rate":100,
+			"description":"GST"
+		})
+
+		purchase_tax.save()
+		pi = make_purchase_invoice(
+			qty=1,
+			item_code="_Test Item",
+			supplier = "_Test Supplier",
+			company = "_Test Company",
+			rate = 500,
+			do_not_save = True
+			
+		)
+		
+		pi.taxes_and_charges = purchase_tax.name
+		pi.save()
+		pi.submit()
+
+		pr = frappe.new_doc('Payment Request')
+		pr.payment_request_type = "Outward"
+		pr.party_type = "Supplier"
+		pr.party = "_Test Supplier"
+		pr.reference_doctype = "Purchase Invoice"
+		pr.reference_name = pi.name
+		pr.grand_total = 250
+
+		pr.save()
+		pr.submit()
+
+		pe = create_payment_entry(
+			company="_Test Company",
+			payment_type="Pay",
+			party_type="Supplier",
+			party=f"_Test Supplier",
+			paid_to="Creditors - _TC",
+			paid_from ="Cash - _TC",
+			paid_amount=pr.grand_total,
+		)
+		pe.append("references", {"reference_doctype": "Purchase Invoice", "reference_name": pi.name,"allocated_amount":pr.grand_total})
+		pe.save()
+		pe.submit()
+
+		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
+		self.assertEqual(pi_status, "Partly Paid")
+
+	def test_fully_paid_of_pi_to_pr_to_pe_with_gst_TC_B_084(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
+
+		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
+		purchase_tax.title = "TEST"
+		purchase_tax.company = "_Test Company"
+		purchase_tax.tax_category = "_Test Tax Category 1"
+
+		purchase_tax.append("taxes",{
+			"category":"Total",
+			"add_deduct_tax":"Add",
+			"charge_type":"On Net Total",
+			"account_head":"_Test Account Excise Duty - _TC",
+			"_Test Account Excise Duty":"_Test Account Excise Duty",
+			"rate":100,
+			"description":"GST"
+		})
+
+		purchase_tax.save()
+		pi = make_purchase_invoice(
+			qty=1,
+			item_code="_Test Item",
+			supplier = "_Test Supplier",
+			company = "_Test Company",
+			rate = 500,
+			do_not_save = True
+			
+		)
+	
+		pi.taxes_and_charges = purchase_tax.name
+		pi.save()
+		pi.submit()
+
+		pr = frappe.new_doc('Payment Request')
+		pr.payment_request_type = "Outward"
+		pr.party_type = "Supplier"
+		pr.party = "_Test Supplier"
+		pr.reference_doctype = "Purchase Invoice"
+		pr.reference_name = pi.name
+		pr.grand_total = pi.grand_total
+
+		pr.save()
+		pr.submit()
+
+		pe = create_payment_entry(
+			company="_Test Company",
+			payment_type="Pay",
+			party_type="Supplier",
+			party=f"_Test Supplier",
+			paid_to="Creditors - _TC",
+			paid_from ="Cash - _TC",
+			paid_amount=pr.grand_total,
+		)
+		pe.append("references", {"reference_doctype": "Purchase Invoice", "reference_name": pi.name,"allocated_amount":pr.grand_total})
+		pe.save()
+		pe.submit()
+
+		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
+		self.assertEqual(pi_status, "Paid")
+
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
