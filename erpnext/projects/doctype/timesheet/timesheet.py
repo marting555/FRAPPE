@@ -166,17 +166,7 @@ class Timesheet(Document):
 			if data.task and data.task not in tasks:
 				task = frappe.get_doc("Task", data.task)
 				task.update_time_and_costing()
-<<<<<<< HEAD
-				task.save()
-=======
-				time_logs_completed = all(tl.completed for tl in self.time_logs if tl.task == task.name)
-
-				if time_logs_completed:
-					task.status = "Completed"
-				else:
-					task.status = "Working"
 				task.save(ignore_permissions=True)
->>>>>>> 9e760e54a5 (fix(Timesheet): ignore permissions when updating Task and Project (#45168))
 				tasks.append(data.task)
 
 			if data.project and data.project not in projects:
