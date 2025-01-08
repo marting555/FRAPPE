@@ -516,6 +516,12 @@ frappe.ui.form.on("Stock Entry", {
 			frm.trigger("toggle_display_account_head");
 
 			erpnext.accounts.dimensions.update_dimension(frm, frm.doctype);
+
+			let stock_instance = new erpnext.stock.StockEntry();
+			stock_instance.frm = frm;
+			stock_instance.set_default_account("stock_adjustment_account", "expense_account");
+			stock_instance.set_default_account("cost_center", "cost_center");
+			frm.refresh_fields("items");
 		}
 	},
 
@@ -1060,11 +1066,9 @@ erpnext.stock.StockEntry = class StockEntry extends erpnext.stock.StockControlle
 
 	onload_post_render() {
 		var me = this;
-		this.set_default_account(function () {
-			if (me.frm.doc.__islocal && me.frm.doc.company && !me.frm.doc.amended_from) {
-				me.frm.trigger("company");
-			}
-		});
+		if (me.frm.doc.__islocal && me.frm.doc.company && !me.frm.doc.amended_from) {
+			me.frm.trigger("company");
+		}
 
 		this.frm.get_field("items").grid.set_multiple_add("item_code", "qty");
 	}
@@ -1143,22 +1147,21 @@ erpnext.stock.StockEntry = class StockEntry extends erpnext.stock.StockControlle
 		this.clean_up();
 	}
 
-	set_default_account(callback) {
+	set_default_account(company_fieldname, fieldname) {
 		var me = this;
 
 		if (this.frm.doc.company && erpnext.is_perpetual_inventory_enabled(this.frm.doc.company)) {
 			return this.frm.call({
 				method: "erpnext.accounts.utils.get_company_default",
 				args: {
-					fieldname: "stock_adjustment_account",
+					fieldname: company_fieldname,
 					company: this.frm.doc.company,
 				},
 				callback: function (r) {
 					if (!r.exc) {
 						$.each(me.frm.doc.items || [], function (i, d) {
-							if (!d.expense_account) d.expense_account = r.message;
+							d[fieldname] = r.message;
 						});
-						if (callback) callback();
 					}
 				},
 			});
