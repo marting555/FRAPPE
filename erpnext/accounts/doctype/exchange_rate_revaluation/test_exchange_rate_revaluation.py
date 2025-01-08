@@ -300,7 +300,7 @@ class TestExchangeRateRevaluation(AccountsTestMixin, FrappeTestCase):
 		gain_loss_account("_Test Company")
 		company = frappe.get_doc("Company", "_Test Company")
 		self.assertEqual(
-			company.exchange_gain_loss_account, "_Test Exchange Gain/Loss - _TC"
+			company.exchange_gain_loss_account, "Exchange Gain/Loss - _TC"
 		)
 		self.assertEqual(
 			company.unrealized_exchange_gain_loss_account,
@@ -343,7 +343,7 @@ class TestExchangeRateRevaluation(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(je.total_credit, 6300.0)
 
 		for account in je.accounts:
-			if account.account == "_Test Exchange Gain/Loss - _TC":
+			if account.account == "Exchange Gain/Loss - _TC":
 				if account.credit:
 					self.assertEqual(account.credit, 6000.0)
 				if account.debit:
@@ -364,7 +364,7 @@ class TestExchangeRateRevaluation(AccountsTestMixin, FrappeTestCase):
 		gain_loss_account("_Test Company")
 		company = frappe.get_doc("Company", "_Test Company")
 		self.assertEqual(
-			company.exchange_gain_loss_account, "_Test Exchange Gain/Loss - _TC"
+			company.exchange_gain_loss_account, "Exchange Gain/Loss - _TC"
 		)
 		self.assertEqual(
 			company.unrealized_exchange_gain_loss_account,
@@ -408,7 +408,7 @@ class TestExchangeRateRevaluation(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(je.total_credit, 6300.0)
 		
 		for account in je.accounts:
-			if account.account == "_Test Exchange Gain/Loss - _TC":
+			if account.account == "Exchange Gain/Loss - _TC":
 				if account.credit:
 					self.assertEqual(account.credit, 6000.0)
 				if account.debit:
@@ -426,7 +426,7 @@ class TestExchangeRateRevaluation(AccountsTestMixin, FrappeTestCase):
 		gain_loss_account("_Test Company")
 		company = frappe.get_doc("Company", "_Test Company")
 		self.assertEqual(
-			company.exchange_gain_loss_account, "_Test Exchange Gain/Loss - _TC"
+			company.exchange_gain_loss_account, "Exchange Gain/Loss - _TC"
 		)
 		self.assertEqual(
 			company.unrealized_exchange_gain_loss_account,
@@ -471,7 +471,7 @@ class TestExchangeRateRevaluation(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(je.total_credit, 6600.0)
 
 		for account in je.accounts:
-			if account.account == "_Test Exchange Gain/Loss - _TC":
+			if account.account == "Exchange Gain/Loss - _TC":
 				if account.credit:
 					self.assertEqual(account.credit, 6300.0)
 				if account.debit:
@@ -480,7 +480,6 @@ class TestExchangeRateRevaluation(AccountsTestMixin, FrappeTestCase):
 				self.assertEqual(account.credit, 300.0)
     
 	def test_exchange_rate_for_overdue_si_TC_ACC_034(self):
-		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
 		create_records_for_err()
 		customer = frappe.get_doc("Customer", "_Test Customer USD")
 
@@ -489,7 +488,7 @@ class TestExchangeRateRevaluation(AccountsTestMixin, FrappeTestCase):
 		gain_loss_account("_Test Company")
 		company = frappe.get_doc("Company", "_Test Company")
 		self.assertEqual(
-			company.exchange_gain_loss_account, "_Test Exchange Gain/Loss - _TC"
+			company.exchange_gain_loss_account, "Exchange Gain/Loss - _TC"
 		)
 		self.assertEqual(
 			company.unrealized_exchange_gain_loss_account,
@@ -512,7 +511,7 @@ class TestExchangeRateRevaluation(AccountsTestMixin, FrappeTestCase):
 		
 		err = frappe.new_doc("Exchange Rate Revaluation")
 		err.company = "_Test Company"
-		err.posting_date = today()
+		err.posting_date = add_days(today(),-1)
 		accounts = err.get_accounts_data()
 		err.extend("accounts", accounts)
 
@@ -535,14 +534,201 @@ class TestExchangeRateRevaluation(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(je.total_credit, 6600.0)
 
 		for account in je.accounts:
-			if account.account == "_Test Exchange Gain/Loss - _TC":
+			if account.account == "Exchange Gain/Loss - _TC":
 				if account.credit:
 					self.assertEqual(account.credit, 6300.0)
 				if account.debit:
 					self.assertEqual(account.debit, 6600.0)
 			if account.account == "_Test Unrealized Profit - _TC":
 				self.assertEqual(account.credit, 300.0)
+    
+	def test_debtor_payment_with_revaluation_TC_ACC_111(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			create_purchase_invoice,
+		)
+		from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import (
+			get_jv_entry_account,
+			check_gl_entries
+      	)
+
+		create_records_for_err()
+		supplier = frappe.get_doc("Supplier", "_Test Supplier USD")
+
+		self.assertEqual(supplier.accounts[0].account, "_Test Payable USD - _TC")
+
+		gain_loss_account("_Test Company")
+		company = frappe.get_doc("Company", "_Test Company")
+		self.assertEqual(
+			company.exchange_gain_loss_account, "Exchange Gain/Loss - _TC"
+		)
+		self.assertEqual(
+			company.unrealized_exchange_gain_loss_account,
+			"_Test Unrealized Profit - _TC",
+		)
+		pi = create_purchase_invoice(
+			supplier=supplier.name,
+			company="_Test Company",
+			currency="USD",
+			item_code=self.item,
+			rate=100,
+			credit_to="_Test Payable USD - _TC",
+		)
+		pi.conversion_rate = 63
+		pi.save()
+		pi.submit()
+
+		err = frappe.new_doc("Exchange Rate Revaluation")
+		err.company = "_Test Company"
+		accounts = err.get_accounts_data()
+		err.extend("accounts", accounts)
+
+		row = err.accounts[0]
+		row.new_exchange_rate = 60
+		row.new_balance_in_base_currency = flt(
+			row.new_exchange_rate * flt(row.balance_in_account_currency)
+		)
+		row.gain_loss = row.new_balance_in_base_currency - flt(row.balance_in_base_currency)
+		err.set_total_gain_loss()
+		err = err.save().submit()
+
+		err_journals = err.make_jv_entries()
+		je = frappe.get_doc("Journal Entry", err_journals.get("revaluation_jv"))
+		je = je.submit()
+		je.reload()
+
+		self.assertEqual(je.voucher_type, "Exchange Rate Revaluation")
+		self.assertEqual(je.total_debit, 6300.0)
+		self.assertEqual(je.total_credit, 6300.0)
 		
+		for account in je.accounts:
+			if account.account == "Exchange Gain/Loss - _TC":
+				if account.credit:
+					self.assertEqual(account.credit, 6000.0)
+				if account.debit:
+					self.assertEqual(account.debit, 6300.0)
+			if account.account == "_Test Unrealized Profit - _TC":
+				self.assertEqual(account.credit, 300.0)
+		
+		pe=get_payment_entry(pi.doctype,pi.name)
+		pe.target_exchange_rate=65
+		pe.save()
+		pe.submit()
+		
+		jea_parent = get_jv_entry_account(
+			credit_to=pi.credit_to,
+			reference_name=pi.name,
+			party_type="Supplier",
+			party=supplier.name,
+			credit=200
+		)
+
+		expected_jv_entries = [
+				["Exchange Gain/Loss - _TC", 200.0, 0.0, pe.posting_date],
+				["_Test Payable USD - _TC", 0.0, 200.0, pe.posting_date]
+			]
+			
+		check_gl_entries(
+			doc=self,
+			voucher_no=jea_parent.parent,
+			expected_gle=expected_jv_entries,
+			posting_date=pi.posting_date,
+			voucher_type="Journal Entry"
+		)
+
+	def	test_creditor_payment_with_revaluation_TC_ACC_110(self):
+		from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import get_jv_entry_account
+		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import check_gl_entries
+		create_records_for_err()
+		customer = frappe.get_doc("Customer", "_Test Customer USD")
+
+		self.assertEqual(customer.accounts[0].account, "_Test Receivable USD - _TC")
+
+		gain_loss_account("_Test Company")
+		company = frappe.get_doc("Company", "_Test Company")
+		self.assertEqual(
+			company.exchange_gain_loss_account, "Exchange Gain/Loss - _TC"
+		)
+		self.assertEqual(
+			company.unrealized_exchange_gain_loss_account,
+			"_Test Unrealized Profit - _TC",
+		)
+
+		si= create_sales_invoice(
+			company="_Test Company",
+			customer="_Test Customer USD",
+			debit_to="_Test Receivable USD - _TC",
+			currency="USD",
+			item=self.item,
+			item_name=self.item,
+			rate=100,
+			conversion_rate=63
+		)
+		si.save()
+		si.submit()
+
+		err = frappe.new_doc("Exchange Rate Revaluation")
+		err.company = "_Test Company"
+		err.posting_date = today()
+		accounts = err.get_accounts_data()
+		err.extend("accounts", accounts)
+
+		row = err.accounts[0]
+		row.new_exchange_rate = 60
+		row.new_balance_in_base_currency = flt(
+			row.new_exchange_rate * flt(row.balance_in_account_currency)
+		)
+		row.gain_loss = row.new_balance_in_base_currency - flt(row.balance_in_base_currency)
+		err.set_total_gain_loss()
+		err = err.save().submit()
+
+		err_journals = err.make_jv_entries()
+		je = frappe.get_doc("Journal Entry", err_journals.get("revaluation_jv"))
+		je = je.submit()
+		je.reload()
+
+		self.assertEqual(je.voucher_type, "Exchange Rate Revaluation")
+		self.assertEqual(je.total_debit, 6300.0)
+		self.assertEqual(je.total_credit, 6300.0)
+
+		for account in je.accounts:
+			if account.account == "Exchange Gain/Loss - _TC":
+				if account.credit:
+					self.assertEqual(account.credit, 6300.0)
+				if account.debit:
+					self.assertEqual(account.debit, 6600.0)
+			if account.account == "_Test Unrealized Profit - _TC":
+				self.assertEqual(account.debit, 300.0)
+		pe = get_payment_entry("Sales Invoice", si.name)    
+		pe.source_exchange_rate = 65
+		pe.save()
+		pe.submit()
+
+		jv_name = get_jv_entry_account(
+			credit_to=si.debit_to,
+			reference_name=si.name,
+			party_type='Customer',
+			party=pe.party,
+			debit=200
+		)
+		
+		self.assertEqual(
+			frappe.db.get_value("Journal Entry", jv_name.parent, "voucher_type"),
+			"Exchange Gain Or Loss"
+		)
+
+		expected_jv_entries = [
+			["Exchange Gain/Loss - _TC", 0.0, 200.0, pe.posting_date],
+			["_Test Receivable USD - _TC", 200.0, 0.0, pe.posting_date]
+		]
+		check_gl_entries(
+			doc=self,
+			voucher_no=jv_name.parent,
+			expected_gle=expected_jv_entries,
+			posting_date=pe.posting_date,
+			voucher_type="Journal Entry"
+		)
+    
+
 def gain_loss_account(company:str):
 	doc = frappe.get_doc("Company", company)
 	if not doc.exchange_gain_loss_account or doc.exchange_gain_loss_account != "Exchange Gain/Loss - _TC":
