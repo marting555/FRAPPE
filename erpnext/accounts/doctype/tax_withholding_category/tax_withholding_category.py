@@ -299,6 +299,10 @@ def get_tax_amount(party_type, parties, inv, tax_details, posting_date, pan_no=N
 	if tax_deducted_on_advances:
 		tax_deducted += get_advance_tax_across_fiscal_year(tax_deducted_on_advances, tax_details)
 
+	# if tds account is chenged.
+	if not tax_deducted and party_type == "Supplier":
+		tax_deducted += is_tax_deducted_on_the_basis_of_inv(vouchers)
+
 	tax_amount = 0
 
 	if party_type == "Supplier":
@@ -334,6 +338,20 @@ def get_tax_amount(party_type, parties, inv, tax_details, posting_date, pan_no=N
 		tax_amount = normal_round(tax_amount)
 
 	return tax_amount, tax_deducted, tax_deducted_on_advances, voucher_wise_amount
+
+
+def is_tax_deducted_on_the_basis_of_inv(vouchers):
+	return sum(
+		frappe.db.get_all(
+			"Purchase Taxes and Charges",
+			filters={
+				"parent": ["in", vouchers],
+				"is_tax_withholding_account": 1,
+				"parenttype": "Purchase Invoice",
+			},
+			pluck="base_tax_amount_after_discount_amount",
+		)
+	)
 
 
 def get_invoice_vouchers(parties, tax_details, company, party_type="Supplier"):
