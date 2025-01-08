@@ -116,3 +116,17 @@ class AccountsSettings(Document):
 	def validate_pending_reposts(self):
 		if self.acc_frozen_upto:
 			check_pending_reposting(self.acc_frozen_upto)
+
+	def before_save(self):
+		doc_before_save = self.get_doc_before_save()
+		if doc_before_save.cron_interval != self.cron_interval:
+			if self.cron_interval > 0 and self.cron_interval < 60:
+				doc = frappe.get_doc(
+					"Scheduled Job Type",
+					{
+						"method": "erpnext.accounts.doctype.process_payment_reconciliation.process_payment_reconciliation.trigger_reconciliation_for_queued_docs"
+					},
+				)
+				doc.update({"cron_format": f"0/{self.cron_interval} * * * *"}).save()
+			else:
+				frappe.throw(_("Cron Interval should be between 1 and 59 Min"))
