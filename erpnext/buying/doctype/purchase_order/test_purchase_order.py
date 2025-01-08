@@ -1601,6 +1601,57 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		frappe.db.commit()
 
+
+	def test_status_po_on_pi_cancel_TC_B_038(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
+		from erpnext.accounts.doctype.unreconcile_payment.unreconcile_payment import payment_reconciliation_record_on_unreconcile,create_unreconcile_doc_for_selection
+
+		po = create_purchase_order()
+		
+		pi = make_pi_from_po(po.name)
+		pi.update_stock = 1
+		pi.insert()
+		pi.submit()
+
+		pe = create_payment_entry(
+			company=f"{pi.company}",
+			payment_type="Pay",
+			party_type="Supplier",
+			party=f"{pi.supplier}",
+			paid_from="Cash - _TC",
+			paid_to="Creditors - _TC",
+			paid_amount=pi.grand_total,
+		)
+		
+		pe.append('references',{
+			"reference_doctype": "Purchase Invoice",
+			"reference_name": pi.name,
+			"allocated_amount":pi.grand_total
+		})
+		pe.save()
+		pe.submit()
+
+		before_pi_cancel_status = frappe.db.get_value("Purchase Order", po.name, "status")
+		self.assertEqual(before_pi_cancel_status, "Completed")
+		
+		header = {
+			"company":"_Test Company",
+			"unreconcile":1,
+			"clearing_date":"2025-01-07",
+			"party_type":"Supplier",
+			"party":"_Test Supplier"
+		}
+		selection = {"company":"_Test Company","voucher_type":"Payment Entry","voucher_no":f"{pe.name}","against_voucher_type":"Purchase Invoice","against_voucher_no":f"{pi.name}","allocated_amount":pi.rounded_total}
+		allocation = [{"reference_type":"Payment Entry","reference_name":pe.name,"invoice_type":"Purchase Invoice","invoice_number":pi.name,"allocated_amount":pi.rounded_total}]
+		payment_reconciliation_record_on_unreconcile(header=header,allocation=allocation)
+		create_unreconcile_doc_for_selection(selections = json.dumps([selection]))
+		
+		pi.reload()
+		pi.cancel()
+		after_pi_cancel_status = frappe.db.get_value("Purchase Order", po.name, "status")
+		self.assertEqual(after_pi_cancel_status, "To Receive and Bill")
+
+
 	def test_full_payment_request_TC_B_030(self):
 		# Scenario : PO => Payment Request
 		
@@ -1908,6 +1959,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			fields=["account", "debit", "credit"]
 		)
 		self.assertGreater(len(gl_entries), 0)
+
 
 
 def create_po_for_sc_testing():
