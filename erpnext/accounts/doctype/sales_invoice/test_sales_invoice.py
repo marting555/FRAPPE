@@ -4327,7 +4327,7 @@ class TestSalesInvoice(FrappeTestCase):
 			party=pe.party,
 			credit=300
 		)
-		print(jv_name)
+	
 		self.assertEqual(
 			frappe.db.get_value("Journal Entry", jv_name.parent, "voucher_type"),
 			"Exchange Gain Or Loss"

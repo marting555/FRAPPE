@@ -2803,6 +2803,135 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				voucher_type="Journal Entry"
 			)
 	
+	def test_single_payment_request_for_purchase_invoice_TC_ACC_035(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			create_records as records_for_pi,
+			create_purchase_invoice,
+			make_test_item,
+		)
+		from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
+
+		records_for_pi('_Test Supplier')
+
+		supplier = frappe.get_doc('Supplier', '_Test Supplier')
+
+		if supplier:
+			item=make_test_item()
+			pi = create_purchase_invoice(
+				supplier=supplier.name,
+				currency="INR",
+				rate=5000,
+				item_code=item.name,
+			)
+			pi.save()
+			pi.submit()
+
+			pr = make_payment_request(
+				dt="Purchase Invoice",
+				dn=pi.name,
+				party_type="Supplier",
+				party=supplier.name,
+				grand_total=5000,
+				submit_doc=1,
+				return_doc=1,
+			)
+			pe=pr.create_payment_entry()
+			pe.save()
+			pe.submit()
+			pr.load_from_db()
+			self.assertEqual(pr.status, "Paid")
+			pe.load_from_db()
+			expected_gle = [
+				['Cash - _TC', 0.0, 5000.0, pe.posting_date],
+				['Creditors - _TC', 5000.0, 0.0, pe.posting_date]
+			]
+			check_gl_entries(
+				doc=self,
+				voucher_no=pe.name,
+				expected_gle=expected_gle,
+				voucher_type="Payment Entry",
+				posting_date=pe.posting_date
+			)
+			pi.load_from_db()
+			self.assertEqual(pi.status, "Paid")
+	def test_multi_payment_request_for_purchase_invoice_TC_ACC_036(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			create_records as records_for_pi,
+			create_purchase_invoice,
+			make_test_item,
+		)
+		from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
+
+		records_for_pi('_Test Supplier')
+
+		supplier = frappe.get_doc('Supplier', '_Test Supplier')
+
+		if supplier:
+			item=make_test_item()
+			pi = create_purchase_invoice(
+				supplier=supplier.name,
+				currency="INR",
+				rate=5000,
+				item_code=item.name,
+			)
+			pi.save()
+			pi.submit()
+
+			pr = make_payment_request(
+				dt="Purchase Invoice",
+				dn=pi.name,
+				party_type="Supplier",
+				party=supplier.name,
+				return_doc=1,
+			)
+			pr.grand_total = pr.grand_total / 2
+			pr.save()
+			pr.submit()
+			pe=pr.create_payment_entry()
+			pe.save()
+			pe.submit()
+			pr.load_from_db()
+			self.assertEqual(pr.status, "Paid")
+			pe.load_from_db()
+			expected_gle = [
+				['Cash - _TC', 0.0, 2500.0, pe.posting_date],
+				['Creditors - _TC', 2500.0, 0.0, pe.posting_date]
+			]
+			check_gl_entries(
+				doc=self,
+				voucher_no=pe.name,
+				expected_gle=expected_gle,
+				voucher_type="Payment Entry",
+				posting_date=pe.posting_date
+			)
+			pi.load_from_db()
+			self.assertEqual(pi.status, "Partly Paid")
+			_pr = make_payment_request(
+				dt="Purchase Invoice",
+				dn=pi.name,
+				party_type="Supplier",
+				party=supplier.name,
+				return_doc=1,
+				submit_doc=1,
+			)
+			_pe=_pr.create_payment_entry()
+			_pe.save()	
+			_pe.submit()
+			_pr.load_from_db()		
+			self.assertEqual(_pr.status, "Paid")
+			_pe.load_from_db()		
+			expected_gle = [
+				['Cash - _TC', 0.0, 2500.0, _pe.posting_date],
+				['Creditors - _TC', 2500.0, 0.0, _pe.posting_date]
+			]
+			check_gl_entries(
+				doc=self,
+				voucher_no=_pe.name,
+				expected_gle=expected_gle,
+				voucher_type="Payment Entry",
+				posting_date=_pe.posting_date
+			)
+	
 	def test_invoice_status_on_payment_entry_submit_TC_B_035_and_TC_B_037(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
 		from erpnext.accounts.doctype.unreconcile_payment.unreconcile_payment import payment_reconciliation_record_on_unreconcile,create_unreconcile_doc_for_selection
@@ -2884,7 +3013,7 @@ def check_gl_entries(
 		for col in additional_columns:
 			query = query.select(gl[col])
 	gl_entries = query.run(as_dict=True)
-	
+ 
 	for i, gle in enumerate(gl_entries):
 		doc.assertEqual(expected_gle[i][0], gle.account)
 		doc.assertEqual(expected_gle[i][1], gle.debit)
