@@ -26,7 +26,7 @@ from erpnext.stock.doctype.material_request.test_material_request import make_ma
 from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 	make_purchase_invoice as make_pi_from_pr,
 )
-
+from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
 
 class TestPurchaseOrder(FrappeTestCase):
 	def test_purchase_order_qty(self):
@@ -1399,8 +1399,8 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(doc_po.grand_total, doc_pi.grand_total)
 	
 	def test_create_purchase_receipt_partial_TC_SCK_037(self):
-			po = create_purchase_order(rate=10000,qty=10)
-			po.submit()
+		po = create_purchase_order(rate=10000,qty=10)
+		po.submit()
 
 			pr = create_pr_against_po(po.name, received_qty=5)
 			bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "_Test Warehouse - _TC"}, "actual_qty")
@@ -1601,6 +1601,36 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		frappe.db.commit()
 
+	def test_full_payment_request_TC_B_030(self):
+		# Scenario : PO => Payment Request
+		
+		po_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 6,
+			"rate" : 100,
+		}
+		
+		doc_po = create_purchase_order(**po_data)
+		self.assertEqual(doc_po.docstatus, 1)
+		
+		args = frappe._dict()
+		args = {
+				"dt": doc_po.doctype,
+				"dn": doc_po.name,
+				"recipient_id": doc_po.contact_email,
+				"payment_request_type": 'Outward',
+				"party_type":  "Supplier",
+				"party":  doc_po.supplier,
+				"party_name": doc_po.supplier_name
+			}
+		dict_pr = make_payment_request(**args)
+		doc_pr = frappe.get_doc("Payment Request", dict_pr.name)
+		doc_pr.submit()
+		self.assertEqual(doc_pr.docstatus, 1)
+		self.assertEqual(doc_pr.reference_name, doc_po.name)
+		self.assertEqual(doc_pr.grand_total, doc_po.grand_total)
 
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (

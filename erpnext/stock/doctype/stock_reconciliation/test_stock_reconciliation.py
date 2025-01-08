@@ -1474,6 +1474,47 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 
 		frappe.db.rollback()
 		
+	def test_stock_reco_cancel_and_TC_SCK_051(self):
+		warehouse = create_warehouse(
+			"_Test reco Warehouse",
+			{"parent_warehouse": "All Warehouses - _TC"},
+		)
+
+		item = create_item(
+			"_Test Stock Reco Item",
+			is_stock_item=1,
+			valuation_rate=500,
+			warehouse="_Test reco Warehouse",
+		)
+
+		stock_reco = create_stock_reconciliation(
+			item_code=item.name,
+			qty=100,
+			rate=500,
+			posting_date="2024-04-01",
+			purpose="Opening Stock",
+			warehouse=warehouse,
+			expense_account="Temporary Opening - _TC",
+		)
+
+		sle = frappe.get_all(
+			"Stock Ledger Entry",
+			filters={"is_cancelled": 0, "voucher_no": stock_reco.name},
+			fields=["qty_after_transaction", "actual_qty", "voucher_type", "voucher_no"],
+		)
+		self.assertEqual(flt(sle[0]['qty_after_transaction'], 1), 100)
+
+		# stock reco after cancel
+		stock_reco.cancel()
+		cancel_sle = frappe.get_all(
+			"Stock Ledger Entry",
+			filters={"is_cancelled": 1, "voucher_no": stock_reco.name},
+			fields=["qty_after_transaction", "actual_qty", "voucher_type", "voucher_no"],
+			order_by="posting_time desc, creation desc",
+		)
+		self.assertEqual(flt(sle[0]['actual_qty'], 1), flt(cancel_sle[0]['qty_after_transaction'], 1))
+		self.assertEqual(flt(cancel_sle[0]['actual_qty'], 1), -100)
+		
 def create_stock_reconciliation_for_opening():
 	item1 = create_item("OP-MB-001")
 	
