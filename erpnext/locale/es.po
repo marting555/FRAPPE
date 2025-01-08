@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-01-05 09:35+0000\n"
-"PO-Revision-Date: 2025-01-07 16:18\n"
+"PO-Revision-Date: 2025-01-08 16:50\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Spanish\n"
 "MIME-Version: 1.0\n"
@@ -255,11 +255,11 @@ msgstr "'Posee numero de serie' no puede ser \"Sí\" para los productos que NO s
 
 #: erpnext/stock/doctype/quality_inspection/quality_inspection.py:151
 msgid "'Inspection Required before Delivery' has disabled for the item {0}, no need to create the QI"
-msgstr ""
+msgstr "'Inspección requerida antes de la entrega' se ha desactivado para el artículo {0}, no es necesario crear el QI"
 
 #: erpnext/stock/doctype/quality_inspection/quality_inspection.py:142
 msgid "'Inspection Required before Purchase' has disabled for the item {0}, no need to create the QI"
-msgstr ""
+msgstr "'Inspección requerida antes de la compra' se ha desactivado para el artículo {0}, no es necesario crear el QI"
 
 #: erpnext/stock/report/stock_ledger/stock_ledger.py:585
 #: erpnext/stock/report/stock_ledger/stock_ledger.py:618
@@ -3903,7 +3903,7 @@ msgstr "Todas las Oportunidades (Abiertas)"
 
 #: erpnext/accounts/report/general_ledger/general_ledger.html:68
 msgid "All Parties "
-msgstr ""
+msgstr "Todos los terceros"
 
 #. Option for the 'Send To' (Select) field in DocType 'SMS Center'
 #: erpnext/selling/doctype/sms_center/sms_center.json
@@ -3955,7 +3955,7 @@ msgstr "Todos los almacenes"
 
 #: erpnext/manufacturing/report/production_analytics/production_analytics.py:134
 msgid "All Work Orders"
-msgstr ""
+msgstr "Todas las órdenes de trabajo"
 
 #. Description of the 'Reconciled' (Check) field in DocType 'Process Payment
 #. Reconciliation Log'
@@ -6114,7 +6114,7 @@ msgstr "En la fila #{0}: La cantidad seleccionada {1} para el artículo {2} es m
 
 #: erpnext/accounts/doctype/exchange_rate_revaluation/exchange_rate_revaluation.py:84
 msgid "At least one account with exchange gain or loss is required"
-msgstr ""
+msgstr "Se requiere al menos una cuenta con ganancias o pérdidas por cambio"
 
 #: erpnext/assets/doctype/asset/asset.py:1088
 msgid "At least one asset has to be selected."
@@ -6987,15 +6987,15 @@ msgstr "Herramienta de actualización de Lista de Materiales (BOM)"
 #. Description of a DocType
 #: erpnext/manufacturing/doctype/bom_update_log/bom_update_log.json
 msgid "BOM Update Tool Log with job status maintained"
-msgstr ""
+msgstr "Registro de la herramienta de actualización de lista de materiales con el estado del trabajo mantenido"
 
 #: erpnext/manufacturing/doctype/bom_update_log/bom_update_log.py:99
 msgid "BOM Updation already in progress. Please wait until {0} is complete."
-msgstr ""
+msgstr "La actualización de la lista de materiales ya está en curso. Espere hasta que se complete {0} ."
 
 #: erpnext/manufacturing/doctype/bom_update_tool/bom_update_tool.js:81
 msgid "BOM Updation is queued and may take a few minutes. Check {0} for progress."
-msgstr ""
+msgstr "La actualización de la lista de materiales está en cola y puede tardar unos minutos. Verifique {0} para ver el progreso."
 
 #. Name of a report
 #: erpnext/manufacturing/report/bom_variance_report/bom_variance_report.json
@@ -7049,7 +7049,7 @@ msgstr "La lista de materiales (LdM) {0} debe ser validada"
 
 #: erpnext/manufacturing/doctype/bom/bom.py:716
 msgid "BOM {0} not found for the item {1}"
-msgstr ""
+msgstr "Lista de materiales {0} no encontrada para el artículo {1}"
 
 #. Label of the boms_updated (Long Text) field in DocType 'BOM Update Batch'
 #: erpnext/manufacturing/doctype/bom_update_batch/bom_update_batch.json
@@ -7058,7 +7058,7 @@ msgstr "Listas de materiales actualizadas"
 
 #: erpnext/manufacturing/doctype/bom_creator/bom_creator.py:267
 msgid "BOMs created successfully"
-msgstr ""
+msgstr "Listas de materiales creadas con éxito"
 
 #: erpnext/manufacturing/doctype/bom_creator/bom_creator.py:277
 msgid "BOMs creation failed"
@@ -8186,7 +8186,7 @@ msgstr "Dividir a la izquierda"
 #. Name of a DocType
 #: erpnext/accounts/doctype/bisect_nodes/bisect_nodes.json
 msgid "Bisect Nodes"
-msgstr ""
+msgstr "Dividir nodos"
 
 #: erpnext/accounts/doctype/bisect_accounting_statements/bisect_accounting_statements.js:13
 msgid "Bisect Right"
@@ -8236,7 +8236,7 @@ msgstr "Orden de la Manta"
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 #: erpnext/selling/doctype/selling_settings/selling_settings.json
 msgid "Blanket Order Allowance (%)"
-msgstr ""
+msgstr "Asignación de pedidos generales (%)"
 
 #. Name of a DocType
 #: erpnext/manufacturing/doctype/blanket_order_item/blanket_order_item.json
@@ -55184,7 +55184,7 @@ msgstr "Valor total del pedido"
 
 #: erpnext/accounts/report/item_wise_sales_register/item_wise_sales_register.py:674
 msgid "Total Other Charges"
-msgstr ""
+msgstr "Total de otros cargos"
 
 #: erpnext/stock/report/itemwise_recommended_reorder_level/itemwise_recommended_reorder_level.py:62
 msgid "Total Outgoing"
@@ -55193,12 +55193,12 @@ msgstr "Total saliente"
 #. Label of a number card in the Accounting Workspace
 #: erpnext/accounts/workspace/accounting/accounting.json
 msgid "Total Outgoing Bills"
-msgstr ""
+msgstr "Total de Facturas Salientes"
 
 #. Label of a number card in the Accounting Workspace
 #: erpnext/accounts/workspace/accounting/accounting.json
 msgid "Total Outgoing Payment"
-msgstr ""
+msgstr "Pago Total Saliente"
 
 #. Label of the total_outgoing_value (Currency) field in DocType 'Stock Entry'
 #: erpnext/stock/doctype/stock_entry/stock_entry.json
@@ -57249,7 +57249,7 @@ msgstr "Validar el precio de venta del artículo frente a la tasa de compra o la
 #. Label of the validate_stock_on_save (Check) field in DocType 'POS Profile'
 #: erpnext/accounts/doctype/pos_profile/pos_profile.json
 msgid "Validate Stock on Save"
-msgstr ""
+msgstr "Validar Stock al Guardar"
 
 #. Label of the section_break_4 (Section Break) field in DocType 'Tax Rule'
 #: erpnext/accounts/doctype/tax_rule/tax_rule.json
