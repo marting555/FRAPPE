@@ -40,9 +40,13 @@
   "show_payment_schedule_in_print",
   "currency_exchange_section",
   "allow_stale",
+  "column_break_yuug",
+  "stale_days",
   "section_break_jpd0",
   "auto_reconcile_payments",
-  "stale_days",
+  "exchange_gain_loss_posting_date",
+  "column_break_resa",
+  "cron_interval",
   "invoicing_settings_tab",
   "accounts_transactions_settings_section",
   "over_billing_allowance",
@@ -489,6 +493,28 @@
    "fieldname": "create_pr_in_draft_status",
    "fieldtype": "Check",
    "label": "Create in Draft Status"
+  },
+  {
+   "fieldname": "column_break_yuug",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Payment",
+   "fieldname": "exchange_gain_loss_posting_date",
+   "fieldtype": "Select",
+   "label": "Posting Date Inheritance for Exchange Gain / Loss",
+   "options": "Invoice\nPayment"
+  },
+  {
+   "fieldname": "column_break_resa",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "15",
+   "description": "Interval should be between 1 to 59 MInutes",
+   "fieldname": "cron_interval",
+   "fieldtype": "Int",
+   "label": "Cron Interval"
   }
  ],
  "icon": "icon-cog",
@@ -496,7 +522,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-07-26 06:48:52.714630",
+ "modified": "2025-01-08 20:34:23.362588",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Accounts Settings",
