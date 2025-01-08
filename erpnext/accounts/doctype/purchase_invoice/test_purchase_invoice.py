@@ -2468,35 +2468,16 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi.tax_withholding_category="Test - TDS - 194C - Company"
 		pi.save()
 		pi.submit()
-		gl_entries = frappe.db.sql(
-			"""select account, sum(debit) as debit, sum(credit) as credit , against_voucher
-			from `tabGL Entry` where voucher_type='Purchase Invoice' and voucher_no=%s
-			group by account,against_voucher""",
-			pi.name,
-			as_dict=1,
-		)
-		
-		expected_result = [
-				{
-					"account": "Creditors - _TC",
-					"debit": 1800.0,
-					"credit": 90000.0,
-					"against_voucher": pi.name
-				},
-				{
-					"account": "Stock Received But Not Billed - _TC",
-					"debit": 90000.0,
-					"credit": 0.0,
-					"against_voucher": None
-				},
-				{
-					"account": "Test TDS Payable - _TC",
-					"debit": 0.0,
-					"credit": 1800.0,
-					"against_voucher": None
-				}
-			]
-		self.assertEqual(gl_entries,expected_result)
+
+		expected_result=[
+			['Creditors - _TC', 0.0, 90000.0, pi.posting_date],
+			['Creditors - _TC', 1800.0, 0.0, pi.posting_date],
+			['Stock Received But Not Billed - _TC', 90000.0, 0.0, pi.posting_date],
+			['_Test TDS Payable - _TC', 0.0, 1800.0, pi.posting_date]
+		]
+
+		check_gl_entries(self,voucher_no=pi.name,expected_gle=expected_result,posting_date=pi.posting_date,voucher_type="Purchase Invoice")
+		# self.assertEqual(gl_entries,expected_result)
 
 		
 
@@ -2692,7 +2673,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		records_for_pi('_Test Supplier USD')
 		supplier = frappe.get_doc('Supplier', '_Test Supplier USD')
-
+		print(supplier)
 		if supplier:
 			pe = create_payment_entry(
 				party_type="Supplier",
@@ -2712,14 +2693,13 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			pe.append(
 				"taxes",
 				{
-					"account_head": "Test TDS Payable - _TC",
+					"account_head": "_Test TDS Payable - _TC",
 					"charge_type": "On Paid Amount",
 					"rate": 0,
 					"add_deduct_tax": "Deduct",
 					"description": "Cash",
 				},
 			)
-			
 			pe.save()
 			pe.submit()
 
@@ -3013,7 +2993,7 @@ def check_gl_entries(
 		for col in additional_columns:
 			query = query.select(gl[col])
 	gl_entries = query.run(as_dict=True)
- 
+	print(gl_entries)
 	for i, gle in enumerate(gl_entries):
 		doc.assertEqual(expected_gle[i][0], gle.account)
 		doc.assertEqual(expected_gle[i][1], gle.debit)

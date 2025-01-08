@@ -593,7 +593,7 @@ class TestJournalEntry(unittest.TestCase):
 		create_records('_Test Supplier TDS')
 
 		supplier = frappe.get_doc("Supplier", "_Test Supplier TDS")
-		account = frappe.get_doc("Account", "Test TDS Payable - _TC")
+		account = frappe.get_doc("Account", "_Test TDS Payable - _TC")
 		
 		if supplier and account:
 			jv=frappe.new_doc("Journal Entry")
@@ -607,7 +607,7 @@ class TestJournalEntry(unittest.TestCase):
 						"credit_in_account_currency": 1000
 					},
 					{
-						"account": 'Test Creditors - _TC',
+						"account": 'Creditors - _TC',
 						"party_type": "Supplier",
 						"party": supplier.name,
 						"debit_in_account_currency": 1000,
@@ -628,7 +628,7 @@ class TestJournalEntry(unittest.TestCase):
 
 			self.expected_gle = [
 				{
-					"account": 'Test Creditors - _TC',
+					"account": 'Creditors - _TC',
 					"debit_in_account_currency": 1000,
 					"credit_in_account_currency": 0,
 					"cost_center": "Main - _TC",

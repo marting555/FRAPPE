@@ -740,35 +740,51 @@ def gain_loss_account(company:str):
  
 def create_account(**args):
 	account_name = args.get('account_name')
-	company = args.get('company', "_Test Company")
+	if not account_name:
+		print("Error: Account name is required.")
+		return
 
+	company = args.get('company', " ")
+	print('account_name:', company)
+	
 	existing_account = frappe.db.exists("Account", {
 		"name": f"{account_name} - _TC"
 	})
+
 	if not existing_account:
+		print(f"Account '{account_name} - _TC' does not exist. Creating...")
 		try:
 			doc = frappe.get_doc({
 				"doctype": "Account",
-				"company": company,
 				"account_type": args.get('account_type', " "),
 				"account_name": account_name,
-				"parent_account": args.get('parent_account'),
 				"report_type": args.get('report_type', "Balance Sheet"),
 				"root_type": args.get('root_type', "Liability"),
 				"account_currency": args.get('account_currency', "INR"),
-			}).insert()
-
+				"is_group": args.get('is_group', 0)
+			})
+			if args.get('parent_account'):
+				doc.parent_account = args.get('parent_account')
+			if args.get('company'):
+				doc.company = args.get('company')
+			doc.insert(ignore_mandatory=True)
 			frappe.db.commit()
 			print(f"Account {account_name} created successfully.")
 		except Exception as e:
 			frappe.log_error(f"Account Creation Failed: {account_name}", str(e))
 			print(f"Error creating account '{account_name}': {str(e)}")
 	else:
-		print(f"Account '{account_name} _TC' already exists.")
+		print(f"Account '{account_name} - _TC' already exists.")
+
 def create_records_for_err():
 	from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_supplier
-	from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
 	from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_customer
+
+	create_warehouse(
+     warehouse_name="_Test Warehouse - _TC", 
+     company="_Test Company"
+     )
+	
 	create_account(
 		account_name="_Test Payable USD",
 		parent_account="Current Assets - _TC",
@@ -797,7 +813,7 @@ def create_records_for_err():
 		report_type="Balance Sheet",
 	)
 	create_cost_center(
-			cost_center_name="_Test Cost Center - _TC",
+			cost_center_name="_Test Cost Center",
 			company="_Test Company",
 			parent_cost_center="_Test Company - _TC"
 		)
@@ -839,3 +855,29 @@ def create_records_for_err():
 		)
 		supplier.save()
 	frappe.db.commit()
+ 
+def create_warehouse(**args):
+	if not frappe.db.exists("Warehouse", {"warehouse_name": args.get('warehouse_name')} ):
+		frappe.get_doc(
+			{
+				"doctype": "Warehouse",
+				"warehouse_name": args.get('warehouse_name'),
+				"company": args.get('company', "_Test Company"),
+			}
+		).insert(ignore_mandatory=True)
+		frappe.db.commit()
+  
+def create_cost_center(**args):
+	args = frappe._dict(args)
+	if args.cost_center_name:
+		company = args.company or "_Test Company"
+		company_abbr = frappe.db.get_value("Company", company, "abbr")
+		cc_name = args.cost_center_name + " - " + company_abbr
+		if not frappe.db.exists("Cost Center", cc_name):
+			cc = frappe.new_doc("Cost Center")
+			cc.company = args.company or "_Test Company"
+			cc.cost_center_name = args.cost_center_name
+			cc.is_group = args.is_group or 0
+			cc.parent_cost_center = args.parent_cost_center or "_Test Company - _TC"
+			cc.insert()
+			frappe.db.commit()	

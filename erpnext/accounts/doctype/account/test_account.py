@@ -448,6 +448,7 @@ def create_account(**kwargs):
 		account.save()
 		return account.name
 	else:
+		print(kwargs)
 		account = frappe.get_doc(
 			dict(
 				doctype="Account",

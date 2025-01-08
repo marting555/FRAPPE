@@ -4265,13 +4265,13 @@ class TestSalesInvoice(FrappeTestCase):
 		from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import get_jv_entry_account
 
 		create_cost_center(
-			cost_center_name="_Test Cost Center - _TC",
+			cost_center_name="_Test Cost Center",
 			company="_Test Company",
 			parent_cost_center="_Test Company - _TC"
 		)
 
 		create_account(
-			account_name="_Test Receivable USD - _TC",
+			account_name="_Test Receivable USD",
 			parent_account="Current Assets - _TC",
 			company="_Test Company",
 			account_currency="USD",
@@ -4352,20 +4352,20 @@ class TestSalesInvoice(FrappeTestCase):
 		from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import get_jv_entry_account 
 
 		create_cost_center(
-			cost_center_name="_Test Cost Center - _TC",
+			cost_center_name="_Test Cost Center",
 			company="_Test Company",
 			parent_cost_center="_Test Company - _TC"
 		)
 
 		create_account(
-			account_name="_Test Receivable USD - _TC",
+			account_name="_Test Receivable USD",
 			parent_account="Current Assets - _TC",
 			company="_Test Company",
 			account_currency="USD",
 			account_type="Receivable",
 		)
 		create_account(
-			account_name="_Test Cash - _TC",
+			account_name="_Test Cash",
 			parent_account="Cash In Hand - _TC",
 			company="_Test Company",
 			account_currency="INR",
@@ -4687,6 +4687,7 @@ class TestSalesInvoice(FrappeTestCase):
 		)
 		self.assertEqual(sum([entry.actual_qty for entry in sle]), -4)  
 
+		
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
