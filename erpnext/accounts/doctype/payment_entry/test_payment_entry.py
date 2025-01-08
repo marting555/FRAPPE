@@ -2226,27 +2226,23 @@ def create_supplier(**args):
 
 def create_account():
 	accounts = [
-		{"name": "Source of Funds", "parent": ""},
+		{"name": "Source of Funds (Liabilities)", "parent": ""},
 		{"name": "Current Liabilities", "parent": "Source of Funds (Liabilities) - _TC"},
 		{"name": "Duties and Taxes", "parent": "Current Liabilities - _TC"},
-		{"name": "_Test TDS Payable", "parent": "Accounts Payable - _TC","account_type":"Payable"},
+		{"name": "_Test TDS Payable", "parent": "Duties and Taxes - _TC","account_type":"Tax"},
 		{"name": "_Test Creditors", "parent": "Accounts Payable - _TC","account_type":"Payable"},
 		{"name": "_Test Payable USD", "parent": "Accounts Payable - _TC","account_type":"Payable"},
 		{"name": "_Test Cash", "parent": "Cash In Hand - _TC"},
 	]
 
 	if not frappe.db.exists("Company", "_Test Company"):
-		print("Company '_Test Company' does not exist.")
 		return
 
 	for account in accounts:
-		print(f"Checking existence of {account['name']}...")
 		if frappe.db.exists("Account", f"{account['name']} - _TC"):
-			print(f"{account['name']} already exists. Skipping.")
 			continue
 
 		if account["parent"] and not frappe.db.exists("Account", account["parent"]):
-			print(f"Skipping {account['name']} - Parent {account['parent']} does not exist.")
 			continue
 
 		try:
@@ -2265,14 +2261,11 @@ def create_account():
 			if account["parent"]:
 				doc.parent_account = account["parent"]
 
-			print(f"Inserting {account['name']} with account_type '{doc.account_type}'...")
 			doc.insert(ignore_mandatory=True)
 			frappe.db.commit()
-			print(f"Inserted {account['name']} successfully.")
 
 		except Exception as e:
 			frappe.log_error(f"Failed to insert {account['name']}", str(e))
-			print(f"Error inserting {account['name']}: {e}")
 
 def create_records(supplier):
 	from erpnext.accounts.doctype.tax_withholding_category.test_tax_withholding_category import create_tax_withholding_category

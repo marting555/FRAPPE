@@ -741,18 +741,15 @@ def gain_loss_account(company:str):
 def create_account(**args):
 	account_name = args.get('account_name')
 	if not account_name:
-		print("Error: Account name is required.")
 		return
 
 	company = args.get('company', " ")
-	print('account_name:', company)
 	
 	existing_account = frappe.db.exists("Account", {
 		"name": f"{account_name} - _TC"
 	})
 
 	if not existing_account:
-		print(f"Account '{account_name} - _TC' does not exist. Creating...")
 		try:
 			doc = frappe.get_doc({
 				"doctype": "Account",
@@ -769,19 +766,16 @@ def create_account(**args):
 				doc.company = args.get('company')
 			doc.insert(ignore_mandatory=True)
 			frappe.db.commit()
-			print(f"Account {account_name} created successfully.")
 		except Exception as e:
 			frappe.log_error(f"Account Creation Failed: {account_name}", str(e))
-			print(f"Error creating account '{account_name}': {str(e)}")
-	else:
-		print(f"Account '{account_name} - _TC' already exists.")
+	
 
 def create_records_for_err():
 	from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_supplier
 	from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_customer
 
 	create_warehouse(
-     warehouse_name="_Test Warehouse - _TC", 
+     warehouse_name="_Test Warehouse", 
      company="_Test Company"
      )
 	
@@ -857,15 +851,20 @@ def create_records_for_err():
 	frappe.db.commit()
  
 def create_warehouse(**args):
-	if not frappe.db.exists("Warehouse", {"warehouse_name": args.get('warehouse_name')} ):
+	warehouse_name = args.get('warehouse_name')
+	company = args.get('company', "_Test Company")
+	full_warehouse_name = f"{warehouse_name} - _TC"
+	if not frappe.db.exists("Warehouse", full_warehouse_name):
 		frappe.get_doc(
 			{
 				"doctype": "Warehouse",
-				"warehouse_name": args.get('warehouse_name'),
-				"company": args.get('company', "_Test Company"),
+				"warehouse_name": warehouse_name,
+				"company": company,
 			}
 		).insert(ignore_mandatory=True)
 		frappe.db.commit()
+
+
   
 def create_cost_center(**args):
 	args = frappe._dict(args)
