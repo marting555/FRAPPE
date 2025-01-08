@@ -672,9 +672,6 @@ class AccountsController(TransactionBase):
 			self.due_date = posting_date
 
 		elif self.doctype in ["Sales Invoice", "Purchase Invoice"]:
-			if self.doctype == "Sales Invoice" and not self.due_date:
-				frappe.throw(_("Due Date is mandatory"))
-
 			bill_date = self.bill_date if self.doctype == "Purchase Invoice" else None
 
 			validate_due_date(
