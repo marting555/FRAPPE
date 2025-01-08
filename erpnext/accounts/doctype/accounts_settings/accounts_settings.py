@@ -52,6 +52,7 @@ class AccountsSettings(Document):
 		merge_similar_account_heads: DF.Check
 		over_billing_allowance: DF.Currency
 		post_change_gl_entries: DF.Check
+		queue_size: DF.Int
 		receivable_payable_remarks_length: DF.Int
 		role_allowed_to_over_bill: DF.Link | None
 		round_row_wise_tax: DF.Check
@@ -118,6 +119,9 @@ class AccountsSettings(Document):
 			check_pending_reposting(self.acc_frozen_upto)
 
 	def before_save(self):
+		self.validate_auto_reconcile_config()
+
+	def validate_auto_reconcile_config(self):
 		doc_before_save = self.get_doc_before_save()
 		if doc_before_save.cron_interval != self.cron_interval:
 			if self.cron_interval > 0 and self.cron_interval < 60:
@@ -130,3 +134,7 @@ class AccountsSettings(Document):
 				doc.update({"cron_format": f"0/{self.cron_interval} * * * *"}).save()
 			else:
 				frappe.throw(_("Cron Interval should be between 1 and 59 Min"))
+
+		if doc_before_save.queue_size != self.queue_sizel:
+			if self.queue_size < 5 or self.queue_size > 100:
+				frappe.throw(_("Queue Size should be between 5 and 100"))

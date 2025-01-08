@@ -47,6 +47,7 @@
   "exchange_gain_loss_posting_date",
   "column_break_resa",
   "cron_interval",
+  "queue_size",
   "invoicing_settings_tab",
   "accounts_transactions_settings_section",
   "over_billing_allowance",
@@ -515,6 +516,13 @@
    "fieldname": "cron_interval",
    "fieldtype": "Int",
    "label": "Cron Interval"
+  },
+  {
+   "default": "5",
+   "description": "Queue Size should be between 5 and 100",
+   "fieldname": "queue_size",
+   "fieldtype": "Int",
+   "label": "Queue Size"
   }
  ],
  "icon": "icon-cog",
@@ -522,7 +530,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-01-08 20:34:23.362588",
+ "modified": "2025-01-08 20:51:39.882648",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Accounts Settings",
