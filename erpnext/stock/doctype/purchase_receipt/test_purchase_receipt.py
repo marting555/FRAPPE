@@ -3950,6 +3950,55 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(se.get("actual_qty"), -10)
 		return_pr.cancel()
 		pr.cancel()
+	
+	def test_direct_create_purchase_receipt_and_cancel_TC_SCK_53(self):
+		from erpnext.stock.doctype.material_request.test_material_request import get_gle
+
+		fields = {"has_batch_no": 1, "batch_number_series": "BT-BATCHITEM-.#####", "create_new_batch": 1}
+		if frappe.db.has_column("Item", "gst_hsn_code"):
+			fields["gst_hsn_code"] = "01011010"
+		
+		batch_item_code = make_item( "Test Batch Item", fields).name
+		frappe.db.set_value("Company", "_Test Company","enable_perpetual_inventory", 1)
+		frappe.db.set_value("Company", "_Test Company","stock_received_but_not_billed", "Stock Received But Not Billed - _TC")
+		pr = make_purchase_receipt(item_code=batch_item_code, qty=10, rate=100, use_serial_batch_fields=1)
+
+		self.assertEqual(pr.status, "To Bill")
+
+		# check sle
+		sl_entries = get_sl_entries("Purchase Receipt", pr.name)
+
+		expected_sle = {"_Test Warehouse - _TC": 10}
+
+		# Validate sle
+		for sle in sl_entries:
+			self.assertEqual(expected_sle[sle.warehouse], sle.actual_qty)
+
+		# check gl entries
+		gl_entries = get_gl_entries("Purchase Receipt", pr.name)
+
+		self.assertTrue(gl_entries)
+		stock_in_hand_account = get_inventory_account(pr.company, "_Test Warehouse - _TC")
+
+		expected_values = {
+			stock_in_hand_account: [1000.0, 0.0],
+			"Stock Received But Not Billed - _TC": [0.0, 1000.0],
+		}
+
+		for gle in gl_entries:
+			self.assertEqual(expected_values[gle.account][0], gle.debit)
+			self.assertEqual(expected_values[gle.account][1], gle.credit)
+		
+		pr.cancel()
+
+		# SL and GL entries after cancel
+		sl_entries = get_sl_entries("Purchase Receipt", pr.name)
+		sh_gle = get_gle(pr.company, pr.name, stock_in_hand_account)
+		srbnb_gle = get_gle(pr.company, pr.name, "Stock Received But Not Billed - _TC")
+		self.assertEqual(pr.status, "Cancelled")
+		self.assertEqual(sl_entries[0]['actual_qty'], -10)
+		self.assertEqual(sh_gle[0], sh_gle[1])
+		self.assertEqual(srbnb_gle[0], srbnb_gle[1])
 
 def prepare_data_for_internal_transfer():
 	from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_internal_supplier
