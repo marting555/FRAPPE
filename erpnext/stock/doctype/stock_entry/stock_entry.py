@@ -202,7 +202,6 @@ class StockEntry(StockController):
 		self.validate_purpose()
 		self.validate_item()
 		self.validate_customer_provided_item()
-		self.validate_qty()
 		self.set_transfer_qty()
 		self.validate_uom_is_integer("uom", "qty")
 		self.validate_uom_is_integer("stock_uom", "transfer_qty")
@@ -236,7 +235,7 @@ class StockEntry(StockController):
 		self.validate_serialized_batch()
 		self.calculate_rate_and_amount()
 		self.validate_putaway_capacity()
-		self.validate_component_quantities()
+		self.validate_component_and_quantities()
 
 		if self.get("purpose") != "Manufacture":
 			# ignore scrap item wh difference and empty source/target wh
@@ -472,40 +471,6 @@ class StockEntry(StockController):
 				item.transfer_qty = flt(
 					flt(item.qty) * flt(item.conversion_factor), self.precision("transfer_qty", item)
 				)
-
-	def validate_qty(self):
-		manufacture_purpose = ["Manufacture", "Material Consumption for Manufacture"]
-
-		if self.purpose in manufacture_purpose and self.work_order:
-			if not frappe.get_value("Work Order", self.work_order, "skip_transfer"):
-				item_code = []
-				for item in self.items:
-					if cstr(item.t_warehouse) == "":
-						req_items = frappe.get_all(
-							"Work Order Item",
-							filters={"parent": self.work_order, "item_code": item.item_code},
-							fields=["item_code"],
-						)
-
-						transferred_materials = frappe.db.sql(
-							"""
-									select
-										sum(sed.qty) as qty
-									from `tabStock Entry` se,`tabStock Entry Detail` sed
-									where
-										se.name = sed.parent and se.docstatus=1 and
-										(se.purpose='Material Transfer for Manufacture' or se.purpose='Manufacture')
-										and sed.item_code=%s and se.work_order= %s and ifnull(sed.t_warehouse, '') != ''
-								""",
-							(item.item_code, self.work_order),
-							as_dict=1,
-						)
-
-						stock_qty = flt(item.qty)
-						trans_qty = flt(transferred_materials[0].qty)
-						if req_items:
-							if stock_qty > trans_qty:
-								item_code.append(item.item_code)
 
 	def validate_fg_completed_qty(self):
 		if self.purpose != "Manufacture":
@@ -766,7 +731,7 @@ class StockEntry(StockController):
 					title=_("Insufficient Stock"),
 				)
 
-	def validate_component_quantities(self):
+	def validate_component_and_quantities(self):
 		if self.purpose not in ["Manufacture", "Material Transfer for Manufacture"]:
 			return
 
@@ -779,20 +744,31 @@ class StockEntry(StockController):
 		raw_materials = self.get_bom_raw_materials(self.fg_completed_qty)
 
 		precision = frappe.get_precision("Stock Entry Detail", "qty")
-		for row in self.items:
-			if not row.s_warehouse:
-				continue
-
-			if details := raw_materials.get(row.item_code):
-				if flt(details.get("qty"), precision) != flt(row.qty, precision):
+		for item_code, details in raw_materials.items():
+			if matched_item := self.get_matched_items(item_code):
+				if flt(details.get("qty"), precision) != flt(matched_item.qty, precision):
 					frappe.throw(
 						_("For the item {0}, the quantity should be {1} according to the BOM {2}.").format(
-							frappe.bold(row.item_code),
-							flt(details.get("qty"), precision),
+							frappe.bold(item_code),
+							flt(details.get("qty")),
 							get_link_to_form("BOM", self.bom_no),
 						),
 						title=_("Incorrect Component Quantity"),
 					)
+			else:
+				frappe.throw(
+					_("According to the BOM {0}, the Item '{1}' is missing in the stock entry.").format(
+						get_link_to_form("BOM", self.bom_no), frappe.bold(item_code)
+					),
+					title=_("Missing Item"),
+				)
+
+	def get_matched_items(self, item_code):
+		for row in self.items:
+			if row.item_code == item_code:
+				return row
+
+		return {}
 
 	@frappe.whitelist()
 	def get_stock_and_rate(self):
@@ -3313,8 +3289,10 @@ def create_serial_and_batch_bundle(parent_doc, row, child, type_of_transaction=N
 			doc.append("entries", {"serial_no": serial_no, "warehouse": row.warehouse, "qty": -1})
 
 	elif row.batches_to_be_consume:
+		precision = frappe.get_precision("Serial and Batch Entry", "qty")
 		doc.has_batch_no = 1
 		for batch_no, qty in row.batches_to_be_consume.items():
+			qty = flt(qty, precision)
 			doc.append("entries", {"batch_no": batch_no, "warehouse": row.warehouse, "qty": qty * -1})
 
 	if not doc.entries:
