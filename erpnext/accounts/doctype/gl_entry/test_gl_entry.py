@@ -81,16 +81,10 @@ class TestGLEntry(IntegrationTestCase):
 		self.assertEqual(old_naming_series_current_value + 2, new_naming_series_current_value)
 
 	def test_company_validation_in_dimensions(self):
-		si = create_sales_invoice(do_not_submit=True)
-		project = frappe.get_doc(
-			{
-				"doctype": "Project",
-				"project_name": "_Test Demo Project1",
-				"status": "Open",
-				"company": "_Test Company 1",
-			}
-		).insert()
+		from erpnext.projects.doctype.project.test_project import make_project
 
+		si = create_sales_invoice(do_not_submit=True)
+		project = make_project({"project_name": "_Test Demo Project1", "company": "_Test Company 1"})
 		si.project = project.name
 		si.save()
 		self.assertRaises(frappe.ValidationError, si.submit)
@@ -99,3 +93,48 @@ class TestGLEntry(IntegrationTestCase):
 		si_1.items[0].project = project.name
 		si_1.save()
 		self.assertRaises(frappe.ValidationError, si_1.submit)
+
+	def test_validate_account_party_type(self):
+		jv = make_journal_entry(
+			"_Test Account Cost for Goods Sold - _TC",
+			"_Test Bank - _TC",
+			100,
+			"_Test Cost Center - _TC",
+			save=False,
+			submit=False,
+		)
+
+		for row in jv.accounts:
+			row.party_type = "Supplier"
+			break
+
+		jv.save()
+		try:
+			jv.submit()
+		except Exception as e:
+			self.assertEqual(
+				str(e),
+				"Party Type and Party can only be set for Receivable / Payable account_Test Account Cost for Goods Sold - _TC",
+			)
+
+		jv1 = make_journal_entry(
+			"_Test Account Cost for Goods Sold - _TC",
+			"_Test Bank - _TC",
+			100,
+			"_Test Cost Center - _TC",
+			save=False,
+			submit=False,
+		)
+
+		for row in jv.accounts:
+			row.party_type = "Customer"
+			break
+
+		jv1.save()
+		try:
+			jv1.submit()
+		except Exception as e:
+			self.assertEqual(
+				str(e),
+				"Party Type and Party can only be set for Receivable / Payable account_Test Account Cost for Goods Sold - _TC",
+			)
