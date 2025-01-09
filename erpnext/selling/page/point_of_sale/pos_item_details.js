@@ -209,12 +209,17 @@ erpnext.PointOfSale.ItemDetails = class {
 	}
 
 	make_auto_serial_selection_btn(item) {
-		if (item.has_serial_no || item.has_batch_no) {
+		if ((item.has_serial_no || item.has_batch_no) && !(item.has_serial_no && item.has_batch_no)) {
 			const label = item.has_serial_no ? __("Select Serial No") : __("Select Batch No");
 			this.$form_container.append(
 				`<div class="btn btn-sm btn-secondary auto-fetch-btn">${label}</div>`
 			);
+		}
+		if (item.has_serial_no) {
 			this.$form_container.find(".serial_no-control").find("textarea").css("height", "6rem");
+		}
+		if (item.has_serial_no && item.has_batch_no) {
+			this.batch_no_control.df.read_only = 1;
 		}
 	}
 
@@ -282,7 +287,10 @@ erpnext.PointOfSale.ItemDetails = class {
 			this.serial_no_control.df.reqd = 1;
 			this.serial_no_control.df.onchange = async function () {
 				!me.current_item.batch_no && (await me.auto_update_batch_no());
-				me.events.form_updated(me.current_item, "serial_no", this.value);
+				let serial_nos = [];
+				this.value.split("\n").forEach((serial_no) => serial_nos.push(serial_no.trim()));
+				serial_nos = [...new Set(serial_nos)];
+				me.events.form_updated(me.current_item, "serial_no", serial_nos);
 			};
 			this.serial_no_control.refresh();
 		}
@@ -403,6 +411,7 @@ erpnext.PointOfSale.ItemDetails = class {
 			let item_row = this.item_row;
 			item_row.type_of_transaction = "Outward";
 
+			item_row.parent = frm.doc.name;
 			new erpnext.SerialBatchPackageSelector(frm, item_row, (r) => {
 				if (r) {
 					frappe.model.set_value(item_row.doctype, item_row.name, {

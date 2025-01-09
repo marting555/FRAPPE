@@ -556,11 +556,62 @@ erpnext.PointOfSale.Controller = class {
 			item_row = this.get_item_from_frm(item);
 			const item_row_exists = !$.isEmptyObject(item_row);
 
-			const from_selector = field === "qty" && value === "+1";
-			if (from_selector) value = flt(item_row.qty) + flt(value);
+			const from_selector = (field === "qty" && value === "+1") || field === "serial_no";
+			if (from_selector) {
+				if (field === "qty") {
+					value = flt(item_row.qty) + flt(value);
+				}
+			}
 
 			if (item_row_exists) {
+				if (item_row.serial_and_batch_bundle) {
+					const r = await frappe.db.get_value("Item", item_row.item_code, "has_serial_no");
+					if (r.message.has_serial_no) {
+						frappe.msgprint({
+							title: __("Serial and Batch Bundle already created."),
+							indicator: "orange",
+							message: __(
+								"Serial and Batch Bundle for the item already created. Remove the item from the cart and add again."
+							),
+						});
+						return;
+					}
+				}
+
 				if (field === "qty") value = flt(value);
+
+				if (field === "serial_no") {
+					if (value.constructor !== Array) {
+						await this.check_serial_no_availablilty(
+							item.item_code,
+							this.frm.doc.set_warehouse,
+							item.serial_no
+						);
+
+						if (item_row.serial_no.split("\n").includes(value)) {
+							frappe.msgprint({
+								title: __("Duplicate Serial No"),
+								message: __(`${value} is already added to the cart.`),
+								indicator: "orange",
+							});
+							return;
+						}
+						value = `${item_row.serial_no}\n${value}`;
+					}
+
+					if (value.constructor === Array) {
+						let serial_nos = [];
+						for (let serial_no of value) {
+							await this.check_serial_no_availablilty(
+								item.item_code,
+								this.frm.doc.set_warehouse,
+								serial_no
+							);
+							serial_nos.push(serial_no);
+						}
+						value = serial_nos;
+					}
+				}
 
 				if (["qty", "conversion_factor"].includes(field) && value > 0 && !this.allow_negative_stock) {
 					const qty_needed =
@@ -569,7 +620,36 @@ erpnext.PointOfSale.Controller = class {
 				}
 
 				if (this.is_current_item_being_edited(item_row) || from_selector) {
-					await frappe.model.set_value(item_row.doctype, item_row.name, field, value);
+					if (field !== "serial_no") {
+						await frappe.model.set_value(item_row.doctype, item_row.name, field, value);
+					}
+
+					if (field === "serial_no") {
+						if (value.constructor !== Array) {
+							await frappe.model.set_value(item_row.doctype, item_row.name, field, value);
+							await frappe.model.set_value(
+								item_row.doctype,
+								item_row.name,
+								"qty",
+								item_row.qty + 1
+							);
+						}
+
+						if (value.constructor === Array) {
+							await frappe.model.set_value(
+								item_row.doctype,
+								item_row.name,
+								field,
+								value.join("\n")
+							);
+							await frappe.model.set_value(
+								item_row.doctype,
+								item_row.name,
+								"qty",
+								value.length
+							);
+						}
+					}
 					this.update_cart_html(item_row);
 				}
 			} else {
