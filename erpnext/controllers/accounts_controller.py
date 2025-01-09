@@ -380,13 +380,14 @@ class AccountsController(TransactionBase):
 					== 1
 				)
 			).run()
-			frappe.db.sql(
-				"delete from `tabGL Entry` where voucher_type=%s and voucher_no=%s", (self.doctype, self.name)
-			)
-			frappe.db.sql(
-				"delete from `tabStock Ledger Entry` where voucher_type=%s and voucher_no=%s",
-				(self.doctype, self.name),
-			)
+			gle = frappe.qb.DocType("GL Entry")
+			frappe.qb.from_(gle).delete().where(
+				(gle.voucher_type == self.doctype) & (gle.voucher_no == self.name)
+			).run()
+			sle = frappe.qb.DocType("Stock Ledger Entry")
+			frappe.qb.from_(sle).delete().where(
+				(sle.voucher_type == self.doctype) & (sle.voucher_no == self.name)
+			).run()
 
 	def remove_serial_and_batch_bundle(self):
 		bundles = frappe.get_all(
@@ -461,10 +462,18 @@ class AccountsController(TransactionBase):
 					)
 
 	def validate_invoice_documents_schedule(self):
-		if self.is_return:
+		if (
+			self.is_return
+			or (self.doctype == "Purchase Invoice" and self.is_paid)
+			or (self.doctype == "Sales Invoice" and self.is_pos)
+			or self.get("is_opening") == "Yes"
+		):
 			self.payment_terms_template = ""
 			self.payment_schedule = []
+
+		if self.is_return:
 			return
+
 		self.validate_payment_schedule_dates()
 		self.set_due_date()
 		self.set_payment_schedule()
@@ -1143,11 +1152,14 @@ class AccountsController(TransactionBase):
 	def clear_unallocated_advances(self, childtype, parentfield):
 		self.set(parentfield, self.get(parentfield, {"allocated_amount": ["not in", [0, None, ""]]}))
 
-		frappe.db.sql(
-			"""delete from `tab{}` where parentfield={} and parent = {}
-			and allocated_amount = 0""".format(childtype, "%s", "%s"),
-			(parentfield, self.name),
-		)
+		gle = frappe.qb.DocType("GL Entry")
+		frappe.qb.from_(gle).delete().where(
+			(gle.voucher_type == self.doctype) & (gle.voucher_no == self.name)
+		).run()
+		sle = frappe.qb.DocType("Stock Ledger Entry")
+		frappe.qb.from_(sle).delete().where(
+			(sle.voucher_type == self.doctype) & (sle.voucher_no == self.name)
+		).run()
 
 	@frappe.whitelist()
 	def apply_shipping_rule(self):
@@ -1207,7 +1219,9 @@ class AccountsController(TransactionBase):
 
 	def get_advance_entries(self, include_unallocated=True):
 		party_account = []
-		if self.doctype == "Sales Invoice":
+		default_advance_account = None
+
+		if self.doctype in ["Sales Invoice", "POS Invoice"]:
 			party_type = "Customer"
 			party = self.customer
 			amount_field = "credit_in_account_currency"
@@ -1222,9 +1236,13 @@ class AccountsController(TransactionBase):
 			order_doctype = "Purchase Order"
 			party_account.append(self.credit_to)
 
-		party_account.extend(
-			get_party_account(party_type, party=party, company=self.company, include_advance=True)
+		party_accounts = get_party_account(
+			party_type, party=party, company=self.company, include_advance=True
 		)
+
+		if party_accounts:
+			party_account.append(party_accounts[0])
+			default_advance_account = party_accounts[1] if len(party_accounts) == 2 else None
 
 		order_list = list(set(d.get(order_field) for d in self.get("items") if d.get(order_field)))
 
@@ -1233,7 +1251,13 @@ class AccountsController(TransactionBase):
 		)
 
 		payment_entries = get_advance_payment_entries_for_regional(
-			party_type, party, party_account, order_doctype, order_list, include_unallocated
+			party_type,
+			party,
+			party_account,
+			order_doctype,
+			order_list,
+			default_advance_account,
+			include_unallocated,
 		)
 
 		res = journal_entries + payment_entries
@@ -2110,11 +2134,9 @@ class AccountsController(TransactionBase):
 		for adv in self.advances:
 			consider_for_total_advance = True
 			if adv.reference_name == linked_doc_name:
-				frappe.db.sql(
-					f"""delete from `tab{self.doctype} Advance`
-					where name = %s""",
-					adv.name,
-				)
+				doctype = frappe.qb.DocType(self.doctype + " Advance")
+				frappe.qb.from_(doctype).delete().where(doctype.name == adv.name).run()
+				
 				consider_for_total_advance = False
 
 			if consider_for_total_advance:
@@ -2326,6 +2348,7 @@ class AccountsController(TransactionBase):
 		if self.doctype == "Sales Invoice" and self.is_pos:
 			return
 
+
 		for d in self.get("payment_schedule"):
 			if self.doctype == "Sales Order" and getdate(d.due_date) < getdate(self.transaction_date):
 				frappe.throw(
@@ -2344,7 +2367,7 @@ class AccountsController(TransactionBase):
 	def validate_payment_schedule_amount(self):
 		if (self.doctype == "Sales Invoice" and self.is_pos) or self.get("is_opening") == "Yes":
 			return
-
+		
 		party_account_currency = self.get("party_account_currency")
 		if not party_account_currency:
 			party_type, party = self.get_party()
@@ -2979,7 +3002,7 @@ def get_common_query(
 		q = q.where(
 			account_condition
 			| (
-				(payment_entry[field] == default_advance_account)
+				(payment_entry[field] == field)
 				& (payment_entry.book_advance_payments_in_separate_party_account == 1)
 			)
 		)

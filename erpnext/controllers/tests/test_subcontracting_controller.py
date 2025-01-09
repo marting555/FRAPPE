@@ -1259,6 +1259,7 @@ def make_raw_materials():
 	for item, properties in raw_materials.items():
 		if not frappe.db.exists("Item", item):
 			properties.update({"is_stock_item": 1})
+			properties.update({"valuation_rate": 100})
 			make_item(item, properties)
 
 
@@ -1309,7 +1310,7 @@ def make_bom_for_subcontracted_items():
 
 	for item_code, raw_materials in boms.items():
 		if not frappe.db.exists("BOM", {"item": item_code}):
-			make_bom(item=item_code, raw_materials=raw_materials, rate=100)
+			make_bom(item=item_code, raw_materials=raw_materials, rate=100, currency="INR")
 
 
 def set_backflush_based_on(based_on):

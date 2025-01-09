@@ -316,7 +316,12 @@ erpnext.PointOfSale.ItemDetails = class {
 			const field_control = this[`${fieldname}_control`];
 			const item_row_is_being_edited = this.compare_with_current_item(item_row);
 
-			if (item_row_is_being_edited && field_control && field_control.get_value() !== value) {
+			if (
+				item_row_is_being_edited &&
+				field_control &&
+				field_control.get_value() !== value &&
+				value == item_row[fieldname]
+			) {
 				field_control.set_value(value);
 				cur_pos.update_cart_html(item_row);
 			}

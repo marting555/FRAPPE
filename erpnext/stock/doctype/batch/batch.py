@@ -121,16 +121,15 @@ class Batch(Document):
 			self.name = self.batch_id
 			return
 
-		create_new_batch, batch_number_series = frappe.db.get_value(
-			"Item", self.item, ["create_new_batch", "batch_number_series"]
-		)
+		item_doc = frappe.get_doc("Item", self.item)
 
-		if not create_new_batch:
+		if not item_doc.create_new_batch:
 			frappe.throw(_("Batch ID is mandatory"), frappe.MandatoryError)
 
 		while not self.batch_id:
-			if batch_number_series:
-				self.batch_id = make_autoname(batch_number_series, doc=self)
+			if item_doc.batch_number_series:
+				item_doc.validate_naming_series()
+				self.batch_id = make_autoname(item_doc.batch_number_series, doc=self)
 			elif batch_uses_naming_series():
 				self.batch_id = self.get_name_from_naming_series()
 			else:
