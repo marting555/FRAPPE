@@ -7,6 +7,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.model.meta import get_field_precision
 from frappe.model.naming import set_name_from_naming_options
+from frappe.query_builder import DocType
 from frappe.utils import flt, fmt_money
 
 import erpnext
@@ -175,15 +176,21 @@ class GLEntry(Document):
 			frappe.throw(msg, title=_("Missing Cost Center"))
 
 	def validate_company_in_accounting_dimension(self):
-		if not self.company:
-			return
-		accounting_dimensions = ["Project"]
-		accounting_dimensions.extend(frappe.get_all("Accounting Dimension", pluck="name"))
+		doc_field = DocType("DocField")
+		accounting_dimension = DocType("Accounting Dimension")
+		query = (
+			frappe.qb.from_(accounting_dimension)
+			.select(accounting_dimension.document_type)
+			.join(doc_field)
+			.on(doc_field.parent == accounting_dimension.document_type)
+			.where(doc_field.fieldname == "company")
+		).run(as_list=True)
 
-		for dimension in accounting_dimensions:
+		dimension_list = sum(query, ["Project"])
+		for dimension in dimension_list:
 			if dimension_value := self.get(frappe.scrub(dimension)):
-				doc = frappe.get_doc(dimension, dimension_value)
-				if hasattr(doc, "company") and doc.company and doc.company != self.company:
+				company = frappe.get_cached_value(dimension, dimension_value, "company")
+				if company and company != self.company:
 					frappe.throw(
 						_("{0}: {1} does not belong to the Company: {2}").format(
 							dimension, frappe.bold(dimension_value), self.company
