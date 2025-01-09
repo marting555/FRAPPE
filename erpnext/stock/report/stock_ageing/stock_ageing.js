@@ -44,8 +44,10 @@ frappe.query_reports["Stock Ageing"] = {
 		{
 			fieldname: "item_code",
 			label: __("Item"),
-			fieldtype: "Link",
-			options: "Item",
+			fieldtype: "MultiSelectList",
+			get_data: function(txt) {
+				return frappe.db.get_link_options('Item', txt);
+			}
 		},
 		{
 			fieldname: "brand",

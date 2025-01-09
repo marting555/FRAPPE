@@ -462,9 +462,8 @@ class FIFOSlots:
 			)
 		)
 
-		for field in ["item_code"]:
-			if self.filters.get(field):
-				query = query.where(bundle[field] == self.filters.get(field))
+		if self.filters.get("item_code"):
+			query = query.where(bundle.item_code.isin(self.filters.get("item_code")))
 
 		if self.filters.get("warehouse"):
 			query = self.__get_warehouse_conditions(bundle, query)
@@ -483,7 +482,7 @@ class FIFOSlots:
 		)
 
 		if self.filters.get("item_code"):
-			item = item.where(item_table.item_code == self.filters.get("item_code"))
+			item = item.where(item_table.item_code.isin(self.filters.get("item_code")))
 
 		if self.filters.get("brand"):
 			item = item.where(item_table.brand == self.filters.get("brand"))
