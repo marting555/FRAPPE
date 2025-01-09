@@ -591,7 +591,7 @@ erpnext.PointOfSale.Controller = class {
 						if (item_row.serial_no.split("\n").includes(value)) {
 							frappe.msgprint({
 								title: __("Duplicate Serial No"),
-								message: __(`${value} is already added to the cart.`),
+								message: __("Serial No is already added to the cart."),
 								indicator: "orange",
 							});
 							return;
