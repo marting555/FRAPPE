@@ -216,11 +216,13 @@ erpnext.PointOfSale.ItemDetails = class {
 				.find(classname)
 				.append(
 					`<div class="btn btn-sm btn-secondary auto-fetch-btn" style="margin-top: 6px">${label}</div>`
-			   );
+				);
 		}
+
 		if (item.has_serial_no) {
 			this.$form_container.find(".serial_no-control").find("textarea").css("height", "6rem");
 		}
+
 		if (item.has_serial_no && item.has_batch_no) {
 			this.batch_no_control.df.read_only = 1;
 		}
