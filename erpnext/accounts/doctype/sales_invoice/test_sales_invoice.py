@@ -4263,7 +4263,7 @@ class TestSalesInvoice(FrappeTestCase):
 		from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import get_jv_entry_account
-
+		
 		create_cost_center(
 			cost_center_name="_Test Cost Center",
 			company="_Test Company",
@@ -4461,8 +4461,221 @@ class TestSalesInvoice(FrappeTestCase):
 				voucher_type="Journal Entry"
 			)
 
-		
+	def test_single_payment_request_for_purchase_invoice_TC_ACC_037(self):
+		from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
+		from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 
+		setup_bank_accounts()
+  
+		create_cost_center(
+			cost_center_name="_Test Cost Center",
+			company="_Test Company",
+			parent_cost_center="_Test Company - _TC"
+		)
+
+		create_account(
+			account_name="_Test Receivable",
+			parent_account="Current Assets - _TC",
+			company="_Test Company",
+			account_currency="INR",
+			account_type="Receivable",
+		)
+		create_account(
+			account_name="_Test Cash",
+			parent_account="Cash In Hand - _TC",
+			company="_Test Company",
+			account_currency="INR",
+			account_type="Cash",
+		)
+
+		create_customer(
+			customer_name="_Test Customer",
+			currency="INR",
+			company="_Test Company",
+			account="_Test Receivable - _TC"
+		)
+
+		item = make_test_item(item_name="_Test Item")
+		
+		if item.is_new():
+			item.append(
+				"item_defaults",
+				{
+					"default_warehouse": '_Test Warehouse - _TC',
+					"company": "_Test Company",
+					"selling_cost_center": "_Test Cost Center - _TC",
+				},
+			)
+			item.save()
+		
+		frappe.db.commit()
+
+		customer =frappe.get_doc("Customer", "_Test Customer")
+
+		if customer:
+			si=create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				parent_cost_center="_Test Cost Center - _TC",
+				item_code=item.name,
+				qty=1,
+				rate=5000,
+			)
+
+			si.submit()
+
+			pr =make_payment_request(
+			dt="Sales Invoice",
+			dn=si.name,
+			recipient_id="test@test.com",
+			payment_gateway_account="_Test Gateway - INR",
+			mute_email=1,
+			submit_doc=1,
+			return_doc=1,
+			)
+
+			pe = pr.set_as_paid()
+			pe.save()
+			pe.submit()
+			pr.load_from_db()
+			self.assertEqual(pr.status, "Paid")
+			si.load_from_db()	
+			self.assertEqual(si.status, "Paid")
+			expected_gle = [
+					["Debtors - _TC", 0.0, si.grand_total, pe.posting_date],
+					["_Test Bank - _TC", si.grand_total, 0.0, pe.posting_date]
+			]
+			check_gl_entries(
+				doc=self,
+				voucher_no=pe.name,
+				expected_gle=expected_gle,
+				voucher_type="Payment Entry",
+				posting_date=pe.posting_date	
+			)
+	
+	def test_multiple_payment_request_for_purchase_invoice_TC_ACC_038(self):
+		from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
+		from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+
+		setup_bank_accounts()
+  
+		create_cost_center(
+			cost_center_name="_Test Cost Center",
+			company="_Test Company",
+			parent_cost_center="_Test Company - _TC"
+		)
+
+		create_account(
+			account_name="_Test Receivable",
+			parent_account="Current Assets - _TC",
+			company="_Test Company",
+			account_currency="INR",
+			account_type="Receivable",
+		)
+		create_account(
+			account_name="_Test Cash",
+			parent_account="Cash In Hand - _TC",
+			company="_Test Company",
+			account_currency="INR",
+			account_type="Cash",
+		)
+
+		create_customer(
+			customer_name="_Test Customer",
+			currency="INR",
+			company="_Test Company",
+			account="_Test Receivable - _TC"
+		)
+
+		item = make_test_item(item_name="_Test Item")
+		
+		if item.is_new():
+			item.append(
+				"item_defaults",
+				{
+					"default_warehouse": '_Test Warehouse - _TC',
+					"company": "_Test Company",
+					"selling_cost_center": "_Test Cost Center - _TC",
+				},
+			)
+			item.save()
+		
+		frappe.db.commit()
+
+		customer =frappe.get_doc("Customer", "_Test Customer")
+
+		if customer:
+			si=create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				parent_cost_center="_Test Cost Center - _TC",
+				item_code=item.name,
+				qty=1,
+				rate=5000,
+			)
+
+			si.submit()
+
+			pr =make_payment_request(
+			dt="Sales Invoice",
+			dn=si.name,
+			recipient_id="test@test.com",		
+			payment_gateway_account="_Test Gateway - INR",
+			mute_email=1,
+			return_doc=1,
+			)
+			pr.grand_total = pr.grand_total / 2
+			pr.save()
+			pr.submit()
+			pe = pr.set_as_paid()
+			pe.save()
+			pe.submit()	
+
+			pr.load_from_db()
+			self.assertEqual(pr.status, "Paid")
+			si.load_from_db()
+			self.assertEqual(si.status, "Partly Paid")
+			expected_gle = [
+					["Debtors - _TC", 0.0, si.grand_total/2, pe.posting_date],
+					["_Test Bank - _TC", si.grand_total/2, 0.0, pe.posting_date]
+			]
+			check_gl_entries(
+				doc=self,
+				voucher_no=pe.name,
+				expected_gle=expected_gle,
+				voucher_type="Payment Entry",
+				posting_date=pe.posting_date	
+			)
+			_pr=make_payment_request(
+				dt="Sales Invoice",
+				dn=si.name,	
+				recipient_id="test@test.com",		
+				payment_gateway_account="_Test Gateway - INR",
+				mute_email=1,
+				return_doc=1,
+				submit_doc=1,
+			)
+			_pe=_pr.set_as_paid()
+			_pe.save()
+			_pe.submit()
+
+			_pr.load_from_db()
+			self.assertEqual(_pr.status, "Paid")
+			si.load_from_db()
+			self.assertEqual(si.status, "Paid")
+			expected_gle = [
+					["Debtors - _TC", 0.0, si.grand_total/2, _pe.posting_date],
+					["_Test Bank - _TC", si.grand_total/2, 0.0, _pe.posting_date]
+			]
+			check_gl_entries(
+				doc=self,
+				voucher_no=_pe.name,
+				expected_gle=expected_gle,
+				voucher_type="Payment Entry",
+				posting_date=pe.posting_date	
+			)
 	def test_sales_invoice_without_sales_order_with_gst_TC_S_016(self):
 		setting = frappe.get_doc("Selling Settings")
 		setting.so_required = 'No'
@@ -5077,7 +5290,7 @@ def get_taxes_and_charges():
 
 def create_internal_parties():
 	from erpnext.selling.doctype.customer.test_customer import create_internal_customer
-
+    
 	create_internal_customer(
 		customer_name="_Test Internal Customer",
 		represents_company="_Test Company 1",
@@ -5196,5 +5409,32 @@ def create_accounts(**args):
 				frappe.log_error(f"Failed to insert {args.get('account_name')}", str(e))
 	
 			
+def setup_bank_accounts():
+	payment_gateway = {"doctype": "Payment Gateway", "gateway": "_Test Gateway"}
 
+	payment_method = [
+		{
+			"doctype": "Payment Gateway Account",
+			"is_default": 1,
+			"payment_gateway": "_Test Gateway",
+			"payment_account": "_Test Bank - _TC",
+			"currency": "INR",
+		},
+		{
+			"doctype": "Payment Gateway Account",
+			"payment_gateway": "_Test Gateway",
+			"payment_account": "_Test Bank USD - _TC",
+			"currency": "USD",
+		},
+	]
+	
+	if not frappe.db.get_value("Payment Gateway", payment_gateway["gateway"], "name"):
+			frappe.get_doc(payment_gateway).insert(ignore_permissions=True)
 
+	for method in payment_method:
+		if not frappe.db.get_value(
+			"Payment Gateway Account",
+			{"payment_gateway": method["payment_gateway"], "currency": method["currency"]},
+			"name",
+		):
+			frappe.get_doc(method).insert(ignore_permissions=True)
