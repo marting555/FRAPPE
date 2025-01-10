@@ -3375,6 +3375,66 @@ class TestMaterialRequest(FrappeTestCase):
 		if frappe.db.exists('GL Entry',{'account': 'Creditors - _TC'}):
 			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr1.name, 'account': 'Creditors - _TC'},'debit')
 			self.assertEqual(gl_stock_debit, 500)
+	
+	def test_create_mr_material_transfer_to_stock_entry_TC_SCK_064(self):
+		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry as _make_stock_entry
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import TestStockEntry as tse
+
+		item = create_item("_Test Item")
+		source_warehouse = create_warehouse(
+			"_Test Source Warehouse", properties=None, company="_Test Company"
+		)
+		t_warehouse = create_warehouse(
+			warehouse_name="_Test Warehouse 1", properties=None, company="_Test Company"
+		)
+		_make_stock_entry(
+			item_code=item.name,
+			qty=10,
+			to_warehouse=source_warehouse,
+			company="_Test Company",
+			rate=120,
+		)
+		s_bin_qty = (
+			frappe.db.get_value("Bin", {"item_code": item.name, "warehouse": source_warehouse}, "actual_qty")
+			or 0
+		)
+
+		# Create Material Request for Material Transfer
+		mr = make_material_request(
+			material_request_type="Material Transfer",
+			qty=10,
+			warehouse=t_warehouse,
+			from_warehouse=source_warehouse,
+			item_code=item.name,
+		)
+		self.assertEqual(mr.status, "Pending")
+
+		# Create Stock Entry based on Material Request
+		se = make_stock_entry(mr.name)
+		se.save()
+		se.submit()
+		tse.check_stock_ledger_entries(
+			self,
+			"Stock Entry",
+			se.name,
+			[
+				[item.name, t_warehouse, 10],
+				[item.name, source_warehouse, -10],
+			],
+		)
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Transferred")
+
+		# Cancel Stock Entry and check qty in source warehouse
+		se.cancel()
+		mr.load_from_db()
+		current_qty = (
+			frappe.db.get_value("Bin", {"item_code": item.name, "warehouse": source_warehouse}, "actual_qty")
+			or 0
+		)
+		self.assertEqual(current_qty, s_bin_qty)
+		self.assertEqual(mr.status, "Pending")
+
 
 def get_in_transit_warehouse(company):
 	if not frappe.db.exists("Warehouse Type", "Transit"):
