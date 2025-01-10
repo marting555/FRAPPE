@@ -1959,6 +1959,87 @@ class TestPurchaseOrder(FrappeTestCase):
 		)
 		self.assertGreater(len(gl_entries), 0)
 
+	def test_po_and_pi_with_pricing_rule_with_TC_B_048(self):
+		company = "_Test Company"
+		item_code = "Testing-31"
+		target_warehouse = "Stores - _TC"
+		supplier = "_Test Supplier 1"
+		item_price = 130
+
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_stock_item": 1,
+				"is_purchase_item": 1,
+				"is_sales_item": 0,
+				"company": company
+			}).insert()
+
+		item_price_doc = frappe.get_doc({
+			"doctype": "Item Price",
+			"price_list": "Standard Buying",
+			"item_code": item_code,
+			"price_list_rate": item_price
+		}).insert()
+
+		pricing_rule = frappe.get_doc({
+			"doctype": "Pricing Rule",
+			"title": "10% Discount",
+			"company": company,
+			"apply_on": "Item Code",
+			"items":[
+				{
+					"item_code":item_code
+				}
+			],
+			"rate_or_discount": "Discount Percentage",
+			"discount_percentage": 10,
+			"selling": 0,
+			"buying": 1
+		}).insert()
+
+		po = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"supplier": supplier,
+			"company": company,
+			"schedule_date":today(),
+			"set_warehouse": target_warehouse,
+			"items": [
+				{
+					"item_code": item_code,
+					"warehouse": target_warehouse,
+					"qty": 1
+				}
+			]
+		})
+		po.insert()
+		po.submit()
+
+		self.assertEqual(len(po.items), 1)
+		self.assertEqual(po.items[0].rate, 117)
+		self.assertEqual(po.items[0].discount_percentage, 10)
+
+		pi = frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"supplier": supplier,
+			"company": company,
+			"items": [
+				{
+					"item_code": item_code,
+					"purchase_order": po.name,
+					"warehouse": target_warehouse,
+					"qty": po.items[0].qty
+				}
+			]
+		})
+		pi.insert()
+		pi.submit()
+
+		self.assertEqual(len(pi.items), 1)
+		self.assertEqual(pi.items[0].rate, 117)
+		self.assertEqual(pi.items[0].discount_percentage, 10)
 	def test_po_to_pr_with_gst_partly_paid_TC_B_085(self):
 		# Scenario : PO => PR with GST Partly Paid
 
