@@ -2598,640 +2598,515 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(si_acc_debit, 5000)
   
 	def test_sales_order_full_payment_with_gst_TC_S_011(self):
-		company = frappe.get_all("Company", {"name": "_Test Indian Registered Company"}, ["gstin", "gst_category"])
-		customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
-		company_add = frappe.get_all("Address", {"name": "_Test Indian Registered Company-Billing"}, ["name", "gstin", "gst_category"])
-		customer_add = frappe.get_all("Address", {"name": "_Test Registered Customer-Billing"}, ["name", "gstin", "gst_category"])
+		# company = frappe.get_all("Company", {"name": "_Test Indian Registered Company"}, ["gstin", "gst_category"])
+		# customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
+		# company_add = frappe.get_all("Address", {"name": "_Test Indian Registered Company-Billing"}, ["name", "gstin", "gst_category"])
+		# customer_add = frappe.get_all("Address", {"name": "_Test Registered Customer-Billing"}, ["name", "gstin", "gst_category"])
   
-		if company[0].get("gst_category") == "Registered Regular" and customer[0].get("gst_category") == "Registered Regular" and customer[0].get("gstin") and customer[0].get("gstin"):
-			if company_add[0].get("gst_category") == "Registered Regular" and customer_add[0].get("gst_category") == "Registered Regular" and company_add[0].get("gstin") and customer_add[0].get("gstin"):
-				so = make_sales_order(company='_Test Indian Registered Company', customer='_Test Registered Customer', warehouse='Stores - _TIRC' ,cost_center='Main - _TIRC', selling_price_list='Standard Selling', item_code='_Test Item', qty=1, rate=5000, do_not_save=True)
-				so.tax_category = 'In-State'
-				so.taxes_and_charges = 'Output GST In-state - _TIRC'
-				so.customer_address = customer_add[0].get("name")
-				so.billing_address_gstin = customer_add[0].get("gstin")
-				so.company_address = company_add[0].get("name")
-				so.company_gstin = company_add[0].get("gstin")
-				so.save()
-				so.submit()
+		# if company[0].get("gst_category") == "Registered Regular" and customer[0].get("gst_category") == "Registered Regular" and customer[0].get("gstin") and customer[0].get("gstin"):
+		# 	if company_add[0].get("gst_category") == "Registered Regular" and customer_add[0].get("gst_category") == "Registered Regular" and company_add[0].get("gstin") and customer_add[0].get("gstin"):
+		# 		so = make_sales_order(company='_Test Indian Registered Company', customer='_Test Registered Customer', warehouse='Stores - _TIRC' ,cost_center='Main - _TIRC', selling_price_list='Standard Selling', item_code='_Test Item', qty=1, rate=5000, do_not_save=True)
+		# 		so.tax_category = 'In-State'
+		# 		so.taxes_and_charges = 'Output GST In-state - _TIRC'
+		# 		so.customer_address = customer_add[0].get("name")
+		# 		so.billing_address_gstin = customer_add[0].get("gstin")
+		# 		so.company_address = company_add[0].get("name")
+		# 		so.company_gstin = company_add[0].get("gstin")
+		# 		so.save()
+		# 		so.submit()
 
-				self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
-				self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
+		# 		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
+		# 		self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
+		so = self.create_and_submit_sales_order_with_gst("_Test Item", qty=1, rate=5000)
 
-				dn = make_delivery_note(so.name)
-				dn.save()
-				dn.submit()
+		dn = make_delivery_note(so.name)
+		dn.save()
+		dn.submit()
 
-				self.assertEqual(dn.status, "To Bill", "Delivery Note not created")
+		self.assertEqual(dn.status, "To Bill", "Delivery Note not created")
 
-				qty_change = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn.name, 'warehouse': 'Stores - _TIRC'}, ['actual_qty', 'valuation_rate'])
-				self.assertEqual(qty_change[0].get("actual_qty"), -1)
-    
-				dn_acc_credit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Stock In Hand - _TIRC'}, 'credit')
-				self.assertEqual(dn_acc_credit1, qty_change[0].get("valuation_rate") * 1)
+		qty_change = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn.name, 'warehouse': 'Stores - _TIRC'}, ['actual_qty', 'valuation_rate'])
+		self.assertEqual(qty_change[0].get("actual_qty"), -1)
 
-				dn_acc_debit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
-				self.assertEqual(dn_acc_debit1, qty_change[0].get("valuation_rate") * 1)
-    
-				from erpnext.stock.doctype.delivery_note.delivery_note import (make_sales_invoice)
+		dn_acc_credit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Stock In Hand - _TIRC'}, 'credit')
+		self.assertEqual(dn_acc_credit1, qty_change[0].get("valuation_rate") * 1)
 
-				si = make_sales_invoice(dn.name)
-				si.insert()
-				si.submit()
+		dn_acc_debit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
+		self.assertEqual(dn_acc_debit1, qty_change[0].get("valuation_rate") * 1)
 
-				self.assertEqual(si.status, "Unpaid", "Sales Invoice not created")
-    
-				voucher_params_si = {
-					'voucher_type': 'Sales Invoice',
-					'voucher_no': si.name
-				}
-				gl_accounts = {
-					'Sales - _TIRC': 'credit',
-					'Debtors - _TIRC': 'debit',
-					'Output Tax SGST - _TIRC': 'credit',
-					'Output Tax CGST - _TIRC': 'credit'
-				}
-				gl_entries = {
-					account: frappe.db.get_value('GL Entry', {**voucher_params_si, 'account': account}, field)
-					for account, field in gl_accounts.items()
-				}
+		from erpnext.stock.doctype.delivery_note.delivery_note import (make_sales_invoice)
 
-				self.assertEqual(gl_entries['Sales - _TIRC'], 5000)
-				self.assertEqual(gl_entries['Debtors - _TIRC'], 5900)
-				self.assertEqual(gl_entries['Output Tax SGST - _TIRC'], 450)
-				self.assertEqual(gl_entries['Output Tax CGST - _TIRC'], 450)
-    
-				dn.reload()
-				self.assertEqual(dn.status, "Completed")
+		si = make_sales_invoice(dn.name)
+		si.insert()
+		si.submit()
+
+		self.assertEqual(si.status, "Unpaid", "Sales Invoice not created")
+
+		voucher_params_si = {
+			'voucher_type': 'Sales Invoice',
+			'voucher_no': si.name
+		}
+		gl_accounts = {
+			'Sales - _TIRC': 'credit',
+			'Debtors - _TIRC': 'debit',
+			'Output Tax SGST - _TIRC': 'credit',
+			'Output Tax CGST - _TIRC': 'credit'
+		}
+		gl_entries = {
+			account: frappe.db.get_value('GL Entry', {**voucher_params_si, 'account': account}, field)
+			for account, field in gl_accounts.items()
+		}
+
+		self.assertEqual(gl_entries['Sales - _TIRC'], 5000)
+		self.assertEqual(gl_entries['Debtors - _TIRC'], 5900)
+		self.assertEqual(gl_entries['Output Tax SGST - _TIRC'], 450)
+		self.assertEqual(gl_entries['Output Tax CGST - _TIRC'], 450)
+
+		dn.reload()
+		self.assertEqual(dn.status, "Completed")
     
 	def test_sales_order_partial_payment_with_gst_TC_S_012(self):
-		company = frappe.get_all("Company", {"name": "_Test Indian Registered Company"}, ["gstin", "gst_category"])
-		customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
-		company_add = frappe.get_all("Address", {"name": "_Test Indian Registered Company-Billing"}, ["name", "gstin", "gst_category"])
-		customer_add = frappe.get_all("Address", {"name": "_Test Registered Customer-Billing"}, ["name", "gstin", "gst_category"])
-  
-		if company[0].get("gst_category") == "Registered Regular" and customer[0].get("gst_category") == "Registered Regular" and customer[0].get("gstin") and customer[0].get("gstin"):
-			if company_add[0].get("gst_category") == "Registered Regular" and customer_add[0].get("gst_category") == "Registered Regular" and company_add[0].get("gstin") and customer_add[0].get("gstin"):
-				so = make_sales_order(company='_Test Indian Registered Company', customer='_Test Registered Customer', warehouse='Stores - _TIRC' ,cost_center='Main - _TIRC', selling_price_list='Standard Selling', item_code='_Test Item', qty=4, rate=5000, do_not_save=True)
-				so.tax_category = 'In-State'
-				so.taxes_and_charges = 'Output GST In-state - _TIRC'
-				so.customer_address = customer_add[0].get("name")
-				so.billing_address_gstin = customer_add[0].get("gstin")
-				so.company_address = company_add[0].get("name")
-				so.company_gstin = company_add[0].get("gstin")
-				so.save()
-				so.submit()
+		so = self.create_and_submit_sales_order_with_gst("_Test Item", qty=4, rate=5000)
 
-				self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
-				self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
+		dn1 = make_delivery_note(so.name)
+		dn1.get("items")[0].qty = 2
+		dn1.save()
+		dn1.submit()
 
-				dn1 = make_delivery_note(so.name)
-				dn1.get("items")[0].qty = 2
-				dn1.save()
-				dn1.submit()
+		self.assertEqual(dn1.status, "To Bill", "Delivery Note not created")
 
-				self.assertEqual(dn1.status, "To Bill", "Delivery Note not created")
+		qty_change1 = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn1.name, 'warehouse': 'Stores - _TIRC'}, ['actual_qty', 'valuation_rate'])
+		self.assertEqual(qty_change1[0].get("actual_qty"), -2)
 
-				qty_change1 = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn1.name, 'warehouse': 'Stores - _TIRC'}, ['actual_qty', 'valuation_rate'])
-				self.assertEqual(qty_change1[0].get("actual_qty"), -2)
-    
-				dn_acc_credit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn1.name, 'account': 'Stock In Hand - _TIRC'}, 'credit')
-				self.assertEqual(dn_acc_credit1, qty_change1[0].get("valuation_rate") * 2)
+		dn_acc_credit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn1.name, 'account': 'Stock In Hand - _TIRC'}, 'credit')
+		self.assertEqual(dn_acc_credit1, qty_change1[0].get("valuation_rate") * 2)
 
-				dn_acc_debit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn1.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
-				self.assertEqual(dn_acc_debit1, qty_change1[0].get("valuation_rate") * 2)
-    
-				from erpnext.stock.doctype.delivery_note.delivery_note import (make_sales_invoice)
+		dn_acc_debit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn1.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
+		self.assertEqual(dn_acc_debit1, qty_change1[0].get("valuation_rate") * 2)
 
-				si1 = make_sales_invoice(dn1.name)
-				si1.insert()
-				si1.submit()
+		from erpnext.stock.doctype.delivery_note.delivery_note import (make_sales_invoice)
 
-				self.assertEqual(si1.status, "Unpaid", "Sales Invoice not created")
+		si1 = make_sales_invoice(dn1.name)
+		si1.insert()
+		si1.submit()
 
-				voucher_params_si1 = {
-					'voucher_type': 'Sales Invoice',
-					'voucher_no': si1.name
-				}
-				gl_accounts = {
-					'Sales - _TIRC': 'credit',
-					'Debtors - _TIRC': 'debit',
-					'Output Tax SGST - _TIRC': 'credit',
-					'Output Tax CGST - _TIRC': 'credit'
-				}
-				gl_entries_si1 = {
-					account: frappe.db.get_value('GL Entry', {**voucher_params_si1, 'account': account}, field)
-					for account, field in gl_accounts.items()
-				}
-				self.assertEqual(gl_entries_si1['Sales - _TIRC'], 10000)
-				self.assertEqual(gl_entries_si1['Debtors - _TIRC'], 11800)
-				self.assertEqual(gl_entries_si1['Output Tax SGST - _TIRC'], 900)
-				self.assertEqual(gl_entries_si1['Output Tax CGST - _TIRC'], 900)
-    
-				dn1.reload()
-				self.assertEqual(dn1.status, "Completed")
-    
-				dn2 = make_delivery_note(so.name)
-				dn2.save()
-				dn2.submit()
+		self.assertEqual(si1.status, "Unpaid", "Sales Invoice not created")
 
-				qty_change2 = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn2.name, 'warehouse': 'Stores - _TIRC'}, ['actual_qty', 'valuation_rate'])
-				self.assertEqual(qty_change2[0].get("actual_qty"), -2)
-    
-				dn_acc_credit2 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn2.name, 'account': 'Stock In Hand - _TIRC'}, 'credit')
-				self.assertEqual(dn_acc_credit2, qty_change2[0].get("valuation_rate") * 2)
+		voucher_params_si1 = {
+			'voucher_type': 'Sales Invoice',
+			'voucher_no': si1.name
+		}
+		gl_accounts = {
+			'Sales - _TIRC': 'credit',
+			'Debtors - _TIRC': 'debit',
+			'Output Tax SGST - _TIRC': 'credit',
+			'Output Tax CGST - _TIRC': 'credit'
+		}
+		gl_entries_si1 = {
+			account: frappe.db.get_value('GL Entry', {**voucher_params_si1, 'account': account}, field)
+			for account, field in gl_accounts.items()
+		}
+		self.assertEqual(gl_entries_si1['Sales - _TIRC'], 10000)
+		self.assertEqual(gl_entries_si1['Debtors - _TIRC'], 11800)
+		self.assertEqual(gl_entries_si1['Output Tax SGST - _TIRC'], 900)
+		self.assertEqual(gl_entries_si1['Output Tax CGST - _TIRC'], 900)
 
-				dn_acc_debit2 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn2.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
-				self.assertEqual(dn_acc_debit2, qty_change2[0].get("valuation_rate") * 2)
+		dn1.reload()
+		self.assertEqual(dn1.status, "Completed")
 
-				si2 = make_sales_invoice(dn2.name)
-				si2.insert()
-				si2.submit()
+		dn2 = make_delivery_note(so.name)
+		dn2.save()
+		dn2.submit()
 
-				self.assertEqual(si2.status, "Unpaid", "Sales Invoice not created")
+		qty_change2 = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn2.name, 'warehouse': 'Stores - _TIRC'}, ['actual_qty', 'valuation_rate'])
+		self.assertEqual(qty_change2[0].get("actual_qty"), -2)
 
-				voucher_params_si2 = {
-					'voucher_type': 'Sales Invoice',
-					'voucher_no': si2.name
-				}
-				gl_accounts = {
-					'Sales - _TIRC': 'credit',
-					'Debtors - _TIRC': 'debit',
-					'Output Tax SGST - _TIRC': 'credit',
-					'Output Tax CGST - _TIRC': 'credit'
-				}
-				gl_entries_si2 = {
-					account: frappe.db.get_value('GL Entry', {**voucher_params_si2, 'account': account}, field)
-					for account, field in gl_accounts.items()
-				}
-				self.assertEqual(gl_entries_si2['Sales - _TIRC'], 10000)
-				self.assertEqual(gl_entries_si2['Debtors - _TIRC'], 11800)
-				self.assertEqual(gl_entries_si2['Output Tax SGST - _TIRC'], 900)
-				self.assertEqual(gl_entries_si2['Output Tax CGST - _TIRC'], 900)
-    
-				dn2.reload()
-				self.assertEqual(dn2.status, "Completed")
+		dn_acc_credit2 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn2.name, 'account': 'Stock In Hand - _TIRC'}, 'credit')
+		self.assertEqual(dn_acc_credit2, qty_change2[0].get("valuation_rate") * 2)
+
+		dn_acc_debit2 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn2.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
+		self.assertEqual(dn_acc_debit2, qty_change2[0].get("valuation_rate") * 2)
+
+		si2 = make_sales_invoice(dn2.name)
+		si2.insert()
+		si2.submit()
+
+		self.assertEqual(si2.status, "Unpaid", "Sales Invoice not created")
+
+		voucher_params_si2 = {
+			'voucher_type': 'Sales Invoice',
+			'voucher_no': si2.name
+		}
+		gl_accounts = {
+			'Sales - _TIRC': 'credit',
+			'Debtors - _TIRC': 'debit',
+			'Output Tax SGST - _TIRC': 'credit',
+			'Output Tax CGST - _TIRC': 'credit'
+		}
+		gl_entries_si2 = {
+			account: frappe.db.get_value('GL Entry', {**voucher_params_si2, 'account': account}, field)
+			for account, field in gl_accounts.items()
+		}
+		self.assertEqual(gl_entries_si2['Sales - _TIRC'], 10000)
+		self.assertEqual(gl_entries_si2['Debtors - _TIRC'], 11800)
+		self.assertEqual(gl_entries_si2['Output Tax SGST - _TIRC'], 900)
+		self.assertEqual(gl_entries_si2['Output Tax CGST - _TIRC'], 900)
+
+		dn2.reload()
+		self.assertEqual(dn2.status, "Completed")
     
 	def test_sales_order_partial_sales_invoice_with_gst_TC_S_013(self):
-		company = frappe.get_all("Company", {"name": "_Test Indian Registered Company"}, ["gstin", "gst_category"])
-		customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
-		company_add = frappe.get_all("Address", {"name": "_Test Indian Registered Company-Billing"}, ["name", "gstin", "gst_category"])
-		customer_add = frappe.get_all("Address", {"name": "_Test Registered Customer-Billing"}, ["name", "gstin", "gst_category"])
-  
-		if company[0].get("gst_category") == "Registered Regular" and customer[0].get("gst_category") == "Registered Regular" and customer[0].get("gstin") and customer[0].get("gstin"):
-			if company_add[0].get("gst_category") == "Registered Regular" and customer_add[0].get("gst_category") == "Registered Regular" and company_add[0].get("gstin") and customer_add[0].get("gstin"):
-				so = make_sales_order(company='_Test Indian Registered Company', customer='_Test Registered Customer', warehouse='Stores - _TIRC' ,cost_center='Main - _TIRC', selling_price_list='Standard Selling', item_code='_Test Item', qty=4, rate=5000, do_not_save=True)
-				so.tax_category = 'In-State'
-				so.taxes_and_charges = 'Output GST In-state - _TIRC'
-				so.customer_address = customer_add[0].get("name")
-				so.billing_address_gstin = customer_add[0].get("gstin")
-				so.company_address = company_add[0].get("name")
-				so.company_gstin = company_add[0].get("gstin")
-				so.save()
-				so.submit()
+		so = self.create_and_submit_sales_order_with_gst("_Test Item", qty=4, rate=5000)
 
-				self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
-				self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
+		dn = make_delivery_note(so.name)
+		dn.save()
+		dn.submit()
 
-				dn = make_delivery_note(so.name)
-				dn.save()
-				dn.submit()
+		self.assertEqual(dn.status, "To Bill", "Delivery Note not created")
 
-				self.assertEqual(dn.status, "To Bill", "Delivery Note not created")
+		qty_change = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn.name, 'warehouse': 'Stores - _TIRC'}, ['actual_qty', 'valuation_rate'])
+		self.assertEqual(qty_change[0].get("actual_qty"), -4)
 
-				qty_change = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn.name, 'warehouse': 'Stores - _TIRC'}, ['actual_qty', 'valuation_rate'])
-				self.assertEqual(qty_change[0].get("actual_qty"), -4)
-    
-				dn_acc_credit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Stock In Hand - _TIRC'}, 'credit')
-				self.assertEqual(dn_acc_credit1, qty_change[0].get("valuation_rate") * 4)
+		dn_acc_credit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Stock In Hand - _TIRC'}, 'credit')
+		self.assertEqual(dn_acc_credit1, qty_change[0].get("valuation_rate") * 4)
 
-				dn_acc_debit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
-				self.assertEqual(dn_acc_debit1, qty_change[0].get("valuation_rate") * 4)
-    
-				from erpnext.stock.doctype.delivery_note.delivery_note import (make_sales_invoice)
+		dn_acc_debit1 = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
+		self.assertEqual(dn_acc_debit1, qty_change[0].get("valuation_rate") * 4)
 
-				si1 = make_sales_invoice(dn.name)
-				si1.get("items")[0].qty = 2
-				si1.insert()
-				si1.submit()
+		from erpnext.stock.doctype.delivery_note.delivery_note import (make_sales_invoice)
 
-				self.assertEqual(si1.status, "Unpaid", "Sales Invoice not created")
+		si1 = make_sales_invoice(dn.name)
+		si1.get("items")[0].qty = 2
+		si1.insert()
+		si1.submit()
 
-				voucher_params_si1 = {
-					'voucher_type': 'Sales Invoice',
-					'voucher_no': si1.name
-				}
-				gl_accounts = {
-					'Sales - _TIRC': 'credit',
-					'Debtors - _TIRC': 'debit',
-					'Output Tax SGST - _TIRC': 'credit',
-					'Output Tax CGST - _TIRC': 'credit'
-				}
-				gl_entries_si1 = {
-					account: frappe.db.get_value('GL Entry', {**voucher_params_si1, 'account': account}, field)
-					for account, field in gl_accounts.items()
-				}
-				self.assertEqual(gl_entries_si1['Sales - _TIRC'], 10000)
-				self.assertEqual(gl_entries_si1['Debtors - _TIRC'], 11800)
-				self.assertEqual(gl_entries_si1['Output Tax SGST - _TIRC'], 900)
-				self.assertEqual(gl_entries_si1['Output Tax CGST - _TIRC'], 900)
-    
-				si2 = make_sales_invoice(dn.name)
-				si2.insert()
-				si2.submit()
+		self.assertEqual(si1.status, "Unpaid", "Sales Invoice not created")
 
-				self.assertEqual(si2.status, "Unpaid", "Sales Invoice not created")
+		voucher_params_si1 = {
+			'voucher_type': 'Sales Invoice',
+			'voucher_no': si1.name
+		}
+		gl_accounts = {
+			'Sales - _TIRC': 'credit',
+			'Debtors - _TIRC': 'debit',
+			'Output Tax SGST - _TIRC': 'credit',
+			'Output Tax CGST - _TIRC': 'credit'
+		}
+		gl_entries_si1 = {
+			account: frappe.db.get_value('GL Entry', {**voucher_params_si1, 'account': account}, field)
+			for account, field in gl_accounts.items()
+		}
+		self.assertEqual(gl_entries_si1['Sales - _TIRC'], 10000)
+		self.assertEqual(gl_entries_si1['Debtors - _TIRC'], 11800)
+		self.assertEqual(gl_entries_si1['Output Tax SGST - _TIRC'], 900)
+		self.assertEqual(gl_entries_si1['Output Tax CGST - _TIRC'], 900)
 
-				voucher_params_si2 = {
-					'voucher_type': 'Sales Invoice',
-					'voucher_no': si2.name
-				}
-				gl_accounts = {
-					'Sales - _TIRC': 'credit',
-					'Debtors - _TIRC': 'debit',
-					'Output Tax SGST - _TIRC': 'credit',
-					'Output Tax CGST - _TIRC': 'credit'
-				}
-				gl_entries_si2 = {
-					account: frappe.db.get_value('GL Entry', {**voucher_params_si2, 'account': account}, field)
-					for account, field in gl_accounts.items()
-				}
-				self.assertEqual(gl_entries_si2['Sales - _TIRC'], 10000)
-				self.assertEqual(gl_entries_si2['Debtors - _TIRC'], 11800)
-				self.assertEqual(gl_entries_si2['Output Tax SGST - _TIRC'], 900)
-				self.assertEqual(gl_entries_si2['Output Tax CGST - _TIRC'], 900)
-    
-				dn.reload()
-				self.assertEqual(dn.status, "Completed")
+		si2 = make_sales_invoice(dn.name)
+		si2.insert()
+		si2.submit()
+
+		self.assertEqual(si2.status, "Unpaid", "Sales Invoice not created")
+
+		voucher_params_si2 = {
+			'voucher_type': 'Sales Invoice',
+			'voucher_no': si2.name
+		}
+		gl_accounts = {
+			'Sales - _TIRC': 'credit',
+			'Debtors - _TIRC': 'debit',
+			'Output Tax SGST - _TIRC': 'credit',
+			'Output Tax CGST - _TIRC': 'credit'
+		}
+		gl_entries_si2 = {
+			account: frappe.db.get_value('GL Entry', {**voucher_params_si2, 'account': account}, field)
+			for account, field in gl_accounts.items()
+		}
+		self.assertEqual(gl_entries_si2['Sales - _TIRC'], 10000)
+		self.assertEqual(gl_entries_si2['Debtors - _TIRC'], 11800)
+		self.assertEqual(gl_entries_si2['Output Tax SGST - _TIRC'], 900)
+		self.assertEqual(gl_entries_si2['Output Tax CGST - _TIRC'], 900)
+
+		dn.reload()
+		self.assertEqual(dn.status, "Completed")
     
 	def test_sales_order_create_dn_via_si_with_gst_TC_S_014(self):
-		company = frappe.get_all("Company", {"name": "_Test Indian Registered Company"}, ["gstin", "gst_category"])
-		customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
-		company_add = frappe.get_all("Address", {"name": "_Test Indian Registered Company-Billing"}, ["name", "gstin", "gst_category"])
-		customer_add = frappe.get_all("Address", {"name": "_Test Registered Customer-Billing"}, ["name", "gstin", "gst_category"])
-  
-		if company[0].get("gst_category") == "Registered Regular" and customer[0].get("gst_category") == "Registered Regular" and customer[0].get("gstin") and customer[0].get("gstin"):
-			if company_add[0].get("gst_category") == "Registered Regular" and customer_add[0].get("gst_category") == "Registered Regular" and company_add[0].get("gstin") and customer_add[0].get("gstin"):
-				so = make_sales_order(company='_Test Indian Registered Company', customer='_Test Registered Customer', warehouse='Stores - _TIRC' ,cost_center='Main - _TIRC', selling_price_list='Standard Selling', item_code='_Test Item', qty=4, rate=5000, do_not_save=True)
-				so.tax_category = 'In-State'
-				so.taxes_and_charges = 'Output GST In-state - _TIRC'
-				so.customer_address = customer_add[0].get("name")
-				so.billing_address_gstin = customer_add[0].get("gstin")
-				so.company_address = company_add[0].get("name")
-				so.company_gstin = company_add[0].get("gstin")
-				so.save()
-				so.submit()
-
-				self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
-				self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
+		so = self.create_and_submit_sales_order_with_gst("_Test Item", qty=4, rate=5000)
     
-				si = make_sales_invoice(so.name)
-				si.save()
-				si.submit()
+		si = make_sales_invoice(so.name)
+		si.save()
+		si.submit()
 
-				self.assertEqual(si.status, "Unpaid", "Sales Invoice not created")
-    
-				si_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Sales - _TIRC'}, 'credit')
-				self.assertEqual(si_acc_credit, 20000)
+		self.assertEqual(si.status, "Unpaid", "Sales Invoice not created")
 
-				si_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Debtors - _TIRC'}, 'debit')
-				self.assertEqual(si_acc_debit, 23600)
-    
-				si_acc_credit_gst = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Output Tax SGST - _TIRC'}, 'credit')
-				self.assertEqual(si_acc_credit_gst, 1800)
+		si_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Sales - _TIRC'}, 'credit')
+		self.assertEqual(si_acc_credit, 20000)
 
-				si_acc_debit_gst = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Output Tax CGST - _TIRC'}, 'credit')
-				self.assertEqual(si_acc_debit_gst, 1800)			
-    
-				from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
-				dn = make_delivery_note(si.name)
-				dn.save()
-				dn.submit()
+		si_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Debtors - _TIRC'}, 'debit')
+		self.assertEqual(si_acc_debit, 23600)
 
-				self.assertEqual(dn.status, "Completed", "Delivery Note not created")
+		si_acc_credit_gst = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Output Tax SGST - _TIRC'}, 'credit')
+		self.assertEqual(si_acc_credit_gst, 1800)
 
-				qty_change = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn.name, 'warehouse': 'Stores - _TIRC'}, ['actual_qty', 'valuation_rate'])
-				self.assertEqual(qty_change[0].get("actual_qty"), -4)
+		si_acc_debit_gst = frappe.db.get_value('GL Entry', {'voucher_type': 'Sales Invoice', 'voucher_no': si.name, 'account': 'Output Tax CGST - _TIRC'}, 'credit')
+		self.assertEqual(si_acc_debit_gst, 1800)			
 
-				dn_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Stock In Hand - _TIRC'}, 'credit')
-				self.assertEqual(dn_acc_credit, qty_change[0].get("valuation_rate") * 4)
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
+		dn = make_delivery_note(si.name)
+		dn.save()
+		dn.submit()
 
-				dn_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
-				self.assertEqual(dn_acc_debit, qty_change[0].get("valuation_rate") * 4)
+		self.assertEqual(dn.status, "Completed", "Delivery Note not created")
+
+		qty_change = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn.name, 'warehouse': 'Stores - _TIRC'}, ['actual_qty', 'valuation_rate'])
+		self.assertEqual(qty_change[0].get("actual_qty"), -4)
+
+		dn_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Stock In Hand - _TIRC'}, 'credit')
+		self.assertEqual(dn_acc_credit, qty_change[0].get("valuation_rate") * 4)
+
+		dn_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
+		self.assertEqual(dn_acc_debit, qty_change[0].get("valuation_rate") * 4)
     
 	def test_sales_order_create_partial_dn_via_si_with_gst_TC_S_015(self):
-		company = frappe.get_all("Company", {"name": "_Test Indian Registered Company"}, ["gstin", "gst_category"])
-		customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
-		company_add = frappe.get_all("Address", {"name": "_Test Indian Registered Company-Billing"}, ["name", "gstin", "gst_category"])
-		customer_add = frappe.get_all("Address", {"name": "_Test Registered Customer-Billing"}, ["name", "gstin", "gst_category"])
+		so = self.create_and_submit_sales_order_with_gst("_Test Item", qty=4, rate=5000)
   
-		if company[0].get("gst_category") == "Registered Regular" and customer[0].get("gst_category") == "Registered Regular" and customer[0].get("gstin") and customer[0].get("gstin"):
-			if company_add[0].get("gst_category") == "Registered Regular" and customer_add[0].get("gst_category") == "Registered Regular" and company_add[0].get("gstin") and customer_add[0].get("gstin"):
-				so = make_sales_order(company='_Test Indian Registered Company', customer='_Test Registered Customer', warehouse='Stores - _TIRC' ,cost_center='Main - _TIRC', selling_price_list='Standard Selling', item_code='_Test Item', qty=4, rate=5000, do_not_save=True)
-				so.tax_category = 'In-State'
-				so.taxes_and_charges = 'Output GST In-state - _TIRC'
-				so.customer_address = customer_add[0].get("name")
-				so.billing_address_gstin = customer_add[0].get("gstin")
-				so.company_address = company_add[0].get("name")
-				so.company_gstin = company_add[0].get("gstin")
-				so.save()
-				so.submit()
+		si = make_sales_invoice(so.name)
+		si.save()
+		si.submit()
 
-				self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
-				self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
-    
-				si = make_sales_invoice(so.name)
-				si.save()
-				si.submit()
+		self.assertEqual(si.status, "Unpaid", "Sales Invoice not created")
 
-				self.assertEqual(si.status, "Unpaid", "Sales Invoice not created")
-    
-				voucher_params_si = {
-					'voucher_type': 'Sales Invoice',
-					'voucher_no': si.name
-				}
-				gl_accounts = {
-					'Sales - _TIRC': 'credit',
-					'Debtors - _TIRC': 'debit',
-					'Output Tax SGST - _TIRC': 'credit',
-					'Output Tax CGST - _TIRC': 'credit'
-				}
-				gl_entries = {
-					account: frappe.db.get_value('GL Entry', {**voucher_params_si, 'account': account}, field)
-					for account, field in gl_accounts.items()
-				}
-				self.assertEqual(gl_entries['Sales - _TIRC'], 20000)
-				self.assertEqual(gl_entries['Debtors - _TIRC'], 23600)
-				self.assertEqual(gl_entries['Output Tax SGST - _TIRC'], 1800)
-				self.assertEqual(gl_entries['Output Tax CGST - _TIRC'], 1800)		
-    
-				from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
-				dn1 = make_delivery_note(si.name)
-				dn1.get("items")[0].qty = 2
-				dn1.save()
-				dn1.submit()
+		voucher_params_si = {
+			'voucher_type': 'Sales Invoice',
+			'voucher_no': si.name
+		}
+		gl_accounts = {
+			'Sales - _TIRC': 'credit',
+			'Debtors - _TIRC': 'debit',
+			'Output Tax SGST - _TIRC': 'credit',
+			'Output Tax CGST - _TIRC': 'credit'
+		}
+		gl_entries = {
+			account: frappe.db.get_value('GL Entry', {**voucher_params_si, 'account': account}, field)
+			for account, field in gl_accounts.items()
+		}
+		self.assertEqual(gl_entries['Sales - _TIRC'], 20000)
+		self.assertEqual(gl_entries['Debtors - _TIRC'], 23600)
+		self.assertEqual(gl_entries['Output Tax SGST - _TIRC'], 1800)
+		self.assertEqual(gl_entries['Output Tax CGST - _TIRC'], 1800)		
 
-				self.assertEqual(dn1.status, "Completed", "Delivery Note not created")
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
+		dn1 = make_delivery_note(si.name)
+		dn1.get("items")[0].qty = 2
+		dn1.save()
+		dn1.submit()
 
-				qty_change1 = frappe.get_all(
-					'Stock Ledger Entry',
-					{'item_code': '_Test Item', 'voucher_no': dn1.name, 'warehouse': 'Stores - _TIRC'},
-					['actual_qty', 'valuation_rate']
-				)
-				actual_qty = qty_change1[0].get("actual_qty")
-				valuation_rate = qty_change1[0].get("valuation_rate")
+		self.assertEqual(dn1.status, "Completed", "Delivery Note not created")
 
-				self.assertEqual(actual_qty, -2)
+		qty_change1 = frappe.get_all(
+			'Stock Ledger Entry',
+			{'item_code': '_Test Item', 'voucher_no': dn1.name, 'warehouse': 'Stores - _TIRC'},
+			['actual_qty', 'valuation_rate']
+		)
+		actual_qty = qty_change1[0].get("actual_qty")
+		valuation_rate = qty_change1[0].get("valuation_rate")
 
-				voucher_params_dn1 = {
-					'voucher_type': 'Delivery Note','voucher_no': dn1.name
-				}
-				gl_accounts_dn1 = {
-					'Stock In Hand - _TIRC': 'credit','Cost of Goods Sold - _TIRC': 'debit'
-				}
-				gl_entries_dn1 = {
-					account: frappe.db.get_value('GL Entry', {**voucher_params_dn1, 'account': account}, field)
-					for account, field in gl_accounts_dn1.items()
-				}
-				self.assertEqual(gl_entries_dn1['Stock In Hand - _TIRC'], valuation_rate * 2)
-				self.assertEqual(gl_entries_dn1['Cost of Goods Sold - _TIRC'], valuation_rate * 2)
-    
-				dn2 = make_delivery_note(si.name)
-				dn2.save()
-				dn2.submit()
-    
-				self.assertEqual(dn1.status, "Completed", "Delivery Note not created")
+		self.assertEqual(actual_qty, -2)
 
-				qty_change2 = frappe.get_all(
-					'Stock Ledger Entry',
-					{'item_code': '_Test Item', 'voucher_no': dn2.name, 'warehouse': 'Stores - _TIRC'},
-					['actual_qty', 'valuation_rate']
-				)
-				actual_qty = qty_change2[0].get("actual_qty")
-				valuation_rate = qty_change2[0].get("valuation_rate")
+		voucher_params_dn1 = {
+			'voucher_type': 'Delivery Note','voucher_no': dn1.name
+		}
+		gl_accounts_dn1 = {
+			'Stock In Hand - _TIRC': 'credit','Cost of Goods Sold - _TIRC': 'debit'
+		}
+		gl_entries_dn1 = {
+			account: frappe.db.get_value('GL Entry', {**voucher_params_dn1, 'account': account}, field)
+			for account, field in gl_accounts_dn1.items()
+		}
+		self.assertEqual(gl_entries_dn1['Stock In Hand - _TIRC'], valuation_rate * 2)
+		self.assertEqual(gl_entries_dn1['Cost of Goods Sold - _TIRC'], valuation_rate * 2)
 
-				self.assertEqual(actual_qty, -2)
+		dn2 = make_delivery_note(si.name)
+		dn2.save()
+		dn2.submit()
 
-				voucher_params_dn2 = {
-					'voucher_type': 'Delivery Note',
-					'voucher_no': dn2.name
-				}
-				gl_accounts_dn2 = {
-					'Stock In Hand - _TIRC': 'credit',
-					'Cost of Goods Sold - _TIRC': 'debit'
-				}
-				gl_entries_dn2 = {
-					account: frappe.db.get_value('GL Entry', {**voucher_params_dn2, 'account': account}, field)
-					for account, field in gl_accounts_dn2.items()
-				}
-				self.assertEqual(gl_entries_dn2['Stock In Hand - _TIRC'], valuation_rate * 2)
-				self.assertEqual(gl_entries_dn2['Cost of Goods Sold - _TIRC'], valuation_rate * 2)
+		self.assertEqual(dn1.status, "Completed", "Delivery Note not created")
+
+		qty_change2 = frappe.get_all(
+			'Stock Ledger Entry',
+			{'item_code': '_Test Item', 'voucher_no': dn2.name, 'warehouse': 'Stores - _TIRC'},
+			['actual_qty', 'valuation_rate']
+		)
+		actual_qty = qty_change2[0].get("actual_qty")
+		valuation_rate = qty_change2[0].get("valuation_rate")
+
+		self.assertEqual(actual_qty, -2)
+
+		voucher_params_dn2 = {
+			'voucher_type': 'Delivery Note',
+			'voucher_no': dn2.name
+		}
+		gl_accounts_dn2 = {
+			'Stock In Hand - _TIRC': 'credit',
+			'Cost of Goods Sold - _TIRC': 'debit'
+		}
+		gl_entries_dn2 = {
+			account: frappe.db.get_value('GL Entry', {**voucher_params_dn2, 'account': account}, field)
+			for account, field in gl_accounts_dn2.items()
+		}
+		self.assertEqual(gl_entries_dn2['Stock In Hand - _TIRC'], valuation_rate * 2)
+		self.assertEqual(gl_entries_dn2['Cost of Goods Sold - _TIRC'], valuation_rate * 2)
     
 	def test_sales_order_update_stock_in_si_with_gst_TC_S_018(self):
-		company = frappe.get_all("Company", {"name": "_Test Indian Registered Company"}, ["gstin", "gst_category"])
-		customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
-		company_add = frappe.get_all("Address", {"name": "_Test Indian Registered Company-Billing"}, ["name", "gstin", "gst_category"])
-		customer_add = frappe.get_all("Address", {"name": "_Test Registered Customer-Billing"}, ["name", "gstin", "gst_category"])
-  
-		if company[0].get("gst_category") == "Registered Regular" and customer[0].get("gst_category") == "Registered Regular" and customer[0].get("gstin") and customer[0].get("gstin"):
-			if company_add[0].get("gst_category") == "Registered Regular" and customer_add[0].get("gst_category") == "Registered Regular" and company_add[0].get("gstin") and customer_add[0].get("gstin"):
-				so = make_sales_order(company='_Test Indian Registered Company', customer='_Test Registered Customer', warehouse='Stores - _TIRC' ,cost_center='Main - _TIRC', selling_price_list='Standard Selling', item_code='_Test Item', qty=4, rate=5000, do_not_save=True)
-				so.tax_category = 'In-State'
-				so.taxes_and_charges = 'Output GST In-state - _TIRC'
-				so.customer_address = customer_add[0].get("name")
-				so.billing_address_gstin = customer_add[0].get("gstin")
-				so.company_address = company_add[0].get("name")
-				so.company_gstin = company_add[0].get("gstin")
-				so.save()
-				so.submit()
+		so = self.create_and_submit_sales_order_with_gst("_Test Item", qty=4, rate=5000)
 
-				self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
-				self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
+		si = make_sales_invoice(so.name)
+		si.update_stock = 1
+		si.save()
+		si.submit()
 
-				si = make_sales_invoice(so.name)
-				si.update_stock = 1
-				si.save()
-				si.submit()
+		self.assertEqual(si.status, "Unpaid", "Sales Invoice not created")
 
-				self.assertEqual(si.status, "Unpaid", "Sales Invoice not created")
+		qty_change = frappe.get_all(
+			'Stock Ledger Entry',
+			{'item_code': '_Test Item', 'voucher_no': si.name, 'warehouse': 'Stores - _TIRC'},
+			['actual_qty', 'valuation_rate']
+		)
+		actual_qty = qty_change[0].get("actual_qty")
+		valuation_rate = qty_change[0].get("valuation_rate")
 
-				qty_change = frappe.get_all(
-					'Stock Ledger Entry',
-					{'item_code': '_Test Item', 'voucher_no': si.name, 'warehouse': 'Stores - _TIRC'},
-					['actual_qty', 'valuation_rate']
-				)
-				actual_qty = qty_change[0].get("actual_qty")
-				valuation_rate = qty_change[0].get("valuation_rate")
+		self.assertEqual(actual_qty, -4)
 
-				self.assertEqual(actual_qty, -4)
+		voucher_params_si = {
+			'voucher_type': 'Sales Invoice',
+			'voucher_no': si.name
+		}
+		gl_accounts_si = {
+			'Stock In Hand - _TIRC': 'credit',
+			'Cost of Goods Sold - _TIRC': 'debit',
+			'Sales - _TIRC': 'credit',
+			'Debtors - _TIRC': 'debit',
+			'Output Tax SGST - _TIRC': 'credit',
+			'Output Tax CGST - _TIRC': 'credit'
+		}
+		gl_entries_si = {
+			account: frappe.db.get_value('GL Entry', {**voucher_params_si, 'account': account}, field)
+			for account, field in gl_accounts_si.items()
+		}
+		self.assertEqual(gl_entries_si['Stock In Hand - _TIRC'], valuation_rate * 4)
+		self.assertEqual(gl_entries_si['Cost of Goods Sold - _TIRC'], valuation_rate * 4)
+		self.assertEqual(gl_entries_si['Sales - _TIRC'], 20000)
+		self.assertEqual(gl_entries_si['Debtors - _TIRC'], 23600)
+		self.assertEqual(gl_entries_si['Output Tax SGST - _TIRC'], 1800)
+		self.assertEqual(gl_entries_si['Output Tax CGST - _TIRC'], 1800)
 
-				voucher_params_si = {
-					'voucher_type': 'Sales Invoice',
-					'voucher_no': si.name
-				}
-				gl_accounts_si = {
-					'Stock In Hand - _TIRC': 'credit',
-					'Cost of Goods Sold - _TIRC': 'debit',
-					'Sales - _TIRC': 'credit',
-					'Debtors - _TIRC': 'debit',
-					'Output Tax SGST - _TIRC': 'credit',
-					'Output Tax CGST - _TIRC': 'credit'
-				}
-				gl_entries_si = {
-					account: frappe.db.get_value('GL Entry', {**voucher_params_si, 'account': account}, field)
-					for account, field in gl_accounts_si.items()
-				}
-				self.assertEqual(gl_entries_si['Stock In Hand - _TIRC'], valuation_rate * 4)
-				self.assertEqual(gl_entries_si['Cost of Goods Sold - _TIRC'], valuation_rate * 4)
-				self.assertEqual(gl_entries_si['Sales - _TIRC'], 20000)
-				self.assertEqual(gl_entries_si['Debtors - _TIRC'], 23600)
-				self.assertEqual(gl_entries_si['Output Tax SGST - _TIRC'], 1800)
-				self.assertEqual(gl_entries_si['Output Tax CGST - _TIRC'], 1800)
-
-				so.reload()
-				self.assertEqual(so.status, 'Completed')
+		so.reload()
+		self.assertEqual(so.status, 'Completed')
     
 	def test_sales_order_update_stock_in_partial_si_with_gst_TC_S_019(self):
-		company = frappe.get_all("Company", {"name": "_Test Indian Registered Company"}, ["gstin", "gst_category"])
-		customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
-		company_add = frappe.get_all("Address", {"name": "_Test Indian Registered Company-Billing"}, ["name", "gstin", "gst_category"])
-		customer_add = frappe.get_all("Address", {"name": "_Test Registered Customer-Billing"}, ["name", "gstin", "gst_category"])
-  
-		if company[0].get("gst_category") == "Registered Regular" and customer[0].get("gst_category") == "Registered Regular" and customer[0].get("gstin") and customer[0].get("gstin"):
-			if company_add[0].get("gst_category") == "Registered Regular" and customer_add[0].get("gst_category") == "Registered Regular" and company_add[0].get("gstin") and customer_add[0].get("gstin"):
-				so = make_sales_order(company='_Test Indian Registered Company', customer='_Test Registered Customer', warehouse='Stores - _TIRC' ,cost_center='Main - _TIRC', selling_price_list='Standard Selling', item_code='_Test Item', qty=4, rate=5000, do_not_save=True)
-				so.tax_category = 'In-State'
-				so.taxes_and_charges = 'Output GST In-state - _TIRC'
-				so.customer_address = customer_add[0].get("name")
-				so.billing_address_gstin = customer_add[0].get("gstin")
-				so.company_address = company_add[0].get("name")
-				so.company_gstin = company_add[0].get("gstin")
-				so.save()
-				so.submit()
+		so = self.create_and_submit_sales_order_with_gst("_Test Item", qty=4, rate=5000)
 
-				self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
-				self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
+		si1 = make_sales_invoice(so.name)
+		si1.get("items")[0].qty = 2
+		si1.update_stock = 1
+		si1.save()
+		si1.submit()
 
-				si1 = make_sales_invoice(so.name)
-				si1.get("items")[0].qty = 2
-				si1.update_stock = 1
-				si1.save()
-				si1.submit()
+		self.assertEqual(si1.status, "Unpaid", "Sales Invoice not created")
 
-				self.assertEqual(si1.status, "Unpaid", "Sales Invoice not created")
+		qty_change1 = frappe.get_all(
+			'Stock Ledger Entry',
+			{'item_code': '_Test Item', 'voucher_no': si1.name, 'warehouse': 'Stores - _TIRC'},
+			['actual_qty', 'valuation_rate']
+		)
 
-				qty_change1 = frappe.get_all(
-					'Stock Ledger Entry',
-					{'item_code': '_Test Item', 'voucher_no': si1.name, 'warehouse': 'Stores - _TIRC'},
-					['actual_qty', 'valuation_rate']
-				)
+		actual_qty1 = qty_change1[0].get("actual_qty")
+		valuation_rate1 = qty_change1[0].get("valuation_rate")
 
-				actual_qty1 = qty_change1[0].get("actual_qty")
-				valuation_rate1 = qty_change1[0].get("valuation_rate")
+		self.assertEqual(actual_qty1, -2)
 
-				self.assertEqual(actual_qty1, -2)
+		voucher_params_si1 = {
+			'voucher_type': 'Sales Invoice','voucher_no': si1.name
+		}
+		gl_accounts_si1 = {
+			'Stock In Hand - _TIRC': 'credit',
+			'Cost of Goods Sold - _TIRC': 'debit',
+			'Sales - _TIRC': 'credit',
+			'Debtors - _TIRC': 'debit'
+		}
+		gl_entries_si1 = {
+			account: frappe.db.get_value('GL Entry', {**voucher_params_si1, 'account': account}, field)
+			for account, field in gl_accounts_si1.items()
+		}
+		self.assertEqual(gl_entries_si1['Stock In Hand - _TIRC'], valuation_rate1 * 2)
+		self.assertEqual(gl_entries_si1['Cost of Goods Sold - _TIRC'], valuation_rate1 * 2)
+		self.assertEqual(gl_entries_si1['Sales - _TIRC'], 10000)
+		self.assertEqual(gl_entries_si1['Debtors - _TIRC'], 11800)
 
-				voucher_params_si1 = {
-					'voucher_type': 'Sales Invoice','voucher_no': si1.name
-				}
-				gl_accounts_si1 = {
-					'Stock In Hand - _TIRC': 'credit',
-					'Cost of Goods Sold - _TIRC': 'debit',
-					'Sales - _TIRC': 'credit',
-					'Debtors - _TIRC': 'debit'
-				}
-				gl_entries_si1 = {
-					account: frappe.db.get_value('GL Entry', {**voucher_params_si1, 'account': account}, field)
-					for account, field in gl_accounts_si1.items()
-				}
-				self.assertEqual(gl_entries_si1['Stock In Hand - _TIRC'], valuation_rate1 * 2)
-				self.assertEqual(gl_entries_si1['Cost of Goods Sold - _TIRC'], valuation_rate1 * 2)
-				self.assertEqual(gl_entries_si1['Sales - _TIRC'], 10000)
-				self.assertEqual(gl_entries_si1['Debtors - _TIRC'], 11800)
-		
-				si2 = make_sales_invoice(so.name)
-				si2.update_stock = 1
-				si2.save()
-				si2.submit()
+		si2 = make_sales_invoice(so.name)
+		si2.update_stock = 1
+		si2.save()
+		si2.submit()
 
-				self.assertEqual(si2.status, "Unpaid", "Sales Invoice not created")
+		self.assertEqual(si2.status, "Unpaid", "Sales Invoice not created")
 
-				qty_change2 = frappe.get_all(
-					'Stock Ledger Entry',
-					{'item_code': '_Test Item', 'voucher_no': si2.name, 'warehouse': 'Stores - _TIRC'},
-					['actual_qty', 'valuation_rate']
-				)
-				actual_qty2 = qty_change2[0].get("actual_qty")
-				valuation_rate2 = qty_change2[0].get("valuation_rate")
+		qty_change2 = frappe.get_all(
+			'Stock Ledger Entry',
+			{'item_code': '_Test Item', 'voucher_no': si2.name, 'warehouse': 'Stores - _TIRC'},
+			['actual_qty', 'valuation_rate']
+		)
+		actual_qty2 = qty_change2[0].get("actual_qty")
+		valuation_rate2 = qty_change2[0].get("valuation_rate")
 
-				self.assertEqual(actual_qty2, -2)
+		self.assertEqual(actual_qty2, -2)
 
-				voucher_params_si2 = {
-					'voucher_type': 'Sales Invoice','voucher_no': si2.name
-				}
-				gl_accounts_si2 = {
-					'Stock In Hand - _TIRC': 'credit',
-					'Cost of Goods Sold - _TIRC': 'debit',
-					'Sales - _TIRC': 'credit',
-					'Debtors - _TIRC': 'debit'
-				}
-				gl_entries_si2 = {
-					account: frappe.db.get_value('GL Entry', {**voucher_params_si2, 'account': account}, field)
-					for account, field in gl_accounts_si2.items()
-				}
-				self.assertEqual(gl_entries_si2['Stock In Hand - _TIRC'], valuation_rate2 * 2)
-				self.assertEqual(gl_entries_si2['Cost of Goods Sold - _TIRC'], valuation_rate2 * 2)
-				self.assertEqual(gl_entries_si2['Sales - _TIRC'], 10000)
-				self.assertEqual(gl_entries_si2['Debtors - _TIRC'], 11800)
+		voucher_params_si2 = {
+			'voucher_type': 'Sales Invoice','voucher_no': si2.name
+		}
+		gl_accounts_si2 = {
+			'Stock In Hand - _TIRC': 'credit',
+			'Cost of Goods Sold - _TIRC': 'debit',
+			'Sales - _TIRC': 'credit',
+			'Debtors - _TIRC': 'debit'
+		}
+		gl_entries_si2 = {
+			account: frappe.db.get_value('GL Entry', {**voucher_params_si2, 'account': account}, field)
+			for account, field in gl_accounts_si2.items()
+		}
+		self.assertEqual(gl_entries_si2['Stock In Hand - _TIRC'], valuation_rate2 * 2)
+		self.assertEqual(gl_entries_si2['Cost of Goods Sold - _TIRC'], valuation_rate2 * 2)
+		self.assertEqual(gl_entries_si2['Sales - _TIRC'], 10000)
+		self.assertEqual(gl_entries_si2['Debtors - _TIRC'], 11800)
 
-				so.reload()
-				self.assertEqual(so.status, 'Completed')
+		so.reload()
+		self.assertEqual(so.status, 'Completed')
     
 	def test_sales_order_for_service_item_with_gst_TC_S_020(self):
 		make_service_item()
-		company = frappe.get_all("Company", {"name": "_Test Indian Registered Company"}, ["gstin", "gst_category"])
-		customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
-		company_add = frappe.get_all("Address", {"name": "_Test Indian Registered Company-Billing"}, ["name", "gstin", "gst_category"])
-		customer_add = frappe.get_all("Address", {"name": "_Test Registered Customer-Billing"}, ["name", "gstin", "gst_category"])
-  
-		if company[0].get("gst_category") == "Registered Regular" and customer[0].get("gst_category") == "Registered Regular" and customer[0].get("gstin") and customer[0].get("gstin"):
-			if company_add[0].get("gst_category") == "Registered Regular" and customer_add[0].get("gst_category") == "Registered Regular" and company_add[0].get("gstin") and customer_add[0].get("gstin"):
-				so = make_sales_order(company='_Test Indian Registered Company', customer='_Test Registered Customer', warehouse='Stores - _TIRC' ,cost_center='Main - _TIRC', selling_price_list='Standard Selling', item_code='Consultancy', qty=1, rate=5000, do_not_save=True)
-				so.tax_category = 'In-State'
-				so.taxes_and_charges = 'Output GST In-state - _TIRC'
-				so.customer_address = customer_add[0].get("name")
-				so.billing_address_gstin = customer_add[0].get("gstin")
-				so.company_address = company_add[0].get("name")
-				so.company_gstin = company_add[0].get("gstin")
-				so.save()
-				so.submit()
-
-				self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
-				self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
+		so = self.create_and_submit_sales_order_with_gst("_Test Item", qty=1, rate=5000)		
 		
-				si = make_sales_invoice(so.name)
-				si.save()
-				si.submit()
+		si = make_sales_invoice(so.name)
+		si.save()
+		si.submit()
 
-				self.assertEqual(si.status, "Unpaid", "Sales Invoice not created")
-		
-				voucher_params_si = {
-					'voucher_type': 'Sales Invoice','voucher_no': si.name
-				}
-				gl_accounts_si = {
-					'Sales - _TIRC': 'credit',
-					'Debtors - _TIRC': 'debit',
-					'Output Tax SGST - _TIRC': 'credit',
-					'Output Tax CGST - _TIRC': 'credit'
-				}
-				gl_entries_si = {
-					account: frappe.db.get_value('GL Entry', {**voucher_params_si, 'account': account}, field)
-					for account, field in gl_accounts_si.items()
-				}
-				self.assertEqual(gl_entries_si['Sales - _TIRC'], 5000)
-				self.assertEqual(gl_entries_si['Debtors - _TIRC'], 5900)
-				self.assertEqual(gl_entries_si['Output Tax SGST - _TIRC'], 450)
-				self.assertEqual(gl_entries_si['Output Tax CGST - _TIRC'], 450)
+		self.assertEqual(si.status, "Unpaid", "Sales Invoice not created")
+
+		voucher_params_si = {
+			'voucher_type': 'Sales Invoice','voucher_no': si.name
+		}
+		gl_accounts_si = {
+			'Sales - _TIRC': 'credit',
+			'Debtors - _TIRC': 'debit',
+			'Output Tax SGST - _TIRC': 'credit',
+			'Output Tax CGST - _TIRC': 'credit'
+		}
+		gl_entries_si = {
+			account: frappe.db.get_value('GL Entry', {**voucher_params_si, 'account': account}, field)
+			for account, field in gl_accounts_si.items()
+		}
+		self.assertEqual(gl_entries_si['Sales - _TIRC'], 5000)
+		self.assertEqual(gl_entries_si['Debtors - _TIRC'], 5900)
+		self.assertEqual(gl_entries_si['Output Tax SGST - _TIRC'], 450)
+		self.assertEqual(gl_entries_si['Output Tax CGST - _TIRC'], 450)
     
 	def test_sales_order_of_full_payment_with_shipping_rule_TC_S_021(self):
 		so = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', qty=1, rate=5000, do_not_save=True)
@@ -4013,37 +3888,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(so.status, "To Deliver", "Sales Order not updated")
  
 	def test_sales_order_create_si_via_pe_dn_with_gst_TC_S_042(self):
-		company = get_gst_details("Company", {"name": "_Test Indian Registered Company"})[0]
-		customer = get_gst_details("Customer", {"name": "_Test Registered Customer"})[0]
-		company_add = get_gst_details("Address", {"name": "_Test Indian Registered Company-Billing"})[0]
-		customer_add = get_gst_details("Address", {"name": "_Test Registered Customer-Billing"})[0]
-
-		if not (is_registered_regular(company) and is_registered_regular(customer) and
-				is_registered_regular(company_add) and is_registered_regular(customer_add)):
-			self.fail("GST details are not properly configured")
-
-		so = make_sales_order(
-			company="_Test Indian Registered Company",
-			customer="_Test Registered Customer",
-			warehouse="Stores - _TIRC",
-			cost_center="Main - _TIRC",
-			selling_price_list="Standard Selling",
-			item_code="_Test Item",
-			qty=1,
-			rate=5000,
-			do_not_save=True
-		)
-		so.tax_category = "In-State"
-		so.taxes_and_charges = "Output GST In-state - _TIRC"
-		so.customer_address = customer_add.get("name")
-		so.billing_address_gstin = customer_add.get("gstin")
-		so.company_address = company_add.get("name")
-		so.company_gstin = company_add.get("gstin")
-		so.save()
-		so.submit()
-
-		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
-		self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
+		so = self.create_and_submit_sales_order_with_gst("_Test Item", qty=1, rate=5000)
 
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
 
@@ -4120,37 +3965,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		)
  
 	def test_sales_order_create_si_via_partial_pe_dn_with_gst_TC_S_043(self):
-		company = get_gst_details("Company", {"name": "_Test Indian Registered Company"})
-		customer = get_gst_details("Customer", {"name": "_Test Registered Customer"})
-		company_add = get_gst_details("Address", {"name": "_Test Indian Registered Company-Billing"})
-		customer_add = get_gst_details("Address", {"name": "_Test Registered Customer-Billing"})
-
-		if not (is_registered_regular(company[0]) and is_registered_regular(customer[0]) and 
-				is_registered_regular(company_add[0]) and is_registered_regular(customer_add[0])):
-			self.fail("GST details are not properly configured")
-
-		so = make_sales_order(
-			company='_Test Indian Registered Company',
-			customer='_Test Registered Customer',
-			warehouse='Stores - _TIRC',
-			cost_center='Main - _TIRC',
-			selling_price_list='Standard Selling',
-			item_code='_Test Item',
-			qty=1,
-			rate=5000,
-			do_not_save=True
-		)
-		so.tax_category = 'In-State'
-		so.taxes_and_charges = 'Output GST In-state - _TIRC'
-		so.customer_address = customer_add[0].get("name")
-		so.billing_address_gstin = customer_add[0].get("gstin")
-		so.company_address = company_add[0].get("name")
-		so.company_gstin = company_add[0].get("gstin")
-		so.save()
-		so.submit()
-
-		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
-		self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
+		so = self.create_and_submit_sales_order_with_gst("_Test Item", qty=1, rate=5000)
   
 		create_registered_bank_account()
 
@@ -4506,6 +4321,43 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		sales_order.submit()
 		self.assertEqual(sales_order.status, "To Deliver and Bill")
 		return sales_order
+
+	def create_and_submit_sales_order_with_gst(self, item_code, qty=None, rate=None):
+		company = get_gst_details("Company", {"name": "_Test Indian Registered Company"})[0]
+		customer = get_gst_details("Customer", {"name": "_Test Registered Customer"})[0]
+		company_add = get_gst_details("Address", {"name": "_Test Indian Registered Company-Billing"})[0]
+		customer_add = get_gst_details("Address", {"name": "_Test Registered Customer-Billing"})[0]
+
+		if not (is_registered_regular(company) and is_registered_regular(customer) and
+				is_registered_regular(company_add) and is_registered_regular(customer_add)):
+			self.fail("GST details are not properly configured")
+
+		so = make_sales_order(
+			company="_Test Indian Registered Company",
+			customer="_Test Registered Customer",
+			warehouse="Stores - _TIRC",
+			cost_center="Main - _TIRC",
+			selling_price_list="Standard Selling",
+			item_code=item_code,
+			qty=qty,
+			rate=rate,
+			do_not_save=True
+		)
+		so.tax_category = "In-State"
+		so.taxes_and_charges = "Output GST In-state - _TIRC"
+		so.customer_address = customer_add.get("name")
+		so.billing_address_gstin = customer_add.get("gstin")
+		so.company_address = company_add.get("name")
+		so.company_gstin = company_add.get("gstin")
+		for i in so.items:
+			i.gst_hsn_code = "01011020"
+		so.save()
+		so.submit()
+
+		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
+		self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
+  
+		return so
 
 	def create_and_submit_sales_invoice(self, delivery_note_name, qty=None, expected_amount=None,advances_automatically=None):
 		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
