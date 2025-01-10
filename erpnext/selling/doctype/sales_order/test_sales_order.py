@@ -4306,6 +4306,31 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Sales - _TC'}, 'credit'), 5000)
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Debtors - _TC'}, 'debit'), 5000)
   
+	def test_sales_order_creating_partial_pe_with_update_stock_SI_TC_S_053(self):
+		so = self.create_and_submit_sales_order(qty=1, rate=5000)
+
+		self.create_and_submit_payment_entry(dt="Sales Order", dn=so.name, amt=2000)
+  
+		si = make_sales_invoice(so.name)
+		si.allocate_advances_automatically= 1
+		si.only_include_allocated_payments = 1
+		si.update_stock = 1
+		si.save()
+		si.submit()
+		si.reload()
+
+		self.assertEqual(si.status, "Partly Paid", "Sales Invoice not created")
+		self.assertEqual(frappe.db.get_value('Stock Ledger Entry', {'voucher_no': si.name, 'warehouse': '_Test Warehouse - _TC', 'item_code': '_Test Item'}, 
+			'actual_qty'), -1)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Sales - _TC'}, 'credit'), 5000)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Debtors - _TC'}, 'debit'), 5000)
+  
+		self.create_and_submit_payment_entry(dt="Sales Invoice", dn=si.name)
+
+		si.reload()
+		self.assertEqual(si.status, "Paid")
+		self.assertEqual(si.outstanding_amount, 0)
+  
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
 		sales_order.delivery_date = nowdate()
