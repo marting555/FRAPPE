@@ -4001,7 +4001,16 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(srbnb_gle[0], srbnb_gle[1])
 
 	def test_create_2pr_with_item_fifo_and_sr_TC_SCK_14(self):
-		from erpnext.stock.doctype.material_request.test_material_request import get_gle
+		self._test_create_2pr_with_item_fifo_and_sr()
+
+	def test_create_2pr_with_item_fifo_and_sr_and_cancel_TC_SCK_59(self):
+		sr = self._test_create_2pr_with_item_fifo_and_sr()
+
+		# Cancel Stock Reco and check SLE and GL
+		sr.cancel()
+		self.check_cancel_stock_gl_sle(sr, 20, -3000.0)
+	
+	def _test_create_2pr_with_item_fifo_and_sr(self):
 		from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import (
 			create_stock_reconciliation,
 		)
@@ -4048,57 +4057,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.val_method_sl_entry(sr, expected_sle)
 		self.check_gl_entry(sr, expected_gl)	
 
-	def test_create_2pr_with_item_fifo_and_sr_and_cancel_TC_SCK_59(self):
-		from erpnext.stock.doctype.material_request.test_material_request import get_gle
-		from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import (
-			create_stock_reconciliation,
-		)
-
-		fields = {"is_stock_item": 1, "valuation_method": "FIFO"}
-		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
-		frappe.db.set_value(
-			"Company", "_Test Company", "stock_received_but_not_billed", "Stock Received But Not Billed - _TC"
-		)
-		if frappe.db.has_column("Item", "gst_hsn_code"):
-			fields["gst_hsn_code"] = "01011010"
-
-		item = make_item("_Test Item For FIFO", properties=fields).name
-		warehouse = "_Test Warehouse - _TC"
-		pr = make_purchase_receipt(item_code=item, qty=10, rate=500)
-
-		# Validate sle for PR 1
-		expected_sle = {"_Test Warehouse - _TC": [10, 10, 5000, 500, "[[10.0, 500.0]]"]}
-		self.val_method_sl_entry(pr, expected_sle)
-
-		pr1 = make_purchase_receipt(item_code=item, qty=10, rate=600)
-
-		# Validate sle for PR 2
-		expected_sle = {"_Test Warehouse - _TC": [10, 20, 6000, 550, "[[10.0, 500.0], [10.0, 600.0]]"]}
-		self.val_method_sl_entry(pr1, expected_sle)
-
-		# Create Stock Reco
-		sr = create_stock_reconciliation(
-			item_code=item,
-			qty=20,
-			rate=700,
-			warehouse=warehouse,
-			expense_account="Stock Adjustment - _TC",
-		)
-
-		stock_in_hand_account = get_inventory_account(pr.company, "_Test Warehouse - _TC")
-		expected_sle = {"_Test Warehouse - _TC": [0, 20, 3000, 700, "[[20.0, 700.0]]"]}
-		expected_gl = {
-			stock_in_hand_account: [3000.0, 0.0],
-			"Stock Adjustment - _TC": [0.0, 3000.0],
-		}
-
-		# Validate sle and gl stock reco
-		self.val_method_sl_entry(sr, expected_sle)
-		self.check_gl_entry(sr, expected_gl)
-
-		# Cancel Stock Reco and check SLE and GL
-		sr.cancel()
-		self.check_cancel_stock_gl_sle(sr, 20, -3000.0)
+		return sr
 
 	def test_create_2pr_with_item_mov_avg_and_sr_and_cancel_TC_SCK_60(self):
 		from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import (
