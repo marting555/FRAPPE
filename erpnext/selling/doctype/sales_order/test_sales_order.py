@@ -2598,25 +2598,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(si_acc_debit, 5000)
   
 	def test_sales_order_full_payment_with_gst_TC_S_011(self):
-		# company = frappe.get_all("Company", {"name": "_Test Indian Registered Company"}, ["gstin", "gst_category"])
-		# customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
-		# company_add = frappe.get_all("Address", {"name": "_Test Indian Registered Company-Billing"}, ["name", "gstin", "gst_category"])
-		# customer_add = frappe.get_all("Address", {"name": "_Test Registered Customer-Billing"}, ["name", "gstin", "gst_category"])
-  
-		# if company[0].get("gst_category") == "Registered Regular" and customer[0].get("gst_category") == "Registered Regular" and customer[0].get("gstin") and customer[0].get("gstin"):
-		# 	if company_add[0].get("gst_category") == "Registered Regular" and customer_add[0].get("gst_category") == "Registered Regular" and company_add[0].get("gstin") and customer_add[0].get("gstin"):
-		# 		so = make_sales_order(company='_Test Indian Registered Company', customer='_Test Registered Customer', warehouse='Stores - _TIRC' ,cost_center='Main - _TIRC', selling_price_list='Standard Selling', item_code='_Test Item', qty=1, rate=5000, do_not_save=True)
-		# 		so.tax_category = 'In-State'
-		# 		so.taxes_and_charges = 'Output GST In-state - _TIRC'
-		# 		so.customer_address = customer_add[0].get("name")
-		# 		so.billing_address_gstin = customer_add[0].get("gstin")
-		# 		so.company_address = company_add[0].get("name")
-		# 		so.company_gstin = company_add[0].get("gstin")
-		# 		so.save()
-		# 		so.submit()
-
-		# 		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
-		# 		self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
 		so = self.create_and_submit_sales_order_with_gst("_Test Item", qty=1, rate=5000)
 
 		dn = make_delivery_note(so.name)
