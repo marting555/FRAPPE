@@ -2286,24 +2286,25 @@ def run_ledger_health_checks():
 					doc.save()
 
 
-def sync_auto_reconcile_config(cron_interval: int = 15):
-	if cron_interval:
-		method = "erpnext.accounts.doctype.process_payment_reconciliation.process_payment_reconciliation.trigger_reconciliation_for_queued_docs"
-		if frappe.db.get_value("Scheduled Job Type", {"method": method}):
-			frappe.get_doc(
-				"Scheduled Job Type",
-				{
-					"method": method,
-				},
-			).update({"cron_format": f"0/{cron_interval} * * * *"}).save()
-		else:
-			frappe.get_doc(
-				{
-					"doctype": "Scheduled Job Type",
-					"method": method,
-					"cron_format": f"0/{cron_interval} * * * *",
-					"create_log": True,
-					"stopped": False,
-					"frequency": "Cron",
-				}
-			).save()
+def sync_auto_reconcile_config():
+	cron_interval = frappe.db.get_single_value("Accounts Settings", "cron_interval") or 15
+	method = "erpnext.accounts.doctype.process_payment_reconciliation.process_payment_reconciliation.trigger_reconciliation_for_queued_docs"
+
+	if frappe.db.get_value("Scheduled Job Type", {"method": method}):
+		frappe.get_doc(
+			"Scheduled Job Type",
+			{
+				"method": method,
+			},
+		).update({"cron_format": f"0/{cron_interval} * * * *"}).save()
+	else:
+		frappe.get_doc(
+			{
+				"doctype": "Scheduled Job Type",
+				"method": method,
+				"cron_format": f"0/{cron_interval} * * * *",
+				"create_log": True,
+				"stopped": False,
+				"frequency": "Cron",
+			}
+		).save()

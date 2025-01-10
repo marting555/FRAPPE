@@ -125,7 +125,7 @@ class AccountsSettings(Document):
 	def validate_and_sync_auto_reconcile_config(self):
 		if self.has_value_changed("cron_interval"):
 			if self.cron_interval > 0 and self.cron_interval < 60:
-				sync_auto_reconcile_config(self.cron_interval)
+				sync_auto_reconcile_config()
 			else:
 				frappe.throw(_("Cron Interval should be between 1 and 59 Min"))
 
