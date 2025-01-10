@@ -3194,8 +3194,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		})
 
 		purchase_tax.save()
-		purchase_tax.save()
-
+		
 		pi = make_purchase_invoice(
 			qty=1,
 			item_code="_Test Item",
@@ -3216,6 +3215,45 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
 		self.assertEqual(pi_status, "Paid")
+	
+	def test_standalone_pi_is_partly_paid_TC_B_090(self):
+		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
+		purchase_tax.title = "TEST"
+		purchase_tax.company = "_Test Company"
+		purchase_tax.tax_category = "_Test Tax Category 1"
+
+		purchase_tax.append("taxes",{
+			"category":"Total",
+			"add_deduct_tax":"Add",
+			"charge_type":"On Net Total",
+			"account_head":"_Test Account Excise Duty - _TC",
+			"_Test Account Excise Duty":"_Test Account Excise Duty",
+			"rate":100,
+			"description":"GST"
+		})
+
+		purchase_tax.save()
+
+		pi = make_purchase_invoice(
+			qty=1,
+			item_code="_Test Item",
+			supplier = "_Test Supplier",
+			company = "_Test Company",
+			rate = 500,
+			do_not_save = True
+		)
+
+
+		pi.taxes_and_charges = purchase_tax.name
+		pi.is_paid = 1
+		pi.mode_of_payment = "Cash"
+		pi.cash_bank_account = "Cash - _TC"
+		pi.save()
+		pi.paid_amount = pi.grand_total / 2
+		pi.submit()
+
+		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
+		self.assertEqual(pi_status, "Partly Paid")
 
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
