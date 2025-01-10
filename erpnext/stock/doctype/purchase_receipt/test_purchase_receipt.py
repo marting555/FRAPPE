@@ -4000,6 +4000,162 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(sh_gle[0], sh_gle[1])
 		self.assertEqual(srbnb_gle[0], srbnb_gle[1])
 
+	def test_create_2pr_with_item_fifo_and_sr_TC_SCK_14(self):
+		self._test_create_2pr_with_item_fifo_and_sr()
+
+	def test_create_2pr_with_item_fifo_and_sr_and_cancel_TC_SCK_59(self):
+		sr = self._test_create_2pr_with_item_fifo_and_sr()
+
+		# Cancel Stock Reco and check SLE and GL
+		sr.cancel()
+		self.check_cancel_stock_gl_sle(sr, 20, -3000.0)
+	
+	def _test_create_2pr_with_item_fifo_and_sr(self):
+		from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import (
+			create_stock_reconciliation,
+		)
+
+		fields = {"is_stock_item": 1, "valuation_method": "FIFO"}
+		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
+		frappe.db.set_value(
+			"Company", "_Test Company", "stock_received_but_not_billed", "Stock Received But Not Billed - _TC"
+		)
+		if frappe.db.has_column("Item", "gst_hsn_code"):
+			fields["gst_hsn_code"] = "01011010"
+
+		item = make_item("_Test Item For FIFO", properties=fields).name
+		warehouse = "_Test Warehouse - _TC"
+		pr = make_purchase_receipt(item_code=item, qty=10, rate=500)
+
+		# Validate sle for PR 1
+		expected_sle = {"_Test Warehouse - _TC": [10, 10, 5000, 500, "[[10.0, 500.0]]"]}
+		self.val_method_sl_entry(pr, expected_sle)
+
+		pr1 = make_purchase_receipt(item_code=item, qty=10, rate=600)
+
+		# Validate sle for PR 2
+		expected_sle = {"_Test Warehouse - _TC": [10, 20, 6000, 550, "[[10.0, 500.0], [10.0, 600.0]]"]}
+		self.val_method_sl_entry(pr1, expected_sle)
+
+		# Create Stock Reco
+		sr = create_stock_reconciliation(
+			item_code=item,
+			qty=20,
+			rate=700,
+			warehouse=warehouse,
+			expense_account="Stock Adjustment - _TC",
+		)
+
+		stock_in_hand_account = get_inventory_account(pr.company, "_Test Warehouse - _TC")
+		expected_sle = {"_Test Warehouse - _TC": [0, 20, 3000, 700, "[[20.0, 700.0]]"]}
+		expected_gl = {
+			stock_in_hand_account: [3000.0, 0.0],
+			"Stock Adjustment - _TC": [0.0, 3000.0],
+		}
+
+		# Validate sle and gl stock reco
+		self.val_method_sl_entry(sr, expected_sle)
+		self.check_gl_entry(sr, expected_gl)	
+
+		return sr
+
+	def test_create_2pr_with_item_mov_avg_and_sr_TC_SCK_15(self):
+		self._test_create_2pr_with_item_mov_avg_and_sr()
+
+	def test_create_2pr_with_item_mov_avg_and_sr_and_cancel_TC_SCK_60(self):	
+		sr = self._test_create_2pr_with_item_mov_avg_and_sr()
+		
+		# Cancel Stock Reco and check SLE and GL
+		sr.cancel()
+		self.check_cancel_stock_gl_sle(sr, 20, -30000.0)
+
+	def _test_create_2pr_with_item_mov_avg_and_sr(self):
+		from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import (
+			create_stock_reconciliation,
+		)
+
+		fields = {"is_stock_item": 1, "valuation_method": "Moving Average"}
+		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
+		frappe.db.set_value(
+			"Company", "_Test Company", "stock_received_but_not_billed", "Stock Received But Not Billed - _TC"
+		)
+		if frappe.db.has_column("Item", "gst_hsn_code"):
+			fields["gst_hsn_code"] = "01011010"
+
+		item = make_item("_Test Item For Moving Average", properties=fields).name
+		warehouse = "_Test Warehouse - _TC"
+		pr = make_purchase_receipt(item_code=item, qty=10, rate=5000)
+
+		expected_sle = {"_Test Warehouse - _TC": [10, 10, 50000, 5000, "[]"]}
+
+		# Validate sle for PR 1
+		self.val_method_sl_entry(pr, expected_sle)
+
+		pr1 = make_purchase_receipt(item_code=item, qty=10, rate=6000)
+
+		expected_sle = {"_Test Warehouse - _TC": [10, 20, 60000, 5500, "[]"]}
+
+		# Validate sle for PR 2
+		self.val_method_sl_entry(pr1, expected_sle)
+
+		# Create Stock Reco
+		sr = create_stock_reconciliation(
+			item_code=item,
+			qty=20,
+			rate=7000,
+			warehouse=warehouse,
+			expense_account="Stock Adjustment - _TC",
+		)
+
+		stock_in_hand_account = get_inventory_account(pr.company, "_Test Warehouse - _TC")
+		expected_sle = {"_Test Warehouse - _TC": [0, 20, 30000, 7000, "[]"]}
+		expected_gl = {
+			stock_in_hand_account: [30000.0, 0.0],
+			"Stock Adjustment - _TC": [0.0, 30000.0],
+		}
+
+		# Validate sle and gl stock reco
+		self.val_method_sl_entry(sr, expected_sle)
+		self.check_gl_entry(sr, expected_gl)
+
+		return sr
+
+	def check_cancel_stock_gl_sle(self, doc, exp_qty, exp_amt):
+		from erpnext.stock.doctype.material_request.test_material_request import get_gle
+
+		sl_entry_cancelled = frappe.db.get_all(
+			"Stock Ledger Entry",
+			{"voucher_type": doc.doctype, "voucher_no": doc.name},
+			["qty_after_transaction", "stock_value_difference"],
+			order_by="creation",
+		)
+		self.assertEqual(len(sl_entry_cancelled), 2)
+		self.assertEqual(sl_entry_cancelled[1].qty_after_transaction, exp_qty)
+		self.assertEqual(sl_entry_cancelled[1].stock_value_difference, exp_amt)
+
+		sa_gle = get_gle(doc.company, doc.name, "Stock Adjustment - _TC")
+		self.assertEqual(sa_gle[0], sa_gle[1])
+	
+	def val_method_sl_entry(self, doc, expected_sle):
+		sl_entries = get_sl_entries(doc.doctype, doc.name)
+
+		for sle in sl_entries:
+			self.assertEqual(expected_sle[sle.warehouse][0], sle.actual_qty)
+			self.assertEqual(expected_sle[sle.warehouse][1], sle.qty_after_transaction)
+			self.assertEqual(expected_sle[sle.warehouse][2], sle.stock_value_difference)
+			self.assertEqual(expected_sle[sle.warehouse][3], sle.valuation_rate)
+			self.assertEqual(expected_sle[sle.warehouse][4], sle.stock_queue)
+	
+	def check_gl_entry(self, doc, expected_values):
+		gl_entries = get_gl_entries(doc.doctype, doc.name)
+
+		self.assertTrue(gl_entries)
+
+		for gle in gl_entries:
+			self.assertEqual(expected_values[gle.account][0], gle.debit)
+			self.assertEqual(expected_values[gle.account][1], gle.credit)
+
+
 def prepare_data_for_internal_transfer():
 	from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_internal_supplier
 	from erpnext.selling.doctype.customer.test_customer import create_internal_customer
@@ -4037,7 +4193,12 @@ def prepare_data_for_internal_transfer():
 
 def get_sl_entries(voucher_type, voucher_no):
 	return frappe.db.sql(
-		""" select actual_qty, warehouse, stock_value_difference
+		""" select actual_qty,
+		 warehouse,
+		 stock_value_difference,
+		 qty_after_transaction,
+		 valuation_rate,
+		 stock_queue
 		from `tabStock Ledger Entry` where voucher_type=%s and voucher_no=%s
 		order by posting_time desc""",
 		(voucher_type, voucher_no),
