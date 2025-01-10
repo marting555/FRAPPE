@@ -64,7 +64,7 @@ def search_by_term(search_term, warehouse, price_list):
 	}
 
 	if batch_no:
-		price_filters["batch_no"] = batch_no
+		price_filters["batch_no"] = ["in", [batch_no, ""]]
 
 	price = frappe.get_list(
 		doctype="Item Price",
