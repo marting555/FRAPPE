@@ -1959,7 +1959,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			fields=["account", "debit", "credit"]
 		)
 		self.assertGreater(len(gl_entries), 0)
-		
+
 	def test_po_to_pr_with_gst_partly_paid_TC_B_085(self):
 		# Scenario : PO => PR with GST Partly Paid
 
@@ -1996,6 +1996,45 @@ class TestPurchaseOrder(FrappeTestCase):
 		doc_pr = frappe.get_doc("Payment Request", partly_pr.name)
 		# set half amount to be paid
 		doc_pr.grand_total = po.grand_total / 2
+		doc_pr.submit()
+		po_status = frappe.db.get_value("Purchase Order",po.name,'status')
+		self.assertEqual(po_status,'To Receive and Bill')
+	
+	def test_po_to_pr_with_gst_fully_paid_TC_B_086(self):
+		# Scenario : PO => PR with GST Fully Paid
+
+		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
+		purchase_tax.title = "TEST"
+		purchase_tax.company = "_Test Company"
+		purchase_tax.tax_category = "_Test Tax Category 1"
+
+		purchase_tax.append("taxes",{
+			"category":"Total",
+			"add_deduct_tax":"Add",
+			"charge_type":"On Net Total",
+			"account_head":"_Test Account Excise Duty - _TC",
+			"_Test Account Excise Duty":"_Test Account Excise Duty",
+			"rate":100,
+			"description":"GST"
+		})
+		purchase_tax.save()
+		po = create_purchase_order(do_not_submit=True)
+		po.taxes_and_charges = purchase_tax.name
+		po.save()
+		po.submit()
+		self.assertEqual(po.docstatus,1)
+
+		args = {
+				"dt": po.doctype,
+				"dn": po.name,
+				"payment_request_type": 'Outward',
+				"party_type":  "Supplier",
+				"party":  po.supplier,
+				"party_name": po.supplier_name
+			}
+		partly_pr = make_payment_request(**args)
+		doc_pr = frappe.get_doc("Payment Request", partly_pr.name)
+		doc_pr.grand_total = po.grand_total 
 		doc_pr.submit()
 		po_status = frappe.db.get_value("Purchase Order",po.name,'status')
 		self.assertEqual(po_status,'To Receive and Bill')
