@@ -1311,6 +1311,32 @@ class TestPickList(FrappeTestCase):
 		sales_invoice.submit()
 		validate_gl_entries(self, sales_invoice.name, 20000)
 
+	def test_sales_order_to_sales_invoice_with_pick_list_TC_S_086(self):
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+
+		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=5, rate=4000)
+
+		sales_order = make_sales_order(item_code="_Test Item Home Desktop 100", qty=4, rate=5000)
+		self.assertEqual(sales_order.status, "To Deliver and Bill")  
+
+		# Pick list
+		pick_list = create_pick_list(sales_order.name)
+		pick_list.save()
+		pick_list.submit()
+		# Delivery note
+		delivery_note = create_delivery_note(pick_list.name)
+		delivery_note.save()
+		delivery_note.submit()
+
+		stock_check(self,delivery_note.name,-4)
+
+		# sales invoice
+		sales_invoice = make_sales_invoice(delivery_note.name)
+		sales_invoice.insert()
+		sales_invoice.submit()
+		validate_gl_entries(self, sales_invoice.name, 20000)
+
 def stock_check(self,voucher,qty):
 	stock_entries = frappe.get_all(
 		"Stock Ledger Entry",
