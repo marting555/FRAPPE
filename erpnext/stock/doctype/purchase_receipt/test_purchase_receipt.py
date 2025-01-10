@@ -4018,25 +4018,15 @@ class TestPurchaseReceipt(FrappeTestCase):
 		warehouse = "_Test Warehouse - _TC"
 		pr = make_purchase_receipt(item_code=item, qty=10, rate=500)
 
-		sl_entries = get_sl_entries("Purchase Receipt", pr.name)
-
-		expected_sle = {"_Test Warehouse - _TC": [10, "[[10.0, 500.0]]"]}
-
 		# Validate sle for PR 1
-		for sle in sl_entries:
-			self.assertEqual(expected_sle[sle.warehouse][0], sle.actual_qty)
-			self.assertEqual(expected_sle[sle.warehouse][1], sle.stock_queue)
+		expected_sle = {"_Test Warehouse - _TC": [10, 10, 5000, 500, "[[10.0, 500.0]]"]}
+		self.val_method_sl_entry(pr, expected_sle)
 
 		pr1 = make_purchase_receipt(item_code=item, qty=10, rate=600)
 
-		sl_entries = get_sl_entries("Purchase Receipt", pr1.name)
-
-		expected_sle = {"_Test Warehouse - _TC": [10, "[[10.0, 500.0], [10.0, 600.0]]"]}
-
 		# Validate sle for PR 2
-		for sle in sl_entries:
-			self.assertEqual(expected_sle[sle.warehouse][0], sle.actual_qty)
-			self.assertEqual(expected_sle[sle.warehouse][1], sle.stock_queue)
+		expected_sle = {"_Test Warehouse - _TC": [10, 20, 6000, 550, "[[10.0, 500.0], [10.0, 600.0]]"]}
+		self.val_method_sl_entry(pr1, expected_sle)
 
 		# Create Stock Reco
 		sr = create_stock_reconciliation(
@@ -4046,49 +4036,23 @@ class TestPurchaseReceipt(FrappeTestCase):
 			warehouse=warehouse,
 			expense_account="Stock Adjustment - _TC",
 		)
-		sl_entries = get_sl_entries("Stock Reconciliation", sr.name)
 
-		expected_sle = {"_Test Warehouse - _TC": [20, 3000, 700, "[[20.0, 700.0]]"]}
-
-		# Validate sle stock reco
-		for sle in sl_entries:
-			self.assertEqual(expected_sle[sle.warehouse][0], sle.qty_after_transaction)
-			self.assertEqual(expected_sle[sle.warehouse][1], sle.stock_value_difference)
-			self.assertEqual(expected_sle[sle.warehouse][2], sle.valuation_rate)
-			self.assertEqual(expected_sle[sle.warehouse][3], sle.stock_queue)
-
-		gl_entries = get_gl_entries("Stock Reconciliation", sr.name)
-
-		self.assertTrue(gl_entries)
 		stock_in_hand_account = get_inventory_account(pr.company, "_Test Warehouse - _TC")
-
-		expected_values = {
+		expected_sle = {"_Test Warehouse - _TC": [0, 20, 3000, 700, "[[20.0, 700.0]]"]}
+		expected_gl = {
 			stock_in_hand_account: [3000.0, 0.0],
 			"Stock Adjustment - _TC": [0.0, 3000.0],
 		}
 
-		for gle in gl_entries:
-			self.assertEqual(expected_values[gle.account][0], gle.debit)
-			self.assertEqual(expected_values[gle.account][1], gle.credit)
+		# Validate sle and gl stock reco
+		self.val_method_sl_entry(sr, expected_sle)
+		self.check_gl_entry(sr, expected_gl)
 
 		# Cancel Stock Reco and check SLE and GL
 		sr.cancel()
-
-		sl_entry_cancelled = frappe.db.get_all(
-			"Stock Ledger Entry",
-			{"voucher_type": "Stock Reconciliation", "voucher_no": sr.name},
-			["qty_after_transaction", "stock_value_difference"],
-			order_by="creation",
-		)
-		self.assertEqual(len(sl_entry_cancelled), 2)
-		self.assertEqual(sl_entry_cancelled[1].qty_after_transaction, 20)
-		self.assertEqual(sl_entry_cancelled[1].stock_value_difference, -3000)
-
-		sa_gle = get_gle(sr.company, sr.name, "Stock Adjustment - _TC")
-		self.assertEqual(sa_gle[0], sa_gle[1])
+		self.check_cancel_stock_gl_sle(sr, 20, -3000.0)
 
 	def test_create_2pr_with_item_mov_avg_and_sr_and_cancel_TC_SCK_60(self):
-		from erpnext.stock.doctype.material_request.test_material_request import get_gle
 		from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import (
 			create_stock_reconciliation,
 		)
@@ -4105,25 +4069,17 @@ class TestPurchaseReceipt(FrappeTestCase):
 		warehouse = "_Test Warehouse - _TC"
 		pr = make_purchase_receipt(item_code=item, qty=10, rate=5000)
 
-		sl_entries = get_sl_entries("Purchase Receipt", pr.name)
-
-		expected_sle = {"_Test Warehouse - _TC": [10, "[]"]}
+		expected_sle = {"_Test Warehouse - _TC": [10, 10, 50000, 5000, "[]"]}
 
 		# Validate sle for PR 1
-		for sle in sl_entries:
-			self.assertEqual(expected_sle[sle.warehouse][0], sle.actual_qty)
-			self.assertEqual(expected_sle[sle.warehouse][1], sle.stock_queue)
+		self.val_method_sl_entry(pr, expected_sle)
 
 		pr1 = make_purchase_receipt(item_code=item, qty=10, rate=6000)
 
-		sl_entries = get_sl_entries("Purchase Receipt", pr1.name)
-
-		expected_sle = {"_Test Warehouse - _TC": [10, "[]"]}
+		expected_sle = {"_Test Warehouse - _TC": [10, 20, 60000, 5500, "[]"]}
 
 		# Validate sle for PR 2
-		for sle in sl_entries:
-			self.assertEqual(expected_sle[sle.warehouse][0], sle.actual_qty)
-			self.assertEqual(expected_sle[sle.warehouse][1], sle.stock_queue)
+		self.val_method_sl_entry(pr1, expected_sle)
 
 		# Create Stock Reco
 		sr = create_stock_reconciliation(
@@ -4133,46 +4089,56 @@ class TestPurchaseReceipt(FrappeTestCase):
 			warehouse=warehouse,
 			expense_account="Stock Adjustment - _TC",
 		)
-		sl_entries = get_sl_entries("Stock Reconciliation", sr.name)
 
-		expected_sle = {"_Test Warehouse - _TC": [20, 30000, 7000, "[]"]}
-
-		# Validate sle stock reco
-		for sle in sl_entries:
-			self.assertEqual(expected_sle[sle.warehouse][0], sle.qty_after_transaction)
-			self.assertEqual(expected_sle[sle.warehouse][1], sle.stock_value_difference)
-			self.assertEqual(expected_sle[sle.warehouse][2], sle.valuation_rate)
-			self.assertEqual(expected_sle[sle.warehouse][3], sle.stock_queue)
-
-		gl_entries = get_gl_entries("Stock Reconciliation", sr.name)
-
-		self.assertTrue(gl_entries)
 		stock_in_hand_account = get_inventory_account(pr.company, "_Test Warehouse - _TC")
-
-		expected_values = {
+		expected_sle = {"_Test Warehouse - _TC": [0, 20, 30000, 7000, "[]"]}
+		expected_gl = {
 			stock_in_hand_account: [30000.0, 0.0],
 			"Stock Adjustment - _TC": [0.0, 30000.0],
 		}
 
-		for gle in gl_entries:
-			self.assertEqual(expected_values[gle.account][0], gle.debit)
-			self.assertEqual(expected_values[gle.account][1], gle.credit)
+		# Validate sle and gl stock reco
+		self.val_method_sl_entry(sr, expected_sle)
+		self.check_gl_entry(sr, expected_gl)	
 
 		# Cancel Stock Reco and check SLE and GL
 		sr.cancel()
+		self.check_cancel_stock_gl_sle(sr, 20, -30000.0)
+
+	def check_cancel_stock_gl_sle(self, doc, exp_qty, exp_amt):
+		from erpnext.stock.doctype.material_request.test_material_request import get_gle
 
 		sl_entry_cancelled = frappe.db.get_all(
 			"Stock Ledger Entry",
-			{"voucher_type": "Stock Reconciliation", "voucher_no": sr.name},
+			{"voucher_type": doc.doctype, "voucher_no": doc.name},
 			["qty_after_transaction", "stock_value_difference"],
 			order_by="creation",
 		)
 		self.assertEqual(len(sl_entry_cancelled), 2)
-		self.assertEqual(sl_entry_cancelled[1].qty_after_transaction, 20)
-		self.assertEqual(sl_entry_cancelled[1].stock_value_difference, -30000)
+		self.assertEqual(sl_entry_cancelled[1].qty_after_transaction, exp_qty)
+		self.assertEqual(sl_entry_cancelled[1].stock_value_difference, exp_amt)
 
-		sa_gle = get_gle(sr.company, sr.name, "Stock Adjustment - _TC")
+		sa_gle = get_gle(doc.company, doc.name, "Stock Adjustment - _TC")
 		self.assertEqual(sa_gle[0], sa_gle[1])
+	
+	def val_method_sl_entry(self, doc, expected_sle):
+		sl_entries = get_sl_entries(doc.doctype, doc.name)
+
+		for sle in sl_entries:
+			self.assertEqual(expected_sle[sle.warehouse][0], sle.actual_qty)
+			self.assertEqual(expected_sle[sle.warehouse][1], sle.qty_after_transaction)
+			self.assertEqual(expected_sle[sle.warehouse][2], sle.stock_value_difference)
+			self.assertEqual(expected_sle[sle.warehouse][3], sle.valuation_rate)
+			self.assertEqual(expected_sle[sle.warehouse][4], sle.stock_queue)
+	
+	def check_gl_entry(self, doc, expected_values):
+		gl_entries = get_gl_entries(doc.doctype, doc.name)
+
+		self.assertTrue(gl_entries)
+
+		for gle in gl_entries:
+			self.assertEqual(expected_values[gle.account][0], gle.debit)
+			self.assertEqual(expected_values[gle.account][1], gle.credit)
 
 
 def prepare_data_for_internal_transfer():
