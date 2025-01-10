@@ -1337,6 +1337,65 @@ class TestPickList(FrappeTestCase):
 		sales_invoice.submit()
 		validate_gl_entries(self, sales_invoice.name, 20000)
 
+	def test_sales_order_to_sales_invoice_with_double_entries_TC_S_087(self):
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+
+		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=5, rate=4000)
+
+		sales_order = make_sales_order(item_code="_Test Item Home Desktop 100", qty=4, rate=5000)
+		self.assertEqual(sales_order.status, "To Deliver and Bill")  
+
+		# Pick list
+		pick_list_1 = create_pick_list(sales_order.name)
+		pick_list_1.save()
+		for i in pick_list_1.locations:
+			i.qty = 2
+			i.stock_qty = 2
+		pick_list_1.submit()
+		# Delivery note
+		delivery_note_1 = create_delivery_note(pick_list_1.name)
+		delivery_note_1.save()
+		delivery_note_1.submit()
+
+		stock_check(self,delivery_note_1.name,-2)
+
+		# sales invoice
+		sales_invoice_1 = make_sales_invoice(delivery_note_1.name)
+		sales_invoice_1.insert()
+		sales_invoice_1.submit()
+		validate_gl_entries(self, sales_invoice_1.name, 10000)
+
+		delivery_note_1.reload()
+		self.assertEqual(sales_invoice_1.status, "Unpaid")  
+		self.assertEqual(delivery_note_1.status, "Completed") 
+
+		# Pick list
+		pick_list_2 = create_pick_list(sales_order.name)
+		pick_list_2.save()
+		for i in pick_list_2.locations:
+			i.qty = 2
+			i.stock_qty = 2
+		pick_list_2.submit()
+		# Delivery note
+		delivery_note_2 = create_delivery_note(pick_list_2.name)
+		delivery_note_2.save()
+		delivery_note_2.submit()
+
+		stock_check(self,delivery_note_2.name,-2)
+
+		# sales invoice
+		sales_invoice_2 = make_sales_invoice(delivery_note_2.name)
+		sales_invoice_2.insert()
+		sales_invoice_2.submit()
+		validate_gl_entries(self, sales_invoice_2.name, 10000)
+		
+		sales_order.reload()
+		delivery_note_2.reload()
+		self.assertEqual(sales_invoice_2.status, "Unpaid")  
+		self.assertEqual(sales_order.status, "Completed")  
+		self.assertEqual(delivery_note_2.status, "Completed")  
+
 def stock_check(self,voucher,qty):
 	stock_entries = frappe.get_all(
 		"Stock Ledger Entry",
