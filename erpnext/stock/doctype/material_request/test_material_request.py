@@ -3104,6 +3104,51 @@ class TestMaterialRequest(FrappeTestCase):
 			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': payable_act},'credit')
 			self.assertEqual(gl_stock_debit, 1000)
 
+	def test_mr_po_pi_cancel_TC_SCK_086(self):
+		# MR =>  PO => PI => PI Cancel
+		mr_dict_list = [{
+				"company" : "_Test Company",
+				"item_code" : "Testing-31",
+				"warehouse" : "Stores - _TC",
+				"qty" : 10,
+				"rate" : 100,
+			},
+		]
+
+		doc_mr = make_material_request(**mr_dict_list[0])
+		self.assertEqual(doc_mr.docstatus, 1)
+
+		doc_po = make_test_po(doc_mr.name)
+		doc_pi = create_purchase_invoice(doc_po.name)
+		doc_pi.submit()
+
+		self.assertEqual(doc_pi.docstatus, 1)
+		doc_pi.reload()
+		doc_pi.load_from_db()
+		self.assertEqual(doc_pi.status, "Unpaid")
+
+		#if account setup in company
+		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':doc_pi.name, 'account': 'Stock Received But Not Billed - _TC'},'debit')
+			self.assertEqual(gl_temp_credit, 1000)
+		
+		#if account setup in company
+		if frappe.db.exists('GL Entry',{'account': 'Creditors - _TC'}):
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':doc_pi.name, 'account': 'Creditors - _TC'},'credit')
+			self.assertEqual(gl_stock_debit, 1000)
+
+		doc_pi.cancel()
+		doc_pi.reload()
+		#if account setup in company
+		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':doc_pi.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
+			self.assertEqual(gl_temp_credit, 1000)
+		
+		#if account setup in company
+		if frappe.db.exists('GL Entry',{'account': 'Creditors - _TC'}):
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':doc_pi.name, 'account': 'Creditors - _TC'},'debit')
+			self.assertEqual(gl_stock_debit, 1000)
+
 def get_in_transit_warehouse(company):
 	if not frappe.db.exists("Warehouse Type", "Transit"):
 		frappe.get_doc(
