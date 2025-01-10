@@ -4465,6 +4465,48 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		si.reload()
 		self.assertEqual(si.status, "Paid")
   
+	def test_sales_order_creating_credit_note_after_SR_TC_S_048(self):
+		so = self.create_and_submit_sales_order(qty=5, rate=3000)
+  
+		self.create_and_submit_payment_entry(dt="Sales Order", dn=so.name)
+  
+		dn = self.create_and_validate_delivery_note(so.name, -5)
+
+		si = self.create_and_submit_sales_invoice(dn.name,advances_automatically= 1,expected_amount=15000)
+		si.reload()
+		self.assertEqual(si.status, "Paid")
+  
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_return
+		sr = make_sales_return(dn.name)
+		sr.save()
+		sr.submit()
+
+		self.assertEqual(sr.status, "To Bill", "Sales Return not created")
+
+		qty_change_return = frappe.db.get_value('Stock Ledger Entry', {
+			'item_code': '_Test Item',
+			'voucher_no': sr.name,
+			'warehouse': '_Test Warehouse - _TC'
+		}, 'actual_qty')
+		self.assertEqual(qty_change_return, 5)
+  
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_sales_return as make_credit_note
+		cn = make_credit_note(si.name)
+		cn.advances.clear()
+		cn.save()
+		cn.submit()
+  
+		self.assertEqual(cn.status, "Return", "Credit Note not created")
+  
+		voucher_params_cn = {'voucher_type': 'Sales Invoice', 'voucher_no': cn.name}
+		gl_accounts_cn = {'Debtors - _TC': 'credit', 'Sales - _TC': 'debit'}
+		gl_entries_cn = {
+      		account: frappe.db.get_value('GL Entry', {**voucher_params_cn, 'account': account}, field)
+			for account, field in gl_accounts_cn.items()
+		}
+		self.assertEqual(gl_entries_cn['Debtors - _TC'], 15000)
+		self.assertEqual(gl_entries_cn['Sales - _TC'], 15000)
+  
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
 		sales_order.delivery_date = nowdate()
