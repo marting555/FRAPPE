@@ -989,7 +989,7 @@ erpnext.PointOfSale.ItemCart = class {
 
 				res.forEach((invoice) => {
 					const posting_datetime = moment(invoice.posting_date + " " + invoice.posting_time).format(
-						"Do MMMM, h:mma"
+						"YYYY-MM-DD, hh:mm"
 					);
 					let indicator_color = {
 						Paid: "green",
