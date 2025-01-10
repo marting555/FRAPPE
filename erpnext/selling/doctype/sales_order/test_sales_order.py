@@ -4507,6 +4507,28 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(gl_entries_cn['Debtors - _TC'], 15000)
 		self.assertEqual(gl_entries_cn['Sales - _TC'], 15000)
   
+	def test_sales_order_creating_full_si_for_service_item_SI_TC_S_050(self):
+		make_service_item()
+  
+		so = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', item_code='Consultancy', qty=1, rate=5000)
+		so.save()
+		so.submit()
+
+		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
+  
+		self.create_and_submit_payment_entry(dt="Sales Order", dn=so.name)
+  
+		si = make_sales_invoice(so.name)
+		si.allocate_advances_automatically= 1
+		si.only_include_allocated_payments = 1
+		si.save()
+		si.submit()
+		si.reload()
+
+		self.assertEqual(si.status, "Paid", "Sales Invoice not created")
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Sales - _TC'}, 'credit'), 5000)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Debtors - _TC'}, 'debit'), 5000)
+  
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
 		sales_order.delivery_date = nowdate()
