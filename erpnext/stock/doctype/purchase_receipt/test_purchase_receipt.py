@@ -4059,7 +4059,17 @@ class TestPurchaseReceipt(FrappeTestCase):
 
 		return sr
 
-	def test_create_2pr_with_item_mov_avg_and_sr_and_cancel_TC_SCK_60(self):
+	def test_create_2pr_with_item_mov_avg_and_sr_TC_SCK_15(self):
+		self._test_create_2pr_with_item_mov_avg_and_sr()
+
+	def test_create_2pr_with_item_mov_avg_and_sr_and_cancel_TC_SCK_60(self):	
+		sr = self._test_create_2pr_with_item_mov_avg_and_sr()
+		
+		# Cancel Stock Reco and check SLE and GL
+		sr.cancel()
+		self.check_cancel_stock_gl_sle(sr, 20, -30000.0)
+
+	def _test_create_2pr_with_item_mov_avg_and_sr(self):
 		from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import (
 			create_stock_reconciliation,
 		)
@@ -4106,11 +4116,9 @@ class TestPurchaseReceipt(FrappeTestCase):
 
 		# Validate sle and gl stock reco
 		self.val_method_sl_entry(sr, expected_sle)
-		self.check_gl_entry(sr, expected_gl)	
+		self.check_gl_entry(sr, expected_gl)
 
-		# Cancel Stock Reco and check SLE and GL
-		sr.cancel()
-		self.check_cancel_stock_gl_sle(sr, 20, -30000.0)
+		return sr
 
 	def check_cancel_stock_gl_sle(self, doc, exp_qty, exp_amt):
 		from erpnext.stock.doctype.material_request.test_material_request import get_gle
