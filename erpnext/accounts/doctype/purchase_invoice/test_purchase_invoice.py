@@ -2977,6 +2977,22 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi_status_after_reconcile = frappe.db.get_value("Purchase Invoice", pi.name, "status")
 		self.assertEqual(pi_status_after_reconcile, "Unpaid")
 
+		new_pi = make_purchase_invoice(
+			qty=1,
+			item_code="_Test Item",
+			supplier = "_Test Supplier",
+			company = "_Test Company",
+			rate = 30,
+			do_not_save =True,
+		)
+		new_pi.save()
+		new_pi.set_advances()
+		new_pi.save()
+		new_pi.submit()
+
+		pi_status_after_advances = frappe.db.get_value("Purchase Invoice", new_pi.name, "status")
+		self.assertEqual(pi_status_after_advances, "Paid")
+
 	def test_partly_paid_of_pi_to_pr_to_pe_TC_B_081(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
 		pi = make_purchase_invoice(
