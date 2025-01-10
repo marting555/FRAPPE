@@ -18,7 +18,8 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 	make_serial_batch_bundle,
 )
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
-
+from erpnext.accounts.doctype.pos_closing_entry.pos_closing_entry import make_closing_entry_from_opening
+from erpnext.accounts.doctype.pos_opening_entry.test_pos_opening_entry import create_opening_entry
 
 class TestPOSInvoice(unittest.TestCase):
 	@classmethod
@@ -924,6 +925,25 @@ class TestPOSInvoice(unittest.TestCase):
 		finally:
 			frappe.db.rollback(save_point="before_test_delivered_serial_no_case")
 			frappe.set_user("Administrator")
+		
+	def test_pos_opening_to_pos_closing_with_possi_and_tax_TC_S_102(self):
+		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile	
+
+		test_user, pos_profile = init_user_and_profile()
+		opening_entry = create_opening_entry(pos_profile=pos_profile, user=test_user.name)
+		self.assertEqual(opening_entry.status, "Open")
+
+		pos_inv = create_pos_invoice(rate=3500, do_not_submit=1)
+		for i in pos_inv.items:
+			i.item_tax_template = "GST 5% - _TC"
+		pos_inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 3500})
+		pos_inv.taxes_and_charges = "Output GST In-state - _TC"
+		pos_inv.save()
+		pos_inv.submit()
+		closing_enrty= make_closing_entry_from_opening(opening_entry)
+		closing_enrty.submit()
+		opening_entry.reload()
+		self.assertEqual(opening_entry.status, "Closed")
 
 
 def create_pos_invoice(**args):
