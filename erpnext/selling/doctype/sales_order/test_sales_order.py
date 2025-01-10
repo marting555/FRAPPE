@@ -4443,18 +4443,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
   
 		so = self.create_and_submit_sales_order(qty=10)
   
-		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
-  
-		pe = get_payment_entry(dt="Sales Order",dn=so.name)
-		pe.paid_amount= 400
-		for i in pe.references:
-			i.allocated_amount = 400
-		pe.save()
-		pe.submit()
-  
-		self.assertEqual(pe.status, 'Submitted')
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe.name, 'account': 'Debtors - _TC'}, 'credit'), 400)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe.name, 'account': 'Cash - _TC'}, 'debit'), 400)
+		self.create_and_submit_payment_entry(dt="Sales Order", dn=so.name, amt=400)
   
 		dn = make_delivery_note(so.name)
 		dn.submit()
@@ -4471,9 +4460,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		si.reload()
 		self.assertEqual(si.status, "Partly Paid")
   
-		pe=get_payment_entry(dt="Sales Invoice",dn=si.name)
-		pe.save()
-		pe.submit()
+		self.create_and_submit_payment_entry(dt="Sales Invoice", dn=si.name)
 
 		si.reload()
 		self.assertEqual(si.status, "Paid")
@@ -4511,7 +4498,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			self.validate_gl_entries(sales_invoice.name, expected_amount)
 		return sales_invoice
 
-	def create_and_submit_payment_entry(self, dt=None, dn=None, voucher_name=None , amt=None):
+	def create_and_submit_payment_entry(self, dt=None, dn=None, amt=None):
 		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 		payment_entry = get_payment_entry(dt=dt,dn=dn)
 		payment_entry.insert()
