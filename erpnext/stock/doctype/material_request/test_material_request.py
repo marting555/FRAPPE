@@ -29,6 +29,7 @@ from erpnext.buying.doctype.request_for_quotation.request_for_quotation import m
 from erpnext.buying.doctype.supplier_quotation.supplier_quotation import make_purchase_order as create_po_aganist_sq
 from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt as make_purchase_receipt_aganist_mr
 from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
+from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_invoice as create_purchase_invoice
 
 class TestMaterialRequest(FrappeTestCase):
 	def test_make_purchase_order(self):
@@ -2910,6 +2911,40 @@ class TestMaterialRequest(FrappeTestCase):
 		pr.cancel()
 		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':pr.name})
 		self.assertEqual(sle.qty_after_transaction, 0)
+
+	def test_mr_transfer_to_se_cancel_TC_SCK_061(self):
+		source_wh = create_warehouse(
+			warehouse_name="_Test Source Warehouse",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
+		target_wh = create_warehouse(
+			warehouse_name="_Test target Warehouse",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
+		mr = make_material_request(material_request_type="Material Transfer",do_not_submit=1)
+		mr.items[0].from_warehouse = source_wh
+		mr.items[0].warehouse = target_wh
+		mr.submit()
+		self.assertEqual(mr.status, "Pending")
+
+		se = make_stock_entry(mr.name)
+		se.insert()
+		se.submit()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Transferred")
+
+		from_warehouse_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':se.name, 'voucher_type':'Stock Entry','warehouse':source_wh},['qty_after_transaction'])
+		target_warehouse_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':se.name, 'voucher_type':'Stock Entry','warehouse':target_wh},['qty_after_transaction'])
+		self.assertEqual(from_warehouse_qty, -10)
+		self.assertEqual(target_warehouse_qty, 10)
+
+		se.cancel()
+		from_warehouse_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':se.name, 'voucher_type':'Stock Entry','warehouse':source_wh},['qty_after_transaction'])
+		target_warehouse_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':se.name, 'voucher_type':'Stock Entry','warehouse':target_wh},['qty_after_transaction'])
+		self.assertEqual(from_warehouse_qty, 0)
+		self.assertEqual(target_warehouse_qty, 0)
 
 def get_in_transit_warehouse(company):
 	if not frappe.db.exists("Warehouse Type", "Transit"):
