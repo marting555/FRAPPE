@@ -4437,6 +4437,47 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		si.reload()
 		self.assertEqual(si.status, "Paid")
   
+	def test_sales_order_create_si_via_partial_pe_with_pricing_rule_TC_S_047(self):
+		make_item_price()
+		make_pricing_rule()
+  
+		so = self.create_and_submit_sales_order(qty=10)
+  
+		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+  
+		pe = get_payment_entry(dt="Sales Order",dn=so.name)
+		pe.paid_amount= 400
+		for i in pe.references:
+			i.allocated_amount = 400
+		pe.save()
+		pe.submit()
+  
+		self.assertEqual(pe.status, 'Submitted')
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe.name, 'account': 'Debtors - _TC'}, 'credit'), 400)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe.name, 'account': 'Cash - _TC'}, 'debit'), 400)
+  
+		dn = make_delivery_note(so.name)
+		dn.submit()
+
+		self.assertEqual(dn.status, "To Bill", "Delivery Note not created")
+		stock_ledger_entry = frappe.get_all(
+			'Stock Ledger Entry', 
+			{'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'warehouse': '_Test Warehouse - _TC', 'item_code': '_Test Item'}, 
+			['valuation_rate', 'actual_qty']
+		)
+		self.assertEqual(stock_ledger_entry[0].get("actual_qty"), -10)
+
+		si = self.create_and_submit_sales_invoice(dn.name,advances_automatically= 1,expected_amount=900)
+		si.reload()
+		self.assertEqual(si.status, "Partly Paid")
+  
+		pe=get_payment_entry(dt="Sales Invoice",dn=si.name)
+		pe.save()
+		pe.submit()
+
+		si.reload()
+		self.assertEqual(si.status, "Paid")
+  
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
 		sales_order.delivery_date = nowdate()
