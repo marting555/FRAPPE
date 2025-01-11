@@ -267,7 +267,11 @@ erpnext.buying.SubcontractingOrderController = class SubcontractingOrderControll
 						);
 					}
 				}
-				cur_frm.page.set_inner_btn_group_as_primary(__("Create"));
+				if (flt(doc.per_received) < 100 && me.has_unsupplied_items()) {
+					cur_frm.page.set_inner_btn_group_as_primary(__("Transfer"));
+				} else {
+					cur_frm.page.set_inner_btn_group_as_primary(__("Create"));
+				}
 			}
 		}
 	}
