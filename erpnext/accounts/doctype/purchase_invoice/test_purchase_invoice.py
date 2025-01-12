@@ -3415,6 +3415,8 @@ def make_purchase_invoice(**args):
 	pi.is_subcontracted = args.is_subcontracted or 0
 	pi.supplier_warehouse = args.supplier_warehouse or "_Test Warehouse 1 - _TC"
 	pi.cost_center = args.parent_cost_center
+	pi.apply_discount_on = args.apply_discount_on or None
+	pi.additional_discount_percentage = args.additional_discount_percentage or None
 
 	bundle_id = None
 	if not args.use_serial_batch_fields and (args.get("batch_no") or args.get("serial_no")):
