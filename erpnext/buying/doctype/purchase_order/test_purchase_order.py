@@ -2548,6 +2548,9 @@ def create_purchase_order(**args):
 	po.currency = args.currency or frappe.get_cached_value("Company", po.company, "default_currency")
 	po.conversion_factor = args.conversion_factor or 1
 	po.supplier_warehouse = args.supplier_warehouse or None
+	po.apply_discount_on = args.apply_discount_on or None
+	po.additional_discount_percentage = args.additional_discount_percentage or None
+	po.discount_amount = args.discount_amount or None
 
 	if args.rm_items:
 		for row in args.rm_items:
@@ -2604,13 +2607,17 @@ test_dependencies = ["BOM", "Item Price"]
 
 test_records = frappe.get_test_records("Purchase Order")
 
-def make_pi_against_pr(source_name, received_qty=0, item_dict_list = None):
+def make_pi_against_pr(source_name, received_qty=0, item_dict_list = None, args = None):
 	doc_pi =  make_pi_from_pr(source_name)
 	if received_qty != 0: doc_pi.get("items")[0].qty = received_qty
 	
 	if item_dict_list is not None:
 		for item in item_dict_list:
 			doc_pi.append("items", item)
+
+	if args:
+		args = frappe._dict(args)
+		doc_pi.update(args)
 
 	doc_pi.insert()
 	doc_pi.submit()
