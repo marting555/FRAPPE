@@ -2194,6 +2194,67 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(doc_pi.status, 'Paid')
 		self.assertEqual(doc_po.status, 'Completed')
 
+	def test_po_with_pricing_rule_TC_B_046(self):
+		# Scenario : PO => Pricing Rule => PR => PI
+
+		po_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"supplier": "_Test Supplier",
+            "schedule_date": "2025-01-13",
+			"qty" : 1,
+		}
+
+		pricing_rule_record = {
+			"doctype": "Pricing Rule",
+			"title": "Discount on _Test Item",
+			"apply_on": "Item Code",
+			"items": [
+				{
+					"item_code": "_Test Item",
+				}
+				],
+			"price_or_product_discount": "Price",
+			"applicable_for": "Supplier",
+			"supplier": "_Test Supplier",
+			"buying": 1,
+			"currency": "INR",
+
+			"min_qty": 1,
+			"min_amt": 100,
+			"valid_from": "2025-01-01",
+			"rate_or_discount": "Discount Percentage",
+			"discount_percentage": 10,
+			"price_list": "Standard Buying",
+			"company" : "_Test Company",
+
+		}
+		rule = frappe.get_doc(pricing_rule_record)
+		rule.insert()
+
+		frappe.get_doc(
+			{
+				"doctype": "Item Price",
+				"price_list": "Standard Buying",
+				"item_code": "_Test Item",
+				"price_list_rate": 130,
+			}
+		).insert()
+
+		doc_po = create_purchase_order(**po_data)
+		doc_po_item = doc_po.items[0]
+		self.assertEqual(doc_po_item.discount_percentage, 10)
+		self.assertEqual(doc_po_item.rate, 117)  
+		self.assertEqual(doc_po_item.amount, 117)
+
+		doc_pr = make_pr_for_po(doc_po.name)
+
+		doc_pi = make_pi_against_pr(doc_pr.name)
+		pi_item = doc_pi.items[0]
+		self.assertEqual(pi_item.rate, 117)
+		self.assertEqual(pi_item.amount, 117)
+		
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
