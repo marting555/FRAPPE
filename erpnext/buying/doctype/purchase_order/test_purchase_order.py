@@ -2162,6 +2162,37 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(doc_pi.status, 'Debit Note Issued')
 		self.assertEqual(doc_returned_pi.status, 'Return')
 
+	def test_po_full_payment_TC_B_045(self):
+		# Scenario : PO => Payment Entry => PR => PI => PI(Return)
+
+		po_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 6,
+			"rate" : 100,
+		}
+
+		doc_po = create_purchase_order(**po_data)
+		self.assertEqual(doc_po.docstatus, 1)
+
+		doc_pe = get_payment_entry("Purchase Order", doc_po.name, doc_po.grand_total)
+		doc_pe.insert()
+		doc_pe.submit()
+		# doc_pe.paid_from = "Cash"
+
+		doc_pr = make_pr_for_po(doc_po.name)
+		self.assertEqual(doc_pr.docstatus, 1)
+
+		doc_pi = make_pi_against_pr(doc_pr.name, args={"is_paid" : 1, "cash_bank_account" : doc_pe.paid_from})
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_pi.items[0].qty, doc_po.items[0].qty)
+		self.assertEqual(doc_pi.grand_total, doc_po.grand_total)
+
+		doc_pi.reload()
+		doc_po.reload()
+		self.assertEqual(doc_pi.status, 'Paid')
+		self.assertEqual(doc_po.status, 'Completed')
 
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
@@ -2261,7 +2292,7 @@ def make_pr_against_po(po, received_qty=0):
 
 def make_return_pi(source_name):
 	from erpnext.accounts.doctype.purchase_invoice.purchase_invoice import make_debit_note
-	
+
 	return_pi = make_debit_note(source_name)
 	return_pi.update_outstanding_for_self = 0
 	return_pi.insert()
