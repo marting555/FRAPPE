@@ -886,7 +886,7 @@ def make_material_request(source_name, target_doc=None):
 				"doctype": "Material Request Item",
 				"field_map": {"name": "sales_order_item",
 							  "parent": "sales_order",
-							  "delivery_date": "required_by"
+							  "delivery_date": "required_by",
 							 },
 				"condition": lambda item: not frappe.db.exists(
 					"Product Bundle", {"name": item.item_code, "disabled": 0}
