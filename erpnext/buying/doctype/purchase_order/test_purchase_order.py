@@ -2134,6 +2134,49 @@ class TestPurchaseOrder(FrappeTestCase):
 		po_status_after_paid =  frappe.db.get_value("Purchase Order",po.name,'status')
 		self.assertEqual(po_status_after_paid,'Completed')
 
+	def test_po_with_additional_discount_TC_B_057(self):
+		company = "_Test Company"
+		item_code = "Testing-31"
+		target_warehouse = "Stores - _TC"
+		supplier = "_Test Supplier 1"
+		item_price = 10000
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_stock_item": 1,
+				"is_purchase_item": 1,
+				"is_sales_item": 0,
+				"company": company
+			}).insert()
+		pi = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"supplier": supplier,
+			"company": company,
+			"schedule_date": today(),
+			"set_warehouse": target_warehouse,
+			"items": [
+				{
+					"item_code": item_code,
+					"warehouse": target_warehouse,
+					"qty": 1,
+					"rate": item_price
+				}
+			]
+		})
+		pi.insert()
+		self.assertEqual(len(pi.items), 1)
+		self.assertEqual(pi.items[0].rate, item_price)
+		self.assertEqual(pi.net_total, item_price)
+		pi.apply_discount_on = "Net Total"
+		pi.additional_discount_percentage = 10
+		pi.save()
+		pi.submit()
+		self.assertEqual(pi.discount_amount, 1000)
+		self.assertEqual(pi.net_total, 9000)
+
+
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
