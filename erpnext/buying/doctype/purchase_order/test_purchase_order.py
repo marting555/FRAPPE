@@ -2507,6 +2507,41 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi_total = sum(entry["debit"] for entry in pi_gl_entries)
 		self.assertEqual(pi_total, 10080) 
 
+	def test_po_additional_discount_TC_B_063(self):
+		# Scenario : PO => PI [With Additional Discount]
+
+		po_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"supplier": "_Test Supplier",
+            "schedule_date": "2025-01-13",
+			"qty" : 1,
+			"rate" : 10000,
+			"apply_discount_on" : "Grand Total",
+			"additional_discount_percentage" :10 ,
+			"do_not_submit":1
+		}
+
+		acc = frappe.new_doc("Account")
+		acc.account_name = "Input Tax IGST"
+		acc.parent_account = "Tax Assets - _TC"
+		acc.company = "_Test Company"
+		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
+		if not account_name:
+			account_name = acc.insert()
+
+		doc_po = create_purchase_order(**po_data)
+		doc_po.append("taxes", {
+                    "charge_type": "On Net Total",
+                    "account_head": account_name,
+                    "rate": 12,
+                    "description": "Input GST",
+                })
+		doc_po.submit()
+		self.assertEqual(doc_po.discount_amount, 1120)
+		self.assertEqual(doc_po.grand_total, 10080)
+
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
