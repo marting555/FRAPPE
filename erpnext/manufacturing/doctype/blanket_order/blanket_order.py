@@ -148,7 +148,7 @@ def make_order(source_name):
 				"doctype": doctype + " Item",
 				"field_map": {"rate": "blanket_order_rate", "parent": "blanket_order"},
 				"postprocess": update_item,
-				"condition": lambda item: (flt(item.qty) - flt(item.ordered_qty)) > 0,
+				"condition": lambda item: not (flt(item.qty)) or (flt(item.qty) - flt(item.ordered_qty)) > 0,
 			},
 		},
 	)
@@ -186,7 +186,7 @@ def validate_against_blanket_order(order_doc):
 					if item.item_code in item_data:
 						remaining_qty = item.qty - item.ordered_qty
 						allowed_qty = remaining_qty + (remaining_qty * (allowance / 100))
-						if allowed_qty < item_data[item.item_code]:
+						if item.qty and allowed_qty < item_data[item.item_code]:
 							frappe.throw(
 								_(
 									"Item {0} cannot be ordered more than {1} against Blanket Order {2}."
