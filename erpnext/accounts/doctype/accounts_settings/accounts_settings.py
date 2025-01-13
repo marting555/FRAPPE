@@ -28,6 +28,7 @@ class AccountsSettings(Document):
 		allow_multi_currency_invoices_against_single_party_account: DF.Check
 		allow_stale: DF.Check
 		auto_reconcile_payments: DF.Check
+		auto_reconciliation_job_trigger: DF.Int
 		automatically_fetch_payment_terms: DF.Check
 		automatically_process_deferred_accounting_entry: DF.Check
 		book_asset_depreciation_entry_automatically: DF.Check
@@ -38,7 +39,6 @@ class AccountsSettings(Document):
 		check_supplier_invoice_uniqueness: DF.Check
 		create_pr_in_draft_status: DF.Check
 		credit_controller: DF.Link | None
-		cron_interval: DF.Int
 		delete_linked_ledger_entries: DF.Check
 		determine_address_tax_category_from: DF.Literal["Billing Address", "Shipping Address"]
 		enable_common_party_accounting: DF.Check
@@ -53,8 +53,8 @@ class AccountsSettings(Document):
 		merge_similar_account_heads: DF.Check
 		over_billing_allowance: DF.Currency
 		post_change_gl_entries: DF.Check
-		queue_size: DF.Int
 		receivable_payable_remarks_length: DF.Int
+		reconciliation_queue_size: DF.Int
 		role_allowed_to_over_bill: DF.Link | None
 		round_row_wise_tax: DF.Check
 		show_balance_in_coa: DF.Check
@@ -122,12 +122,15 @@ class AccountsSettings(Document):
 			check_pending_reposting(self.acc_frozen_upto)
 
 	def validate_and_sync_auto_reconcile_config(self):
-		if self.has_value_changed("cron_interval"):
-			if cint(self.cron_interval) > 0 and cint(self.cron_interval) < 60:
-				sync_auto_reconcile_config(self.cron_interval)
+		if self.has_value_changed("auto_reconciliation_job_trigger"):
+			if (
+				cint(self.auto_reconciliation_job_trigger) > 0
+				and cint(self.auto_reconciliation_job_trigger) < 60
+			):
+				sync_auto_reconcile_config(self.auto_reconciliation_job_trigger)
 			else:
 				frappe.throw(_("Cron Interval should be between 1 and 59 Min"))
 
-		if self.has_value_changed("queue_size"):
-			if cint(self.queue_size) < 5 or cint(self.queue_size) > 100:
+		if self.has_value_changed("reconciliation_queue_size"):
+			if cint(self.reconciliation_queue_size) < 5 or cint(self.reconciliation_queue_size) > 100:
 				frappe.throw(_("Queue Size should be between 5 and 100"))

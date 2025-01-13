@@ -2286,8 +2286,10 @@ def run_ledger_health_checks():
 					doc.save()
 
 
-def sync_auto_reconcile_config(cron_interval: int = 15):
-	cron_interval = cron_interval or frappe.db.get_single_value("Accounts Settings", "cron_interval")
+def sync_auto_reconcile_config(auto_reconciliation_job_trigger: int = 15):
+	auto_reconciliation_job_trigger = auto_reconciliation_job_trigger or frappe.db.get_single_value(
+		"Accounts Settings", "auto_reconciliation_job_trigger"
+	)
 	method = "erpnext.accounts.doctype.process_payment_reconciliation.process_payment_reconciliation.trigger_reconciliation_for_queued_docs"
 
 	sch_event = frappe.get_doc(
@@ -2301,7 +2303,7 @@ def sync_auto_reconcile_config(cron_interval: int = 15):
 			},
 		).update(
 			{
-				"cron_format": f"0/{cron_interval} * * * *",
+				"cron_format": f"0/{auto_reconciliation_job_trigger} * * * *",
 				"scheduler_event": sch_event.name,
 			}
 		).save()
@@ -2311,7 +2313,7 @@ def sync_auto_reconcile_config(cron_interval: int = 15):
 				"doctype": "Scheduled Job Type",
 				"method": method,
 				"scheduler_event": sch_event.name,
-				"cron_format": f"0/{cron_interval} * * * *",
+				"cron_format": f"0/{auto_reconciliation_job_trigger} * * * *",
 				"create_log": True,
 				"stopped": False,
 				"frequency": "Cron",

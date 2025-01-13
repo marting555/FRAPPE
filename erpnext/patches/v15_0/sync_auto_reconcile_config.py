@@ -7,8 +7,8 @@ def execute():
 	"""
 	Set default Cron Interval and Queue size
 	"""
-	frappe.db.set_single_value("Accounts Settings", "cron_interval", 15)
-	frappe.db.set_single_value("Accounts Settings", "queue_size", 5)
+	frappe.db.set_single_value("Accounts Settings", "auto_reconciliation_job_trigger", 15)
+	frappe.db.set_single_value("Accounts Settings", "reconciliation_queue_size", 5)
 
 	# Create Scheduler Event record if it doesn't exist
 	method = "erpnext.accounts.doctype.process_payment_reconciliation.process_payment_reconciliation.trigger_reconciliation_for_queued_docs"
