@@ -3489,7 +3489,7 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(sabb.entries[0].serial_no, "Test-SABBMRP-Sno-001")
 		self.assertEqual(sabb.entries[1].serial_no, "Test-SABBMRP-Sno-002")
 		self.assertEqual(sabb.entries[0].batch_no, "Test-SABBMRP-Bno-001")
-		
+
 	def test_create_mr_for_purchase_to_po_2pr_TC_SCK_020(self):
 		fields = {
 			"has_batch_no": 1,
@@ -3524,6 +3524,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po.submit()
 
 		pr1 = make_purchase_receipt(po.name)
+		pr1.posting_date = "05-08-2024"
 		pr1.items[0].use_serial_batch_fields = 1
 		pr1.items[0].qty = 3
 		pr1.items[0].serial_no = "Test-SABBMRP-Sno-001\nTest-SABBMRP-Sno-002\nTest-SABBMRP-Sno-003"
@@ -3551,6 +3552,7 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(sabb.entries[0].batch_no, "Test-SABBMRP-Bno-001")
 
 		pr2 = make_purchase_receipt(po.name)
+		pr2.posting_date = "10-08-2024"
 		pr2.items[0].use_serial_batch_fields = 1
 		pr2.items[0].qty = 2
 		pr2.items[0].serial_no = "Test-SABBMRP-Sno-004\nTest-SABBMRP-Sno-005"
