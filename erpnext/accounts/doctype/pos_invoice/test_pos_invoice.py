@@ -1042,6 +1042,29 @@ class TestPOSInvoice(unittest.TestCase):
 
 		self.assertEqual(inv.status, "Paid")
 		self.assertEqual(opening_entry.status, "Closed")
+	
+	def test_pos_inoivce_with_terms_and_conditions_TC_S_107(self):
+		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile	
+
+		test_user, pos_profile = init_user_and_profile()
+		opening_entry = create_opening_entry(pos_profile=pos_profile, user=test_user.name)
+		self.assertEqual(opening_entry.status, "Open")
+
+		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=3000, do_not_save=1)
+		inv.taxes_and_charges = "Output GST In-state - _TC"
+		inv.tc_name ="_Test Terms and Conditions"
+		inv.save()
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
+
+		inv.paid_amount = inv.grand_total
+		inv.submit()
+		closing_enrty= make_closing_entry_from_opening(opening_entry)
+		closing_enrty.submit()
+		opening_entry.reload()
+
+		self.assertEqual(inv.status, "Paid")
+		self.assertEqual(opening_entry.status, "Closed")
+		
 def create_pos_invoice(**args):
 	args = frappe._dict(args)
 	pos_profile = None
