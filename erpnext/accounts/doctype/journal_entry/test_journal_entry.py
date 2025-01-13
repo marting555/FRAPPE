@@ -949,6 +949,51 @@ class TestJournalEntry(unittest.TestCase):
 			self.assertEqual(entry["debit"], expected["debit"], f"Debit mismatch for {entry['account']}.")
 			self.assertEqual(entry["credit"], expected["credit"], f"Credit mismatch for {entry['account']}.")
 
+	def test_deferred_revenue_entry_TC_ACC_058(self):
+		# Set up input parameters
+		entry_type = "Deferred Revenue"
+		debit_account = "Creditors - _TC"
+		credit_account = "Sales - _TC"
+		amount = 30000.0
+
+		# Create the Journal Entry using the existing function
+		jv = make_journal_entry(
+			account1=debit_account,
+			account2=credit_account,
+			amount=amount,
+			save=False,
+			submit=False,
+		)
+		for account in jv.accounts:
+			if account.account == "Creditors - _TC":
+				account.party_type = "Supplier"
+				account.party = "_Test Supplier"
+		# Set the entry type and save the journal entry
+		jv.entry_type = entry_type
+		jv.save().submit()
+
+		# Fetch GL Entries to validate the transaction
+		gl_entries = frappe.db.sql(
+			"""SELECT account, debit, credit FROM `tabGL Entry`
+				WHERE voucher_type='Journal Entry' AND voucher_no=%s
+				ORDER BY account""",
+			jv.name,
+			as_dict=True,
+		)
+		# Expected GL entries
+		expected_gl_entries = [
+			{"account": debit_account, "debit": amount, "credit": 0},
+			{"account": credit_account, "debit": 0, "credit": amount}
+
+		]
+
+		# Assertions
+		self.assertEqual(len(gl_entries), 2, "Incorrect number of GL entries created.")
+		for entry, expected in zip(gl_entries, expected_gl_entries):
+			self.assertEqual(entry["account"], expected["account"], "Account mismatch in GL Entry.")
+			self.assertEqual(entry["debit"], expected["debit"], f"Debit mismatch for {entry['account']}.")
+			self.assertEqual(entry["credit"], expected["credit"], f"Credit mismatch for {entry['account']}.")
+
 	def test_reversal_of_itc_TC_ACC_059(self):
 		# Set up input parameters
 		entry_type = "Reversal of ITC"
