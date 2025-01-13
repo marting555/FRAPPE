@@ -6,7 +6,7 @@ import unittest
 
 import frappe
 from frappe import _
-
+from frappe.utils import cint, flt, getdate, today
 from erpnext.accounts.doctype.pos_invoice.pos_invoice import make_sales_return
 from erpnext.accounts.doctype.pos_profile.test_pos_profile import make_pos_profile
 from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
@@ -945,6 +945,56 @@ class TestPOSInvoice(unittest.TestCase):
 		opening_entry.reload()
 		self.assertEqual(opening_entry.status, "Closed")
 
+	
+	def test_pos_invoice_with_loyalty_point_TC_S_103(self):
+		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile	
+		from erpnext.accounts.doctype.loyalty_program.loyalty_program import get_loyalty_program_details_with_points
+
+		if not frappe.db.exists("Loyalty Program", "Test Single Loyalty"):
+			frappe.get_doc(
+				{
+					"doctype": "Loyalty Program",
+					"loyalty_program_name": "Test Single Loyalty",
+					"auto_opt_in": 1,
+					"from_date": today(),
+					"loyalty_program_type": "Single Tier Program",
+					"conversion_factor": 1,
+					"expiry_duration": 10,
+					"company": "_Test Company",
+					"cost_center": "Main - _TC",
+					"expense_account": "Loyalty - _TC",
+					"collection_rules": [{"tier_name": "Silver", "collection_factor": 1000, "min_spent": 1000}],
+				}
+			).insert()
+
+		test_user, pos_profile = init_user_and_profile()
+		opening_entry = create_opening_entry(pos_profile=pos_profile, user=test_user.name)
+		self.assertEqual(opening_entry.status, "Open")
+
+		before_lp_details = get_loyalty_program_details_with_points(
+			"Test Loyalty Customer", company="_Test Company", loyalty_program="Test Single Loyalty"
+		)
+
+		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=10000, do_not_save=1)
+		inv.redeem_loyalty_points = 1
+		inv.loyalty_points = before_lp_details.loyalty_points
+		inv.loyalty_amount = inv.loyalty_points * before_lp_details.conversion_factor
+		inv.append(
+			"payments",
+			{"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 10000 - inv.loyalty_amount},
+		)
+		inv.paid_amount = 10000
+		inv.submit()
+		after_redeem_lp_details = get_loyalty_program_details_with_points(
+			inv.customer, company=inv.company, loyalty_program=inv.loyalty_program
+		)
+		self.assertEqual(after_redeem_lp_details.loyalty_points, 9)
+		closing_enrty= make_closing_entry_from_opening(opening_entry)
+		closing_enrty.submit()
+		opening_entry.reload()
+		self.assertEqual(inv.status, "Paid")
+		self.assertEqual(opening_entry.status, "Closed")
+	
 
 def create_pos_invoice(**args):
 	args = frappe._dict(args)
