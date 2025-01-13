@@ -20,6 +20,7 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 )
 from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 from erpnext.stock.doctype.material_request.test_material_request import get_gle, make_material_request
+from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 from erpnext.stock.doctype.serial_no.serial_no import *
 from erpnext.stock.doctype.stock_entry.stock_entry import FinishedGoodError, make_stock_in_entry
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
@@ -1959,6 +1960,132 @@ class TestStockEntry(FrappeTestCase):
 		sa_gle = get_gle(se.company, se.name, "Stock Adjustment - _TC")
 		self.assertEqual(sh_gle[0], sh_gle[1])
 		self.assertEqual(sa_gle[0], sa_gle[1])
+
+	def test_create_stock_repack_via_bom_TC_SCK_016(self):
+		self.create_stock_repack_via_bom_TC_SCK_016()
+
+	def create_stock_repack_via_bom_TC_SCK_016(self):
+		t_warehouse = create_warehouse(
+			warehouse_name="_Test Target Warehouse",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
+		fields = {
+			"is_stock_item": 1, 
+			"stock_uom": "Kg", 
+			"uoms": [
+				{
+					'uom': "Kg",
+					"conversion_factor": 1
+				},
+				{
+					'uom': "Tonne",
+					"conversion_factor": 1000
+				}
+			]
+		}
+		if frappe.db.has_column("Item", "gst_hsn_code"):
+			fields["gst_hsn_code"] = "01011010"
+
+		item_wheet = make_item("_Test Item Wheet", properties=fields).name
+		fields["stock_uom"]= "Nos"
+		fields["uoms"]= [
+			{
+				'uom': "Nos",
+				"conversion_factor": 1
+			},
+			{
+				'uom': "Kg",
+				"conversion_factor": 10
+			}
+		]
+		item_wheet_bag = make_item("_Test Item Wheet 10Kg Bag", properties=fields).name
+		
+		# Create Purchase Receipt
+		pr = make_purchase_receipt(item_code=item_wheet, qty=1, rate=20000, uom="Tonne", stock_uom="Kg", conversion_factor=1000)
+		
+		# Check Stock Ledger Entries
+		self.check_stock_ledger_entries(
+			"Purchase Receipt",
+			pr.name,
+			[
+				["_Test Item Wheet", "_Test Warehouse - _TC", 1000], 
+			]
+		)
+		
+		# Create BOM
+		rm_items=[{
+			"item_code": item_wheet,
+			"qty": 10,
+			"uom": "Kg"
+		}]
+		bom_doc = create_bom(
+			item_wheet_bag, rm_items
+		)
+
+		# Create Repack
+		se = make_stock_entry(
+			item_code=item_wheet, 
+			expense_account="Stock Adjustment - _TC", 
+			company = "_Test Company", 
+			purpose="Repack", 
+			qty=10,
+			do_not_submit=True,
+			do_not_save=True
+		)
+		se.from_bom = 1
+		se.bom_no = bom_doc.name
+		se.fg_completed_qty = 10
+		se.get_items()
+		se.items[0].s_warehouse = "_Test Warehouse - _TC"
+		se.items[0].t_warehouse = None
+		se.items[1].s_warehouse = None
+		se.items[1].t_warehouse = t_warehouse
+		se.save()
+		se.submit()
+		
+		# Check Stock Ledger Entries
+		self.check_stock_ledger_entries(
+			"Stock Entry",
+			se.name,
+			[
+				['_Test Item Wheet 10Kg Bag', '_Test Target Warehouse - _TC', 10.0], 
+				['_Test Item Wheet', '_Test Warehouse - _TC', -100.0], 
+			]
+		)
+
+
+def create_bom(bom_item, rm_items, company=None, qty=None, properties=None):
+		bom = frappe.new_doc("BOM")
+		bom.update(
+			{
+				"item": bom_item or "_Test Item",
+				"company": company or "_Test Company",
+				"quantity": qty or 1,
+			}
+		)
+		if properties:
+			bom.update(properties)
+
+		for item in rm_items:
+			item_args = {}
+
+			item_args.update(
+				{
+					"item_code": item.get('item_code'),
+					"qty": item.get('qty'),
+					"uom": item.get('uom'),
+					"rate": item.get('rate')
+				}
+			)
+
+			bom.append("items", item_args)
+
+		bom.save(ignore_permissions=True)
+		bom.submit()
+
+		return bom
+
 
 def make_serialized_item(**args):
 	args = frappe._dict(args)
