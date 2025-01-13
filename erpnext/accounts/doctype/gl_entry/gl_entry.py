@@ -289,6 +289,9 @@ class GLEntry(Document):
 		validate_party_frozen_disabled(self.party_type, self.party)
 
 	def validate_currency(self):
+		if self.is_cancelled:
+			return
+		
 		company_currency = erpnext.get_company_currency(self.company)
 		account_currency = get_account_currency(self.account)
 
