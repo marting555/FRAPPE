@@ -94,6 +94,8 @@ class AccountsSettings(Document):
 		if clear_cache:
 			frappe.clear_cache()
 
+		self.validate_and_sync_auto_reconcile_config()
+
 	def validate_stale_days(self):
 		if not self.allow_stale and cint(self.stale_days) <= 0:
 			frappe.msgprint(
@@ -119,16 +121,13 @@ class AccountsSettings(Document):
 		if self.acc_frozen_upto:
 			check_pending_reposting(self.acc_frozen_upto)
 
-	def before_save(self):
-		self.validate_and_sync_auto_reconcile_config()
-
 	def validate_and_sync_auto_reconcile_config(self):
 		if self.has_value_changed("cron_interval"):
-			if int(self.cron_interval) > 0 and int(self.cron_interval) < 60:
-				sync_auto_reconcile_config()
+			if cint(self.cron_interval) > 0 and cint(self.cron_interval) < 60:
+				sync_auto_reconcile_config(self.cron_interval)
 			else:
 				frappe.throw(_("Cron Interval should be between 1 and 59 Min"))
 
 		if self.has_value_changed("queue_size"):
-			if self.queue_size < 5 or self.queue_size > 100:
+			if cint(self.queue_size) < 5 or cint(self.queue_size) > 100:
 				frappe.throw(_("Queue Size should be between 5 and 100"))

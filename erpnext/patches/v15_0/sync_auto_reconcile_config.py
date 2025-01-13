@@ -9,4 +9,18 @@ def execute():
 	"""
 	frappe.db.set_single_value("Accounts Settings", "cron_interval", 15)
 	frappe.db.set_single_value("Accounts Settings", "queue_size", 5)
-	sync_auto_reconcile_config()
+
+	# Create Scheduler Event record if it doesn't exist
+	method = "erpnext.accounts.doctype.process_payment_reconciliation.process_payment_reconciliation.trigger_reconciliation_for_queued_docs"
+	if not frappe.db.get_all(
+		"Scheduler Event", {"scheduled_against": "Process Payment Reconciliation", "method": method}
+	):
+		frappe.get_doc(
+			{
+				"doctype": "Scheduler Event",
+				"scheduled_against": "Process Payment Reconciliation",
+				"method": method,
+			}
+		).save()
+
+	sync_auto_reconcile_config(15)
