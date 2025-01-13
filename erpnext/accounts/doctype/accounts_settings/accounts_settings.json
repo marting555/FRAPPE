@@ -44,10 +44,9 @@
   "stale_days",
   "section_break_jpd0",
   "auto_reconcile_payments",
-  "exchange_gain_loss_posting_date",
-  "column_break_resa",
   "auto_reconciliation_job_trigger",
   "reconciliation_queue_size",
+  "column_break_resa",
   "invoicing_settings_tab",
   "accounts_transactions_settings_section",
   "over_billing_allowance",
@@ -500,13 +499,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "Payment",
-   "fieldname": "exchange_gain_loss_posting_date",
-   "fieldtype": "Select",
-   "label": "Posting Date Inheritance for Exchange Gain / Loss",
-   "options": "Invoice\nPayment"
-  },
-  {
    "fieldname": "column_break_resa",
    "fieldtype": "Column Break"
   },
@@ -530,7 +522,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-01-13 17:25:24.690593",
+ "modified": "2025-01-13 17:38:39.661320",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Accounts Settings",
