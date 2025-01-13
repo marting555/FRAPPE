@@ -4401,6 +4401,37 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Output Tax SGST - _TIRC'}, 'credit'), 1800)
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Output Tax CGST - _TIRC'}, 'credit'), 1800)
   
+	def test_sales_order_creating_si_with_installation_note_TC_S_060(self):
+		so = self.create_and_submit_sales_order(qty=5, rate=3000)
+  
+		dn = make_delivery_note(so.name)
+		dn.submit()
+
+		self.assertEqual(dn.status, "To Bill", "Delivery Note not created")
+		stock_ledger_entry = frappe.get_all(
+			'Stock Ledger Entry', 
+			{'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'warehouse': '_Test Warehouse - _TC', 'item_code': '_Test Item'}, 
+			['valuation_rate', 'actual_qty']
+		)
+		self.assertEqual(stock_ledger_entry[0].get("actual_qty"), -5)
+  
+		from erpnext.stock.doctype.delivery_note.delivery_note import (make_installation_note, make_sales_invoice)
+		install_note = make_installation_note(dn.name)
+		install_note.inst_date = nowdate()
+		install_note.inst_time = datetime.now().time()
+		install_note.submit()
+		self.assertEqual(install_note.status, "Submitted", "Installation Note not created")
+  
+		si = make_sales_invoice(dn.name)
+		si.save()
+		si.submit()
+
+		self.assertEqual(si.status, 'Unpaid')
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Sales - _TC'}, 'credit'), 15000)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Debtors - _TC'}, 'debit'), 15000)
+  
+		return dn, si
+  
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
 		sales_order.delivery_date = nowdate()
