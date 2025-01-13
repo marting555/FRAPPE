@@ -51,7 +51,6 @@ class PaymentRequest(Document):
 		grand_total: DF.Currency
 		iban: DF.ReadOnly | None
 		is_a_subscription: DF.Check
-		is_payment_order_required: DF.Check
 		make_sales_invoice: DF.Check
 		message: DF.Text | None
 		mode_of_payment: DF.Link | None
