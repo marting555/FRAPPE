@@ -1964,6 +1964,28 @@ class TestStockEntry(FrappeTestCase):
 	def test_create_stock_repack_via_bom_TC_SCK_016(self):
 		self.create_stock_repack_via_bom_TC_SCK_016()
 
+	def test_create_and_cancel_stock_repack_via_bom_TC_SCK_065(self):
+		se = self.create_stock_repack_via_bom_TC_SCK_016()
+		se.cancel()
+
+		sl_entry_cancelled = frappe.db.get_all(
+			"Stock Ledger Entry",
+			{"voucher_type": "Stock Entry", "voucher_no": se.name},
+			["actual_qty", "warehouse"],
+			order_by="creation",
+		)
+		warehouse_qty = {
+			"_Test Target Warehouse - _TC": 0,
+			"_Test Warehouse - _TC": 0
+		}
+
+		for sle in sl_entry_cancelled:
+			warehouse_qty[sle.get('warehouse')] += sle.get('actual_qty')
+		
+		self.assertEqual(len(sl_entry_cancelled), 4)
+		self.assertEqual(warehouse_qty["_Test Target Warehouse - _TC"], 0)
+		self.assertEqual(warehouse_qty["_Test Warehouse - _TC"], 0)
+
 	def create_stock_repack_via_bom_TC_SCK_016(self):
 		t_warehouse = create_warehouse(
 			warehouse_name="_Test Target Warehouse",
@@ -2053,6 +2075,8 @@ class TestStockEntry(FrappeTestCase):
 				['_Test Item Wheet', '_Test Warehouse - _TC', -100.0], 
 			]
 		)
+
+		return se
 
 
 def create_bom(bom_item, rm_items, company=None, qty=None, properties=None):
