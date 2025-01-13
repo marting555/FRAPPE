@@ -2322,6 +2322,45 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.items[0].rate, 130)
 
 
+	def test_po_to_pi_with_deferred_expense_TC_B_094(self):
+		item = frappe.get_doc({
+			'doctype': 'Item',
+			'item_code': 'test_expense',
+			'item_name': 'Test Expense',
+			'is_stock_item': 0,  # Not a stock item
+			'enable_deferred_expense': 1,
+			'gst_hsn_code': '01011010'
+		})
+		item.insert()
+		po = frappe.get_doc({
+			'doctype': 'Purchase Order',
+			'supplier': '_Test Supplier 1',
+			'schedule_date': today(),
+			'items': [{
+				'item_code': item.item_code,
+				'qty': 1,
+				'rate': 1000  # Adjust the rate as needed
+			}]
+		})
+		po.insert()
+		po.submit()
+		pi = frappe.get_doc({
+			'doctype': 'Purchase Invoice',
+			'supplier': po.supplier,
+			'items': [{
+				'item_code': item.item_code,
+				'qty': 1,
+				'rate': 1000  # Same as PO
+			}]
+		})
+		pi.insert()
+		item = frappe.get_doc('Item', item.item_code)
+		pi.items[0].enable_deferred_expense = item.enable_deferred_expense
+		pi.save()
+		self.assertEqual(pi.items[0].enable_deferred_expense, 1)
+		pi.submit()
+		self.assertEqual(pi.docstatus, 1)
+
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
