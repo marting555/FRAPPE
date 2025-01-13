@@ -242,7 +242,7 @@
  "depends_on": "eval:doc.backflush_raw_materials_based_on == \"BOM\"",
  "fieldname": "validate_components_quantities_per_bom",
  "fieldtype": "Check",
- "label": "Validate Components Quantities Per BOM"
+ "label": "Validate Components and Quantities Per BOM"
 }
 ],
 "icon": "icon-wrench",
