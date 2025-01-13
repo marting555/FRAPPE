@@ -2200,7 +2200,11 @@ def create_supplier(**args):
 	args = frappe._dict(args)
 
 	if frappe.db.exists("Supplier", args.supplier_name):
-		return frappe.get_doc("Supplier", args.supplier_name)
+		doc = frappe.get_doc("Supplier", args.supplier_name)
+		if doc.name == "_Test Supplier USD" and not frappe.db.exists("Party Account", {"parent": doc.name, "account": "_Test Payable USD - _TC"}):
+			doc.append("accounts", {"company": args.company, "account": "_Test Payable USD - _TC"})
+			frappe.db.commit()
+		return doc
 	doc = frappe.get_doc(
 		{
 			"doctype": "Supplier",
@@ -2215,12 +2219,11 @@ def create_supplier(**args):
 		'company': args.company,
 		'account': '_Test Payable USD - _TC' if args.default_currency == 'USD' else '_Test TDS Payable - _TC',
 	})
-
 	if not args.without_supplier_group:
 		doc.supplier_group = args.supplier_group or "Services"
+  
 
-	doc.insert()
-	doc.save()
+	doc.insert(ignore_mandatory=True)
 	frappe.db.commit()
 	return doc
 
@@ -2260,7 +2263,7 @@ def create_account():
 
 			if account["parent"]:
 				doc.parent_account = account["parent"]
-
+			
 			doc.insert(ignore_mandatory=True)
 			frappe.db.commit()
 

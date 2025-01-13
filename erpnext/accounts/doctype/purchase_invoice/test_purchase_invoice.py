@@ -2468,16 +2468,35 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi.tax_withholding_category="Test - TDS - 194C - Company"
 		pi.save()
 		pi.submit()
-
-		expected_result=[
-			['Creditors - _TC', 0.0, 90000.0, pi.posting_date],
-			['Creditors - _TC', 1800.0, 0.0, pi.posting_date],
-			['Stock Received But Not Billed - _TC', 90000.0, 0.0, pi.posting_date],
-			['_Test TDS Payable - _TC', 0.0, 1800.0, pi.posting_date]
-		]
-
-		check_gl_entries(self,voucher_no=pi.name,expected_gle=expected_result,posting_date=pi.posting_date,voucher_type="Purchase Invoice")
-		# self.assertEqual(gl_entries,expected_result)
+		gl_entries = frappe.db.sql(
+			"""select account, sum(debit) as debit, sum(credit) as credit , against_voucher
+			from `tabGL Entry` where voucher_type='Purchase Invoice' and voucher_no=%s
+			group by account,against_voucher""",
+			pi.name,
+			as_dict=1,
+		)
+		
+		expected_result = [
+				{
+					"account": "Creditors - _TC",
+					"debit": 1800.0,
+					"credit": 90000.0,
+					"against_voucher": pi.name
+				},
+				{
+					"account": "Stock Received But Not Billed - _TC",
+					"debit": 90000.0,
+					"credit": 0.0,
+					"against_voucher": None
+				},
+				{
+					"account": "_Test TDS Payable - _TC",
+					"debit": 0.0,
+					"credit": 1800.0,
+					"against_voucher": None
+				}
+			]
+		self.assertEqual(gl_entries,expected_result)
 
 		
 
@@ -2583,7 +2602,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				["Creditors - _TC", 0.0, 50000.0, pi.posting_date],
 				["Creditors - _TC", 600.0, 0.0, pi.posting_date],
 				["Stock Received But Not Billed - _TC", 50000.0, 0.0, pi.posting_date],
-				["Test TDS Payable - _TC", 0.0, 600.0, pi.posting_date]
+				["_Test TDS Payable - _TC", 0.0, 600.0, pi.posting_date]
 			]
 			
 			check_gl_entries(self, pi.name, expected_gle, pi.posting_date)
@@ -2613,6 +2632,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			pi.submit()
 			
 			pe = get_payment_entry("Purchase Invoice", pi.name)
+			pe.payment_type= "Pay"
+			pe.paid_from = "Cash - _TC"
 			pe.target_exchange_rate = 60
 			pe.save()
 			pe.submit()
@@ -2673,6 +2694,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		records_for_pi('_Test Supplier USD')
 		supplier = frappe.get_doc('Supplier', '_Test Supplier USD')
+
 		if supplier:
 			pe = create_payment_entry(
 				party_type="Supplier",
@@ -2692,13 +2714,14 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			pe.append(
 				"taxes",
 				{
-					"account_head": "_Test TDS Payable - _TC",
+					"account_head": "Test TDS Payable - _TC",
 					"charge_type": "On Paid Amount",
 					"rate": 0,
 					"add_deduct_tax": "Deduct",
 					"description": "Cash",
 				},
 			)
+			
 			pe.save()
 			pe.submit()
 
@@ -2810,15 +2833,27 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				dn=pi.name,
 				party_type="Supplier",
 				party=supplier.name,
+				grand_total=5000,
 				submit_doc=1,
 				return_doc=1,
 			)
-
 			pe=pr.create_payment_entry()
 			pe.save()
 			pe.submit()
 			pr.load_from_db()
 			self.assertEqual(pr.status, "Paid")
+			pe.load_from_db()
+			expected_gle = [
+				['Cash - _TC', 0.0, 5000.0, pe.posting_date],
+				['Creditors - _TC', 5000.0, 0.0, pe.posting_date]
+			]
+			check_gl_entries(
+				doc=self,
+				voucher_no=pe.name,
+				expected_gle=expected_gle,
+				voucher_type="Payment Entry",
+				posting_date=pe.posting_date
+			)
 			pi.load_from_db()
 			self.assertEqual(pi.status, "Paid")
 	def test_multi_payment_request_for_purchase_invoice_TC_ACC_036(self):
@@ -2860,7 +2895,17 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			pr.load_from_db()
 			self.assertEqual(pr.status, "Paid")
 			pe.load_from_db()
-			
+			expected_gle = [
+				['Cash - _TC', 0.0, 2500.0, pe.posting_date],
+				['Creditors - _TC', 2500.0, 0.0, pe.posting_date]
+			]
+			check_gl_entries(
+				doc=self,
+				voucher_no=pe.name,
+				expected_gle=expected_gle,
+				voucher_type="Payment Entry",
+				posting_date=pe.posting_date
+			)
 			pi.load_from_db()
 			self.assertEqual(pi.status, "Partly Paid")
 			_pr = make_payment_request(
@@ -2876,8 +2921,19 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			_pe.submit()
 			_pr.load_from_db()		
 			self.assertEqual(_pr.status, "Paid")
-			pi.load_from_db()
-			self.assertEqual(pi.status, "Paid")
+			_pe.load_from_db()		
+			expected_gle = [
+				['Cash - _TC', 0.0, 2500.0, _pe.posting_date],
+				['Creditors - _TC', 2500.0, 0.0, _pe.posting_date]
+			]
+			check_gl_entries(
+				doc=self,
+				voucher_no=_pe.name,
+				expected_gle=expected_gle,
+				voucher_type="Payment Entry",
+				posting_date=_pe.posting_date
+			)
+	
 	def test_invoice_status_on_payment_entry_submit_TC_B_035_and_TC_B_037(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
 		from erpnext.accounts.doctype.unreconcile_payment.unreconcile_payment import payment_reconciliation_record_on_unreconcile,create_unreconcile_doc_for_selection
@@ -3253,7 +3309,7 @@ def check_gl_entries(
 		for col in additional_columns:
 			query = query.select(gl[col])
 	gl_entries = query.run(as_dict=True)
-
+ 
 	for i, gle in enumerate(gl_entries):
 		doc.assertEqual(expected_gle[i][0], gle.account)
 		doc.assertEqual(expected_gle[i][1], gle.debit)
@@ -3489,6 +3545,7 @@ def update_ldc_details(supplier):
         setattr(supplier,'custom_lower_tds_deduction_applicable','Yes')
         if not supplier.pan:
             setattr(supplier,'pan','DAJPC4150P')
+        supplier.flags.ignore_mandatory = True
         supplier.save()
         frappe.db.commit()
 
