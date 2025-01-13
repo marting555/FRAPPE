@@ -821,10 +821,6 @@
    "role": "Stock User"
   },
   {
-   "read": 1,
-   "role": "Projects User"
-  },
-  {
    "create": 1,
    "delete": 1,
    "email": 1,
