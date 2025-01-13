@@ -3490,6 +3490,93 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(sabb.entries[1].serial_no, "Test-SABBMRP-Sno-002")
 		self.assertEqual(sabb.entries[0].batch_no, "Test-SABBMRP-Bno-001")
 		
+	def test_create_mr_for_purchase_to_po_2pr_TC_SCK_020(self):
+		fields = {
+			"has_batch_no": 1,
+			"has_serial_no": 1,
+			"is_stock_item": 1,
+			"create_new_batch": 1,
+			"batch_naming_series": "Test-SABBMRP-Bno.#####",
+		}
+
+		if frappe.db.has_column("Item", "gst_hsn_code"):
+			fields["gst_hsn_code"] = "01011010"
+
+		item = make_item("Test Use Serial and Batch Item SN Item", fields).name
+
+		# Create Material Request for Purchase
+		mr = make_material_request(
+			material_request_type="Purchase",
+			qty=5,
+			item_code=item,
+			rate=10000,
+			do_not_submit=True
+		)
+		mr.transaction_date = "01-08-2024"
+		mr.schedule_date = "15-08-2024"
+		mr.save()
+		mr.submit()
+
+		po = make_purchase_order(mr.name)
+		po.posting_date = "05-08-2024"
+		po.supplier = "_Test Supplier"
+		po.save()
+		po.submit()
+
+		pr1 = make_purchase_receipt(po.name)
+		pr1.items[0].use_serial_batch_fields = 1
+		pr1.items[0].qty = 3
+		pr1.items[0].serial_no = "Test-SABBMRP-Sno-001\nTest-SABBMRP-Sno-002\nTest-SABBMRP-Sno-003"
+
+		if not frappe.db.exists({"doctype": "Batch", "batch_id":"Test-SABBMRP-Bno-001"}):
+			b_no = frappe.new_doc("Batch")
+			b_no.batch_id = "Test-SABBMRP-Bno-001"
+			b_no.item = item
+			b_no.save()
+
+		pr1.items[0].batch_no = "Test-SABBMRP-Bno-001"
+		pr1.save()
+		pr1.submit()
+
+		sl_entry = frappe.db.get_all(
+			"Stock Ledger Entry",
+			{"voucher_type": "Purchase Receipt", "voucher_no": pr1.name},
+			["actual_qty", "serial_and_batch_bundle"],
+			order_by="creation",
+		)
+
+		sabb = frappe.get_doc("Serial and Batch Bundle", sl_entry[0].serial_and_batch_bundle)
+		self.assertEqual(sl_entry[0].actual_qty, 3)
+		self.assertEqual(sabb.entries[0].serial_no, "Test-SABBMRP-Sno-001")
+		self.assertEqual(sabb.entries[0].batch_no, "Test-SABBMRP-Bno-001")
+
+		pr2 = make_purchase_receipt(po.name)
+		pr2.items[0].use_serial_batch_fields = 1
+		pr2.items[0].qty = 2
+		pr2.items[0].serial_no = "Test-SABBMRP-Sno-004\nTest-SABBMRP-Sno-005"
+
+		if not frappe.db.exists({"doctype": "Batch", "batch_id":"Test-SABBMRP-Bno-001"}):
+			b_no = frappe.new_doc("Batch")
+			b_no.batch_id = "Test-SABBMRP-Bno-001"
+			b_no.item = item
+			b_no.save()
+
+		pr2.items[0].batch_no = "Test-SABBMRP-Bno-001"
+		pr2.save()
+		pr2.submit()
+
+		sl_entry = frappe.db.get_all(
+			"Stock Ledger Entry",
+			{"voucher_type": "Purchase Receipt", "voucher_no": pr2.name},
+			["actual_qty", "serial_and_batch_bundle"],
+			order_by="creation",
+		)
+
+		sabb = frappe.get_doc("Serial and Batch Bundle", sl_entry[0].serial_and_batch_bundle)
+		self.assertEqual(sl_entry[0].actual_qty, 2)
+		self.assertEqual(sabb.entries[1].serial_no, "Test-SABBMRP-Sno-005")
+		self.assertEqual(sabb.entries[1].batch_no, "Test-SABBMRP-Bno-001")
+		
 
 def get_in_transit_warehouse(company):
 	if not frappe.db.exists("Warehouse Type", "Transit"):
