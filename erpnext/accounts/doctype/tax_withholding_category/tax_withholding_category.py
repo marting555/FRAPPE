@@ -352,7 +352,7 @@ def get_invoice_vouchers(parties, tax_details, company, party_type="Supplier"):
 		"docstatus": 1,
 	}
 
-	if doctype != "Sales Invoice":
+	if doctype != "Sales Invoice" and not cint(tax_details.consider_party_ledger_amount):
 		filters.update(
 			{"apply_tds": 1, "tax_withholding_category": tax_details.get("tax_withholding_category")}
 		)
