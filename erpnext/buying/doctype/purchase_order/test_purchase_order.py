@@ -5,6 +5,7 @@
 import json
 
 import frappe
+import pandas as pd
 from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, flt, getdate, nowdate
 from frappe.utils.data import today
@@ -27,6 +28,7 @@ from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 	make_purchase_invoice as make_pi_from_pr,
 )
 from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
+from io import BytesIO
 
 class TestPurchaseOrder(FrappeTestCase):
 	def test_purchase_order_qty(self):
@@ -2668,6 +2670,91 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertTrue(any(entry["account"] == "SGST" and entry["debit"] == 54 for entry in pi_gl_entries))
 		self.assertTrue(any(entry["account"] == "Creditors" and entry["credit"] == 1308 for entry in pi_gl_entries))
 
+	def test_po_with_uploader_TC_B_091(self):
+		# Test Data
+		po_data = {
+			"doctype": "Purchase Order",
+			"company": "_Test Company",
+			"supplier": "_Test Supplier",
+			"set_posting_time": 1,
+			"posting_date": "2025-01-10",
+			"update_stock": 1,
+			"items": []
+		}
+
+		# Create PO Document
+		po_doc = frappe.get_doc(po_data)
+		
+		# Create Excel Data
+		excel_data = {
+			"Item Code": ["_Test Item", "_Test Item Home Desktop 200"],
+			"Warehouse": ["_Test Warehouse 1 - _TC", "_Test Warehouse 1 - _TC"],
+			"Qty": [1, 1],
+			"Rate": [2000, 1000]
+		}
+
+		# Create DataFrame and save to Excel
+		df = pd.DataFrame(excel_data)
+		with BytesIO() as output:
+			with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+				df.to_excel(writer, index=False)
+			output.seek(0)
+			# Simulate the upload
+			# Assuming the item table is uploaded from an Excel file
+
+		# Now, we would have the uploaded data in PO items table.
+		for index, row in df.iterrows():
+			po_doc.append("items", {
+				"item_code": row['Item Code'],
+				"warehouse": row['Warehouse'],
+				"qty": row['Qty'],
+				"rate": row['Rate']
+			})
+		
+		# Insert and Submit PO
+		po_doc.insert()
+		po_doc.submit()
+
+		# Assertions for PO Items table
+		self.assertEqual(len(po_doc.items), 2, "All items should be added to the PO.")
+		self.assertEqual(po_doc.items[0].item_code, "_Test Item", "First item code should be '_Test Item'.")
+		self.assertEqual(po_doc.items[1].item_code, "_Test Item Home Desktop 200", "Second item code should be '_Test Item Home Desktop 200'.")
+		self.assertEqual(po_doc.items[0].rate, 2000, "Rate for _Test Item should be 2000.")
+		self.assertEqual(po_doc.items[1].rate, 1000, "Rate for _Test Item Home Desktop 200 should be 1000.")
+		
+		# Create PR and PI from PO
+		pr_doc = frappe.get_doc({
+			"doctype": "Purchase Receipt",
+			"purchase_order": po_doc.name,
+			"items": po_doc.items
+		})
+		pr_doc.insert()
+		pr_doc.submit()
+
+		pi_doc = frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"purchase_receipt": pr_doc.name,
+			"items": pr_doc.items
+		})
+		pi_doc.insert()
+		pi_doc.submit()
+
+		# Assertions for Accounting Entries
+		gle = frappe.get_all("GL Entry", filters={"voucher_no": pi_doc.name}, fields=["account", "debit", "credit"])
+		self.assertGreater(len(gle), 0, "GL Entries should be created.")
+
+		# Validate Stock Ledger
+		sle = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": pi_doc.name}, fields=["item_code", "actual_qty", "stock_value"])
+		self.assertEqual(len(sle), 2, "Stock Ledger should have entries for both items.")
+		self.assertEqual(sle[0]["item_code"], "_Test Item", "Stock Ledger should contain _Test Item.")
+		self.assertEqual(sle[1]["item_code"], "_Test Item Home Desktop 200", "Stock Ledger should contain _Test Item Home Desktop 200.")
+		self.assertEqual(sle[0]["actual_qty"], 1, "Quantity for _Test Item should be 1.")
+		self.assertEqual(sle[1]["actual_qty"], 1, "Quantity for _Test Item Home Desktop 200 should be 1.")
+
+		# Cleanup
+		pi_doc.cancel()
+		pr_doc.cancel()
+		po_doc.cancel()
 
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
