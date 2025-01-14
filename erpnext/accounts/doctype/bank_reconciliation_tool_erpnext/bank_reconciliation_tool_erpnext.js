@@ -5,8 +5,14 @@ frappe.provide("erpnext.accounts.bank_reconciliation");
 
 frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 	refresh(frm) {
-        frm.disable_save();
-		frappe.require("bank-reconciliation-tool.bundle.js", () => frm.trigger("make_reconciliation_tool"));
+		frm.disable_save();
+		// frappe.require("bank-reconciliation-tool.bundle.js", () => frm.trigger("make_reconciliation_tool"));
+		if (frm.doc.closing_balance_as_per_bank_statement && frm.doc.closing_balance_as_per_erp) {
+			frm.set_value(
+				"difference_amount",
+				(frm.doc.closing_balance_as_per_bank_statement - frm.doc.closing_balance_as_per_erp)
+			);
+		}
 
 		frm.add_custom_button(__("Upload Bank Statement"), () =>
 			frappe.call({
@@ -25,42 +31,45 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 				},
 			})
 		);
-        if (frm.doc.closing_balance_as_per_erp && frm.doc.closing_balance_as_per_bank_statement) {
-            frm.set_value("difference_amount", frm.doc.closing_balance_as_per_bank_statement - frm.doc.closing_balance_as_per_erp)
-        }
+		if (frm.doc.closing_balance_as_per_erp && frm.doc.closing_balance_as_per_bank_statement) {
+			frm.set_value(
+				"difference_amount",
+				frm.doc.closing_balance_as_per_bank_statement - frm.doc.closing_balance_as_per_erp
+			);
+		}
 		// console.log(" NOT ALLLOCSATE",frm.doc.bank_statement.length)
-        if (frm.doc.bank_statement.length && frm.doc.erp_transaction.length) {
+		if (frm.doc.bank_statement.length && frm.doc.erp_transaction.length) {
 			// console.log("ALLLOCSATE")
 			frm.add_custom_button(__("Allocate"), () => frm.trigger("allocate"));
-            frm.change_custom_button_type(__("Allocate"), null, "primary");
-            frm.change_custom_button_type(__("Get Unreconciled Entries"), null, "default");
-        }
-        if (frm.doc.matching_table.length) {
+			frm.change_custom_button_type(__("Allocate"), null, "primary");
+			frm.change_custom_button_type(__("Get Unreconciled Entries"), null, "default");
+		}
+		if (frm.doc.matching_table.length) {
 			frm.add_custom_button(__("Reconcile"), () => frm.trigger("reconcile"));
 			frm.change_custom_button_type(__("Reconcile"), null, "primary");
 			frm.change_custom_button_type(__("Get Unreconciled Entries"), null, "default");
 			frm.change_custom_button_type(__("Allocate"), null, "default");
-			frm.doc.matching_table.map((i)=>{
-				frm.doc.erp_transaction.map((j)=>{
-					if (i.reference_id == j.reference_id){
-						frm.doc.bank_statement.map((k)=>{
-							if (k.bank_transaction_id == i.bank_transaction_id){
-								if ((j.withdraw || j.deposit) - (k.withdraw || k.deposit)>=0){
-								j.remaining_amount = (j.withdraw || j.deposit) - (k.withdraw || k.deposit)
-								}
-								else {
-									j.remaining_amount = 0
+			frm.doc.matching_table.map((i) => {
+				frm.doc.erp_transaction.map((j) => {
+					if (i.reference_id == j.reference_id) {
+						frm.doc.bank_statement.map((k) => {
+							if (k.bank_transaction_id == i.bank_transaction_id) {
+								if ((j.withdraw || j.deposit) - (k.withdraw || k.deposit) >= 0) {
+									j.remaining_amount =
+										(j.withdraw || j.deposit) - (k.withdraw || k.deposit);
+								} else {
+									j.remaining_amount = 0;
 								}
 							}
-						})
+						});
 					}
-				})
-			})
+				});
+			});
 			frm.refresh_field("erp_transaction");
 		}
 
 	},
-    setup: function (frm) {
+	setup: function (frm) {
 		frm.set_query("bank_account", function () {
 			return {
 				filters: {
@@ -74,82 +83,87 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 		// )}</div>`;
 		// set_field_options("no_bank_transactions", no_bank_transactions_text);
 	},
-    bank_account: function (frm) {
+	bank_account: function (frm) {
 		frappe.db.get_value("Bank Account", frm.doc.bank_account, "account", (r) => {
 			frappe.db.get_value("Account", r.account, "account_currency", (r) => {
 				frm.doc.account_currency = r.account_currency;
-                // console.log('rrrr',r, frm.doc.account_currency)
+				// console.log('rrrr',r, frm.doc.account_currency)
 				// frm.trigger("render_chart");
 			});
 		});
-        // frm.trigger("render_chart");
+		// frm.trigger("render_chart");
 		frm.trigger("get_account_opening_balance");
-        frm.add_custom_button(__('Get Unreconciled Entries'), function () {
-            frappe.call({
+		frm.add_custom_button(__("Get Unreconciled Entries"), function () {
+			frappe.call({
 				method: "erpnext.accounts.doctype.bank_reconciliation_tool_erpnext.bank_reconciliation_tool_erpnext.get_bank_transaction",
 				args: {
 					bank_account: frm.doc.bank_account,
 					company: frm.doc.company,
-                    from_statement_date : frm.doc.from_statement_date,
-                    to_statement_date : frm.doc.to_statement_date
+					from_statement_date: frm.doc.from_statement_date,
+					to_statement_date: frm.doc.to_statement_date,
 				},
 				callback: (response) => {
-                    let existingTransactionIds = new Set(
-                        frm.doc.bank_statement.map(row => row.bank_transaction_id) // Collect existing IDs
-                    );
-                    // console.log('Response:', response.message);
-                    
-                    if (Array.isArray(response.message)) {
-                        response.message.forEach(transaction => {
-                            if (!existingTransactionIds.has(transaction.name)) {
-								if (transaction.deposit || transaction.withdraw){
-                                // Add a new child row to the bank_statement table
-                                let bankTransaction = frm.add_child("bank_statement");
-                                bankTransaction.date = transaction.date;
-                                bankTransaction.bank_transaction_id = transaction.name;
-								bankTransaction.description = transaction.description;
-                                bankTransaction.deposit = transaction.deposit;
-                                bankTransaction.withdraw = transaction.withdraw;
-                                bankTransaction.reference_no = transaction.reference_number;
-                                bankTransaction.unallocated_amount = transaction.unallocated_amount;
-                    
-                                // Track added transaction IDs
-                                existingTransactionIds.add(transaction.name);
-                            }
-						}
-                        });
-                    } else {
-                        console.error('Invalid response.message:', response.message);
-                    }
-                    
-                    frm.refresh_field('bank_statement');
+					let existingTransactionIds = new Set(
+						frm.doc.bank_statement.map((row) => row.bank_transaction_id) // Collect existing IDs
+					);
+					// console.log('Response:', response.message);
+
+					if (Array.isArray(response.message)) {
+						response.message.forEach((transaction) => {
+							if (!existingTransactionIds.has(transaction.name)) {
+								if (transaction.deposit || transaction.withdrawal) {
+									// Add a new child row to the bank_statement table
+									let bankTransaction = frm.add_child("bank_statement");
+									bankTransaction.date = transaction.date;
+									bankTransaction.bank_transaction_id = transaction.name;
+									bankTransaction.description = transaction.description;
+									bankTransaction.deposit = transaction.deposit;
+									bankTransaction.withdraw = transaction.withdrawal;
+									bankTransaction.reference_no = transaction.reference_number;
+									bankTransaction.unallocated_amount = transaction.unallocated_amount;
+
+									// Track added transaction IDs
+									existingTransactionIds.add(transaction.name);
+								}
+							}
+						});
+					} else {
+						console.error("Invalid response.message:", response.message);
+					}
+
+					frm.refresh_field("bank_statement");
 				},
 			});
-            frappe.call({
+			frappe.call({
 				method: "erpnext.accounts.doctype.bank_reconciliation_tool_erpnext.bank_reconciliation_tool_erpnext.get_erp_transaction",
 				args: {
 					bank_account: frm.doc.bank_account,
 					company: frm.doc.company,
-                    from_statement_date : frm.doc.from_statement_date,
-                    to_statement_date : frm.doc.to_statement_date
+					from_statement_date: frm.doc.from_statement_date,
+					to_statement_date: frm.doc.to_statement_date,
 				},
 				callback: async (response) => {
-					// console.log('Response:', response.message);
-			
+					// Create a Set of existing reference IDs in the `erp_transaction` table
+					let existingReferenceIds = new Set(
+						frm.doc.erp_transaction.map((row) => row.reference_id)
+					);
+				
 					for (const i of response.message) {
-						if (i.paid_amount > 0) {
-							// console.log("Processing transaction:", i.paid_amount, i.name);
-			
+						if (i.paid_amount > 0 && !existingReferenceIds.has(i.name)) {
+							// Add the transaction if it does not already exist
 							let bnk_tr = frm.add_child("erp_transaction");
 							bnk_tr.date = i.posting_date;
-							bnk_tr.reference_id = i.name;
+							bnk_tr.reference_id = i.name; // Unique reference ID
 							bnk_tr.reference_number = i.reference_no;
 							bnk_tr.reference_doc = i.doctype;
-			
+				
 							if (i.doctype === "Payment Entry") {
-								const payment_type = await frappe.db.get_value("Payment Entry", i.name, "payment_type");
-								// console.log("Payment Type:", payment_type.message.payment_type);
-			
+								const payment_type = await frappe.db.get_value(
+									"Payment Entry",
+									i.name,
+									"payment_type"
+								);
+				
 								if (payment_type.message.payment_type === "Pay") {
 									bnk_tr.withdraw = i.paid_amount;
 									bnk_tr.deposit = 0;
@@ -164,21 +178,23 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 								bnk_tr.deposit = i.paid_amount;
 								bnk_tr.withdraw = i.paid_amount; // Confirm logic here.
 							}
+				
+							// Add the reference ID to the Set to track it
+							existingReferenceIds.add(i.name);
 						}
 					}
-			
+				
 					// Refresh field after processing all transactions
-					frm.refresh_field("erp_transaction");
-			
+					frm.refresh_field("erp_transaction");			
 					// Add custom button for Allocate
 					frm.add_custom_button(__("Allocate"), () => frm.trigger("allocate"));
 					frm.change_custom_button_type(__("Allocate"), null, "primary");
 					frm.change_custom_button_type(__("Get Unreconciled Entries"), null, "default");
 				},
 			});
-        })
+		});
 	},
-    get_account_opening_balance(frm) {
+	get_account_opening_balance(frm) {
 		if (frm.doc.bank_account && frm.doc.from_date && frm.doc.to_date) {
 			frappe.call({
 				method: "erpnext.accounts.doctype.bank_reconciliation_tool.bank_reconciliation_tool.get_account_balance",
@@ -193,16 +209,18 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 		}
 	},
 
-    onload: function (frm) {
+	onload: function (frm) {
 		// Set default filter dates
 		let today = frappe.datetime.get_today();
 		frm.doc.from_date = frappe.datetime.add_months(today, -1);
 		frm.doc.to_date = today;
+		frm.doc.from_statement_date = frappe.datetime.add_months(today, -1);
+		frm.doc.to_statement_date = today;
 		frm.trigger("bank_account");
 	},
 
-    opening_balance(frm) {
-        frm.set_value("closing_balance_as_per_erp", frm.doc.opening_balance);
+	opening_balance(frm) {
+		frm.set_value("closing_balance_as_per_erp", frm.doc.opening_balance);
 		// console.log("CLOSING BAL")
 		frappe.call({
 			method: "erpnext.accounts.doctype.bank_reconciliation_tool_erpnext.bank_reconciliation_tool_erpnext.get_closing_bal",
@@ -212,28 +230,35 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 				to_date: frm.doc.to_date,
 				bank_account: frm.doc.bank_account,
 			},
-			callback:function(r){
+			callback: function (r) {
 				// console.log('GHJJHJHJHJBBJ', r)
-				if(!r.exc) {
-					if(r.message) {
-						   frm.doc.closing_balance_as_per_bank_statement = r.message
-					 }}
-					 frm.refresh_field('closing_balance_as_per_bank_statement')
+				if (!r.exc) {
+					if (r.message) {
+						frm.doc.closing_balance_as_per_bank_statement = r.message;
 					}
+				}
+				frm.refresh_field("closing_balance_as_per_bank_statement");
+			},
 		});
-    },
+	},
 
-    closing_balance_as_per_erp(frm) {
-        if (frm.doc.closing_balance_as_per_bank_statement) {
-            frm.set_value("difference_amount", frm.doc.closing_balance_as_per_bank_statement - frm.doc.closing_balance_as_per_erp)
-        }
-    },
-    closing_balance_as_per_bank_statement(frm) {
-        if (frm.doc.closing_balance_as_per_bank_statement) {
-            frm.set_value("difference_amount", frm.doc.closing_balance_as_per_bank_statement - frm.doc.closing_balance_as_per_erp)
-        }
-    },
-    // make_reconciliation_tool(frm) {
+	closing_balance_as_per_erp(frm) {
+		if (frm.doc.closing_balance_as_per_bank_statement) {
+			frm.set_value(
+				"difference_amount",
+				(frm.doc.closing_balance_as_per_bank_statement - frm.doc.closing_balance_as_per_erp)
+			);
+		}
+	},
+	closing_balance_as_per_bank_statement(frm) {
+		if (frm.doc.closing_balance_as_per_bank_statement) {
+			frm.set_value(
+				"difference_amount",
+				(frm.doc.closing_balance_as_per_bank_statement - frm.doc.closing_balance_as_per_erp)
+			);
+		}
+	},
+	// make_reconciliation_tool(frm) {
 	// 	frm.get_field("reconciliation_tool_cards").$wrapper.empty();
 	// 	if (frm.doc.bank_account && frm.doc.bank_statement_to_date) {
 	// 		frm.trigger("get_cleared_balance").then(() => {
@@ -275,35 +300,34 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 			},
 			callback: () => {
 				frm.refresh();
-				frm.msgprint("Bank Transaction is Reconciled")
+				frm.msgprint("Bank Transaction is Reconciled");
 			},
 		});
 	},
 
 	reconcile(frm) {
-		frm.doc.matching_table.map((i)=>{
+		frm.doc.matching_table.map((i) => {
 			frm.call({
 				method: "erpnext.accounts.doctype.bank_reconciliation_tool_erpnext.bank_reconciliation_tool_erpnext.reconcile_bnk_transaction",
 				args: {
 					bank_transaction_id: i.bank_transaction_id,
 					amount: i.matched_amount,
-					name : i.reference_id,
-					payment_document : i.reference_to
+					name: i.reference_id,
+					payment_document: i.reference_to,
 				},
-				callback:function(r){
+				callback: function (r) {
 					// console.log('GHJJHJHJHJBBJ')
-					if(!r.exc) {
-    					if(r.message) {
-   							frappe.msgprint("done")
-                         }}
+					if (!r.exc) {
+						if (r.message) {
+							frappe.msgprint("done");
 						}
-			})
-		})
+					}
+				},
+			});
+		});
 	},
-	
-	
 
-    // render_chart(frm) {
+	// render_chart(frm) {
 	// 	frm.cards_manager = new erpnext.accounts.bank_reconciliation.NumberCardManager({
 	// 		$reconciliation_tool_cards: frm.get_field("reconciliation_tool_cards").$wrapper,
 	// 		bank_statement_closing_balance: frm.doc.closing_balance_as_per_bank_statement,
@@ -345,5 +369,4 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 	// 		});
 	// 	}
 	// },
-
 });
