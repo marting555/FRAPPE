@@ -859,7 +859,7 @@ class TestMaterialRequest(FrappeTestCase):
 		for perm in permissions:
 			perm.delete()
 
-	def test_material_request_transfer_to_stock_entry(self):
+	def test_material_request_transfer_to_stock_entry_TC_SCK_186(self):
 		item = create_item("OP-MB-001")
 		mr = frappe.new_doc("Material Request")
 		mr.company = "_Test Company"
