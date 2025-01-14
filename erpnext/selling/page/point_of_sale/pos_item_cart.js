@@ -990,7 +990,7 @@ erpnext.PointOfSale.ItemCart = class {
 				res.forEach((invoice) => {
 					const posting_datetime = frappe.datetime.str_to_user(
 						invoice.posting_date + " " + invoice.posting_time
-					); 
+					);
 					let indicator_color = {
 						Paid: "green",
 						Draft: "red",
