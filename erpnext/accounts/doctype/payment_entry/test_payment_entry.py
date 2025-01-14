@@ -2298,40 +2298,50 @@ def create_records(supplier):
 
 
 def make_test_item(item_name=None):
-    from erpnext.stock.doctype.item.test_item import make_item
+	from erpnext.stock.doctype.item.test_item import make_item
+	app_name = "india_compliance"
+	if not frappe.db.exists("Item", item_name or "Test Item with Tax"):
+		if app_name in frappe.get_installed_apps():
+			if not frappe.db.exists("GST HSN Code", '888890'):
+				frappe.get_doc({
+					"doctype": 'GST HSN Code',
+					"hsn_code": '888890',
+					"description": 'test'
+				}).insert()
+				frappe.db.commit()
+			
+			item= make_item(
+				item_name or "Test Item with Tax",
+				{
+					"is_stock_item": 1,
+					"gst_hsn_code": "888890",
+				},
+			)
+			
+			return item
 
-    if not frappe.db.exists("Item", item_name or "Test Item with Tax"):
-        app_name = "india_compliance"
-        
-        if app_name in frappe.get_installed_apps():
-            if not frappe.db.exists("GST HSN Code", '888890'):
-                frappe.get_doc({
-                    "doctype": 'GST HSN Code',
-                    "hsn_code": '888890',
-                    "description": 'test'
-                }).insert()
-                frappe.db.commit()
-            
-            item= make_item(
-                item_name or "Test Item with Tax",
-                {
-                    "is_stock_item": 1,
-                    "gst_hsn_code": "888890",
-                },
-            )
-            
-            return item
-
-        else:
-            item= make_item(
-                "Test TDS Item",
-                {
-                    "is_stock_item": 1,
-                },
-            )
-            return item
-    else:
-        return frappe.get_doc("Item", item_name or "Test Item with Tax")
+		else:
+			item= make_item(
+				"Test TDS Item",
+				{
+					"is_stock_item": 1,
+				},
+			)
+			return item
+	else:
+		if app_name in frappe.get_installed_apps():
+			if not frappe.db.exists("GST HSN Code", '888890'):
+				frappe.get_doc({
+					"doctype": 'GST HSN Code',
+					"hsn_code": '888890',
+					"description": 'test'
+				}).insert()
+			item=frappe.get_doc("Item", item_name or "Test Item with Tax")
+			if not item.gst_hsn_code:
+				item.gst_hsn_code="888890"
+				item.save()
+			frappe.db.commit()
+			return item
         
 def create_purchase_invoice(**args):
 	# return sales invoice doc object

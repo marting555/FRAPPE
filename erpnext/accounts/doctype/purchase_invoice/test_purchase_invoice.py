@@ -2781,6 +2781,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 			_pe = get_payment_entry('Purchase Invoice', pi.name)
 			_pe.target_exchange_rate = 62
+			_pe.payment_type= "Pay"
+			_pe.paid_from = "Cash - _TC"
 			_pe.save()
 			_pe.submit()
 			
@@ -2837,7 +2839,9 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				submit_doc=1,
 				return_doc=1,
 			)
-			pe=pr.create_payment_entry()
+			pe=pr.create_payment_entry(submit=False)
+			pe.payment_type= "Pay"
+			pe.paid_from = "Cash - _TC"
 			pe.save()
 			pe.submit()
 			pr.load_from_db()
@@ -2889,7 +2893,9 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			pr.grand_total = pr.grand_total / 2
 			pr.save()
 			pr.submit()
-			pe=pr.create_payment_entry()
+			pe=pr.create_payment_entry(submit=False)
+			pe.payment_type= "Pay"
+			pe.paid_from = "Cash - _TC"
 			pe.save()
 			pe.submit()
 			pr.load_from_db()
@@ -2916,7 +2922,9 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				return_doc=1,
 				submit_doc=1,
 			)
-			_pe=_pr.create_payment_entry()
+			_pe=_pr.create_payment_entry(submit=False)
+			_pe.payment_type= "Pay"
+			_pe.paid_from = "Cash - _TC"
 			_pe.save()	
 			_pe.submit()
 			_pr.load_from_db()		
@@ -3272,7 +3280,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
 		self.assertEqual(pi_status, "Partly Paid")
-
+	
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
@@ -3309,7 +3317,6 @@ def check_gl_entries(
 		for col in additional_columns:
 			query = query.select(gl[col])
 	gl_entries = query.run(as_dict=True)
- 
 	for i, gle in enumerate(gl_entries):
 		doc.assertEqual(expected_gle[i][0], gle.account)
 		doc.assertEqual(expected_gle[i][1], gle.debit)
