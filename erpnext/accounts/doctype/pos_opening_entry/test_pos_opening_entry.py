@@ -3,7 +3,6 @@
 
 import unittest
 
-from erpnext.accounts.doctype.pos_invoice.test_pos_invoice import create_pos_invoice
 from erpnext.accounts.doctype.pos_closing_entry.pos_closing_entry import make_closing_entry_from_opening
 import frappe
 
@@ -11,6 +10,7 @@ import frappe
 class TestPOSOpeningEntry(unittest.TestCase):
 
 	def test_pos_opening_to_pos_closing_TC_S_099(self):
+		from erpnext.accounts.doctype.pos_invoice.test_pos_invoice import create_pos_invoice
 		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile		
 		test_user, pos_profile = init_user_and_profile()
 
@@ -32,6 +32,7 @@ class TestPOSOpeningEntry(unittest.TestCase):
 		self.assertEqual(opening_entry.status, "Closed")
 
 	def test_pos_opening_to_closing_enrty_check_cashire_and_posprofile_TC_S_100(self):
+		from erpnext.accounts.doctype.pos_invoice.test_pos_invoice import create_pos_invoice
 		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile		
 		test_user, pos_profile = init_user_and_profile()
 
@@ -55,6 +56,7 @@ class TestPOSOpeningEntry(unittest.TestCase):
 		self.assertEqual(opening_entry.status, "Closed")
 	
 	def test_pos_opening_to_closing_enrty_with_opening_balance_TC_S_101(self):
+		from erpnext.accounts.doctype.pos_invoice.test_pos_invoice import create_pos_invoice
 		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile		
 		test_user, pos_profile = init_user_and_profile()
 
