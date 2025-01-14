@@ -93,3 +93,4 @@ frappe.ui.form.on("Payment Request", "is_a_subscription", function (frm) {
 		});
 	}
 });
+
