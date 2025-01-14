@@ -4,6 +4,7 @@
 
 import frappe
 from frappe import _
+from frappe.boot import DocType
 from frappe.query_builder.functions import Sum
 from frappe.utils import add_days, cstr, flt, formatdate, getdate
 
@@ -143,13 +144,23 @@ def get_rootwise_opening_balances(filters, report_type):
 	)
 
 	if not ignore_closing_balances:
-		last_period_closing_voucher = frappe.db.get_all(
-			"Period Closing Voucher",
-			filters={"docstatus": 1, "company": filters.company, "period_end_date": ("<", filters.from_date)},
-			fields=["period_end_date", "name"],
-			order_by="period_end_date desc",
-			limit=1,
+		PeriodClosingVoucher = DocType('Period Closing Voucher')
+
+		query = (
+			frappe.qb.from_(PeriodClosingVoucher)
+			.select(
+				PeriodClosingVoucher.period_end_date,
+				PeriodClosingVoucher.name
+			)
+			.where(
+				(PeriodClosingVoucher.docstatus == 1) &
+				(PeriodClosingVoucher.company == filters.company) &
+				(PeriodClosingVoucher.period_end_date < filters.from_date)
+			)
+			.orderby(PeriodClosingVoucher.period_end_date, order=frappe.qb.desc)
+			.limit(1)
 		)
+		last_period_closing_voucher = query.run()
 
 	accounting_dimensions = get_accounting_dimensions(as_list=False)
 
