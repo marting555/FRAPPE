@@ -113,6 +113,95 @@ class TestBlanketOrder(FrappeTestCase):
 		bo = make_blanket_order(blanket_order_type="Purchasing", supplier=supplier, item_code=item_code)
 		self.assertEqual(bo.items[0].party_item_code, "SUPP-PART-1")
 
+	def test_blanket_order_to_invoice_TC_B_102(self):
+		#Scenario : BO=>PO=>PR=PI
+		item_doc = make_item("_Test Item 1 for Blanket Order")
+		item_code = item_doc.name
+
+		# 1. Create Blanket Order
+		bo_data = {
+			"doctype": "Blanket Order",
+			"order_type": "Purchasing",
+			"supplier": "_Test Suppliers",
+			"company": "_Test Company",
+			"from_date": "2025-01-01",
+			"to_date": "2025-01-31",
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": 1000,
+					"rate": 100
+				}
+			]
+		}
+		blanket_order = frappe.get_doc(bo_data)
+		blanket_order.insert()
+		blanket_order.submit()
+
+		# 2. Create Purchase Order from Blanket Order
+		po_data = {
+			"doctype": "Purchase Order",
+			"supplier": "_Test Suppliers",
+			"company": "_Test Company",
+			"blanket_order": blanket_order.name,
+			"schedule_date": "2025-01-10",
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": 1000,
+					"rate": 100,
+					"warehouse": "Stores - _TC"
+				}
+			],
+		}
+		purchase_order = frappe.get_doc(po_data)
+		purchase_order.insert()
+
+		tax_list = create_taxes_interstate()
+		for tax in tax_list:
+			purchase_order.append("taxes", tax)
+		purchase_order.submit()
+
+		# 3. Validate Blanket Order Updates
+		blanket_order.reload()
+		self.assertEqual(blanket_order.ordered_qty, 1000)
+		self.assertIn(purchase_order.name, [ref.reference_name for ref in blanket_order.references])
+
+		# 4. Create Purchase Receipt from PO
+		pr_data = {
+			"doctype": "Purchase Receipt",
+			"supplier": "_Test Suppliers",
+			"company": "_Test Company",
+			"items": purchase_order.items
+		}
+		purchase_receipt = frappe.get_doc(pr_data)
+		purchase_receipt.insert()
+		purchase_receipt.submit()
+
+		# Validate PR Accounting Entries
+		pr_gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": purchase_receipt.name}, fields=["account", "debit", "credit"])
+		self.assertTrue(any(entry["account"] == "Stock In Hand" and entry["debit"] == 100000 for entry in pr_gl_entries))
+		self.assertTrue(any(entry["account"] == "Stock Received But Not Billed" and entry["credit"] == 100000 for entry in pr_gl_entries))
+
+		# 5. Create Purchase Invoice from PR
+		pi_data = {
+			"doctype": "Purchase Invoice",
+			"supplier": "_Test Suppliers",
+			"company": "_Test Company",
+			"items": purchase_receipt.items,
+			"taxes": purchase_order.taxes,
+			"supplier_invoice_no": "INV-001"
+		}
+		purchase_invoice = frappe.get_doc(pi_data)
+		purchase_invoice.insert()
+		purchase_invoice.submit()
+
+		# Validate PI Accounting Entries
+		pi_gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": purchase_invoice.name}, fields=["account", "debit", "credit"])
+		self.assertTrue(any(entry["account"] == "Stock Received But Not Billed" and entry["debit"] == 100000 for entry in pi_gl_entries))
+		self.assertTrue(any(entry["account"] == "CGST" and entry["debit"] == 9000 for entry in pi_gl_entries))
+		self.assertTrue(any(entry["account"] == "SGST" and entry["debit"] == 9000 for entry in pi_gl_entries))
+		self.assertTrue(any(entry["account"] == "Creditors" and entry["credit"] == 118000 for entry in pi_gl_entries))
 
 def make_blanket_order(**args):
 	args = frappe._dict(args)
@@ -140,3 +229,37 @@ def make_blanket_order(**args):
 	bo.insert()
 	bo.submit()
 	return bo
+
+def create_taxes_interstate():
+
+		acc = frappe.new_doc("Account")
+		acc.account_name = "Input Tax CGST"
+		acc.parent_account = "Tax Assets - _TC"
+		acc.company = "_Test Company"
+		account_name_cgst = frappe.db.exists("Account", {"account_name" : "Input Tax CGST","company": "_Test Company" })
+		if not account_name_cgst:
+			account_name_cgst = acc.insert()
+
+		
+		acc = frappe.new_doc("Account")
+		acc.account_name = "Input Tax SGST"
+		acc.parent_account = "Tax Assets - _TC"
+		acc.company = "_Test Company"
+		account_name_sgst = frappe.db.exists("Account", {"account_name" : "Input Tax SGST","company": "_Test Company" })
+		if not account_name_sgst:
+			account_name_sgst = acc.insert()
+		
+		return [
+			{
+                    "charge_type": "On Net Total",
+                    "account_head": account_name_cgst,
+                    "rate": 9,
+                    "description": "Input GST",
+            },
+			{
+                    "charge_type": "On Net Total",
+                    "account_head": account_name_sgst,
+                    "rate": 9,
+                    "description": "Input GST",
+            }
+		]
