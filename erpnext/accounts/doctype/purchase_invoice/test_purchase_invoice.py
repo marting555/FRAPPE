@@ -3363,6 +3363,60 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi_total = sum(entry["debit"] for entry in pi_gl_entries)
 		self.assertEqual(pi_total, 10080) 
 
+	def test_pi_with_uploader_TC_B_092(self):
+		# Test Data
+		pi_data = {
+			"doctype": "Purchase Invoice",
+			"company": "_Test Company",
+			"supplier": "_Test Supplier",
+			"set_posting_time": 1,
+			"posting_date": "2025-01-10",
+			"update_stock": 1,
+			"items": []
+		}
+
+		# Uploader Data
+		uploaded_data = [
+			{"item_code": "_Test Item", "warehouse": "_Test Warehouse 1 - _TC", "qty": 1, "rate": 2000},
+			{"item_code": "_Test Item Home Desktop 200", "warehouse": "_Test Warehouse 1 - _TC", "qty": 1, "rate": 1000},
+		]
+
+		# Simulating Upload Feature: Fill items table using uploaded data
+		pi_doc = frappe.get_doc(pi_data)
+		for row in uploaded_data:
+			pi_doc.append("items", {
+				"item_code": row["item_code"],
+				"warehouse": row["warehouse"],
+				"qty": row["qty"],
+				"rate": row["rate"]
+			})
+		
+		# Insert and Submit PI
+		pi_doc.insert()
+		pi_doc.submit()
+
+		# Assertions for items table
+		self.assertEqual(len(pi_doc.items), 2, "All items should be added to the PI.")
+		self.assertEqual(pi_doc.items[0].item_code, "_Test Item", "First item code should be 'Tissue'.")
+		self.assertEqual(pi_doc.items[1].item_code, "_Test Item Home Desktop 200", "Second item code should be 'Book'.")
+		self.assertEqual(pi_doc.items[0].rate, 2000, "Rate for Tissue should be 2000.")
+		self.assertEqual(pi_doc.items[1].rate, 1000, "Rate for Book should be 1000.")
+		
+		# Check Accounting Entries
+		gle = frappe.get_all("GL Entry", filters={"voucher_no": pi_doc.name}, fields=["account", "debit", "credit"])
+		self.assertGreater(len(gle), 0, "GL Entries should be created.")
+		
+		# Validate Stock Ledger
+		sle = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": pi_doc.name}, fields=["item_code", "actual_qty", "stock_value"])
+		self.assertEqual(len(sle), 2, "Stock Ledger should have entries for both items.")
+		self.assertEqual(sle[0]["item_code"], "Tissue", "Stock Ledger should contain Tissue.")
+		self.assertEqual(sle[1]["item_code"], "Book", "Stock Ledger should contain Book.")
+		self.assertEqual(sle[0]["actual_qty"], 1, "Quantity for Tissue should be 1.")
+		self.assertEqual(sle[1]["actual_qty"], 1, "Quantity for Book should be 1.")
+
+		# Cleanup
+		pi_doc.cancel()
+
 	
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
