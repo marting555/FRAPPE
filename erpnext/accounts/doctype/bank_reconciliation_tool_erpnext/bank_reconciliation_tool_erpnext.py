@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt
 
@@ -142,21 +143,33 @@ def get_erp_transaction(bank_account, company, from_statement_date=None, to_stat
 	transaction_list = frappe.db.get_all(
 		"Bank Transaction", {"bank_account": bank_account, "status": "Unreconciled"}, pluck="name"
 	)
+	result = []
 	for i in transaction_list:
 		transaction = frappe.get_doc("Bank Transaction", i)
 		# print("++++++++++++++++++++++++++++++++")
-		# print(transaction_list)
+		# # print(transaction_list)
 		# print(get_linked_payments(transaction.name, document_types=["payment_entry","journal_entry"], from_date=from_statement_date, to_date=to_statement_date, filter_by_reference_date=None, from_reference_date=from_statement_date, to_reference_date=to_statement_date))
 		# print("++++++++++++++++++++++++++++++++")
-		return get_linked_payments(
-			transaction.name,
-			document_types=["payment_entry", "journal_entry"],
-			from_date=from_statement_date,
-			to_date=to_statement_date,
-			filter_by_reference_date=None,
-			from_reference_date=from_statement_date,
-			to_reference_date=to_statement_date,
-		)
+
+		for i in get_linked_payments(transaction.name, document_types=["payment_entry","journal_entry"], from_date=from_statement_date, to_date=to_statement_date, filter_by_reference_date=None, from_reference_date=from_statement_date, to_reference_date=to_statement_date):
+			if i['doctype'] == "Journal Entry":
+				list = frappe.db.get_all("Journal Entry Account", 
+										{
+											'account': "IDFC Bank - PP Ltd",
+											'parent': i.name   
+										},
+										['credit_in_account_currency', 'debit_in_account_currency', 'parent']
+									)
+				for j in list:
+					if j['credit_in_account_currency'] > 0:
+						i['bank'] = 'Credit'
+					elif j['debit_in_account_currency'] > 0:
+						i['bank'] = 'Debit'
+				result.append(i)
+			else:
+				result.append(i)
+		
+		return result
 	# if from_statement_date and to_statement_date:
 	# 	pe_list = frappe.db.get_all("Payment Entry",filters={'posting_date': ['between' ,[from_statement_date, to_statement_date]], 'bank_account':bank_account, 'company': company}, fields = ['posting_date', 'paid_amount', 'reference_no', 'payment_type'])
 	# 	je_list = frappe.db.get_all("Journal Entry Account", filters={'bank_account': bank_account}, fields = ["parent", "account", "creation", "debit", "credit"])
@@ -178,6 +191,7 @@ def reconcile_bnk_transaction(bank_transaction_id, amount, name, payment_documen
 	)
 	try:
 		bnk_trn.save()
+		frappe.msgprint(_("Successfully Reconciled"))
 	except Exception as e:
 		frappe.msgprint("Please Reconcile again to ")
 

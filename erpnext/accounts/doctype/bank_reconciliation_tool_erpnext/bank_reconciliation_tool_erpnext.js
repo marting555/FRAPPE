@@ -93,7 +93,13 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 		});
 		// frm.trigger("render_chart");
 		frm.trigger("get_account_opening_balance");
+		frm.doc.difference_amount = (frm.doc.closing_balance_as_per_bank_statement - frm.doc.closing_balance_as_per_erp)
+		frm.refresh_fields();
 		frm.add_custom_button(__("Get Unreconciled Entries"), function () {
+			frm.set_value(
+				"difference_amount",
+				(frm.doc.closing_balance_as_per_bank_statement - frm.doc.closing_balance_as_per_erp)
+			);
 			frappe.call({
 				method: "erpnext.accounts.doctype.bank_reconciliation_tool_erpnext.bank_reconciliation_tool_erpnext.get_bank_transaction",
 				args: {
@@ -175,8 +181,14 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 									bnk_tr.deposit = 0;
 								}
 							} else if (i.doctype === "Journal Entry") {
-								bnk_tr.deposit = i.paid_amount;
-								bnk_tr.withdraw = i.paid_amount; // Confirm logic here.
+								if (i.bank == 'Credit'){
+									bnk_tr.deposit = 0;
+									bnk_tr.withdraw = i.paid_amount; // Confirm logic here.
+								}
+								else if (i.bank == 'Debit'){
+									bnk_tr.deposit = i.paid_amount;
+									bnk_tr.withdraw = 0; // Confirm logic here.
+								}
 							}
 				
 							// Add the reference ID to the Set to track it
@@ -200,7 +212,7 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 				method: "erpnext.accounts.doctype.bank_reconciliation_tool.bank_reconciliation_tool.get_account_balance",
 				args: {
 					bank_account: frm.doc.bank_account,
-					till_date: frappe.datetime.add_days(frm.doc.bank_statement_from_date, -1),
+					till_date: frappe.datetime.add_days(frm.doc.bank_statement_from_date, -1)
 				},
 				callback: (response) => {
 					frm.set_value("opening_balance", response.message);
@@ -300,7 +312,6 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 			},
 			callback: () => {
 				frm.refresh();
-				frm.msgprint("Bank Transaction is Reconciled");
 			},
 		});
 	},
@@ -316,6 +327,8 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 					payment_document: i.reference_to,
 				},
 				callback: function (r) {
+					frm.clear_table("matching_table");
+					frm.refresh();
 					// console.log('GHJJHJHJHJBBJ')
 					if (!r.exc) {
 						if (r.message) {
