@@ -4300,6 +4300,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 		pi = make_pi_from_pr(doc_pr.name)
 		pi.insert()
 		pi.submit()
+
 	def test_pr_with_additional_discount_TC_B_056(self):
 		company = "_Test Company"
 		item_code = "Testing-31"
@@ -4341,6 +4342,52 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(pi.discount_amount, 1000)
 		self.assertEqual(pi.net_total, 9000)
 		pi.submit()
+
+	def test_pr_zero_valuation_TC_B_104(self):
+		# Enable Allow Zero Valuation Rate
+		frappe.db.set_value("Stock Settings", None, "allow_zero_valuation_rate", 1)
+
+		# Create Purchase Receipt
+		pr_data = {
+			"doctype": "Purchase Receipt",
+			"company": "_Test Company",
+			"supplier": "_Test Supplier",
+			"cost_center": "Main - _Test Company",
+			"currency": "INR",
+			"buying_price_list": "Standard Buying",
+			"set_warehouse": "_Test Warehouse 1 - _TC",
+			"items": [
+				{
+					"item_code": "_Test Item",
+					"qty": 1,
+					"rate": 0,
+					"warehouse": "_Test Warehouse 1 - _TC",
+				}
+			]
+		}
+
+		pr_doc = frappe.get_doc(pr_data)
+		pr_doc.insert()
+		pr_doc.submit()
+
+		# Assert No Accounting Entries
+		gle = frappe.get_all("GL Entry", filters={"voucher_no": pr_doc.name})
+		self.assertEqual(len(gle), 0, "No GL entries should be created for zero valuation.")
+
+		# Assert Stock Ledger Entry
+		sle = frappe.get_all(
+			"Stock Ledger Entry",
+			filters={"voucher_no": pr_doc.name, "warehouse": "_Test Warehouse 1 - _TC"},
+			fields=["actual_qty", "valuation_rate", "stock_value"],
+		)
+		self.assertEqual(len(sle), 1, "One Stock Ledger Entry should be created.")
+		self.assertEqual(sle[0]["actual_qty"], 1, "Stock Ledger Entry quantity should be 1.")
+		self.assertEqual(sle[0]["valuation_rate"], 0, "Valuation rate should be 0.")
+		self.assertEqual(sle[0]["stock_value"], 0, "Stock value should be 0.")
+
+		# Cleanup
+		pr_doc.cancel()
+		frappe.db.set_value("Stock Settings", None, "allow_zero_valuation_rate", 0)
 
 
 def prepare_data_for_internal_transfer():
