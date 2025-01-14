@@ -2583,6 +2583,91 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(pi.discount_amount, 1000)
 		self.assertEqual(pi.net_total, 9000)
 
+	def test_partial_pr_pi_flow_TC_B_103(self):
+		# 1. Create PO
+		po_data = {
+			"doctype": "Purchase Order",
+			"supplier": "_Test Supplier",
+			"company": "_Test Company",
+			"items": [
+				{
+					"item_code": "_Test Item",
+					"qty": 10,
+					"rate": 100,
+					"warehouse": "Stores - _TC",
+					"schedule_date": "2025-01-09"
+				},
+				{
+					"item_code": "Book",
+					"qty": 5,
+					"rate": 500,
+					"warehouse": "Stores - _TC",
+					"schedule_date": "2025-01-10"
+				}
+			],
+		}
+		purchase_order = frappe.get_doc(po_data)
+		purchase_order.insert()
+		tax_list = create_taxes_interstate()
+		for tax in tax_list:
+			purchase_order.append("taxes", tax)
+		purchase_order.submit()
+
+		# Validate PO Analytics
+		po_status = frappe.get_doc("Purchase Order", purchase_order.name)
+		self.assertEqual(po_status.status, "To Receive and Bill")
+		self.assertEqual(po_status.items[0].received_qty, 0)
+		self.assertEqual(po_status.items[0].billed_qty, 0)
+
+		# 2. Create Partial PR
+		pr_data = {
+			"doctype": "Purchase Receipt",
+			"supplier": "_Test Supplier",
+			"company": "_Test Company",
+			"items": [
+				{
+					"item_code": "_Test Item",
+					"qty": 2,
+					"warehouse": "Stores - _TC",
+					"purchase_order": purchase_order.name
+				},
+				{
+					"item_code": "Book",
+					"qty": 5,
+					"warehouse": "Stores - _TC",
+					"purchase_order": purchase_order.name
+				}
+			]
+		}
+		purchase_receipt = frappe.get_doc(pr_data)
+		purchase_receipt.insert()
+		purchase_receipt.submit()
+
+		# Validate PR Analytics
+		po_status.reload()
+		self.assertEqual(po_status.items[0].received_qty, 2)
+		self.assertEqual(po_status.items[1].received_qty, 5)
+
+		# 3. Create PI for Partial PR
+		pi_data = {
+			"doctype": "Purchase Invoice",
+			"supplier": "_Test Supplier",
+			"company": "_Test Company",
+			"items": purchase_receipt.items,
+			"taxes": purchase_order.taxes,
+			"supplier_invoice_no": "INV-002"
+		}
+		purchase_invoice = frappe.get_doc(pi_data)
+		purchase_invoice.insert()
+		purchase_invoice.submit()
+
+		# Validate PI Accounting Entries
+		pi_gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": purchase_invoice.name}, fields=["account", "debit", "credit"])
+		self.assertTrue(any(entry["account"] == "Stock Received But Not Billed" and entry["debit"] == 1200 for entry in pi_gl_entries))
+		self.assertTrue(any(entry["account"] == "CGST" and entry["debit"] == 54 for entry in pi_gl_entries))
+		self.assertTrue(any(entry["account"] == "SGST" and entry["debit"] == 54 for entry in pi_gl_entries))
+		self.assertTrue(any(entry["account"] == "Creditors" and entry["credit"] == 1308 for entry in pi_gl_entries))
+
 
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
@@ -2834,3 +2919,37 @@ def run_tests():
 	obj = TestPurchaseOrder()
 	obj.test_po_additional_discount_TC_B_058()
 	return 1
+
+def create_taxes_interstate():
+
+		acc = frappe.new_doc("Account")
+		acc.account_name = "Input Tax CGST"
+		acc.parent_account = "Tax Assets - _TC"
+		acc.company = "_Test Company"
+		account_name_cgst = frappe.db.exists("Account", {"account_name" : "Input Tax CGST","company": "_Test Company" })
+		if not account_name_cgst:
+			account_name_cgst = acc.insert()
+
+		
+		acc = frappe.new_doc("Account")
+		acc.account_name = "Input Tax SGST"
+		acc.parent_account = "Tax Assets - _TC"
+		acc.company = "_Test Company"
+		account_name_sgst = frappe.db.exists("Account", {"account_name" : "Input Tax SGST","company": "_Test Company" })
+		if not account_name_sgst:
+			account_name_sgst = acc.insert()
+		
+		return [
+			{
+                    "charge_type": "On Net Total",
+                    "account_head": account_name_cgst,
+                    "rate": 9,
+                    "description": "Input GST",
+            },
+			{
+                    "charge_type": "On Net Total",
+                    "account_head": account_name_sgst,
+                    "rate": 9,
+                    "description": "Input GST",
+            }
+		]
