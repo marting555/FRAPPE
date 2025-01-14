@@ -43,6 +43,7 @@ class BlanketOrder(Document):
 	def validate(self):
 		self.validate_dates()
 		self.validate_duplicate_items()
+		self.validate_item_qty()
 		self.set_party_item_code()
 
 	def validate_dates(self):
@@ -116,6 +117,11 @@ class BlanketOrder(Document):
 
 		for d in self.items:
 			d.db_set("ordered_qty", item_ordered_qty.get(d.item_code, 0))
+
+	def validate_item_qty(self):
+		for d in self.items:
+			if d.qty < 0:
+				frappe.throw(_(f"Row {d.idx}: Quantity cannot be negative."))
 
 
 @frappe.whitelist()
