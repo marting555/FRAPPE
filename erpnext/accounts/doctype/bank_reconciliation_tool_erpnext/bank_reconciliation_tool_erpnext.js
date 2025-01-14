@@ -145,8 +145,8 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 				args: {
 					bank_account: frm.doc.bank_account,
 					company: frm.doc.company,
-					from_statement_date: frm.doc.from_statement_date,
-					to_statement_date: frm.doc.to_statement_date,
+					from_statement_date: frm.doc.from_erp_date,
+					to_statement_date: frm.doc.to_erp_date,
 				},
 				callback: async (response) => {
 					// Create a Set of existing reference IDs in the `erp_transaction` table
@@ -212,7 +212,8 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 				method: "erpnext.accounts.doctype.bank_reconciliation_tool.bank_reconciliation_tool.get_account_balance",
 				args: {
 					bank_account: frm.doc.bank_account,
-					till_date: frappe.datetime.add_days(frm.doc.bank_statement_from_date, -1)
+					till_date: frappe.datetime.add_days(frm.doc.bank_statement_from_date, -1),
+					company: frm.doc.company
 				},
 				callback: (response) => {
 					frm.set_value("opening_balance", response.message);
@@ -228,6 +229,8 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 		frm.doc.to_date = today;
 		frm.doc.from_statement_date = frappe.datetime.add_months(today, -1);
 		frm.doc.to_statement_date = today;
+		frm.doc.from_erp_date = frappe.datetime.add_months(today, -1);
+		frm.doc.to_erp_date = today;
 		frm.trigger("bank_account");
 	},
 
