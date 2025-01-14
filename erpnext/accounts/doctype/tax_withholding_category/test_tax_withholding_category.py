@@ -1091,7 +1091,14 @@ def create_tax_withholding_category(
 				"accounts": [{"company": "_Test Company", "account": account}],
 			}
 		).insert()
-
+	elif frappe.db.exists("Tax Withholding Category", category_name):
+		doc = frappe.get_doc("Tax Withholding Category",category_name)
+		if doc.accounts:
+			child=frappe.get_doc("Tax Withholding Account",doc.accounts[0].name)
+			if child.account != account:
+				child.account=account
+				child.save()
+				frappe.db.commit()
 
 def create_lower_deduction_certificate(supplier, tax_withholding_category, tax_rate, certificate_no, limit):
 	fiscal_year = get_fiscal_year(today(), company="_Test Company")
