@@ -4620,7 +4620,9 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Sales - _TC'}, 'credit'), 5000)
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Debtors - _TC'}, 'debit'), 5000)
   
-	def test_sales_order_for_stock_reservation_with_installatin_note_and_return_TC_S_067(self, reuse=None):
+		return dn, si
+  
+	def test_sales_order_for_stock_reservation_with_installation_note_and_return_TC_S_067(self, reuse=None):
 		dn = self.test_sales_order_for_stock_reservation_with_installation_note_TC_S_066(reuse=1)
   
 		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_return
