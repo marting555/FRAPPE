@@ -406,6 +406,7 @@ frappe.ui.form.on('Quotation Item', {
 
 	qty: function (frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
+
 		if (row.is_product_bundle) {
 			const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
 			const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
@@ -415,17 +416,12 @@ frappe.ui.form.on('Quotation Item', {
 	},
 	discount_percentage: function (frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
-		console.log("row: ", row);
 		const rate = row.base_price_list_rate;
-		console.log("rate: ", rate);
 
 		if (rate <= 0) return
-		
-		console.log("== pass rate ==");
+
 		const discount_percentage = row.discount_percentage;
-		console.log("discount_percentage: ", discount_percentage);
 		const discount_amount = Number(((rate * discount_percentage) / 100).toFixed(2));
-		console.log("discount_amount: ", discount_amount);
 
 		row.rate = rate - discount_amount;
 		row.discount_percentage = discount_percentage;
