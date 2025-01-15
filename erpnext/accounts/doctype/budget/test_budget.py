@@ -431,7 +431,8 @@ def make_budget(**args):
 	budget.action_if_annual_budget_exceeded = "Stop"
 	budget.action_if_accumulated_monthly_budget_exceeded = "Ignore"
 	budget.budget_against = budget_against
-	budget.append("accounts", {"account": "_Test Account Cost for Goods Sold - _TC", "budget_amount": 200000})
+	wbs_name = setup_test_wbs()
+	budget.append("accounts", {"account": "_Test Account Cost for Goods Sold - _TC", "budget_amount": 200000,"child_wbs":wbs_name})
 
 	if args.applicable_on_material_request:
 		budget.applicable_on_material_request = 1
@@ -451,3 +452,27 @@ def make_budget(**args):
 	budget.submit()
 
 	return budget
+
+# Setup test project
+def setup_test_project():
+	desired_company = "_Test Company"
+	# Check if a project with the same name exists for the desired company
+	existing_project = frappe.get_all("Project", filters={"project_name": "_Test Company Project", "company": desired_company})
+	if not existing_project:
+		# Create a new project for the desired company
+		project = frappe.new_doc("Project")
+		project.project_name = "_Test Company Project"
+		project.company = desired_company
+		project.status = "Open"
+		project.is_active = 'Yes'
+		project.is_wbs = 1
+		project.start_date = nowdate()
+		project.save().submit()
+		return project.name
+	else:
+		return existing_project
+
+# Setup test WBS
+def setup_test_wbs():
+	setup_test_project()
+	return frappe.get_last_doc("Work Breakdown Structure")
