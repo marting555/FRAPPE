@@ -143,6 +143,7 @@ def get_erp_transaction(bank_account, company, from_statement_date=None, to_stat
 	transaction_list = frappe.db.get_all(
 		"Bank Transaction", {"bank_account": bank_account, "status": "Unreconciled"}, pluck="name"
 	)
+	account = frappe.db.get_value("Bank Account", bank_account, 'account')
 	result = []
 	for i in transaction_list:
 		transaction = frappe.get_doc("Bank Transaction", i)
@@ -155,7 +156,7 @@ def get_erp_transaction(bank_account, company, from_statement_date=None, to_stat
 			if i['doctype'] == "Journal Entry":
 				list = frappe.db.get_all("Journal Entry Account", 
 										{
-											'account': "IDFC Bank - PP Ltd",
+											'account': account,
 											'parent': i.name   
 										},
 										['credit_in_account_currency', 'debit_in_account_currency', 'parent']
