@@ -104,10 +104,17 @@ def get_merge():
         .run(as_dict=True)
     )
     return data
+
+
 @frappe.whitelist(allow_guest=True)
 def get_account_settings():
-    acs = frappe.get_all("Accounts Closing Table", fields=["company", "frozen_accounts_modifier"])
+    if frappe.db.table_exists("Accounts Closing Table"):
+        acs = frappe.get_all("Accounts Closing Table", fields=["company", "frozen_accounts_modifier"])
+    else:
+        acs = []
     return acs
+
+
 @frappe.whitelist(allow_guest=True)
 def get_user_roles():
     user = frappe.session.user

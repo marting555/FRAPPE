@@ -2490,7 +2490,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 					"against_voucher": None
 				},
 				{
-					"account": "Test TDS Payable - _TC",
+					"account": "_Test TDS Payable - _TC",
 					"debit": 0.0,
 					"credit": 1800.0,
 					"against_voucher": None
@@ -2602,7 +2602,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				["Creditors - _TC", 0.0, 50000.0, pi.posting_date],
 				["Creditors - _TC", 600.0, 0.0, pi.posting_date],
 				["Stock Received But Not Billed - _TC", 50000.0, 0.0, pi.posting_date],
-				["Test TDS Payable - _TC", 0.0, 600.0, pi.posting_date]
+				["_Test TDS Payable - _TC", 0.0, 600.0, pi.posting_date]
 			]
 			
 			check_gl_entries(self, pi.name, expected_gle, pi.posting_date)
@@ -2632,6 +2632,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			pi.submit()
 			
 			pe = get_payment_entry("Purchase Invoice", pi.name)
+			pe.payment_type= "Pay"
+			pe.paid_from = "Cash - _TC"
 			pe.target_exchange_rate = 60
 			pe.save()
 			pe.submit()
@@ -2779,6 +2781,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 			_pe = get_payment_entry('Purchase Invoice', pi.name)
 			_pe.target_exchange_rate = 62
+			_pe.payment_type= "Pay"
+			_pe.paid_from = "Cash - _TC"
 			_pe.save()
 			_pe.submit()
 			
@@ -2835,7 +2839,9 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				submit_doc=1,
 				return_doc=1,
 			)
-			pe=pr.create_payment_entry()
+			pe=pr.create_payment_entry(submit=False)
+			pe.payment_type= "Pay"
+			pe.paid_from = "Cash - _TC"
 			pe.save()
 			pe.submit()
 			pr.load_from_db()
@@ -2887,7 +2893,9 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			pr.grand_total = pr.grand_total / 2
 			pr.save()
 			pr.submit()
-			pe=pr.create_payment_entry()
+			pe=pr.create_payment_entry(submit=False)
+			pe.payment_type= "Pay"
+			pe.paid_from = "Cash - _TC"
 			pe.save()
 			pe.submit()
 			pr.load_from_db()
@@ -2914,7 +2922,9 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				return_doc=1,
 				submit_doc=1,
 			)
-			_pe=_pr.create_payment_entry()
+			_pe=_pr.create_payment_entry(submit=False)
+			_pe.payment_type= "Pay"
+			_pe.paid_from = "Cash - _TC"
 			_pe.save()	
 			_pe.submit()
 			_pr.load_from_db()		
@@ -2976,6 +2986,22 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		create_unreconcile_doc_for_selection(selections = json.dumps([selection]))
 		pi_status_after_reconcile = frappe.db.get_value("Purchase Invoice", pi.name, "status")
 		self.assertEqual(pi_status_after_reconcile, "Unpaid")
+
+		new_pi = make_purchase_invoice(
+			qty=1,
+			item_code="_Test Item",
+			supplier = "_Test Supplier",
+			company = "_Test Company",
+			rate = 30,
+			do_not_save =True,
+		)
+		new_pi.save()
+		new_pi.set_advances()
+		new_pi.save()
+		new_pi.submit()
+
+		pi_status_after_advances = frappe.db.get_value("Purchase Invoice", new_pi.name, "status")
+		self.assertEqual(pi_status_after_advances, "Paid")
 
 	def test_partly_paid_of_pi_to_pr_to_pe_TC_B_081(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
@@ -3176,7 +3202,85 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
 		self.assertEqual(pi_status, "Paid")
+	
+	def test_standalone_pi_is_fully_paid_TC_B_088(self):
+		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
+		purchase_tax.title = "TEST"
+		purchase_tax.company = "_Test Company"
+		purchase_tax.tax_category = "_Test Tax Category 1"
 
+		purchase_tax.append("taxes",{
+			"category":"Total",
+			"add_deduct_tax":"Add",
+			"charge_type":"On Net Total",
+			"account_head":"_Test Account Excise Duty - _TC",
+			"_Test Account Excise Duty":"_Test Account Excise Duty",
+			"rate":100,
+			"description":"GST"
+		})
+
+		purchase_tax.save()
+		
+		pi = make_purchase_invoice(
+			qty=1,
+			item_code="_Test Item",
+			supplier = "_Test Supplier",
+			company = "_Test Company",
+			rate = 500,
+			do_not_save = True
+		)
+
+
+		pi.taxes_and_charges = purchase_tax.name
+		pi.is_paid = 1
+		pi.mode_of_payment = "Cash"
+		pi.cash_bank_account = "Cash - _TC"
+		pi.save()
+		pi.paid_amount = pi.grand_total 
+		pi.submit()
+
+		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
+		self.assertEqual(pi_status, "Paid")
+	
+	def test_standalone_pi_is_partly_paid_TC_B_090(self):
+		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
+		purchase_tax.title = "TEST"
+		purchase_tax.company = "_Test Company"
+		purchase_tax.tax_category = "_Test Tax Category 1"
+
+		purchase_tax.append("taxes",{
+			"category":"Total",
+			"add_deduct_tax":"Add",
+			"charge_type":"On Net Total",
+			"account_head":"_Test Account Excise Duty - _TC",
+			"_Test Account Excise Duty":"_Test Account Excise Duty",
+			"rate":100,
+			"description":"GST"
+		})
+
+		purchase_tax.save()
+
+		pi = make_purchase_invoice(
+			qty=1,
+			item_code="_Test Item",
+			supplier = "_Test Supplier",
+			company = "_Test Company",
+			rate = 500,
+			do_not_save = True
+		)
+
+
+		pi.taxes_and_charges = purchase_tax.name
+		pi.is_paid = 1
+		pi.mode_of_payment = "Cash"
+		pi.cash_bank_account = "Cash - _TC"
+		pi.save()
+		pi.paid_amount = pi.grand_total / 2
+		pi.submit()
+
+		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
+		self.assertEqual(pi_status, "Partly Paid")
+	
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
@@ -3213,7 +3317,6 @@ def check_gl_entries(
 		for col in additional_columns:
 			query = query.select(gl[col])
 	gl_entries = query.run(as_dict=True)
- 
 	for i, gle in enumerate(gl_entries):
 		doc.assertEqual(expected_gle[i][0], gle.account)
 		doc.assertEqual(expected_gle[i][1], gle.debit)
@@ -3449,6 +3552,7 @@ def update_ldc_details(supplier):
         setattr(supplier,'custom_lower_tds_deduction_applicable','Yes')
         if not supplier.pan:
             setattr(supplier,'pan','DAJPC4150P')
+        supplier.flags.ignore_mandatory = True
         supplier.save()
         frappe.db.commit()
 

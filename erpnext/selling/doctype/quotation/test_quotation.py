@@ -1039,6 +1039,18 @@ class TestQuotation(FrappeTestCase):
 		dn_2.submit()
 		self.stock_check(voucher=dn_2.name,qty=-2)
 		self.assertEqual(dn_2.status, "Completed")
+		
+	def test_quotation_to_material_request_TC_S_084(self):
+		from erpnext.selling.doctype.sales_order.sales_order import make_material_request
+		quotation = self.create_and_submit_quotation("_Test Item Home Desktop 100", 4, 5000, "Stores - _TC")
+		sales_order = self.create_and_submit_sales_order(quotation.name, add_days(nowdate(), 5))
+		quotation.reload()
+		self.assertEqual(quotation.status, "Ordered")
+		mr = make_material_request(sales_order.name)
+		mr.save()
+		mr.submit()
+		mr.reload()
+		self.assertEqual(mr.status, "Pending")
 
 	def stock_check(self,voucher,qty):
 		stock_entries = frappe.get_all(

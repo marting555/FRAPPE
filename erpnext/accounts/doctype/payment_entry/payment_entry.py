@@ -2422,17 +2422,16 @@ def get_orders_to_be_billed(
 	else:
 		grand_total_field = "grand_total"
 		rounded_total_field = "rounded_total"
-
 	orders = frappe.db.sql(
         f"""
         SELECT
             name AS voucher_no,
             CASE 
-                WHEN {rounded_total_field} IS NOT NULL THEN {rounded_total_field}
+                WHEN {rounded_total_field} > 0 THEN {rounded_total_field}
                 ELSE {grand_total_field}
             END AS invoice_amount,
             (CASE 
-                WHEN {rounded_total_field} IS NOT NULL THEN {rounded_total_field}
+                WHEN {rounded_total_field} > 0 THEN {rounded_total_field}
                 ELSE {grand_total_field}
             END - advance_paid) AS outstanding_amount,
             transaction_date AS posting_date
@@ -2444,7 +2443,7 @@ def get_orders_to_be_billed(
             AND company = %s
             AND status != 'Closed'
             AND (CASE 
-                    WHEN {rounded_total_field} IS NOT NULL THEN {rounded_total_field}
+                    WHEN {rounded_total_field} > 0 THEN {rounded_total_field}
                     ELSE {grand_total_field}
                  END) > advance_paid
             AND ABS(100 - per_billed) > 0.01

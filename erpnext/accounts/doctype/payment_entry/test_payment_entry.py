@@ -24,6 +24,7 @@ from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import (
 )
 from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
 from erpnext.setup.doctype.employee.test_employee import make_employee
+import frappe.utils
 
 
 test_dependencies = ["Item"]
@@ -1921,7 +1922,7 @@ class TestPaymentEntry(FrappeTestCase):
 			tax_withholding_category=frappe.get_doc("Tax Withholding Category","Test - TDS - 194C - Company")
 			
 			if len(tax_withholding_category.accounts) >0:
-				self.assertEqual(tax_withholding_category.accounts[0].account,"Test TDS Payable - _TC")
+				self.assertEqual(tax_withholding_category.accounts[0].account,"_Test TDS Payable - _TC")
 			
 			payment_entry=create_payment_entry(
 				party_type="Supplier",
@@ -1937,7 +1938,7 @@ class TestPaymentEntry(FrappeTestCase):
 			payment_entry.append(
 						"taxes",
 						{
-							"account_head": "Test TDS Payable - _TC",
+							"account_head": "_Test TDS Payable - _TC",
 							"charge_type": "On Paid Amount",
 							"rate": 0,
 							"add_deduct_tax": "Deduct",
@@ -1960,7 +1961,7 @@ class TestPaymentEntry(FrappeTestCase):
 					'against_voucher': None
 					},
 					{
-					'account': 'Test TDS Payable - _TC', 
+					'account': '_Test TDS Payable - _TC', 
 					'debit': 0.0, 'credit': 1600.0, 
 					'against_voucher': None
 					}
@@ -1977,7 +1978,7 @@ class TestPaymentEntry(FrappeTestCase):
 				tax_withholding_category=frappe.get_doc("Tax Withholding Category","Test - TDS - 194C - Company")
 				
 				if len(tax_withholding_category.accounts) >0:
-					self.assertEqual(tax_withholding_category.accounts[0].account,"Test TDS Payable - _TC")
+					self.assertEqual(tax_withholding_category.accounts[0].account,"_Test TDS Payable - _TC")
 				
 				payment_entry=create_payment_entry(
 					party_type="Supplier",
@@ -1993,7 +1994,7 @@ class TestPaymentEntry(FrappeTestCase):
 				payment_entry.append(
 							"taxes",
 							{
-								"account_head": "Test TDS Payable - _TC",
+								"account_head": "_Test TDS Payable - _TC",
 								"charge_type": "On Paid Amount",
 								"rate": 0,
 								"add_deduct_tax": "Deduct",
@@ -2055,7 +2056,7 @@ class TestPaymentEntry(FrappeTestCase):
 					"credit_in_account_currency": 0.0
 				},
 				{
-					"account": "Test TDS Payable - _TC",
+					"account": "_Test TDS Payable - _TC",
 					"cost_center": "Main - _TC",
 					"account_currency": "INR",
 					"debit": 0.0,
@@ -2199,7 +2200,11 @@ def create_supplier(**args):
 	args = frappe._dict(args)
 
 	if frappe.db.exists("Supplier", args.supplier_name):
-		return frappe.get_doc("Supplier", args.supplier_name)
+		doc = frappe.get_doc("Supplier", args.supplier_name)
+		if doc.name == "_Test Supplier USD" and not frappe.db.exists("Party Account", {"parent": doc.name, "account": "_Test Payable USD - _TC"}):
+			doc.append("accounts", {"company": args.company, "account": "_Test Payable USD - _TC"})
+			frappe.db.commit()
+		return doc
 	doc = frappe.get_doc(
 		{
 			"doctype": "Supplier",
@@ -2212,104 +2217,131 @@ def create_supplier(**args):
 	)
 	doc.append('accounts',{
 		'company': args.company,
-		'account': '_Test Payable USD - _TC' if args.default_currency == 'USD' else 'Test TDS Payable',
+		'account': '_Test Payable USD - _TC' if args.default_currency == 'USD' else '_Test TDS Payable - _TC',
 	})
-
 	if not args.without_supplier_group:
 		doc.supplier_group = args.supplier_group or "Services"
+  
 
-	doc.insert()
-	doc.save()
+	doc.insert(ignore_mandatory=True)
 	frappe.db.commit()
 	return doc
 
 def create_account():
-    accounts = [
-        {"name": "Current Liabilities", "parent": "Source of Funds (Liabilities) - _TC"},
-        {"name": "Duties and Taxes", "parent": "Current Liabilities - _TC"},
-        {"name": "Test TDS Payable", "parent": "Duties and Taxes - _TC"},
-        {"name": "Test Creditors", "parent": "Accounts Payable - _TC"},
-        {"name": "_Test Payable USD", "parent": "Current Liabilities - _TC"},
-        {"name": "_Test Cash", "parent": "Cash In Hand - _TC"},
-    ]
-    
-    for account in accounts:
-        if not frappe.db.exists("Account", f"{account['name']} - _TC"):  # Ensure proper check with "- _TC"
-            try:
-                doc = frappe.get_doc({
-                    "doctype": "Account",
-                    "company": "_Test Company",
-                    "account_name": account["name"],
-                    "parent_account": account["parent"],
-                    "report_type": "Balance Sheet",
-                    "root_type": "Liability",
-                    "account_currency": "USD" if account["name"] == "_Test Payable USD"  else "INR",
-                }).insert()
-                frappe.db.commit()
-            except Exception as e:
-                frappe.log_error(f"Failed to insert {account['name']}", str(e))
+	accounts = [
+		{"name": "Source of Funds (Liabilities)", "parent": ""},
+		{"name": "Current Liabilities", "parent": "Source of Funds (Liabilities) - _TC"},
+		{"name": "Duties and Taxes", "parent": "Current Liabilities - _TC"},
+		{"name": "_Test TDS Payable", "parent": "Duties and Taxes - _TC","account_type":"Tax"},
+		{"name": "_Test Creditors", "parent": "Accounts Payable - _TC","account_type":"Payable"},
+		{"name": "_Test Payable USD", "parent": "Accounts Payable - _TC","account_type":"Payable"},
+		{"name": "_Test Cash", "parent": "Cash In Hand - _TC"},
+	]
+
+	if not frappe.db.exists("Company", "_Test Company"):
+		return
+
+	for account in accounts:
+		if frappe.db.exists("Account", f"{account['name']} - _TC"):
+			continue
+
+		if account["parent"] and not frappe.db.exists("Account", account["parent"]):
+			continue
+
+		try:
+			doc = frappe.new_doc("Account")
+			doc.company = "_Test Company"
+			doc.account_name = account["name"]
+			doc.report_type = "Balance Sheet"
+			doc.root_type = "Liability"
+			doc.is_group = 1 if account["name"] == 'Source of Funds' else 0
+			doc.account_currency = "USD" if account["name"] == "_Test Payable USD" else "INR"
+			
+			# Set count_type based on account name
+			if account["account_type"]:
+				doc.account_type = account["account_type"]
+
+			if account["parent"]:
+				doc.parent_account = account["parent"]
+			
+			doc.insert(ignore_mandatory=True)
+			frappe.db.commit()
+
+		except Exception as e:
+			frappe.log_error(f"Failed to insert {account['name']}", str(e))
 
 def create_records(supplier):
-    from erpnext.accounts.doctype.tax_withholding_category.test_tax_withholding_category import create_tax_withholding_category
+	from erpnext.accounts.doctype.tax_withholding_category.test_tax_withholding_category import create_tax_withholding_category
+	create_company()
+ 
+	create_account()
 
-    create_account()
+	create_tax_withholding_category(
+			category_name="Test - TDS - 194C - Company",
+			rate=2,
+			from_date=frappe.utils.get_date_str('01-04-2024'),
+			to_date=frappe.utils.get_date_str('31-03-2025'),
+			account="_Test TDS Payable - _TC",
+			single_threshold=30000,
+			cumulative_threshold=100000,
+			consider_party_ledger_amount=1,
+	)
+	create_supplier(
+		supplier_name=supplier,
+		company="_Test Company",
+		tax_withholding_category="Test - TDS - 194C - Company",
+		default_currency="USD" if supplier == "_Test Supplier USD" else "INR",
+		)
 
-    create_tax_withholding_category(
-            category_name="Test - TDS - 194C - Company",
-            rate=2,
-            from_date=frappe.utils.get_date_str('01-04-2024'),
-            to_date=frappe.utils.get_date_str('31-03-2025'),
-            account="Test TDS Payable - _TC",
-            single_threshold=30000,
-            cumulative_threshold=100000,
-            consider_party_ledger_amount=1,
-    )
-    create_supplier(
-        supplier_name=supplier,
-        company="_Test Company",
-        tax_withholding_category="Test - TDS - 194C - Company",
-        default_currency="USD" if supplier == "_Test Supplier USD" else "INR",
-        )
-
-    frappe.db.commit()
+	frappe.db.commit()
 
 
 
 def make_test_item(item_name=None):
-    from erpnext.stock.doctype.item.test_item import make_item
+	from erpnext.stock.doctype.item.test_item import make_item
+	app_name = "india_compliance"
+	if not frappe.db.exists("Item", item_name or "Test Item with Tax"):
+		if app_name in frappe.get_installed_apps():
+			if not frappe.db.exists("GST HSN Code", '888890'):
+				frappe.get_doc({
+					"doctype": 'GST HSN Code',
+					"hsn_code": '888890',
+					"description": 'test'
+				}).insert()
+				frappe.db.commit()
+			
+			item= make_item(
+				item_name or "Test Item with Tax",
+				{
+					"is_stock_item": 1,
+					"gst_hsn_code": "888890",
+				},
+			)
+			
+			return item
 
-    if not frappe.db.exists("Item", item_name or "Test Item with Tax"):
-        app_name = "india_compliance"
-        
-        if app_name in frappe.get_installed_apps():
-            if not frappe.db.exists("GST HSN Code", '888890'):
-                frappe.get_doc({
-                    "doctype": 'GST HSN Code',
-                    "hsn_code": '888890',
-                    "description": 'test'
-                }).insert()
-                frappe.db.commit()
-            
-            item= make_item(
-                item_name or "Test Item with Tax",
-                {
-                    "is_stock_item": 1,
-                    "gst_hsn_code": "888890",
-                },
-            )
-            
-            return item
-
-        else:
-            item= make_item(
-                "Test TDS Item",
-                {
-                    "is_stock_item": 1,
-                },
-            )
-            return item
-    else:
-        return frappe.get_doc("Item", item_name or "Test Item with Tax")
+		else:
+			item= make_item(
+				"Test TDS Item",
+				{
+					"is_stock_item": 1,
+				},
+			)
+			return item
+	else:
+		if app_name in frappe.get_installed_apps():
+			if not frappe.db.exists("GST HSN Code", '888890'):
+				frappe.get_doc({
+					"doctype": 'GST HSN Code',
+					"hsn_code": '888890',
+					"description": 'test'
+				}).insert()
+			item=frappe.get_doc("Item", item_name or "Test Item with Tax")
+			if not item.gst_hsn_code:
+				item.gst_hsn_code="888890"
+				item.save()
+			frappe.db.commit()
+			return item
         
 def create_purchase_invoice(**args):
 	# return sales invoice doc object
@@ -2341,3 +2373,15 @@ def create_purchase_invoice(**args):
 
 	pi.save()
 	return pi
+
+def create_company():
+	if not frappe.db.exists("Company", "_Test Company"):
+		frappe.get_doc({
+			"doctype": "Company",
+			"company_name": "_Test Company",
+			"company_type": "Company",
+			"default_currency": "INR",
+			"company_email": "test@example.com",
+			"abbr":"_TC"
+		}).insert()
+		frappe.db.commit()
