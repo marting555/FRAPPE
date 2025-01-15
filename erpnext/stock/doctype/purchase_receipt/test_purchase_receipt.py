@@ -25,7 +25,6 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
-
 class TestPurchaseReceipt(FrappeTestCase):
 	def setUp(self):
 		frappe.db.set_single_value("Buying Settings", "allow_multiple_items", 1)
@@ -3901,6 +3900,197 @@ class TestPurchaseReceipt(FrappeTestCase):
 		batch_return.save()
 		batch_return.submit()
 
+	def test_purchase_order_and_receipt_TC_SCK_072(self):
+		company = "_Test Company"
+		item1 = make_item("ST-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011010"})
+		item2 = make_item("W-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011020"})
+		warehouse1 = create_warehouse("Raw Material - Iron Building - _TC", company=company)
+		warehouse2 = create_warehouse("Woods - _TC", company=company)
+		posting_date = "2024-12-31"
+
+		# Create Purchase Order
+		po = frappe.new_doc("Purchase Order")
+		po.company = company
+		po.supplier = "_Test Supplier"
+		po.transaction_date = posting_date
+		po.schedule_date = "2025-01-02"
+		item_list = [{"item_code": item1.name, "rate":50 ,"qty": 150, "warehouse": warehouse1}, {"item_code": item2.name,"rate":55 , "qty": 75, "warehouse": warehouse2}]
+		for row in item_list:
+			po.append("items", row)
+		po.insert()
+		po.submit()
+
+		self.assertEqual(po.items[0].item_code, item1.name)
+		self.assertEqual(po.items[0].qty, 150)
+		self.assertEqual(po.items[0].warehouse, warehouse1)
+		self.assertEqual(po.items[1].item_code, item2.name)
+		self.assertEqual(po.items[1].qty, 75)
+		self.assertEqual(po.items[1].warehouse, warehouse2)
+
+		# Check PO status
+		self.assertEqual(po.status, "To Receive and Bill")
+	
+		# Create Purchase Receipt
+		pr = make_purchase_receipt_with_multiple_items(
+			purchase_order=po.name,
+			company=company,
+			supplier=po.supplier,
+			posting_date=posting_date,
+			items=item_list
+		)
+		
+		self.assertEqual(pr.items[0].item_code, item1.name)
+		self.assertEqual(pr.items[0].qty, 150)
+		self.assertEqual(pr.items[0].warehouse, warehouse1)
+		self.assertEqual(pr.items[1].item_code, item2.name)
+		self.assertEqual(pr.items[1].qty, 75)
+		self.assertEqual(pr.items[1].warehouse, warehouse2)
+
+		# Check PR status
+		self.assertEqual(pr.status, "To Bill")
+
+		# Check Stock Ledger Entries
+		sl_entries = get_sl_entries("Purchase Receipt", pr.name)
+		self.assertEqual(len(sl_entries), 2)
+		self.assertEqual(sl_entries[0].warehouse, warehouse1)
+		self.assertEqual(sl_entries[1].warehouse, warehouse2)
+
+	def test_purchase_order_and_receipt_TC_SCK_073(self):
+		company = "_Test Indian Registered Company"
+		item1 = make_item("ST-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011010"})
+		item2 = make_item("W-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011020"})
+		warehouse1 = create_warehouse("Raw Material - Iron Building - _TIRC", company=company)
+		warehouse2 = create_warehouse("Woods - _TIRC", company=company)
+		rejected_warehouse = create_warehouse("Rejection / Scrap - _TIRC", company=company)
+		posting_date = "2024-12-31"
+
+		# Create Purchase Order
+		po = frappe.new_doc("Purchase Order")
+		po.company = company
+		po.supplier = "_Test Supplier"
+		po.transaction_date = posting_date
+		po.schedule_date = "2025-01-02"
+		item_list = [{"item_code": item1.name, "rate":50 ,"qty": 150, "warehouse": warehouse1}, {"item_code": item2.name,"rate":55 , "qty": 75, "warehouse": warehouse2}]
+		for row in item_list:
+			po.append("items", row)
+		po.insert()
+		po.submit()
+
+		self.assertEqual(po.items[0].item_code, item1.name)
+		self.assertEqual(po.items[0].qty, 150)
+		self.assertEqual(po.items[0].warehouse, warehouse1)
+		self.assertEqual(po.items[1].item_code, item2.name)
+		self.assertEqual(po.items[1].qty, 75)
+		self.assertEqual(po.items[1].warehouse, warehouse2)
+
+		# Check PO status
+		self.assertEqual(po.status, "To Receive and Bill")
+
+		item_list[0]["qty"] = 100
+		item_list[0]["rejected_qty"] = 50
+		item_list[0]["rejected_warehouse"] = rejected_warehouse
+		item_list[1]["qty"] = 50
+		item_list[1]["rejected_qty"] = 25
+		item_list[1]["rejected_warehouse"] = rejected_warehouse
+
+		# Create Purchase Receipt
+		pr = make_purchase_receipt_with_multiple_items(
+			purchase_order=po.name,
+			company=company,
+			supplier=po.supplier,
+			posting_date=posting_date,
+			items=item_list,
+		)
+		pr.save()
+		pr.submit()
+
+		self.assertEqual(pr.items[0].item_code, item1.name)
+		self.assertEqual(pr.items[0].qty, 100)
+		self.assertEqual(pr.items[0].warehouse, warehouse1)
+		self.assertEqual(pr.items[0].rejected_qty, 50)
+		self.assertEqual(pr.items[0].rejected_warehouse, rejected_warehouse)
+		self.assertEqual(pr.items[1].item_code, item2.name)
+		self.assertEqual(pr.items[1].qty, 50)
+		self.assertEqual(pr.items[1].warehouse, warehouse2)
+		self.assertEqual(pr.items[1].rejected_qty, 25)
+		self.assertEqual(pr.items[1].rejected_warehouse, rejected_warehouse)
+
+		# Check PR status
+		self.assertEqual(pr.status, "To Bill")
+
+		# Check Stock Ledger Entries
+		sl_entries = get_sl_entries("Purchase Receipt", pr.name)
+		self.assertEqual(len(sl_entries), 4)
+		self.assertEqual(sl_entries[0].warehouse, warehouse1)
+		self.assertEqual(sl_entries[1].warehouse, rejected_warehouse)
+		self.assertEqual(sl_entries[2].warehouse, warehouse2)
+		self.assertEqual(sl_entries[3].warehouse, rejected_warehouse)
+
+	def test_purchase_order_and_receipt_TC_SCK_074(self):
+		company = "_Test Indian Registered Company"
+		item1 = make_item("ST-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011010"})
+		item2 = make_item("W-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011020"})
+		warehouse1 = create_warehouse("Raw Material - Iron Building - _TIRC", company=company)
+		warehouse2 = create_warehouse("Woods - _TIRC", company=company)
+		rejected_warehouse = create_warehouse("Rejection / Scrap - _TIRC", company=company)
+		posting_date = "2024-12-31"
+
+		# Create Purchase Order
+		po = frappe.new_doc("Purchase Order")
+		po.company = company
+		po.supplier = "_Test Supplier"
+		po.transaction_date = posting_date
+		po.schedule_date = "2025-01-02"
+		item_list = [{"item_code": item1.name, "rate":50 ,"qty": 150, "warehouse": warehouse1}, {"item_code": item2.name,"rate":55 , "qty": 75, "warehouse": warehouse2}]
+		for row in item_list:
+			po.append("items", row)
+		po.insert()
+		po.submit()
+
+		self.assertEqual(po.items[0].item_code, item1.name)
+		self.assertEqual(po.items[0].qty, 150)
+		self.assertEqual(po.items[0].warehouse, warehouse1)
+		self.assertEqual(po.items[1].item_code, item2.name)
+		self.assertEqual(po.items[1].qty, 75)
+		self.assertEqual(po.items[1].warehouse, warehouse2)
+
+		# Check PO status
+		self.assertEqual(po.status, "To Receive and Bill")
+		item_list[0]["qty"] = 0
+		item_list[0]["rejected_qty"] = 150
+		item_list[0]["rejected_warehouse"] = rejected_warehouse
+		item_list[1]["qty"] = 0
+		item_list[1]["rejected_qty"] = 75
+		item_list[1]["rejected_warehouse"] = rejected_warehouse
+
+		# Create Purchase Receipt
+		pr = make_purchase_receipt_with_multiple_items(
+			purchase_order=po.name,
+			company=company,
+			supplier=po.supplier,
+			posting_date=posting_date,
+			items=item_list,
+		)
+		pr.save()
+		pr.submit()
+
+		self.assertEqual(pr.items[0].item_code, item1.name)
+		self.assertEqual(pr.items[0].qty, 0)
+		self.assertEqual(pr.items[0].rejected_qty, 150)
+		self.assertEqual(pr.items[0].rejected_warehouse, rejected_warehouse)
+		self.assertEqual(pr.items[1].item_code, item2.name)
+		self.assertEqual(pr.items[1].qty, 0)
+		self.assertEqual(pr.items[1].rejected_qty, 75)
+		self.assertEqual(pr.items[1].rejected_warehouse, rejected_warehouse)
+
+		# Check PR status
+		self.assertEqual(pr.status, "Completed")
+
+		# Check Stock Ledger Entries
+		sl_entries = get_sl_entries("Purchase Receipt", pr.name)
+		self.assertEqual(len(sl_entries), 2)
+		self.assertEqual(sl_entries[0].warehouse, rejected_warehouse)
+		self.assertEqual(sl_entries[1].warehouse, rejected_warehouse)
 	def test_direct_create_purchase_receipt(self):
 		item = create_item("OP-MB-001")
 		pr = make_purchase_receipt(qty=10, item_code=item,rate=10000)
@@ -4434,6 +4624,45 @@ def make_purchase_receipt(**args):
 		cost_center = args.cost_center or company_cost_center
 
 		for item in get_items(warehouse=args.warehouse, cost_center=cost_center):
+			pr.append("items", item)
+
+	if args.get_taxes_and_charges:
+		for tax in get_taxes():
+			pr.append("taxes", tax)
+
+	if not args.do_not_save:
+		pr.insert()
+		if not args.do_not_submit:
+			pr.submit()
+		pr.load_from_db()
+
+	return pr
+
+def make_purchase_receipt_with_multiple_items(**args):
+	if not frappe.db.exists("Location", "Test Location"):
+		frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
+
+	frappe.db.set_single_value("Buying Settings", "allow_multiple_items", 1)
+	pr = frappe.new_doc("Purchase Receipt")
+	args = frappe._dict(args)
+	pr.posting_date = args.posting_date or today()
+	if args.posting_time:
+		pr.posting_time = args.posting_time
+	if args.posting_date or args.posting_time:
+		pr.set_posting_time = 1
+	pr.company = args.company or "_Test Company"
+	pr.supplier = args.supplier or "_Test Supplier"
+	pr.is_subcontracted = args.is_subcontracted or 0
+	pr.supplier_warehouse = args.supplier_warehouse or "_Test Warehouse 1 - _TC"
+	pr.currency = args.currency or "INR"
+	pr.is_return = args.is_return
+	pr.return_against = args.return_against
+	pr.apply_putaway_rule = args.apply_putaway_rule
+
+	items = args["items"] or get_items(warehouse=args.warehouse, cost_center=args.cost_center)
+	for item in items:
+		if args.purchase_order:
+			item["purchase_order"] = args.purchase_order
 			pr.append("items", item)
 
 	if args.get_taxes_and_charges:
