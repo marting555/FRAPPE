@@ -2756,6 +2756,69 @@ class TestPurchaseOrder(FrappeTestCase):
 		pr_doc.cancel()
 		po_doc.cancel()
 
+	def test_po_pr_pi_with_shipping_rule_TC_B_064(self):
+		# Scenario : PO=>PR=>PI [With Shipping Rule]
+		po = {
+			"doctype": "Purchase Order",
+			"company": "_Test Company",
+			
+			"supplier": "_Test Supplier",
+			"set_posting_time": 1,
+			"posting_date": "2025-01-15",
+			"required_by_date": "2025-01-20",
+			"shipping_rule": "Ship-Buy",
+			"item_code": "_Test Item",
+			"warehouse": "_Test Warehouse 1 - _TC",
+			"qty": 1,
+			"rate": 3000
+		}
+		doc_po = make_purchase_order(po)
+		doc_po.insert()
+		doc_po.submit()
+
+		self.assertEqual(doc_po.grand_total, 3200, "Grand Total should include Shipping Rule (3000 + 200 = 3200).")
+		self.assertEqual(doc_po.status, "To Receive and Bill", "PO status should be 'To Receive and Bill'.")
+
+		doc_pr = make_pr_for_po(po.name)
+
+		sle = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": doc_pr.name}, fields=["actual_qty", "item_code"])
+		self.assertEqual(len(sle), 1, "Stock Ledger Entry should exist for the received item.")
+		self.assertEqual(sle[0]["actual_qty"], 1, "Stock Ledger should reflect 1 qty received for _Test Item.")
+
+		gl_entries_pr = frappe.get_all("GL Entry", filters={"voucher_no": doc_pr.name}, fields=["account", "debit", "credit"])
+		self.assertTrue(any(entry["account"] == "Stock In Hand - _Test Company" and entry["debit"] == 3200 for entry in gl_entries_pr),
+						"Stock In Hand account should be debited with 3200.")
+		self.assertTrue(any(entry["account"] == "Stock Received But Not Billed - _Test Company" and entry["credit"] == 3000 for entry in gl_entries_pr),
+						"Stock Received But Not Billed account should be credited with 3000.")
+		self.assertTrue(any(entry["account"] == "Shipping Rule - _Test Company" and entry["credit"] == 200 for entry in gl_entries_pr),
+						"Shipping Rule account should be credited with 200.")
+		self.assertEqual(doc_pr.status, "To Bill", "PR status should be 'To Bill'.")
+
+		doc_pi = make_pi_against_pr(doc_pr.name)
+
+		gl_entries_pi = frappe.get_all("GL Entry", filters={"voucher_no": doc_pi.name}, fields=["account", "debit", "credit"])
+		self.assertTrue(any(entry["account"] == "Stock Received But Not Billed - _Test Company" and entry["debit"] == 3000 for entry in gl_entries_pi),
+						"Stock Received But Not Billed account should be debited with 3000.")
+		self.assertTrue(any(entry["account"] == "Shipping Rule - _Test Company" and entry["debit"] == 200 for entry in gl_entries_pi),
+						"Shipping Rule account should be debited with 200.")
+		self.assertTrue(any(entry["account"] == "Creditors - _Test Company" and entry["credit"] == 3200 for entry in gl_entries_pi),
+						"Creditors account should be credited with 3200.")
+		self.assertEqual(doc_pi.status, "Unpaid", "PI status should be 'Unpaid'.")
+
+		po.reload()
+		doc_pr.reload()
+		self.assertEqual(po.status, "Completed", "PO status should be 'Completed'.")
+		self.assertEqual(doc_pr.status, "Completed", "PR status should be 'Completed'.")
+
+		self.assertEqual(doc_pr.purchase_order, po.name, "PR should be linked to the PO.")
+		self.assertEqual(doc_pi.purchase_receipt, doc_pr.name, "PI should be linked to the PR.")
+
+		# Cleanup
+		doc_pi.cancel()
+		doc_pr.cancel()
+		po.cancel()
+
+
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
