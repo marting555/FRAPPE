@@ -299,13 +299,13 @@ def get_tax_amount(party_type, parties, inv, tax_details, posting_date, pan_no=N
 	if tax_deducted_on_advances:
 		tax_deducted += get_advance_tax_across_fiscal_year(tax_deducted_on_advances, tax_details)
 
-	# if tds account is chenged.
-	if not tax_deducted and party_type == "Supplier":
-		tax_deducted += is_tax_deducted_on_the_basis_of_inv(vouchers)
-
 	tax_amount = 0
 
 	if party_type == "Supplier":
+		# if tds account is changed.
+		if not tax_deducted:
+			tax_deducted = is_tax_deducted_on_the_basis_of_inv(vouchers)
+
 		ldc = get_lower_deduction_certificate(inv.company, posting_date, tax_details, pan_no)
 		if tax_deducted:
 			net_total = inv.tax_withholding_net_total
@@ -341,16 +341,14 @@ def get_tax_amount(party_type, parties, inv, tax_details, posting_date, pan_no=N
 
 
 def is_tax_deducted_on_the_basis_of_inv(vouchers):
-	return sum(
-		frappe.db.get_all(
-			"Purchase Taxes and Charges",
-			filters={
-				"parent": ["in", vouchers],
-				"is_tax_withholding_account": 1,
-				"parenttype": "Purchase Invoice",
-			},
-			pluck="base_tax_amount_after_discount_amount",
-		)
+	return frappe.db.exists(
+		"Purchase Taxes and Charges",
+		{
+			"parent": ["in", vouchers],
+			"is_tax_withholding_account": 1,
+			"parenttype": "Purchase Invoice",
+			"base_tax_amount_after_discount_amount": [">", 0],
+		},
 	)
 
 

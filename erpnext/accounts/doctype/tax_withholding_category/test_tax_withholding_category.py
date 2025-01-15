@@ -102,7 +102,7 @@ class TestTaxWithholdingCategory(IntegrationTestCase):
 			"_Test Account VAT - _TC",
 		)
 
-		# TDS should be on invoice only even thpugh account is changed
+		# TDS should be on invoice only even though account is changed
 		pi = create_purchase_invoice(supplier="Test TDS Supplier", rate=5000)
 		pi.submit()
 
