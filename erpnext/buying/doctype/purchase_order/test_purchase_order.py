@@ -2174,6 +2174,46 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi.submit()
 		self.assertEqual(pi.discount_amount, 1000)
 		self.assertEqual(pi.net_total, 9000)
+	
+	def test_inter_state_CGST_and_SGST_TC_B_097(self):
+		po = create_purchase_order(qty=1,rate = 100,do_not_save=True)
+		po.save()
+		purchase_tax_and_value = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company,'tax_category':'In-State'},'name')
+		po.taxes_and_charges = purchase_tax_and_value
+		po.save()
+		po.submit()
+		po.reload()
+	
+		self.assertEqual(po.grand_total, 118)
+	
+		pr = make_purchase_receipt(po.name)
+		pr.taxes_and_charges = purchase_tax_and_value
+		pr.save()
+		pr.submit()
+		pr.reload()
+		
+		frappe.db.set_value('Company',pr.company,'enable_provisional_accounting_for_non_stock_items',1)
+		frappe.db.set_value('Company',pr.company,'stock_received_but_not_billed','_Test Account Service Tax - _TC')
+		frappe.db.set_value('Company',pr.company,'default_provisional_account','_Test Account Service Tax - _TC')
+
+		account_entries = frappe.db.get_all('GL Entry',{'voucher_type':'Purchase Receipt','voucher_no':pr.name},['account','debit','credit'])
+		self.assertEqual(account_entries[0].account, '_Test Account Service Tax - _TC')
+		self.assertEqual(account_entries[0].credit, 100)
+		self.assertEqual(account_entries[1].account, '_Test Warehouse for Stock Reco2 - _TC')
+		self.assertEqual(account_entries[1].debit, 100)
+		stock_entries = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':pr.name},'item_code')
+		self.assertEqual(stock_entries,pr.items[0].item_code)
+
+		pi = make_pi_from_pr(pr.name)
+		pi.save()
+		pi.submit()
+
+		account_entries_pi = frappe.db.get_all('GL Entry',{'voucher_no':pi.name},['account','debit','credit'])
+	
+		self.assertEqual(account_entries_pi[0].debit, 9)
+		self.assertEqual(account_entries_pi[1].debit, 9)
+		self.assertEqual(account_entries_pi[3].credit, 118)
+
 
 
 def create_po_for_sc_testing():
