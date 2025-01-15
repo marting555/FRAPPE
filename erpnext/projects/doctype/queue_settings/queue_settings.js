@@ -1,8 +1,11 @@
 // Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and contributors
 // For license information, please see license.txt
 
-// frappe.ui.form.on("Queue Settings", {
-// 	refresh(frm) {
-
-// 	},
-// });
+frappe.ui.form.on("Queue Settings", {
+  validate: function (frm) {
+    if (frm.doc.cars_per_day <= 0) {
+      frappe.msgprint(__('The value for {0} must be greater than 0.', [__('Cars per Day')]));
+      frappe.validated = false;
+    }
+  }
+});
