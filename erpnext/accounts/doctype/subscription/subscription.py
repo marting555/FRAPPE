@@ -415,7 +415,6 @@ class Subscription(Document):
 				invoice.apply_tds = 1
 
 		# Add currency to invoice
-		# We have already validated default currency
 		invoice.currency = frappe.db.get_value("Subscription Plan", {"name": self.plans[0].plan}, "currency")
 
 		# Add dimensions in invoice for subscription:

@@ -483,7 +483,7 @@ class TestSubscription(IntegrationTestCase):
 		"Accounts Settings",
 		{"allow_multi_currency_invoices_against_single_party_account": 1},
 	)
-	def test_multi_currency_subscription_with_defalut_company_currency(self):
+	def test_multi_currency_subscription_with_default_company_currency(self):
 		party = "Test Subscription Customer Multi Currency"
 		frappe.db.set_value("Customer", party, "default_currency", "USD")
 		subscription = create_subscription(
