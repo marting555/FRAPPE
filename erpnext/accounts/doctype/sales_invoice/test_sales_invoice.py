@@ -4315,7 +4315,11 @@ class TestSalesInvoice(FrappeTestCase):
 		si.save()
 		si.submit()
 
-		pe = get_payment_entry("Sales Invoice", si.name)    
+		pe = get_payment_entry("Sales Invoice", si.name) 
+		pe.payment_type == "Receive"
+		pe.mode_of_payment = "Cash"
+		pe.paid_from="_Test Receivable USD - _TC"
+		pe.paid_to = "Cash - _TC"
 		pe.source_exchange_rate = 60
 		pe.save()
 		pe.submit()

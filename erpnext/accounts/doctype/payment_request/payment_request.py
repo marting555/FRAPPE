@@ -35,11 +35,8 @@ class PaymentRequest(Document):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
+		from erpnext.accounts.doctype.subscription_plan_detail.subscription_plan_detail import SubscriptionPlanDetail
 		from frappe.types import DF
-
-		from erpnext.accounts.doctype.subscription_plan_detail.subscription_plan_detail import (
-			SubscriptionPlanDetail,
-		)
 
 		account: DF.ReadOnly | None
 		amended_from: DF.Link | None
@@ -54,6 +51,7 @@ class PaymentRequest(Document):
 		grand_total: DF.Currency
 		iban: DF.ReadOnly | None
 		is_a_subscription: DF.Check
+		is_payment_order_required: DF.Check
 		make_sales_invoice: DF.Check
 		message: DF.Text | None
 		mode_of_payment: DF.Link | None
@@ -65,7 +63,7 @@ class PaymentRequest(Document):
 		party_name: DF.Data | None
 		party_type: DF.Link | None
 		payment_account: DF.ReadOnly | None
-		payment_channel: DF.Literal["", "Email", "Phone", "Other"]
+		payment_channel: DF.Literal["", "Email", "Phone"]
 		payment_gateway: DF.ReadOnly | None
 		payment_gateway_account: DF.Link | None
 		payment_order: DF.Link | None
@@ -74,17 +72,7 @@ class PaymentRequest(Document):
 		print_format: DF.Literal[None]
 		reference_doctype: DF.Link | None
 		reference_name: DF.DynamicLink | None
-		status: DF.Literal[
-			"",
-			"Draft",
-			"Requested",
-			"Initiated",
-			"Partially Paid",
-			"Payment Ordered",
-			"Paid",
-			"Failed",
-			"Cancelled",
-		]
+		status: DF.Literal["", "Draft", "Requested", "Initiated", "Partially Paid", "Payment Ordered", "Paid", "Failed", "Cancelled"]
 		subject: DF.Data | None
 		subscription_plans: DF.Table[SubscriptionPlanDetail]
 		swift_number: DF.ReadOnly | None
@@ -211,6 +199,7 @@ class PaymentRequest(Document):
 			sender=self.email_to,
 			currency=self.currency,
 			payment_gateway=self.payment_gateway,
+			phone_number=self.phone_number,
 		)
 
 		controller.validate_transaction_currency(self.currency)
@@ -619,6 +608,7 @@ def make_payment_request(**args):
 				"party": args.get("party") or ref_doc.get("customer"),
 				"bank_account": bank_account,
 				"party_name": args.get("party_name") or ref_doc.get("customer_name"),
+				"phone_number": args.get("phone_number") if args.get("phone_number") else None,
 			}
 		)
 

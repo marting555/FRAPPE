@@ -2,9 +2,12 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
-from erpnext.accounts.doctype.bank_reconciliation_tool.bank_reconciliation_tool import get_linked_payments
 from frappe.utils import flt
+
+from erpnext.accounts.doctype.bank_reconciliation_tool.bank_reconciliation_tool import get_linked_payments
+
 
 class BankReconciliationToolERPNext(Document):
 	# begin: auto-generated types
@@ -68,8 +71,10 @@ class BankReconciliationToolERPNext(Document):
 				pay["unreconciled_amount"] = pay["withdraw"]
 
 			for bnk_st in args.get("bank_statement"):
-				allocated_amount = min(pay.get("deposit", 0) or pay.get("withdraw", 0), bnk_st["unallocated_amount"])
-				
+				allocated_amount = min(
+					pay.get("deposit", 0) or pay.get("withdraw", 0), bnk_st["unallocated_amount"]
+				)
+
 				res = self.get_allocated_entry(pay, bnk_st, allocated_amount)
 				# print(pay.get("name"), pay.get("doctype"))
 
@@ -77,7 +82,7 @@ class BankReconciliationToolERPNext(Document):
 					pay["deposit"] -= allocated_amount
 				elif flt(pay.get("deposit")) > 0:
 					pay["withdraw"] -= allocated_amount
-				
+
 				bnk_st["unallocated_amount"] -= allocated_amount
 
 				entries.append(res)
@@ -96,30 +101,90 @@ class BankReconciliationToolERPNext(Document):
 
 
 @frappe.whitelist()
-def get_bank_transaction(bank_account, company ,from_statement_date = None, to_statement_date = None):
+def get_bank_transaction(bank_account, company, from_statement_date=None, to_statement_date=None):
 	if from_statement_date and to_statement_date:
-		bank_transactn_list = frappe.db.get_all("Bank Transaction",filters={'date': ['between' ,[from_statement_date, to_statement_date]], 'bank_account':bank_account, 'company': company, 'status':'Unreconciled'}, fields = ['date', 'name', 'deposit', 'withdrawal', 'description', 'reference_number', 'unallocated_amount'])
+		bank_transactn_list = frappe.db.get_all(
+			"Bank Transaction",
+			filters={
+				"date": ["between", [from_statement_date, to_statement_date]],
+				"bank_account": bank_account,
+				"company": company,
+				"status": "Unreconciled",
+			},
+			fields=[
+				"date",
+				"name",
+				"deposit",
+				"withdrawal",
+				"description",
+				"reference_number",
+				"unallocated_amount",
+			],
+		)
 	else:
-		bank_transactn_list = frappe.db.get_all("Bank Transaction",filters={'bank_account':bank_account, 'company': company, 'status':'Unreconciled'}, fields = ['date', 'name', 'deposit', 'withdrawal', 'description', 'reference_number', 'unallocated_amount'])
+		bank_transactn_list = frappe.db.get_all(
+			"Bank Transaction",
+			filters={"bank_account": bank_account, "company": company, "status": "Unreconciled"},
+			fields=[
+				"date",
+				"name",
+				"deposit",
+				"withdrawal",
+				"description",
+				"reference_number",
+				"unallocated_amount",
+			],
+		)
 	return bank_transactn_list
 
+
 @frappe.whitelist()
-def get_erp_transaction(bank_account, company ,from_statement_date = None, to_statement_date = None):
-	transaction_list = frappe.db.get_all("Bank Transaction", {'bank_account':bank_account, 'status':'Unreconciled'}, pluck='name')
-	for i in transaction_list:
-		transaction = frappe.get_doc("Bank Transaction", i)
-		# print("++++++++++++++++++++++++++++++++")
-		# print(transaction_list)
-		# print(get_linked_payments(transaction.name, document_types=["payment_entry","journal_entry"], from_date=from_statement_date, to_date=to_statement_date, filter_by_reference_date=None, from_reference_date=from_statement_date, to_reference_date=to_statement_date))
-		# print("++++++++++++++++++++++++++++++++")
-		return get_linked_payments(transaction.name, document_types=["payment_entry","journal_entry"], from_date=from_statement_date, to_date=to_statement_date, filter_by_reference_date=None, from_reference_date=from_statement_date, to_reference_date=to_statement_date)
-	# if from_statement_date and to_statement_date:
-	# 	pe_list = frappe.db.get_all("Payment Entry",filters={'posting_date': ['between' ,[from_statement_date, to_statement_date]], 'bank_account':bank_account, 'company': company}, fields = ['posting_date', 'paid_amount', 'reference_no', 'payment_type'])
-	# 	je_list = frappe.db.get_all("Journal Entry Account", filters={'bank_account': bank_account}, fields = ["parent", "account", "creation", "debit", "credit"])
-	# else:
-	# 	pe_list = frappe.db.get_all("Payment Entry",filters={'bank_account':bank_account, 'company': company}, fields = ['posting_date', 'paid_amount', 'reference_no', 'payment_type'])
-	# 	je_list = frappe.db.get_all("Journal Entry Account", filters={'bank_account': bank_account}, fields = ["parent", "account", "creation", "debit", "credit"])
-	# return pe_list, je_list
+def get_erp_transaction(bank_account, company, from_statement_date=None, to_statement_date=None):
+    # Fetch unreconciled transactions
+    transaction_list = frappe.db.get_all(
+        "Bank Transaction", 
+        filters={"bank_account": bank_account, "status": "Unreconciled"},
+        fields=["name"]
+    )
+    
+    # Get the linked account for the bank account
+    account = frappe.db.get_value("Bank Account", bank_account, 'account')
+    result = []
+
+    for transaction in transaction_list:        
+        # Get linked payments or journal entries
+        linked_payments = get_linked_payments(
+            transaction.name,
+            document_types=["payment_entry", "journal_entry"],
+            from_date=from_statement_date,
+            to_date=to_statement_date,
+            filter_by_reference_date=None,
+            from_reference_date=from_statement_date,
+            to_reference_date=to_statement_date
+        )
+        
+        for payment in linked_payments:
+            if payment['doctype'] == "Journal Entry":
+                # Fetch journal entry accounts linked to the bank account
+                je_accounts = frappe.db.get_all(
+                    "Journal Entry Account",
+                    filters={
+                        'account': account,
+                        'parent': payment['name']
+                    },
+                    fields=['credit_in_account_currency', 'debit_in_account_currency', 'parent']
+                )
+                for je_account in je_accounts:
+                    if je_account['credit_in_account_currency'] > 0:
+                        payment['bank'] = 'Credit'
+                    elif je_account['debit_in_account_currency'] > 0:
+                        payment['bank'] = 'Debit'
+                result.append(payment)
+            else:
+                result.append(payment)
+
+    return result
+
 
 @frappe.whitelist()
 def reconcile_bnk_transaction(bank_transaction_id, amount, name, payment_document):
@@ -127,30 +192,43 @@ def reconcile_bnk_transaction(bank_transaction_id, amount, name, payment_documen
 	# print("***********************************")
 	# print("docc",bank_transaction_id)
 	# print("***********************************")
-	bnk_trn.append("payment_entries", {
-    "payment_document": payment_document,
-    "payment_entry": name,
-	"allocated_amount": flt(amount)
-	})
+	bnk_trn.append(
+		"payment_entries",
+		{"payment_document": payment_document, "payment_entry": name, "allocated_amount": flt(amount)},
+	)
 	try:
 		bnk_trn.save()
+		frappe.msgprint(_("Successfully Reconciled"))
 	except Exception as e:
 		frappe.msgprint("Please Reconcile again to ")
 
+
 @frappe.whitelist()
 def get_closing_bal(opening_bal, from_date, to_date, bank_account):
-	total_credits = frappe.db.sql("""
+	total_credits = (
+		frappe.db.sql(
+			"""
 		SELECT SUM(deposit)
 		FROM `tabBank Transaction`
 		WHERE bank_account = %s AND date BETWEEN %s AND %s  AND docstatus = 1
-	""", (bank_account, from_date, to_date))[-1][-1] or 0
+	""",
+			(bank_account, from_date, to_date),
+		)[-1][-1]
+		or 0
+	)
 
 	# Sum of debits (withdrawals)
-	total_debits = frappe.db.sql("""
+	total_debits = (
+		frappe.db.sql(
+			"""
 		SELECT SUM(withdrawal)
 		FROM `tabBank Transaction`
 		WHERE bank_account = %s AND date BETWEEN %s AND %s AND docstatus = 1
-	""", (bank_account, from_date, to_date))[-1][-1] or 0
+	""",
+			(bank_account, from_date, to_date),
+		)[-1][-1]
+		or 0
+	)
 
 	# Calculate closing balance
 	closing_balance = float(opening_bal) + float(total_credits) or 0 - float(total_debits) or 0
