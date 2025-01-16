@@ -3436,6 +3436,29 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(mr.status, "Pending")
 
 	def test_create_mr_for_purchase_to_po_TC_SCK_019(self):
+		self.create_mr_for_puchase_to_po_to_invoice()
+	
+	def test_create_mr_for_purchase_to_po_cancel_pr_TC_SCK_066(self):
+		pr = self.create_mr_for_puchase_to_po_to_invoice()
+		pr.cancel()
+
+		sl_entry_cancelled = frappe.db.get_all(
+			"Stock Ledger Entry",
+			{"voucher_type": "Purchase Receipt", "voucher_no": pr.name},
+			["actual_qty", "warehouse", "serial_and_batch_bundle"],
+			order_by="creation",
+		)
+
+		warehouse_qty = {
+			"_Test Warehouse - _TC": 0
+		}
+
+		for sle in sl_entry_cancelled:
+			warehouse_qty[sle.get('warehouse')] += sle.get('actual_qty')
+		
+		self.assertEqual(warehouse_qty["_Test Warehouse - _TC"], 0)
+	
+	def create_mr_for_puchase_to_po_to_invoice(self):
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import TestStockEntry as tse
 
 		# Create Material Request for Purchase
@@ -3489,6 +3512,8 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(sabb.entries[0].serial_no, "Test-SABBMRP-Sno-001")
 		self.assertEqual(sabb.entries[1].serial_no, "Test-SABBMRP-Sno-002")
 		self.assertEqual(sabb.entries[0].batch_no, "Test-SABBMRP-Bno-001")
+
+		return pr
 
 	def test_create_mr_for_purchase_to_po_2pr_TC_SCK_020(self):
 		fields = {
