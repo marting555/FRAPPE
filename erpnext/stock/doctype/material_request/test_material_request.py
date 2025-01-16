@@ -4308,6 +4308,65 @@ class TestMaterialRequest(FrappeTestCase):
 			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr1.name, 'account': 'Creditors - _TC'},'credit')
 			self.assertEqual(gl_stock_debit, 500)
 
+	def test_create_mr_for_purchase_2po_to_1pr_TC_SCK_021(self):
+		from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import get_sl_entries, get_gl_entries
+
+		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
+		frappe.db.set_value("Company", "_Test Company", "stock_adjustment_account", "Stock Adjustment - _TC")
+		frappe.db.set_value(
+			"Company", "_Test Company", "stock_received_but_not_billed", "Stock Received But Not Billed - _TC"
+		)
+		mr = make_material_request(
+			material_request_type="Purchase",
+			qty=10,
+			item_code="_Test Item",
+			rate=100,
+			do_not_submit=True
+		)
+		mr.transaction_date = "01-08-2024"
+		mr.schedule_date = "02-08-2024"
+		mr.save()
+		mr.submit()
+
+		po1 = make_purchase_order(mr.name)
+		po1.transaction_date = "01-08-2024"
+		po1.schedule_date = "02-08-2024"
+		po1.supplier = "_Test Supplier"
+		po1.items[0].qty = 5
+		po1.save()
+		po1.submit()
+
+		po2 = make_purchase_order(mr.name)
+		po2.transaction_date = "01-08-2024"
+		po2.schedule_date = "02-08-2024"
+		po2.supplier = "_Test Supplier"
+		po2.items[0].qty = 5
+		po2.save()
+		po2.submit()
+
+		pr = make_purchase_receipt(po1.name)
+		pr = make_purchase_receipt(po2.name, target_doc=pr)
+		pr.submit()
+
+		stock_in_hand_account = get_inventory_account("_Test Company", "_Test Warehouse - _TC")
+		
+		# Validate sle
+		sl_entries = get_sl_entries("Purchase Receipt", pr.name)
+		expected_sle = {"_Test Warehouse - _TC": 5}
+		for sle in sl_entries:
+			self.assertEqual(expected_sle[sle.warehouse], sle.actual_qty)
+
+		# check gl entries
+		gl_entries = get_gl_entries("Purchase Receipt", pr.name)
+		expected_values = {
+			stock_in_hand_account: [1000.0, 0.0],
+			"Stock Received But Not Billed - _TC": [0.0, 1000.0],
+		}
+
+		for gle in gl_entries:
+			self.assertEqual(expected_values[gle.account][0], gle.debit)
+			self.assertEqual(expected_values[gle.account][1], gle.credit)
+
 def get_in_transit_warehouse(company):
 	if not frappe.db.exists("Warehouse Type", "Transit"):
 		frappe.get_doc(
