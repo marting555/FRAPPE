@@ -3349,6 +3349,100 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
 		self.assertEqual(pi_status, "Partly Paid")
+  
+	def test_deferred_expense_invoice_line_item_TC_ACC_041(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			create_records as records_for_pi,
+			make_test_item,
+		)
+
+		records_for_pi('_Test Supplier')
+		
+		item=make_test_item()
+		item.enable_deferred_expense=1
+		item.no_of_months_exp=12
+		item.save()
+
+		pi = make_purchase_invoice(
+			qty=1,
+			item_code=item.item_code,
+			supplier = '_Test Supplier',
+			company = '_Test Company',
+			rate = 50000,
+   			do_not_submit=True
+		)
+		if pi.items:
+			setattr(pi.items[0], 'enable_deferred_expense', 1)
+			setattr(pi.items[0], 'deferred_expense_account', 'Deferred Expense - _TC')
+
+		pi.submit()
+		expected_gl_entries = [
+			['Creditors - _TC', 0.0, 50000.0, pi.posting_date],
+			['Deferred Expense - _TC', 50000.0, 0.0, pi.posting_date]
+		]
+
+		check_gl_entries(
+			self,
+			pi.name,
+			expected_gl_entries,
+			pi.posting_date,
+		)
+     
+	def test_deferred_expense_invoice_multiple_item_TC_ACC_042(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			create_records as records_for_pi,
+			make_test_item,
+		)
+		from erpnext.stock.get_item_details import calculate_service_end_date
+		records_for_pi('_Test Supplier')
+		
+		items_list = ['_Test Item 1', '_Test Item 2']
+		for item in items_list:
+			item=make_test_item(item_name=item)
+			item.enable_deferred_expense=1
+			item.no_of_months_exp=12
+			item.save()
+			frappe.db.commit()
+		pi = make_purchase_invoice(
+			qty=1,
+			item_code=items_list[0],
+			supplier = '_Test Supplier',
+			company = '_Test Company',
+			rate = 50000,
+   			do_not_submit=True
+		)
+		if pi.items:
+			setattr(pi.items[0], 'enable_deferred_expense', 1)
+			setattr(pi.items[0], 'deferred_expense_account', 'Deferred Expense - _TC')
+
+		pi.append("items",{
+			"item_name": items_list[1],
+			"item_code": items_list[1],
+			"qty": 1,
+			"rate": 50000,
+			"warehouse": "_Test Warehouse - _TC",
+   			"expense_account": "_Test Account Cost for Goods Sold - _TC",
+			"enable_deferred_expense": 1,
+			"deferred_expense_account": "Deferred Expense - _TC",
+			"service_start_date": pi.posting_date
+		})
+		end_date_obj=calculate_service_end_date(args=pi.items[1].as_dict())
+		pi.items[1].service_end_date = end_date_obj.get("service_end_date")
+		pi.save()
+		pi.submit()
+
+		expected_gl_entries =[
+			['Creditors - _TC', 0.0, 100000.0, pi.posting_date],
+			['Deferred Expense - _TC', 50000.0, 0.0, pi.posting_date],
+			['Deferred Expense - _TC', 50000.0, 0.0, pi.posting_date]
+		]
+		check_gl_entries(
+			self,
+			pi.name,
+			expected_gl_entries,
+			pi.posting_date,
+		)
+		
 	
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
