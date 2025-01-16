@@ -4047,7 +4047,6 @@ class TestMaterialRequest(FrappeTestCase):
 				"rate" : 100,
 			},
 		]
-
 		doc_mr = make_material_request(**mr_dict_list[0])
 		self.assertEqual(doc_mr.docstatus, 1)
 
