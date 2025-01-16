@@ -2255,6 +2255,101 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi.submit()
 		self.assertEqual(pi.discount_amount, 1000)
 		self.assertEqual(pi.net_total, 9000)
+	
+	def test_inter_state_CGST_and_SGST_TC_B_097(self):
+		po = create_purchase_order(qty=1,rate = 100,do_not_save=True)
+		po.save()
+		purchase_tax_and_value = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company,'tax_category':'In-State'},'name')
+		po.taxes_and_charges = purchase_tax_and_value
+		po.save()
+		po.submit()
+		po.reload()
+	
+		self.assertEqual(po.grand_total, 118)
+	
+		pr = make_purchase_receipt(po.name)
+		pr.taxes_and_charges = purchase_tax_and_value
+		pr.save()
+		frappe.db.set_value('Company',pr.company,'enable_perpetual_inventory',1)
+		frappe.db.set_value('Company',pr.company,'enable_provisional_accounting_for_non_stock_items',1)
+		frappe.db.set_value('Company',pr.company,'stock_received_but_not_billed','Stock Received But Not Billed - _TC')
+		frappe.db.set_value('Company',pr.company,'default_inventory_account','Stock In Hand - _TC')
+		frappe.db.set_value('Company',pr.company,'default_provisional_account','Stock In Hand - _TC')
+		pr.submit()
+		pr.reload()
+		account_entries = frappe.db.get_all('GL Entry',{'voucher_type':'Purchase Receipt','voucher_no':pr.name},['account','debit','credit'])
+		for entries in account_entries:
+			if entries.account == 'Stock In Hand - _TC':
+				self.assertEqual(entries.debit, 100)
+			if entries.account == 'Stock Received But Not Billed - _TC':
+				self.assertEqual(entries.credit, 100)
+
+		stock_entries = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':pr.name},'item_code')
+		self.assertEqual(stock_entries,pr.items[0].item_code)
+
+		pi = make_pi_from_pr(pr.name)
+		pi.save()
+		pi.submit()
+
+		account_entries_pi = frappe.db.get_all('GL Entry',{'voucher_no':pi.name},['account','debit','credit'])
+		for entries in account_entries_pi:
+			if entries.account == 'Input Tax SGST - _TC':
+				self.assertEqual(entries.debit, 9)
+			if entries.account == 'Input Tax CGST - _TC':
+				self.assertEqual(entries.debit, 9)
+			if entries.account == 'Stock Received But Not Billed - _TC':
+				self.assertEqual(entries.debit,100)
+			if entries.account == 'Creditors - _TC':
+				self.assertEqual(entries.credit, 118.0)
+
+	
+
+	def test_outer_state_IGST_TC_B_098(self):
+		po = create_purchase_order(supplier='_Test Registered Supplier',qty=1,rate = 100,do_not_save=True)
+		po.save()
+		purchase_tax_and_value = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company,'tax_category':'Out-State'},'name')
+		po.taxes_and_charges = purchase_tax_and_value
+		po.save()
+		po.submit()
+		po.reload()
+		self.assertEqual(po.grand_total, 118)
+		pr = make_purchase_receipt(po.name)
+		pr.taxes_and_charges = purchase_tax_and_value
+		pr.save()
+
+		frappe.db.set_value('Company',pr.company,'enable_perpetual_inventory',1)
+		frappe.db.set_value('Company',pr.company,'enable_provisional_accounting_for_non_stock_items',1)
+		frappe.db.set_value('Company',pr.company,'stock_received_but_not_billed','Stock Received But Not Billed - _TC')
+		frappe.db.set_value('Company',pr.company,'default_inventory_account','Stock In Hand - _TC')
+		frappe.db.set_value('Company',pr.company,'default_provisional_account','Stock In Hand - _TC')
+
+		pr.submit()
+		pr.reload()
+		
+		account_entries = frappe.db.get_all('GL Entry',{'voucher_type':'Purchase Receipt','voucher_no':pr.name},['account','debit','credit'])
+		for entries in account_entries:
+			if entries.account == 'Stock In Hand - _TC':
+				self.assertEqual(entries.debit, 100)
+			if entries.account == 'Stock Received But Not Billed - _TC':
+				self.assertEqual(entries.credit, 100)
+
+		stock_entries = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':pr.name},'item_code')
+		self.assertEqual(stock_entries,pr.items[0].item_code)
+		self.assertEqual(pr.status,'To Bill')
+		pi = make_pi_from_pr(pr.name)
+		pi.save()
+		pi.submit()
+
+		account_entries_pi = frappe.db.get_all('GL Entry',{'voucher_no':pi.name},['account','debit','credit'])
+		for entries in account_entries_pi:
+			if entries.account == 'Input Tax IGST - _TC':
+				self.assertEqual(entries.debit, 18)
+			if entries.account == 'Stock Received But Not Billed - _TC':
+				self.assertEqual(entries.debit,100)
+			if entries.account == 'Creditors - _TC':
+				self.assertEqual(entries.credit, 118.0)
+		pi.reload()
+		self.assertEqual(pi.status,'Unpaid')
 
 	def test_po_ignore_pricing_rule_TC_B_049(self):
 		company = "_Test Company"
