@@ -69,7 +69,6 @@ class SalesInvoiceItem(Document):
 		net_rate: DF.Currency
 		page_break: DF.Check
 		parent: DF.Data
-		parent_item_row: DF.Data | None
 		parentfield: DF.Data
 		parenttype: DF.Data
 		pos_invoice: DF.Link | None
@@ -96,6 +95,7 @@ class SalesInvoiceItem(Document):
 		stock_uom_rate: DF.Currency
 		target_warehouse: DF.Link | None
 		total_weight: DF.Float
+		trigger_for_free_item: DF.Data | None
 		uom: DF.Link
 		use_serial_batch_fields: DF.Check
 		warehouse: DF.Link | None

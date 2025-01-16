@@ -51,7 +51,7 @@
   "pricing_rule_section",
   "pricing_rules",
   "is_free_item",
-  "parent_item_row",
+  "trigger_for_free_item",
   "section_break_21",
   "net_rate",
   "net_amount",
@@ -987,9 +987,9 @@
    "label": "Pricing Rule"
   },
   {
-   "fieldname": "parent_item_row",
+   "fieldname": "trigger_for_free_item",
    "fieldtype": "Data",
-   "label": "Parent Row",
+   "label": "Trigger For Free Item",
    "read_only": 1
   }
  ],

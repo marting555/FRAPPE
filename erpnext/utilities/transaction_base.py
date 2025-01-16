@@ -294,8 +294,8 @@ class TransactionBase(StatusUpdater):
 					x.item_code,
 					("name", x.name),
 					("__temporary_name", x.get("__temporary_name")),
-					("parent_item_row", x.get("parent_item_row")),
-					("__is_local", x.get("__is_local")),
+					("trigger_for_free_item", x.get("trigger_for_free_item")),
+					("__islocal", x.get("__islocal")),
 				)
 			)
 
@@ -303,15 +303,18 @@ class TransactionBase(StatusUpdater):
 		for x in self.items:
 			print_item(x)
 
+		# generate map
 		tk_to_pk = {}
 		for x in self.items:
-			if x.name and x.get("__temporary_name"):
+			if x.get("__islocal") and x.name and x.get("__temporary_name"):
 				tk_to_pk[x.get("__temporary_name")] = x.name
 
 		print(tk_to_pk)
+
+		# update temp with permanent key
 		for x in self.items:
-			if x.get("__islocal") and x.parent_item_row:
-				x.parent_item_row = tk_to_pk[x.parent_item_row]
+			if x.get("__islocal") and x.trigger_for_free_item:
+				x.trigger_for_free_item = tk_to_pk[x.trigger_for_free_item]
 		print("----------after----------")
 		for x in self.items:
 			print_item(x)
@@ -407,14 +410,14 @@ class TransactionBase(StatusUpdater):
 					x
 					for x in existing_free_items
 					if x.item_code == free_item.get("item_code")
-					and x.get("parent_item_row") == item_obj.get("__temporary_name")
+					and x.get("trigger_for_free_item") == item_obj.get("__temporary_name")
 				]
 				if _matches:
 					row_to_modify = _matches[0]
 				else:
 					row_to_modify = self.append("items")
 
-				setattr(row_to_modify, "parent_item_row", item_obj.get("__temporary_name"))
+				setattr(row_to_modify, "trigger_for_free_item", item_obj.get("__temporary_name"))
 				for k, _v in free_item.items():
 					setattr(row_to_modify, k, free_item.get(k))
 
