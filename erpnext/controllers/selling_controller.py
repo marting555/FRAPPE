@@ -712,10 +712,14 @@ class SellingController(StockController):
 			return
 
 		items = [item.item_code for item in self.get("items")]
-		item_details = frappe.get_all(
-			"Item", filters={"item_code": ["in", items]}, fields=["is_stock_item", "item_code"]
+		item_stock_map = frappe._dict(
+			frappe.get_all(
+				"Item",
+				filters={"item_code": ["in", items]},
+				fields=["item_code", "is_stock_item"],
+				as_list=True,
+			)
 		)
-		item_stock_map = {item.item_code: item.is_stock_item for item in item_details}
 
 		for d in self.get("items"):
 			if self.doctype == "Sales Invoice":
