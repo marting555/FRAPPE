@@ -135,7 +135,7 @@ def get_bank_transaction(bank_account, company, from_statement_date=None, to_sta
 				"unallocated_amount",
 			],
 		)
-	if len[bank_transactn_list] == 0:
+	if len(bank_transactn_list) == 0:
 		frappe.msgprint("No records found")
 
 	return bank_transactn_list
@@ -185,7 +185,7 @@ def get_erp_transaction(bank_account, company, from_statement_date=None, to_stat
                 result.append(payment)
             else:
                 result.append(payment)
-    if len[result] == 0:
+    if len(result) == 0:
         frappe.msgprint("No records found")
     return result
 
