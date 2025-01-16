@@ -1108,6 +1108,7 @@ class TestSalesInvoice(IntegrationTestCase):
 			warehouse="Stores - TCP1",
 			cost_center="Main - TCP1",
 			write_off_account="_Test Write Off - TCP1",
+			write_off_limit=10,
 		)
 
 		make_purchase_receipt(

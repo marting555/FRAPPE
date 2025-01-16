@@ -619,8 +619,11 @@ class TestPOSInvoice(IntegrationTestCase):
 		from erpnext.accounts.doctype.loyalty_program.loyalty_program import (
 			get_loyalty_program_details_with_points,
 		)
+		from erpnext.accounts.doctype.loyalty_program.test_loyalty_program import create_records
 
 		# add 10 loyalty points
+		create_records()
+		frappe.db.set_value("Customer", "Test Loyalty Customer", "loyalty_program", "Test Single Loyalty")
 		create_pos_invoice(customer="Test Loyalty Customer", rate=10000, do_not_save=True)
 		before_lp_details = get_loyalty_program_details_with_points(
 			"Test Loyalty Customer", company="_Test Company", loyalty_program="Test Single Loyalty"
@@ -640,7 +643,7 @@ class TestPOSInvoice(IntegrationTestCase):
 		after_redeem_lp_details = get_loyalty_program_details_with_points(
 			inv.customer, company=inv.company, loyalty_program=inv.loyalty_program
 		)
-		self.assertEqual(after_redeem_lp_details.loyalty_points, 9)
+		self.assertEqual(after_redeem_lp_details.loyalty_points, 10)
 
 	def test_merging_into_sales_invoice_with_discount(self):
 		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import (

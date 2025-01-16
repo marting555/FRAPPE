@@ -111,10 +111,12 @@ class TestPOSClosingEntry(IntegrationTestCase):
 
 		pos_inv1 = create_pos_invoice(rate=3500, do_not_submit=1)
 		pos_inv1.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 3500})
+		pos_inv1.save()
 		pos_inv1.submit()
 
 		pos_inv2 = create_pos_invoice(rate=3200, do_not_submit=1)
 		pos_inv2.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 3200})
+		pos_inv1.save()
 		pos_inv2.submit()
 
 		pcv_doc = make_closing_entry_from_opening(opening_entry)
