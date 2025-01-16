@@ -4304,6 +4304,132 @@ class TestMaterialRequest(FrappeTestCase):
 		pi_total = sum(entry["debit"] for entry in pi_gl_entries)
 		self.assertEqual(pi_total, 10080) 
 
+    def test_purchase_flow_TC_B_068(self):
+        #Scenario : MR=>PO=>PR=>PI
+        data_dict = {
+            company :  "_Test Supplier",
+            warehouse :  "_Test Warehouse 1 - _TC",
+            item :  "_Test Item",
+            uom :  "Nos",
+            qty :  1,
+            supplier :  "_Test Supplier",
+            rate :  3000,
+            shipping_rule :  "Ship-Buy",
+            transaction_date :  "2025-01-17",
+            received_date :  "2025-01-18",
+            pr_status :  'To Bill',
+            pi_status :  'Unpaid',
+        }
+
+        # Step 1: Create MR (Material Request)
+        mr = frappe.get_doc({
+            "doctype": "Material Request",
+            "company": data_dict.get("company"),
+            "purpose": "Purchase",
+            "transaction_date": data_dict.get("transaction_date"),
+            "items": [{
+                "item_code": data_dict.get("item"),
+                "qty": data_dict.get("qty"),
+                "uom": data_dict.get("uom"),
+                "warehouse": data_dict.get("warehouse")
+            }]
+        }).insert()
+        
+        mr.submit()
+
+        # Verify MR Status
+        self.assertEqual(mr.status, "Pending")
+        
+        # Step 2: Create PO (Purchase Order)
+
+
+        po = frappe.get_doc({
+            "doctype": "Purchase Order",
+            "supplier": data_dict.get("supplier"),
+            "transaction_date": data_dict.get("transaction_date"),
+            "items": [{
+                "item_code": data_dict.get("item"),
+                "qty": data_dict.get("qty"),
+                "uom": data_dict.get("uom"),
+                "rate": data_dict.get("rate"),
+                "cost_center": data_dict.get("cost_center"),
+                "warehouse": data_dict.get("warehouse")
+            }],
+            "shipping_rule": data_dict.get("shipping_rule")
+        }).insert()
+
+        po.submit()
+
+        # Verify PO Status and Grand Total Calculation
+        self.assertEqual(po.status, "To Receive and Bill")
+        self.assertEqual(po.grand_total, self.rate + 200)  # Shipping rule = 200
+        self.assertEqual(mr.status, "Ordered")
+
+        # Step 3: Create PR (Purchase Receipt) from PO
+        pr = frappe.get_doc({
+            "doctype": "Purchase Receipt",
+            "purchase_order": po.name,
+            "transaction_date": self.received_date,
+            "items": [{
+                "item_code": self.item,
+                "qty": self.qty,
+                "uom": self.uom,
+                "warehouse": self.warehouse
+            }]
+        }).insert()
+
+        pr.submit()
+
+        # Verify PR Status and GL Entries
+        self.assertEqual(pr.status, self.pr_status)
+        # Verify GL Entries
+        stock_in_hand_account = frappe.get_all('GL Entry', filters={'voucher_type': 'Purchase Receipt', 'voucher_no': pr.name, 'account': 'Stock in Hand - PP'}, fields=['debit'])
+        self.assertEqual(stock_in_hand_account[0].debit, 3200)
+        
+        stock_received_not_billed = frappe.get_all('GL Entry', filters={'voucher_type': 'Purchase Receipt', 'voucher_no': pr.name, 'account': 'Stock Received But Not Billed - PP'}, fields=['credit'])
+        self.assertEqual(stock_received_not_billed[0].credit, 3000)
+
+        shipping_rule_account = frappe.get_all('GL Entry', filters={'voucher_type': 'Purchase Receipt', 'voucher_no': pr.name, 'account': 'Shipping Rule Account - PP'}, fields=['credit'])
+        self.assertEqual(shipping_rule_account[0].credit, 200)
+
+        # Step 4: Create PI (Purchase Invoice) from PR
+        pi = frappe.get_doc({
+            "doctype": "Purchase Invoice",
+            "purchase_receipt": pr.name,
+            "supplier": self.supplier,
+            "posting_date": self.received_date,
+            "items": [{
+                "item_code": self.item,
+                "qty": self.qty,
+                "rate": self.rate,
+                "uom": self.uom,
+                "cost_center": self.cost_center
+            }],
+            "shipping_rule": self.shipping_rule
+        }).insert()
+
+        pi.submit()
+
+        # Verify PI Status and GL Entries
+        self.assertEqual(pi.status, self.pi_status)
+
+        # Verify GL Entries for PI
+        creditors_account = frappe.get_all('GL Entry', filters={'voucher_type': 'Purchase Invoice', 'voucher_no': pi.name, 'account': 'Creditors - PP'}, fields=['credit'])
+        self.assertEqual(creditors_account[0].credit, 3200)
+
+        stock_received_not_billed = frappe.get_all('GL Entry', filters={'voucher_type': 'Purchase Invoice', 'voucher_no': pi.name, 'account': 'Stock Received But Not Billed - PP'}, fields=['debit'])
+        self.assertEqual(stock_received_not_billed[0].debit, 3000)
+
+        shipping_rule_account = frappe.get_all('GL Entry', filters={'voucher_type': 'Purchase Invoice', 'voucher_no': pi.name, 'account': 'Shipping Rule Account - PP'}, fields=['debit'])
+        self.assertEqual(shipping_rule_account[0].debit, 200)
+
+        # Verify that MR, PO, PR, and PI are interlinked
+        self.assertEqual(mr.status, "Ordered")
+        self.assertEqual(po.status, "To Receive and Bill")
+        self.assertEqual(pr.status, "To Bill")
+        self.assertEqual(pi.status, "Unpaid")
+
+
 def get_in_transit_warehouse(company):
 	if not frappe.db.exists("Warehouse Type", "Transit"):
 		frappe.get_doc(
