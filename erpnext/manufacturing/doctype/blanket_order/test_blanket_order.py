@@ -113,6 +113,53 @@ class TestBlanketOrder(FrappeTestCase):
 		bo = make_blanket_order(blanket_order_type="Purchasing", supplier=supplier, item_code=item_code)
 		self.assertEqual(bo.items[0].party_item_code, "SUPP-PART-1")
 
+	def test_blanket_order_to_po_TC_B_093(self):
+		company = "_Test Company"
+		item_code = "Testing-31"
+		target_warehouse = "Stores - _TC"
+		supplier = "_Test Supplier 1"
+		item_price = 3000
+		qty = 3
+		blanket_order = frappe.get_doc({
+			"doctype": "Blanket Order",
+			"company": company,
+			"supplier": supplier,
+			"from_date": today(),
+			"to_date": today(),
+			"blanket_order_type": "Purchasing",
+			"items": [
+				{
+					"item_code": item_code,
+					"target_warehouse": target_warehouse,
+					"rate": item_price,
+					"qty": qty,
+				}
+			]
+		})
+		blanket_order.insert()
+		blanket_order.submit()
+		self.assertEqual(blanket_order.docstatus,1)
+		purchase_order = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"company": company,
+			"supplier": supplier,
+			"schedule_date": today(),
+			"items": [
+				{
+					"blanket_order": blanket_order.name,
+					"item_code": item_code,
+					"warehouse": target_warehouse,
+					"qty": 5,
+					"rate": item_price,
+				}
+			]
+		})
+		purchase_order.items[0].qty = 2
+		purchase_order.insert()
+		purchase_order.submit()
+		self.assertEqual(purchase_order.docstatus,1)
+		updated_blanket_order = frappe.get_doc("Blanket Order", blanket_order.name)
+		self.assertEqual(updated_blanket_order.items[0].ordered_qty, 2)
 
 def make_blanket_order(**args):
 	args = frappe._dict(args)

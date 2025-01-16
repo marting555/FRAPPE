@@ -57,8 +57,23 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 								if ((j.withdraw || j.deposit) - (k.withdraw || k.deposit) >= 0) {
 									j.remaining_amount =
 										(j.withdraw || j.deposit) - (k.withdraw || k.deposit);
+									if (j.withdraw >0){
+										j.withdraw = j.remaining_amount
+									}
+									else if (j.deposit > 0){
+										j.deposit = j.remaining_amount
+									}
+									else if (k.withdraw > 0){
+										// console.log('withdraw',k.withdraw)
+										k.withdraw = k.withdraw - i.matched_amount
+									}
+									else if (k.deposit > 0){
+										// console.log('dep',k.deposit)
+										k.deposit = k.deposit - i.matched_amount
+									}
 								} else {
 									j.remaining_amount = 0;
+									frm.doc.erp_transaction.splice(jIndex, 1);
 								}
 							}
 						});
@@ -100,110 +115,111 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 				"difference_amount",
 				(frm.doc.closing_balance_as_per_bank_statement - frm.doc.closing_balance_as_per_erp)
 			);
-			frappe.call({
-				method: "erpnext.accounts.doctype.bank_reconciliation_tool_erpnext.bank_reconciliation_tool_erpnext.get_bank_transaction",
-				args: {
-					bank_account: frm.doc.bank_account,
-					company: frm.doc.company,
-					from_statement_date: frm.doc.from_statement_date,
-					to_statement_date: frm.doc.to_statement_date,
-				},
-				callback: (response) => {
-					let existingTransactionIds = new Set(
-						frm.doc.bank_statement.map((row) => row.bank_transaction_id) // Collect existing IDs
-					);
-					// console.log('Response:', response.message);
+			frm.trigger("unreconcile_entries");
+			// frappe.call({
+			// 	method: "erpnext.accounts.doctype.bank_reconciliation_tool_erpnext.bank_reconciliation_tool_erpnext.get_bank_transaction",
+			// 	args: {
+			// 		bank_account: frm.doc.bank_account,
+			// 		company: frm.doc.company,
+			// 		from_statement_date: frm.doc.from_statement_date,
+			// 		to_statement_date: frm.doc.to_statement_date,
+			// 	},
+			// 	callback: (response) => {
+			// 		let existingTransactionIds = new Set(
+			// 			frm.doc.bank_statement.map((row) => row.bank_transaction_id) // Collect existing IDs
+			// 		);
+			// 		console.log('Response:', response.message);
 
-					if (Array.isArray(response.message)) {
-						response.message.forEach((transaction) => {
-							if (!existingTransactionIds.has(transaction.name)) {
-								if (transaction.deposit || transaction.withdrawal) {
-									// Add a new child row to the bank_statement table
-									let bankTransaction = frm.add_child("bank_statement");
-									bankTransaction.date = transaction.date;
-									bankTransaction.bank_transaction_id = transaction.name;
-									bankTransaction.description = transaction.description;
-									bankTransaction.deposit = transaction.deposit;
-									bankTransaction.withdraw = transaction.withdrawal;
-									bankTransaction.reference_no = transaction.reference_number;
-									bankTransaction.unallocated_amount = transaction.unallocated_amount;
+			// 		if (Array.isArray(response.message)) {
+			// 			response.message.forEach((transaction) => {
+			// 				if (!existingTransactionIds.has(transaction.name)) {
+			// 					if (transaction.deposit || transaction.withdrawal) {
+			// 						// Add a new child row to the bank_statement table
+			// 						let bankTransaction = frm.add_child("bank_statement");
+			// 						bankTransaction.date = transaction.date;
+			// 						bankTransaction.bank_transaction_id = transaction.name;
+			// 						bankTransaction.description = transaction.description;
+			// 						bankTransaction.deposit = transaction.deposit;
+			// 						bankTransaction.withdraw = transaction.withdrawal;
+			// 						bankTransaction.reference_no = transaction.reference_number;
+			// 						bankTransaction.unallocated_amount = transaction.unallocated_amount;
 
-									// Track added transaction IDs
-									existingTransactionIds.add(transaction.name);
-								}
-							}
-						});
-					} else {
-						console.error("Invalid response.message:", response.message);
-					}
+			// 						// Track added transaction IDs
+			// 						existingTransactionIds.add(transaction.name);
+			// 					}
+			// 				}
+			// 			});
+			// 		} else {
+			// 			console.error("Invalid response.message:", response.message);
+			// 		}
 
-					frm.refresh_field("bank_statement");
-				},
-			});
-			frappe.call({
-				method: "erpnext.accounts.doctype.bank_reconciliation_tool_erpnext.bank_reconciliation_tool_erpnext.get_erp_transaction",
-				args: {
-					bank_account: frm.doc.bank_account,
-					company: frm.doc.company,
-					from_statement_date: frm.doc.from_erp_date,
-					to_statement_date: frm.doc.to_erp_date,
-				},
-				callback: async (response) => {
-					// Create a Set of existing reference IDs in the `erp_transaction` table
-					let existingReferenceIds = new Set(
-						frm.doc.erp_transaction.map((row) => row.reference_id)
-					);
+			// 		frm.refresh_field("bank_statement");
+			// 	},
+			// });
+			// frappe.call({
+			// 	method: "erpnext.accounts.doctype.bank_reconciliation_tool_erpnext.bank_reconciliation_tool_erpnext.get_erp_transaction",
+			// 	args: {
+			// 		bank_account: frm.doc.bank_account,
+			// 		company: frm.doc.company,
+			// 		from_statement_date: frm.doc.from_erp_date,
+			// 		to_statement_date: frm.doc.to_erp_date,
+			// 	},
+			// 	callback: async (response) => {
+			// 		// Create a Set of existing reference IDs in the `erp_transaction` table
+			// 		let existingReferenceIds = new Set(
+			// 			frm.doc.erp_transaction.map((row) => row.reference_id)
+			// 		);
 				
-					for (const i of response.message) {
-						if (i.paid_amount > 0 && !existingReferenceIds.has(i.name)) {
-							// Add the transaction if it does not already exist
-							let bnk_tr = frm.add_child("erp_transaction");
-							bnk_tr.date = i.posting_date;
-							bnk_tr.reference_id = i.name; // Unique reference ID
-							bnk_tr.reference_number = i.reference_no;
-							bnk_tr.reference_doc = i.doctype;
+			// 		for (const i of response.message) {
+			// 			if (i.paid_amount > 0 && !existingReferenceIds.has(i.name)) {
+			// 				// Add the transaction if it does not already exist
+			// 				let bnk_tr = frm.add_child("erp_transaction");
+			// 				bnk_tr.date = i.posting_date;
+			// 				bnk_tr.reference_id = i.name; // Unique reference ID
+			// 				bnk_tr.reference_number = i.reference_no;
+			// 				bnk_tr.reference_doc = i.doctype;
 				
-							if (i.doctype === "Payment Entry") {
-								const payment_type = await frappe.db.get_value(
-									"Payment Entry",
-									i.name,
-									"payment_type"
-								);
+			// 				if (i.doctype === "Payment Entry") {
+			// 					const payment_type = await frappe.db.get_value(
+			// 						"Payment Entry",
+			// 						i.name,
+			// 						"payment_type"
+			// 					);
 				
-								if (payment_type.message.payment_type === "Pay") {
-									bnk_tr.withdraw = i.paid_amount;
-									bnk_tr.deposit = 0;
-								} else if (payment_type.message.payment_type === "Receive") {
-									bnk_tr.deposit = i.paid_amount;
-									bnk_tr.withdraw = 0;
-								} else {
-									bnk_tr.withdraw = i.paid_amount;
-									bnk_tr.deposit = 0;
-								}
-							} else if (i.doctype === "Journal Entry") {
-								if (i.bank == 'Credit'){
-									bnk_tr.deposit = 0;
-									bnk_tr.withdraw = i.paid_amount; // Confirm logic here.
-								}
-								else if (i.bank == 'Debit'){
-									bnk_tr.deposit = i.paid_amount;
-									bnk_tr.withdraw = 0; // Confirm logic here.
-								}
-							}
+			// 					if (payment_type.message.payment_type === "Pay") {
+			// 						bnk_tr.withdraw = i.paid_amount;
+			// 						bnk_tr.deposit = 0;
+			// 					} else if (payment_type.message.payment_type === "Receive") {
+			// 						bnk_tr.deposit = i.paid_amount;
+			// 						bnk_tr.withdraw = 0;
+			// 					} else {
+			// 						bnk_tr.withdraw = i.paid_amount;
+			// 						bnk_tr.deposit = 0;
+			// 					}
+			// 				} else if (i.doctype === "Journal Entry") {
+			// 					if (i.bank == 'Credit'){
+			// 						bnk_tr.deposit = 0;
+			// 						bnk_tr.withdraw = i.paid_amount; // Confirm logic here.
+			// 					}
+			// 					else if (i.bank == 'Debit'){
+			// 						bnk_tr.deposit = i.paid_amount;
+			// 						bnk_tr.withdraw = 0; // Confirm logic here.
+			// 					}
+			// 				}
 				
-							// Add the reference ID to the Set to track it
-							existingReferenceIds.add(i.name);
-						}
-					}
+			// 				// Add the reference ID to the Set to track it
+			// 				existingReferenceIds.add(i.name);
+			// 			}
+			// 		}
 				
-					// Refresh field after processing all transactions
-					frm.refresh_field("erp_transaction");			
-					// Add custom button for Allocate
-					frm.add_custom_button(__("Allocate"), () => frm.trigger("allocate"));
-					frm.change_custom_button_type(__("Allocate"), null, "primary");
-					frm.change_custom_button_type(__("Get Unreconciled Entries"), null, "default");
-				},
-			});
+			// 		// Refresh field after processing all transactions
+			// 		frm.refresh_field("erp_transaction");			
+			// 		// Add custom button for Allocate
+			// 		frm.add_custom_button(__("Allocate"), () => frm.trigger("allocate"));
+			// 		frm.change_custom_button_type(__("Allocate"), null, "primary");
+			// 		frm.change_custom_button_type(__("Get Unreconciled Entries"), null, "default");
+			// 	},
+			// });
 		});
 	},
 	get_account_opening_balance(frm) {
@@ -330,6 +346,9 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 					payment_document: i.reference_to,
 				},
 				callback: function (r) {
+					frm.clear_table("bank_statement");
+					frm.clear_table("erp_transaction");
+					frm.trigger("unreconcile_entries");
 					frm.clear_table("matching_table");
 					frm.refresh();
 					// console.log('GHJJHJHJHJBBJ')
@@ -385,4 +404,110 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 	// 		});
 	// 	}
 	// },
+	unreconcile_entries(frm) {
+		frappe.call({
+			method: "erpnext.accounts.doctype.bank_reconciliation_tool_erpnext.bank_reconciliation_tool_erpnext.get_bank_transaction",
+			args: {
+				bank_account: frm.doc.bank_account,
+				company: frm.doc.company,
+				from_statement_date: frm.doc.from_statement_date,
+				to_statement_date: frm.doc.to_statement_date,
+			},
+			callback: (response) => {
+				let existingTransactionIds = new Set(
+					frm.doc.bank_statement.map((row) => row.bank_transaction_id) // Collect existing IDs
+				);
+				// console.log('Response:', response.message);
+
+				if (Array.isArray(response.message)) {
+					response.message.forEach((transaction) => {
+						if (!existingTransactionIds.has(transaction.name)) {
+							if (transaction.deposit || transaction.withdrawal) {
+								// Add a new child row to the bank_statement table
+								let bankTransaction = frm.add_child("bank_statement");
+								bankTransaction.date = transaction.date;
+								bankTransaction.bank_transaction_id = transaction.name;
+								bankTransaction.description = transaction.description;
+								bankTransaction.deposit = transaction.deposit;
+								bankTransaction.withdraw = transaction.withdrawal;
+								bankTransaction.reference_no = transaction.reference_number;
+								bankTransaction.unallocated_amount = transaction.unallocated_amount;
+
+								// Track added transaction IDs
+								existingTransactionIds.add(transaction.name);
+							}
+						}
+					});
+				} else {
+					console.error("Invalid response.message:", response.message);
+				}
+
+				frm.refresh_field("bank_statement");
+			},
+		});
+		frappe.call({
+			method: "erpnext.accounts.doctype.bank_reconciliation_tool_erpnext.bank_reconciliation_tool_erpnext.get_erp_transaction",
+			args: {
+				bank_account: frm.doc.bank_account,
+				company: frm.doc.company,
+				from_statement_date: frm.doc.from_erp_date,
+				to_statement_date: frm.doc.to_erp_date,
+			},
+			callback: async (response) => {
+				// Create a Set of existing reference IDs in the `erp_transaction` table
+				let existingReferenceIds = new Set(
+					frm.doc.erp_transaction.map((row) => row.reference_id)
+				);
+			
+				for (const i of response.message) {
+					if (i.paid_amount > 0 && !existingReferenceIds.has(i.name)) {
+						// Add the transaction if it does not already exist
+						let bnk_tr = frm.add_child("erp_transaction");
+						bnk_tr.date = i.posting_date;
+						bnk_tr.reference_id = i.name; // Unique reference ID
+						bnk_tr.reference_number = i.reference_no;
+						bnk_tr.reference_doc = i.doctype;
+			
+						if (i.doctype === "Payment Entry") {
+							const payment_type = await frappe.db.get_value(
+								"Payment Entry",
+								i.name,
+								"payment_type"
+							);
+			
+							if (payment_type.message.payment_type === "Pay") {
+								bnk_tr.withdraw = i.paid_amount;
+								bnk_tr.deposit = 0;
+							} else if (payment_type.message.payment_type === "Receive") {
+								bnk_tr.deposit = i.paid_amount;
+								bnk_tr.withdraw = 0;
+							} else {
+								bnk_tr.withdraw = i.paid_amount;
+								bnk_tr.deposit = 0;
+							}
+						} else if (i.doctype === "Journal Entry") {
+							if (i.bank == 'Credit'){
+								bnk_tr.deposit = 0;
+								bnk_tr.withdraw = i.paid_amount; // Confirm logic here.
+							}
+							else if (i.bank == 'Debit'){
+								bnk_tr.deposit = i.paid_amount;
+								bnk_tr.withdraw = 0; // Confirm logic here.
+							}
+						}
+			
+						// Add the reference ID to the Set to track it
+						existingReferenceIds.add(i.name);
+					}
+				}
+			
+				// Refresh field after processing all transactions
+				frm.refresh_field("erp_transaction");			
+				// Add custom button for Allocate
+				frm.add_custom_button(__("Allocate"), () => frm.trigger("allocate"));
+				frm.change_custom_button_type(__("Allocate"), null, "primary");
+				frm.change_custom_button_type(__("Get Unreconciled Entries"), null, "default");
+			},
+		});
+	}
 });
