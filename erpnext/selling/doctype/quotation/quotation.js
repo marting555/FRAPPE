@@ -406,6 +406,7 @@ frappe.ui.form.on('Quotation Item', {
 
 	qty: function (frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
+
 		if (row.is_product_bundle) {
 			const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
 			const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
@@ -416,7 +417,9 @@ frappe.ui.form.on('Quotation Item', {
 	discount_percentage: function (frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
 		const rate = row.base_price_list_rate;
+
 		if (rate <= 0) return
+
 		const discount_percentage = row.discount_percentage;
 		const discount_amount = Number(((rate * discount_percentage) / 100).toFixed(2));
 
@@ -433,29 +436,7 @@ frappe.ui.form.on('Quotation Item', {
 		});
 		frm.set_value('items', allItems);
 		refreshQuotationFields(frm);
-
 	},
-	discount_amount: function (frm, cdt, cdn){
-		const row = locals[cdt][cdn];
-		const rate = row.base_price_list_rate;
-		if (rate <= 0) return
-		const discount_amount = row.discount_amount;
-		const discount_percentage = Number(((100 * discount_amount) / rate).toFixed(2));
-
-		row.rate = rate - discount_amount;
-		row.discount_percentage = discount_percentage;
-		row.discount_amount = discount_amount
-
-		const allItems = frm.doc.items.map(item => {
-			if (item.item_code === row.item_code) {
-				item.discount_percentage = discount_percentage;
-				item.discount_amount = discount_amount;
-			}
-			return item;
-		});
-		frm.set_value('items', allItems);
-		refreshQuotationFields(frm);
-	}
 });
 
 function validateItemsNotExist(frm, item_code, current_row) {
@@ -477,6 +458,7 @@ function storeOriginalQuantities(row) {
 	const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
 	originalQuantities[row.item_code] = {
 		qty: row.qty,
+		rate: row.rate,
 		product_bundle_items: row.product_bundle_items.map(bundleItem => ({
 			item_code: bundleItem.item_code,
 			qty: bundleItem.qty,
