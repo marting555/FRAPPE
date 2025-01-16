@@ -4709,6 +4709,53 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Sales - _TC'}, 'credit'), 5000)
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Debtors - _TC'}, 'debit'), 5000)
   
+	def test_sales_order_for_auto_stock_reservation_TC_S_070(self, reuse=None):
+		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="_Test Warehouse - _TC")
+  
+		stock_setting = frappe.get_doc('Stock Settings')
+		stock_setting.auto_reserve_stock_for_sales_order_on_purchase = 1
+		stock_setting.save()
+  
+		so = self.create_and_submit_sales_order(qty=1, rate=5000)
+  
+		mr = make_material_request(so.name)
+		for i in mr.items:
+			i.cost_center =  "_Test Cost Center - _TC"
+			i.rate = 5000
+		mr.save()
+		mr.submit()
+  
+		self.assertEqual(mr.status, "Pending")
+  
+		from erpnext.stock.doctype.material_request.material_request import make_purchase_order
+		po = make_purchase_order(mr.name)
+		po.supplier = "_Test Supplier"
+		po.cost_center = "_Test Cost Center - _TC"
+		po.save()
+		po.submit()
+		
+		self.assertEqual(po.status, "To Receive and Bill")
+  
+		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
+		pr = make_purchase_receipt(po.name)
+		pr.save()
+		pr.submit()
+  
+		self.assertEqual(pr.status, "To Bill")
+		qty_change = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': pr.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change, 1)
+  
+		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so.name, "from_voucher_no": pr.name}, "status"), "Reserved")
+  
+		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
+		pi = make_purchase_invoice(pr.name)
+		pi.save()
+		pi.submit()
+  
+		self.assertEqual(pi.status, "Unpaid")
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': 'Creditors - _TC'}, 'credit'), 5000)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': 'Cost of Goods Sold - _TC'}, 'debit'), 5000)
+  
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
 		sales_order.delivery_date = nowdate()
