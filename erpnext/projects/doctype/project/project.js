@@ -663,8 +663,10 @@ async function insertResendPaymentLink(frm) {
 				title: __("The message and payment Link will be sent to the client"),
 				fields: [],
 				primary_action_label: __("Send"),
-				primary_action: function () {
-					const url = "https://40smjbggcl.execute-api.us-east-1.amazonaws.com/project/quality-approved";
+				primary_action: async function () {
+					const { aws_url } = await frappe.db.get_doc('Queue Settings')
+					console.log({aws_url})
+					const url = `${aws_url}project/quality-approved`;
 					const obj = {
 					"name": frm.doc.name,
 					};
@@ -684,7 +686,8 @@ async function insertResendPaymentLink(frm) {
 						const errorMessage = await response.text();
 						throw new Error(`HTTP error ${response.status}: ${errorMessage}`);
 						}
-						return response.json(); // Si la respuesta tiene datos JSON
+						console.log(response.json())
+						return response
 					})
 					.then((data) => {
 						console.log("Response data:", data);

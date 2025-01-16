@@ -776,8 +776,10 @@ async function insertResendQuotationApprovalButton(frm) {
 				title: __("The message and quotation attached will be sent to the client for approval"),
 				fields: [],
 				primary_action_label: __("Send"),
-				primary_action: function () {
-					const url = "https://cx29vv67ue.execute-api.us-west-2.amazonaws.com/quotation/created";
+				primary_action: async function () {
+					const { aws_url } = await frappe.db.get_doc('Queue Settings')
+					console.log({aws_url})
+					const url = `${aws_url}quotation/created`;
 					const obj = {
 						"party_name": frm.doc.party_name,
 						"customer_name": frm.doc.customer_name,
