@@ -4747,7 +4747,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(pr.status, "To Bill")
 		qty_change = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': pr.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
 		self.assertEqual(qty_change, 1)
-  
+	
 		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so.name, "from_voucher_no": pr.name}, "status"), "Reserved")
   
 		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
@@ -4767,6 +4767,14 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		cancel_stock_reservation_entries(voucher_type="Sales Order", voucher_no=so.name, sre_list=None, notify=True)
   
 		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so.name}, "status"), "Cancelled")
+  
+	def test_stock_reservation_entry_on_cancel_TC_S_073(self):
+		so = self.test_sales_order_for_stock_reservation_TC_S_063(get_so_with_stock_reserved=1)
+		sre = frappe.get_doc("Stock Reservation Entry", {"voucher_no": so.name})
+		sre.cancel()
+		sre.reload()
+  
+		self.assertEqual(sre.status, "Cancelled")
   
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
