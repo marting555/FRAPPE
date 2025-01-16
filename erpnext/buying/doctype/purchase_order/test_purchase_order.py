@@ -2456,6 +2456,68 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 
+	def test_po_with_actual_account_type_TC_B_133(self):
+		po = create_purchase_order(qty=10,rate = 1000, do_not_save=True)
+		po.save()
+		purchase_tax_and_value = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company,'tax_category':'In-State'},'name')
+		po.taxes_and_charges = purchase_tax_and_value
+		po.save()
+		po.append('taxes',{
+			'charge_type':'Actual',
+			'account_head' : 'Freight and Forwarding Charges - _TC',
+			'description': 'Freight and Forwarding Charges',
+			'tax_amount' : 100
+		})
+		po.save()
+		po.submit()
+		self.assertEqual(po.grand_total, 11900)
+		self.assertEqual(po.taxes_and_charges_added, 1900)
+
+		pr = make_purchase_receipt(po.name)
+		pr.save()
+
+		frappe.db.set_value('Company',pr.company,'enable_perpetual_inventory',1)
+		frappe.db.set_value('Company',pr.company,'enable_provisional_accounting_for_non_stock_items',1)
+		frappe.db.set_value('Company',pr.company,'stock_received_but_not_billed','Stock Received But Not Billed - _TC')
+		frappe.db.set_value('Company',pr.company,'default_inventory_account','Stock In Hand - _TC')
+		frappe.db.set_value('Company',pr.company,'default_provisional_account','Stock In Hand - _TC')
+
+		pr.submit()
+		self.assertEqual(po.grand_total, po.grand_total)
+		self.assertEqual(po.taxes_and_charges_added, po.taxes_and_charges_added)
+
+
+		account_entries_pr = frappe.db.get_all('GL Entry',{'voucher_type':'Purchase Receipt','voucher_no':pr.name},['account','debit','credit'])
+		for entries in account_entries_pr:
+			if entries.account == 'Stock Received But Not Billed - _TC':
+				self.assertEqual(entries.credit,pr.total)
+			if entries.account == 'Stock In Hand - _TC':
+				self.assertEqual(entries.debit,pr.total)
+
+		stock_entries_item = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':pr.name},'item_code')
+		stock_entries_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':pr.name},'actual_qty')
+		self.assertEqual(stock_entries_item,pr.items[0].item_code)
+		self.assertEqual(stock_entries_qty,pr.items[0].qty)
+
+		pi = make_pi_from_pr(pr.name)
+		pi.save()
+		pi.submit()
+
+		account_entries_pi = frappe.db.get_all('GL Entry',{'voucher_no':pi.name},['account','debit','credit'])
+		
+		for entries in account_entries_pi:
+			if entries.account == 'Freight and Forwarding Charges - _TC':
+				self.assertEqual(entries.debit, 100)
+			if entries.account == 'Input Tax SGST - _TC':
+				self.assertEqual(entries.debit, 900)
+			if entries.account == 'Input Tax CGST - _TC':
+				self.assertEqual(entries.debit, 900)
+			if entries.account == 'Stock Received But Not Billed - _TC':
+				self.assertEqual(entries.debit,10000)
+			if entries.account == 'Creditors - _TC':
+				self.assertEqual(entries.credit,11900)
+
+
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
