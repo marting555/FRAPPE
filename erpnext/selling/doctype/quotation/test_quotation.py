@@ -1146,6 +1146,68 @@ class TestQuotation(FrappeTestCase):
 		purchase_orders[0].reload()
 		self.assertEqual(sales_order.status, "To Bill")
 		self.assertEqual(purchase_orders[0].status, "Delivered")
+	
+
+	def test_quotation_to_si_with_pi_and_drop_ship_TC_S_114(self):
+		from erpnext.stock.doctype.item.test_item import make_item
+		from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+		from erpnext.selling.doctype.sales_order.sales_order import make_purchase_order_for_default_supplier
+		from erpnext.buying.doctype.purchase_order.purchase_order import update_status
+		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_invoice as make_pi_from_po
+		make_item("_Test Item for Drop Shipping", {"is_stock_item": 1, "delivered_by_supplier": 1})
+		so_items = [
+			{
+				"item_code": "_Test Item for Drop Shipping",
+				"warehouse": "",
+				"qty": 2,
+				"rate": 5000,
+				"delivered_by_supplier": 1,
+				"supplier": "_Test Supplier",
+			}]
+
+		quotation = self.create_and_submit_quotation("_Test Item for Drop Shipping", 1, 5000, "Stores - _TC")
+
+		sales_order = make_sales_order(quotation.name)
+		sales_order.delivery_date = add_days(nowdate(), 5)
+		for i in sales_order.items:
+			i.delivered_by_supplier =1
+			i.supplier = "_Test Supplier"
+		sales_order.save()
+		sales_order.submit()
+
+		quotation.reload()
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+		self.assertEqual(quotation.status, "Ordered")
+
+		purchase_orders = make_purchase_order_for_default_supplier(sales_order.name, selected_items=so_items)
+		for i in purchase_orders[0].items:
+			i.rate = 3000
+		purchase_orders[0].submit()
+
+		update_status("Delivered", purchase_orders[0].name)
+		sales_order.reload()
+		purchase_orders[0].reload()
+		self.assertEqual(sales_order.status, "To Bill")
+		self.assertEqual(purchase_orders[0].status, "Delivered")
+
+		pi = make_pi_from_po(purchase_orders[0].name)
+		pi.save()
+		pi.submit()
+
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
+		gl_debits = {entry.account: entry.debit for entry in gl_entries}
+		gl_credits = {entry.account: entry.credit for entry in gl_entries}
+		self.assertAlmostEqual(gl_debits["Cost of Goods Sold - _TC"], 3000)
+		self.assertAlmostEqual(gl_credits["Creditors - _TC"], 3000)
+		self.assertEqual(pi.status, "Unpaid")
+
+		si = make_sales_invoice(sales_order.name)
+		si.save()
+		si.submit()
+
+		self.assertEqual(si.status, "Unpaid")
+		self.validate_gl_entries(voucher_no= si.name,amount= 5000)
+
 
 	def stock_check(self,voucher,qty):
 		stock_entries = frappe.get_all(
