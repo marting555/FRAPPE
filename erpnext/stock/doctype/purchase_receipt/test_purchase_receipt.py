@@ -4345,6 +4345,75 @@ class TestPurchaseReceipt(FrappeTestCase):
 			self.assertEqual(expected_values[gle.account][0], gle.debit)
 			self.assertEqual(expected_values[gle.account][1], gle.credit)
 
+	def test_pr_ignore_pricing_rule_TC_B_050(self):
+		company = "_Test Company"
+		item_code = "Testing-31"
+		target_warehouse = "Stores - _TC"
+		supplier = "_Test Supplier 1"
+		item_price = 130
+
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_stock_item": 1,
+				"is_purchase_item": 1,
+				"is_sales_item": 0,
+				"company": company
+			}).insert()
+
+		if not frappe.db.exists("Item Price", {"item_code": item_code, "price_list": "Standard Buying"}):
+			frappe.get_doc({
+				"doctype": "Item Price",
+				"price_list": "Standard Buying",
+				"item_code": item_code,
+				"price_list_rate": item_price
+			}).insert()
+
+		if not frappe.db.exists("Pricing Rule", {"title": "10% Discount"}):
+			frappe.get_doc({
+				"doctype": "Pricing Rule",
+				"title": "10% Discount",
+				"company": company,
+				"apply_on": "Item Code",
+				"items": [
+					{
+						"item_code": item_code
+					}
+				],
+				"rate_or_discount": "Discount Percentage",
+				"discount_percentage": 10,
+				"selling": 0,
+				"buying": 1
+			}).insert()
+
+		pr = frappe.get_doc({
+			"doctype": "Purchase Receipt",
+			"supplier": supplier,
+			"company": company,
+			"posting_date": today(),
+			"set_warehouse": target_warehouse,
+			"items": [
+				{
+					"item_code": item_code,
+					"warehouse": target_warehouse,
+					"qty": 1
+				}
+			]
+		})
+		pr.insert()
+		self.assertEqual(len(pr.items), 1)
+		self.assertEqual(pr.items[0].rate, 117)
+		self.assertEqual(pr.items[0].discount_percentage, 10)
+		pr.ignore_pricing_rule = 1
+		pr.save()
+		self.assertEqual(pr.items[0].rate, 130)
+		self.assertEqual(pr.items[0].discount_percentage, 0)
+		pr.submit()
+		self.assertEqual(pr.docstatus, 1)
+		self.assertEqual(pr.items[0].rate, 130)
+
 	def test_pr_with_additional_discount_TC_B_056(self):
 		company = "_Test Company"
 		item_code = "Testing-31"
