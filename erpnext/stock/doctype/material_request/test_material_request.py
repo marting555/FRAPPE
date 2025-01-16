@@ -3516,6 +3516,30 @@ class TestMaterialRequest(FrappeTestCase):
 		return pr
 
 	def test_create_mr_for_purchase_to_po_2pr_TC_SCK_020(self):
+		self.create_mr_for_purchase_to_po_2pr()
+
+	def test_create_mr_for_purchase_to_po__cancel_2pr_TC_SCK_067(self):
+		pr1, pr2 = self.create_mr_for_purchase_to_po_2pr()
+		pr1.cancel()
+		pr2.cancel()
+
+		sl_entry_cancelled = frappe.db.get_all(
+			"Stock Ledger Entry",
+			{"voucher_type": "Purchase Receipt", "voucher_no": ["in",[pr1.name, pr2.name]]},
+			["actual_qty", "warehouse", "serial_and_batch_bundle"],
+			order_by="creation",
+		)
+
+		warehouse_qty = {
+			"_Test Warehouse - _TC": 0
+		}
+
+		for sle in sl_entry_cancelled:
+			warehouse_qty[sle.get('warehouse')] += sle.get('actual_qty')
+		
+		self.assertEqual(warehouse_qty["_Test Warehouse - _TC"], 0)
+		
+	def create_mr_for_purchase_to_po_2pr(self):
 		fields = {
 			"has_batch_no": 1,
 			"has_serial_no": 1,
@@ -3603,6 +3627,8 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(sl_entry[0].actual_qty, 2)
 		self.assertEqual(sabb.entries[1].serial_no, "Test-SABBMRP-Sno-005")
 		self.assertEqual(sabb.entries[1].batch_no, "Test-SABBMRP-Bno-001")
+
+		return pr1, pr2
 		
 
 	def test_create_material_req_to_2po_to_1pi_cancel_TC_SCK_089(self):
