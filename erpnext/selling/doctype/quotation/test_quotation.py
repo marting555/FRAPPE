@@ -1068,7 +1068,7 @@ class TestQuotation(FrappeTestCase):
 				"supplier": "_Test Supplier",
 			}]
 
-		quotation = self.create_and_submit_quotation("_Test Item for Drop Shipping", 4, 5000, "Stores - _TC")
+		quotation = self.create_and_submit_quotation("_Test Item for Drop Shipping", 1, 5000, "Stores - _TC")
 
 		sales_order = make_sales_order(quotation.name)
 		sales_order.delivery_date = add_days(nowdate(), 5)
@@ -1083,6 +1083,8 @@ class TestQuotation(FrappeTestCase):
 		self.assertEqual(quotation.status, "Ordered")
 
 		purchase_orders = make_purchase_order_for_default_supplier(sales_order.name, selected_items=so_items)
+		for i in purchase_orders[0].items:
+			i.rate = 3000
 		purchase_orders[0].submit()
 
 		update_status("Delivered", purchase_orders[0].name)
@@ -1091,7 +1093,59 @@ class TestQuotation(FrappeTestCase):
 		self.assertEqual(sales_order.status, "To Bill")
 		self.assertEqual(purchase_orders[0].status, "Delivered")
 
+	def test_quotation_to_po_with_drop_ship_with_GST_TC_S_112(self):
+		from erpnext.stock.doctype.item.test_item import make_item
+		from erpnext.selling.doctype.sales_order.sales_order import make_purchase_order_for_default_supplier
+		from erpnext.buying.doctype.purchase_order.purchase_order import update_status
 
+		make_item("_Test Item for Drop Shipping", {"is_stock_item": 1, "delivered_by_supplier": 1})
+		so_items = [
+			{
+				"item_code": "_Test Item for Drop Shipping",
+				"warehouse": "",
+				"qty": 2,
+				"rate": 5000,
+				"delivered_by_supplier": 1,
+				"supplier": "_Test Supplier",
+			}]
+
+		quotation = make_quotation(item="_Test Item for Drop Shipping", qty=1, rate=5000, warehouse="Stores - _TC",do_not_save =1)
+		for i in quotation.items:
+			i.item_tax_template = "GST 18% - _TC"
+		quotation.tax_category = "In-State"
+		quotation.taxes_and_charges = "Output GST In-state - _TC"
+		quotation.save()
+		quotation.submit()
+
+		sales_order = make_sales_order(quotation.name)
+		sales_order.delivery_date = add_days(nowdate(), 5)
+		for i in sales_order.items:
+			i.delivered_by_supplier =1
+			i.item_tax_template = "GST 18% - _TC"
+			i.supplier = "_Test Supplier"
+		sales_order.tax_category = "In-State"
+		sales_order.taxes_and_charges = "Output GST In-state - _TC"
+		sales_order.save()
+		sales_order.submit()
+
+		quotation.reload()
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+		self.assertEqual(quotation.status, "Ordered")
+
+		purchase_orders = make_purchase_order_for_default_supplier(sales_order.name, selected_items=so_items)
+		for i in purchase_orders[0].items:
+			i.rate = 3000
+			i.item_tax_template = "GST 18% - _TC"
+		purchase_orders[0].tax_category = "In-State"
+		purchase_orders[0].taxes_and_charges = "Input GST In-state - _TC"
+		purchase_orders[0].save()
+		purchase_orders[0].submit()
+		self.assertAlmostEqual(	purchase_orders[0].grand_total, 3540)
+		update_status("Delivered", purchase_orders[0].name)
+		sales_order.reload()
+		purchase_orders[0].reload()
+		self.assertEqual(sales_order.status, "To Bill")
+		self.assertEqual(purchase_orders[0].status, "Delivered")
 
 	def stock_check(self,voucher,qty):
 		stock_entries = frappe.get_all(
