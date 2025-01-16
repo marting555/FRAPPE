@@ -285,6 +285,7 @@ erpnext.PointOfSale.Controller = class {
 				edit_cart: () => this.payment.edit_cart(),
 
 				customer_details_updated: (details) => {
+					this.item_selector.load_items_data();
 					this.customer_details = details;
 					// will add/remove LP payment method
 					this.payment.render_loyalty_points_payment_mode();
@@ -574,7 +575,7 @@ erpnext.PointOfSale.Controller = class {
 			} else {
 				if (!this.frm.doc.customer) return this.raise_customer_selection_alert();
 
-				const { item_code, batch_no, serial_no, rate, uom } = item;
+				const { item_code, batch_no, serial_no, rate, uom, stock_uom } = item;
 
 				if (!item_code) return;
 
@@ -586,7 +587,7 @@ erpnext.PointOfSale.Controller = class {
 					frappe.utils.play_sound("error");
 					return;
 				}
-				const new_item = { item_code, batch_no, rate, uom, [field]: value };
+				const new_item = { item_code, batch_no, rate, uom, [field]: value, stock_uom };
 
 				if (serial_no) {
 					await this.check_serial_no_availablilty(item_code, this.frm.doc.set_warehouse, serial_no);

@@ -12,10 +12,10 @@ app_home = "/app/home"
 
 add_to_apps_screen = [
 	{
-		"name": "erpnext",
+		"name": app_name,
 		"logo": "/assets/erpnext/images/erpnext-logo-blue.png",
-		"title": "ERPNext",
-		"route": "/app/home",
+		"title": app_title,
+		"route": app_home,
 		"has_permission": "erpnext.check_app_permission",
 	}
 ]
@@ -407,7 +407,6 @@ scheduler_events = {
 	"cron": {
 		"0/15 * * * *": [
 			"erpnext.manufacturing.doctype.bom_update_log.bom_update_log.resume_bom_cost_update_jobs",
-			"erpnext.accounts.doctype.process_payment_reconciliation.process_payment_reconciliation.trigger_reconciliation_for_queued_docs",
 		],
 		"0/30 * * * *": [
 			"erpnext.utilities.doctype.video.video.update_youtube_data",

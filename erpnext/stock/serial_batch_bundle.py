@@ -351,6 +351,15 @@ class SerialBatchBundle:
 		status = "Inactive"
 		if self.sle.actual_qty < 0:
 			status = "Delivered"
+			if self.sle.voucher_type == "Stock Entry":
+				purpose = frappe.get_cached_value("Stock Entry", self.sle.voucher_no, "purpose")
+				if purpose in [
+					"Manufacture",
+					"Material Issue",
+					"Repack",
+					"Material Consumption for Manufacture",
+				]:
+					status = "Consumed"
 
 		sn_table = frappe.qb.DocType("Serial No")
 
@@ -643,7 +652,10 @@ class BatchNoValuation(DeprecatedBatchNoValuation):
 		child = frappe.qb.DocType("Serial and Batch Entry")
 
 		timestamp_condition = ""
-		if self.sle.posting_date and self.sle.posting_time:
+		if self.sle.posting_date:
+			if self.sle.posting_time is None:
+				self.sle.posting_time = nowtime()
+
 			timestamp_condition = CombineDatetime(parent.posting_date, parent.posting_time) < CombineDatetime(
 				self.sle.posting_date, self.sle.posting_time
 			)
