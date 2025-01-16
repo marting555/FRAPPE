@@ -66,6 +66,9 @@ frappe.ui.form.on('Quotation', {
 				}
 			};
 		}
+
+		insertResendQuotationApprovalButton(frm);
+		frm.trigger("set_custom_buttons");
 	},
 
 	quotation_to: function (frm) {
@@ -764,4 +767,57 @@ function refreshQuotationFields(frm) {
 	frm.refresh_field('items');
 	frm.trigger('calculate_taxes_and_totals');
 	frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+}
+
+async function insertResendQuotationApprovalButton(frm) {
+	console.log("==========> insertResendQuotationApprovalButton: ", frm.doc.status);
+	if (["Open", "Draft", "Approved", "Partially Ordered", "Ordered"].includes(frm.doc.status)) {
+		frm.add_custom_button(__('Resend Approve Message'), () => {
+			var d = new frappe.ui.Dialog({
+				title: __("The message and quotation attached will be sent to the client for approval"),
+				fields: [],
+				primary_action_label: __("Send"),
+				primary_action: function () {
+					const url = "https://cx29vv67ue.execute-api.us-west-2.amazonaws.com/quotation/created";
+					const obj = {
+						"party_name": frm.doc.party_name,
+						"customer_name": frm.doc.customer_name,
+						"doctype": "Quotation",
+						"name": frm.doc.name,
+						"grand_total": frm.doc.grand_total
+					};
+					console.log(obj);
+
+					fetch(url, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify(obj)
+					})
+						.then(() => {
+							frappe.show_alert({
+								message: __('Message sent'),
+								indicator: 'green'
+							}, 10);
+						})
+						.catch((error) => {
+							frappe.show_alert({
+								message: __('An error occurred while sending the message'),
+								indicator: 'red'
+							}, 10);
+							console.error('Error:', error);
+						});
+
+					d.hide();
+				},
+				secondary_action_label: __("Cancel"),
+				secondary_action: function () {
+					d.hide();
+				}
+			});
+
+			d.show();
+		});
+	}
 }
