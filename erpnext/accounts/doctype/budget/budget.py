@@ -505,6 +505,7 @@ def get_accumulated_monthly_budget(monthly_distribution, posting_date, fiscal_ye
 			.select(mdp.month, mdp.percentage_allocation)
 			.where(md.fiscal_year == fiscal_year)
 			.where(md.name == monthly_distribution)
+			.run(as_dict=True)
 		)
 		for d in res:
 			distribution.setdefault(d.month, d.percentage_allocation)

@@ -135,48 +135,59 @@ def get_bank_transaction(bank_account, company, from_statement_date=None, to_sta
 				"unallocated_amount",
 			],
 		)
+	if len(bank_transactn_list) == 0:
+		frappe.msgprint("No records found")
+
 	return bank_transactn_list
 
 
 @frappe.whitelist()
 def get_erp_transaction(bank_account, company, from_statement_date=None, to_statement_date=None):
-	transaction_list = frappe.db.get_all(
-		"Bank Transaction", {"bank_account": bank_account, "status": "Unreconciled"}, pluck="name"
-	)
-	result = []
-	for i in transaction_list:
-		transaction = frappe.get_doc("Bank Transaction", i)
-		# print("++++++++++++++++++++++++++++++++")
-		# # print(transaction_list)
-		# print(get_linked_payments(transaction.name, document_types=["payment_entry","journal_entry"], from_date=from_statement_date, to_date=to_statement_date, filter_by_reference_date=None, from_reference_date=from_statement_date, to_reference_date=to_statement_date))
-		# print("++++++++++++++++++++++++++++++++")
+    # Fetch unreconciled transactions
+    transaction_list = frappe.db.get_all(
+        "Bank Transaction", 
+        filters={"bank_account": bank_account, "status": "Unreconciled"},
+        fields=["name"]
+    )
+    
+    # Get the linked account for the bank account
+    account = frappe.db.get_value("Bank Account", bank_account, 'account')
+    result = []
 
-		for i in get_linked_payments(transaction.name, document_types=["payment_entry","journal_entry"], from_date=from_statement_date, to_date=to_statement_date, filter_by_reference_date=None, from_reference_date=from_statement_date, to_reference_date=to_statement_date):
-			if i['doctype'] == "Journal Entry":
-				list = frappe.db.get_all("Journal Entry Account", 
-										{
-											'account': "IDFC Bank - PP Ltd",
-											'parent': i.name   
-										},
-										['credit_in_account_currency', 'debit_in_account_currency', 'parent']
-									)
-				for j in list:
-					if j['credit_in_account_currency'] > 0:
-						i['bank'] = 'Credit'
-					elif j['debit_in_account_currency'] > 0:
-						i['bank'] = 'Debit'
-				result.append(i)
-			else:
-				result.append(i)
-		
-		return result
-	# if from_statement_date and to_statement_date:
-	# 	pe_list = frappe.db.get_all("Payment Entry",filters={'posting_date': ['between' ,[from_statement_date, to_statement_date]], 'bank_account':bank_account, 'company': company}, fields = ['posting_date', 'paid_amount', 'reference_no', 'payment_type'])
-	# 	je_list = frappe.db.get_all("Journal Entry Account", filters={'bank_account': bank_account}, fields = ["parent", "account", "creation", "debit", "credit"])
-	# else:
-	# 	pe_list = frappe.db.get_all("Payment Entry",filters={'bank_account':bank_account, 'company': company}, fields = ['posting_date', 'paid_amount', 'reference_no', 'payment_type'])
-	# 	je_list = frappe.db.get_all("Journal Entry Account", filters={'bank_account': bank_account}, fields = ["parent", "account", "creation", "debit", "credit"])
-	# return pe_list, je_list
+    for transaction in transaction_list:        
+        # Get linked payments or journal entries
+        linked_payments = get_linked_payments(
+            transaction.name,
+            document_types=["payment_entry", "journal_entry"],
+            from_date=from_statement_date,
+            to_date=to_statement_date,
+            filter_by_reference_date=None,
+            from_reference_date=from_statement_date,
+            to_reference_date=to_statement_date
+        )
+        
+        for payment in linked_payments:
+            if payment['doctype'] == "Journal Entry":
+                # Fetch journal entry accounts linked to the bank account
+                je_accounts = frappe.db.get_all(
+                    "Journal Entry Account",
+                    filters={
+                        'account': account,
+                        'parent': payment['name']
+                    },
+                    fields=['credit_in_account_currency', 'debit_in_account_currency', 'parent']
+                )
+                for je_account in je_accounts:
+                    if je_account['credit_in_account_currency'] > 0:
+                        payment['bank'] = 'Credit'
+                    elif je_account['debit_in_account_currency'] > 0:
+                        payment['bank'] = 'Debit'
+                result.append(payment)
+            else:
+                result.append(payment)
+    if len(result) == 0:
+        frappe.msgprint("No records found")
+    return result
 
 
 @frappe.whitelist()

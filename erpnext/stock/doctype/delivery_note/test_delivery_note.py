@@ -2461,6 +2461,13 @@ class TestDeliveryNote(FrappeTestCase):
 		sle = frappe.get_doc("Stock Ledger Entry", {"voucher_type": "Delivery Note", "voucher_no": dn.name,"is_cancelled":1})
 		self.assertEqual(sle.get("actual_qty"), 10)
 
+	def test_create_dn_neg_TC_SCK_151(self):
+		frappe.db.set_single_value("Stock Settings", "allow_negative_stock", 1)
+		item = create_item("OP-MB-001")
+		dn = create_delivery_note(qty=5,item=item.item_code)
+		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':dn.name})
+		self.assertEqual(sle.qty_after_transaction, -5)
+
 def create_delivery_note(**args):
 	dn = frappe.new_doc("Delivery Note")
 	args = frappe._dict(args)
