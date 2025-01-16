@@ -4138,6 +4138,65 @@ class TestMaterialRequest(FrappeTestCase):
 		serial_cnt = frappe.db.count('Serial No',{'purchase_document_no':doc_pi1.name})
 		self.assertEqual(serial_cnt, 1)
 
+	def test_create_mr_to_2po_to_2pi_TC_SCK_094(self):
+		create_company()
+		create_fiscal_year()
+		supplier = create_supplier(supplier_name="_Test Supplier MR")
+		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
+		item = item_create("_Test MR")
+		cost_center = frappe.db.get_value("Company","_Test Company MR","cost_center")
+
+		mr = make_material_request(company="_Test Company MR",qty=2,supplier=supplier,warehouse=warehouse,item_code=item.item_code,cost_center=cost_center)
+	
+		#partially qty
+		po = make_purchase_order(mr.name)
+		po.supplier = supplier
+		po.get("items")[0].item_code = item.item_code
+		po.get("items")[0].rate = 100
+		po.get("items")[0].qty = 1
+		po.insert()
+		po.submit()
+
+		#remaining qty
+		po1 = make_purchase_order(mr.name)
+		po1.supplier = supplier
+		po1.get("items")[0].rate = 100
+		po1.get("items")[0].qty = 1
+		po1.insert()
+		po1.submit()
+
+		pr = create_purchase_invoice(po.name)
+		pr.update_stock = 1
+		pr.set_warehouse = warehouse
+		pr.items[0].qty = 1
+		pr.items[0].serial_no = "01 - MR"
+		pr.submit()
+
+		pr1 = create_purchase_invoice(po1.name)
+		pr1.update_stock = 1
+		pr1.set_warehouse = warehouse
+		pr1.items[0].qty = 1
+		pr1.items[0].serial_no = "013 - MR"
+		pr1.submit()
+
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': pr.items[0].expense_account},'debit')
+		self.assertEqual(gl_temp_credit, 100)
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr1.name, 'account': pr.items[0].expense_account},'debit')
+		self.assertEqual(gl_temp_credit, 100)
+
+		#if account setup in company
+		if frappe.db.exists('GL Entry',{'account': 'Creditors - _TC'}):
+			payable_act = frappe.db.get_value("Company",mr.company,"default_payable_account")
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': payable_act},'credit')
+			self.assertEqual(gl_stock_debit, 100)
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr1.name, 'account': payable_act},'credit')
+			self.assertEqual(gl_stock_debit, 100)
+
+		serial_cnt = frappe.db.count('Serial No',{'purchase_document_no':pr.name})
+		self.assertEqual(serial_cnt, 1)
+		serial_cnt = frappe.db.count('Serial No',{'purchase_document_no':pr1.name})
+		self.assertEqual(serial_cnt, 1)
+		
 def get_in_transit_warehouse(company):
 	if not frappe.db.exists("Warehouse Type", "Transit"):
 		frappe.get_doc(
