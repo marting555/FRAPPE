@@ -175,7 +175,7 @@ frappe.ui.form.on("Project", {
 		installQuotationItems(frm)
 		insertCarousel(frm);
 		insertVinSearchButton(frm)
-		insertResendQuotationApprovalButton(frm);
+		insertResendPaymentLink(frm);
 		frm.trigger("set_custom_buttons");
 	},
 	create_duplicate: function (frm) {
@@ -654,5 +654,64 @@ async function insertVinSearchButton(frm) {
 	container.appendChild(tooltip);
 	container.appendChild(spinner);
 
+}
+
+async function insertResendPaymentLink(frm) {
+	if (!["Completed", "Cancelled"].includes(frm.doc.status)) {
+		frm.add_custom_button(__('Resend Payment Link'), () => {
+			var d = new frappe.ui.Dialog({
+				title: __("The message and payment Link will be sent to the client"),
+				fields: [],
+				primary_action_label: __("Send"),
+				primary_action: function () {
+					const url = "https://40smjbggcl.execute-api.us-east-1.amazonaws.com/project/quality-approved";
+					const obj = {
+					"name": frm.doc.name,
+					};
+
+					console.log("Sending payload:", obj);
+
+					fetch(url, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(obj),
+					})
+					.then(async (response) => {
+						if (!response.ok) {
+						// Manejo de error basado en el estado de la respuesta
+						const errorMessage = await response.text();
+						throw new Error(`HTTP error ${response.status}: ${errorMessage}`);
+						}
+						return response.json(); // Si la respuesta tiene datos JSON
+					})
+					.then((data) => {
+						console.log("Response data:", data);
+						frappe.show_alert({
+						message: __('Message sent successfully'),
+						indicator: 'green'
+						}, 10);
+					})
+					.catch((error) => {
+						frappe.show_alert({
+						message: __('An error occurred while sending the message'),
+						indicator: 'red'
+						}, 10);
+						console.error('Error:', error);
+					});
+
+
+					d.hide();
+				},
+				secondary_action_label: __("Cancel"),
+				secondary_action: function () {
+					d.hide();
+				}
+			});
+
+			d.show();
+		});
+	}
 }
 

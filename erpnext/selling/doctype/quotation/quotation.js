@@ -770,8 +770,7 @@ function refreshQuotationFields(frm) {
 }
 
 async function insertResendQuotationApprovalButton(frm) {
-	console.log("==========> insertResendQuotationApprovalButton: ", frm.doc.status);
-	if (["Open", "Draft", "Approved", "Partially Ordered", "Ordered"].includes(frm.doc.status)) {
+	if (!["Approved", "Ordered"].includes(frm.doc.status)) {
 		frm.add_custom_button(__('Resend Approve Message'), () => {
 			var d = new frappe.ui.Dialog({
 				title: __("The message and quotation attached will be sent to the client for approval"),
