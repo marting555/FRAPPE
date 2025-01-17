@@ -3981,6 +3981,99 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.taxes_and_charges_deducted, 20)
 		self.assertEqual(po.grand_total, 980)
 
+	def test_putaway_rule_with_po_pr_pi_TC_B_155(self):
+		company = "_Test Company"
+		warehouse = "Stores - _TC"
+		overflow_warehouse = "Overflow Warehouse - _TC"
+		supplier = "_Test Supplier 1"
+		item_code = "Test Item with Putaway Rule"
+		quantity = 30
+		gst_hsn_code = "11112222"
+		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
+			gst_hsn_code = frappe.new_doc("GST HSN Code")
+			gst_hsn_code.hsn_code = "11112222"
+			gst_hsn_code.save()
+
+		if not frappe.db.exists("Item", item_code):
+			item = frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"stock_uom": "Nos",
+				"is_stock_item": 1,
+				"item_group": "All Item Groups",
+				"default_warehouse": warehouse,
+				"company": company,
+				"gst_hsn_code": gst_hsn_code
+			})
+			item.insert()
+
+		if not frappe.db.exists("Putaway Rule", {"item_code": item_code, "warehouse": warehouse}):
+			frappe.get_doc({
+				"company": company,
+				"doctype": "Putaway Rule",
+				"item_code": item_code,
+				"warehouse": warehouse,
+				"capacity": 20,
+				"priority": 1,
+				"default_location": overflow_warehouse,
+			}).insert()
+
+		po = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"supplier": supplier,
+			"company": company,
+			"schedule_date": today(),
+			"items": [{
+				"item_code": item_code,
+				"qty": 30,
+				"warehouse": warehouse,
+			}],
+		})
+		po.insert()
+		po.submit()
+		self.assertEqual(po.docstatus, 1)
+
+		pr = frappe.get_doc({
+			"doctype": "Purchase Receipt",
+			"supplier": po.supplier,
+			"company": po.company,
+			"items": [{
+				"item_code": item_code,
+				"qty": 20,
+				"warehouse": warehouse,
+			}],
+			"apply_putaway_rule": 1
+		})
+		pr.insert()
+		pr.submit()
+		self.assertEqual(pr.docstatus,1)
+		stock_ledger_entries = frappe.get_all("Stock Ledger Entry",
+			filters={
+				"voucher_no": pr.name
+			},
+			fields=[
+				"warehouse",
+				"actual_qty"
+			]
+		)
+
+		warehouse_qty = sum(entry.actual_qty for entry in stock_ledger_entries if entry.warehouse == warehouse)
+		self.assertEqual(warehouse_qty, 20)
+		pi = frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"supplier": supplier,
+			"company": company,
+			"items": [{
+				"item_code": item_code,
+				"qty": pr.items[0].qty,
+				"warehouse": warehouse,
+			}],
+		})
+		pi.insert()
+		pi.submit()
+		self.assertEqual(pi.docstatus, 1)
+
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
