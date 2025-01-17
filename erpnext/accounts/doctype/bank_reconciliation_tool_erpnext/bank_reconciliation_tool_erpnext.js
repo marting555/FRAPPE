@@ -335,31 +335,31 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 	},
 
 	reconcile(frm) {
-		frm.trigger("update_bal");
-		frm.doc.matching_table.map((i) => {
-			frm.call({
-				method: "erpnext.accounts.doctype.bank_reconciliation_tool_erpnext.bank_reconciliation_tool_erpnext.reconcile_bnk_transaction",
-				args: {
-					bank_transaction_id: i.bank_transaction_id,
-					amount: i.matched_amount,
-					name: i.reference_id,
-					payment_document: i.reference_to,
-				},
-				callback: function (r) {
-					frm.clear_table("bank_statement");
-					frm.clear_table("erp_transaction");
-					frm.clear_table("matching_table");
-					frm.trigger("unreconcile_entries");
-					frm.refresh();
-					// console.log('GHJJHJHJHJBBJ')
-					if (!r.exc) {
-						if (r.message) {
-							frappe.msgprint("done");
-						}
+		// frm.trigger("update_bal");
+		// frm.doc.matching_table.map((i) => {
+		frm.call({
+			method: "erpnext.accounts.doctype.bank_reconciliation_tool_erpnext.bank_reconciliation_tool_erpnext.reconcile_bnk_transaction",
+			args: {
+				matching_table: frm.doc.matching_table,
+				// amount: i.matched_amount,
+				// name: i.reference_id,
+				// payment_document: i.reference_to,
+			},
+			callback: function (r) {
+				frm.clear_table("bank_statement");
+				frm.clear_table("erp_transaction");
+				frm.clear_table("matching_table");
+				frm.trigger("unreconcile_entries");
+				// frm.refresh();
+				// console.log('GHJJHJHJHJBBJ')
+				if (!r.exc) {
+					if (r.message) {
+						frappe.msgprint("done");
 					}
-				},
-			});
+				}
+			},
 		});
+		// });
 	},
 
 	// render_chart(frm) {
