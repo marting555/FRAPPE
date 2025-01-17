@@ -4456,6 +4456,85 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(pi.net_total, 9000)
 		pi.submit()
 
+	def test_putaway_rule_with_pr_pi_TC_B_153(self):
+		company = "_Test Company"
+		warehouse = "Stores - _TC"
+		overflow_warehouse = "Overflow Warehouse - _TC"
+		supplier = "_Test Supplier 1"
+		item_code = "Test Item with Putaway Rule"
+		quantity = 30
+		gst_hsn_code = "11112222"
+		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
+			gst_hsn_code = frappe.new_doc("GST HSN Code")
+			gst_hsn_code.hsn_code = "11112222"
+			gst_hsn_code.save()
+
+		if not frappe.db.exists("Item", item_code):
+			item = frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"stock_uom": "Nos",
+				"is_stock_item": 1,
+				"item_group": "All Item Groups",
+				"default_warehouse": warehouse,
+				"company": company,
+				"gst_hsn_code": gst_hsn_code
+			})
+			item.insert()
+
+		if not frappe.db.exists("Putaway Rule", {"item_code": item_code, "warehouse": warehouse}):
+			frappe.get_doc({
+				"company": company,
+				"doctype": "Putaway Rule",
+				"item_code": item_code,
+				"warehouse": warehouse,
+				"capacity": 20,
+				"priority": 1,
+				"default_location": overflow_warehouse,
+			}).insert()
+
+		pr = frappe.get_doc({
+			"doctype": "Purchase Receipt",
+			"supplier": supplier,
+			"company": company,
+			"items": [{
+				"item_code": item_code,
+				"qty": 20,
+				"warehouse": warehouse,
+			}],
+			"apply_putaway_rule": 1
+		})
+		pr.insert()
+		pr.submit()
+		self.assertEqual(pr.docstatus,1)
+		stock_ledger_entries = frappe.get_all("Stock Ledger Entry",
+			filters={
+				"voucher_no": pr.name
+			},
+			fields=[
+				"warehouse",
+				"actual_qty"
+			]
+		)
+
+		warehouse_qty = sum(entry.actual_qty for entry in stock_ledger_entries if entry.warehouse == warehouse)
+		self.assertEqual(warehouse_qty, 20)
+		pi = frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"supplier": supplier,
+			"company": company,
+			"items": [{
+				"item_code": item_code,
+				"qty": pr.items[0].qty,
+				"warehouse": warehouse,
+			}],
+		})
+		pi.insert()
+		pi.submit()
+		self.assertEqual(pi.docstatus, 1)
+
+
 
 def prepare_data_for_internal_transfer():
 	from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_internal_supplier
