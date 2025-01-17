@@ -2379,7 +2379,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		self.assertEqual(dn.status, "To Bill", "Delivery Note not created")
 
-		qty_change = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn.name, 'warehouse': '_Test Warehouse - _TC'}, ['actual_qty', 'valuation_rate'])
+		qty_change = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
 		self.assertEqual(qty_change, -4)
 
 		from erpnext.stock.doctype.delivery_note.delivery_note import (make_sales_invoice)
