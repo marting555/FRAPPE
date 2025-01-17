@@ -222,10 +222,10 @@ frappe.ui.form.on("Project", {
 		showConfirmationDialog(frm, quotations, incomplete_requirements)
 	},
 	validate: function (frm) {
-		const regex = /^(?!-?$)\S.*$/
+		const regex = /^(?=.*[a-zA-Z0-9])[\s\S]{4,}$/g
 
     if (!regex.test(frm.doc.plate)) {
-      frappe.msgprint(__('Please enter a valid License plate. It cannot be empty or just a "-"'));
+      frappe.msgprint(__('Please enter a valid license plate. It cannot be empty or contain only special characters.'));
       frappe.validated = false;
     }
   }
