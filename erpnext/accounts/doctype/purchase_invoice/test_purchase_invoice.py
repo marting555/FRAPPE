@@ -3487,10 +3487,11 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
   
 	def test_deferred_expense_invoice_line_item_TC_ACC_041(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			create_records as records_for_pi,
 			make_test_item,
 		)
-
+		
 		records_for_pi('_Test Supplier')
 		
 		item=make_test_item()
@@ -3579,7 +3580,9 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 		
 	
+
 def set_advance_flag(company, flag, default_account):
+	frappe.db.set_value(
 		"Company",
 		company,
 		{
@@ -3587,7 +3590,6 @@ def set_advance_flag(company, flag, default_account):
 			"default_advance_paid_account": default_account,
 		},
 	)
-
 
 def check_gl_entries(
 	doc,

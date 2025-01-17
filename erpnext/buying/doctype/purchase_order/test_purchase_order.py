@@ -3000,6 +3000,8 @@ class TestPurchaseOrder(FrappeTestCase):
 					"warehouse": "_Test Warehouse 1 - _TC",
 					"qty": 4,
 					"rate": 3000
+     }]
+		})
 	
 	def test_inter_state_CGST_and_SGST_TC_B_097(self):
 		po = create_purchase_order(qty=1,rate = 100,do_not_save=True)
