@@ -654,7 +654,7 @@ export_python_type_annotations = True
 
 fields_for_group_similar_items = ["qty", "amount"]
 
-after_migrate = ["erpnext.accounts.install.after_migrate"]
+after_migrate = ["erpnext.accounts.install.after_migrate","erpnext.setup.install.after_migrate"]
 
 
 fixtures =[
