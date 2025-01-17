@@ -7,8 +7,9 @@ import json
 import frappe
 import pandas as pd
 from frappe.tests.utils import FrappeTestCase, change_settings
-from frappe.utils import add_days, flt, getdate, nowdate
+from frappe.utils import add_days, flt, getdate, nowdate, add_years, today
 from frappe.utils.data import today
+from datetime import date
 
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 from erpnext.accounts.party import get_due_date_from_template
@@ -28,6 +29,9 @@ from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 	make_purchase_invoice as make_pi_from_pr,
 )
 from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
+from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+from erpnext.stock.doctype.item.test_item import create_item
+from erpnext.buying.doctype.supplier.test_supplier import create_supplier
 from io import BytesIO
 
 class TestPurchaseOrder(FrappeTestCase):
@@ -3734,6 +3738,98 @@ class TestPurchaseOrder(FrappeTestCase):
 			if entries.account == 'Creditors - _TC':
 				self.assertEqual(entries.credit,2875)
 
+	def test_create_po_pr_partial_TC_SCK_046(self):
+		po = create_purchase_order(rate=10000,qty=10)
+		po.submit()
+
+		pr = create_pr_against_po(po.name, received_qty=5)
+		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "_Test Warehouse - _TC"}, "actual_qty")
+		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':pr.name})
+		self.assertEqual(sle.qty_after_transaction, bin_qty)
+		self.assertEqual(sle.warehouse, po.get("items")[0].warehouse)
+
+		#if account setup in company
+		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
+			self.assertEqual(gl_temp_credit, 50000)
+
+		#if account setup in company
+		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit')
+			self.assertEqual(gl_stock_debit, 50000)
+
+
+		from erpnext.controllers.sales_and_purchase_return import make_return_doc
+		return_pr = make_return_doc("Purchase Receipt", pr.name)
+		return_pr.get("items")[0].received_qty = -5
+		return_pr.submit()
+
+		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "_Test Warehouse - _TC"}, "actual_qty")
+		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':return_pr.name})
+		self.assertEqual(sle.qty_after_transaction, bin_qty)
+
+		#if account setup in company
+		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'debit')
+			self.assertEqual(gl_temp_credit, 500)
+
+		#if account setup in company
+		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pr.name, 'account': 'Stock In Hand - _TC'},'credit')
+			self.assertEqual(gl_stock_debit, 500)
+
+	def test_create_po_pr_TC_SCK_177(self):
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+
+		po = create_purchase_order(qty=10)
+		po.submit()
+
+		frappe.db.set_value("Item", "_Test Item", "over_delivery_receipt_allowance", 10)
+		pr = make_purchase_receipt(po.name)
+		pr.company = "_Test Company"
+		pr.set_warehouse = "All Warehouses - _TC"
+		pr.rejected_warehouse = create_warehouse("_Test Warehouse8", company=pr.company)
+		pr.get("items")[0].qty = 8
+		pr.get("items")[0].rejected_qty = 2
+		pr.insert()
+		pr.submit()
+
+		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':pr.name})
+		self.assertEqual(sle.qty_after_transaction, 2)
+
+	def test_create_po_pr_return_pr_TC_SCK_178(self):
+		create_company()
+		create_fiscal_year()
+		supplier = create_supplier(supplier_name="_Test Supplier PO")
+		item = create_item("_Test PO")
+		warehouse = create_warehouse("_Test warehouse - _PO", company="_Test Company PO")
+
+		po = create_purchase_order(qty=10,company="_Test Company PO",supplier=supplier,item=item.item_code,warehouse=warehouse,do_not_save=1)
+		po.save()
+		po.submit()
+
+		frappe.db.set_value("Item", "_Test PO", "over_delivery_receipt_allowance", 10)
+		pr = make_purchase_receipt(po.name)
+		pr.company = "_Test Company PO"
+		pr.set_warehouse = warehouse
+		pr.rejected_warehouse = create_warehouse("_Test Warehouse8", company=pr.company)
+		pr.get("items")[0].qty = 8
+		pr.get("items")[0].rejected_qty = 2
+		pr.insert()
+		pr.submit()
+
+		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':pr.name})
+		self.assertEqual(sle.qty_after_transaction, 2)
+
+		pr.load_from_db()
+		from erpnext.controllers.sales_and_purchase_return import make_return_doc
+		return_pi = make_return_doc("Purchase Receipt", pr.name,return_against_rejected_qty=True)
+		return_pi.get("items")[0].qty = -2
+		return_pi.submit()
+		pr.reload()
+
+		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':return_pi.name})
+		self.assertEqual(sle.actual_qty, -2)
 
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
@@ -4021,3 +4117,35 @@ def create_new_account(account_name,company,parent_account):
 		account.parent_account	= parent_account
 		account.save()
 		return account.name
+
+def create_company():
+	company_name = "_Test Company PO"
+	if not frappe.db.exists("Company", company_name):
+		company = frappe.new_doc("Company")
+		company.company_name = company_name
+		company.country="India",
+		company.default_currency= "INR",
+		company.create_chart_of_accounts_based_on= "Standard Template",
+		company.chart_of_accounts= "Standard",
+		company = company.save()
+		company.load_from_db()
+
+	return company_name
+
+def create_fiscal_year():
+	today = date.today()
+	if today.month >= 4:  # Fiscal year starts in April
+		start_date = date(today.year, 4, 1)
+		end_date = date(today.year + 1, 3, 31)
+	else:
+		start_date = date(today.year - 1, 4, 1)
+		end_date = date(today.year, 3, 31)
+
+	company="_Test Company PO", 
+	fy_doc = frappe.new_doc("Fiscal Year")
+	fy_doc.year = "2025 PO"
+	fy_doc.year_start_date = start_date
+	fy_doc.year_end_date = end_date
+	fy_doc.append("companies", {"company": company})
+	fy_doc.submit()
+	
