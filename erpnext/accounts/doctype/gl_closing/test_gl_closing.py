@@ -7,7 +7,6 @@ from frappe.utils import getdate, nowdate
 from frappe import _
 from frappe.tests.utils import FrappeTestCase
 
-
 class TestGLClosing(FrappeTestCase):
 	def before_save(self):
 		if self.is_new():

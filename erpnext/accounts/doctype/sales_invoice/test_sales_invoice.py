@@ -5078,6 +5078,162 @@ class TestSalesInvoice(FrappeTestCase):
 
 
 
+	def test_deferred_revenue_invoice_line_item_TC_ACC_039(self):
+		from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+
+  
+		create_cost_center(
+			cost_center_name="_Test Cost Center",
+			company="_Test Company",
+			parent_cost_center="_Test Company - _TC"
+		)
+
+		create_account(
+			account_name="_Test Receivable",
+			parent_account="Current Assets - _TC",
+			company="_Test Company",
+			account_currency="INR",
+			account_type="Receivable",
+		)
+		create_account(
+			account_name="_Test Cash",
+			parent_account="Cash In Hand - _TC",
+			company="_Test Company",
+			account_currency="INR",
+			account_type="Cash",
+		)
+
+		create_customer(
+			customer_name="_Test Customer",
+			currency="INR",
+			company="_Test Company",
+			account="_Test Receivable - _TC"
+		)
+
+		item = make_test_item(item_name="_Test Item")
+		item.enable_deferred_revenue=1
+		item.no_of_months=12
+		item.save()
+		if item.is_new():
+			item.append(
+				"item_defaults",
+				{
+					"default_warehouse": '_Test Warehouse - _TC',
+					"company": "_Test Company",
+					"selling_cost_center": "_Test Cost Center - _TC",
+				},
+			)
+			item.save()
+		
+		frappe.db.commit()
+
+		customer = frappe.get_doc("Customer", "_Test Customer")
+		sales_invoice = create_sales_invoice(
+			item=item.name,
+			qty=1,
+			customer=customer.name,
+			update_stock=1,
+			warehouse="_Test Warehouse - _TC",
+			cost_center="_Test Cost Center - _TC",
+			account="_Test Receivable - _TC",
+			company="_Test Company",
+			currency="INR",
+			rate=50000,
+			do_not_submit=True,
+		)
+		if sales_invoice.items:
+			setattr(sales_invoice.items[0], 'enable_deferred_revenue', 1)
+			setattr(sales_invoice.items[0], 'deferred_revenue_account', 'Deferred Revenue - _TC')
+		sales_invoice.save()
+		sales_invoice.submit()
+		expected_gl_entries = [
+			['Debtors - _TC', sales_invoice.grand_total, 0.0, sales_invoice.posting_date],
+			['Deferred Revenue - _TC', 0.0, sales_invoice.grand_total, sales_invoice.posting_date]
+		]
+		check_gl_entries(self, sales_invoice.name, expected_gl_entries, sales_invoice.posting_date)
+    
+	def test_deferred_revenue_invoice_multiple_item_TC_ACC_040(self):
+		from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.stock.get_item_details import calculate_service_end_date
+
+		create_cost_center(
+			cost_center_name="_Test Cost Center",
+			company="_Test Company",
+			parent_cost_center="_Test Company - _TC"
+		)
+
+		create_account(
+			account_name="_Test Receivable",
+			parent_account="Current Assets - _TC",
+			company="_Test Company",
+			account_currency="INR",
+			account_type="Receivable",
+		)
+		create_account(
+			account_name="_Test Cash",
+			parent_account="Cash In Hand - _TC",
+			company="_Test Company",
+			account_currency="INR",
+			account_type="Cash",
+		)
+
+		create_customer(
+			customer_name="_Test Customer",
+			currency="INR",
+			company="_Test Company",
+			account="_Test Receivable - _TC"
+		)
+
+		items_list = ['_Test Item 1', '_Test Item 2']
+		for item in items_list:
+			item=make_test_item(item_name=item)
+			item.enable_deferred_expense=1
+			item.no_of_months_exp=12
+			item.save()	
+			frappe.db.commit()
+		customer = frappe.get_doc("Customer", "_Test Customer")
+		sales_invoice = create_sales_invoice(
+			item=items_list[0],
+			qty=1,
+			customer=customer.name,
+			warehouse="_Test Warehouse - _TC",
+			cost_center="_Test Cost Center - _TC",
+			account="_Test Receivable - _TC",
+			company="_Test Company",
+			currency="INR",
+			rate=50000,
+			do_not_submit=True,
+		)	
+		if sales_invoice.items:
+			setattr(sales_invoice.items[0], 'enable_deferred_revenue', 1)
+			setattr(sales_invoice.items[0], 'deferred_revenue_account', 'Deferred Revenue - _TC')
+			sales_invoice.save()
+		
+		sales_invoice.append('items',{
+			'item_code':items_list[1],
+			'item_name':items_list[1],
+			"qty":1,
+			"rate":50000,
+			"warehouse": "_Test Warehouse - _TC",
+			"cost_center": "_Test Cost Center - _TC",
+			"expense_account": "Cost of Goods Sold - _TC",
+			"enable_deferred_revenue": 1,
+			"deferred_revenue_account": "Deferred Revenue - _TC",
+			"no_of_months": 12,
+			"service_start_date": sales_invoice.posting_date
+		})
+		end_date_obj=calculate_service_end_date(args=sales_invoice.items[1].as_dict())
+		sales_invoice.items[1].service_end_date = end_date_obj.get("service_end_date")
+		sales_invoice.save()
+		sales_invoice.submit()
+
+		expected_gl_entries = [
+			['Debtors - _TC', sales_invoice.grand_total, 0.0, sales_invoice.posting_date],
+			['Deferred Revenue - _TC', 0.0, sales_invoice.grand_total, sales_invoice.posting_date]
+		]
+		check_gl_entries(self, sales_invoice.name, expected_gl_entries, sales_invoice.posting_date)
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
@@ -5106,6 +5262,7 @@ def check_gl_entries(doc, voucher_no, expected_gle, posting_date, voucher_type="
 	expected_gle = sorted(expected_gle, key=lambda x: x[0])
 	gl_entries = sorted(gl_entries, key=lambda x: x['account'])
 
+ 
 	for i, gle in enumerate(gl_entries):
 		doc.assertEqual(expected_gle[i][0], gle.account)
 		doc.assertEqual(expected_gle[i][1], gle.debit)

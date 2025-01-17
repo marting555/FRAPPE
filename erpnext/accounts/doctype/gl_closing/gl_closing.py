@@ -63,8 +63,7 @@ def validate_account_link_or_child_table(doc, method):
                         if account_value:
                             if is_account_closed(merged_data, account_value):
                                 frappe.throw(f"The account {account_value} is closed and cannot be used in this {doc.doctype}")
-                        else:
-                            frappe.throw(f"{field.label} is required")
+                       
                     elif field.fieldtype == "Table":
                         table_data = doc.get(field.fieldname)
                         if table_data:
@@ -79,8 +78,7 @@ def validate_child_table(child_doc, merged_data):
             if account_value:
                 if is_account_closed(merged_data, account_value):
                     frappe.throw(f"The account {account_value} is closed and cannot be used in this {child_doc.doctype}")
-            else:
-                frappe.throw(f"{field.label} in child table is required")
+        
 def is_account_closed(merged_data, account_value):
     for record in merged_data:
         if record.get("account") == account_value and record.get("closed") == 1:
