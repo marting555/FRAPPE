@@ -5076,6 +5076,8 @@ class TestSalesInvoice(FrappeTestCase):
 		)
 		self.assertEqual(sum([entry.actual_qty for entry in stock_entries_crn]), 2)  
 
+
+
 	def test_deferred_revenue_invoice_line_item_TC_ACC_039(self):
 		from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
@@ -5259,6 +5261,7 @@ def check_gl_entries(doc, voucher_no, expected_gle, posting_date, voucher_type="
 	gl_entries = q.run(as_dict=True)
 	expected_gle = sorted(expected_gle, key=lambda x: x[0])
 	gl_entries = sorted(gl_entries, key=lambda x: x['account'])
+
  
 	for i, gle in enumerate(gl_entries):
 		doc.assertEqual(expected_gle[i][0], gle.account)
