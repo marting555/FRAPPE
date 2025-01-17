@@ -186,14 +186,8 @@ def get_erp_transaction(bank_account, company, from_statement_date=None, to_stat
                         # je_account['remaining_amount'] == je_account['debit_in_account_currency']
                         payment['bank'] = 'Debit'
                         payment['amount'] = je_account['debit_in_account_currency']
-                # print("******************************1111111**********")
-                # print(payment)
-                # print("*************************111111111***************")
                 result.append(payment)
             else:
-                # print("****************************************")
-                # print(payment)
-                # print("****************************************")
                 payment['amount'] = frappe.db.get_value("Payment Entry", payment['name'], 'paid_amount')
                 result.append(payment)
     if len(result) == 0:
@@ -202,20 +196,17 @@ def get_erp_transaction(bank_account, company, from_statement_date=None, to_stat
 
 
 @frappe.whitelist()
-def reconcile_bnk_transaction(bank_transaction_id, amount, name, payment_document):
-	bnk_trn = frappe.get_doc("Bank Transaction", bank_transaction_id)
-	# print("***********************************")
-	# print("docc",bank_transaction_id)
-	# print("***********************************")
-	bnk_trn.append(
-		"payment_entries",
-		{"payment_document": payment_document, "payment_entry": name, "allocated_amount": flt(amount)},
-	)
-	try:
+def reconcile_bnk_transaction(matching_table):
+	matching_table = json.loads(matching_table)
+	for i in matching_table:
+		bnk_trn = frappe.get_doc("Bank Transaction", i.get("bank_transaction_id"))
+		bnk_trn.append(
+			"payment_entries",
+			{"payment_document": i.get("reference_to"), "payment_entry": i.get("reference_id"), "allocated_amount": flt(i.get("matched_amount"))},
+		)
+		# try:
 		bnk_trn.save()
-		frappe.msgprint(_("Successfully Reconciled"))
-	except Exception as e:
-		frappe.msgprint("Please Reconcile again to ")
+	frappe.msgprint(_("Successfully Reconciled"))
 
 
 
