@@ -1163,7 +1163,96 @@ class TestJournalEntry(unittest.TestCase):
 			self.assertEqual(entry["debit"], expected["debit"], f"Debit mismatch for {entry['account']}.")
 			self.assertEqual(entry["credit"], expected["credit"], f"Credit mismatch for {entry['account']}.")
   
-   
+	def test_create_jv_for_cash_enrty_TC_ACC_082(self):
+		jv=make_journal_entry(
+			account1="Cash - _TC",
+			account2="_Test Payable - _TC",
+			amount=1000.0,
+			exchange_rate=0,
+			save=False,
+			submit=False
+		)
+		for account in jv.accounts:
+			if account.account=="_Test Payable - _TC":
+				account.party_type = "Supplier"
+				account.party = "_Test Supplier"
+		jv.save().submit()
+		self.voucher_no = jv.name
+		self.fields = [
+			"account",
+			"account_currency",
+			"debit",
+			"debit_in_account_currency",
+			"credit",
+			"credit_in_account_currency",
+		]
+
+		self.expected_gle = [
+			{
+				"account": "Cash - _TC",
+				"account_currency": "INR",
+				"debit": 1000,
+				"debit_in_account_currency": 1000,
+				"credit": 0 ,
+				"credit_in_account_currency": 0,
+			},
+			{
+				"account": "_Test Payable - _TC",
+				"account_currency": "INR",
+				"debit": 0,
+				"debit_in_account_currency": 0,
+				"credit": 1000,
+				"credit_in_account_currency": 1000,
+			},
+		]
+		self.check_gl_entries()
+  
+	def test_create_jv_for_bank_enrty_TC_ACC_083(self):
+		jv=make_journal_entry(
+			account1="_Test Bank - _TC",
+			account2="_Test Receivable - _TC",
+			amount=1000.0,
+			exchange_rate=0,
+			save=False,
+			submit=False
+		)
+		jv.voucher_type="Bank Entry"
+		jv.cheque_no="112233"
+		jv.cheque_date=nowdate()
+		for account in jv.accounts:
+			if account.account=="_Test Receivable - _TC":
+				account.party_type = "Customer"
+				account.party = "_Test Customer"
+		jv.save().submit()
+		self.voucher_no = jv.name
+		self.fields = [
+			"account",
+			"account_currency",
+			"debit",
+			"debit_in_account_currency",
+			"credit",
+			"credit_in_account_currency",
+		]
+
+		self.expected_gle = [
+			{
+				"account": "_Test Bank - _TC",
+				"account_currency": "INR",
+				"debit": 1000,
+				"debit_in_account_currency": 1000,
+				"credit": 0 ,
+				"credit_in_account_currency": 0,
+			},
+			{
+				"account": "_Test Receivable - _TC",
+				"account_currency": "INR",
+				"debit": 0,
+				"debit_in_account_currency": 0,
+				"credit": 1000,
+				"credit_in_account_currency": 1000,
+			},
+		]
+		self.check_gl_entries()
 
 def make_journal_entry(
 	account1,
