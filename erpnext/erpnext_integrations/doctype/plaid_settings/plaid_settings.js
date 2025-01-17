@@ -26,10 +26,10 @@ frappe.ui.form.on("Plaid Settings", {
 					freeze: true,
 					callback: () => {
 						let bank_transaction_link = frappe.utils.get_form_link(
-							"Bank Transaction",
+							__("Bank Transaction"),
 							"",
 							true,
-							"Bank Transaction"
+							__("Bank Transaction")
 						);
 
 						frappe.msgprint({
