@@ -349,6 +349,110 @@ class TestBudget(unittest.TestCase):
 
 		self.assertRaises(BudgetError, jv.submit)
 
+	def test_provisional_entry_for_service_items_TC_ACC_064(self):
+		# Step 1: Enable Provisional Accounting in Company Master
+		company = "_Test Company"
+		frappe.db.set_value("Company", company, "enable_provisional_accounting_for_non_stock_items", 1)
+		# Set _Test Cash - _TC as the Provisional Account
+		frappe.db.set_value("Company", company, "default_provisional_account", "_Test Cash - _TC")
+
+		# Step 3: Create a Service Item
+		service_item = frappe.get_doc({
+			"doctype": "Item",
+			"item_code": "_Test Non Stock Item",
+			"item_group": "Services",
+			"is_stock_item": 0
+		})
+		if not frappe.db.exists("Item", service_item.item_code):
+			service_item.insert(ignore_permissions=True)
+
+		pr = None  # Initialize 'pr' to avoid UnboundLocalError
+		try:
+			# Step 4: Create a Purchase Receipt with the Service Item
+			from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
+			pr = make_purchase_receipt(
+				company=company,
+				item=service_item.item_code,
+				rate=1000,
+				qty=1,
+				expense_account="_Test Account Cost for Goods Sold - _TC"
+			)
+
+			# Step 5: Validate GL Entries
+			gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pr.name}, fields=["account", "debit", "credit"])
+
+			# Check GL Entries
+			expected_entries = [
+				{"account": "_Test Account Cost for Goods Sold - _TC", "debit": 1000.0, "credit": 0.0},
+				{"account": "_Test Cash - _TC", "debit": 0.0, "credit": 1000.0}
+			]
+			for entry in expected_entries:
+				self.assertIn(entry, gl_entries, msg=f"Expected GL Entry {entry} not found in {gl_entries}")
+
+			print(f"Provisional Accounting validated for {pr.name}")
+
+		finally:
+			# Step 6: Cleanup
+			if pr and pr.docstatus == 1:
+				pr.cancel()
+			if pr:
+				frappe.delete_doc("Purchase Receipt", pr.name, force=True)
+			frappe.delete_doc("Item", service_item.name, force=True)
+
+			# Reset Company Settings
+			frappe.db.set_value("Company", company, "enable_provisional_accounting_for_non_stock_items", 0)
+			frappe.db.set_value("Company", company, "default_provisional_account", "")
+			
+	def test_provisional_entry_for_service_items_TC_ACC_065(self):
+		# Step 1: Enable Provisional Accounting in Company Master
+		company = "_Test Company"
+		frappe.db.set_value("Company", company, "enable_provisional_accounting_for_non_stock_items", 1)
+		# Set _Test Cash - _TC as the Provisional Account
+		frappe.db.set_value("Company", company, "default_provisional_account", "_Test Cash - _TC")
+
+		# Step 2: Create a Service Item
+		service_item = frappe.get_doc({
+			"doctype": "Item",
+			"item_code": "_Test Non Stock Item",
+			"item_group": "Services",
+			"is_stock_item": 0
+		})
+		if not frappe.db.exists("Item", service_item.item_code):
+			service_item.insert(ignore_permissions=True)
+
+		pi = None  # Initialize 'pi' to avoid UnboundLocalError
+		try:
+			# Step 3: Create a Purchase Invoice with the Service Item
+			from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
+			pi = make_purchase_invoice(
+				company=company,
+				item=service_item.item_code,
+				rate=1000,
+				qty=1,
+				expense_account="_Test Account Cost for Goods Sold - _TC",
+				# purchase_account="_Test Account Payable - _TC"
+			)
+
+			# Step 4: Validate GL Entries
+			gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
+			# Check GL Entries for Provisional Accounting Treatment
+			expected_entries = [
+				{"account": "_Test Account Cost for Goods Sold - _TC", "debit": 1000.0, "credit": 0.0},
+				{"account": "Creditors - _TC", "debit": 0.0, "credit": 1000.0},
+			]
+			for entry in expected_entries:
+				self.assertIn(entry, gl_entries, msg=f"Expected GL Entry {entry} not found in {gl_entries}")
+		finally:
+			# Step 6: Cleanup
+			if pi and pi.docstatus == 1:
+				pi.cancel()
+			if pi:
+				frappe.delete_doc("Purchase Invoice", pi.name, force=True)
+			frappe.delete_doc("Item", service_item.name, force=True)
+
+			# Reset Company Settings
+			frappe.db.set_value("Company", company, "enable_provisional_accounting_for_non_stock_items", 0)
+			frappe.db.set_value("Company", company, "default_provisional_account", "")
 
 def set_total_expense_zero(posting_date, budget_against_field=None, budget_against_CC=None):
 	if budget_against_field == "project":
