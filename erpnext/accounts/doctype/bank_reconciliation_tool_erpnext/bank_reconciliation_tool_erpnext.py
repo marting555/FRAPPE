@@ -5,7 +5,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt
-
+import json
 from erpnext.accounts.doctype.bank_reconciliation_tool.bank_reconciliation_tool import get_linked_payments
 
 
@@ -66,29 +66,29 @@ class BankReconciliationToolERPNext(Document):
 		for pay in args.get("erp_transaction"):
 			# Initialize unreconciled_amount for deposit/withdraw
 			if flt(pay.get("deposit")) > 0 and flt(pay.get("withdraw")) == 0:
-				pay["unreconciled_amount"] = pay["deposit"]
+				pay["remaining_amount"] = pay["deposit"]
 			elif flt(pay.get("withdraw")) > 0 and flt(pay.get("deposit")) == 0:
-				pay["unreconciled_amount"] = pay["withdraw"]
+				pay["remaining_amount"] = pay["withdraw"]
 
 			for bnk_st in args.get("bank_statement"):
 				allocated_amount = min(
-					pay.get("deposit", 0) or pay.get("withdraw", 0), bnk_st["unallocated_amount"]
+					pay.get("remaining_amount", 0), bnk_st["unallocated_amount"]
 				)
 
 				res = self.get_allocated_entry(pay, bnk_st, allocated_amount)
 				# print(pay.get("name"), pay.get("doctype"))
 
-				if flt(pay.get("deposit")) > 0:
-					pay["deposit"] -= allocated_amount
-				elif flt(pay.get("deposit")) > 0:
-					pay["withdraw"] -= allocated_amount
-
+				# if flt(pay.get("deposit")) > 0:
+				# 	pay["deposit"] -= allocated_amount
+				# elif flt(pay.get("withdraw")) > 0:
+				# 	pay["withdraw"] -= allocated_amount
+				pay["remaining_amount"] -= allocated_amount
 				bnk_st["unallocated_amount"] -= allocated_amount
 
 				entries.append(res)
 
 				# Break if pay is fully allocated
-				if pay.get("deposit") == 0 and pay.get("withdraw") == 0:
+				if pay.get("remaining_amount") == 0:
 					break
 
 		# Update the matching table
@@ -175,15 +175,26 @@ def get_erp_transaction(bank_account, company, from_statement_date=None, to_stat
                         'account': account,
                         'parent': payment['name']
                     },
-                    fields=['credit_in_account_currency', 'debit_in_account_currency', 'parent']
+                    fields=['credit_in_account_currency', 'debit_in_account_currency', 'parent', 'remaining_amount']
                 )
                 for je_account in je_accounts:
+                    je_account['remaining_amount'] == payment['paid_amount']
                     if je_account['credit_in_account_currency'] > 0:
                         payment['bank'] = 'Credit'
+                        payment['amount'] = je_account['credit_in_account_currency']
                     elif je_account['debit_in_account_currency'] > 0:
+                        # je_account['remaining_amount'] == je_account['debit_in_account_currency']
                         payment['bank'] = 'Debit'
+                        payment['amount'] = je_account['debit_in_account_currency']
+                # print("******************************1111111**********")
+                # print(payment)
+                # print("*************************111111111***************")
                 result.append(payment)
             else:
+                # print("****************************************")
+                # print(payment)
+                # print("****************************************")
+                payment['amount'] = frappe.db.get_value("Payment Entry", payment['name'], 'paid_amount')
                 result.append(payment)
     if len(result) == 0:
         frappe.msgprint("No records found")
@@ -207,16 +218,17 @@ def reconcile_bnk_transaction(bank_transaction_id, amount, name, payment_documen
 		frappe.msgprint("Please Reconcile again to ")
 
 
+
 @frappe.whitelist()
-def get_closing_bal(opening_bal, from_date, to_date, bank_account):
+def get_closing_bal_bnk(bank_account):
 	total_credits = (
 		frappe.db.sql(
 			"""
 		SELECT SUM(deposit)
 		FROM `tabBank Transaction`
-		WHERE bank_account = %s AND date = %s AND docstatus = 1
+		WHERE bank_account = %s AND docstatus = 1
 	""",
-			(bank_account, to_date),
+			(bank_account),
 		)[-1][-1]
 		or 0
 	)
@@ -227,13 +239,53 @@ def get_closing_bal(opening_bal, from_date, to_date, bank_account):
 			"""
 		SELECT SUM(withdrawal)
 		FROM `tabBank Transaction`
-		WHERE bank_account = %s AND date = %s AND docstatus = 1
+		WHERE bank_account = %s AND docstatus = 1
 	""",
-			(bank_account, to_date),
+			(bank_account),
 		)[-1][-1]
 		or 0
 	)
 
+	print("^^^^^^^^^^^^^^^BNK^^^^^^^^^^^^^^^^^^^^^^^")
+	print('cr',total_credits)
+	print('deb',total_debits)
+	print("^^^^^^^^^^^^^^^BNK^^^^^^^^^^^^^^^^^^^^^^^")
+	
 	# Calculate closing balance
-	closing_balance = float(opening_bal) + float(total_credits) or 0 - float(total_debits) or 0
+	closing_balance = float(total_credits) - float(total_debits)
+	return closing_balance
+
+@frappe.whitelist()
+def get_closing_bal_erp(opening_balance, bank_account, from_date, to_date):
+	total_credits = (
+		frappe.db.sql(
+			"""
+		SELECT SUM(allocated_amount)
+		FROM `tabBank Transaction`
+		WHERE bank_account = %s AND docstatus = 1 AND deposit > 0 AND date between %s AND %s
+	""",
+			(bank_account, from_date, to_date),
+		)[-1][-1]
+		or 0
+	)
+
+	# Sum of debits (withdrawals)
+	total_debits = (
+		frappe.db.sql(
+			"""
+		SELECT SUM(allocated_amount)
+		FROM `tabBank Transaction`
+		WHERE bank_account = %s AND docstatus = 1 AND withdrawal > 0 AND date between %s AND %s
+	""",
+			(bank_account, from_date, to_date),
+		)[-1][-1]
+		or 0
+	)
+	
+	print("^^^^^^^^^^^^^^^ERP^^^^^^^^^^^^^^^^^^^^^^^")
+	print('cr',total_credits)
+	print('db',total_debits)
+	print("^^^^^^^^^^^^^^^ERP^^^^^^^^^^^^^^^^^^^^^^^")
+	# Calculate closing balance
+	closing_balance = flt(opening_balance) + float(total_credits) - float(total_debits)
 	return closing_balance
