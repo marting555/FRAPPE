@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-01-12 09:35+0000\n"
-"PO-Revision-Date: 2025-01-12 18:14\n"
+"PO-Revision-Date: 2025-01-17 19:03\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -6439,13 +6439,13 @@ msgstr "Automatisk Avstämning av Betalningar har inaktiverats. Aktivera genom {
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.json
 #: erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.json
 msgid "Auto Repeat"
-msgstr "Återkommande Händelse"
+msgstr "Återkommande"
 
 #. Label of the subscription_detail (Section Break) field in DocType
 #. 'Subcontracting Receipt'
 #: erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.json
 msgid "Auto Repeat Detail"
-msgstr "Återkomamnde Detaljer"
+msgstr "Återkommande Detaljer"
 
 #. Label of the auto_reserve_serial_and_batch (Check) field in DocType 'Stock
 #. Settings'
@@ -59284,7 +59284,7 @@ msgstr "Du måste aktivera automatisk ombeställning i lager inställningar för
 
 #: erpnext/templates/pages/projects.html:134
 msgid "You haven't created a {0} yet"
-msgstr "Ingen {0} skapad än"
+msgstr "Du har inte skapat {0} än"
 
 #: erpnext/selling/page/point_of_sale/pos_controller.js:218
 msgid "You must add atleast one item to save it as draft."
