@@ -3438,6 +3438,29 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(mr.status, "Pending")
 
 	def test_create_mr_for_purchase_to_po_TC_SCK_019(self):
+		self.create_mr_for_puchase_to_po_to_invoice()
+	
+	def test_create_mr_for_purchase_to_po_cancel_pr_TC_SCK_066(self):
+		pr = self.create_mr_for_puchase_to_po_to_invoice()
+		pr.cancel()
+
+		sl_entry_cancelled = frappe.db.get_all(
+			"Stock Ledger Entry",
+			{"voucher_type": "Purchase Receipt", "voucher_no": pr.name},
+			["actual_qty", "warehouse", "serial_and_batch_bundle"],
+			order_by="creation",
+		)
+
+		warehouse_qty = {
+			"_Test Warehouse - _TC": 0
+		}
+
+		for sle in sl_entry_cancelled:
+			warehouse_qty[sle.get('warehouse')] += sle.get('actual_qty')
+		
+		self.assertEqual(warehouse_qty["_Test Warehouse - _TC"], 0)
+	
+	def create_mr_for_puchase_to_po_to_invoice(self):
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import TestStockEntry as tse
 
 		# Create Material Request for Purchase
@@ -3492,7 +3515,33 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(sabb.entries[1].serial_no, "Test-SABBMRP-Sno-002")
 		self.assertEqual(sabb.entries[0].batch_no, "Test-SABBMRP-Bno-001")
 
+		return pr
+
 	def test_create_mr_for_purchase_to_po_2pr_TC_SCK_020(self):
+		self.create_mr_for_purchase_to_po_2pr()
+
+	def test_create_mr_for_purchase_to_po__cancel_2pr_TC_SCK_067(self):
+		pr1, pr2 = self.create_mr_for_purchase_to_po_2pr()
+		pr1.cancel()
+		pr2.cancel()
+
+		sl_entry_cancelled = frappe.db.get_all(
+			"Stock Ledger Entry",
+			{"voucher_type": "Purchase Receipt", "voucher_no": ["in",[pr1.name, pr2.name]]},
+			["actual_qty", "warehouse", "serial_and_batch_bundle"],
+			order_by="creation",
+		)
+
+		warehouse_qty = {
+			"_Test Warehouse - _TC": 0
+		}
+
+		for sle in sl_entry_cancelled:
+			warehouse_qty[sle.get('warehouse')] += sle.get('actual_qty')
+		
+		self.assertEqual(warehouse_qty["_Test Warehouse - _TC"], 0)
+		
+	def create_mr_for_purchase_to_po_2pr(self):
 		fields = {
 			"has_batch_no": 1,
 			"has_serial_no": 1,
@@ -3580,6 +3629,8 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(sl_entry[0].actual_qty, 2)
 		self.assertEqual(sabb.entries[1].serial_no, "Test-SABBMRP-Sno-005")
 		self.assertEqual(sabb.entries[1].batch_no, "Test-SABBMRP-Bno-001")
+
+		return pr1, pr2
 		
 
 	def test_create_material_req_to_2po_to_1pi_cancel_TC_SCK_089(self):
@@ -4259,6 +4310,64 @@ class TestMaterialRequest(FrappeTestCase):
 			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr1.name, 'account': 'Creditors - _TC'},'credit')
 			self.assertEqual(gl_stock_debit, 500)
 
+	def test_create_mr_for_purchase_2po_to_1pr_TC_SCK_021(self):
+		from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import get_sl_entries, get_gl_entries
+
+		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
+		frappe.db.set_value("Company", "_Test Company", "stock_adjustment_account", "Stock Adjustment - _TC")
+		frappe.db.set_value(
+			"Company", "_Test Company", "stock_received_but_not_billed", "Stock Received But Not Billed - _TC"
+		)
+		mr = make_material_request(
+			material_request_type="Purchase",
+			qty=10,
+			item_code="_Test Item",
+			rate=100,
+			do_not_submit=True
+		)
+		mr.transaction_date = "01-08-2024"
+		mr.schedule_date = "02-08-2024"
+		mr.save()
+		mr.submit()
+
+		po1 = make_purchase_order(mr.name)
+		po1.transaction_date = "01-08-2024"
+		po1.schedule_date = "02-08-2024"
+		po1.supplier = "_Test Supplier"
+		po1.items[0].qty = 5
+		po1.save()
+		po1.submit()
+
+		po2 = make_purchase_order(mr.name)
+		po2.transaction_date = "01-08-2024"
+		po2.schedule_date = "02-08-2024"
+		po2.supplier = "_Test Supplier"
+		po2.items[0].qty = 5
+		po2.save()
+		po2.submit()
+
+		pr = make_purchase_receipt(po1.name)
+		pr = make_purchase_receipt(po2.name, target_doc=pr)
+		pr.submit()
+
+		stock_in_hand_account = get_inventory_account("_Test Company", "_Test Warehouse - _TC")
+		
+		# Validate sle
+		sl_entries = get_sl_entries("Purchase Receipt", pr.name)
+		expected_sle = {"_Test Warehouse - _TC": 5}
+		for sle in sl_entries:
+			self.assertEqual(expected_sle[sle.warehouse], sle.actual_qty)
+
+		# check gl entries
+		gl_entries = get_gl_entries("Purchase Receipt", pr.name)
+		expected_values = {
+			stock_in_hand_account: [1000.0, 0.0],
+			"Stock Received But Not Billed - _TC": [0.0, 1000.0],
+		}
+
+		for gle in gl_entries:
+			self.assertEqual(expected_values[gle.account][0], gle.debit)
+			self.assertEqual(expected_values[gle.account][1], gle.credit)
 	def test_po_additional_discount_TC_B_079(self):
 		# Scenario : MR=> PO => PR => PI [With IGST TAX]
 
