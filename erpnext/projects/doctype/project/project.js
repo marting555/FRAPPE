@@ -50,7 +50,7 @@ frappe.ui.form.on("Project", {
 			};
 		});
 
-		frm.set_query('quotations', function() {
+		frm.set_query('quotations', function () {
 			var filters = [
 				['status', '=', 'Draft']
 			]
@@ -60,9 +60,9 @@ frappe.ui.form.on("Project", {
 			}
 		})
 
-		frm.set_query('sales_invoice', function() {
+		frm.set_query('sales_invoice', function () {
 			const filters = [
-				['status','=','Unpaid']
+				['status', '=', 'Unpaid']
 			]
 			return { filters }
 		})
@@ -75,9 +75,9 @@ frappe.ui.form.on("Project", {
 		})
 
 		const sidebar = $(".layout-side-section");
-		
+
 		if (sidebar.is(':visible')) {
-				sidebar.hide();
+			sidebar.hide();
 		}
 	},
 
@@ -90,7 +90,7 @@ frappe.ui.form.on("Project", {
 		}
 
 		if (!frm.is_new()) {
-			frm.add_custom_button(__("Create quotation"),  async () => {
+			frm.add_custom_button(__("Create quotation"), async () => {
 				const doc = await frappe.model.get_new_doc('Quotation');
 				doc.party_name = frm.doc.customer;
 				frappe.new_doc('Quotation', {
@@ -99,26 +99,26 @@ frappe.ui.form.on("Project", {
 					quotation_to: 'Customer'
 				});
 			})
-			frm.add_custom_button(__("Customer info"),  async () => {
+			frm.add_custom_button(__("Customer info"), async () => {
 				const customer = await frappe.db.get_doc('Customer', frm.doc.customer)
 				const linked_contacts_and_addresses = await frappe.db.get_list(
 					"Address",
 					{
-						filters:[
+						filters: [
 							["disabled", "=", 0],
 							["address_type", "in", ["Billing", "Shipping"]],
 							["Dynamic Link", "link_doctype", "=", "Customer"],
-							["Dynamic Link", "link_name", "=", `${frm.doc.customer}`], 
+							["Dynamic Link", "link_name", "=", `${frm.doc.customer}`],
 							["Dynamic Link", "parenttype", "=", "Address"]
 						],
-						fields:["address_line1", "address_line2", "country", "city", "pincode", "state", "address_type"]
+						fields: ["address_line1", "address_line2", "country", "city", "pincode", "state", "address_type"]
 					}
 				);
-				
-				
+
+
 				let billingAddress = null;
 				let shippingAddress = null;
-				
+
 				// Find the first Billing and Shipping address
 				for (let address of linked_contacts_and_addresses) {
 					if (address.address_type === 'Billing' && !billingAddress) {
@@ -126,13 +126,13 @@ frappe.ui.form.on("Project", {
 					} else if (address.address_type === 'Shipping' && !shippingAddress) {
 						shippingAddress = address;
 					}
-				
+
 					// Exit the loop if both addresses are found
 					if (billingAddress && shippingAddress) {
 						break;
 					}
 				}
-				
+
 				let addresses_info = '';
 				if (billingAddress) {
 					addresses_info += `
@@ -145,7 +145,7 @@ frappe.ui.form.on("Project", {
 						State/Province: ${billingAddress.state}<br>
 					`;
 				}
-				
+
 				if (shippingAddress) {
 					addresses_info += `
 						<br><b>Address Type: Shipping</b><br>
@@ -157,7 +157,7 @@ frappe.ui.form.on("Project", {
 						State/Province: ${shippingAddress.state}<br>
 					`;
 				}
-				
+
 				frappe.msgprint({
 					title: __('Customer Information'),
 					indicator: 'green',
@@ -170,15 +170,15 @@ frappe.ui.form.on("Project", {
 				});
 			})
 		}
-		
+
 		installChat(frm);
 		installQuotationItems(frm)
 		insertCarousel(frm);
-    	insertVinSearchButton(frm)
-
+		insertVinSearchButton(frm)
+		insertResendPaymentLink(frm);
 		frm.trigger("set_custom_buttons");
 	},
-	create_duplicate: function(frm) {
+	create_duplicate: function (frm) {
 		return new Promise(resolve => {
 			frappe.prompt('Project Name', (data) => {
 				frappe.xcall('erpnext.projects.doctype.project.project.create_duplicate_project',
@@ -186,26 +186,26 @@ frappe.ui.form.on("Project", {
 						prev_doc: frm.doc,
 						project_name: data.value
 					}).then(() => {
-					frappe.set_route('Form', "Project", data.value);
-					frappe.show_alert(__("Duplicate project has been created"));
-				});
+						frappe.set_route('Form', "Project", data.value);
+						frappe.show_alert(__("Duplicate project has been created"));
+					});
 				resolve();
 			});
 		});
 	},
 
-	set_status: function(frm, status) {
+	set_status: function (frm, status) {
 		frappe.confirm(__('Set Project and all Tasks to status {0}?', [status.bold()]), () => {
 			frappe.xcall('erpnext.projects.doctype.project.project.set_project_status',
-				{project: frm.doc.name, status: status}).then(() => {
-				frm.reload_doc();
-			});
+				{ project: frm.doc.name, status: status }).then(() => {
+					frm.reload_doc();
+				});
 		});
 	},
-	status: async function(frm) {
-        let new_value = frm.doc.status;
+	status: async function (frm) {
+		let new_value = frm.doc.status;
 
-		if(new_value !== "Quality check approved") return 
+		if (new_value !== "Quality check approved") return
 
 		const incomplete_requirements = frm.doc.requirements.filter(requirement => !requirement.completed)
 
@@ -217,34 +217,34 @@ frappe.ui.form.on("Project", {
 			fields: ["name", "status"]
 		})
 
-		if(!quotations?.length && !incomplete_requirements.length) return
+		if (!quotations?.length && !incomplete_requirements.length) return
 
 		showConfirmationDialog(frm, quotations, incomplete_requirements)
 	}
 });
 
 function showConfirmationDialog(frm, quotations, incomplete_requirements) {
-    const dialog = new frappe.ui.Dialog({
-        title: 'Confirm',
-        fields: buildFields(frm, quotations, incomplete_requirements),
-        primary_action_label: 'Confirm',
-        primary_action: function() {
-            dialog.hide();
-        },
+	const dialog = new frappe.ui.Dialog({
+		title: 'Confirm',
+		fields: buildFields(frm, quotations, incomplete_requirements),
+		primary_action_label: 'Confirm',
+		primary_action: function () {
+			dialog.hide();
+		},
 		secondary_action_label: 'Cancel',
-        secondary_action: function() {
-            frm.undo_manager.undo();
-            dialog.hide();
-        }
-    });
+		secondary_action: function () {
+			frm.undo_manager.undo();
+			dialog.hide();
+		}
+	});
 
 	dialog.$wrapper.find('.modal-header .modal-actions').hide();
 	dialog.$wrapper.modal({ backdrop: 'static', keyboard: false })
 
-    dialog.show();
+	dialog.show();
 }
 
-function buildFields(frm, quotations, incomplete_requirements){
+function buildFields(frm, quotations, incomplete_requirements) {
 	const quotation_fields = [
 		{
 			fieldtype: 'HTML',
@@ -263,7 +263,7 @@ function buildFields(frm, quotations, incomplete_requirements){
 			`
 		}
 	]
-	const requirements_fields = [	
+	const requirements_fields = [
 		{
 			fieldtype: 'HTML',
 			options: `<h3>Incomplete Client Requirements</h3> `
@@ -286,11 +286,11 @@ function buildFields(frm, quotations, incomplete_requirements){
 
 	let fields = []
 
-	if(quotations.length){
+	if (quotations.length) {
 		fields.push(...quotation_fields)
 	}
 
-	if(incomplete_requirements.length){
+	if (incomplete_requirements.length) {
 		fields.push(...requirements_fields)
 	}
 
@@ -301,35 +301,35 @@ function buildFields(frm, quotations, incomplete_requirements){
 
 let instaling = false;
 async function installChat(frm) {
-	if (document.querySelector('#chat-container')){
+	if (document.querySelector('#chat-container')) {
 		document.querySelector('#chat-container').remove();
 	}
 	frm.page.container.removeClass("full-width");
-	if(instaling) return;
+	if (instaling) return;
 	instaling = true;
-	if (!frm.is_new()){
-		const {0: conversation} = await frappe.db.get_list('Conversation',{
+	if (!frm.is_new()) {
+		const { 0: conversation } = await frappe.db.get_list('Conversation', {
 			filters: [['from', '=', frm.doc.custom_customers_phone_number]],
 			fields: ["*"]
 		});
-		
-		if(!conversation) {
+
+		if (!conversation) {
 			instaling = false;
 			return;
 		};
 		const chatContainer = document.createElement('div')
 
 		const button = document.createElement('button')
-		button.classList.add('btn','btn-default','ellipsis')
+		button.classList.add('btn', 'btn-default', 'ellipsis')
 		button.textContent = 'Toggle WhatsApp'
-		button.addEventListener('click', ()=>{
-			if(chatContainer.style.display === 'none'){
+		button.addEventListener('click', () => {
+			if (chatContainer.style.display === 'none') {
 				chatContainer.style.display = 'block';
 			} else {
 				chatContainer.style.display = 'none';
 			}
 		})
-		
+
 		document.querySelector('#custom_actions')
 			.innerHTML = '';
 		document.querySelector('#custom_actions')
@@ -338,13 +338,13 @@ async function installChat(frm) {
 		chatContainer.id = 'chat-container'
 		const chat = document.createElement('erp-chat')
 		const section = document.querySelector('#page-Project > div.container.page-body > div.page-wrapper > div > div.row.layout-main')
-		
-		const {aws_url} = await frappe.db.get_doc('Whatsapp Config')
+
+		const { aws_url } = await frappe.db.get_doc('Whatsapp Config')
 		chat.setAttribute('url', aws_url)
 		chat.setAttribute('user-name', frappe.user_info().fullname)
-		
+
 		frappe.realtime.on(`msg-${conversation.name}`, (data) => {
-			chat._instance.exposed.addMessage(data); 
+			chat._instance.exposed.addMessage(data);
 		})
 		frappe.realtime.on(`translation-${frm.doc.name}`, (data) => {
 			console.log('on Translate')
@@ -356,7 +356,7 @@ async function installChat(frm) {
 				section.appendChild(chatContainer)
 				setTimeout(() => {
 					chat._instance.exposed.setFrappe(frappe)
-          chat._instance.exposed.setConversation(conversation)
+					chat._instance.exposed.setConversation(conversation)
 				}, 100);
 			})
 
@@ -368,53 +368,53 @@ async function installChat(frm) {
 
 let is_quotation_installed = false;
 function installQuotationItems(frm) {
-    if (frm.is_new()) return;
-    if (is_quotation_installed) return;
-    
-    const container = document.querySelector('div[data-fieldname="customer_details"] .section-body');
-    if (!container) {
-        return;
-    }
-    
-    // Eliminar el componente existente si está presente
-    const existingComponent = container.querySelector("erp-quotation-items");
-    if (existingComponent) {
-        existingComponent.remove();
-    }
-    
-    is_quotation_installed = true;
-    
-    // Crear un contenedor adicional para manejar el desbordamiento
-    const wrapper = document.createElement("div");
-    wrapper.style.width = '100%';  // Ajusta al tamaño del contenedor
-    wrapper.style.overflow = 'auto';  // Permite el scroll si es necesario
-    
-    frappe.require("erp-quotation-items.bundle.js").then(() => {
-        const element = document.createElement("erp-quotation-items");
-        element.style.width = '100%';  // Asegura que el componente no exceda el contenedor
-        element.style.maxWidth = '100%';  // Evita que el componente se expanda más allá del contenedor
-        element.style.boxSizing = 'border-box';  // Incluye padding y border en el ancho total
-        element.style.display = 'block';  // Asegura que el componente se comporte como un bloque
-        
-        // Añadir el componente al contenedor wrapper
-        wrapper.appendChild(element);
-        container.appendChild(wrapper);
-        
-        // Forzar un redibujado del contenedor
-        container.style.overflow = 'hidden';  // Establecer overflow a hidden
-        container.offsetHeight;  // Forzar un reflujo
-        container.style.overflow = 'auto';  // Restaurar overflow a auto
-        
-        setTimeout(() => {
-            element._instance.exposed.setFrappe(frappe);
-            element._instance.exposed.setProjectName(frm.doc.name);
+	if (frm.is_new()) return;
+	if (is_quotation_installed) return;
+
+	const container = document.querySelector('div[data-fieldname="customer_details"] .section-body');
+	if (!container) {
+		return;
+	}
+
+	// Eliminar el componente existente si está presente
+	const existingComponent = container.querySelector("erp-quotation-items");
+	if (existingComponent) {
+		existingComponent.remove();
+	}
+
+	is_quotation_installed = true;
+
+	// Crear un contenedor adicional para manejar el desbordamiento
+	const wrapper = document.createElement("div");
+	wrapper.style.width = '100%';  // Ajusta al tamaño del contenedor
+	wrapper.style.overflow = 'auto';  // Permite el scroll si es necesario
+
+	frappe.require("erp-quotation-items.bundle.js").then(() => {
+		const element = document.createElement("erp-quotation-items");
+		element.style.width = '100%';  // Asegura que el componente no exceda el contenedor
+		element.style.maxWidth = '100%';  // Evita que el componente se expanda más allá del contenedor
+		element.style.boxSizing = 'border-box';  // Incluye padding y border en el ancho total
+		element.style.display = 'block';  // Asegura que el componente se comporte como un bloque
+
+		// Añadir el componente al contenedor wrapper
+		wrapper.appendChild(element);
+		container.appendChild(wrapper);
+
+		// Forzar un redibujado del contenedor
+		container.style.overflow = 'hidden';  // Establecer overflow a hidden
+		container.offsetHeight;  // Forzar un reflujo
+		container.style.overflow = 'auto';  // Restaurar overflow a auto
+
+		setTimeout(() => {
+			element._instance.exposed.setFrappe(frappe);
+			element._instance.exposed.setProjectName(frm.doc.name);
 			element._instance.exposed.setUserSession(frappe.session)
-            is_quotation_installed = false;
-        }, 100);
-    }).catch((err) => {
-        console.error("Error loading erp-quotation-items", err);
-        is_quotation_installed = false;
-    });
+			is_quotation_installed = false;
+		}, 100);
+	}).catch((err) => {
+		console.error("Error loading erp-quotation-items", err);
+		is_quotation_installed = false;
+	});
 }
 
 function open_form(frm, doctype, child_doctype, parentfield) {
@@ -451,7 +451,7 @@ async function insertCarousel(frm) {
 				const container = document.querySelector('.glider-contain')
 				const gliderEl = document.querySelector('.glider')
 
-				if(!gliderEl) return null
+				if (!gliderEl) return null
 
 				const glider = new Glider(gliderEl, {
 					slidesToShow: 1,
@@ -510,7 +510,7 @@ async function insertCarousel(frm) {
 function setListeners(el, attachment) {
 	let element = el
 
-	if(attachment.file_type === "MOV" || attachment.file_type === "MP4") return null
+	if (attachment.file_type === "MOV" || attachment.file_type === "MP4") return null
 	if (attachment.file_type === 'PDF' || attachment.file_url === 'TXT') {
 		element = el.querySelector('#touch-overlay')
 	}
@@ -522,7 +522,7 @@ function setListeners(el, attachment) {
 function createAttachmentElement(attachment) {
 	let el;
 
-	switch(attachment.file_type){
+	switch (attachment.file_type) {
 		case "PDF":
 		case "TXT":
 			el = document.createElement('div')
@@ -530,11 +530,11 @@ function createAttachmentElement(attachment) {
 			el.innerHTML = `<iframe src="${attachment.file_url}" frameborder="0" class="glider-iframe"></iframe> <div id="touch-overlay"></div>`
 			break;
 		case "MOV":
-			case "MP4":
+		case "MP4":
 			el = document.createElement('video')
 			el.className = 'video-container'
 			el.setAttribute('controls', 'true')
-			el.setAttribute('src',attachment.file_url)
+			el.setAttribute('src', attachment.file_url)
 			break;
 		default:
 			el = document.createElement('img')
@@ -565,40 +565,40 @@ function handleTouchEnd(e) {
 }
 
 async function insertVinSearchButton(frm) {
-  const container = document.querySelector('div[data-fieldname="vin"] .form-group .clearfix');
+	const container = document.querySelector('div[data-fieldname="vin"] .form-group .clearfix');
 
-  if (!container || document.getElementById('vinSearch')) {
-    return;
-  }
+	if (!container || document.getElementById('vinSearch')) {
+		return;
+	}
 
-  const button = document.createElement('button');
-  button.id = 'vinSearch';
+	const button = document.createElement('button');
+	button.id = 'vinSearch';
 	button.style = 'border:none;background:black;padding:2px;color:white;border-radius:5px;position:relative;'
 
-  const tooltip = document.createElement('span');
-  tooltip.textContent = "Vin Search";
+	const tooltip = document.createElement('span');
+	tooltip.textContent = "Vin Search";
 	tooltip.style = 'font-size:12px;background:#171717;color:white;padding:4px;border-radius:4px;opacity:0;transition:opacity 0.3s;position:absolute;margin-left:4px;'
 
 	const spinner = document.createElement('div')
 	spinner.setAttribute('hidden', 'true')
 	spinner.classList = 'vin-search-spinner'
 
-  const iconSpan = document.createElement('span');
-  iconSpan.innerHTML = `
+	const iconSpan = document.createElement('span');
+	iconSpan.innerHTML = `
 	<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><g fill="none" fill-rule="evenodd">
 		<path d="m12.593 23.258l-.011.002l-.071.035l-.02.004l-.014-.004l-.071-.035q-.016-.005-.024.005l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.017-.018m.265-.113l-.013.002l-.185.093l-.01.01l-.003.011l.018.43l.005.012l.008.007l.201.093q.019.005.029-.008l.004-.014l-.034-.614q-.005-.018-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.004-.011l.017-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M10.5 4a6.5 6.5 0 1 0 0 13a6.5 6.5 0 0 0 0-13M2 10.5a8.5 8.5 0 1 1 15.176 5.262l3.652 3.652a1 1 0 0 1-1.414 1.414l-3.652-3.652A8.5 8.5 0 0 1 2 10.5M9.5 7a1 1 0 0 1 1-1a4.5 4.5 0 0 1 4.5 4.5a1 1 0 1 1-2 0A2.5 2.5 0 0 0 10.5 8a1 1 0 0 1-1-1"/></g>
 	</svg>
 	`;
 
-  button.addEventListener('mouseover', () => {
-    tooltip.style.visibility = 'visible';
-    tooltip.style.opacity = '1';
-  });
+	button.addEventListener('mouseover', () => {
+		tooltip.style.visibility = 'visible';
+		tooltip.style.opacity = '1';
+	});
 
-  button.addEventListener('mouseout', () => {
-    tooltip.style.visibility = 'hidden';
-    tooltip.style.opacity = '0';
-  });
+	button.addEventListener('mouseout', () => {
+		tooltip.style.visibility = 'hidden';
+		tooltip.style.opacity = '0';
+	});
 
 	button.addEventListener('click', async function () {
 		button.setAttribute('hidden', 'true')
@@ -616,42 +616,105 @@ async function insertVinSearchButton(frm) {
 		if (data.errors) {
 			frappe.show_alert({
 				message: __(`${data.errors}`),
-				indicator:'red'
-		}, 5);
+				indicator: 'red'
+			}, 5);
 
-			if(!data.vehicle_identification_no){
+			if (!data.vehicle_identification_no) {
 				return
 			}
 		}
-		 
+
 		const partsObject = {};
-		 
+
 		data.parts?.forEach(part => {
-				partsObject[part.name] = part.partNumber;
+			partsObject[part.name] = part.partNumber;
 		});
-		 
+
 		frm.set_value({
-				vin: data.vehicle_identification_no,
-				model: data.model,
-				model_year: data.year,
-				brand: data.make,
-				engine_liters: data.engine_liters,
-				engine_code: data.engine_code,
-				dsg_model: data.dsg_family || data.dsg ? data.dsg[0] : '',
-				dsg_code: data.dsg_code,
-				ecu_number: data.ecu_code,
-				dsg_gearbox: partsObject["gearbox"] ?? partsObject["speed dual clutch gearbox"] ?? "",
-				mechatronic: partsObject["mechatronic"] ?? partsObject["mechatronic with software"] ?? "",
-				flywheel: partsObject["flywheel"] ?? "",
-				clutch: partsObject["clutch"] ?? partsObject["repair set for multi-coupling"] ?? "",
+			vin: data.vehicle_identification_no,
+			model: data.model,
+			model_year: data.year,
+			brand: data.make,
+			engine_liters: data.engine_liters,
+			engine_code: data.engine_code,
+			dsg_model: data.dsg_family || data.dsg ? data.dsg[0] : '',
+			dsg_code: data.dsg_code,
+			ecu_number: data.ecu_code,
+			dsg_gearbox: partsObject["gearbox"] ?? partsObject["speed dual clutch gearbox"] ?? "",
+			mechatronic: partsObject["mechatronic"] ?? partsObject["mechatronic with software"] ?? "",
+			flywheel: partsObject["flywheel"] ?? "",
+			clutch: partsObject["clutch"] ?? partsObject["repair set for multi-coupling"] ?? "",
 		}).then(() => {
-				frm.save();
+			frm.save();
 		})
 	});
 
-  button.appendChild(iconSpan);
-  container.appendChild(button);
-  container.appendChild(tooltip);
+	button.appendChild(iconSpan);
+	container.appendChild(button);
+	container.appendChild(tooltip);
 	container.appendChild(spinner);
-  
+
 }
+
+async function insertResendPaymentLink(frm) {
+	if (!["Completed", "Cancelled"].includes(frm.doc.status)) {
+		frm.add_custom_button(__('Resend Payment Link'), () => {
+			var d = new frappe.ui.Dialog({
+				title: __("The message and payment Link will be sent to the client"),
+				fields: [],
+				primary_action_label: __("Send"),
+				primary_action: async function () {
+					const { aws_url } = await frappe.db.get_doc('Queue Settings')
+					console.log({aws_url})
+					const url = `${aws_url}project/quality-approved`;
+					const obj = {
+					"name": frm.doc.name,
+					};
+
+					console.log("Sending payload:", obj);
+
+					fetch(url, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(obj),
+					})
+					.then(async (response) => {
+						if (!response.ok) {
+						// Manejo de error basado en el estado de la respuesta
+						const errorMessage = await response.text();
+						throw new Error(`HTTP error ${response.status}: ${errorMessage}`);
+						}
+						console.log(response.json())
+						return response
+					})
+					.then((data) => {
+						console.log("Response data:", data);
+						frappe.show_alert({
+						message: __('Message sent successfully'),
+						indicator: 'green'
+						}, 10);
+					})
+					.catch((error) => {
+						frappe.show_alert({
+						message: __('An error occurred while sending the message'),
+						indicator: 'red'
+						}, 10);
+						console.error('Error:', error);
+					});
+
+
+					d.hide();
+				},
+				secondary_action_label: __("Cancel"),
+				secondary_action: function () {
+					d.hide();
+				}
+			});
+
+			d.show();
+		});
+	}
+}
+
