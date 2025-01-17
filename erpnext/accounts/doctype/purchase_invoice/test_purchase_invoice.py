@@ -4,7 +4,7 @@
 
 import frappe
 from frappe.tests.utils import FrappeTestCase, change_settings
-from frappe.utils import add_days, cint, flt, getdate, nowdate, today
+from frappe.utils import add_days, cint, flt, getdate, nowdate, today, get_year_start, get_year_ending
 
 import erpnext
 from erpnext.accounts.doctype.account.test_account import create_account, get_inventory_account
@@ -3578,8 +3578,74 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			expected_gl_entries,
 			pi.posting_date,
 		)
-		
-	
+
+	def test_pi_with_tds_TC_B_151(self):
+		company = "_Test Company"
+		tax_category = "test_tax_withholding_category"
+		supplier = "_Test Supplier 1"
+		item_code = "Testing-31"
+		target_warehouse = "Stores - _TC"
+		supplier = "_Test Supplier 1"
+		if not frappe.db.exists("Tax Withholding Category", tax_category):
+			doc = frappe.get_doc({
+				"doctype": "Tax Withholding Category",
+				"name": tax_category,
+				"category_name": tax_category,
+				"rates": [
+					{
+						"from_date": get_year_start(getdate()),
+						"to_date": get_year_ending(getdate()),
+						"tax_withholding_rate": 2,
+						"single_threshold": 1000,
+						"cumulative_threshold": 100000
+					}
+				],
+				"accounts": [
+					{
+						"company": company,
+						"account": 'Test TDS Payable - _TC',
+					}
+				]
+			})
+			doc.insert()
+			tax_category = doc.name
+
+		frappe.db.set_value("Supplier", supplier, "tax_withholding_category", tax_category)
+		pi = frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"supplier": supplier,
+			"company": company,
+			"posting_date": today(),
+			"apply_tds": 1,
+			"tax_withholding_category": tax_category,
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": 2,
+					"rate": 500,
+					"warehouse": target_warehouse,
+				}
+			],
+		})
+		pi.insert()
+		pi.submit()
+
+		self.assertEqual(pi.taxes[0].tax_amount, 20)
+		self.assertEqual(pi.taxes_and_charges_deducted, 20)
+		self.assertEqual(pi.grand_total, 980)
+
+		self.assertEqual(pi.items[0].qty, 2)
+		self.assertEqual(pi.items[0].rate, 500)
+
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name, "company": company}, fields=["account", "debit", "credit"])
+
+		tds_entry = next(entry for entry in gl_entries if entry["account"] == "Test TDS Payable - _TC")
+		self.assertEqual(tds_entry["credit"], 20)
+		self.assertEqual(tds_entry["debit"], 0)
+
+		total_debit = sum(entry["debit"] for entry in gl_entries)
+		total_credit = sum(entry["credit"] for entry in gl_entries)
+		self.assertEqual(total_debit, total_credit)
 
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(

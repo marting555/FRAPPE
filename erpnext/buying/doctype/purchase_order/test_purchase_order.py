@@ -7,7 +7,7 @@ import json
 import frappe
 import pandas as pd
 from frappe.tests.utils import FrappeTestCase, change_settings
-from frappe.utils import add_days, flt, getdate, nowdate, add_years, today
+from frappe.utils import add_days, flt, getdate, nowdate, add_years, today, get_year_start, get_year_ending
 from frappe.utils.data import today
 from datetime import date
 
@@ -3830,6 +3830,156 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':return_pi.name})
 		self.assertEqual(sle.actual_qty, -2)
+
+	def test_tds_in_po_and_pi_TC_B_150(self):
+		company = "_Test Company"
+		tax_category = "test_tax_withholding_category"
+		supplier = "_Test Supplier 1"
+		item_code = "Testing-31"
+		target_warehouse = "Stores - _TC"
+		supplier = "_Test Supplier 1"
+		if not frappe.db.exists("Tax Withholding Category", tax_category):
+			doc = frappe.get_doc({
+				"doctype": "Tax Withholding Category",
+				"name": tax_category,
+				"category_name": tax_category,
+				"rates": [
+					{
+						"from_date": get_year_start(getdate()),
+						"to_date": get_year_ending(getdate()),
+						"tax_withholding_rate": 2,
+						"single_threshold": 1000,
+						"cumulative_threshold": 100000
+					}
+				],
+				"accounts": [
+					{
+						"company": company,
+						"account": 'Test TDS Payable - _TC',
+					}
+				]
+			})
+			doc.insert()
+			tax_category = doc.name
+
+		frappe.db.set_value("Supplier", supplier, "tax_withholding_category", tax_category)
+		po = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"supplier": supplier,
+			"company": company,
+			"apply_tds": 1,
+			"schedule_date":today(),
+			"set_warehouse": target_warehouse,
+			"tax_withholding_category": tax_category,
+			"items": [
+				{
+					"item_code": item_code,
+					"warehouse": target_warehouse,
+					"qty": 2,
+					"rate": 500
+				}
+			]
+		})
+		po.insert()
+		po.submit()
+		self.assertEqual(po.docstatus, 1)
+		self.assertEqual(po.taxes[0].tax_amount, 20)
+		self.assertEqual(po.taxes_and_charges_deducted, 20)
+		self.assertEqual(po.grand_total, 980)
+
+		pi = frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"supplier": po.supplier,
+			"company": po.company,
+			"posting_date": today(),
+			"apply_tds": po.apply_tds,
+			"tax_withholding_category": po.tax_withholding_category,
+			"items": [
+				{
+					"item_code": item.item_code,
+					"qty": item.qty,
+					"rate": item.rate,
+					"warehouse": item.warehouse,
+					"purchase_order": po.name,
+					"po_detail": item.name
+				} for item in po.items
+			],
+			"taxes": po.taxes
+		})
+		pi.insert()
+		pi.submit()
+
+		self.assertEqual(pi.taxes[0].tax_amount, 20)
+		self.assertEqual(pi.taxes_and_charges_deducted, 20)
+		self.assertEqual(pi.grand_total, 980)
+
+		self.assertEqual(len(pi.items), len(po.items))
+		self.assertEqual(pi.items[0].qty, 2)
+		self.assertEqual(pi.items[0].rate, 500)
+
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name, "company": company}, fields=["account", "debit", "credit"])
+
+		tds_entry = next(entry for entry in gl_entries if entry["account"] == "Test TDS Payable - _TC")
+		self.assertEqual(tds_entry["credit"], 20)
+		self.assertEqual(tds_entry["debit"], 0)
+
+		total_debit = sum(entry["debit"] for entry in gl_entries)
+		total_credit = sum(entry["credit"] for entry in gl_entries)
+		self.assertEqual(total_debit, total_credit)
+
+	def test_po_with_tds_TC_B_152(self):
+		company = "_Test Company"
+		tax_category = "test_tax_withholding_category"
+		supplier = "_Test Supplier 1"
+		item_code = "Testing-31"
+		target_warehouse = "Stores - _TC"
+		supplier = "_Test Supplier 1"
+		if not frappe.db.exists("Tax Withholding Category", tax_category):
+			doc = frappe.get_doc({
+				"doctype": "Tax Withholding Category",
+				"name": tax_category,
+				"category_name": tax_category,
+				"rates": [
+					{
+						"from_date": get_year_start(getdate()),
+						"to_date": get_year_ending(getdate()),
+						"tax_withholding_rate": 2,
+						"single_threshold": 1000,
+						"cumulative_threshold": 100000
+					}
+				],
+				"accounts": [
+					{
+						"company": company,
+						"account": 'Test TDS Payable - _TC',
+					}
+				]
+			})
+			doc.insert()
+			tax_category = doc.name
+		frappe.db.set_value("Supplier", supplier, "tax_withholding_category", tax_category)
+		po = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"supplier": supplier,
+			"company": company,
+			"apply_tds": 1,
+			"schedule_date":today(),
+			"set_warehouse": target_warehouse,
+			"tax_withholding_category": tax_category,
+			"items": [
+				{
+					"item_code": item_code,
+					"warehouse": target_warehouse,
+					"qty": 2,
+					"rate": 500
+				}
+			]
+		})
+		po.insert()
+		po.submit()
+		self.assertEqual(po.taxes[0].tax_amount, 20)
+		self.assertEqual(po.taxes_and_charges_deducted, 20)
+		self.assertEqual(po.grand_total, 980)
 
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
