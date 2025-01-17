@@ -1267,7 +1267,49 @@ class TestPickList(FrappeTestCase):
 		delivery_note = create_delivery_note(pl.name)
 
 		self.assertEqual(len(delivery_note.items), 1)
+
+	def test_pick_list_to_unreservation_TC_S_072(self):
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
+		from erpnext.stock.doctype.stock_reservation_entry.stock_reservation_entry import cancel_stock_reservation_entries
+
+		frappe.db.set_single_value("Stock Settings", "enable_stock_reservation", 1)
+		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=5, rate=4000)
+
+		sales_order = make_sales_order(item_code="_Test Item Home Desktop 100", qty=4, rate=5000)
+		self.assertEqual(sales_order.status, "To Deliver and Bill")  
+
+		pick_list = create_pick_list(sales_order.name)
+		pick_list.save()
+		pick_list.submit()
+		so_items_details_map = {}
+		for location in pick_list.locations:
+			if location.warehouse and location.sales_order and location.sales_order_item:
+				item_details = {
+					"sales_order_item": location.sales_order_item,
+					"item_code": location.item_code,
+					"warehouse": location.warehouse,
+					"qty_to_reserve": (flt(location.picked_qty) - flt(location.stock_reserved_qty)),
+					"from_voucher_no": location.parent,
+					"from_voucher_detail_no": location.name,
+					"serial_and_batch_bundle": location.serial_and_batch_bundle,
+				}
+				so_items_details_map.setdefault(location.sales_order, []).append(item_details)
+
+		if so_items_details_map:
+			for so, items_details in so_items_details_map.items():
+				so_doc = frappe.get_doc("Sales Order", so)
+				so_doc.create_stock_reservation_entries(
+					items_details=items_details,
+					from_voucher_type="Pick List",
+					notify=None,
+				)
+     
+		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so_doc.name}, "status"), "Reserved")
 	
+		cancel_stock_reservation_entries(
+			from_voucher_type="Pick List", from_voucher_no=pick_list.name, notify=False
+		)
+		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so_doc.name}, "status"), "Cancelled")
 
 	def test_quotation_to_sales_invoice_with_pick_list_TC_S_085(self):
 		from erpnext.selling.doctype.quotation.quotation import make_sales_order
