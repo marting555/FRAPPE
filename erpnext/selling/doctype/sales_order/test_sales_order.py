@@ -4870,6 +4870,47 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': 'Creditors - _TC'}, 'credit'), 5000)
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': 'Cost of Goods Sold - _TC'}, 'debit'), 5000)
   
+	def test_sales_order_delivery_trip_creating_si_TC_S_092(self):
+		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="_Test Warehouse - _TC")
+  
+		so = self.create_and_submit_sales_order(qty=1, rate=5000)
+  
+		dn = make_delivery_note(so.name)
+		dn.submit()
+
+		self.assertEqual(dn.status, "To Bill", "Delivery Note not created")
+		qty_change = frappe.db.get_value('Stock Ledger Entry', {'voucher_no': dn.name, 'warehouse': '_Test Warehouse - _TC', 'item_code': '_Test Item'},'actual_qty') 
+		self.assertEqual(qty_change, -1)
+  
+		driver, vehicle, add = get_transport_details(customer = "_Test Customer")
+   
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_delivery_trip
+		trip = make_delivery_trip(dn.name)
+		trip.driver = driver.name	
+		trip.vehicle = vehicle.name
+		trip.departure_time = frappe.utils.now()
+		for i in trip.delivery_stops:
+			i.address = add.name
+		trip.save()
+		trip.submit()
+  
+		self.assertEqual(trip.status, "Scheduled")
+			
+		from erpnext.stock.doctype.delivery_note.delivery_note import (make_sales_invoice)
+
+		si = make_sales_invoice(dn.name)
+		si.save()
+		si.submit()
+		si.reload()
+		self.assertEqual(si.status, 'Unpaid')
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Sales - _TC'}, 'credit'), 5000)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Debtors - _TC'}, 'debit'), 5000)
+  
+		so.reload()
+		self.assertEqual(so.per_billed, 100)
+  
+		return dn, si
+  
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
 		sales_order.delivery_date = nowdate()
