@@ -4837,6 +4837,8 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		return sales_order
 
 	def create_and_submit_sales_order_with_gst(self, item_code, qty=None, rate=None):
+		make_stock_entry(item_code="_Test Item", qty=10, rate=rate, target="Stores - _TIRC")
+  
 		company = get_gst_details("Company", {"name": "_Test Indian Registered Company"})[0]
 		customer = get_gst_details("Customer", {"name": "_Test Registered Customer"})[0]
 		company_add = get_gst_details("Address", {"name": "_Test Indian Registered Company-Billing"})[0]
