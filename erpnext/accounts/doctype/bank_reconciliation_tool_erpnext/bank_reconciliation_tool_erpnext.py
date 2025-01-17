@@ -214,9 +214,9 @@ def get_closing_bal(opening_bal, from_date, to_date, bank_account):
 			"""
 		SELECT SUM(deposit)
 		FROM `tabBank Transaction`
-		WHERE bank_account = %s AND date BETWEEN %s AND %s  AND docstatus = 1
+		WHERE bank_account = %s AND date = %s AND docstatus = 1
 	""",
-			(bank_account, from_date, to_date),
+			(bank_account, to_date),
 		)[-1][-1]
 		or 0
 	)
@@ -227,9 +227,9 @@ def get_closing_bal(opening_bal, from_date, to_date, bank_account):
 			"""
 		SELECT SUM(withdrawal)
 		FROM `tabBank Transaction`
-		WHERE bank_account = %s AND date BETWEEN %s AND %s AND docstatus = 1
+		WHERE bank_account = %s AND date = %s AND docstatus = 1
 	""",
-			(bank_account, from_date, to_date),
+			(bank_account, to_date),
 		)[-1][-1]
 		or 0
 	)
