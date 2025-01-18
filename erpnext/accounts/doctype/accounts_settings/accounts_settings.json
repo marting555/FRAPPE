@@ -40,13 +40,9 @@
   "show_payment_schedule_in_print",
   "currency_exchange_section",
   "allow_stale",
-  "column_break_yuug",
-  "stale_days",
   "section_break_jpd0",
   "auto_reconcile_payments",
-  "auto_reconciliation_job_trigger",
-  "reconciliation_queue_size",
-  "column_break_resa",
+  "stale_days",
   "invoicing_settings_tab",
   "accounts_transactions_settings_section",
   "over_billing_allowance",
@@ -76,6 +72,7 @@
   "reports_tab",
   "remarks_section",
   "general_ledger_remarks_length",
+  "ignore_is_opening_check_for_reporting",
   "column_break_lvjk",
   "receivable_payable_remarks_length",
   "payment_request_settings",
@@ -495,26 +492,11 @@
    "label": "Create in Draft Status"
   },
   {
-   "fieldname": "column_break_yuug",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_resa",
-   "fieldtype": "Column Break"
-  },
-  {
-   "default": "15",
-   "description": "Interval should be between 1 to 59 MInutes",
-   "fieldname": "auto_reconciliation_job_trigger",
-   "fieldtype": "Int",
-   "label": "Auto Reconciliation Job Trigger"
-  },
-  {
-   "default": "5",
-   "description": "Documents Processed on each trigger. Queue Size should be between 5 and 100",
-   "fieldname": "reconciliation_queue_size",
-   "fieldtype": "Int",
-   "label": "Reconciliation Queue Size"
+   "default": "0",
+   "description": "Ignores legacy Is Opening field in GL Entry that allows adding opening balance post the system is in use while generating reports",
+   "fieldname": "ignore_is_opening_check_for_reporting",
+   "fieldtype": "Check",
+   "label": "Ignore Is Opening check for reporting"
   }
  ],
  "icon": "icon-cog",
@@ -522,7 +504,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-01-13 17:38:39.661320",
+ "modified": "2025-01-18 21:24:19.840745",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Accounts Settings",
