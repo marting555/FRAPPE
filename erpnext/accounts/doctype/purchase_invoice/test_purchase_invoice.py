@@ -393,7 +393,7 @@ class TestPurchaseInvoice(IntegrationTestCase, StockTestMixin):
 		pr.currency = "USD"
 		pr.company = "_Test Company with perpetual inventory"
 		pr.conversion_rate = (70,)
-		pr.supplier = "_Test Supplier"
+		pr.supplier = "_Test Supplier USD"
 		pr.append(
 			"items",
 			{
