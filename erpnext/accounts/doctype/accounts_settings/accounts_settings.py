@@ -28,6 +28,7 @@ class AccountsSettings(Document):
 		allow_multi_currency_invoices_against_single_party_account: DF.Check
 		allow_stale: DF.Check
 		auto_reconcile_payments: DF.Check
+		auto_reconciliation_job_trigger: DF.Int
 		automatically_fetch_payment_terms: DF.Check
 		automatically_process_deferred_accounting_entry: DF.Check
 		book_asset_depreciation_entry_automatically: DF.Check
@@ -53,6 +54,7 @@ class AccountsSettings(Document):
 		over_billing_allowance: DF.Currency
 		post_change_gl_entries: DF.Check
 		receivable_payable_remarks_length: DF.Int
+		reconciliation_queue_size: DF.Int
 		role_allowed_to_over_bill: DF.Link | None
 		round_row_wise_tax: DF.Check
 		show_balance_in_coa: DF.Check
