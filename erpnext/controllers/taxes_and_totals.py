@@ -916,7 +916,6 @@ class calculate_taxes_and_totals:
 				and self.doc.get("is_return")
 				and not self.doc.get("is_consolidated")
 			):
-				self.set_total_amount_to_default_mop(total_amount_to_pay)
 				self.calculate_paid_amount()
 
 	def calculate_paid_amount(self):
