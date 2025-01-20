@@ -1160,12 +1160,13 @@ class TestPOSInvoice(unittest.TestCase):
 		inv.reload()
 		self.assertEqual(inv.status, "Return")
 	
-	def test_pos_invoice_with_item_tax_TC_S_121(self):	
+	def test_pos_invoice_with_item_discount_TC_S_121(self):	
 		inv = create_pos_invoice(rate=3500, do_not_submit=1)
 		for i in inv.items:
-			i.item_tax_template = "GST 5% - _TC"
-		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 3500})
-		inv.taxes_and_charges = "Output GST In-state - _TC"
+			i.price_list_rate = i.rate
+			i.margin_type = "Percentage"
+			i.discount_percentage = 10 
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
 		inv.save()
 		inv.submit()
 		self.assertEqual(inv.status, "Paid")
