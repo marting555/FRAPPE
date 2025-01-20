@@ -202,10 +202,22 @@ frappe.ui.form.on("Project", {
 				});
 		});
 	},
-	status: async function (frm) {
-		let new_value = frm.doc.status;
+	before_save: function(frm) {
+		if (frm.doc.__islocal) {
+				frm.previous_status = null;
+		} else {
+				if(frm.doc.status === "Completed" && frm.previous_status === "Remote diagnose"){
+					showSentMessageAfterRemoteDiagnoseDialog(frm.docname)
+				}
+				frm.previous_status = frm.doc.status;
+		}
+	},
+	status: async function(frm) {
+    let new_value = frm.doc.status;
 
-		if (new_value !== "Quality check approved") return
+		if(new_value !== "Quality check approved") {
+			return 
+		}
 
 		const incomplete_requirements = frm.doc.requirements.filter(requirement => !requirement.completed)
 
@@ -656,6 +668,33 @@ async function insertVinSearchButton(frm) {
 
 }
 
+function showSentMessageAfterRemoteDiagnoseDialog(project_name) {
+	const dialog = new frappe.ui.Dialog({
+		title: 'Remote Diagnose Completed',
+		fields: [
+			{
+				fieldtype: 'HTML',
+				options: `<p>Would you like to send the customer an invitation to schedule an appointment with our workshop?</p> `
+			},
+		],
+		primary_action_label: 'Yes',
+		primary_action: async function() {
+			const { aws_url } = await frappe.db.get_doc("Whatsapp Config")
+			console.log("aws_url => ",aws_url)
+			await frappe.call({
+				method: 'frappe.desk.doctype.kanban_board.kanban_board.call_send_whatsapp_message',
+				args: { aws_url: aws_url, project_name: project_name }
+			})
+			dialog.hide();
+		},
+		secondary_action_label: 'No',
+		secondary_action: function() {
+			dialog.hide();
+		}
+	});
+
+	dialog.show();			
+}
 async function insertResendPaymentLink(frm) {
 	if (!["Completed", "Cancelled"].includes(frm.doc.status)) {
 		frm.add_custom_button(__('Resend Payment Link'), () => {
