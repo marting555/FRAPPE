@@ -1064,7 +1064,63 @@ class TestPOSInvoice(unittest.TestCase):
 
 		self.assertEqual(inv.status, "Paid")
 		self.assertEqual(opening_entry.status, "Closed")
+	
+	def test_pos_invoice_with_manually_redeem_loyalty_points_TC_S_117(self):
+		from erpnext.accounts.doctype.loyalty_program.loyalty_program import get_loyalty_program_details_with_points
+		if not frappe.db.exists("Loyalty Program", "Test Single Loyalty"):
+			frappe.get_doc(
+				{
+					"doctype": "Loyalty Program",
+					"loyalty_program_name": "Test Single Loyalty",
+					"auto_opt_in": 1,
+					"from_date": today(),
+					"loyalty_program_type": "Single Tier Program",
+					"conversion_factor": 1,
+					"expiry_duration": 10,
+					"company": "_Test Company",
+					"cost_center": "Main - _TC",
+					"expense_account": "Loyalty - _TC",
+					"collection_rules": [{"tier_name": "Silver", "collection_factor": 1000, "min_spent": 1000}],
+				}
+			).insert()
+
+		before_lp_details = get_loyalty_program_details_with_points(
+			"Test Loyalty Customer", company="_Test Company", loyalty_program="Test Single Loyalty"
+		)
+		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=10000, do_not_save=1)
+		inv.redeem_loyalty_points = 1
+		inv.loyalty_points = 11
+		inv.loyalty_amount = inv.loyalty_points * before_lp_details.conversion_factor
+		inv.tax_category = "In-State"
+		inv.taxes_and_charges = "Output GST In-state - _TC"
+
+		inv.append(
+			"payments",
+			{"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 10000 - inv.loyalty_amount},
+		)
+		inv.paid_amount = 10000
+		inv.submit()
+		after_redeem_lp_details = get_loyalty_program_details_with_points(
+			inv.customer, company=inv.company, loyalty_program=inv.loyalty_program
+		)
+		self.assertEqual(after_redeem_lp_details.loyalty_points, 11)
+		self.assertEqual(inv.status, "Paid")
 		
+	def test_pos_inoivce_retun_with_update_stock_TC_S_119(self):
+		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=3000,do_not_save=1)
+		inv.save()
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
+		inv.paid_amount = inv.grand_total
+		inv.submit()
+		self.assertEqual(inv.status, "Paid")
+
+		pos_return = make_sales_return(inv.name)
+		pos_return.insert()
+		pos_return.submit()
+		print(pos_return.update_stock)
+		inv.reload()
+		self.assertEqual(inv.status, "Return")
+
 def create_pos_invoice(**args):
 	args = frappe._dict(args)
 	pos_profile = None
