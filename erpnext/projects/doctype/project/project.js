@@ -232,7 +232,15 @@ frappe.ui.form.on("Project", {
 		if (!quotations?.length && !incomplete_requirements.length) return
 
 		showConfirmationDialog(frm, quotations, incomplete_requirements)
-	}
+	},
+	validate: function (frm) {
+		const regex = /^(?=.*[a-zA-Z0-9])[\s\S]{4,}$/g
+
+    if (!regex.test(frm.doc.plate)) {
+      frappe.msgprint(__('Please enter a valid license plate. It cannot be empty or contain only special characters.'));
+      frappe.validated = false;
+    }
+  }
 });
 
 function showConfirmationDialog(frm, quotations, incomplete_requirements) {
