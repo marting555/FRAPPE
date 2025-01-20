@@ -1131,6 +1131,19 @@ class TestPOSInvoice(unittest.TestCase):
 		self.assertEqual(after_redeem_lp_details.loyalty_points, 11)
 		self.assertEqual(inv.status, "Paid")
 		
+	def test_pos_inoivce_with_discount_TC_S_118(self):
+		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=3000, do_not_save=1)
+		inv.taxes_and_charges = "Output GST In-state - _TC"
+		inv.apply_discount_on = "Grand Total"
+		inv.discount_amount = 1000
+
+		inv.save()
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
+		inv.paid_amount = inv.grand_total
+		inv.submit()
+
+		self.assertEqual(inv.status, "Paid")
+
 	def test_pos_inoivce_retun_with_update_stock_TC_S_119(self):
 		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=3000,do_not_save=1)
 		inv.save()
