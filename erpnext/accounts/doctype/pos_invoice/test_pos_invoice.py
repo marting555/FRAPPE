@@ -1131,6 +1131,7 @@ class TestPOSInvoice(unittest.TestCase):
 		self.assertEqual(after_redeem_lp_details.loyalty_points, 11)
 		self.assertEqual(inv.status, "Paid")
 		
+	
 	def test_pos_inoivce_with_discount_TC_S_118(self):
 		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=3000, do_not_save=1)
 		inv.taxes_and_charges = "Output GST In-state - _TC"
@@ -1158,6 +1159,17 @@ class TestPOSInvoice(unittest.TestCase):
 		print(pos_return.update_stock)
 		inv.reload()
 		self.assertEqual(inv.status, "Return")
+	
+	def test_pos_invoice_with_item_tax_TC_S_121(self):	
+		inv = create_pos_invoice(rate=3500, do_not_submit=1)
+		for i in inv.items:
+			i.item_tax_template = "GST 5% - _TC"
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 3500})
+		inv.taxes_and_charges = "Output GST In-state - _TC"
+		inv.save()
+		inv.submit()
+		self.assertEqual(inv.status, "Paid")
+		
 def create_pos_invoice(**args):
 	args = frappe._dict(args)
 	pos_profile = None
