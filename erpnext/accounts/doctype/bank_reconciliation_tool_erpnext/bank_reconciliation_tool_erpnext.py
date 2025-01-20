@@ -65,10 +65,10 @@ class BankReconciliationToolERPNext(Document):
 
 		for pay in args.get("erp_transaction"):
 			# Initialize unreconciled_amount for deposit/withdraw
-			if flt(pay.get("deposit")) > 0 and flt(pay.get("withdraw")) == 0:
-				pay["remaining_amount"] = pay["deposit"]
-			elif flt(pay.get("withdraw")) > 0 and flt(pay.get("deposit")) == 0:
-				pay["remaining_amount"] = pay["withdraw"]
+			# if flt(pay.get("deposit")) > 0 and flt(pay.get("withdraw")) == 0:
+			# 	pay["remaining_amount"] = pay["deposit"]
+			# elif flt(pay.get("withdraw")) > 0 and flt(pay.get("deposit")) == 0:
+			# 	pay["remaining_amount"] = pay["withdraw"]
 
 			for bnk_st in args.get("bank_statement"):
 				allocated_amount = min(
@@ -236,11 +236,6 @@ def get_closing_bal_bnk(bank_account):
 		)[-1][-1]
 		or 0
 	)
-
-	print("^^^^^^^^^^^^^^^BNK^^^^^^^^^^^^^^^^^^^^^^^")
-	print('cr',total_credits)
-	print('deb',total_debits)
-	print("^^^^^^^^^^^^^^^BNK^^^^^^^^^^^^^^^^^^^^^^^")
 	
 	# Calculate closing balance
 	closing_balance = float(total_credits) - float(total_debits)
@@ -272,11 +267,6 @@ def get_closing_bal_erp(opening_balance, bank_account, from_date, to_date):
 		)[-1][-1]
 		or 0
 	)
-	
-	print("^^^^^^^^^^^^^^^ERP^^^^^^^^^^^^^^^^^^^^^^^")
-	print('cr',total_credits)
-	print('db',total_debits)
-	print("^^^^^^^^^^^^^^^ERP^^^^^^^^^^^^^^^^^^^^^^^")
 	# Calculate closing balance
 	closing_balance = flt(opening_balance) + float(total_credits) - float(total_debits)
 	return closing_balance
