@@ -39,7 +39,8 @@ def after_install():
 	update_roles()
 	frappe.db.commit()
 
-# def after_migrate():
+def after_migrate():
+	pass
 # 	generate_custom_fields()
 
 
