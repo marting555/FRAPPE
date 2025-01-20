@@ -15,6 +15,7 @@ from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delive
 from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
+from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
 
 # test_records = frappe.get_test_records('Quality Inspection')
 
@@ -282,6 +283,25 @@ class TestQualityInspection(FrappeTestCase):
 
 		qa = create_quality_inspection(
 			reference_type="Purchase Receipt", reference_name=pr.name, status="Accepted", inspection_type="Incoming", do_not_submit=True
+		)
+		pr.reload()
+		qa.reload()
+		self.assertEqual(qa.docstatus, 0)
+		qa.submit()
+		qa.reload()
+		self.assertEqual(qa.status, "Accepted")
+
+		qa.reload()
+		qa.cancel()
+		pr.reload()
+		pr.cancel()
+
+	def test_qa_for_pi_TC_SCK_160(self):
+		pr = make_purchase_invoice(item_code="_Test Item with QA")
+		frappe.db.set_value("Item", "_Test Item with QA", "inspection_required_before_purchase", 1)
+
+		qa = create_quality_inspection(
+			reference_type="Purchase Invoice", reference_name=pr.name, status="Accepted", inspection_type="Incoming", do_not_submit=True
 		)
 		pr.reload()
 		qa.reload()

@@ -5,7 +5,7 @@
 import json
 
 import frappe
-import pandas as pd
+# import pandas as pd
 from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, flt, getdate, nowdate, add_years, today, get_year_start, get_year_ending
 from frappe.utils.data import today
