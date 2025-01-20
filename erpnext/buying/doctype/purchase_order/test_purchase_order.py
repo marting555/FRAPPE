@@ -23,7 +23,13 @@ from erpnext.buying.doctype.purchase_order.purchase_order import (
 from erpnext.controllers.accounts_controller import InvalidQtyError, update_child_qty_rate
 from erpnext.manufacturing.doctype.blanket_order.test_blanket_order import make_blanket_order
 from erpnext.stock.doctype.item.test_item import make_item
-from erpnext.stock.doctype.material_request.material_request import make_purchase_order
+from erpnext.stock.doctype.material_request.material_request import (
+	make_purchase_order,
+	make_stock_entry,
+	make_supplier_quotation,
+	raise_work_orders,
+	make_request_for_quotation
+)
 from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 	make_purchase_invoice as make_pi_from_pr,
@@ -35,6 +41,7 @@ from erpnext.buying.doctype.supplier.test_supplier import create_supplier
 from erpnext.buying.doctype.supplier_quotation.supplier_quotation import make_purchase_order as create_po_aganist_sq
 from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt as make_purchase_receipt_aganist_mr
 from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
+from erpnext.buying.doctype.request_for_quotation.request_for_quotation import make_supplier_quotation_from_rfq
 from io import BytesIO
 
 class TestPurchaseOrder(FrappeTestCase):
@@ -1256,6 +1263,31 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(doc_mr.docstatus, 1)
 
 		doc_po = make_test_po(doc_mr.name)
+		doc_pr = make_test_pr(doc_po.name)
+		doc_pi = make_test_pi(doc_pr.name)
+
+		self.assertEqual(doc_pi.docstatus, 1)
+		doc_mr.reload()
+		self.assertEqual(doc_mr.status, "Received")
+
+	def test_mr_pi_TC_B_003(self):
+		# MR => RFQ => SQ => PO => PR => PI
+		args = frappe._dict()
+		args['mr'] = [{
+				"company" : "_Test Company",
+				"item_code" : "Testing-31",
+				"warehouse" : "Stores - _TC",
+				"qty" : 2,
+				"rate" : 100,
+			},
+		]
+
+		doc_mr = make_material_request(**args['mr'][0])
+		self.assertEqual(doc_mr.docstatus, 1)
+
+		doc_rfq = make_test_rfq(doc_mr.name)
+		doc_sq= make_test_sq(doc_rfq.name, 100)
+		doc_po = make_test_po(doc_sq.name, type='Supplier Quotation')
 		doc_pr = make_test_pr(doc_po.name)
 		doc_pi = make_test_pi(doc_pr.name)
 
@@ -4462,3 +4494,34 @@ def make_test_pi(source_name, received_qty = None, item_dict = None):
 	doc_pi.insert()
 	doc_pi.submit()
 	return doc_pi
+
+def make_test_rfq(source_name, received_qty=0):
+	doc_rfq = make_request_for_quotation(source_name)
+
+	supplier_data=[
+				{
+					"supplier": "_Test Supplier",
+					"email_id": "123_testrfquser@example.com",
+				}
+			]
+	doc_rfq.append("suppliers", supplier_data[0])
+	doc_rfq.message_for_supplier = "Please supply the specified items at the best possible rates."
+
+	if received_qty:
+		doc_rfq.items[0].qty = received_qty
+
+	doc_rfq.insert()
+	doc_rfq.submit()
+	return doc_rfq
+
+def make_test_sq(source_name, rate = 0, received_qty=0):
+	doc_sq = make_supplier_quotation_from_rfq(source_name, for_supplier = "_Test Supplier")
+
+	if received_qty:
+		doc_sq.items[0].qty = received_qty
+
+	doc_sq.items[0].rate = rate
+
+	doc_sq.insert()
+	doc_sq.submit()
+	return doc_sq
