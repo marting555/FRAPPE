@@ -610,3 +610,33 @@ body[data-route="pos"] {
 #chat-container {
 	max-width: 24.875rem;
 }
+
+.flag {
+  cursor: pointer;
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-size: 5762px 15px;
+  height: 15px;
+  width: 20px;
+  background-image: url('https://chat-bot-prod-chat-files.s3.us-east-2.amazonaws.com/flags%402x.webp')
+}
+
+.en{
+  background-position: -1841px
+}
+
+.es {
+  background-position: -1577px
+}
+
+.nl {
+  background-position: -3818px
+}
+
+.uk {
+  background-position: -5263px;
+}
+
+.de {
+  background-position: -1291px
+}

@@ -176,6 +176,8 @@ frappe.ui.form.on("Project", {
 		insertCarousel(frm);
 		insertVinSearchButton(frm)
 		insertResendPaymentLink(frm);
+		insertDiagnoseResultTranslation(frm)
+
 		frm.trigger("set_custom_buttons");
 	},
 	create_duplicate: function (frm) {
@@ -765,3 +767,74 @@ async function insertResendPaymentLink(frm) {
 	}
 }
 
+async function insertDiagnoseResultTranslation(frm) {
+  const lang = frappe?.boot?.user?.language || 'nl'
+  const languages = new Set(['nl', 'en', 'uk', lang])
+  const field = document.querySelector('div[data-fieldname="diagnose_result"]');
+  const container = field.querySelector('.clearfix');
+  container.style = 'display:flex;gap:1rem;align-items:center;'
+
+  const spinner = document.createElement('div')
+  spinner.setAttribute('hidden', 'true')
+  spinner.classList = 'vin-search-spinner'
+  spinner.style = `position: relative !important;`
+
+  if(container.getElementsByClassName('flag').length) return
+
+  for (const lang of languages) {
+    const el = document.createElement(`div`)
+    el.classList = `flag ${lang}`
+    el.title = `translate diagnose result to ${lang}`
+
+    el.addEventListener('click', () => onClick(frm, spinner, field, lang))
+    container.appendChild(el)
+  }
+
+  container.appendChild(spinner);
+}
+
+async function onClick(frm, spinner, field, lang) {
+  const flags = document.getElementsByClassName('flag')
+
+  for (const flag of flags) {
+    flag.setAttribute('hidden', 'true')
+  }
+  spinner.removeAttribute('hidden')
+
+  const { aws_url } = await frappe.db.get_doc('Queue Settings')
+
+  if (!aws_url) return
+
+  const response = await fetch(`${aws_url}project/translate-diagnose-result`, {
+    method: "POST",
+    body: JSON.stringify({
+      project_name: frm.docname,
+      language: lang,
+      diagnose_result: frm.doc.diagnose_result
+    })
+  }).then(res => res.json())
+
+  spinner.setAttribute('hidden', 'true')
+
+  for (const flag of flags) {
+    flag.removeAttribute('hidden')
+  }
+
+  if (!response.translation) {
+    frappe.show_alert({
+      message: __(response.message),
+      indicator: 'red'
+    }, 5);
+    return
+  }
+
+  let translation = null;
+
+  translation = field.querySelector('#translation-container') || document.createElement('div')
+  translation.id = 'translation-container'
+
+  translation.style = 'background:#f3f3f3;padding:12px 15px;height:300px;overflow:scroll;font-size:13px;margin-bottom:1rem;'
+  translation.innerHTML = response.translation
+
+  field.appendChild(translation)
+}
