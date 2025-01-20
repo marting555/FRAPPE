@@ -1169,7 +1169,8 @@ class TestPOSInvoice(unittest.TestCase):
 		inv.save()
 		inv.submit()
 		self.assertEqual(inv.status, "Paid")
-		
+
+
 	def test_pos_invoice_with_product_bundle_TC_S_222(self):
 		if not frappe.db.exists("Item", "_Test Book Bundle"):
 			item = frappe.get_doc(
@@ -1206,6 +1207,17 @@ class TestPOSInvoice(unittest.TestCase):
 				"qty": 1,  
 				"rate": 3000, 
 			 })
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
+		inv.paid_amount = inv.grand_total
+		inv.submit()
+		self.assertEqual(inv.status, "Paid")
+		
+	def test_pos_inoivce_with_payment_terms_TC_S_223(self):
+		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=3000,do_not_save=1)
+		inv.save()
+		inv.include_payment = 1  
+		inv.payment_terms_template = "_Test Payment Term Template"
+		inv.set_payment_schedule()
 		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
 		inv.paid_amount = inv.grand_total
 		inv.submit()
