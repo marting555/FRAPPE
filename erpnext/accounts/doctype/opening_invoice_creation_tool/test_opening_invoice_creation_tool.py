@@ -148,7 +148,7 @@ class TestOpeningInvoiceCreationTool(FrappeTestCase):
 			1: ["_Test Customer 1", 250, "Overdue", "Sales - _TOIC"],
 		}
 		self.check_expected_values(invoices, expected_value, invoice_type="Sales")
-	def test_create_opening_invoice_for_purchase_invoice_TC_ACC_044(self):
+	def test_create_opening_invoice_for_purchase_invoice_TC_ACC_047(self):
 		invoices = self.make_invoices(invoice_type="Purchase", company="_Test Company",party_1="_Test Supplier")
 		expected_value = {
 			"keys": ["supplier", "outstanding_amount", "status"],
