@@ -1170,6 +1170,47 @@ class TestPOSInvoice(unittest.TestCase):
 		inv.submit()
 		self.assertEqual(inv.status, "Paid")
 		
+	def test_pos_invoice_with_product_bundle_TC_S_222(self):
+		if not frappe.db.exists("Item", "_Test Book Bundle"):
+			item = frappe.get_doc(
+			{
+				"doctype": "Item",
+				"item_code": "_Test Book Bundle",
+				"item_name": "_Test Book Bundle",
+				"description": "_Test Book Bundle",
+				"item_group": "Products",
+				"gst_hsn_code":"01011010",
+				"is_stock_item":0
+			}
+		)
+			item.save()
+
+		if not frappe.db.exists("Product Bundle", "_Test Book Bundle"):
+			product_bundle = frappe.get_doc({
+				"doctype": "Product Bundle",
+				"new_item_code": "_Test Book Bundle",
+				"items": [
+					{
+						"item_code": "_Test Item",
+						"qty": 2 
+					}
+				]
+			})
+			product_bundle.insert()
+			frappe.db.commit()
+		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=3000,do_not_save=1)
+		inv.items =[]
+		inv.append("items",
+			 {
+				"item_code": product_bundle.new_item_code,  
+				"qty": 1,  
+				"rate": 3000, 
+			 })
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
+		inv.paid_amount = inv.grand_total
+		inv.submit()
+		self.assertEqual(inv.status, "Paid")
+		
 def create_pos_invoice(**args):
 	args = frappe._dict(args)
 	pos_profile = None
