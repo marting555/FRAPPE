@@ -1253,7 +1253,76 @@ class TestJournalEntry(unittest.TestCase):
 			},
 		]
 		self.check_gl_entries()
+	def test_create_jv_with_jv_template_TC_ACC_084(self):
+		
+		if not frappe.db.exists("Journal Entry Template", "_Test Template"):
+			template = frappe.new_doc("Journal Entry Template")
+			template.template_title="_Test Template"
+			template.company="_Test Company"
+			template.naming_series="ACC-JV-.YYYY.-"
+			template.append("accounts",{
+				"account":"Cash - _TC",
+			})
+			template.insert()
+		template=frappe.get_doc("Journal Entry Template","_Test Template")
+		jv = frappe.get_doc({
+			"doctype": "Journal Entry",
+			"company": "_Test Company",
+			"posting_date": frappe.utils.nowdate(),
+			"from_template": template.name,
+			"accounts": [
+				{
+					"account":template.accounts[0].account,
+					"account_currency": "INR",
+					"debit": 10000,
+					"debit_in_account_currency": 10000,
+					"credit": 0,
+					"credit_in_account_currency": 0,
+				}
+			],
+		}).insert()
+		jv.append("accounts", {
+			"account": "_Test Payable - _TC",
+			"account_currency": "INR",
+			"party_type": "Supplier",
+			"party": "_Test Supplier",
+			"debit": 0,
+			"debit_in_account_currency": 0,
+			"credit": 10000,
+			"credit_in_account_currency": 10000,
+		})
+		jv.save().submit()	
 
+		self.voucher_no = jv.name
+		self.fields = [
+			"account",
+			"account_currency",
+			"debit",
+			"debit_in_account_currency",
+			"credit",
+			"credit_in_account_currency",
+		]
+
+		self.expected_gle = [
+			{
+				"account": "Cash - _TC",
+				"account_currency": "INR",
+				"debit": 10000,
+				"debit_in_account_currency": 10000,
+				"credit": 0 ,
+				"credit_in_account_currency": 0,
+			},
+			{
+				"account": "_Test Payable - _TC",
+				"account_currency": "INR",
+				"debit": 0,
+				"debit_in_account_currency": 0,
+				"credit": 10000,
+				"credit_in_account_currency": 10000,
+			}
+		]
+
+		self.check_gl_entries()
 def make_journal_entry(
 	account1,
 	account2,
