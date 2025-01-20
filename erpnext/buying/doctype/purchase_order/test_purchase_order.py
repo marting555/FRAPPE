@@ -32,6 +32,9 @@ from erpnext.accounts.doctype.payment_request.payment_request import make_paymen
 from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.buying.doctype.supplier.test_supplier import create_supplier
+from erpnext.buying.doctype.supplier_quotation.supplier_quotation import make_purchase_order as create_po_aganist_sq
+from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt as make_purchase_receipt_aganist_mr
+from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
 from io import BytesIO
 
 class TestPurchaseOrder(FrappeTestCase):
@@ -1238,6 +1241,28 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(doc_pi.items[0].qty, doc_po.items[0].qty)
 		self.assertEqual(doc_pi.grand_total, doc_po.grand_total)
 	
+	def test_mr_pi_TC_B_002(self):
+		# MR =>  PO => PR => PI
+		mr_dict_list = [{
+				"company" : "_Test Company",
+				"item_code" : "Testing-31",
+				"warehouse" : "Stores - _TC",
+				"qty" : 6,
+				"rate" : 100,
+			},
+		]
+
+		doc_mr = make_material_request(**mr_dict_list[0])
+		self.assertEqual(doc_mr.docstatus, 1)
+
+		doc_po = make_test_po(doc_mr.name)
+		doc_pr = make_test_pr(doc_po.name)
+		doc_pi = make_test_pi(doc_pr.name)
+
+		self.assertEqual(doc_pi.docstatus, 1)
+		doc_mr.reload()
+		self.assertEqual(doc_mr.status, "Received")
+
 	def test_multi_po_pr_TC_B_008(self):
 		# Scenario : 2PO => 2PR => 1PI
 		args = frappe._dict()
@@ -4392,3 +4417,48 @@ def create_fiscal_year():
 	fy_doc.append("companies", {"company": company})
 	fy_doc.submit()
 	
+def make_test_po(source_name, type = "Material Request", received_qty = 0, item_dict = None):
+	if type == "Material Request":
+		doc_po = make_purchase_order(source_name)
+
+	if type == 'Supplier Quotation':
+		doc_po = create_po_aganist_sq(source_name)
+
+	if doc_po.supplier is None:
+		doc_po.supplier = "_Test Supplier"
+
+	if received_qty:
+		doc_po.items[0].qty = received_qty
+
+	if item_dict is not None:
+		doc_po.append("items", item_dict)
+
+
+	doc_po.insert()
+	doc_po.submit()
+	return doc_po
+
+def make_test_pr(source_name, received_qty = None, item_dict = None):
+	doc_pr = make_purchase_receipt_aganist_mr(source_name)
+
+	if received_qty is not None:
+		doc_pr.items[0].qty = received_qty
+
+	if item_dict is not None:
+		doc_pr.append("items", item_dict)
+
+	doc_pr.insert()
+	doc_pr.submit()
+	return doc_pr
+
+def make_test_pi(source_name, received_qty = None, item_dict = None):
+	doc_pi = make_purchase_invoice(source_name)
+	if received_qty is not None:
+		doc_pi.items[0].qty = received_qty
+
+	if item_dict is not None:
+		doc_pi.append("items", item_dict)
+
+	doc_pi.insert()
+	doc_pi.submit()
+	return doc_pi
