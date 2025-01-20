@@ -39,11 +39,6 @@ def after_install():
 	update_roles()
 	frappe.db.commit()
 
-def after_migrate():
-	pass
-# 	generate_custom_fields()
-
-
 def check_setup_wizard_not_completed():
 	if cint(frappe.db.get_single_value("System Settings", "setup_complete") or 0):
 		message = """ERPNext can only be installed on a fresh site where the setup wizard is not completed.
