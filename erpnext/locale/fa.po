@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-01-19 09:34+0000\n"
-"PO-Revision-Date: 2025-01-19 19:22\n"
+"PO-Revision-Date: 2025-01-20 19:57\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Persian\n"
 "MIME-Version: 1.0\n"
@@ -51635,7 +51635,7 @@ msgstr "قاشق غذاخوری (US)"
 
 #: erpnext/buying/doctype/request_for_quotation/request_for_quotation.js:467
 msgid "Tag"
-msgstr "برچسب بزنید"
+msgstr "تگ"
 
 #. Label of the target (Data) field in DocType 'Quality Goal Objective'
 #. Label of the target (Data) field in DocType 'Quality Review Objective'
