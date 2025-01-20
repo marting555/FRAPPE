@@ -3407,6 +3407,8 @@ class TestPurchaseOrder(FrappeTestCase):
 
 
 	def test_po_to_pi_with_deferred_expense_TC_B_094(self):
+		company = '_Test Company'
+		frappe.db.set_value('Company', company, 'default_deferred_expense_account', '_Test Account Excise Duty - _TC')
 		item = frappe.get_doc({
 			'doctype': 'Item',
 			'item_code': 'test_expense',
@@ -3419,6 +3421,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		po = frappe.get_doc({
 			'doctype': 'Purchase Order',
 			'supplier': '_Test Supplier 1',
+			'company': company,
 			'schedule_date': today(),
 			'items': [{
 				'item_code': item.item_code,
@@ -3431,6 +3434,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi = frappe.get_doc({
 			'doctype': 'Purchase Invoice',
 			'supplier': po.supplier,
+			'company': po.company,
 			'items': [{
 				'item_code': item.item_code,
 				'qty': 1,
