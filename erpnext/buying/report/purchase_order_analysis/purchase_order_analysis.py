@@ -40,6 +40,7 @@ def validate_filters(filters):
 
 
 def get_data(filters):
+    print(1111111111, filters)
     query_result = frappe.db.sql(
         f"""SELECT 
                 "tabPurchase Order"."transaction_date" AS "date",
@@ -102,7 +103,7 @@ def get_data(filters):
         if filters.get("company") and row["company"] != filters.get("company"):
             include_row = False
             
-        if filters.get("name") and row["name"] != filters.get("name"):
+        if filters.get("name") and row["purchase_order"] != filters.get("name"):
             include_row = False
             
         if filters.get("from_date") and filters.get("to_date"):
