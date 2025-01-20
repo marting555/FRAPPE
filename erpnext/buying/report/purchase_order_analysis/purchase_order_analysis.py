@@ -40,7 +40,6 @@ def validate_filters(filters):
 
 
 def get_data(filters):
-    print(1111111111, filters)
     query_result = frappe.db.sql(
         f"""SELECT 
                 "tabPurchase Order"."transaction_date" AS "date",
