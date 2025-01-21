@@ -8,19 +8,74 @@ from frappe import _
 from frappe.tests.utils import FrappeTestCase
 
 class TestGLClosing(FrappeTestCase):
-	def before_save(self):
-		if self.is_new():
-			existing_closing = frappe.get_all("GL Closing",
-			filters={
-                "company": self.company,
-                "start_date": self.start_date,
-                "end_date": self.end_date
-            },
-            limit_page_length=1)
-			if existing_closing:
-				frappe.throw(
-                _("GL Closing for the period from {0} to {1} already exists for the company {2}")
-                .format(self.start_date, self.end_date, self.company))
+    
+     def test_gl_closing_TC_ACC_043(self):
+        from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+            create_records,
+            create_purchase_invoice,
+            make_test_item,
+        )
+        from erpnext.accounts.utils import get_fiscal_year
+        
+        create_records("_Test Supplier")
+        
+        year=get_fiscal_year(nowdate())
+        
+        if not frappe.db.exists("GL Closing", "_Test GL Closing"):
+            gl_closing = frappe.new_doc("GL Closing")
+            gl_closing.period_name = "_Test GL Closing"
+            gl_closing.company = "_Test Company"
+            gl_closing.start_date = year[1] if year else "2025-03-01"
+            gl_closing.end_date = year[2] if year else "2025-03-31"
+            gl_closing.append("gl_closing_details", {
+                "account": "Creditors - _TC",
+                "closed": 1
+            })
+            gl_closing.insert(ignore_permissions=True)
+   
+        gl_closing = frappe.get_doc("GL Closing", "_Test GL Closing")
+        
+        if gl_closing.gl_closing_details and not gl_closing.gl_closing_details[0].closed: 
+            gl_closing.gl_closing_details[0].closed = 1
+            gl_closing.save()
+       
+        item=make_test_item()
+        try:
+            pi = create_purchase_invoice(
+                item_code=item.name,
+                posting_date=nowdate(),
+                company="_Test Company",
+                supplier="_Test Supplier",
+                currency="INR",
+                credit_to="Creditors - _TC"
+            )
+        except Exception as e:
+            error_message = str(e)
+            self.assertEqual("The account Creditors - _TC is closed and cannot be used in this Purchase Invoice", error_message)
+            gl_closing.gl_closing_details[0].closed = 0
+            gl_closing.save()
+            frappe.db.commit()
+            
+            
+            
+        def before_save(self):
+            if self.is_new():
+                existing_closing = frappe.get_all("GL Closing",
+                filters={
+                    "company": self.company,
+                    "start_date": self.start_date,
+                    "end_date": self.end_date
+                },
+                limit_page_length=1)
+                if existing_closing:
+                    frappe.throw(
+                    _("GL Closing for the period from {0} to {1} already exists for the company {2}")
+                    .format(self.start_date, self.end_date, self.company))
+     def tearDown(self):
+            for d in frappe.get_all("GL Closing"):
+                if d.name and d.name == "_Test GL Closing":
+                    frappe.delete_doc("GL Closing", d.name)
+                    frappe.db.commit()
 
 
 @frappe.whitelist(allow_guest=True)

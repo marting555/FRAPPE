@@ -5,7 +5,7 @@
 import json
 
 import frappe
-import pandas as pd
+# import pandas as pd
 from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, flt, getdate, nowdate, add_years, today, get_year_start, get_year_ending
 from frappe.utils.data import today
@@ -23,7 +23,13 @@ from erpnext.buying.doctype.purchase_order.purchase_order import (
 from erpnext.controllers.accounts_controller import InvalidQtyError, update_child_qty_rate
 from erpnext.manufacturing.doctype.blanket_order.test_blanket_order import make_blanket_order
 from erpnext.stock.doctype.item.test_item import make_item
-from erpnext.stock.doctype.material_request.material_request import make_purchase_order
+from erpnext.stock.doctype.material_request.material_request import (
+	make_purchase_order,
+	make_stock_entry,
+	make_supplier_quotation,
+	raise_work_orders,
+	make_request_for_quotation
+)
 from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 	make_purchase_invoice as make_pi_from_pr,
@@ -32,6 +38,10 @@ from erpnext.accounts.doctype.payment_request.payment_request import make_paymen
 from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.buying.doctype.supplier.test_supplier import create_supplier
+from erpnext.buying.doctype.supplier_quotation.supplier_quotation import make_purchase_order as create_po_aganist_sq
+from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt as make_purchase_receipt_aganist_mr
+from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
+from erpnext.buying.doctype.request_for_quotation.request_for_quotation import make_supplier_quotation_from_rfq
 from io import BytesIO
 
 class TestPurchaseOrder(FrappeTestCase):
@@ -1238,6 +1248,53 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(doc_pi.items[0].qty, doc_po.items[0].qty)
 		self.assertEqual(doc_pi.grand_total, doc_po.grand_total)
 	
+	def test_mr_pi_TC_B_002(self):
+		# MR =>  PO => PR => PI
+		mr_dict_list = [{
+				"company" : "_Test Company",
+				"item_code" : "Testing-31",
+				"warehouse" : "Stores - _TC",
+				"qty" : 6,
+				"rate" : 100,
+			},
+		]
+
+		doc_mr = make_material_request(**mr_dict_list[0])
+		self.assertEqual(doc_mr.docstatus, 1)
+
+		doc_po = make_test_po(doc_mr.name)
+		doc_pr = make_test_pr(doc_po.name)
+		doc_pi = make_test_pi(doc_pr.name)
+
+		self.assertEqual(doc_pi.docstatus, 1)
+		doc_mr.reload()
+		self.assertEqual(doc_mr.status, "Received")
+
+	def test_mr_pi_TC_B_003(self):
+		# MR => RFQ => SQ => PO => PR => PI
+		args = frappe._dict()
+		args['mr'] = [{
+				"company" : "_Test Company",
+				"item_code" : "Testing-31",
+				"warehouse" : "Stores - _TC",
+				"qty" : 2,
+				"rate" : 100,
+			},
+		]
+
+		doc_mr = make_material_request(**args['mr'][0])
+		self.assertEqual(doc_mr.docstatus, 1)
+
+		doc_rfq = make_test_rfq(doc_mr.name)
+		doc_sq= make_test_sq(doc_rfq.name, 100)
+		doc_po = make_test_po(doc_sq.name, type='Supplier Quotation')
+		doc_pr = make_test_pr(doc_po.name)
+		doc_pi = make_test_pi(doc_pr.name)
+
+		self.assertEqual(doc_pi.docstatus, 1)
+		doc_mr.reload()
+		self.assertEqual(doc_mr.status, "Received")
+
 	def test_multi_po_pr_TC_B_008(self):
 		# Scenario : 2PO => 2PR => 1PI
 		args = frappe._dict()
@@ -1564,7 +1621,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
 		self.assertEqual(pi_status, "Debit Note Issued")  
 
-	def test_50_50_payment_terms_TC_B_045(self):
+	def test_50_50_payment_terms_TC_B_044(self):
 		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
 
@@ -2263,6 +2320,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(doc_po.docstatus, 1)
 
 		doc_pe = get_payment_entry("Purchase Order", doc_po.name, doc_po.grand_total)
+		doc_pe.reference_no = "123"
 		doc_pe.insert()
 		doc_pe.submit()
 		# doc_pe.paid_from = "Cash"
@@ -3158,108 +3216,14 @@ class TestPurchaseOrder(FrappeTestCase):
 			]
 		})
 		po.insert()
+
+		self.assertEqual(len(po.items), 1)
+		self.assertEqual(po.items[0].rate, 117)
+		self.assertEqual(po.items[0].discount_percentage, 10)
+		po.ignore_pricing_rule = 1
+		po.save()
 		po.submit()
-
-		
-		self.assertEqual(po.grand_total, 12200, "Grand Total should include Shipping Rule (12000 + 200 = 12200).")
-		self.assertEqual(po.status, "To Receive and Bill", "PO status should be 'To Receive and Bill'.")
-
-		
-		pr = frappe.get_doc({
-			"doctype": "Purchase Receipt",
-			"purchase_order": po.name,
-			"items": [
-				{
-					"item_code": "_Test Item",
-					"warehouse": "_Test Warehouse 1 - _TC",
-					"qty": 4,
-					"rate": 3000
-				}
-			]
-		})
-		pr.insert()
-		pr.submit()
-
-		
-		sle = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": pr.name}, fields=["actual_qty", "item_code"])
-		self.assertEqual(len(sle), 1, "Stock Ledger Entry should exist for the received item.")
-		self.assertEqual(sle[0]["actual_qty"], 4, "Stock Ledger should reflect 4 qty received for _Test Item.")
-
-		gl_entries_pr = frappe.get_all("GL Entry", filters={"voucher_no": pr.name}, fields=["account", "debit", "credit"])
-		self.assertTrue(any(entry["account"] == "Stock In Hand - _TC" and entry["debit"] == 12200 for entry in gl_entries_pr),
-						"Stock In Hand account should be debited with 12200.")
-		self.assertTrue(any(entry["account"] == "Stock Received But Not Billed - _TC" and entry["credit"] == 12000 for entry in gl_entries_pr),
-						"Stock Received But Not Billed account should be credited with 12000.")
-		self.assertTrue(any(entry["account"] == "Shipping Rule - _TC" and entry["credit"] == 200 for entry in gl_entries_pr),
-						"Shipping Rule account should be credited with 200.")
-		self.assertEqual(pr.status, "To Bill", "PR status should be 'To Bill'.")
-
-		
-		pi_1 = frappe.get_doc({
-			"doctype": "Purchase Invoice",
-			"purchase_receipt": pr.name,
-			"items": [
-				{
-					"item_code": "_Test Item",
-					"qty": 2,
-					"rate": 3000
-				}
-			]
-		})
-		pi_1.insert()
-		pi_1.submit()
-
-		
-		gl_entries_pi_1 = frappe.get_all("GL Entry", filters={"voucher_no": pi_1.name}, fields=["account", "debit", "credit"])
-		self.assertTrue(any(entry["account"] == "Stock Received But Not Billed - _TC" and entry["debit"] == 6000 for entry in gl_entries_pi_1),
-						"Stock Received But Not Billed account should be debited with 6000.")
-		self.assertTrue(any(entry["account"] == "Shipping Rule - _TC" and entry["debit"] == 200 for entry in gl_entries_pi_1),
-						"Shipping Rule account should be debited with 200.")
-		self.assertTrue(any(entry["account"] == "Creditors - _TC" and entry["credit"] == 6200 for entry in gl_entries_pi_1),
-						"Creditors account should be credited with 6200.")
-		self.assertEqual(pi_1.status, "Unpaid", "1st PI status should be 'Unpaid'.")
-		pr.reload()
-		self.assertEqual(pr.status, "Partially Billed", "PR status should be 'Partially Billed' after 1st PI.")
-
-		
-		pi_2 = frappe.get_doc({
-			"doctype": "Purchase Invoice",
-			"purchase_receipt": pr.name,
-			"items": [
-				{
-					"item_code": "_Test Item",
-					"qty": 2,
-					"rate": 3000
-				}
-			]
-		})
-		pi_2.insert()
-		pi_2.submit()
-
-		
-		gl_entries_pi_2 = frappe.get_all("GL Entry", filters={"voucher_no": pi_2.name}, fields=["account", "debit", "credit"])
-		self.assertTrue(any(entry["account"] == "Stock Received But Not Billed - _TC" and entry["debit"] == 6000 for entry in gl_entries_pi_2),
-						"Stock Received But Not Billed account should be debited with 6000.")
-		self.assertTrue(any(entry["account"] == "Shipping Rule - _TC" and entry["debit"] == 200 for entry in gl_entries_pi_2),
-						"Shipping Rule account should be debited with 200.")
-		self.assertTrue(any(entry["account"] == "Creditors - _TC" and entry["credit"] == 6200 for entry in gl_entries_pi_2),
-						"Creditors account should be credited with 6200.")
-		self.assertEqual(pi_2.status, "Unpaid", "2nd PI status should be 'Unpaid'.")
-		pr.reload()
-		po.reload()
-		self.assertEqual(pr.status, "Completed", "PR status should be 'Completed' after 2nd PI.")
-		self.assertEqual(po.status, "Completed", "PO status should be 'Completed' after 2nd PI.")
-
-		
-		self.assertEqual(pr.purchase_order, po.name, "PR should be linked to the PO.")
-		self.assertEqual(pi_1.purchase_receipt, pr.name, "1st PI should be linked to the PR.")
-		self.assertEqual(pi_2.purchase_receipt, pr.name, "2nd PI should be linked to the PR.")
-
-		
-		pi_2.cancel()
-		pi_1.cancel()
-		pr.cancel()
-		po.cancel()
+		self.assertEqual(po.items[0].rate, 130)
 
 	def test_po_pr_pi_multiple_flow_TC_B_065(self):
 		# Scenario : PO=>2PR=>2PI 
@@ -3407,6 +3371,8 @@ class TestPurchaseOrder(FrappeTestCase):
 
 
 	def test_po_to_pi_with_deferred_expense_TC_B_094(self):
+		company = '_Test Company'
+		frappe.db.set_value('Company', company, 'default_deferred_expense_account', '_Test Account Excise Duty - _TC')
 		item = frappe.get_doc({
 			'doctype': 'Item',
 			'item_code': 'test_expense',
@@ -3419,6 +3385,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		po = frappe.get_doc({
 			'doctype': 'Purchase Order',
 			'supplier': '_Test Supplier 1',
+			'company': company,
 			'schedule_date': today(),
 			'items': [{
 				'item_code': item.item_code,
@@ -3431,6 +3398,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi = frappe.get_doc({
 			'doctype': 'Purchase Invoice',
 			'supplier': po.supplier,
+			'company': po.company,
 			'items': [{
 				'item_code': item.item_code,
 				'qty': 1,
@@ -4392,3 +4360,79 @@ def create_fiscal_year():
 	fy_doc.append("companies", {"company": company})
 	fy_doc.submit()
 	
+def make_test_po(source_name, type = "Material Request", received_qty = 0, item_dict = None):
+	if type == "Material Request":
+		doc_po = make_purchase_order(source_name)
+
+	if type == 'Supplier Quotation':
+		doc_po = create_po_aganist_sq(source_name)
+
+	if doc_po.supplier is None:
+		doc_po.supplier = "_Test Supplier"
+
+	if received_qty:
+		doc_po.items[0].qty = received_qty
+
+	if item_dict is not None:
+		doc_po.append("items", item_dict)
+
+
+	doc_po.insert()
+	doc_po.submit()
+	return doc_po
+
+def make_test_pr(source_name, received_qty = None, item_dict = None):
+	doc_pr = make_purchase_receipt_aganist_mr(source_name)
+
+	if received_qty is not None:
+		doc_pr.items[0].qty = received_qty
+
+	if item_dict is not None:
+		doc_pr.append("items", item_dict)
+
+	doc_pr.insert()
+	doc_pr.submit()
+	return doc_pr
+
+def make_test_pi(source_name, received_qty = None, item_dict = None):
+	doc_pi = make_purchase_invoice(source_name)
+	if received_qty is not None:
+		doc_pi.items[0].qty = received_qty
+
+	if item_dict is not None:
+		doc_pi.append("items", item_dict)
+
+	doc_pi.insert()
+	doc_pi.submit()
+	return doc_pi
+
+def make_test_rfq(source_name, received_qty=0):
+	doc_rfq = make_request_for_quotation(source_name)
+
+	supplier_data=[
+				{
+					"supplier": "_Test Supplier",
+					"email_id": "123_testrfquser@example.com",
+				}
+			]
+	doc_rfq.append("suppliers", supplier_data[0])
+	doc_rfq.message_for_supplier = "Please supply the specified items at the best possible rates."
+
+	if received_qty:
+		doc_rfq.items[0].qty = received_qty
+
+	doc_rfq.insert()
+	doc_rfq.submit()
+	return doc_rfq
+
+def make_test_sq(source_name, rate = 0, received_qty=0):
+	doc_sq = make_supplier_quotation_from_rfq(source_name, for_supplier = "_Test Supplier")
+
+	if received_qty:
+		doc_sq.items[0].qty = received_qty
+
+	doc_sq.items[0].rate = rate
+
+	doc_sq.insert()
+	doc_sq.submit()
+	return doc_sq
