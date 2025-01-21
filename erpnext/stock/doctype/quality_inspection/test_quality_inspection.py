@@ -400,6 +400,32 @@ class TestQualityInspection(FrappeTestCase):
 		qa.reload()
 		qa.cancel()
 
+	def test_qa_for_se_out_TC_SCK_165(self):
+		item_code = create_item("_Test SE Item with QA").name
+		create_company()
+		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company QA")
+
+		se = make_stock_entry(
+			item_code=item_code, target=warehouse, qty=1, basic_rate=100, do_not_submit=True
+		)
+
+		se.inspection_required = 1
+		se.save()
+
+		qa = create_quality_inspection(
+			item_code=item_code, reference_type="Stock Entry", reference_name=se.name, inspection_type="Outgoing", do_not_submit=True
+		)
+
+		se.reload()
+		qa.reload()
+		self.assertEqual(qa.docstatus, 0)
+		qa.submit()
+		qa.reload()
+		self.assertEqual(qa.status, "Accepted")
+
+		qa.reload()
+		qa.cancel()
+
 def create_quality_inspection(**args):
 	args = frappe._dict(args)
 	qa = frappe.new_doc("Quality Inspection")
