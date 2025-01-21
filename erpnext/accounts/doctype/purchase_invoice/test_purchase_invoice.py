@@ -3646,7 +3646,39 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		total_debit = sum(entry["debit"] for entry in gl_entries)
 		total_credit = sum(entry["credit"] for entry in gl_entries)
 		self.assertEqual(total_debit, total_credit)
-
+	
+	def test_repost_account_ledger_for_pi_TC_ACC_117(self):
+		from erpnext.accounts.doctype.repost_accounting_ledger.test_repost_accounting_ledger import update_repost_settings
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item
+		)
+		update_repost_settings()
+		company = "_Test Company"
+		item=make_test_item("_Test Item")
+		pi = make_purchase_invoice(
+			supplier = "_Test Supplier",
+			company = company,
+			item_code=item.name,
+			rate=1000,
+			qty=1,
+		)
+		ral=frappe.get_doc({
+			"doctype":"Repost Accounting Ledger",
+			"company":company,
+			"vouchers":[{
+				"voucher_type":"Purchase Invoice",
+				"voucher_no":pi.name
+			}]
+		}).insert()
+		ral.submit()
+		pi.items[0].expense_account="_Test Account Stock Adjustment - _TC"
+		pi.db_update()
+		pi.submit()
+		expected_gl_entries = [
+			['Creditors - _TC', 0.0, pi.grand_total, pi.posting_date],
+			['_Test Account Stock Adjustment - _TC', pi.grand_total, 0.0, pi.posting_date],
+		]
+		check_gl_entries(self, pi.name, expected_gl_entries, pi.posting_date)
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",

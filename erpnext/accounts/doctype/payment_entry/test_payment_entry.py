@@ -2365,7 +2365,7 @@ def create_purchase_invoice(**args):
 					"qty": args.qty or 1,
 					"rate": args.rate or 90000,
 					"cost_center": "Main - _TC",
-					"expense_account": "Stock Received But Not Billed - _TC",
+					"expense_account": args.expense_account or "Stock Received But Not Billed - _TC",
 				}
 			],
 		}

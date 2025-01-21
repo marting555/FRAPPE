@@ -5234,6 +5234,39 @@ class TestSalesInvoice(FrappeTestCase):
 			['Deferred Revenue - _TC', 0.0, sales_invoice.grand_total, sales_invoice.posting_date]
 		]
 		check_gl_entries(self, sales_invoice.name, expected_gl_entries, sales_invoice.posting_date)
+	
+	def test_repost_account_ledger_for_si_TC_ACC_118(self):
+		from erpnext.accounts.doctype.repost_accounting_ledger.test_repost_accounting_ledger import update_repost_settings
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+
+		update_repost_settings()
+		company = "_Test Company"
+		item = make_test_item(item_name="_Test Item")
+		si = create_sales_invoice(
+			customer="_Test Customer",
+			company=company, 
+			item=item.name,
+			rate=1000
+		)
+		ral=frappe.get_doc({
+			"doctype":"Repost Accounting Ledger",
+			"company":company,
+			"vouchers":[{
+				"voucher_type":"Sales Invoice",
+				"voucher_no":si.name
+			}]
+		}).insert()
+		ral.submit()
+		si.items[0].income_account="_Test Account Cost for Goods Sold - _TC"
+		si.db_update()
+		si.submit()
+		expected_gl_entries = [
+			['Debtors - _TC', si.grand_total, 0.0, si.posting_date],
+			['_Test Account Cost for Goods Sold - _TC', 0.0, si.grand_total, si.posting_date]
+		]
+		check_gl_entries(self, si.name, expected_gl_entries, si.posting_date)
+	
+		
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
@@ -5259,6 +5292,7 @@ def check_gl_entries(doc, voucher_no, expected_gle, posting_date, voucher_type="
 		.orderby(gl.posting_date, gl.account, gl.creation)
 	)
 	gl_entries = q.run(as_dict=True)
+	print(gl_entries)
 	expected_gle = sorted(expected_gle, key=lambda x: x[0])
 	gl_entries = sorted(gl_entries, key=lambda x: x['account'])
 
