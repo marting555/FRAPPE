@@ -4414,25 +4414,25 @@ class TestMaterialRequest(FrappeTestCase):
 		# PI Ledger Validation
 		pi_total = sum(entry["debit"] for entry in pi_gl_entries)
 		self.assertEqual(pi_total, 10080) 
-		
+
 	def test_purchase_flow_TC_B_068(self):
-        #Scenario : MR=>PO=>PR=>PI
+		#Scenario : MR=>PO=>PR=>PI
 		data_dict = {
-			company :  "_Test Supplier",
-			warehouse :  "_Test Warehouse 1 - _TC",
-			item :  "_Test Item",
-			uom :  "Nos",
-			qty :  1,
-			supplier :  "_Test Supplier",
-			rate :  3000,
-			shipping_rule :  "Ship-Buy",
-			transaction_date :  "2025-01-17",
-			received_date :  "2025-01-18",
-			pr_status :  'To Bill',
-			pi_status :  'Unpaid',
+			'company' :  "_Test Supplier",
+			'warehouse' :  "_Test Warehouse 1 - _TC",
+			'item' :  "_Test Item",
+			'uom' :  "Nos",
+			'qty' :  1,
+			'supplier' :  "_Test Supplier",
+			'rate' :  3000,
+			'shipping_rule' :  "Ship-Buy",
+			'transaction_date' :  "2025-01-17",
+			'received_date' :  "2025-01-18",
+			'pr_status' :  'To Bill',
+			'pi_status' :  'Unpaid',
 		}
 
-        # Step 1: Create MR (Material Request)
+		# Step 1: Create MR (Material Request)
 		mr = frappe.get_doc({
 			"doctype": "Material Request",
 			"company": data_dict.get("company"),
@@ -4445,12 +4445,12 @@ class TestMaterialRequest(FrappeTestCase):
 				"warehouse": data_dict.get("warehouse")
 			}]
 		}).insert()
-
+		
 		mr.submit()
 
 		# Verify MR Status
 		self.assertEqual(mr.status, "Pending")
-
+		
 		# Step 2: Create PO (Purchase Order)
 
 
@@ -4496,7 +4496,7 @@ class TestMaterialRequest(FrappeTestCase):
 		# Verify GL Entries
 		stock_in_hand_account = frappe.get_all('GL Entry', filters={'voucher_type': 'Purchase Receipt', 'voucher_no': pr.name, 'account': 'Stock in Hand - PP'}, fields=['debit'])
 		self.assertEqual(stock_in_hand_account[0].debit, 3200)
-
+		
 		stock_received_not_billed = frappe.get_all('GL Entry', filters={'voucher_type': 'Purchase Receipt', 'voucher_no': pr.name, 'account': 'Stock Received But Not Billed - PP'}, fields=['credit'])
 		self.assertEqual(stock_received_not_billed[0].credit, 3000)
 
@@ -4557,7 +4557,7 @@ class TestMaterialRequest(FrappeTestCase):
 			"pr_status" : 'To Bill',
 			"pi_status" : 'Unpaid',
 		}
-
+		
 		# Step 1: Create MR (Material Request)
 		mr = frappe.get_doc({
 			"doctype": "Material Request",
@@ -4571,12 +4571,12 @@ class TestMaterialRequest(FrappeTestCase):
 				"warehouse": self.warehouse
 			}]
 		}).insert()
-
+		
 		mr.submit()
 
 		# Verify MR Status
 		self.assertEqual(mr.status, "Pending")
-
+		
 		# Step 2: Create PO (Purchase Order)
 		po = frappe.get_doc({
 			"doctype": "Purchase Order",
@@ -4620,7 +4620,7 @@ class TestMaterialRequest(FrappeTestCase):
 		# Verify GL Entries
 		stock_in_hand_account = frappe.get_all('GL Entry', filters={'voucher_type': 'Purchase Receipt', 'voucher_no': pr.name, 'account': 'Stock in Hand - PP'}, fields=['debit'])
 		self.assertEqual(stock_in_hand_account[0].debit, 3200)
-
+		
 		stock_received_not_billed = frappe.get_all('GL Entry', filters={'voucher_type': 'Purchase Receipt', 'voucher_no': pr.name, 'account': 'Stock Received But Not Billed - PP'}, fields=['credit'])
 		self.assertEqual(stock_received_not_billed[0].credit, 3000)
 
