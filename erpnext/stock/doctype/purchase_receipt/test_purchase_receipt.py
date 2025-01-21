@@ -4739,6 +4739,37 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(doc_pr.discount_amount, 1120)
 		self.assertEqual(doc_pr.grand_total, 10080)
 
+	def test_pr_to_pi_with_additional_discount_TC_B_059(self):
+		# Scenario : PR => PI => PI [Return]
+		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
+			make_purchase_invoice as make_pi_from_pr,
+		)
+
+		from erpnext.controllers.sales_and_purchase_return import make_return_doc
+
+		pr_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"supplier": "_Test Supplier",
+            "schedule_date": "2025-01-13",
+			"qty" : 1,
+			"rate" : 130,
+		}
+
+		doc_pr = make_purchase_receipt(**pr_data)
+		self.assertEqual(doc_pr.docstatus, 1)
+
+		doc_pi = make_pi_from_pr(doc_pr.name)
+		doc_pi.insert()
+		doc_pi.submit()
+
+		doc_pi_return = make_return_doc(doc_pi.doctype, doc_pi.name)
+		doc_pi_return.insert()
+		doc_pi_return.submit()
+
+		self.assertEqual(doc_pi_return.status, 'Return')
+
 def prepare_data_for_internal_transfer():
 	from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_internal_supplier
 	from erpnext.selling.doctype.customer.test_customer import create_internal_customer
