@@ -4802,12 +4802,14 @@ class TestSalesInvoice(FrappeTestCase):
  
 	def test_sales_invoice_and_delivery_note_with_shipping_rule_TC_S_026(self):
 		frappe.db.set_single_value("Selling Settings", "so_required", "No")
+		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=10, rate=4000)
 
 		sales_invoice = create_sales_invoice(
 			customer="_Test Customer",
 			company="_Test Company",
 			cost_center="Main - _TC",
 			currency="INR",
+			warehouse="Stores - _TC",
 			price_list="Standard Selling",
 			item_code="_Test Item Home Desktop 100",  
 			shipping_rule="_Test Shipping Rule",
@@ -4877,14 +4879,7 @@ class TestSalesInvoice(FrappeTestCase):
 
 		debtor_account = frappe.db.get_value("Company", "_Test Company", "default_receivable_account")
 		sales_account = frappe.db.get_value("Company", "_Test Company", "default_income_account")
-		cogs_account = frappe.db.get_value("Company", "_Test Company", "stock_adjustment_account")
 		shipping_account = frappe.db.get_value("Shipping Rule", "_Test Shipping Rule", "account")
-
-		stock_in_hand_account = frappe.db.get_value(
-			"Warehouse", "Stores - _TC", "account"
-		)
-		if not stock_in_hand_account:
-			stock_in_hand_account = frappe.db.get_single_value("Stock Settings", "stock_in_hand_account")
 
 		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": sales_invoice.name}, fields=["account", "debit", "credit"])
 		gl_debits = {entry.account: entry.debit for entry in gl_entries}
@@ -4893,8 +4888,8 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertAlmostEqual(gl_debits[debtor_account], 20200)  
 		self.assertAlmostEqual(gl_credits[sales_account], 20000)  
 		self.assertAlmostEqual(gl_credits[shipping_account], 200)  
-		self.assertTrue(stock_in_hand_account in gl_credits)  
-		self.assertTrue(cogs_account in gl_debits)  
+		self.assertTrue('Stock In Hand - _TC' in gl_credits)  
+		self.assertTrue('Cost of Goods Sold - _TC' in gl_debits)  
 		shipping_rule_amount = frappe.db.get_value("Sales Taxes and Charges", {"parent": sales_invoice.name, "account_head": shipping_account}, "tax_amount")
 		self.assertAlmostEqual(shipping_rule_amount, 200)  
 		sle = frappe.get_all(
