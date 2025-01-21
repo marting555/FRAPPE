@@ -1621,7 +1621,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
 		self.assertEqual(pi_status, "Debit Note Issued")  
 
-	def test_50_50_payment_terms_TC_B_045(self):
+	def test_50_50_payment_terms_TC_B_044(self):
 		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
 
@@ -2320,6 +2320,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(doc_po.docstatus, 1)
 
 		doc_pe = get_payment_entry("Purchase Order", doc_po.name, doc_po.grand_total)
+		doc_pe.reference_no = "123"
 		doc_pe.insert()
 		doc_pe.submit()
 		# doc_pe.paid_from = "Cash"
