@@ -3360,6 +3360,59 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		qty_change2 = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn2.name, 'warehouse': '_Test Warehouse - _TC'}, ['actual_qty', 'valuation_rate'])
 		self.assertEqual(qty_change2[0].get("actual_qty"), -2)
+	
+	def test_so_with_customer_po_TC_S_031(self):
+		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
+		frappe.db.set_single_value("Selling Settings", "allow_against_multiple_purchase_orders", 1)
+		po = create_purchase_order()
+		so_1 = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', qty=5, rate=3000, do_not_save=True)
+		so_1.po_no = po.name
+		so_1.po_date = today()
+		so_1.save()
+		so_1.submit()
+
+		so_2 = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', qty=8, rate=3000, do_not_save=True)
+		so_2.po_no = po.name
+		so_2.po_date = today()
+		so_2.save()
+		so_2.submit()
+
+		dn_1 = make_delivery_note(so_1.name)
+		dn_1.save()
+		dn_1.submit()
+
+		dn_2 = make_delivery_note(so_2.name)
+		dn_2.save()
+		dn_2.submit()
+
+
+		so_1.reload()
+		so_2.reload()
+		self.assertEqual(dn_1.status, "To Bill")
+		self.assertEqual(dn_2.status, "To Bill")
+
+		qty_change_dn_1 = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn_1.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change_dn_1, -5)
+
+		qty_change_dn_2 = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn_2.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change_dn_2, -8)
+
+		si_1 = make_sales_invoice(dn_1.name)
+		si_1.insert()
+		si_1.submit()
+		self.assertEqual(si_1.status, "Unpaid")
+
+		si_2 = make_sales_invoice(dn_2.name)
+		si_2.insert()
+		si_2.submit()
+		self.assertEqual(si_2.status, "Unpaid")
+		
+		self.validate_gl_entries(si_1.name,15000)
+		self.validate_gl_entries(si_2.name,24000)
+
+
 
 	def test_so_with_qi_flow_TC_S_032(self):
 		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
@@ -3869,10 +3922,8 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(so.status, "To Deliver", "Sales Order not updated")
  
 	def test_sales_order_create_si_via_pe_dn_with_gst_TC_S_042(self):
-		so = self.create_and_submit_sales_order_with_gst("_Test Item", qty=1, rate=5000)
-
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
-
+		so = self.create_and_submit_sales_order_with_gst("_Test Item", qty=1, rate=5000)
 		pe = create_payment_entry(
 			company="_Test Indian Registered Company",
 			payment_type="Receive",
@@ -4216,7 +4267,47 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		}
 		self.assertEqual(gl_entries_cn['Debtors - _TC'], 15000)
 		self.assertEqual(gl_entries_cn['Sales - _TC'], 15000)
-  
+	
+	def test_sales_order_to_sales_return_SR_TC_S_049(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
+		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_return
+
+		so = self.create_and_submit_sales_order(qty=5, rate=3000)
+		pe = create_payment_entry(
+			company="_Test Indian Registered Company",
+			payment_type="Receive",
+			party_type="Customer",
+			party="_Test Registered Customer",
+			paid_from="Debtors - _TIRC",
+			paid_to="Cash - _TIRC",
+			paid_amount=so.grand_total,
+		)
+		pe.append("references", {
+			"reference_doctype": "Sales Order",
+			"reference_name": so.name,
+			"total_amount": so.grand_total,
+			"account": "Debtors - _TIRC"
+		})
+		pe.save()
+		pe.submit()
+
+		dn = make_delivery_note(so.name)
+		dn.save()
+		dn.submit()
+
+		sr = make_sales_return(dn.name)
+		sr.save()
+		sr.submit()
+
+		qty_change_return = frappe.db.get_value('Stock Ledger Entry', {
+			'item_code': '_Test Item',
+			'voucher_no': sr.name,
+			'warehouse': '_Test Warehouse - _TC'
+		}, 'actual_qty')
+		self.assertEqual(qty_change_return, 5)
+
+		
 	def test_sales_order_creating_full_si_for_service_item_SI_TC_S_050(self):
 		make_service_item()
   
