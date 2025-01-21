@@ -4229,6 +4229,48 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(doc_po.status, 'Completed')
 		self.assertEqual(doc_pi.status, 'Paid')
 		self.assertEqual(doc_pi.outstanding_amount, 0)
+	
+	def test_po_to_pi_with_Adv_payment_entry_TC_B_072(self):
+		# Scenario : PO => PE => PR => PI [With Adv Payment]
+
+		po_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 1,
+			"rate" : 3000,
+
+		}
+		
+		doc_po = create_purchase_order(**po_data)
+		self.assertEqual(doc_po.docstatus, 1)
+
+		args = {
+			"mode_of_payment" : "Cash",
+			"reference_no" : "For Testing"
+		}
+
+		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, doc_po.grand_total, args)
+		
+		doc_pr = make_pr_for_po(doc_po.name)
+		self.assertEqual(doc_pr.docstatus, 1)
+
+		args = {
+			"is_paid" : 1,
+			"mode_of_payment" : 'Cash',
+			"cash_bank_account" : doc_pe.paid_from,
+			"paid_amount" : doc_pe.base_received_amount
+		}
+
+		doc_pi = make_pi_against_pr(doc_pr.name, args=args)
+		
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_pi.items[0].qty, doc_po.items[0].qty)
+		self.assertEqual(doc_pi.grand_total, doc_po.grand_total)
+		
+		doc_po.reload()
+		self.assertEqual(doc_po.status, 'Completed')
+		self.assertEqual(doc_pi.status, 'Paid')
 		
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
@@ -4645,7 +4687,7 @@ def make_payment_entry(dt, dn, paid_amount, args = None):
 @frappe.whitelist()
 def run_test():
 	obj_test = TestPurchaseOrder()
-	obj_test.test_shipping_rule_with_payment_entry_TC_B_070()
+	obj_test.test_po_to_pi_with_Adv_payment_entry_TC_B_072()
 	return 1
 
 
