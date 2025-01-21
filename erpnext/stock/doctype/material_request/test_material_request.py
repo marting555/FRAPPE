@@ -5520,6 +5520,136 @@ class TestMaterialRequest(FrappeTestCase):
 		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': payable_act},'debit')
 		self.assertEqual(gl_stock_debit, 100)
 
+	def test_mr_to_2po_to_2pi_sr_partail_return_TC_SCK_114(self):
+		create_company()
+		create_fiscal_year()
+		supplier = create_supplier(supplier_name="_Test Supplier MR")
+		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
+		item = item_create("_Test MR")
+		cost_center = frappe.db.get_value("Company","_Test Company MR","cost_center")
+
+		mr = make_material_request(company="_Test Company MR",qty=2,supplier=supplier,warehouse=warehouse,item_code=item.item_code,cost_center=cost_center)
+	
+		#partially qty
+		po = make_purchase_order(mr.name)
+		po.supplier = supplier
+		po.get("items")[0].item_code = item.item_code
+		po.get("items")[0].rate = 100
+		po.get("items")[0].qty = 1
+		po.insert()
+		po.submit()
+
+		#remaining qty
+		po1 = make_purchase_order(mr.name)
+		po1.supplier = supplier
+		po1.get("items")[0].rate = 100
+		po1.get("items")[0].qty = 1
+		po1.insert()
+		po1.submit()
+
+		pi = create_purchase_invoice(po.name)
+		pi.update_stock = 1
+		pi.set_warehouse = warehouse
+		pi.items[0].qty = 1
+		pi.items[0].serial_no = "01 - MR"
+		pi.submit()
+
+		pi1 = create_purchase_invoice(po1.name)
+		pi1.update_stock = 1
+		pi1.set_warehouse = warehouse
+		pi1.items[0].qty = 1
+		pi1.items[0].serial_no = "013 - MR"
+		pi1.submit()
+
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pi.name, 'account': pi.items[0].expense_account},'debit')
+		self.assertEqual(gl_temp_credit, 100)
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pi1.name, 'account': pi1.items[0].expense_account},'debit')
+		self.assertEqual(gl_temp_credit, 100)
+
+		#if account setup in company
+		if frappe.db.exists('GL Entry',{'account': 'Creditors - _TC'}):
+			payable_act = frappe.db.get_value("Company",mr.company,"default_payable_account")
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pi.name, 'account': payable_act},'credit')
+			self.assertEqual(gl_stock_debit, 100)
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pi1.name, 'account': payable_act},'credit')
+			self.assertEqual(gl_stock_debit, 100)
+
+		serial_cnt = frappe.db.count('Serial No',{'purchase_document_no':pi.name})
+		self.assertEqual(serial_cnt, 1)
+		serial_cnt = frappe.db.count('Serial No',{'purchase_document_no':pi1.name})
+		self.assertEqual(serial_cnt, 1)
+
+		pi.load_from_db()
+		from erpnext.controllers.sales_and_purchase_return import make_return_doc
+		return_pi = make_return_doc("Purchase Invoice", pi.name)
+		return_pi.submit()
+
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': return_pi.items[0].expense_account},'credit')
+		self.assertEqual(gl_temp_credit, 100)
+		
+		payable_act = frappe.db.get_value("Company",pi.company,"default_payable_account")
+		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': payable_act},'debit')
+		self.assertEqual(gl_stock_debit, 100)
+
+	def test_create_mr_to_2po_to_1pi_sr_prtl_ret_TC_SCK_115(self):
+		create_company()
+		create_fiscal_year()
+		supplier = create_supplier(supplier_name="_Test Supplier MR")
+		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
+		item = item_create("_Test MR")
+		cost_center = frappe.db.get_value("Company","_Test Company MR","cost_center")
+
+		mr = make_material_request(company="_Test Company MR",qty=2,supplier=supplier,warehouse=warehouse,item_code=item.item_code,cost_center=cost_center)
+	
+		#partially qty
+		po = make_purchase_order(mr.name)
+		po.supplier = supplier
+		po.get("items")[0].item_code = item.item_code
+		po.get("items")[0].rate = 100
+		po.get("items")[0].qty = 1
+		po.insert()
+		po.submit()
+
+		#remaining qty
+		po1 = make_purchase_order(mr.name)
+		po1.supplier = supplier
+		po1.get("items")[0].rate = 100
+		po1.get("items")[0].qty = 1
+		po1.insert()
+		po1.submit()
+
+		pi = create_purchase_invoice(po.name)
+		pi = create_purchase_invoice(po1.name, target_doc=pi)
+		pi.update_stock = 1
+		pi.has_serial_no = 1
+		pi.set_warehouse = warehouse
+		pi.items[0].serial_no = "011 - MR"
+		pi.items[1].serial_no = "012 - MR"
+		pi.submit()
+		
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pi.name, 'account': pi.items[0].expense_account},'debit')
+		self.assertEqual(gl_temp_credit, 200)
+		
+		payable_act = frappe.db.get_value("Company",mr.company,"default_payable_account")
+		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pi.name, 'account': payable_act},'credit')
+		self.assertEqual(gl_stock_debit, 200)
+
+		serial_cnt = frappe.db.count('Serial No',{'purchase_document_no':pi.name})
+		self.assertEqual(serial_cnt, 2)
+
+		pi.load_from_db()
+		from erpnext.controllers.sales_and_purchase_return import make_return_doc
+		return_pi = make_return_doc("Purchase Invoice", pi.name)
+		return_pi.items = return_pi.items[1:]
+		return_pi.submit()
+
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': return_pi.items[0].expense_account},'credit')
+		self.assertEqual(gl_temp_credit, 100)
+		
+		payable_act = frappe.db.get_value("Company",pi.company,"default_payable_account")
+		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': payable_act},'debit')
+		self.assertEqual(gl_stock_debit, 100)
+
 	def test_mr_to_po_pr_with_serial_no_TC_B_156(self):
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
