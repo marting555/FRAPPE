@@ -4267,6 +4267,47 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		}
 		self.assertEqual(gl_entries_cn['Debtors - _TC'], 15000)
 		self.assertEqual(gl_entries_cn['Sales - _TC'], 15000)
+	
+	def test_sales_order_to_sales_return_SR_TC_S_049(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
+		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_return
+
+		so = self.create_and_submit_sales_order(qty=5, rate=3000)
+		pe = create_payment_entry(
+			company="_Test Indian Registered Company",
+			payment_type="Receive",
+			party_type="Customer",
+			party="_Test Registered Customer",
+			paid_from="Debtors - _TIRC",
+			paid_to="Cash - _TIRC",
+			paid_amount=so.grand_total,
+		)
+		pe.append("references", {
+			"reference_doctype": "Sales Order",
+			"reference_name": so.name,
+			"total_amount": so.grand_total,
+			"account": "Debtors - _TIRC"
+		})
+		pe.save()
+		pe.submit()
+
+		dn = make_delivery_note(so.name)
+		dn.save()
+		dn.submit()
+
+		sr = make_sales_return(dn.name)
+		sr.save()
+		sr.submit()
+
+		qty_change_return = frappe.db.get_value('Stock Ledger Entry', {
+			'item_code': '_Test Item',
+			'voucher_no': sr.name,
+			'warehouse': '_Test Warehouse - _TC'
+		}, 'actual_qty')
+		self.assertEqual(qty_change_return, 5)
+
+		
 	def test_sales_order_creating_full_si_for_service_item_SI_TC_S_050(self):
 		make_service_item()
   
