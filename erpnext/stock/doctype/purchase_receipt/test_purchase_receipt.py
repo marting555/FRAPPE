@@ -5064,10 +5064,3 @@ def make_purchase_receipt_with_multiple_items(**args):
 
 test_dependencies = ["BOM", "Item Price", "Location"]
 test_records = frappe.get_test_records("Purchase Receipt")
-
-
-@frappe.whitelist()
-def run_test():
-	obj_test = TestPurchaseReceipt()
-	obj_test.test_pr_to_pi_with_additional_discount_TC_B_059()
-	return 1
