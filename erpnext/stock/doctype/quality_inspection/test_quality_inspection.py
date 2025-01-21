@@ -426,6 +426,25 @@ class TestQualityInspection(FrappeTestCase):
 		qa.reload()
 		qa.cancel()
 
+	def test_qa_for_pr_proc_TC_SCK_166(self):
+		pr = make_purchase_receipt(item_code="_Test Item with QA")
+		frappe.db.set_value("Item", "_Test Item with QA", "inspection_required_before_purchase", 1)
+
+		qa = create_quality_inspection(
+			reference_type="Purchase Receipt", reference_name=pr.name, status="Accepted", inspection_type="In Process", do_not_submit=True
+		)
+		pr.reload()
+		qa.reload()
+		self.assertEqual(qa.docstatus, 0)
+		qa.submit()
+		qa.reload()
+		self.assertEqual(qa.status, "Accepted")
+
+		qa.reload()
+		qa.cancel()
+		pr.reload()
+		pr.cancel()
+
 def create_quality_inspection(**args):
 	args = frappe._dict(args)
 	qa = frappe.new_doc("Quality Inspection")
