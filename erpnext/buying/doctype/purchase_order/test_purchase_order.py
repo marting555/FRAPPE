@@ -4226,7 +4226,141 @@ class TestPurchaseOrder(FrappeTestCase):
 		doc_pi.reload()
 		self.assertEqual(doc_po.status, 'Completed')
 		self.assertEqual(doc_pi.status, 'Paid')
+
+	def test_default_uom_with_po_pr_pi_TC_B_105(self):
+		# item as box => po => pr => pi with GST
+		company = "_Test Company"
+		warehouse = "Stores - _TC"
+		supplier = "_Test Supplier 1"
+		item_code = "_Test Item With Default Uom"
+		gst_hsn_code = "11112222"
+		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
+			frappe.get_doc({
+				"doctype": "GST HSN Code",
+				"hsn_code": gst_hsn_code,
+				"taxes": [{
+					"item_tax_template": "GST 18% - _TC"
+				}]
+			}).insert()
+
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"gst_hsn_code": gst_hsn_code,
+				"is_stock_item": 1,
+				"purchase_uom": "Box",
+				"uoms": [
+					{
+						"uom": "Nos",
+						"conversion_factor": 1
+					},
+					{
+						"uom": "Box",
+						"conversion_factor": 100
+					}
+				]
+			}).insert()
 		
+		po = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"company": company,
+			"supplier": supplier,
+			"schedule_date": today(),
+			"set_warehouse": warehouse,
+			"items": [{
+				"item_code": item_code,
+				"qty": 1,
+				"rate": 100
+			}],
+			"taxes_and_charges": "Input GST In-state - _TC"
+		})
+		po.insert()
+		po.submit()
+		self.assertEqual(po.items[0].uom, "Box")
+		self.assertEqual(po.taxes_and_charges_added, 18)
+		self.assertEqual(po.grand_total, 118)
+
+		pr = frappe.get_doc({
+			"doctype": "Purchase Receipt",
+			"supplier": po.supplier,
+			"company": po.company,
+			"set_warehouse": po.set_warehouse,
+			"items": [{
+				"item_code": po.items[0].item_code,
+				"uom": po.items[0].uom,
+				"qty": po.items[0].qty,
+				"stock_uom": po.items[0].stock_uom,
+				"conversion_factor": po.items[0].conversion_factor,
+				"rate": po.items[0].rate,
+				"purchase_order": po.name,
+			}],
+			"taxes_and_charges": "Input GST In-state - _TC"
+		})
+		pr.insert()
+		pr.submit()
+		self.assertEqual(pr.items[0].uom, "Box")
+		self.assertEqual(pr.taxes_and_charges_added, 18)
+		self.assertEqual(pr.grand_total, 118)
+
+		get_pr_stock_ledger = frappe.db.get_all("Stock Ledger Entry",{"voucher_no": pr.name}, ['valuation_rate', 'actual_qty', 'warehouse'])
+
+		for stock_led in get_pr_stock_ledger:
+			self.assertEqual(stock_led.get('valuation_rate'), 1)
+			self.assertEqual(stock_led.actual_qty, 100)
+			self.assertEqual(stock_led.warehouse, warehouse)
+
+		get_pr_gl_entries = frappe.db.get_all("GL Entry", {"voucher_no": pr.name})
+		self.assertTrue(get_pr_gl_entries)
+
+		pi = frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"supplier": pr.supplier,
+			"company": pr.company,
+			"credit_to": "_Test Creditors - _TC",
+			"items": [{
+				"item_code": pr.items[0].item_code,
+				"qty": pr.items[0].qty,
+				"uom": pr.items[0].uom,
+				"conversion_factor": pr.items[0].conversion_factor,
+				"rate": pr.items[0].rate,
+				"apply_tds": pr.items[0].apply_tds,
+				"purchase_order": po.name,
+				"purchase_receipt": pr.name
+			}],
+			"taxes_and_charges": "Input GST In-state - _TC"
+		})
+		pi.insert()
+		pi.submit()
+		self.assertEqual(pi.docstatus, 1)
+		self.assertEqual(pi.items[0].uom, "Box")
+		self.assertEqual(pi.taxes_and_charges_added, 18)
+		self.assertEqual(pi.grand_total, 118)
+
+		gl_entries = frappe.get_all(
+			"GL Entry",
+			filters={
+				"voucher_type": "Purchase Invoice",
+				"voucher_no": pi.name,
+				"is_cancelled": 0
+			},
+			fields=["account", "debit", "credit"]
+		)
+
+		expected_entries = [
+			{"account": "Input Tax SGST - _TC", "debit": 9.0, "credit": 0.0},
+			{"account": "Input Tax CGST - _TC", "debit": 9.0, "credit": 0.0},
+			{"account": "_Test Account Excise Duty - _TC", "debit": 100.0, "credit": 0.0},
+			{"account": "_Test Creditors - _TC", "debit": 0.0, "credit": 118.0},
+		]
+
+		for entry in expected_entries:
+			matching_entry = next((gl for gl in gl_entries if gl["account"] == entry["account"]), None)
+			assert matching_entry
+			assert matching_entry["debit"] == entry["debit"]
+			assert matching_entry["credit"] == entry["credit"]
+
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
