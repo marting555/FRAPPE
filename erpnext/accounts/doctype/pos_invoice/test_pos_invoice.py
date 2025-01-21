@@ -1224,6 +1224,21 @@ class TestPOSInvoice(unittest.TestCase):
 		inv.submit()
 		self.assertEqual(inv.status, "Paid")
 
+	def test_pos_invoice_different_warehouses_TC_S_124(self):  
+		inv = create_pos_invoice(rate=3000, do_not_save=1)  
+		inv.save()  
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})  
+		inv.paid_amount = inv.grand_total  
+		
+		pos_profile = frappe.get_doc("POS Profile", inv.pos_profile)  
+		pos_profile.warehouse = "Stores - _TC"  
+		pos_profile.save()  
+		
+		inv.submit()  
+		
+		self.assertEqual(inv.status, "Paid")  
+		self.assertEqual(pos_profile.warehouse, "Stores - _TC")  
+
 def create_pos_invoice(**args):
 	args = frappe._dict(args)
 	pos_profile = None
