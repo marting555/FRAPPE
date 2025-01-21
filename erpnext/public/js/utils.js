@@ -426,6 +426,19 @@ $.extend(erpnext.utils, {
 			}
 		});
 		return fiscal_year;
+	},
+
+	isWorkshopViewer: async (frm) => {
+		const response =  await frappe.call({
+			method: "frappe.sessions.get_is_workshop_viewer",
+			callback: (r) => {
+				return r.message
+			},
+			error: (r) => {
+				return r.message
+			}
+		})
+		return response.message
 	}
 });
 
