@@ -3399,6 +3399,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			'doctype': 'Purchase Invoice',
 			'supplier': po.supplier,
 			'company': po.company,
+			'credit_to': "_Test Creditors - _TC",
 			'items': [{
 				'item_code': item.item_code,
 				'qty': 1,
