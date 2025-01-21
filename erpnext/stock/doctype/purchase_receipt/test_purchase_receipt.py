@@ -4739,7 +4739,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(doc_pr.discount_amount, 1120)
 		self.assertEqual(doc_pr.grand_total, 10080)
 
-	def test_pr_to_pi_with_additional_discount_TC_B_059(self):
+	def test_pr_to_pi_with_return_TC_B_043(self):
 		# Scenario : PR => PI => PI [Return]
 		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 			make_purchase_invoice as make_pi_from_pr,
