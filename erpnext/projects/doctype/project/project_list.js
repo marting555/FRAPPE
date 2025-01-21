@@ -13,10 +13,9 @@ frappe.listview_settings['Project'] = {
 			insertFreezeQueuePosition()
 		}else{
 			const sidebar = $(".layout-side-section");
-
-		if (sidebar.is(':visible')) {
-			sidebar.hide();
-		}
+			if (sidebar.is(':visible')) {
+				sidebar.hide();
+			}
 		}
 	}
 };
