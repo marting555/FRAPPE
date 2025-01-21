@@ -3679,6 +3679,40 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			['_Test Account Stock Adjustment - _TC', pi.grand_total, 0.0, pi.posting_date],
 		]
 		check_gl_entries(self, pi.name, expected_gl_entries, pi.posting_date)
+    
+	def test_over_billing_allowance_TC_ACC_119(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item
+		)
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
+		from erpnext.buying.doctype.purchase_order.purchase_order import (
+			make_purchase_invoice as make_pi_from_po,
+		)
+		account_setting=frappe.get_doc("Accounts Settings")
+		account_setting.db_set("over_billing_allowance", 10)
+		account_setting.save()
+		company = "_Test Company"
+		item=make_test_item("_Test Item")
+		po=create_purchase_order(
+			supplier = "_Test Supplier",
+			company = company,
+			item_code=item.name,
+			rate=1000,
+			qty=1,
+
+		)
+		po.submit()
+	
+		try:
+			pi=make_pi_from_po(po.name)
+			pi.items[0].rate=1200
+			pi.save()
+			pi.submit()
+		except Exception as e:
+			error_msg = str(e)
+			self.assertEqual(error_msg, 'This document is over limit by Amount 100.0 for item _Test Item. Are you making another Purchase Invoice against the same Purchase Order Item?To allow over billing, update "Over Billing Allowance" in Accounts Settings or the Item.')
+	
+
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
