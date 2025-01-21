@@ -16,6 +16,7 @@ from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
+from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
 
 # test_records = frappe.get_test_records('Quality Inspection')
 
@@ -334,6 +335,24 @@ class TestQualityInspection(FrappeTestCase):
 		qa.cancel()
 		dn.reload()
 		dn.cancel()
+
+	def test_qa_for_si_TC_SCK_163(self):
+		si = create_sales_invoice(item_code="_Test Item with QA")
+
+		qa = create_quality_inspection(
+			reference_type="Sales Invoice", reference_name=si.name, status="Accepted", inspection_type="Incoming", do_not_submit=True
+		)
+		si.reload()
+		qa.reload()
+		self.assertEqual(qa.docstatus, 0)
+		qa.submit()
+		qa.reload()
+		self.assertEqual(qa.status, "Accepted")
+
+		qa.reload()
+		qa.cancel()
+		si.reload()
+		si.cancel()
 
 def create_quality_inspection(**args):
 	args = frappe._dict(args)
