@@ -877,3 +877,11 @@ def get_item_group(pos_profile):
 			item_groups.extend(get_descendants_of("Item Group", row.item_group))
 
 	return list(set(item_groups))
+
+
+@frappe.whitelist()
+def get_payment_data(pos_invoice):
+	payment = frappe.db.get_all(
+		"Sales Invoice Payment", {"parent": pos_invoice}, ["mode_of_payment", "amount"]
+	)
+	return payment
