@@ -6000,6 +6000,54 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(doc_po.status, 'Completed')
 		self.assertEqual(doc_pi.status, 'Paid')
 
+	def test_mr_to_pi_with_partial_PE_TC_B_077(self):
+		# MR =>  PO => [Partial]PE => PR => PI [PE with oustanding amount]
+		mr_dict_list = {
+				"company" : "_Test Company",
+				"item_code" : "Testing-31",
+				"warehouse" : "Stores - _TC",
+				"qty" : 4,
+				"rate" : 3000,
+			}
+
+		doc_mr = make_material_request(**mr_dict_list)
+		self.assertEqual(doc_mr.docstatus, 1)
+
+		
+		doc_po = make_test_po(doc_mr.name)
+		args = {
+			"mode_of_payment" : "Cash",
+			"reference_no" : "For Testing"
+		}
+
+		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, 6000, args)
+
+		doc_pr = make_test_pr(doc_po.name)
+
+		args = {
+			"is_paid" : 1,
+			"mode_of_payment" : 'Cash',
+			"cash_bank_account" : doc_pe.paid_from,
+			"paid_amount" : doc_pe.base_received_amount
+		}
+
+		doc_pi = make_test_pi(doc_pr.name, args = args)
+
+		args = {
+			"mode_of_payment" : "Cash",
+			"reference_no" : "For Testing"
+		}
+		make_payment_entry(doc_pi.doctype, doc_pi.name, doc_pi.outstanding_amount, args)
+
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_pi.items[0].qty, doc_po.items[0].qty)
+		self.assertEqual(doc_pi.grand_total, doc_po.grand_total)
+		
+		doc_po.reload()
+		doc_pi.reload()
+		self.assertEqual(doc_po.status, 'Completed')
+		self.assertEqual(doc_pi.status, 'Paid')
+
 def get_in_transit_warehouse(company):
 	if not frappe.db.exists("Warehouse Type", "Transit"):
 		frappe.get_doc(
@@ -6266,11 +6314,3 @@ def make_payment_entry(dt, dn, paid_amount, args = None):
 	
 	doc_pe.submit()
 	return doc_pe
-
-
-
-@frappe.whitelist()
-def run_test():
-	obj_test = TestMaterialRequest()
-	obj_test.test_mr_to_pi_with_PE_TC_B_076()
-	return 1
