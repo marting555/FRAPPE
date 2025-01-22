@@ -5213,6 +5213,62 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(gl_entries_pe[1].get("account"), "_Test Creditors - _TC")
 		self.assertEqual(gl_entries_pe[1].get("debit"), 1430)
 
+	def test_shipping_rule_fixed_restricted_country_po_with_gst_TC_B_115(self):
+		company = "_Test Company"
+		warehouse = "Stores - _TC"
+		supplier = "_Test Supplier 1"
+		item_code = "test_item_with_fixed_shipping_rule"
+		gst_hsn_code = "888890"
+
+		# Ensure Item exists
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"gst_hsn_code": gst_hsn_code,
+				"is_stock_item": 1
+			}).insert()
+
+		# Create Shipping Rule with Fixed Amount
+		shipping_rule = frappe.get_doc({
+			"doctype": "Shipping Rule",
+			"company": company,
+			"label": "test_shipping_rule_restricted_country",
+			"calculate_based_on": "Fixed",
+			"shipping_rule_type": "Buying",
+			"account": "Creditors - _TC",
+			"cost_center": "Main - _TC",
+			"shipping_amount": 500,
+			"countries":[
+				{
+					"country": "Australia"
+				}
+			]
+		}).insert()
+
+		# Create Purchase Order
+		po = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"supplier": supplier,
+			"company": company,
+			"schedule_date": today(),
+			"set_warehouse": warehouse,
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": 10,
+					"rate": 100,
+					"warehouse": warehouse,
+				}
+			],
+			"taxes_and_charges": "Input GST In-state - _TC",
+			"shipping_rule": shipping_rule.name
+		})
+		with self.assertRaises(frappe.exceptions.ValidationError) as cm:
+			po.insert()
+		self.assertEqual(str(cm.exception), "Shipping rule not applicable for country India in Shipping Address")
+
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
