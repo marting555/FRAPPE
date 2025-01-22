@@ -658,3 +658,22 @@ def get_combine_datetime(posting_date, posting_time):
 		posting_time = (datetime.datetime.min + posting_time).time()
 
 	return datetime.datetime.combine(posting_date, posting_time).replace(microsecond=0)
+
+
+def get_default_stock_uom() -> str | None:
+	default_uom = frappe.db.get_single_value("Stock Settings", "stock_uom")
+	if default_uom:
+		return default_uom
+
+	if frappe.db.exists("UOM", "Nos"):
+		return "Nos"
+
+	# In the past, we used to create translated UOMs during initial setup.
+	# These could either be in the current user's language ...
+	if frappe.db.exists("UOM", _("Nos")):
+		return _("Nos")
+
+	# ... or in the system language.
+	system_language = frappe.db.get_single_value("System Settings", "language")
+	if frappe.db.exists("UOM", _("Nos", system_language)):
+		return _("Nos", system_language)
