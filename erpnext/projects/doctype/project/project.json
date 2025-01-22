@@ -396,6 +396,7 @@
    "oldfieldtype": "Link",
    "options": "Customer",
    "print_hide": 1,
+   "reqd": 1,
    "search_index": 1
   },
   {
@@ -428,7 +429,8 @@
    "fieldname": "plate",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Licence plate"
+   "label": "Licence plate",
+   "reqd": 1
   },
   {
    "fieldname": "brand",
@@ -966,7 +968,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2024-12-02 20:10:26.515916",
+ "modified": "2025-01-17 15:26:07.248276",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",

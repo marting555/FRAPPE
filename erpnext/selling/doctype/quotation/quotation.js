@@ -66,6 +66,9 @@ frappe.ui.form.on('Quotation', {
 				}
 			};
 		}
+
+		insertResendQuotationApprovalButton(frm);
+		frm.trigger("set_custom_buttons");
 	},
 
 	quotation_to: function (frm) {
@@ -406,6 +409,7 @@ frappe.ui.form.on('Quotation Item', {
 
 	qty: function (frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
+
 		if (row.is_product_bundle) {
 			const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
 			const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
@@ -416,7 +420,9 @@ frappe.ui.form.on('Quotation Item', {
 	discount_percentage: function (frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
 		const rate = row.base_price_list_rate;
+
 		if (rate <= 0) return
+
 		const discount_percentage = row.discount_percentage;
 		const discount_amount = Number(((rate * discount_percentage) / 100).toFixed(2));
 
@@ -433,29 +439,7 @@ frappe.ui.form.on('Quotation Item', {
 		});
 		frm.set_value('items', allItems);
 		refreshQuotationFields(frm);
-
 	},
-	discount_amount: function (frm, cdt, cdn){
-		const row = locals[cdt][cdn];
-		const rate = row.base_price_list_rate;
-		if (rate <= 0) return
-		const discount_amount = row.discount_amount;
-		const discount_percentage = Number(((100 * discount_amount) / rate).toFixed(2));
-
-		row.rate = rate - discount_amount;
-		row.discount_percentage = discount_percentage;
-		row.discount_amount = discount_amount
-
-		const allItems = frm.doc.items.map(item => {
-			if (item.item_code === row.item_code) {
-				item.discount_percentage = discount_percentage;
-				item.discount_amount = discount_amount;
-			}
-			return item;
-		});
-		frm.set_value('items', allItems);
-		refreshQuotationFields(frm);
-	}
 });
 
 function validateItemsNotExist(frm, item_code, current_row) {
@@ -477,6 +461,7 @@ function storeOriginalQuantities(row) {
 	const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
 	originalQuantities[row.item_code] = {
 		qty: row.qty,
+		rate: row.rate,
 		product_bundle_items: row.product_bundle_items.map(bundleItem => ({
 			item_code: bundleItem.item_code,
 			qty: bundleItem.qty,
@@ -782,4 +767,58 @@ function refreshQuotationFields(frm) {
 	frm.refresh_field('items');
 	frm.trigger('calculate_taxes_and_totals');
 	frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+}
+
+async function insertResendQuotationApprovalButton(frm) {
+	if (!["Approved", "Ordered"].includes(frm.doc.status)) {
+		frm.add_custom_button(__('Resend Approve Message'), () => {
+			var d = new frappe.ui.Dialog({
+				title: __("The message and quotation attached will be sent to the client for approval"),
+				fields: [],
+				primary_action_label: __("Send"),
+				primary_action: async function () {
+					const { aws_url } = await frappe.db.get_doc('Queue Settings')
+					console.log({aws_url})
+					const url = `${aws_url}quotation/created`;
+					const obj = {
+						"party_name": frm.doc.party_name,
+						"customer_name": frm.doc.customer_name,
+						"doctype": "Quotation",
+						"name": frm.doc.name,
+						"grand_total": frm.doc.grand_total
+					};
+					console.log(obj);
+
+					fetch(url, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify(obj)
+					})
+						.then(() => {
+							frappe.show_alert({
+								message: __('Message sent'),
+								indicator: 'green'
+							}, 10);
+						})
+						.catch((error) => {
+							frappe.show_alert({
+								message: __('An error occurred while sending the message'),
+								indicator: 'red'
+							}, 10);
+							console.error('Error:', error);
+						});
+
+					d.hide();
+				},
+				secondary_action_label: __("Cancel"),
+				secondary_action: function () {
+					d.hide();
+				}
+			});
+
+			d.show();
+		});
+	}
 }

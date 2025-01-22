@@ -19,12 +19,17 @@ from erpnext.setup.doctype.holiday_list.holiday_list import is_holiday
 
 
 class Project(Document):
+    done_status = ['Completed', 'No response from customer', 'Cancelled']
 
     def before_save(self):
      if not self.is_new():
         old_doc=frappe.get_doc(self.doctype, self.name)
         if self.status != old_doc.status:
             self.status_modified = get_datetime()
+
+        if self.status in self.done_status:
+            print('reset project')
+            self.queue_position = 0
 
     def onload(self):
         self.set_onload(

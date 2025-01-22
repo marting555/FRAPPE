@@ -9,7 +9,19 @@ frappe.listview_settings['Project'] = {
 		}
 	},
 	async before_render() {
-		const { auto_move_paused } = await frappe.db.get_doc('Queue Settings')
+		if(!await erpnext.utils.isWorkshopViewer(this.frm)){
+			insertFreezeQueuePosition()
+		}else{
+			const sidebar = $(".layout-side-section");
+			if (sidebar.is(':visible')) {
+				sidebar.hide();
+			}
+		}
+	}
+};
+
+async function insertFreezeQueuePosition() {
+	const { auto_move_paused } = await frappe.db.get_doc('Queue Settings')
 		setTimeout(() => {
 			const exists = document.querySelector("#page-List\\/Project\\/List > div.page-head.flex > div > div > div.flex.col.page-actions.justify-content-end #queue-freeze")
 			if (!exists) {
@@ -37,8 +49,7 @@ frappe.listview_settings['Project'] = {
 				})
 			}
 		}, 1500)
-	}
-};
+}
 
 function showConfirmationDialog(input) {
 	const dialog = new frappe.ui.Dialog({
@@ -85,4 +96,3 @@ function showConfirmationDialog(input) {
 
 	dialog.show();
 }
-
