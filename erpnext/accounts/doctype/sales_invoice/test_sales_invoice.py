@@ -5261,7 +5261,7 @@ class TestSalesInvoice(FrappeTestCase):
 		]
 		check_gl_entries(self, si.name, expected_gl_entries, si.posting_date)
 	
-	def test_promotion_scheme_for_selling_TC_ACC_116(self):
+	def test_promotion_scheme_for_selling_TC_ACC_115(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 
 		item=make_test_item("_Test Item Promotion")

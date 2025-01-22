@@ -3712,7 +3712,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			error_msg = str(e)
 			self.assertEqual(error_msg, 'This document is over limit by Amount 100.0 for item _Test Item. Are you making another Purchase Invoice against the same Purchase Order Item?To allow over billing, update "Over Billing Allowance" in Accounts Settings or the Item.')
 	
-	def test_promotion_scheme_for_buying_TC_ACC_115(self):
+	def test_promotion_scheme_for_buying_TC_ACC_114(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			create_records as records_for_pi,
 			make_test_item,
