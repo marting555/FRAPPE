@@ -16,6 +16,8 @@ from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
+from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
+from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
 # test_records = frappe.get_test_records('Quality Inspection')
 
@@ -335,6 +337,114 @@ class TestQualityInspection(FrappeTestCase):
 		dn.reload()
 		dn.cancel()
 
+	def test_qa_for_si_TC_SCK_163(self):
+		si = create_sales_invoice(item_code="_Test Item with QA")
+
+		qa = create_quality_inspection(
+			reference_type="Sales Invoice", reference_name=si.name, status="Accepted", inspection_type="Incoming", do_not_submit=True
+		)
+		si.reload()
+		qa.reload()
+		self.assertEqual(qa.docstatus, 0)
+		qa.submit()
+		qa.reload()
+		self.assertEqual(qa.status, "Accepted")
+
+		qa.reload()
+		qa.cancel()
+		si.reload()
+		si.cancel()
+
+	def test_qa_for_pr_out_TC_SCK_162(self):
+		pr = make_purchase_receipt(item_code="_Test Item with QA")
+		frappe.db.set_value("Item", "_Test Item with QA", "inspection_required_before_purchase", 1)
+
+		qa = create_quality_inspection(
+			reference_type="Purchase Receipt", reference_name=pr.name, status="Accepted", inspection_type="Outgoing", do_not_submit=True
+		)
+		pr.reload()
+		qa.reload()
+		self.assertEqual(qa.docstatus, 0)
+		qa.submit()
+		qa.reload()
+		self.assertEqual(qa.status, "Accepted")
+
+		qa.reload()
+		qa.cancel()
+		pr.reload()
+		pr.cancel()
+
+	def test_qa_for_se_inc_TC_SCK_164(self):
+		item_code = create_item("_Test SE Item with QA").name
+		create_company()
+		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company QA")
+
+		se = make_stock_entry(
+			item_code=item_code, target=warehouse, qty=1, basic_rate=100, do_not_submit=True
+		)
+
+		se.inspection_required = 1
+		se.save()
+
+		qa = create_quality_inspection(
+			item_code=item_code, reference_type="Stock Entry", reference_name=se.name, inspection_type="Incoming", do_not_submit=True
+		)
+
+		se.reload()
+		qa.reload()
+		self.assertEqual(qa.docstatus, 0)
+		qa.submit()
+		qa.reload()
+		self.assertEqual(qa.status, "Accepted")
+
+		qa.reload()
+		qa.cancel()
+
+	def test_qa_for_se_out_TC_SCK_165(self):
+		item_code = create_item("_Test SE Item with QA").name
+		create_company()
+		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company QA")
+
+		se = make_stock_entry(
+			item_code=item_code, target=warehouse, qty=1, basic_rate=100, do_not_submit=True
+		)
+
+		se.inspection_required = 1
+		se.save()
+
+		qa = create_quality_inspection(
+			item_code=item_code, reference_type="Stock Entry", reference_name=se.name, inspection_type="Outgoing", do_not_submit=True
+		)
+
+		se.reload()
+		qa.reload()
+		self.assertEqual(qa.docstatus, 0)
+		qa.submit()
+		qa.reload()
+		self.assertEqual(qa.status, "Accepted")
+
+		qa.reload()
+		qa.cancel()
+
+	def test_qa_for_pr_proc_TC_SCK_166(self):
+		pr = make_purchase_receipt(item_code="_Test Item with QA")
+		frappe.db.set_value("Item", "_Test Item with QA", "inspection_required_before_purchase", 1)
+
+		qa = create_quality_inspection(
+			reference_type="Purchase Receipt", reference_name=pr.name, status="Accepted", inspection_type="In Process", do_not_submit=True
+		)
+		pr.reload()
+		qa.reload()
+		self.assertEqual(qa.docstatus, 0)
+		qa.submit()
+		qa.reload()
+		self.assertEqual(qa.status, "Accepted")
+
+		qa.reload()
+		qa.cancel()
+		pr.reload()
+		pr.cancel()
+
 def create_quality_inspection(**args):
 	args = frappe._dict(args)
 	qa = frappe.new_doc("Quality Inspection")
@@ -375,3 +485,16 @@ def create_quality_inspection_parameter(parameter):
 		frappe.get_doc(
 			{"doctype": "Quality Inspection Parameter", "parameter": parameter, "description": parameter}
 		).insert()
+
+def create_company():
+	company_name = "_Test Company QA"
+	if not frappe.db.exists("Company", company_name):
+		company = frappe.new_doc("Company")
+		company.company_name = company_name
+		company.country="India",
+		company.default_currency= "INR",
+		company.create_chart_of_accounts_based_on= "Standard Template",
+		company.chart_of_accounts= "Standard",
+		company = company.save()
+		company.load_from_db()
+	return company_name

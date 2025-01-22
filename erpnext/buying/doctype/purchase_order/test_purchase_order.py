@@ -3399,6 +3399,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			'doctype': 'Purchase Invoice',
 			'supplier': po.supplier,
 			'company': po.company,
+			'credit_to': "_Test Creditors - _TC",
 			'items': [{
 				'item_code': item.item_code,
 				'qty': 1,
@@ -4042,6 +4043,190 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 
+	def test_shipping_rule_with_payment_entry_TC_B_070(self):
+		# Scenario : PO => PE => PR => PI [With Shipping Rule]
+		args = {
+					"calculate_based_on" : "Fixed",
+					"shipping_amount" : 200
+				}
+		shipping_rule_name = get_shipping_rule_name(args)
+		
+		po_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 3,
+			"rate" : 100,
+			"shipping_rule" :shipping_rule_name
+
+		}
+		
+		doc_po = create_purchase_order(**po_data)
+		self.assertEqual(doc_po.docstatus, 1)
+
+		args = {
+			"mode_of_payment" : "Cash",
+			"reference_no" : "For Testing"
+		}
+
+		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, doc_po.grand_total, args )
+		
+		doc_pr = make_pr_for_po(doc_po.name)
+		self.assertEqual(doc_pr.docstatus, 1)
+
+		args = {
+			"is_paid" : 1,
+			"mode_of_payment" : 'Cash',
+			"cash_bank_account" : doc_pe.paid_from,
+			"paid_amount" : doc_pe.base_received_amount
+		}
+
+		doc_pi = make_pi_against_pr(doc_pr.name, args=args)
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_pi.items[0].qty, doc_po.items[0].qty)
+		self.assertEqual(doc_pi.grand_total, doc_po.grand_total)
+		
+		doc_po.reload()
+		self.assertEqual(doc_po.status, 'Completed')
+		self.assertEqual(doc_pi.status, 'Paid')
+	
+	def test_po_shipping_rule_partial_payment_entry_TC_B_071(self):
+		# Scenario : PO => PE => PR => PI [With Shipping Rule]
+		args = {
+			"calculate_based_on" : "Fixed",
+			"shipping_amount" : 200
+		}
+		shipping_rule_name = get_shipping_rule_name(args)
+		
+		po_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 3,
+			"rate" : 12000,
+			"shipping_rule" :shipping_rule_name
+
+		}
+		
+		doc_po = create_purchase_order(**po_data)
+		self.assertEqual(doc_po.docstatus, 1)
+
+		args = {
+			"mode_of_payment" : "Cash",
+			"reference_no" : "For Testing"
+		}
+
+		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, 6000, args )
+		
+		doc_pr = make_pr_for_po(doc_po.name)
+		self.assertEqual(doc_pr.docstatus, 1)
+
+		args = {
+			"is_paid" : 1,
+			"mode_of_payment" : 'Cash',
+			"cash_bank_account" : doc_pe.paid_from,
+			"paid_amount" : doc_pe.base_received_amount
+		}
+
+		doc_pi = make_pi_against_pr(doc_pr.name, args=args)
+		make_payment_entry(doc_pi.doctype, doc_pi.name, doc_pi.outstanding_amount)
+		
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_pi.items[0].qty, doc_po.items[0].qty)
+		self.assertEqual(doc_pi.grand_total, doc_po.grand_total)
+		
+		doc_po.reload()
+		doc_pi.reload()
+		self.assertEqual(doc_po.status, 'Completed')
+		self.assertEqual(doc_pi.status, 'Paid')
+		self.assertEqual(doc_pi.outstanding_amount, 0)
+	
+	def test_po_to_pi_with_Adv_payment_entry_TC_B_072(self):
+		# Scenario : PO => PE => PR => PI [With Adv Payment]
+
+		po_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 1,
+			"rate" : 3000,
+
+		}
+		
+		doc_po = create_purchase_order(**po_data)
+		self.assertEqual(doc_po.docstatus, 1)
+
+		args = {
+			"mode_of_payment" : "Cash",
+			"reference_no" : "For Testing"
+		}
+
+		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, doc_po.grand_total, args)
+		
+		doc_pr = make_pr_for_po(doc_po.name)
+		self.assertEqual(doc_pr.docstatus, 1)
+
+		args = {
+			"is_paid" : 1,
+			"mode_of_payment" : 'Cash',
+			"cash_bank_account" : doc_pe.paid_from,
+			"paid_amount" : doc_pe.base_received_amount
+		}
+
+		doc_pi = make_pi_against_pr(doc_pr.name, args=args)
+		
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_pi.items[0].qty, doc_po.items[0].qty)
+		self.assertEqual(doc_pi.grand_total, doc_po.grand_total)
+		
+		doc_po.reload()
+		self.assertEqual(doc_po.status, 'Completed')
+		self.assertEqual(doc_pi.status, 'Paid')
+	
+	def test_po_to_pi_with_partial_payment_entry_TC_B_073(self):
+		# Scenario : PO => PE => PR => PI [With Adv Partial Payment]
+
+		po_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 4,
+			"rate" : 3000,
+
+		}
+		
+		doc_po = create_purchase_order(**po_data)
+		self.assertEqual(doc_po.docstatus, 1)
+
+		args = {
+			"mode_of_payment" : "Cash",
+			"reference_no" : "For Testing"
+		}
+
+		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, 6000, args)
+		
+		doc_pr = make_pr_for_po(doc_po.name)
+		self.assertEqual(doc_pr.docstatus, 1)
+
+		args = {
+			"is_paid" : 1,
+			"mode_of_payment" : 'Cash',
+			"cash_bank_account" : doc_pe.paid_from,
+			"paid_amount" : doc_pe.base_received_amount
+		}
+
+		doc_pi = make_pi_against_pr(doc_pr.name, args=args)
+		make_payment_entry(doc_pi.doctype, doc_pi.name, doc_pi.outstanding_amount)
+
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_pi.items[0].qty, doc_po.items[0].qty)
+		self.assertEqual(doc_pi.grand_total, doc_po.grand_total)
+		
+		doc_po.reload()
+		doc_pi.reload()
+		self.assertEqual(doc_po.status, 'Completed')
+		self.assertEqual(doc_pi.status, 'Paid')
+		
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
@@ -4182,6 +4367,7 @@ def create_purchase_order(**args):
 	po.apply_discount_on = args.apply_discount_on or None
 	po.additional_discount_percentage = args.additional_discount_percentage or None
 	po.discount_amount = args.discount_amount or None
+	po.shipping_rule = args.shipping_rule or None
 
 	if args.rm_items:
 		for row in args.rm_items:
@@ -4436,3 +4622,27 @@ def make_test_sq(source_name, rate = 0, received_qty=0):
 	doc_sq.insert()
 	doc_sq.submit()
 	return doc_sq
+
+def get_shipping_rule_name(args = None):
+	from erpnext.accounts.doctype.shipping_rule.test_shipping_rule import create_shipping_rule
+	doc_shipping_rule = create_shipping_rule("Buying", "_Test Shipping Rule -TC", args)
+	return doc_shipping_rule.name
+
+def make_payment_entry(dt, dn, paid_amount, args = None):
+
+	doc_pe = get_payment_entry(dt, dn, paid_amount)
+	
+	args =  frappe._dict() if args is None else frappe._dict(args)
+	doc_pe.mode_of_payment = args.mode_of_payment or None
+	doc_pe.reference_no =  args.reference_no or "Test Reference"
+	
+	doc_pe.submit()
+	return doc_pe
+
+@frappe.whitelist()
+def run_test():
+	obj_test = TestPurchaseOrder()
+	obj_test.test_po_to_pi_with_partial_payment_entry_TC_B_073()
+	return 1
+
+
