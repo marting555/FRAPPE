@@ -4403,7 +4403,47 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		si.reload()
 		self.assertEqual(si.status, "Paid")
 		self.assertEqual(si.outstanding_amount, 0)
+	
+	def test_sales_order_creating_si_with_product_bundle_TC_S_057(self):
+		product_bundle = make_item("_Test Product Bundle", {"is_stock_item": 0})
+		make_item("_Test Bundle Item 1", {"is_stock_item": 1})
+		make_item("_Test Bundle Item 2", {"is_stock_item": 1})
+
+		make_product_bundle("_Test Product Bundle", ["_Test Bundle Item 1", "_Test Bundle Item 2"])
+
+		make_stock_entry(item='_Test Bundle Item 1', target='_Test Warehouse - _TC', qty=10, rate=4000)
+		make_stock_entry(item='_Test Bundle Item 2', target='_Test Warehouse - _TC', qty=10, rate=4000)
   
+		so = make_sales_order(
+			cost_center='Main - _TC', 
+			selling_price_list='Standard Selling', 
+			item_code=product_bundle.item_code,
+			qty=1, 
+			rate=20000, 
+			do_not_save=True
+		)
+		so.save()
+		so.submit()
+
+		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
+  
+		dn = make_delivery_note(so.name)
+		dn.submit()
+
+		self.assertEqual(dn.status, "To Bill", "Delivery Note not created")
+		self.assertEqual(frappe.db.get_value('Stock Ledger Entry', {'voucher_no': dn.name, 'warehouse': '_Test Warehouse - _TC', 'item_code': '_Test Bundle Item 1'}, 'actual_qty'), -1)
+		self.assertEqual(frappe.db.get_value('Stock Ledger Entry', {'voucher_no': dn.name, 'warehouse': '_Test Warehouse - _TC', 'item_code': '_Test Bundle Item 2'}, 'actual_qty'), -1)
+  
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+		si = make_sales_invoice(dn.name)
+		si.save()
+		si.submit()
+		si.reload()
+		self.assertEqual(si.status, 'Unpaid')
+
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name,'account': 'Sales - _TC'}, 'credit'), 20000)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name,'account': 'Debtors - _TC'}, 'debit'), 20000)
+		  
 	def test_sales_order_creating_si_with_product_bundle_and_shipping_rule_TC_S_058(self):
 		product_bundle = make_item("_Test Product Bundle", {"is_stock_item": 0})
 		make_item("_Test Bundle Item 1", {"is_stock_item": 1})
