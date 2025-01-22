@@ -202,7 +202,7 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 				method: "erpnext.accounts.doctype.bank_reconciliation_tool.bank_reconciliation_tool.get_account_balance",
 				args: {
 					bank_account: frm.doc.bank_account,
-					till_date: frappe.datetime.add_days(frm.doc.bank_statement_from_date, -1),
+					till_date: frappe.datetime.add_days(frm.doc.from_date, -1),
 					company: frm.doc.company
 				},
 				callback: (response) => {
@@ -278,6 +278,12 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 				(frm.doc.closing_balance_as_per_bank_statement - frm.doc.closing_balance_as_per_erp)
 			);
 		}
+	},
+	from_date: function (frm) {
+		frm.trigger("get_account_opening_balance");
+	},
+	to_date: function (frm) {
+		frm.trigger("get_account_opening_balance");
 	},
 	// make_reconciliation_tool(frm) {
 	// 	frm.get_field("reconciliation_tool_cards").$wrapper.empty();
@@ -512,7 +518,11 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 				frm.change_custom_button_type(__("Get Unreconciled Entries"), null, "default");
 			},
 		});
-
+		setTimeout(() => {
+			if (!(frm.doc.bank_statement.length) && !(frm.doc.erp_transaction.length)){
+				frappe.throw("No records found")
+			}
+		}, 500);
 	},
 
 	update_bal(frm) {

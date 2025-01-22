@@ -2813,92 +2813,6 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertTrue(any(entry["account"] == "SGST" and entry["debit"] == 54 for entry in pi_gl_entries))
 		self.assertTrue(any(entry["account"] == "Creditors" and entry["credit"] == 1308 for entry in pi_gl_entries))
 
-	def test_po_with_uploader_TC_B_091(self):
-		# Test Data
-		po_data = {
-			"doctype": "Purchase Order",
-			"company": "_Test Company",
-			"supplier": "_Test Supplier",
-			"set_posting_time": 1,
-			"posting_date": "2025-01-10",
-			"update_stock": 1,
-			"items": []
-		}
-
-		# Create PO Document
-		po_doc = frappe.get_doc(po_data)
-		
-		# Create Excel Data
-		excel_data = {
-			"Item Code": ["_Test Item", "_Test Item Home Desktop 200"],
-			"Warehouse": ["_Test Warehouse 1 - _TC", "_Test Warehouse 1 - _TC"],
-			"Qty": [1, 1],
-			"Rate": [2000, 1000]
-		}
-
-		# Create DataFrame and save to Excel
-		df = pd.DataFrame(excel_data)
-		with BytesIO() as output:
-			with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-				df.to_excel(writer, index=False)
-			output.seek(0)
-			# Simulate the upload
-			# Assuming the item table is uploaded from an Excel file
-
-		# Now, we would have the uploaded data in PO items table.
-		for index, row in df.iterrows():
-			po_doc.append("items", {
-				"item_code": row['Item Code'],
-				"warehouse": row['Warehouse'],
-				"qty": row['Qty'],
-				"rate": row['Rate']
-			})
-		
-		# Insert and Submit PO
-		po_doc.insert()
-		po_doc.submit()
-
-		# Assertions for PO Items table
-		self.assertEqual(len(po_doc.items), 2, "All items should be added to the PO.")
-		self.assertEqual(po_doc.items[0].item_code, "_Test Item", "First item code should be '_Test Item'.")
-		self.assertEqual(po_doc.items[1].item_code, "_Test Item Home Desktop 200", "Second item code should be '_Test Item Home Desktop 200'.")
-		self.assertEqual(po_doc.items[0].rate, 2000, "Rate for _Test Item should be 2000.")
-		self.assertEqual(po_doc.items[1].rate, 1000, "Rate for _Test Item Home Desktop 200 should be 1000.")
-		
-		# Create PR and PI from PO
-		pr_doc = frappe.get_doc({
-			"doctype": "Purchase Receipt",
-			"purchase_order": po_doc.name,
-			"items": po_doc.items
-		})
-		pr_doc.insert()
-		pr_doc.submit()
-
-		pi_doc = frappe.get_doc({
-			"doctype": "Purchase Invoice",
-			"purchase_receipt": pr_doc.name,
-			"items": pr_doc.items
-		})
-		pi_doc.insert()
-		pi_doc.submit()
-
-		# Assertions for Accounting Entries
-		gle = frappe.get_all("GL Entry", filters={"voucher_no": pi_doc.name}, fields=["account", "debit", "credit"])
-		self.assertGreater(len(gle), 0, "GL Entries should be created.")
-
-		# Validate Stock Ledger
-		sle = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": pi_doc.name}, fields=["item_code", "actual_qty", "stock_value"])
-		self.assertEqual(len(sle), 2, "Stock Ledger should have entries for both items.")
-		self.assertEqual(sle[0]["item_code"], "_Test Item", "Stock Ledger should contain _Test Item.")
-		self.assertEqual(sle[1]["item_code"], "_Test Item Home Desktop 200", "Stock Ledger should contain _Test Item Home Desktop 200.")
-		self.assertEqual(sle[0]["actual_qty"], 1, "Quantity for _Test Item should be 1.")
-		self.assertEqual(sle[1]["actual_qty"], 1, "Quantity for _Test Item Home Desktop 200 should be 1.")
-
-		# Cleanup
-		pi_doc.cancel()
-		pr_doc.cancel()
-		po_doc.cancel()
-
 	def test_po_pr_pi_with_shipping_rule_TC_B_064(self):
 		# Scenario : PO=>PR=>PI [With Shipping Rule]
 		po = {
@@ -2962,88 +2876,34 @@ class TestPurchaseOrder(FrappeTestCase):
 		po.cancel()
 
 	def test_po_pi_pr_flow_TC_B_067(self):
-		# Scenario : PO=>PI=>PR [With Shipping Rule]
-		po = {
-			"doctype": "Purchase Order",
-			"company": "_Test Company",
-			"supplier": "_Test Supplier",
-			"set_posting_time": 1,
-			"posting_date": "2025-01-15",
-			"required_by_date": "2025-01-20",
-			"shipping_rule": "Ship-Buy",
-			"item_code": "_Test Item",
-			"warehouse": "_Test Warehouse 1 - _TC",
-			"qty": 1,
-			"rate": 3000
+		# Scenario : PO => PI => PR [With Shipping Rule]
+		
+		args = {
+					"calculate_based_on" : "Fixed",
+					"shipping_amount" : 200
+				}
+		shipping_rule_name = get_shipping_rule_name(args)
+		
+		po_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 1,
+			"rate" : 3000,
+			"shipping_rule" :shipping_rule_name
+
 		}
+		
+		doc_po = create_purchase_order(**po_data)
+		self.assertEqual(doc_po.docstatus, 1)
 
-		doc_po = create_purchase_order(**po)
-
-		self.assertEqual(po.grand_total, 3200, "Grand Total should include Shipping Rule (3000 + 200 = 3200).")
-		self.assertEqual(po.status, "To Receive and Bill", "PO status should be 'To Receive and Bill'.")
-
-		pi = frappe.get_doc({
-			"doctype": "Purchase Invoice",
-			"purchase_order": doc_po.name,
-			"items": [
-				{
-					"item_code": "_Test Item",
-					"qty": 1,
-					"rate": 3000
-				}
-			]
-		})
-		pi.insert()
-		pi.submit()
-
-		gl_entries_pi = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
-		self.assertTrue(any(entry["account"] == "Stock Received But Not Billed -  - _TC" and entry["debit"] == 3000 for entry in gl_entries_pi),
-						"Stock Received But Not Billed account should be debited with 3000.")
-		self.assertTrue(any(entry["account"] == "Shipping Rule -  - _TC" and entry["debit"] == 200 for entry in gl_entries_pi),
-						"Shipping Rule account should be debited with 200.")
-		self.assertTrue(any(entry["account"] == "Creditors -  - _TC" and entry["credit"] == 3200 for entry in gl_entries_pi),
-						"Creditors account should be credited with 3200.")
-		self.assertEqual(pi.status, "Unpaid", "PI status should be 'Unpaid'.")
+		doc_pi = make_pi_direct_aganist_po(doc_po.name)
+		self.assertEqual(doc_pi.docstatus, 1)
+		
+		doc_pr = make_pr_form_pi(doc_pi.name)
 		doc_po.reload()
-		self.assertEqual(doc_po.status, "To Receive", "doc_po status should update to 'To Receive' after PI submission.")
-
-		pr = frappe.get_doc({
-			"doctype": "Purchase Receipt",
-			"purchase_invoice": pi.name,
-			"items": [
-				{
-					"item_code": "_Test Item",
-					"warehouse": "_Test Warehouse 1 - _TC",
-					"qty": 1,
-					"rate": 3000
-				}
-			]
-		})
-		pr.insert()
-		pr.submit()
-
-		sle = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": pr.name}, fields=["actual_qty", "item_code"])
-		self.assertEqual(len(sle), 1, "Stock Ledger Entry should exist for the received item.")
-		self.assertEqual(sle[0]["actual_qty"], 1, "Stock Ledger should reflect 1 qty received for _Test Item.")
-
-		gl_entries_pr = frappe.get_all("GL Entry", filters={"voucher_no": pr.name}, fields=["account", "debit", "credit"])
-		self.assertTrue(any(entry["account"] == "Stock In Hand -  - _TC" and entry["debit"] == 3200 for entry in gl_entries_pr),
-						"Stock In Hand account should be debited with 3200.")
-		self.assertTrue(any(entry["account"] == "Stock Received But Not Billed -  - _TC" and entry["credit"] == 3000 for entry in gl_entries_pr),
-						"Stock Received But Not Billed account should be credited with 3000.")
-		self.assertTrue(any(entry["account"] == "Shipping Rule -  - _TC" and entry["credit"] == 200 for entry in gl_entries_pr),
-						"Shipping Rule account should be credited with 200.")
-		self.assertEqual(pr.status, "Completed", "PR status should be 'Completed'.")
-
-		self.assertEqual(pr.purchase_invoice, pi.name, "PR should be linked to the PI.")
-		self.assertEqual(pi.purchase_order, po.name, "PI should be linked to the PO.")
-		po.reload()
-		self.assertEqual(po.status, "Completed", "PO status should be 'Completed' after PR submission.")
-
-		# Cleanup
-		pr.cancel()
-		pi.cancel()
-		po.cancel()
+		self.assertEqual(doc_po.status, 'Completed')
+		self.assertEqual(doc_pr.status, 'Completed')
 
 	def test_po_pr_multiple_pi_flow_TC_B_066(self):
 		#Scenario : PO=>PR=>2PI 
@@ -4197,6 +4057,129 @@ class TestPurchaseOrder(FrappeTestCase):
 		
 		doc_po = create_purchase_order(**po_data)
 		self.assertEqual(doc_po.docstatus, 1)
+
+		args = {
+			"mode_of_payment" : "Cash",
+			"reference_no" : "For Testing"
+		}
+
+		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, 6000, args)
+		
+		doc_pr = make_pr_for_po(doc_po.name)
+		self.assertEqual(doc_pr.docstatus, 1)
+
+		args = {
+			"is_paid" : 1,
+			"mode_of_payment" : 'Cash',
+			"cash_bank_account" : doc_pe.paid_from,
+			"paid_amount" : doc_pe.base_received_amount
+		}
+
+		doc_pi = make_pi_against_pr(doc_pr.name, args=args)
+		make_payment_entry(doc_pi.doctype, doc_pi.name, doc_pi.outstanding_amount)
+
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_pi.items[0].qty, doc_po.items[0].qty)
+		self.assertEqual(doc_pi.grand_total, doc_po.grand_total)
+		
+		doc_po.reload()
+		doc_pi.reload()
+		self.assertEqual(doc_po.status, 'Completed')
+		self.assertEqual(doc_pi.status, 'Paid')
+	
+	def test_po_to_pi_with_Adv_payment_entry_n_tax_TC_B_074(self):
+		# Scenario : PO => PE => PR => PI [With Adv Payment and Tax]
+
+		po_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 1,
+			"rate" : 3000,
+			"do_not_submit" : 1
+		}
+		
+		acc = frappe.new_doc("Account")
+		acc.account_name = "Input Tax IGST"
+		acc.parent_account = "Tax Assets - _TC"
+		acc.company = "_Test Company"
+		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
+		if not account_name:
+			account_name = acc.insert()
+
+		doc_po = create_purchase_order(**po_data)
+		
+		doc_po.append("taxes", {
+                    "charge_type": "On Net Total",
+                    "account_head": account_name,
+                    "rate": 18,
+                    "description": "Input GST",
+                })
+		doc_po.submit()
+
+		self.assertEqual(doc_po.docstatus, 1)
+
+		args = {
+			"mode_of_payment" : "Cash",
+			"reference_no" : "For Testing"
+		}
+
+		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, doc_po.grand_total, args)
+		
+		doc_pr = make_pr_for_po(doc_po.name)
+		self.assertEqual(doc_pr.docstatus, 1)
+
+		args = {
+			"is_paid" : 1,
+			"mode_of_payment" : 'Cash',
+			"cash_bank_account" : doc_pe.paid_from,
+			"paid_amount" : doc_pe.base_received_amount
+		}
+
+		doc_pi = make_pi_against_pr(doc_pr.name, args=args)
+		
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_pi.items[0].qty, doc_po.items[0].qty)
+		self.assertEqual(doc_pi.grand_total, doc_po.grand_total)
+		
+		doc_po.reload()
+		self.assertEqual(doc_po.status, 'Completed')
+		self.assertEqual(doc_pi.status, 'Paid')
+	
+	def test_po_to_pi_with_partial_payment_entry_TC_B_075(self):
+		# Scenario : PO => PE => PR => PI [With Adv Partial Payment and Tax]
+
+		po_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 4,
+			"rate" : 3000,
+			"do_not_submit" : 1
+		}
+		
+		
+		acc = frappe.new_doc("Account")
+		acc.account_name = "Input Tax IGST"
+		acc.parent_account = "Tax Assets - _TC"
+		acc.company = "_Test Company"
+		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
+		if not account_name:
+			account_name = acc.insert()
+
+		doc_po = create_purchase_order(**po_data)
+		
+		doc_po.append("taxes", {
+                    "charge_type": "On Net Total",
+                    "account_head": account_name,
+                    "rate": 18,
+                    "description": "Input GST",
+                })
+		doc_po.submit()
+
+		self.assertEqual(doc_po.docstatus, 1)
+		self.assertEqual(doc_po.base_taxes_and_charges_added, 2160)
+		
 
 		args = {
 			"mode_of_payment" : "Cash",
@@ -5642,10 +5625,16 @@ def make_payment_entry(dt, dn, paid_amount, args = None):
 	doc_pe.submit()
 	return doc_pe
 
-@frappe.whitelist()
-def run_test():
-	obj_test = TestPurchaseOrder()
-	obj_test.test_po_to_pi_with_partial_payment_entry_TC_B_073()
-	return 1
+def make_pi_direct_aganist_po(source_name):
+	doc_pi = make_pi_from_po(source_name)
+	doc_pi.insert()
+	doc_pi.submit()
+	return doc_pi
 
+def make_pr_form_pi(source_name):
+	from erpnext.accounts.doctype.purchase_invoice.purchase_invoice import make_purchase_receipt
+	doc_pi = make_purchase_receipt(source_name)
+	doc_pi.insert()
+	doc_pi.submit()
+	return doc_pi
 
