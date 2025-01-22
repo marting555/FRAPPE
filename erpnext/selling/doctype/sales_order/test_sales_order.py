@@ -4907,7 +4907,28 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		sre.reload()
   
 		self.assertEqual(sre.status, "Cancelled")
-  
+
+	def test_bulk_stock_reservation_entry_cancel_TC_S_074(self):
+		so1 = self.test_sales_order_for_stock_reservation_TC_S_063(get_so_with_stock_reserved=1)
+		so2 = self.test_sales_order_for_stock_reservation_TC_S_063(get_so_with_stock_reserved=1)
+		so3 = self.test_sales_order_for_stock_reservation_TC_S_063(get_so_with_stock_reserved=1)
+		
+		sre1 = frappe.get_doc("Stock Reservation Entry", {"voucher_no": so1.name})
+		sre2 = frappe.get_doc("Stock Reservation Entry", {"voucher_no": so2.name})
+		sre3 = frappe.get_doc("Stock Reservation Entry", {"voucher_no": so3.name})
+		
+		stock_reservation_entries = [sre1.name, sre2.name, sre3.name]
+		
+		frappe.get_all('Stock Reservation Entry', filters={'name': ['in', stock_reservation_entries]}, pluck='name')
+		for sre in stock_reservation_entries:
+			sre_doc = frappe.get_doc('Stock Reservation Entry', sre)
+			sre_doc.cancel()
+			sre_doc.reload()
+
+		for sre in stock_reservation_entries:
+			sre_doc = frappe.get_doc('Stock Reservation Entry', sre)
+			self.assertEqual(sre_doc.status, "Cancelled")
+
 	def test_sales_order_purchase_cycle_creating_pi_TC_S_089(self, reuse=None):
 		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="_Test Warehouse - _TC")
   
