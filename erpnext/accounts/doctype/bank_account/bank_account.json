@@ -34,7 +34,9 @@
   "integration_id",
   "last_integration_date",
   "column_break_27",
-  "mask"
+  "mask",
+  "transaction_details_section",
+  "opening_balance_as_per_bank_statement"
  ],
  "fields": [
   {
@@ -206,6 +208,16 @@
    "fieldname": "disabled",
    "fieldtype": "Check",
    "label": "Disabled"
+  },
+  {
+   "fieldname": "transaction_details_section",
+   "fieldtype": "Section Break",
+   "label": "Transaction Details"
+  },
+  {
+   "fieldname": "opening_balance_as_per_bank_statement",
+   "fieldtype": "Currency",
+   "label": "Opening Balance as per Bank Statement"
   }
  ],
  "links": [
@@ -250,7 +262,7 @@
    "link_fieldname": "default_bank_account"
   }
  ],
- "modified": "2024-09-24 06:57:41.292970",
+ "modified": "2025-01-22 16:08:25.677653",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Bank Account",
