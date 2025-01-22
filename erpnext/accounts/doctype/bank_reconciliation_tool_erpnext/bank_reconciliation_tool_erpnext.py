@@ -135,8 +135,6 @@ def get_bank_transaction(bank_account, company, from_statement_date=None, to_sta
 				"unallocated_amount",
 			],
 		)
-	if len(bank_transactn_list) == 0:
-		frappe.msgprint("No records found")
 
 	return bank_transactn_list
 
@@ -190,8 +188,6 @@ def get_erp_transaction(bank_account, company, from_statement_date=None, to_stat
             else:
                 payment['amount'] = frappe.db.get_value("Payment Entry", payment['name'], 'paid_amount')
                 result.append(payment)
-    if len(result) == 0:
-        frappe.msgprint("No records found")
     return result
 
 
@@ -236,9 +232,11 @@ def get_closing_bal_bnk(bank_account):
 		)[-1][-1]
 		or 0
 	)
+
+	opening_bal = frappe.db.get_value("Bank Account", bank_account, 'opening_balance_as_per_bank_statement')
 	
 	# Calculate closing balance
-	closing_balance = float(total_credits) - float(total_debits)
+	closing_balance = opening_bal + float(total_credits) - float(total_debits)
 	return closing_balance
 
 @frappe.whitelist()
