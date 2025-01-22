@@ -186,6 +186,10 @@ frappe.ui.form.on("Project", {
 				sidebar.hide();
 			}
 		}
+
+		if(!frm.previous_status){
+			frm.previous_status = frm.doc.status
+		}
 	},
 	create_duplicate: function (frm) {
 		return new Promise(resolve => {
