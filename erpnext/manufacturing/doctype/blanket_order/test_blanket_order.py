@@ -250,7 +250,7 @@ class TestBlanketOrder(FrappeTestCase):
 		updated_blanket_order = frappe.get_doc("Blanket Order", blanket_order.name)
 		self.assertEqual(updated_blanket_order.items[0].ordered_qty, 2)
 	
-	def test_blanket_order_to_sales_invoice_TC_S_54(self):
+	def test_blanket_order_to_sales_invoice_TC_S_054(self):
 		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
 		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
 		frappe.flags.args.doctype = "Sales Order"
@@ -278,8 +278,30 @@ class TestBlanketOrder(FrappeTestCase):
 		self.assertAlmostEqual(gl_debits[debtor_account], 50000)
 		self.assertAlmostEqual(gl_credits[sales_account], 50000)
 
+	def test_blanket_order_to_sales_invoice_with_update_stock_TC_S_055(self):
+		from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+		frappe.flags.args.doctype = "Sales Order"
 
+		bo = make_blanket_order(blanket_order_type="Selling",quantity=50,rate=1000)
+		so = make_order(bo.name)
+		so.delivery_date = add_days(nowdate(), 5)
+		so.submit()
 
+		bo.reload()
+		self.assertEqual(bo.items[0].ordered_qty, 50)
+
+		si = make_sales_invoice(so.name)
+		si.update_stock =1
+		si.insert()
+		si.submit()
+
+		debtor_account = frappe.db.get_value("Company", "_Test Company", "default_receivable_account")
+		sales_account = frappe.db.get_value("Company", "_Test Company", "default_income_account")
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": si.name}, fields=["account", "debit", "credit"])
+		gl_debits = {entry.account: entry.debit for entry in gl_entries}
+		gl_credits = {entry.account: entry.credit for entry in gl_entries}
+		self.assertAlmostEqual(gl_debits[debtor_account], 50000)
+		self.assertAlmostEqual(gl_credits[sales_account], 50000)
 
 def make_blanket_order(**args):
 	args = frappe._dict(args)
