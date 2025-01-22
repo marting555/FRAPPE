@@ -89,7 +89,7 @@ frappe.ui.form.on("Project", {
 			frm.trigger('show_dashboard');
 		}
 
-		if (!frm.is_new()) {
+		if (!frm.is_new() && !await erpnext.utils.isWorkshopViewer(frm)) {
 			frm.add_custom_button(__("Create quotation"), async () => {
 				const doc = await frappe.model.get_new_doc('Quotation');
 				doc.party_name = frm.doc.customer;
@@ -171,14 +171,20 @@ frappe.ui.form.on("Project", {
 			})
 		}
 
-		installChat(frm);
-		installQuotationItems(frm)
-		insertCarousel(frm);
-		insertVinSearchButton(frm)
-		insertResendPaymentLink(frm);
-		insertDiagnoseResultTranslation(frm)
-
-		frm.trigger("set_custom_buttons");
+		if (! await erpnext.utils.isWorkshopViewer(this.frm)) {
+			installChat(frm);
+			installQuotationItems(frm)
+			insertCarousel(frm);
+			insertVinSearchButton(frm)
+			insertResendPaymentLink(frm);
+			insertDiagnoseResultTranslation(frm)
+			frm.trigger("set_custom_buttons");
+		} else {
+			const sidebar = $(".layout-side-section");
+			if (sidebar.is(':visible')) {
+				sidebar.hide();
+			}
+		}
 	},
 	create_duplicate: function (frm) {
 		return new Promise(resolve => {
@@ -204,21 +210,21 @@ frappe.ui.form.on("Project", {
 				});
 		});
 	},
-	before_save: function(frm) {
+	before_save: function (frm) {
 		if (frm.doc.__islocal) {
-				frm.previous_status = null;
+			frm.previous_status = null;
 		} else {
-				if(frm.doc.status === "Completed" && frm.previous_status === "Remote diagnose"){
-					showSentMessageAfterRemoteDiagnoseDialog(frm.docname)
-				}
-				frm.previous_status = frm.doc.status;
+			if (frm.doc.status === "Completed" && frm.previous_status === "Remote diagnose") {
+				showSentMessageAfterRemoteDiagnoseDialog(frm.docname)
+			}
+			frm.previous_status = frm.doc.status;
 		}
 	},
-	status: async function(frm) {
-    let new_value = frm.doc.status;
+	status: async function (frm) {
+		let new_value = frm.doc.status;
 
-		if(new_value !== "Quality check approved") {
-			return 
+		if (new_value !== "Quality check approved") {
+			return
 		}
 
 		const incomplete_requirements = frm.doc.requirements.filter(requirement => !requirement.completed)
@@ -238,11 +244,11 @@ frappe.ui.form.on("Project", {
 	validate: function (frm) {
 		const regex = /^(?=.*[a-zA-Z0-9])[\s\S]{4,}$/g
 
-    if (!regex.test(frm.doc.plate)) {
-      frappe.msgprint(__('Please enter a valid license plate. It cannot be empty or contain only special characters.'));
-      frappe.validated = false;
-    }
-  }
+		if (!regex.test(frm.doc.plate)) {
+			frappe.msgprint(__('Please enter a valid license plate. It cannot be empty or contain only special characters.'));
+			frappe.validated = false;
+		}
+	}
 });
 
 function showConfirmationDialog(frm, quotations, incomplete_requirements) {
@@ -688,9 +694,9 @@ function showSentMessageAfterRemoteDiagnoseDialog(project_name) {
 			},
 		],
 		primary_action_label: 'Yes',
-		primary_action: async function() {
+		primary_action: async function () {
 			const { aws_url } = await frappe.db.get_doc("Whatsapp Config")
-			console.log("aws_url => ",aws_url)
+			console.log("aws_url => ", aws_url)
 			await frappe.call({
 				method: 'frappe.desk.doctype.kanban_board.kanban_board.call_send_whatsapp_message',
 				args: { aws_url: aws_url, project_name: project_name }
@@ -698,12 +704,12 @@ function showSentMessageAfterRemoteDiagnoseDialog(project_name) {
 			dialog.hide();
 		},
 		secondary_action_label: 'No',
-		secondary_action: function() {
+		secondary_action: function () {
 			dialog.hide();
 		}
 	});
 
-	dialog.show();			
+	dialog.show();
 }
 async function insertResendPaymentLink(frm) {
 	if (!["Completed", "Cancelled"].includes(frm.doc.status)) {
@@ -714,44 +720,44 @@ async function insertResendPaymentLink(frm) {
 				primary_action_label: __("Send"),
 				primary_action: async function () {
 					const { aws_url } = await frappe.db.get_doc('Queue Settings')
-					console.log({aws_url})
+					console.log({ aws_url })
 					const url = `${aws_url}project/quality-approved`;
 					const obj = {
-					"name": frm.doc.name,
+						"name": frm.doc.name,
 					};
 
 					console.log("Sending payload:", obj);
 
 					fetch(url, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify(obj),
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify(obj),
 					})
-					.then(async (response) => {
-						if (!response.ok) {
-						// Manejo de error basado en el estado de la respuesta
-						const errorMessage = await response.text();
-						throw new Error(`HTTP error ${response.status}: ${errorMessage}`);
-						}
-						console.log(response.json())
-						return response
-					})
-					.then((data) => {
-						console.log("Response data:", data);
-						frappe.show_alert({
-						message: __('Message sent successfully'),
-						indicator: 'green'
-						}, 10);
-					})
-					.catch((error) => {
-						frappe.show_alert({
-						message: __('An error occurred while sending the message'),
-						indicator: 'red'
-						}, 10);
-						console.error('Error:', error);
-					});
+						.then(async (response) => {
+							if (!response.ok) {
+								// Manejo de error basado en el estado de la respuesta
+								const errorMessage = await response.text();
+								throw new Error(`HTTP error ${response.status}: ${errorMessage}`);
+							}
+							console.log(response.json())
+							return response
+						})
+						.then((data) => {
+							console.log("Response data:", data);
+							frappe.show_alert({
+								message: __('Message sent successfully'),
+								indicator: 'green'
+							}, 10);
+						})
+						.catch((error) => {
+							frappe.show_alert({
+								message: __('An error occurred while sending the message'),
+								indicator: 'red'
+							}, 10);
+							console.error('Error:', error);
+						});
 
 
 					d.hide();
@@ -768,73 +774,73 @@ async function insertResendPaymentLink(frm) {
 }
 
 async function insertDiagnoseResultTranslation(frm) {
-  const lang = frappe?.boot?.user?.language || 'nl'
-  const languages = new Set(['nl', 'en', 'uk', lang])
-  const field = document.querySelector('div[data-fieldname="diagnose_result"]');
-  const container = field.querySelector('.clearfix');
-  container.style = 'display:flex;gap:1rem;align-items:center;'
+	const lang = frappe?.boot?.user?.language || 'nl'
+	const languages = new Set(['nl', 'en', 'uk', lang])
+	const field = document.querySelector('div[data-fieldname="diagnose_result"]');
+	const container = field.querySelector('.clearfix');
+	container.style = 'display:flex;gap:1rem;align-items:center;'
 
-  const spinner = document.createElement('div')
-  spinner.setAttribute('hidden', 'true')
-  spinner.classList = 'vin-search-spinner'
-  spinner.style = `position: relative !important;`
+	const spinner = document.createElement('div')
+	spinner.setAttribute('hidden', 'true')
+	spinner.classList = 'vin-search-spinner'
+	spinner.style = `position: relative !important;`
 
-  if(container.getElementsByClassName('flag').length) return
+	if (container.getElementsByClassName('flag').length) return
 
-  for (const lang of languages) {
-    const el = document.createElement(`div`)
-    el.classList = `flag ${lang}`
-    el.title = `translate diagnose result to ${lang}`
+	for (const lang of languages) {
+		const el = document.createElement(`div`)
+		el.classList = `flag ${lang}`
+		el.title = `translate diagnose result to ${lang}`
 
-    el.addEventListener('click', () => onClick(frm, spinner, field, lang))
-    container.appendChild(el)
-  }
+		el.addEventListener('click', () => onClick(frm, spinner, field, lang))
+		container.appendChild(el)
+	}
 
-  container.appendChild(spinner);
+	container.appendChild(spinner);
 }
 
 async function onClick(frm, spinner, field, lang) {
-  const flags = document.getElementsByClassName('flag')
+	const flags = document.getElementsByClassName('flag')
 
-  for (const flag of flags) {
-    flag.setAttribute('hidden', 'true')
-  }
-  spinner.removeAttribute('hidden')
+	for (const flag of flags) {
+		flag.setAttribute('hidden', 'true')
+	}
+	spinner.removeAttribute('hidden')
 
-  const { aws_url } = await frappe.db.get_doc('Queue Settings')
+	const { aws_url } = await frappe.db.get_doc('Queue Settings')
 
-  if (!aws_url) return
+	if (!aws_url) return
 
-  const response = await fetch(`${aws_url}project/translate-diagnose-result`, {
-    method: "POST",
-    body: JSON.stringify({
-      project_name: frm.docname,
-      language: lang,
-      diagnose_result: frm.doc.diagnose_result
-    })
-  }).then(res => res.json())
+	const response = await fetch(`${aws_url}project/translate-diagnose-result`, {
+		method: "POST",
+		body: JSON.stringify({
+			project_name: frm.docname,
+			language: lang,
+			diagnose_result: frm.doc.diagnose_result
+		})
+	}).then(res => res.json())
 
-  spinner.setAttribute('hidden', 'true')
+	spinner.setAttribute('hidden', 'true')
 
-  for (const flag of flags) {
-    flag.removeAttribute('hidden')
-  }
+	for (const flag of flags) {
+		flag.removeAttribute('hidden')
+	}
 
-  if (!response.translation) {
-    frappe.show_alert({
-      message: __(response.message),
-      indicator: 'red'
-    }, 5);
-    return
-  }
+	if (!response.translation) {
+		frappe.show_alert({
+			message: __(response.message),
+			indicator: 'red'
+		}, 5);
+		return
+	}
 
-  let translation = null;
+	let translation = null;
 
-  translation = field.querySelector('#translation-container') || document.createElement('div')
-  translation.id = 'translation-container'
+	translation = field.querySelector('#translation-container') || document.createElement('div')
+	translation.id = 'translation-container'
 
-  translation.style = 'background:#f3f3f3;padding:12px 15px;height:300px;overflow:scroll;font-size:13px;margin-bottom:1rem;'
-  translation.innerHTML = response.translation
+	translation.style = 'background:#f3f3f3;padding:12px 15px;height:300px;overflow:scroll;font-size:13px;margin-bottom:1rem;'
+	translation.innerHTML = response.translation
 
-  field.appendChild(translation)
+	field.appendChild(translation)
 }
