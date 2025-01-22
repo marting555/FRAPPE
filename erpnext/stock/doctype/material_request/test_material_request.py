@@ -5961,6 +5961,45 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(sn.warehouse, warehouse)
 			self.assertEqual(sn.item_code, item_code)
 
+	def test_mr_to_pi_with_PE_TC_B_076(self):
+		# MR =>  PO => PE => PR => PI
+		mr_dict_list = {
+				"company" : "_Test Company",
+				"item_code" : "Testing-31",
+				"warehouse" : "Stores - _TC",
+				"qty" : 1,
+				"rate" : 3000,
+			}
+
+		doc_mr = make_material_request(**mr_dict_list)
+		self.assertEqual(doc_mr.docstatus, 1)
+
+		
+		doc_po = make_test_po(doc_mr.name)
+		args = {
+			"mode_of_payment" : "Cash",
+			"reference_no" : "For Testing"
+		}
+
+		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, doc_po.grand_total, args)
+
+		doc_pr = make_test_pr(doc_po.name)
+
+		args = {
+			"is_paid" : 1,
+			"mode_of_payment" : 'Cash',
+			"cash_bank_account" : doc_pe.paid_from,
+			"paid_amount" : doc_pe.base_received_amount
+		}
+		doc_pi = make_test_pi(doc_pr.name, args = args)
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_pi.items[0].qty, doc_po.items[0].qty)
+		self.assertEqual(doc_pi.grand_total, doc_po.grand_total)
+		
+		doc_po.reload()
+		self.assertEqual(doc_po.status, 'Completed')
+		self.assertEqual(doc_pi.status, 'Paid')
+
 def get_in_transit_warehouse(company):
 	if not frappe.db.exists("Warehouse Type", "Transit"):
 		frappe.get_doc(
@@ -6111,13 +6150,17 @@ def make_test_pr(source_name, received_qty = None, item_dict = None, remove_item
 	return doc_pr
 
 
-def make_test_pi(source_name, received_qty = None, item_dict = None):
+def make_test_pi(source_name, received_qty = None, item_dict = None, args = None):
 	doc_pi = make_purchase_invoice(source_name)
 	if received_qty is not None:
 		doc_pi.items[0].qty = received_qty
 		
 	if item_dict is not None:
 		doc_pi.append("items", item_dict)
+
+	if args is not None:
+		args = frappe._dict(args)
+		doc_pi.update(args)
 
 	doc_pi.insert()
 	doc_pi.submit()
@@ -6211,3 +6254,23 @@ def item_create(
 	else:
 		item = frappe.get_doc("Item", item_code)
 	return item
+
+
+def make_payment_entry(dt, dn, paid_amount, args = None):
+	from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+	doc_pe = get_payment_entry(dt, dn, paid_amount)
+	
+	args =  frappe._dict() if args is None else frappe._dict(args)
+	doc_pe.mode_of_payment = args.mode_of_payment or None
+	doc_pe.reference_no =  args.reference_no or "Test Reference"
+	
+	doc_pe.submit()
+	return doc_pe
+
+
+
+@frappe.whitelist()
+def run_test():
+	obj_test = TestMaterialRequest()
+	obj_test.test_mr_to_pi_with_PE_TC_B_076()
+	return 1
