@@ -886,7 +886,6 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 				pos_invoice: this.frm.doc.return_against
 			}
 		});
-		console.log(return_against_mop.message);
 
 		if (return_against_mop.message.length === 1) {
 			this.frm.doc.payments.forEach(payment => {
