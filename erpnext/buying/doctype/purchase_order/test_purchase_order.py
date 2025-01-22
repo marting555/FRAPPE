@@ -5326,6 +5326,68 @@ class TestPurchaseOrder(FrappeTestCase):
 			po.insert()
 		self.assertEqual(str(cm.exception), "Shipping rule not applicable for country India in Shipping Address")
 
+	def test_shipping_rule_net_weight_restricted_country_po_with_gst_TC_B_117(self):
+		company = "_Test Company"
+		warehouse = "Stores - _TC"
+		supplier = "_Test Supplier 1"
+		item_code = "test_item_with_net_weight_shipping_rule"
+		gst_hsn_code = "888890"
+
+		# Ensure Item exists with weight specification
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"gst_hsn_code": gst_hsn_code,
+				"is_stock_item": 1,
+				"weight_per_unit": 2.5,  # Weight per unit
+				"weight_uom": "Kg"
+			}).insert()
+
+		# Create Shipping Rule with calculation based on Net Weight
+		shipping_rule = frappe.get_doc({
+			"doctype": "Shipping Rule",
+			"company": company,
+			"label": "test_shipping_rule_restricted_country",
+			"calculate_based_on": "Net Weight",
+			"shipping_rule_type": "Buying",
+			"account": "Creditors - _TC",
+			"cost_center": "Main - _TC",
+			"conditions": [{
+				"from_value": 10,  # Net weight range
+				"to_value": 50,
+				"shipping_amount": 250
+			}],
+			"countries":[
+				{
+					"country": "Australia"
+				}
+			]
+		}).insert()
+
+		# Create Purchase Order
+		po = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"supplier": supplier,
+			"company": company,
+			"schedule_date": today(),
+			"set_warehouse": warehouse,
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": 10,  # Total weight = 10 * 2.5 = 25 Kg
+					"rate": 100,
+					"warehouse": warehouse,
+				}
+			],
+			"taxes_and_charges": "Input GST In-state - _TC",
+			"shipping_rule": shipping_rule.name
+		})
+		with self.assertRaises(frappe.exceptions.ValidationError) as cm:
+			po.insert()
+		self.assertEqual(str(cm.exception), "Shipping rule not applicable for country India in Shipping Address")
+
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
