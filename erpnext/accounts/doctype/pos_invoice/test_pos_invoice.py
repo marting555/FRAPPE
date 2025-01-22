@@ -1002,7 +1002,7 @@ class TestPOSInvoice(unittest.TestCase):
 		opening_entry = create_opening_entry(pos_profile=pos_profile, user=test_user.name)
 		self.assertEqual(opening_entry.status, "Open")
 
-		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=3000, do_not_save=1)
+		inv = create_pos_invoice(rate=3000, do_not_save=1)
 		inv.taxes_and_charges = "Output GST In-state - _TC"
 		inv.apply_discount_on = "Grand Total"
 		inv.discount_amount = 1000
@@ -1026,7 +1026,7 @@ class TestPOSInvoice(unittest.TestCase):
 		opening_entry = create_opening_entry(pos_profile=pos_profile, user=test_user.name)
 		self.assertEqual(opening_entry.status, "Open")
 
-		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=3000, do_not_save=1)
+		inv = create_pos_invoice(rate=3000, do_not_save=1)
 		inv.taxes_and_charges = "Output GST In-state - _TC"
 		inv.apply_discount_on = "Net Total"
 		inv.discount_amount = 1000
@@ -1050,7 +1050,7 @@ class TestPOSInvoice(unittest.TestCase):
 		opening_entry = create_opening_entry(pos_profile=pos_profile, user=test_user.name)
 		self.assertEqual(opening_entry.status, "Open")
 
-		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=5000, do_not_save=1)
+		inv = create_pos_invoice(rate=5000, do_not_save=1)
 		inv.taxes_and_charges = "Output GST In-state - _TC"
 		inv.from_date = frappe.utils.nowdate()
 		inv.to_date = inv.to_date = frappe.utils.add_days(inv.from_date, 5)
@@ -1075,7 +1075,7 @@ class TestPOSInvoice(unittest.TestCase):
 		opening_entry = create_opening_entry(pos_profile=pos_profile, user=test_user.name)
 		self.assertEqual(opening_entry.status, "Open")
 
-		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=3000, do_not_save=1)
+		inv = create_pos_invoice(rate=3000, do_not_save=1)
 		inv.taxes_and_charges = "Output GST In-state - _TC"
 		inv.tc_name ="_Test Terms and Conditions"
 		inv.save()
@@ -1104,7 +1104,6 @@ class TestPOSInvoice(unittest.TestCase):
 					"expiry_duration": 10,
 					"company": "_Test Company",
 					"cost_center": "Main - _TC",
-					"expense_account": "Loyalty - _TC",
 					"collection_rules": [{"tier_name": "Silver", "collection_factor": 1000, "min_spent": 1000}],
 				}
 			).insert()
@@ -1133,7 +1132,7 @@ class TestPOSInvoice(unittest.TestCase):
 		
 	
 	def test_pos_inoivce_with_discount_TC_S_118(self):
-		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=3000, do_not_save=1)
+		inv = create_pos_invoice(rate=3000, do_not_save=1)
 		inv.taxes_and_charges = "Output GST In-state - _TC"
 		inv.apply_discount_on = "Grand Total"
 		inv.discount_amount = 1000
@@ -1146,7 +1145,7 @@ class TestPOSInvoice(unittest.TestCase):
 		self.assertEqual(inv.status, "Paid")
 
 	def test_pos_inoivce_retun_with_update_stock_TC_S_119(self):
-		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=3000,do_not_save=1)
+		inv = create_pos_invoice(rate=3000,do_not_save=1)
 		inv.save()
 		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
 		inv.paid_amount = inv.grand_total
@@ -1200,7 +1199,7 @@ class TestPOSInvoice(unittest.TestCase):
 			})
 			product_bundle.insert()
 			frappe.db.commit()
-		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=3000,do_not_save=1)
+		inv = create_pos_invoice(rate=3000,do_not_save=1)
 		inv.items =[]
 		inv.append("items",
 			 {
@@ -1214,7 +1213,7 @@ class TestPOSInvoice(unittest.TestCase):
 		self.assertEqual(inv.status, "Paid")
 		
 	def test_pos_inoivce_with_payment_terms_TC_S_123(self):
-		inv = create_pos_invoice(customer="Test Loyalty Customer", rate=3000,do_not_save=1)
+		inv = create_pos_invoice(rate=3000,do_not_save=1)
 		inv.save()
 		inv.include_payment = 1  
 		inv.payment_terms_template = "_Test Payment Term Template"

@@ -3451,6 +3451,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		frappe.db.set_value("Item", item.name, "quality_inspection_template", template.name)
 		item.reload()
+		make_stock_entry(item_code=item.name, qty=10, rate=5000, target="_Test Warehouse - _TC")
 
 		sales_order = make_sales_order(item_code=item.name, qty=5, rate=200)
 
