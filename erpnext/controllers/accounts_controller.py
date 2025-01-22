@@ -2413,10 +2413,15 @@ class AccountsController(TransactionBase):
 					)
 
 			if (
-				flt(total, self.precision("grand_total")) - flt(grand_total, self.precision("grand_total"))
+				abs(
+					flt(total, self.precision("grand_total"))
+					- flt(grand_total, self.precision("grand_total"))
+				)
 				> 0.1
-				or flt(base_total, self.precision("base_grand_total"))
-				- flt(base_grand_total, self.precision("base_grand_total"))
+				or abs(
+					flt(base_total, self.precision("base_grand_total"))
+					- flt(base_grand_total, self.precision("base_grand_total"))
+				)
 				> 0.1
 			):
 				frappe.throw(
