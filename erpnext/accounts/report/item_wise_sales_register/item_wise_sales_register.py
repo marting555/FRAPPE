@@ -736,7 +736,6 @@ def add_total_row(
 			add_sub_total_row(total_row, total_row_map, "total_row", tax_columns)
 
 		prev_group_by_value = item.get(group_by_field, "")
-		print(444444, prev_group_by_value)
 		total_row_map.setdefault(
 			item.get(group_by_field, ""),
 			{
