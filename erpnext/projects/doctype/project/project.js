@@ -173,11 +173,12 @@ frappe.ui.form.on("Project", {
 
 		if (! await erpnext.utils.isWorkshopViewer(this.frm)) {
 			installChat(frm);
-			installQuotationItems(frm)
+			installQuotationItems(frm);
 			insertCarousel(frm);
-			insertVinSearchButton(frm)
+			insertVinSearchButton(frm);
 			insertResendPaymentLink(frm);
-			insertDiagnoseResultTranslation(frm)
+			insertDiagnoseResultTranslation(frm);
+			insertUpdateQueuePositionButton(frm);
 			frm.trigger("set_custom_buttons");
 		} else {
 			const sidebar = $(".layout-side-section");
@@ -843,4 +844,76 @@ async function onClick(frm, spinner, field, lang) {
 	translation.innerHTML = response.translation
 
 	field.appendChild(translation)
+}
+
+async function insertUpdateQueuePositionButton(frm) {
+	const { aws_url } = await frappe.db.get_doc('Queue Settings')
+	if (!aws_url) return
+	const getSelectUrl = `${aws_url}queue/select`
+	const setPositionUrl = `${aws_url}queue/set-position`
+
+	const getSelect = (project_name) => {
+		return fetch(
+			`${getSelectUrl}?name=${project_name}`
+		).then((res) => res.json());
+	};
+
+	const setPosition = (data) => {
+		return fetch(setPositionUrl, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data)
+		})
+	}
+
+	const option = $('.form-page select[data-fieldname="status"]')
+		.find('option[value="In queue"]')
+
+	const { doc } = frm
+	console.log('doc => ', doc)
+	const cardName = $('.frappe-list .kanban-card-title.ellipsis');
+	cardName.html(cardName.html() + doc.model != "" ? " " + doc.model : "");
+
+
+	frm.set_df_property("queue_position", "read_only", frm.is_new() ? 0 : 1);
+	if (!frm.is_new() && doc.status === 'In queue') {
+		frm.add_custom_button('Change queue position', async () => {
+			const select = await getSelect(doc.name)
+
+			let d = new frappe.ui.Dialog({
+				title: 'Enter the new position.',
+				fields: [
+					{
+						label: 'New position',
+						fieldname: 'new_position',
+						options: select.options,
+						fieldtype: 'Select',
+						default: select.current.toString()
+					},
+				],
+				size: 'small', // small, large, extra-large
+				primary_action_label: 'Submit',
+				primary_action(values) {
+					setPosition({
+						name: doc.name,
+						...values
+					}).then(() => {
+						frappe.show_alert({
+							message: __('Position updated successfuly'),
+							indicator: 'green'
+						}, 5);
+					})
+					d.hide();
+				},
+			});
+			d.show();
+		}, null, false);
+	}
+
+	getSelect(doc.name).then((data) => {
+		frm.set_df_property('queue_position', 'options', data.options)
+		frm.set_value('queue_position', data.current)
+	})
 }
