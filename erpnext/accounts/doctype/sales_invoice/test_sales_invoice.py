@@ -5310,6 +5310,36 @@ class TestSalesInvoice(FrappeTestCase):
 		)
   
 		self.assertEquals(2,si.items[0].discount_percentage)
+  
+	def test_over_billing_allowance_for_si_TC_ACC_120(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item
+		)
+		from erpnext.selling.doctype.sales_order.test_sales_order import (
+			make_sales_order,
+            make_sales_invoice
+		)
+		account_setting=frappe.get_doc("Accounts Settings")
+		account_setting.db_set("over_billing_allowance", 10)
+		account_setting.save()
+		company = "_Test Company"
+		item=make_test_item("_Test Item")
+		so = make_sales_order(
+			customer="_Test Customer",
+			company=company,
+			item_code=item.name,
+			rate=1000,
+			qty=1
+		)
+		try:
+			si=make_sales_invoice(so.name)
+			si.items[0].rate=1200
+			si.save()
+			si.submit()
+		except Exception as e:
+			error_msg = str(e)
+			self.assertEqual(error_msg,'This document is over limit by Amount 100.0 for item _Test Item. Are you making another Sales Invoice against the same Sales Order Item?To allow over billing, update "Over Billing Allowance" in Accounts Settings or the Item.')
+
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
