@@ -4416,23 +4416,39 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(pi_total, 10080) 
 
 	def test_purchase_flow_TC_B_068(self):
-		#Scenario : MR=>PO=>PR=>PI
+		#Scenario : MR=>PO=>PR=>PI [With Shipping Rule]
 		
 		args = {
 					"calculate_based_on" : "Fixed",
 					"shipping_amount" : 200
 				}
 		shipping_rule_name = get_shipping_rule_name(args)
-		
-		po_data = {
-			"company" : "_Test Company",
-			"item_code" : "_Test Item",
-			"warehouse" : "Stores - _TC",
-			"qty" : 3,
-			"rate" : 100,
-			"shipping_rule" :shipping_rule_name
+		mr_dict_list = {
+				"company" : "_Test Company",
+				"item_code" : "Testing-31",
+				"warehouse" : "Stores - _TC",
+				"qty" : 4,
+				"rate" : 3000,
+			}
 
+		doc_mr = make_material_request(**mr_dict_list)
+		self.assertEqual(doc_mr.docstatus, 1)
+
+		args = {
+			"shipping_rule" :shipping_rule_name
 		}
+		doc_po = make_test_po(doc_mr.name, args = args)
+		self.assertEqual(doc_po.base_total_taxes_and_charges, 200)
+
+
+		doc_pr = make_test_pr(doc_po.name)
+		doc_pi = make_test_pi(doc_pr.name, args = args)
+
+		self.assertEqual(doc_pi.docstatus, 1)
+		
+		doc_po.reload()
+		self.assertEqual(doc_po.status, 'Completed')
+
 
 	def test_purchase_flow_TC_B_069(self):
 		#Scenario: MR=>SQ=>PO=>PR=>PI
@@ -5992,6 +6008,7 @@ def make_material_request(**args):
 	mr.material_request_type = args.material_request_type or "Purchase"
 	mr.company = args.company or "_Test Company"
 	mr.customer = args.customer or "_Test Customer"
+	mr.shipping_rule = args.shipping_rule or None
 	mr.append(
 		"items",
 		{
@@ -6053,7 +6070,7 @@ def make_test_sq(source_name, rate = 0, received_qty=0, item_dict = None):
 	return doc_sq
 
 
-def make_test_po(source_name, type = "Material Request", received_qty = 0, item_dict = None):
+def make_test_po(source_name, type = "Material Request", received_qty = 0, item_dict = None, args = None):
 	if type == "Material Request":
 		doc_po = make_purchase_order(source_name)
 
@@ -6069,6 +6086,9 @@ def make_test_po(source_name, type = "Material Request", received_qty = 0, item_
 	if item_dict is not None:
 		doc_po.append("items", item_dict)
 
+	if args is not None:
+		args = frappe._dict(args)
+		doc_po.update(args)
 
 	doc_po.insert()
 	doc_po.submit()
@@ -6216,4 +6236,9 @@ def get_shipping_rule_name(args = None):
 	return doc_shipping_rule.name
 
 
+@frappe.whitelist()
+def run_test():
+	obj_test = TestMaterialRequest()
+	obj_test.test_purchase_flow_TC_B_068()
+	return 1
 
