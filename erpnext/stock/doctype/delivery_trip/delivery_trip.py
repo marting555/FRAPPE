@@ -43,11 +43,16 @@ class DeliveryTrip(Document):
 		super().__init__(*args, **kwargs)
 
 		# Google Maps returns distances in meters by default
+		# TODO: needs validation or fallback, the translated version of "Meter" may not exist as UOM
+		meter_uom = _("Meter")
+
 		self.default_distance_uom = (
-			frappe.db.get_single_value("Global Defaults", "default_distance_unit") or "Meter"
+			frappe.db.get_single_value("Global Defaults", "default_distance_unit") or meter_uom
 		)
+
+		# TODO: needs validation or fallback, the UOM Conversion Factor may not exist
 		self.uom_conversion_factor = frappe.db.get_value(
-			"UOM Conversion Factor", {"from_uom": "Meter", "to_uom": self.default_distance_uom}, "value"
+			"UOM Conversion Factor", {"from_uom": meter_uom, "to_uom": self.default_distance_uom}, "value"
 		)
 
 	def validate(self):
