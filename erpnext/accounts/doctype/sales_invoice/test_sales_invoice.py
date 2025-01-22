@@ -5261,7 +5261,55 @@ class TestSalesInvoice(FrappeTestCase):
 		]
 		check_gl_entries(self, si.name, expected_gl_entries, si.posting_date)
 	
+	def test_promotion_scheme_for_selling_TC_ACC_116(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+
+		item=make_test_item("_Test Item Promotion")
+
+		promo=frappe.get_doc({
+			"doctype":"Promotional Scheme",
+			"__newname":"_Test Promotional Scheme",
+			"company":"_Test Company",
+			"selling":1,
+			"valid_from":nowdate(),
+			"valid_upto":add_days(nowdate(),20),
+   			"currency":"INR",
+			"items":[{
+				'item_code':item.name,
+				"uom":"Nos"
+			}],
+			'price_discount_slabs':[
+       		{
+				"min_qty":"10",
+				"max_qty":"100",
+    			"min_amount":0,
+				"max_amount":0,
+				"rate_or_discount":"Discount Percentage",
+				"discount_percentage":2,
+				"rule_description":"2%"
+			},
+			{
+				"min_qty":"101",
+				"max_qty":"1000",
+				"min_amount":0,
+				"max_amount":0,
+				"rate_or_discount":"Discount Percentage",
+				"discount_percentage":5,
+				"rule_description":"5%"
+				
+			}
+   		]
+		}).insert()
 		
+		si=create_sales_invoice(
+			customer="_Test Customer",
+			item=item.name,
+			rate=1000,
+			qty="10",
+			company="_Test Company",
+		)
+  
+		self.assertEquals(2,si.items[0].discount_percentage)
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",

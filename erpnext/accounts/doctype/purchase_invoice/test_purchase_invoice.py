@@ -3712,7 +3712,58 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			error_msg = str(e)
 			self.assertEqual(error_msg, 'This document is over limit by Amount 100.0 for item _Test Item. Are you making another Purchase Invoice against the same Purchase Order Item?To allow over billing, update "Over Billing Allowance" in Accounts Settings or the Item.')
 	
+	def test_promotion_scheme_for_buying_TC_ACC_115(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			create_records as records_for_pi,
+			make_test_item,
+		)
 
+		item=make_test_item("_Test Item Promotion")
+
+		promo=frappe.get_doc({
+			"doctype":"Promotional Scheme",
+			"__newname":"_Test Promotional Scheme",
+			"company":"_Test Company",
+			"buying":1,
+			"valid_from":nowdate(),
+			"valid_upto":add_days(nowdate(),20),
+   			"currency":"INR",
+			"items":[{
+				'item_code':item.name,
+				"uom":"Nos"
+			}],
+			'price_discount_slabs':[
+       		{
+				"min_qty":"10",
+				"max_qty":"100",
+    			"min_amount":0,
+				"max_amount":0,
+				"rate_or_discount":"Discount Percentage",
+				"discount_percentage":2,
+				"rule_description":"2%"
+			},
+			{
+				"min_qty":"101",
+				"max_qty":"1000",
+				"min_amount":0,
+				"max_amount":0,
+				"rate_or_discount":"Discount Percentage",
+				"discount_percentage":5,
+				"rule_description":"5%"
+				
+			}
+   		]
+		}).insert()
+  
+		_pi=make_purchase_invoice(
+			supplier="_Test Supplier",
+			item_code=item.name,
+			qty=10,
+			rate=1000,
+			company="_Test Company",
+			do_not_submit=True
+		)
+		self.assertEquals(2,_pi.items[0].discount_percentage)
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
