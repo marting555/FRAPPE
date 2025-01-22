@@ -724,7 +724,12 @@ class TestWorkOrder(IntegrationTestCase):
 				self.assertEqual(row.item_code, fg_item)
 
 		work_order = make_wo_order_test_record(
-			item=fg_item, skip_transfer=True, planned_start_date=now(), qty=30, do_not_save=True
+			item=fg_item,
+			skip_transfer=True,
+			planned_start_date=now(),
+			qty=30,
+			do_not_save=True,
+			source_warehouse="_Test Warehouse - _TC",
 		)
 		work_order.batch_size = 10
 		work_order.insert()
@@ -941,11 +946,13 @@ class TestWorkOrder(IntegrationTestCase):
 			wip_warehouse=wip_warehouse,
 			qty=qty,
 			skip_transfer=1,
+			source_warehouse=wip_warehouse,
 			stock_uom=fg_item_non_whole.stock_uom,
 		)
 
 		se = frappe.get_doc(make_stock_entry(wo.name, "Material Transfer for Manufacture", qty))
 		se.get("items")[0].s_warehouse = "Stores - _TC"
+		se.get("items")[0].t_warehouse = wip_warehouse
 		se.insert()
 		se.submit()
 
@@ -2061,6 +2068,7 @@ class TestWorkOrder(IntegrationTestCase):
 			bom_no=bom_doc.name,
 			qty=1,
 			skip_transfer=1,
+			source_warehouse="_Test Warehouse - _TC",
 		)
 
 		job_cards = frappe.get_all("Job Card", filters={"work_order": wo.name})
@@ -2088,7 +2096,7 @@ class TestWorkOrder(IntegrationTestCase):
 	def test_op_cost_and_scrap_based_on_sub_assemblies(self):
 		# Make Sub Assembly BOM 1
 
-		frappe.db.set_single_value("Manufacturing Settings", "set_op_cost_and_scrape_from_sub_assemblies", 1)
+		frappe.db.set_single_value("Manufacturing Settings", "set_op_cost_and_scrap_from_sub_assemblies", 1)
 
 		items = {
 			"Test Final FG Item": 0,
@@ -2129,7 +2137,7 @@ class TestWorkOrder(IntegrationTestCase):
 		for row in se_doc.additional_costs:
 			self.assertEqual(row.amount, 3000)
 
-		frappe.db.set_single_value("Manufacturing Settings", "set_op_cost_and_scrape_from_sub_assemblies", 0)
+		frappe.db.set_single_value("Manufacturing Settings", "set_op_cost_and_scrap_from_sub_assemblies", 0)
 
 	@IntegrationTestCase.change_settings(
 		"Manufacturing Settings", {"material_consumption": 1, "get_rm_cost_from_consumption_entry": 1}
@@ -2466,6 +2474,84 @@ class TestWorkOrder(IntegrationTestCase):
 		manufacture_entry.submit()
 
 		frappe.db.set_single_value("Manufacturing Settings", "validate_components_quantities_per_bom", 0)
+
+	def test_wip_skip(self):
+		wo = make_wo_order_test_record(
+			item="_Test FG Item",
+			qty=10,
+			source_warehouse="_Test Warehouse - _TC",
+			wip_warehouse="Stores - _TC",
+		)
+		manufacture_entry = frappe.get_doc(make_stock_entry(wo.name, "Manufacture", 10))
+		self.assertEqual(manufacture_entry.items[0].s_warehouse, "Stores - _TC")
+
+		wo = make_wo_order_test_record(
+			item="_Test FG Item",
+			qty=10,
+			source_warehouse="_Test Warehouse - _TC",
+			wip_warehouse="Stores - _TC",
+			skip_transfer=1,
+		)
+		manufacture_entry = frappe.get_doc(make_stock_entry(wo.name, "Manufacture", 10))
+		self.assertEqual(manufacture_entry.items[0].s_warehouse, "_Test Warehouse - _TC")
+
+		wo = make_wo_order_test_record(
+			item="_Test FG Item",
+			qty=10,
+			source_warehouse="_Test Warehouse - _TC",
+			wip_warehouse="Stores - _TC",
+			skip_transfer=1,
+			from_wip_warehouse=1,
+		)
+		manufacture_entry = frappe.get_doc(make_stock_entry(wo.name, "Manufacture", 10))
+		self.assertEqual(manufacture_entry.items[0].s_warehouse, "Stores - _TC")
+
+	def test_serial_no_status_for_stock_entry(self):
+		items = {
+			"Finished Good Test Item 1": {"is_stock_item": 1},
+			"_Test RM Item with Serial No": {
+				"is_stock_item": 1,
+				"has_serial_no": 1,
+				"serial_no_series": "SN-FCG-NO-.####",
+			},
+		}
+		for item, properties in items.items():
+			make_item(item, properties)
+
+		fg_item = "Finished Good Test Item 1"
+		rec_se = test_stock_entry.make_stock_entry(
+			item_code="_Test RM Item with Serial No", target="_Test Warehouse - _TC", qty=4, basic_rate=100
+		)
+
+		if not frappe.db.get_value("BOM", {"item": fg_item, "docstatus": 1}):
+			bom = make_bom(
+				item=fg_item,
+				rate=1000,
+				raw_materials=["_Test RM Item with Serial No"],
+				do_not_save=True,
+			)
+			bom.rm_cost_as_per = "Price List"  # non stock item won't have valuation rate
+			bom.buying_price_list = "_Test Price List India"
+			bom.currency = "INR"
+			bom.save()
+
+		wo = make_wo_order_test_record(
+			production_item=fg_item, skip_transfer=1, source_warehouse="_Test Warehouse - _TC"
+		)
+
+		ste = frappe.get_doc(make_stock_entry(wo.name, "Manufacture", 4))
+		ste.items[0].use_serial_batch_fields = 1
+		ste.items[0].serial_no = "\n".join(
+			get_serial_nos_from_bundle(rec_se.items[0].serial_and_batch_bundle)
+		)
+		ste.insert()
+		ste.submit()
+
+		ste.reload()
+		serial_nos = get_serial_nos_from_bundle(ste.items[0].serial_and_batch_bundle)
+		for row in serial_nos:
+			status = frappe.db.get_value("Serial No", row, "status")
+			self.assertEqual(status, "Consumed")
 
 
 def make_operation(**kwargs):
