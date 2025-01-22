@@ -4285,6 +4285,70 @@ class TestPurchaseOrder(FrappeTestCase):
 		doc_po.reload()
 		self.assertEqual(doc_po.status, 'Completed')
 		self.assertEqual(doc_pi.status, 'Paid')
+	
+	def test_po_to_pi_with_partial_payment_entry_TC_B_075(self):
+		# Scenario : PO => PE => PR => PI [With Adv Partial Payment and Tax]
+
+		po_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 4,
+			"rate" : 3000,
+			"do_not_submit" : 1
+		}
+		
+		
+		acc = frappe.new_doc("Account")
+		acc.account_name = "Input Tax IGST"
+		acc.parent_account = "Tax Assets - _TC"
+		acc.company = "_Test Company"
+		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
+		if not account_name:
+			account_name = acc.insert()
+
+		doc_po = create_purchase_order(**po_data)
+		
+		doc_po.append("taxes", {
+                    "charge_type": "On Net Total",
+                    "account_head": account_name,
+                    "rate": 18,
+                    "description": "Input GST",
+                })
+		doc_po.submit()
+
+		self.assertEqual(doc_po.docstatus, 1)
+		self.assertEqual(doc_po.base_taxes_and_charges_added, 2160)
+		
+
+		args = {
+			"mode_of_payment" : "Cash",
+			"reference_no" : "For Testing"
+		}
+
+		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, 6000, args)
+		
+		doc_pr = make_pr_for_po(doc_po.name)
+		self.assertEqual(doc_pr.docstatus, 1)
+
+		args = {
+			"is_paid" : 1,
+			"mode_of_payment" : 'Cash',
+			"cash_bank_account" : doc_pe.paid_from,
+			"paid_amount" : doc_pe.base_received_amount
+		}
+
+		doc_pi = make_pi_against_pr(doc_pr.name, args=args)
+		make_payment_entry(doc_pi.doctype, doc_pi.name, doc_pi.outstanding_amount)
+
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_pi.items[0].qty, doc_po.items[0].qty)
+		self.assertEqual(doc_pi.grand_total, doc_po.grand_total)
+		
+		doc_po.reload()
+		doc_pi.reload()
+		self.assertEqual(doc_po.status, 'Completed')
+		self.assertEqual(doc_pi.status, 'Paid')
 		
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
@@ -4701,7 +4765,7 @@ def make_payment_entry(dt, dn, paid_amount, args = None):
 @frappe.whitelist()
 def run_test():
 	obj_test = TestPurchaseOrder()
-	obj_test.test_po_to_pi_with_Adv_payment_entry_n_tax_TC_B_074()
+	obj_test.test_po_to_pi_with_partial_payment_entry_TC_B_075()
 	return 1
 
 
