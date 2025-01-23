@@ -3,7 +3,7 @@
 
 frappe.ui.form.on("Queue Settings", {
   validate: function (frm) {
-    if (frm.doc.cars_per_day <= 0) {
+    if (frm.doc.cars_per_day <= 0 || !Number.isInteger(frm.doc.cars_per_day)) {
       frappe.msgprint(__('The value for {0} must be greater than 0.', [__('Cars per Day')]));
       frappe.validated = false;
     }
