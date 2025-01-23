@@ -881,9 +881,9 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 		*/
 
 		let return_against_mop = await frappe.call({
-			method: 'erpnext.accounts.doctype.pos_invoice.pos_invoice.get_payment_data',
+			method: 'erpnext.controllers.sales_and_purchase_return.get_payment_data',
 			args: {
-				pos_invoice: this.frm.doc.return_against
+				invoice: this.frm.doc.return_against
 			}
 		});
 
