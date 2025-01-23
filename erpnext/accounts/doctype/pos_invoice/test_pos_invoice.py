@@ -962,7 +962,6 @@ class TestPOSInvoice(unittest.TestCase):
 					"expiry_duration": 10,
 					"company": "_Test Company",
 					"cost_center": "Main - _TC",
-					"expense_account": "Loyalty - _TC",
 					"collection_rules": [{"tier_name": "Silver", "collection_factor": 1000, "min_spent": 1000}],
 				}
 			).insert()
@@ -1155,9 +1154,18 @@ class TestPOSInvoice(unittest.TestCase):
 		pos_return = make_sales_return(inv.name)
 		pos_return.insert()
 		pos_return.submit()
-		print(pos_return.update_stock)
-		inv.reload()
-		self.assertEqual(inv.status, "Return")
+		self.assertEqual(pos_return.status, "Return")
+	
+	def test_pos_inoivce_retun_with_taxes_and_charges_TC_S_120(self):
+		inv = create_pos_invoice(rate=3000,do_not_save=1)
+		inv.save()
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
+		inv.paid_amount = inv.grand_total
+		inv.tax_category = "In-State"
+		inv.taxes_and_charges = "Output GST In-state - _TC"
+		inv.submit()
+		self.assertEqual(inv.status, "Paid")
+
 	
 	def test_pos_invoice_with_item_discount_TC_S_121(self):	
 		inv = create_pos_invoice(rate=3500, do_not_submit=1)
@@ -1203,7 +1211,7 @@ class TestPOSInvoice(unittest.TestCase):
 		inv.items =[]
 		inv.append("items",
 			 {
-				"item_code": product_bundle.new_item_code,  
+				"item_code":  "_Test Book Bundle",
 				"qty": 1,  
 				"rate": 3000, 
 			 })

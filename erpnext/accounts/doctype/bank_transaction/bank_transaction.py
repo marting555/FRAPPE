@@ -120,8 +120,9 @@ class BankTransaction(Document):
 	def on_cancel(self):
 		for payment_entry in self.payment_entries:
 			self.clear_linked_payment_entry(payment_entry, for_cancel=True)
-
+		self.payment_entries = []
 		self.set_status()
+
 
 	def add_payment_entries(self, vouchers):
 		"Add the vouchers with zero allocation. Save() will perform the allocations and clearance"
