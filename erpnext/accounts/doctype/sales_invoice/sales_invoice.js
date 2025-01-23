@@ -125,18 +125,9 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 					},
 					__("Create")
 				);
-<<<<<<< HEAD
-
-				cur_frm.add_custom_button(
-					__("Invoice Discounting"),
-					function () {
-						cur_frm.events.create_invoice_discounting(cur_frm);
-					},
-=======
 				this.frm.add_custom_button(
 					__("Invoice Discounting"),
 					this.make_invoice_discounting.bind(this),
->>>>>>> 1758e125e0 (fix: fix creating documents from sales invoice (#45346))
 					__("Create")
 				);
 
@@ -152,13 +143,7 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 			if (doc.docstatus === 1) {
 				cur_frm.add_custom_button(
 					__("Maintenance Schedule"),
-<<<<<<< HEAD
-					function () {
-						cur_frm.cscript.make_maintenance_schedule();
-					},
-=======
 					this.make_maintenance_schedule.bind(this),
->>>>>>> 1758e125e0 (fix: fix creating documents from sales invoice (#45346))
 					__("Create")
 				);
 			}
