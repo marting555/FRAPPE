@@ -123,6 +123,15 @@ class BankTransaction(Document):
 		self.payment_entries = []
 		self.set_status()
 
+	def before_save(self):
+		if self.deposit > 0 and self.withdrawal == 0:
+			if frappe.db.exists("Bank Transaction", {'date':self.date, 'deposit':self.deposit, 'reference_number': self.reference_number, 'description': self.description}) :
+				frappe.throw("Entry already exists")
+		elif self.deposit == 0 and self.withdrawal > 0:
+			if frappe.db.exists("Bank Transaction", {'date':self.date, 'withdrawal':self.withdrawal, 'reference_number': self.reference_number, 'description': self.description}) :
+				frappe.throw("Entry already exists")
+			
+
 
 	def add_payment_entries(self, vouchers):
 		"Add the vouchers with zero allocation. Save() will perform the allocations and clearance"
