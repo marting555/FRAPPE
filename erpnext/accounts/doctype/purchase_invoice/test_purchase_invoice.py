@@ -2942,7 +2942,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				posting_date=_pe.posting_date
 			)
 
-	def test_tds_computation_summary_report_TC_ACC_092(self):
+	def test_tds_computation_summary_report_TC_ACC_094(self):
 		"""Test the TDS Computation Summary report for Purchase Invoice data."""
 		from frappe.desk.query_report import get_report_result
 
