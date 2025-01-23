@@ -120,15 +120,14 @@ class BankTransaction(Document):
 	def on_cancel(self):
 		for payment_entry in self.payment_entries:
 			self.clear_linked_payment_entry(payment_entry, for_cancel=True)
-		self.payment_entries = []
 		self.set_status()
 
 	def before_save(self):
 		if self.deposit > 0 and self.withdrawal == 0:
-			if frappe.db.exists("Bank Transaction", {'date':self.date, 'deposit':self.deposit, 'reference_number': self.reference_number, 'description': self.description}) :
+			if frappe.db.exists("Bank Transaction", {'date':self.date, 'deposit':self.deposit, 'reference_number': self.reference_number, 'description': self.description, 'docstatus':1}) :
 				frappe.throw("Entry already exists")
 		elif self.deposit == 0 and self.withdrawal > 0:
-			if frappe.db.exists("Bank Transaction", {'date':self.date, 'withdrawal':self.withdrawal, 'reference_number': self.reference_number, 'description': self.description}) :
+			if frappe.db.exists("Bank Transaction", {'date':self.date, 'withdrawal':self.withdrawal, 'reference_number': self.reference_number, 'description': self.description, 'docstatus':1}) :
 				frappe.throw("Entry already exists")
 			
 
