@@ -4481,7 +4481,8 @@ class TestMaterialRequest(FrappeTestCase):
 			"shipping_rule" :shipping_rule_name,
 			"supplier" : "_Test Supplier"
 		}
-		doc_sq = make_test_sq(doc_mr.name, type = "Material Request",args = args)
+		mr_rate = doc_mr.items[0].amount
+		doc_sq = make_test_sq(doc_mr.name, rate= mr_rate, type = "Material Request",args = args)
 		self.assertEqual(doc_sq.base_total_taxes_and_charges, 200)
 
 		doc_po = make_test_po(doc_sq.name, type="Supplier Quotation")
@@ -5880,6 +5881,60 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(doc_po.status, 'Completed')
 		self.assertEqual(doc_pi.status, 'Paid')
 
+	def test_mr_to_pi_TC_B_078(self):
+		#Scenario: MR=>SQ=>PO=>PE=>PR=>PI [With SQ, Shipping Rule and Shipping Rule]
+		
+		args = {
+					"calculate_based_on" : "Fixed",
+					"shipping_amount" : 200
+				}
+		shipping_rule_name = get_shipping_rule_name(args)
+		mr_dict_list = {
+				"company" : "_Test Company",
+				"item_code" : "Testing-31",
+				"warehouse" : "Stores - _TC",
+				"qty" : 4,
+				"rate" : 3000,
+			}
+
+		doc_mr = make_material_request(**mr_dict_list)
+		self.assertEqual(doc_mr.docstatus, 1)
+
+		args = {
+			"shipping_rule" :shipping_rule_name,
+			"supplier" : "_Test Supplier"
+		}
+		mr_rate = doc_mr.items[0].amount
+		doc_sq = make_test_sq(doc_mr.name, rate= mr_rate,type = "Material Request",args = args)
+		self.assertEqual(doc_sq.base_total_taxes_and_charges, 200)
+
+		doc_po = make_test_po(doc_sq.name, type="Supplier Quotation")
+		
+		args = {
+			"mode_of_payment" : "Cash",
+			"reference_no" : "For Testing"
+		}
+
+		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, doc_po.grand_total, args)
+		self.assertEqual(doc_po.base_total_taxes_and_charges, 200)
+
+		doc_pr = make_test_pr(doc_po.name)
+
+		args = {
+			"is_paid" : 1,
+			"mode_of_payment" : 'Cash',
+			"cash_bank_account" : doc_pe.paid_from,
+			"paid_amount" : doc_pe.base_received_amount
+		}
+
+		doc_pi = make_test_pi(doc_pr.name, args = args)
+
+		self.assertEqual(doc_pi.docstatus, 1)
+		
+		doc_po.reload()
+		self.assertEqual(doc_po.status, 'Completed')
+		self.assertEqual(doc_pi.status, 'Paid')
+
 def get_in_transit_warehouse(company):
 	if not frappe.db.exists("Warehouse Type", "Transit"):
 		frappe.get_doc(
@@ -6165,4 +6220,3 @@ def get_shipping_rule_name(args = None):
 	from erpnext.accounts.doctype.shipping_rule.test_shipping_rule import create_shipping_rule
 	doc_shipping_rule = create_shipping_rule("Buying", "_Test Shipping Rule -TC", args)
 	return doc_shipping_rule.name
-
