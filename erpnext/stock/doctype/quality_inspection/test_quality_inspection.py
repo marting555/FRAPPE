@@ -458,7 +458,7 @@ class TestQualityInspection(FrappeTestCase):
 		qa.reload()
 		qa.cancel()
 
-	def test_qa_for_dn_out_TC_SCK_169(self):
+	def test_qa_for_dn_out_TC_SCK_168(self):
 		dn = create_delivery_note(item_code="_Test Item with QA", do_not_submit=True)
 		self.assertRaises(QualityInspectionRequiredError, dn.submit)
 
