@@ -217,7 +217,9 @@ def get_erp_transaction(bank_account, company, from_statement_date=None, to_stat
                 btp.payment_entry IS NULL
             AND 
                 pe.docstatus = 1
-        """, as_dict=True)
+            AND
+                pe.company = %s
+        """, (company,), as_dict=True)
 
         # Fetch unlinked Journal Entries with filtered account details
         try:
@@ -246,10 +248,12 @@ def get_erp_transaction(bank_account, company, from_statement_date=None, to_stat
                 AND 
                     je.docstatus = 1
                 AND 
+                    je.company = %s
+                AND 
                     jea.account = %s  -- Use %s to safely pass the 'account' variable
                 AND 
                     (jea.credit_in_account_currency > 0 OR jea.debit_in_account_currency > 0)
-            """, (account,), as_dict=True) or ''
+            """, (company, account,), as_dict=True) or ''
             if not unlinked_journal_entries:
                print(f"No unlinked journal entries found for account: {account}")
             print(unlinked_journal_entries)
