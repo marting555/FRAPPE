@@ -4712,7 +4712,59 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(serial_cnt, 1)
 		serial_cnt = frappe.db.count('Serial No',{'purchase_document_no':pr1.name})
 		self.assertEqual(serial_cnt, 1)
+	def test_create_material_req_to_2po_to_pi_TC_SCK_095(self):
+		create_company()
+		create_fiscal_year()
+		item_code = "Noise Smart watch"
+		supplier = create_supplier(supplier_name="_Test Supplier MR")
+		warehouse = "Stock In Hand - _TC"
+		qty = 10
+		rate = 100
 
+		mr = make_material_request(
+			item_code=item_code,
+			qty=qty,
+			supplier=supplier,
+			warehouse=warehouse,
+			material_request_type="Purchase"
+		)
+		self.assertEqual(mr.docstatus, 1)
+
+		po1 = make_purchase_order(mr.name)
+		po1.supplier = "_Test Supplier"
+		po1.transaction_date = "2025-08-02"
+		po1.schedule_date = "2025-08-10"
+		po1.items[0].qty = 5
+		po1.items[0].rate = rate
+		po1.insert()
+		po1.submit()
+		self.assertEqual(po1.docstatus, 1)
+
+		po2 = make_purchase_order(mr.name)
+		po2.supplier = "_Test Supplier"
+		po2.transaction_date = "2025-08-03"
+		po2.schedule_date = "2025-08-10"
+		po2.items[0].qty = 5
+		po2.items[0].rate = rate
+		po2.insert()
+		po2.submit()
+		self.assertEqual(po2.docstatus, 1)
+
+		pi = create_purchase_invoice(po1.name)
+		pi = create_purchase_invoice(po2.name, target_doc=pi)
+		pi.update_stock = 1
+		pi.insert()
+		pi.submit()
+		self.assertEqual(pi.docstatus, 1)
+
+		sle_entries = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": pi.name})
+		self.assertEqual(len(sle_entries), 2)
+
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name})
+		stock_in_hand_debit = sum([gle.debit for gle in gl_entries if gle.account == "Stock In Hand - _TC"])
+		creditors_credit = sum([gle.credit for gle in gl_entries if gle.account == "Creditors - _TC"])
+		self.assertEqual(stock_in_hand_debit, 1000)
+		self.assertEqual(creditors_credit, 1000)
 	def test_mr_po_2pi_serial_cancel_TC_SCK_097(self):
 		create_company()
 		create_fiscal_year()
