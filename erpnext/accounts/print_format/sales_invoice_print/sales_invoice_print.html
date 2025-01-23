@@ -1,0 +1,153 @@
+{%- from "templates/print_formats/standard_macros.html" import add_header, render_field, print_value, fieldmeta,
+	get_width, get_align_class with context -%}
+
+{% for page in layout %}
+<div class="page-break">
+	<div {% if print_settings.repeat_header_footer %} id="header-html" class="hidden-pdf" {% endif %}>
+		{{ add_header(loop.index, layout|len, doc, letter_head, no_letterhead, footer, print_settings) }}
+	</div>
+
+	{% if print_settings.repeat_header_footer %}
+	<div id="footer-html" class="visible-pdf">
+		{% if not no_letterhead and footer %}
+		<div class="letter-head-footer">
+			{{ footer }}
+		</div>
+		{% endif %}
+		<p class="text-center small page-number visible-pdf">
+			{{ _("Page {0} of {1}").format('<span class="page"></span>', '<span class="topage"></span>') }}
+		</p>
+	</div>
+	{% endif %}
+
+	<div class="row section-break" style="margin-bottom: 10px;">
+		<div class="col-xs-5">
+			<div class="row important data-field">
+				<div class="col-xs-12 value">{{ doc.customer }}</div>
+				{% set address = frappe.db.get_value(
+					doctype="Address",
+					filters=[
+						["Dynamic Link", "link_doctype", "=", "Customer"],
+						["Dynamic Link", "link_name", "=", doc.customer],
+						["Dynamic Link", "parenttype", "=", "Address"],
+					],
+					fieldname="*",
+					as_dict=True
+					)
+				%}
+				{% if address %}
+					<div class="col-xs-12">
+						{{ address.address_title+"," if address.address_title else '' }} {{ address.address_line1 }}
+					</div>
+					<div class="col-xs-12">
+						{{ address.address_line2+"," if address.address_line2 else '' }} 
+						{{ address.city }} 
+						{{ address.pincode if address.pincode else '' }}
+					</div>
+					<div class="col-xs-12">{{ address.country }}</div>
+				{% endif %}
+			</div>
+		</div>
+		<div class="col-xs-3">
+			<div class="row important data-field">
+				<div>
+					<div><label>{{ _("Date") }}</label></div>
+					<div>{{ doc.posting_date }}</div>
+				</div>
+				<div>
+					<div><label>{{ _("Payment Due Date") }}</label></div>
+					<div>{{ doc.due_date }}</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-xs-4">
+			<div class="row important data-field">
+				<div>
+					<div><label>{{ _("Company") }}</label></div>
+					<div>{{ doc.company }}</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="section-break">
+		<table border=1 style="width: 100%; border-collapse: collapse; border: 1px solid black; font-size: 12px;">
+			<colgroup>
+				<col style="width: 5%">
+				<col style="width: 35%">
+				<col style="width: 10%">
+				<col style="width: 10%">
+				<col style="width: 20%">
+				<col style="width: 20%">
+			</colgroup>
+			<thead>
+				<tr>
+					<th style="text-align:center">Sr</th>
+					<th style="text-align:center">Particulars</th>
+					<th style="text-align:center">QTY</th>
+					<th style="text-align:center">VAT</th>
+					<th style="text-align:center">Rate</th>
+					<th style="text-align:center">Amount</th>
+				</tr>
+			</thead>
+			{% for item in doc.items %}
+			<tr>
+				<td>{{ loop.index }}</td>
+				<td>
+					<b>{{ item.item_code }}: {{ item.item_name }}</b>
+					{% if (item.description != item.item_name) %}
+						<br>{{ item.description }}
+					{% endif %}
+				</td>
+				<td style="text-align: center;">
+					{{ item.get_formatted("qty", 0) }}
+					{{ item.get_formatted("uom", 0) }}
+				</td>
+				<td style="text-align: center;">
+					{% set mydict = json.loads(item.item_tax_rate) %}
+					{% if item.item_tax_rate == "{}" %}
+						{% for row in doc.taxes %}
+							{{ row.get_formatted("rate",0) }}%
+						{% endfor %}
+					{% else %}
+						{% set ns = namespace(vat=none) %}
+						{% for key, value in mydict.items() %}	
+							{% set ns.vat = value %}
+						{% endfor %}
+						{{ ns.vat }}%
+					{% endif %}
+				</td>
+				<td style="text-align: right;">{{ item.get_formatted("net_rate", doc) }}</td>
+				<td style="text-align: right;">{{ item.get_formatted("net_amount", doc) }}</td>
+			</tr>
+			{% endfor %}
+			<tr>
+				<td rowspan=3 colspan=4 style="vertical-align: top !important;">
+					Amount in Words<br>
+					<b>{{ doc.in_words }}</b>
+				</td>
+				<td style="text-align: right;"><b>Sub Total</b></td>
+				<td style="text-align: right;"><b>{{ doc.get_formatted("net_total", doc) }}</b></td>
+			</tr>
+			<tr>
+				<td style="text-align: right;"><b>V.A.T.</b></td>
+				<td style="text-align: right;"><b>{{ doc.get_formatted("total_taxes_and_charges", doc) }}</b></td>
+			</tr>
+			<tr>
+				<td style="text-align: right;"><b>Total</b></td>
+				<td style="text-align: right;"><b>{{ doc.get_formatted("grand_total", doc) }}</b></td>
+			</tr>
+		</table>
+	</div>
+
+
+	<div class="row section-break">
+		<div class="col-xs-12">
+			<div class="row important data-field">
+				<div class="col-xs-12"><label class="value">{{ _("Terms and Conditions") }}: </label></div>
+				<div class="col-xs-12">{{ doc.terms if doc.terms else '' }}</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endfor %}
