@@ -40,8 +40,8 @@
 						{{ address.address_title+"," if address.address_title else '' }} {{ address.address_line1 }}
 					</div>
 					<div class="col-xs-12">
-						{{ address.address_line2+"," if address.address_line2 else '' }} 
-						{{ address.city }} 
+						{{ address.address_line2+"," if address.address_line2 else '' }}
+						{{ address.city }}
 						{{ address.pincode if address.pincode else '' }}
 					</div>
 					<div class="col-xs-12">{{ address.country }}</div>
@@ -111,7 +111,7 @@
 						{% endfor %}
 					{% else %}
 						{% set ns = namespace(vat=none) %}
-						{% for key, value in mydict.items() %}	
+						{% for key, value in mydict.items() %}
 							{% set ns.vat = value %}
 						{% endfor %}
 						{{ ns.vat }}%
