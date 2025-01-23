@@ -5302,6 +5302,67 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(gl_debits['Cash - _TC'], 21000)
 		self.assertEqual(total_debtors_credit, 21000)
 
+	def test_so_with_item_tax_creating_double_entries_with_2payment_TC_S_098(self):
+		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="_Test Warehouse - _TC")
+
+		so = make_sales_order(qty=4,rate=5000,do_not_save=True)	
+		so.tax_category = "In-State"
+		so.taxes_and_charges = "Output GST In-state - _TC"
+		for i in so.items:
+			i.item_tax_template = "GST 5% - _TC"
+		so.save()
+		so.submit()
+		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
+
+		dn1 = make_delivery_note(so.name)
+		dn1.items[0].qty = 2
+		dn1.save()
+		dn1.submit()
+
+		self.assertEqual(dn1.status, "To Bill", "Delivery Note not created")
+		qty_change1 = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn1.name, 'warehouse': '_Test Warehouse - _TC'}, ['actual_qty', 'valuation_rate'])
+		self.assertEqual(qty_change1[0].get("actual_qty"), -2)
+
+		si1 = self.create_and_submit_sales_invoice(dn1.name)
+		self.assertEqual(si1.status, "Unpaid", "Sales Invoice not created")
+
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": si1.name}, fields=["account", "debit", "credit"])
+		gl_debits = {entry.account: entry.debit for entry in gl_entries}
+		gl_credits = {entry.account: entry.credit for entry in gl_entries}
+
+		self.assertEqual(gl_debits['Debtors - _TC'], 10500)
+		self.assertEqual(gl_credits["Sales - _TC"], 10000)
+		self.assertEqual(gl_credits['Output Tax CGST - _TC'], 250)
+		self.assertEqual(gl_credits['Output Tax SGST - _TC'], 250)
+
+		self.create_and_submit_payment_entry(dt="Sales Invoice", dn=si1.name)
+		si1.reload()
+		self.assertEqual(si1.status, "Paid")
+
+
+		dn2 = make_delivery_note(so.name)
+		dn2.save()
+		dn2.submit()
+
+		self.assertEqual(dn2.status, "To Bill", "Delivery Note not created")
+		qty_change1 = frappe.get_all('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn2.name, 'warehouse': '_Test Warehouse - _TC'}, ['actual_qty', 'valuation_rate'])
+		self.assertEqual(qty_change1[0].get("actual_qty"), -2)
+
+		si2 = self.create_and_submit_sales_invoice(dn2.name)
+		self.assertEqual(si2.status, "Unpaid", "Sales Invoice not created")
+
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": si2.name}, fields=["account", "debit", "credit"])
+		gl_debits = {entry.account: entry.debit for entry in gl_entries}
+		gl_credits = {entry.account: entry.credit for entry in gl_entries}
+
+		self.assertEqual(gl_debits['Debtors - _TC'], 10500)
+		self.assertEqual(gl_credits["Sales - _TC"], 10000)
+		self.assertEqual(gl_credits['Output Tax CGST - _TC'], 250)
+		self.assertEqual(gl_credits['Output Tax SGST - _TC'], 250)
+
+		self.create_and_submit_payment_entry(dt="Sales Invoice", dn=si2.name)
+		si2.reload()
+		self.assertEqual(si2.status, "Paid")
 
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
