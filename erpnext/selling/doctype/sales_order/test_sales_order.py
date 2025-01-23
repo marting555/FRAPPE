@@ -5364,6 +5364,48 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		si2.reload()
 		self.assertEqual(si2.status, "Paid")
 
+	def test_so_to_si_with_loyalty_point_creating_payment_TC_S_108(self):
+		from erpnext.accounts.doctype.loyalty_program.loyalty_program import get_loyalty_program_details_with_points
+		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="_Test Warehouse - _TC")
+
+		so = make_sales_order(qty=4,rate=5000)	
+
+		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
+
+		if not frappe.db.exists("Loyalty Program", "Test Single Loyalty"):
+			frappe.get_doc(
+				{
+					"doctype": "Loyalty Program",
+					"loyalty_program_name": "Test Single Loyalty",
+					"auto_opt_in": 1,
+					"from_date": today(),
+					"loyalty_program_type": "Single Tier Program",
+					"conversion_factor": 1,
+					"expiry_duration": 10,
+					"company": "_Test Company",
+					"cost_center": "Main - _TC",
+					"collection_rules": [{"tier_name": "Silver", "collection_factor": 1000, "min_spent": 1000}],
+				}
+			).insert()
+		
+		frappe.db.set_value("Customer","_Test Customer",'loyalty_program','Test Single Loyalty')
+		before_lp_details = get_loyalty_program_details_with_points(
+			"_Test Customer", loyalty_program="Test Single Loyalty"
+		)
+
+		si = make_sales_invoice(so.name)
+		si.redeem_loyalty_points = 1
+		si.loyalty_points = before_lp_details.loyalty_points
+		si.loyalty_redemption_account ="Cash - _TC"
+		si.loyalty_amount = before_lp_details.loyalty_points * before_lp_details.conversion_factor
+		si.save()
+		si.submit()
+		self.assertEqual(si.status, "Partly Paid")
+
+		pe=self.create_and_submit_payment_entry(dt="Sales Invoice", dn=si.name)
+		si.reload()
+		self.assertEqual(si.status, "Paid")
+
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
 		sales_order.delivery_date = nowdate()

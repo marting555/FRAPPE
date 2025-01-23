@@ -976,7 +976,9 @@ class TestPOSInvoice(unittest.TestCase):
 			"_Test Customer", loyalty_program="Test Single Loyalty"
 		)
 		inv = create_pos_invoice(rate=10000, do_not_save=1)
-		inv.redeem_loyalty_points = before_lp_details.loyalty_points
+		inv.redeem_loyalty_points = 1
+		inv.loyalty_points = before_lp_details.loyalty_points
+		inv.loyalty_redemption_account ="Cash - _TC"
 		inv.loyalty_amount = before_lp_details.loyalty_points * before_lp_details.conversion_factor
 		inv.append(
 			"payments",
@@ -1112,6 +1114,7 @@ class TestPOSInvoice(unittest.TestCase):
 		inv = create_pos_invoice(customer="_Test Customer", rate=10000, do_not_save=1)
 		inv.redeem_loyalty_points = 1
 		inv.loyalty_points = 10
+		inv.loyalty_redemption_account ="Cash - _TC"
 		inv.loyalty_amount = inv.loyalty_points * before_lp_details.conversion_factor
 		inv.tax_category = "In-State"
 		inv.taxes_and_charges = "Output GST In-state - _TC"
