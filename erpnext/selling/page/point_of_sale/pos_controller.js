@@ -165,6 +165,7 @@ erpnext.PointOfSale.Controller = class {
 		this.prepare_dom();
 		this.prepare_components();
 		this.prepare_menu();
+		this.prepare_fullscreen_btn();
 		this.make_new_invoice();
 	}
 
@@ -198,6 +199,22 @@ erpnext.PointOfSale.Controller = class {
 		this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "Ctrl+S");
 
 		this.page.add_menu_item(__("Close the POS"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
+	}
+
+	prepare_fullscreen_btn() {
+		this.page.page_actions.find(".custom-actions").empty();
+
+		this.page.add_button(__("Enable Full Screen"), (e) => {
+			if (!document.fullscreenElement) {
+				document.documentElement.requestFullscreen().then(() => {
+					e.target.innerHTML = __("Exit Full Screen");
+				});
+			} else if (document.exitFullscreen) {
+				document.exitFullscreen().then(() => {
+					e.target.innerHTML = __("Enable Full Screen");
+				});
+			}
+		});
 	}
 
 	open_form_view() {
