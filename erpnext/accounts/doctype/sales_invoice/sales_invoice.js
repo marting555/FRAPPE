@@ -9,6 +9,10 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends e
 	setup(doc) {
 		this.setup_posting_date_time_check();
 		super.setup(doc);
+		this.frm.make_methods = {
+			Dunning: this.make_dunning.bind(this),
+			"Invoice Discounting": this.make_invoice_discounting.bind(this),
+		};
 	}
 	company() {
 		super.company();
@@ -94,6 +98,7 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends e
 				}
 			}
 
+<<<<<<< HEAD
 			if (doc.outstanding_amount>0) {
 				cur_frm.add_custom_button(__('Payment Request'), function() {
 					me.make_payment_request();
@@ -107,10 +112,33 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends e
 					cur_frm.add_custom_button(__('Dunning'), function() {
 						cur_frm.events.create_dunning(cur_frm);
 					}, __('Create'));
+=======
+			if (doc.outstanding_amount > 0) {
+				this.frm.add_custom_button(
+					__("Payment Request"),
+					function () {
+						me.make_payment_request();
+					},
+					__("Create")
+				);
+				this.frm.add_custom_button(
+					__("Invoice Discounting"),
+					this.make_invoice_discounting.bind(this),
+					__("Create")
+				);
+
+				const payment_is_overdue = doc.payment_schedule
+					.map((row) => Date.parse(row.due_date) < Date.now())
+					.reduce((prev, current) => prev || current, false);
+
+				if (payment_is_overdue) {
+					this.frm.add_custom_button(__("Dunning"), this.make_dunning.bind(this), __("Create"));
+>>>>>>> 1758e125e0 (fix: fix creating documents from sales invoice (#45346))
 				}
 			}
 
 			if (doc.docstatus === 1) {
+<<<<<<< HEAD
 				cur_frm.add_custom_button(__('Maintenance Schedule'), function () {
 					cur_frm.cscript.make_maintenance_schedule();
 				}, __('Create'));
@@ -120,6 +148,13 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends e
 				cur_frm.add_custom_button(__('Subscription'), function() {
 					erpnext.utils.make_subscription(doc.doctype, doc.name)
 				}, __('Create'))
+=======
+				this.frm.add_custom_button(
+					__("Maintenance Schedule"),
+					this.make_maintenance_schedule.bind(this),
+					__("Create")
+				);
+>>>>>>> 1758e125e0 (fix: fix creating documents from sales invoice (#45346))
 			}
 		}
 
@@ -144,6 +179,20 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends e
 		}
 
 		erpnext.accounts.unreconcile_payment.add_unreconcile_btn(me.frm);
+	}
+
+	make_invoice_discounting() {
+		frappe.model.open_mapped_doc({
+			method: "erpnext.accounts.doctype.sales_invoice.sales_invoice.create_invoice_discounting",
+			frm: this.frm,
+		});
+	}
+
+	make_dunning() {
+		frappe.model.open_mapped_doc({
+			method: "erpnext.accounts.doctype.sales_invoice.sales_invoice.create_dunning",
+			frm: this.frm,
+		});
 	}
 
 	make_maintenance_schedule() {
@@ -948,6 +997,7 @@ frappe.ui.form.on('Sales Invoice', {
 			frm.set_df_property('return_against', 'label', __('Adjustment Against'));
 		}
 	},
+<<<<<<< HEAD
 
 	create_invoice_discounting: function(frm) {
 		frappe.model.open_mapped_doc({
@@ -962,6 +1012,8 @@ frappe.ui.form.on('Sales Invoice', {
 			frm: frm
 		});
 	}
+=======
+>>>>>>> 1758e125e0 (fix: fix creating documents from sales invoice (#45346))
 });
 
 frappe.ui.form.on("Sales Invoice Timesheet", {
