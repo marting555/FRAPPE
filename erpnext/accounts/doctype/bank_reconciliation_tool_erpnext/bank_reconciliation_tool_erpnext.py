@@ -206,7 +206,9 @@ def get_erp_transaction(bank_account, company, from_statement_date=None, to_stat
                 pe.reference_no AS reference_no,
                 pe.paid_amount,
                 pe.payment_type,
-                'Payment Entry' AS doctype                             
+                'Payment Entry' AS doctype,
+                pe.paid_from,
+                pe.paid_to
             FROM 
                 `tabPayment Entry` AS pe
             LEFT JOIN 
@@ -219,7 +221,18 @@ def get_erp_transaction(bank_account, company, from_statement_date=None, to_stat
                 pe.docstatus = 1
             AND
                 pe.company = %s
-        """, (company,), as_dict=True)
+            AND
+                pe.posting_date BETWEEN %s AND %s
+            AND
+                (
+                    (pe.payment_type = 'Pay' AND pe.paid_from = %s) -- Filter for "Pay"
+                    OR
+                    (pe.payment_type = 'Receive' AND pe.paid_to = %s) -- Filter for "Receive"
+                    OR
+                    (pe.payment_type = 'Internal Transfer' AND pe.paid_from = %s) -- Include other payment types
+                )
+        """, (company, from_statement_date, to_statement_date, account, account, account), as_dict=True)
+
 
         # Fetch unlinked Journal Entries with filtered account details
         try:
@@ -249,11 +262,13 @@ def get_erp_transaction(bank_account, company, from_statement_date=None, to_stat
                     je.docstatus = 1
                 AND 
                     je.company = %s
+                AND
+                    je.posting_date BETWEEN %s AND %s
                 AND 
                     jea.account = %s  -- Use %s to safely pass the 'account' variable
                 AND 
                     (jea.credit_in_account_currency > 0 OR jea.debit_in_account_currency > 0)
-            """, (company, account,), as_dict=True) or ''
+            """, (company, from_statement_date, to_statement_date, account,), as_dict=True) or ''
             if not unlinked_journal_entries:
                print(f"No unlinked journal entries found for account: {account}")
             print(unlinked_journal_entries)
