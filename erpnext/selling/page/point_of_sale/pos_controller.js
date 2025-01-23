@@ -204,14 +204,17 @@ erpnext.PointOfSale.Controller = class {
 	prepare_fullscreen_btn() {
 		this.page.page_actions.find(".custom-actions").empty();
 
-		this.page.add_button(__("Enable Full Screen"), (e) => {
+		let enable_full_screen = __("Enable Full Screen");
+		let exit_full_screen = __("Exit Full Screen");
+
+		this.page.add_button(enable_full_screen, (e) => {
 			if (!document.fullscreenElement) {
 				document.documentElement.requestFullscreen().then(() => {
-					e.target.innerHTML = __("Exit Full Screen");
+					e.target.innerHTML = exit_full_screen;
 				});
 			} else if (document.exitFullscreen) {
 				document.exitFullscreen().then(() => {
-					e.target.innerHTML = __("Enable Full Screen");
+					e.target.innerHTML = enable_full_screen;
 				});
 			}
 		});
