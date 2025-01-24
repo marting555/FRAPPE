@@ -66,52 +66,11 @@ frappe.listview_settings["Sales Order"] = {
 			});
 		}
 
-<<<<<<< HEAD
-		listview.page.add_action_item(__("Delivery Note"), () => {
-			erpnext.bulk_transaction_processing.create(listview, "Sales Order", "Delivery Note");
-		});
-=======
 		if (frappe.model.can_create("Delivery Note")) {
 			listview.page.add_action_item(__("Delivery Note"), () => {
-				frappe.call({
-					method: "erpnext.selling.doctype.sales_order.sales_order.is_enable_cutoff_date_on_bulk_delivery_note_creation",
-					callback: (r) => {
-						if (r.message) {
-							var dialog = new frappe.ui.Dialog({
-								title: __("Select Items up to Delivery Date"),
-								fields: [
-									{
-										fieldtype: "Date",
-										fieldname: "delivery_date",
-										default: frappe.datetime.add_days(frappe.datetime.nowdate(), 1),
-									},
-								],
-							});
-							dialog.set_primary_action(__("Select"), function (values) {
-								var until_delivery_date = values.delivery_date;
-								erpnext.bulk_transaction_processing.create(
-									listview,
-									"Sales Order",
-									"Delivery Note",
-									{
-										until_delivery_date,
-									}
-								);
-								dialog.hide();
-							});
-							dialog.show();
-						} else {
-							erpnext.bulk_transaction_processing.create(
-								listview,
-								"Sales Order",
-								"Delivery Note"
-							);
-						}
-					},
-				});
+				erpnext.bulk_transaction_processing.create(listview, "Sales Order", "Delivery Note");
 			});
 		}
->>>>>>> a9bc395e98 (fix: secure bulk transaction (#45386))
 
 		if (frappe.model.can_create("Payment Entry")) {
 			listview.page.add_action_item(__("Advance Payment"), () => {
