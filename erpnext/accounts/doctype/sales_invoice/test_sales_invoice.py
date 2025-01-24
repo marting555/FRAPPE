@@ -5429,6 +5429,52 @@ class TestSalesInvoice(FrappeTestCase):
 			['Debtors - _TC',0.0, jv_doc.total_debit, jv_doc.posting_date],
 		]
 		check_gl_entries(self, jv_doc.name, expected_gl_entries, jv_doc.posting_date, "Journal Entry")
+	
+	def test_prevent_sale_below_purchase_rate_TC_ACC_125(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			create_purchase_invoice,
+			make_test_item,
+			create_supplier,
+		)
+
+		selling_setting = frappe.get_doc("Selling Settings")
+		selling_setting.validate_selling_price = 1
+		selling_setting.save()
+
+		supplier = create_supplier(supplier_name="_Test Supplier")
+
+		item = make_test_item("_Test Sell Item")
+
+		pi = create_purchase_invoice(
+			supplier=supplier.name,
+			company="_Test Company",
+			item_code=item.name,
+			qty=1,
+			rate=100
+		)
+		pi.save().submit()
+
+		try:
+			si = create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				item_code=item.name,
+				qty=1,
+				rate=99
+			)
+		except Exception as e:
+			error_msg = str(e)
+		self.assertEqual(
+            error_msg,
+            (
+                "Row #1: Selling rate for item _Test Item is lower than its last purchase rate.\n"
+                "\t\t\t\t\tSelling net rate should be atleast 100.0.Alternatively,\n"
+                "\t\t\t\t\tyou can disable selling price validation in Selling Settings to bypass\n"
+                "\t\t\t\t\tthis validation."
+            )
+        )
+  
+
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
