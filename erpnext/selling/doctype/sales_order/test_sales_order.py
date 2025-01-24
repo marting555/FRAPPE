@@ -5655,6 +5655,30 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		self.assertEqual(amended_so.status, "To Deliver and Bill")
 
+	def test_so_cancel_amend_with_rate_change_TC_S_127(self):
+		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="_Test Warehouse - _TC")
+		
+		sales_order = make_sales_order(qty=1, rate=5000)
+		sales_order.save()
+		sales_order.submit()
+
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+
+		sales_order.cancel()
+		frappe.db.commit()
+		sales_order.reload()		
+		self.assertEqual(sales_order.status, "Cancelled")
+		
+		amended_so = frappe.copy_doc(sales_order)
+		amended_so.docstatus = 0
+		amended_so.amended_from = sales_order.name
+		amended_so.items[0].rate = 3000
+		amended_so.save()
+		amended_so.submit()
+		frappe.db.commit()
+
+		self.assertEqual(amended_so.status, "To Deliver and Bill")
+
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
 		sales_order.delivery_date = nowdate()
