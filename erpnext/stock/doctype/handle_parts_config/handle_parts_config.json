@@ -7,6 +7,7 @@
  "field_order": [
   "pre_signed_url",
   "product_bundle_errors_url",
+  "parts_errors_url",
   "date_time_url_created",
   "excel_format_url",
   "column_break_itdu",
@@ -51,12 +52,17 @@
    "fieldname": "excel_format_url",
    "fieldtype": "Data",
    "label": "Excel format URL"
+  },
+  {
+   "fieldname": "parts_errors_url",
+   "fieldtype": "Data",
+   "label": "Parts Errors URL"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-12-05 16:14:48.926101",
+ "modified": "2025-01-23 23:32:12.029733",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Handle Parts Config",

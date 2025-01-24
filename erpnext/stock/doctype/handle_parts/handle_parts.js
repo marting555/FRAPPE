@@ -153,6 +153,55 @@ frappe.ui.form.on("Handle Parts", {
             frm.page.clear_indicator();
         }
     },
+    parts_errors: async function (frm) {
+        frm.page.set_indicator(__('Searching and creating report. Please wait...'), 'orange');
+        const data = await frappe.db.get_doc('Handle Parts Config');
+        if (!data || !data.parts_errors_url) {
+            frappe.msgprint({
+                title: __('Validation Error'),
+                message: __('The URL for parts errors is missing or invalid.'),
+                indicator: 'red',
+            });
+            return;
+        }
+
+        const response = await fetch(data.parts_errors_url);
+        if (response.ok) {
+            const errors = await response.json();
+            if (!errors.length) {
+                return frappe.msgprint({
+                    title: __('Success'),
+                    message: __('No errors found.'),
+                    indicator: 'green',
+                })
+            }
+            const createdAt = errors.length > 0 ? errors[0].created_at : '';
+            const title = __('Parts Errors was no created. Fields are missing and are required.');
+
+            let dialog = new frappe.ui.Dialog({
+                title: title,
+                fields: [
+                    {
+                        label: __('Errors'),
+                        fieldtype: 'HTML',
+                        fieldname: 'errors_list',
+                        options: generate_parts_error_table(errors, createdAt)
+                    }
+                ]
+            });
+            dialog.$wrapper.modal({
+                backdrop: "static",
+                keyboard: false,
+                size: "1024px"
+            });
+
+            dialog.show();
+            dialog.$wrapper.find('.modal-dialog').css("width", "90%").css("max-width", "90%");
+            frm.page.clear_indicator();
+        } else {
+            frm.page.clear_indicator();
+        }
+    },
 
     download_excel_format: async function (frm) {
         frm.page.set_indicator(__('Downloading...'), 'orange');
@@ -220,4 +269,52 @@ function generate_error_table(errors, createdAt) {
 }
 
 
+function generate_parts_error_table(errors, createdAt) {
+    let table_html = `
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Item Code</th>
+                    <th>Item Name</th>
+                    <th>Item Category</th>
+                    <th>Sub Category Name</th>
+                    <th>Condition</th>
+                    <th>Brand</th>
+                    <th>Supplier</th>
+                    <th>TVS PN</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    if (createdAt) {
+        const formattedDate = new Date(createdAt).toLocaleString();
+        table_html += `
+            <tr style="background-color: #f8d7da; color: #721c24;">
+                <td colspan="12"><strong>Information Created At: ${formattedDate}</strong></td>
+            </tr>
+        `;
+    }
+
+    errors.forEach(error => {
+        table_html += `
+            <tr>
+                <td style="${!error.item_code ? 'background-color: #f8d7da;' : ''}">${error.item_code || ''}</td>
+                <td style="${!error.item_name ? 'background-color: #f8d7da;' : ''}">${error.item_name || ''}</td>
+                <td style="${!error.item_category ? 'background-color: #f8d7da;' : ''}">${error.item_category || ''}</td>
+                <td style="${!error.sub_category_name ? 'background-color: #f8d7da;' : ''}">${error.sub_category_name || ''}</td>
+                <td style="${!error.condition ? 'background-color: #f8d7da;' : ''}">${error.condition || ''}</td>
+                <td style="${!error.brand ? 'background-color: #f8d7da;' : ''}">${error.brand || ''}</td>
+                <td style="${!error.supplier ? 'background-color: #f8d7da;' : ''}">${error.supplier || ''}</td>
+                <td style="${!error.tvs_pn ? 'background-color: #f8d7da;' : ''}">${error.tvs_pn || ''}</td>
+            </tr>
+        `;
+    });
+
+    table_html += `
+            </tbody>
+        </table>
+    `;
+    return table_html;
+}
 

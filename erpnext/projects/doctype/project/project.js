@@ -186,6 +186,10 @@ frappe.ui.form.on("Project", {
 				sidebar.hide();
 			}
 		}
+
+		if(!frm.previous_status){
+			frm.previous_status = frm.doc.status
+		}
 	},
 	create_duplicate: function (frm) {
 		return new Promise(resolve => {
@@ -376,7 +380,6 @@ async function installChat(frm) {
 			chat._instance.exposed.addMessage(data);
 		})
 		frappe.realtime.on(`translation-${frm.doc.name}`, (data) => {
-			console.log('on Translate')
 			chat._instance.exposed.onTranslate(data);
 		})
 		frappe.require('erp-whatsapp-chat.bundle.js')
@@ -697,7 +700,6 @@ function showSentMessageAfterRemoteDiagnoseDialog(project_name) {
 		primary_action_label: 'Yes',
 		primary_action: async function () {
 			const { aws_url } = await frappe.db.get_doc("Whatsapp Config")
-			console.log("aws_url => ", aws_url)
 			await frappe.call({
 				method: 'frappe.desk.doctype.kanban_board.kanban_board.call_send_whatsapp_message',
 				args: { aws_url: aws_url, project_name: project_name }
@@ -721,13 +723,10 @@ async function insertResendPaymentLink(frm) {
 				primary_action_label: __("Send"),
 				primary_action: async function () {
 					const { aws_url } = await frappe.db.get_doc('Queue Settings')
-					console.log({ aws_url })
 					const url = `${aws_url}project/quality-approved`;
 					const obj = {
 						"name": frm.doc.name,
 					};
-
-					console.log("Sending payload:", obj);
 
 					fetch(url, {
 						method: 'POST',
@@ -742,11 +741,9 @@ async function insertResendPaymentLink(frm) {
 								const errorMessage = await response.text();
 								throw new Error(`HTTP error ${response.status}: ${errorMessage}`);
 							}
-							console.log(response.json())
 							return response
 						})
 						.then((data) => {
-							console.log("Response data:", data);
 							frappe.show_alert({
 								message: __('Message sent successfully'),
 								indicator: 'green'
@@ -871,8 +868,7 @@ async function insertUpdateQueuePositionButton(frm) {
 	const option = $('.form-page select[data-fieldname="status"]')
 		.find('option[value="In queue"]')
 
-	const { doc } = frm
-	console.log('doc => ', doc)
+	const { doc } = frm;
 	const cardName = $('.frappe-list .kanban-card-title.ellipsis');
 	cardName.html(cardName.html() + doc.model != "" ? " " + doc.model : "");
 
