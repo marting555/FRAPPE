@@ -59,7 +59,7 @@ class POSOpeningEntry(StatusUpdater):
 					"default_account",
 				)
 				if not account:
-					invalid_modes.append(get_link_to_form("Mode of Payment", d.mode_of_payment))
+					invalid_modes.append(get_link_to_form("Mode of Payment", _(d.mode_of_payment)))
 
 		if invalid_modes:
 			if invalid_modes == 1:
