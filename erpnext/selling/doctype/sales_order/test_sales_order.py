@@ -5525,6 +5525,54 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(sales_order.status, "To Bill")
 		self.assertEqual(purchase_orders[0].status, "Delivered")
 
+	def test_so_to_si_with_po_TC_S_113(self):
+		from erpnext.selling.doctype.sales_order.sales_order import make_purchase_order_for_default_supplier
+		from erpnext.buying.doctype.purchase_order.purchase_order import update_status
+		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_invoice as make_pi_from_po
+
+		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="_Test Warehouse - _TC")
+
+		so = make_sales_order(qty=1,rate=5000,do_not_save=True)
+		for i in so.items:
+			i.delivered_by_supplier =1
+			i.supplier = "_Test Supplier"
+		so.save()
+		so.submit()
+		purchase_orders = make_purchase_order_for_default_supplier(so.name,selected_items=so.items)
+		for i in purchase_orders[0].items:
+			i.rate = 3000
+		purchase_orders[0].submit()
+
+		update_status("Delivered", purchase_orders[0].name)
+		so.reload()
+		purchase_orders[0].reload()
+		self.assertEqual(so.status, "To Bill")
+		self.assertEqual(purchase_orders[0].status, "Delivered")
+
+		pi = make_pi_from_po(purchase_orders[0].name)
+		pi.insert()
+		pi.submit()
+
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
+		gl_debits = {entry.account: entry.debit for entry in gl_entries}
+		gl_credits = {entry.account: entry.credit for entry in gl_entries}
+		self.assertEqual(gl_debits['_Test Account Cost for Goods Sold - _TC'], 3000)
+		self.assertEqual(gl_credits["Creditors - _TC"], 3000)
+
+		si = make_sales_invoice(so.name)
+		si.save()
+		si.submit()
+
+		gl_entries_si = frappe.get_all("GL Entry", filters={"voucher_no": si.name}, fields=["account", "debit", "credit"])
+		gl_debits_si = {entry.account: entry.debit for entry in gl_entries_si}
+		gl_credits_si = {entry.account: entry.credit for entry in gl_entries_si}
+		self.assertEqual(gl_debits_si['Debtors - _TC'], 5000)
+		self.assertEqual(gl_credits_si["Sales - _TC"], 5000)
+		so.reload()
+		self.assertEqual(so.status, "Completed")
+		self.assertEqual(si.status, "Unpaid")
+		self.assertEqual(pi.status, "Unpaid")
+
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
 		sales_order.delivery_date = nowdate()
