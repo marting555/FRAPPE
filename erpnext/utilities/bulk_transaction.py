@@ -7,7 +7,14 @@ from frappe.utils import get_link_to_form, today
 
 
 @frappe.whitelist()
+<<<<<<< HEAD
 def transaction_processing(data, from_doctype, to_doctype):
+=======
+def transaction_processing(data, from_doctype, to_doctype, args=None):
+	frappe.has_permission(from_doctype, "read", throw=True)
+	frappe.has_permission(to_doctype, "create", throw=True)
+
+>>>>>>> a9bc395e98 (fix: secure bulk transaction (#45386))
 	if isinstance(data, str):
 		deserialized_data = json.loads(data)
 	else:
