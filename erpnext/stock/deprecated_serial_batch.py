@@ -293,9 +293,7 @@ class DeprecatedBatchNoValuation:
 		data = query.run(as_dict=True)
 		return data[0] if data else {}
 
-<<<<<<< HEAD
 	@deprecated
-=======
 	def get_last_sle_for_sabb_no_batchwise_valuation(self):
 		sabb = frappe.qb.DocType("Serial and Batch Bundle")
 		sabb_entry = frappe.qb.DocType("Serial and Batch Entry")
@@ -347,13 +345,7 @@ class DeprecatedBatchNoValuation:
 
 		return sle if sle else {}
 
-	@deprecated(
-		"erpnext.stock.serial_batch_bundle.BatchNoValuation.set_balance_value_from_bundle",
-		"unknown",
-		"v16",
-		"No known instructions.",
-	)
->>>>>>> 5088d8576f (fix: valuation for batch)
+	@deprecated
 	def set_balance_value_from_bundle(self) -> None:
 		bundle = frappe.qb.DocType("Serial and Batch Bundle")
 		bundle_child = frappe.qb.DocType("Serial and Batch Entry")
