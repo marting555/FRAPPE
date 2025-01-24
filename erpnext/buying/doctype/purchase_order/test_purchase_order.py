@@ -5410,7 +5410,28 @@ class TestPurchaseOrder(FrappeTestCase):
 			pr.save()
 			pr.submit()
 			self.assertEqual(pr.docstatus, 1)
-			
+	
+	def test_closed_pr_further_pi_not_created_TC_B_132(self):
+		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import update_purchase_receipt_status
+		po = create_purchase_order(qty=10,Rate=1000, do_not_save=True)
+		po.save()
+		tax_template = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company,'tax_category':'In-State'},'name')
+		po.taxes_and_charges = tax_template
+		po.save()
+		po.submit()
+		self.assertEqual(po.docstatus, 1)
+		pr = make_purchase_receipt(po.name)
+		pr.save()
+		pr.submit()
+		self.assertEqual(pr.docstatus, 1)
+		update_purchase_receipt_status(docname = pr.name,status="Closed")
+		pr.reload()
+		self.assertEqual(pr.status, "Closed")
+		if not frappe.db.exists("Purchase Receipt", {"name": pr.name, "status": "Closed"}):
+			pi = make_pi_from_pr(pr.name)
+			pi.save()
+			pi.submit()
+
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
