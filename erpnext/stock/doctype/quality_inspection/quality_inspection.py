@@ -126,9 +126,8 @@ class QualityInspection(Document):
 		if self.reference_type == "Job Card":
 			if self.reference_name:
 				frappe.db.set_value(
-					self.reference_type, self.reference_name, "quality_inspection", quality_inspection
+					self.reference_type, self.reference_name, "quality_inspection", quality_inspection, update_modified=True
 				)
-				frappe.db.set_value(self.reference_type, self.reference_name, "modified", self.modified)
 
 		else:
 			conditions = {"parent": self.reference_name, "item_code": self.item_code}
