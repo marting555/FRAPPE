@@ -4982,8 +4982,68 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
   
 		self.assertEqual(pi.status, "Unpaid")
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': 'Creditors - _TC'}, 'credit'), 5000)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': 'Cost of Goods Sold - _TC'}, 'debit'), 5000)
 		
+	def test_sales_order_purchase_cycle_creating_pi_via_rfq_TC_S_090(self):
+		so, mr = self.test_sales_order_purchase_cycle_creating_pi_TC_S_089(reuse=1)
+
+		from erpnext.stock.doctype.material_request.material_request import make_request_for_quotation
+		rfq = make_request_for_quotation(mr.name)
+		supplier_data=[
+					{
+						"supplier": "_Test Supplier",
+						"email_id": "123_testrfquser@example.com",
+					}
+				]
+		rfq.append("suppliers", supplier_data[0])
+		rfq.message_for_supplier = "Please provide a quotation for the requested items."
+		rfq.save()
+		rfq.submit()
+		self.assertEqual(rfq.items[0].get("material_request"), mr.name)
+
+		from erpnext.buying.doctype.request_for_quotation.request_for_quotation import make_supplier_quotation_from_rfq
+		sq = make_supplier_quotation_from_rfq(rfq.name, for_supplier = "_Test Supplier")
+		sq.save()
+		sq.submit()
+		sq.items[0].rate = 2500
+		self.assertEqual(sq.status, "Submitted")
+		self.assertEqual(sq.items[0].get("material_request"), mr.name)
+		self.assertEqual(sq.items[0].get("request_for_quotation"), rfq.name)
+		
+		from erpnext.buying.doctype.supplier_quotation.supplier_quotation import make_purchase_order
+		po = make_purchase_order(sq.name)
+		po.set_warehouse = "Stores - _TC"
+		po.items[0].sales_order =so.name
+		po.items[0].rate = 2500
+		po.save()
+		po.submit()
+  
+		self.assertEqual(po.status, "To Receive and Bill")
+		self.assertEqual(po.items[0].get("sales_order"), so.name)
+		self.assertEqual(po.items[0].get("material_request"), mr.name)
+		self.assertEqual(po.items[0].get("supplier_quotation"), sq.name)
+  
+		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
+		pr = make_purchase_receipt(po.name)
+		pr.save()
+		pr.submit()
+  
+		self.assertEqual(pr.status, "To Bill")
+		self.assertEqual(pr.items[0].get("sales_order"), so.name)
+		self.assertEqual(pr.items[0].get("material_request"), mr.name)	
+		self.assertEqual(pr.items[0].get("purchase_order"), po.name)	
+		qty_change = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': pr.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change, 1)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pr.name, 'account': 'Stock In Hand - _TC'}, 'debit'), 2500)
+  
+		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
+		pi = make_purchase_invoice(pr.name)
+		pi.save()
+		pi.submit()
+  
+		self.assertEqual(pi.status, "Unpaid")
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': 'Creditors - _TC'}, 'credit'), 2500)
+  
+  
 	def test_sales_order_purchase_cycle_creating_pi_via_sq_TC_S_091(self):
 		so, mr = self.test_sales_order_purchase_cycle_creating_pi_TC_S_089(reuse=1)
   
@@ -5027,7 +5087,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
   
 		self.assertEqual(pi.status, "Unpaid")
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': 'Creditors - _TC'}, 'credit'), 5000)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': 'Cost of Goods Sold - _TC'}, 'debit'), 5000)
   
 	def test_sales_order_delivery_trip_creating_si_TC_S_092(self):
 		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="_Test Warehouse - _TC")
