@@ -204,7 +204,7 @@ erpnext.PointOfSale.Controller = class {
 	prepare_fullscreen_btn() {
 		this.page.page_actions.find(".custom-actions").empty();
 
-		this.page.add_button(__("Enable Full Screen"), null, { btn_class: "btn-default fullscreen-btn" });
+		this.page.add_button(__("Full Screen"), null, { btn_class: "btn-default fullscreen-btn" });
 
 		this.bind_fullscreen_events();
 	}
@@ -224,7 +224,7 @@ erpnext.PointOfSale.Controller = class {
 	}
 
 	handle_fullscreen_change_event() {
-		let enable_fullscreen_label = __("Enable Full Screen");
+		let enable_fullscreen_label = __("Full Screen");
 		let exit_fullscreen_label = __("Exit Full Screen");
 
 		if (document.fullscreenElement) {
