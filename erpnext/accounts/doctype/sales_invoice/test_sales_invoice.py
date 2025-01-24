@@ -5473,8 +5473,35 @@ class TestSalesInvoice(FrappeTestCase):
                 "\t\t\t\t\tthis validation."
             )
         )
-  
+	
+	def test_test_unlink_payment_on_invoice_cancellation_TC_ACC_126(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item
+		)
 
+		account_setting = frappe.get_doc("Accounts Settings")
+		account_setting.unlink_payment_on_cancellation_of_invoice = 0
+		account_setting.save()
+		item = make_test_item("_Test Item")
+		try:
+			si = create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				item_code=item.name,
+				qty=1,
+				rate=100
+			)
+			
+			pe = get_payment_entry(si.doctype,si.name,bank_account="Cash - _TC")
+			pe.submit()
+			si.load_from_db()
+			
+			si.cancel()
+		except Exception as e:
+			error_msg = str(e)
+			self.assertEqual(error_msg,f'Cannot delete or cancel because Sales Invoice {si.name} is linked with Payment Entry {pe.name} at Row: 1')
+    
+	 
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",

@@ -5288,6 +5288,35 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
   
 		return delivery_note
 
+	def test_unlink_advance_payment_on_order_cancellation_TC_ACC_127(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item,
+			get_payment_entry
+		)
+		
+		account_setting = frappe.get_doc("Accounts Settings")
+		account_setting.unlink_advance_payment_on_cancelation_of_order = 0
+		account_setting.save()
+
+		item = make_test_item("_Test Item")
+		try:
+			so = make_sales_order(
+				customer="_Test Customer",
+				company="_Test Company",	
+				item_code=item.name,
+				qty=1,
+				rate=1000,
+			)
+
+			pe = get_payment_entry("Sales Order", so.name, bank_account="Cash - _TC")
+			pe.submit()
+			so.load_from_db()
+			so.cancel()
+		except Exception as e:
+			error_message = str(e)
+			self.assertEqual(error_message, f"Cannot delete or cancel because Sales Order {so.name} is linked with Payment Entry {pe.name} at Row: 1")
+		
+
 def get_transport_details(customer):
 	# create a driver
 	driver = frappe.new_doc("Driver")
