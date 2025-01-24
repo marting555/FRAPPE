@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-01-19 09:34+0000\n"
-"PO-Revision-Date: 2025-01-22 20:46\n"
+"PO-Revision-Date: 2025-01-24 21:08\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Turkish\n"
 "MIME-Version: 1.0\n"
@@ -7116,7 +7116,7 @@ msgstr "Temel Para Birimi Bakiyesi"
 #: erpnext/stock/report/stock_balance/stock_balance.py:441
 #: erpnext/stock/report/stock_ledger/stock_ledger.py:250
 msgid "Balance Qty"
-msgstr "Bakiya Miktarı"
+msgstr "Mevcut Bakiye"
 
 #: erpnext/stock/page/warehouse_capacity_summary/warehouse_capacity_summary.js:71
 msgid "Balance Qty (Stock)"
