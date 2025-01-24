@@ -2971,6 +2971,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi_status_before = frappe.db.get_value("Purchase Invoice", pi.name, "status")
 		self.assertEqual(pi_status_before, "Unpaid")
 		pe.submit()
+		pe.reload()
+		pi.reload()
 		pi_status_after = frappe.db.get_value("Purchase Invoice", pi.name, "status")
 		self.assertEqual(pi_status_after, "Paid")
 		header = {
