@@ -69,7 +69,13 @@ def make_item(item_code=None, properties=None, uoms=None, barcode=None):
 				"barcode": barcode,
 			},
 		)
-
+	if 'india_compliance' in frappe.get_installed_apps():
+		gst_hsn_code = "11112222"
+		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
+			gst_hsn_code = frappe.new_doc("GST HSN Code")
+			gst_hsn_code.hsn_code = "11112222"
+			gst_hsn_code.save()
+		item.gst_hsn_code = gst_hsn_code
 	item.insert()
 
 	return item
@@ -960,7 +966,7 @@ def create_item(
 				"buying_cost_center": buying_cost_center,
 			},
 		)
-
+		
 		if 'india_compliance' in frappe.get_installed_apps():
 			gst_hsn_code = "11112222"
 			if not frappe.db.exists("GST HSN Code", gst_hsn_code):
