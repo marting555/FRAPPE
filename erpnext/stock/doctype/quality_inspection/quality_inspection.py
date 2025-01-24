@@ -145,9 +145,7 @@ class QualityInspection(Document):
 			else:
 				doctype = self.reference_type + " Item"
 
-			frappe.db.set_value(doctype, conditions, "quality_inspection", quality_inspection)
-
-			frappe.db.set_value(self.reference_type, self.reference_name, "modified", self.modified)
+			frappe.db.set_value(doctype, conditions, "quality_inspection", quality_inspection, update_modified=True)
 
 	def inspect_and_set_status(self):
 		for reading in self.readings:
