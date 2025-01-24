@@ -5343,6 +5343,168 @@ class TestSalesInvoice(FrappeTestCase):
 			error_msg = str(e)
 			self.assertEqual(error_msg,'This document is over limit by Amount 100.0 for item _Test Item. Are you making another Sales Invoice against the same Sales Order Item?To allow over billing, update "Over Billing Allowance" in Accounts Settings or the Item.')
 
+	def test_create_sales_invoice_for_interstate_branch_transfer_TC_ACC_123(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		internal_customer=frappe.get_value("Customer",{"is_internal_customer":1,"represents_company":"_Test Company"})
+		if not internal_customer:
+			customer = frappe.get_doc({
+				"doctype": "Customer",
+				"customer_name": "_Test Internal Customer 4",
+				"customer_type": "Company",
+				"is_internal_customer": 1,
+				"represents_company": "_Test Company",
+				"companies":[
+					{
+					"company": "_Test Company",
+					}]
+				}).insert()
+			frappe.db.commit()
+		elif internal_customer:
+			customer=frappe.get_doc("Customer",internal_customer)
+		else:
+			customer=frappe.get_doc("Customer","_Test Internal Customer 4")
+		
+		item=make_test_item("_Test Item")
+		si= create_sales_invoice(
+			company="_Test Company",
+			customer=customer.name,
+			item=item.name,
+			qty=1,
+			rate=10000,
+			do_not_submit=True
+		)
+		si.taxes_and_charges="Output GST Out-state - _TC"
+		si.save()
+		si.submit()
+		expected_gl_entries = [
+			['Output Tax IGST - _TC', 0.0, si.total_taxes_and_charges, si.posting_date],
+			['Unrealized Profit - _TC',si.total_taxes_and_charges, 0.0, si.posting_date],
+		]
+		check_gl_entries(self, si.name, expected_gl_entries, si.posting_date)
+  
+	def test_create_sales_invoice_for_common_party_TC_ACC_124(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item,
+			create_supplier,
+			create_purchase_invoice
+		)
+		from erpnext.accounts.doctype.party_link.party_link import create_party_link
+		supplier=create_supplier(supplier_name="_Test Common Party",company="_Test Company")
+		if supplier.accounts:
+			supplier.accounts.clear()
+			supplier.flags.ignore_mandatory = True
+			supplier.save()
+			frappe.db.commit()
+		create_customer(customer_name="_Test Common Party",company="_Test Company")
+		if not frappe.get_value("Party Link",{"primary_party":"_Test Common Party","secondary_party":"_Test Common Party","primary_role":"Supplier"}):
+			create_party_link(
+				primary_role="Supplier",
+				primary_party=supplier.name,
+				secondary_party=supplier.name
+			)
+		
+		item=make_test_item("_Test Item")
+		pi=create_purchase_invoice(
+			supplier=supplier.name,
+			item_code=item.name,
+			company="_Test Company",
+			qty=1,
+			rate=10000
+		)
+		pi.save().submit()
+
+		si=create_sales_invoice(
+			customer="_Test Common Party",
+			company="_Test Company",
+			item_code=item.name,
+			qty=1,
+			rate=15000,
+			debit_to="Debtors - _TC"
+		)
+		jv_parent=frappe.get_value(
+      		"Journal Entry Account",{
+            "reference_type":"Sales Invoice",
+            "reference_name":si.name},"parent"
+        )
+		jv_doc=frappe.get_doc("Journal Entry",jv_parent)
+		expected_gl_entries = [
+			['Creditors - _TC',jv_doc.total_credit, 0.0, jv_doc.posting_date],
+			['Debtors - _TC',0.0, jv_doc.total_debit, jv_doc.posting_date],
+		]
+		check_gl_entries(self, jv_doc.name, expected_gl_entries, jv_doc.posting_date, "Journal Entry")
+	
+	def test_prevent_sale_below_purchase_rate_TC_ACC_125(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			create_purchase_invoice,
+			make_test_item,
+			create_supplier,
+		)
+
+		selling_setting = frappe.get_doc("Selling Settings")
+		selling_setting.validate_selling_price = 1
+		selling_setting.save()
+
+		supplier = create_supplier(supplier_name="_Test Supplier")
+
+		item = make_test_item("_Test Sell Item")
+
+		pi = create_purchase_invoice(
+			supplier=supplier.name,
+			company="_Test Company",
+			item_code=item.name,
+			qty=1,
+			rate=100
+		)
+		pi.save().submit()
+
+		try:
+			si = create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				item_code=item.name,
+				qty=1,
+				rate=99
+			)
+		except Exception as e:
+			error_msg = str(e)
+		self.assertEqual(
+            error_msg,
+            (
+                "Row #1: Selling rate for item _Test Item is lower than its last purchase rate.\n"
+                "\t\t\t\t\tSelling net rate should be atleast 100.0.Alternatively,\n"
+                "\t\t\t\t\tyou can disable selling price validation in Selling Settings to bypass\n"
+                "\t\t\t\t\tthis validation."
+            )
+        )
+	
+	def test_test_unlink_payment_on_invoice_cancellation_TC_ACC_126(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item
+		)
+
+		account_setting = frappe.get_doc("Accounts Settings")
+		account_setting.unlink_payment_on_cancellation_of_invoice = 0
+		account_setting.save()
+		item = make_test_item("_Test Item")
+		try:
+			si = create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				item_code=item.name,
+				qty=1,
+				rate=100
+			)
+			
+			pe = get_payment_entry(si.doctype,si.name,bank_account="Cash - _TC")
+			pe.submit()
+			si.load_from_db()
+			
+			si.cancel()
+		except Exception as e:
+			error_msg = str(e)
+			self.assertEqual(error_msg,f'Cannot delete or cancel because Sales Invoice {si.name} is linked with Payment Entry {pe.name} at Row: 1')
+    
+	 
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
