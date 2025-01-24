@@ -126,33 +126,4 @@ jobs:
       - name: Show bench output
         if: ${{ always() }}
         run: cat ~/frappe-bench/bench_start.log || true
-<<<<<<< HEAD
-=======
 
-      - name: Upload coverage data
-        uses: actions/upload-artifact@v4
-        if: github.event_name != 'pull_request'
-        with:
-          name: coverage-${{ matrix.container }}
-          path: /home/runner/frappe-bench/sites/coverage.xml
-
-  coverage:
-    name: Coverage Wrap Up
-    needs: test
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'pull_request' }}
-    steps:
-      - name: Clone
-        uses: actions/checkout@v4
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-
-      - name: Upload coverage data
-        uses: codecov/codecov-action@v4
-        with:
-          name: MariaDB
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: true
-          verbose: true
->>>>>>> 8028dd2683 (fix: version)
