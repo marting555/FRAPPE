@@ -4686,6 +4686,7 @@ class TestSalesInvoice(FrappeTestCase):
 		setting.save()
 
 		self.assertEqual(setting.so_required, 'No')
+		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="Stores - _TIRC")
 
 		company = frappe.get_all("Company", {"name": "_Test Indian Registered Company"}, ["gstin", "gst_category"])
 		customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
@@ -4752,6 +4753,8 @@ class TestSalesInvoice(FrappeTestCase):
 		customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
 		company_add = frappe.get_all("Address", {"name": "_Test Indian Registered Company-Billing"}, ["name", "gstin", "gst_category"])
 		customer_add = frappe.get_all("Address", {"name": "_Test Registered Customer-Billing"}, ["name", "gstin", "gst_category"])
+
+		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="Stores - _TIRC")
   
 		if company[0].get("gst_category") == "Registered Regular" and customer[0].get("gst_category") == "Registered Regular" and customer[0].get("gstin") and customer[0].get("gstin"):
 			if company_add[0].get("gst_category") == "Registered Regular" and customer_add[0].get("gst_category") == "Registered Regular" and company_add[0].get("gstin") and customer_add[0].get("gstin"):
