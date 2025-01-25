@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-01-19 09:34+0000\n"
-"PO-Revision-Date: 2025-01-24 21:08\n"
+"PO-Revision-Date: 2025-01-25 21:19\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -83,7 +83,7 @@ msgstr "\"Kund Försedd Artikel\" kan inte vara Försäljning Artikel"
 
 #: erpnext/stock/doctype/item/item.py:235
 msgid "\"Customer Provided Item\" cannot have Valuation Rate"
-msgstr "\"Kund Försedd Artikel\" kan inte ha Värderingssats"
+msgstr "\"Kund Försedd Artikel\" kan inte ha Grund Pris"
 
 #: erpnext/stock/doctype/item/item.py:311
 msgid "\"Is Fixed Asset\" cannot be unchecked, as Asset record exists against the item"
@@ -342,7 +342,7 @@ msgstr "(H) Förändring av Lager Värde (FIFO)"
 
 #: erpnext/stock/report/fifo_queue_vs_qty_after_transaction_comparison/fifo_queue_vs_qty_after_transaction_comparison.py:209
 msgid "(H) Valuation Rate"
-msgstr "(H) Värderingssats"
+msgstr "(H) Grund Pris"
 
 #. Description of the 'Actual Operating Cost' (Currency) field in DocType 'Work
 #. Order Operation'
@@ -353,12 +353,12 @@ msgstr "(Timpris/60) * Faktisk Åtgärd Tid"
 #: erpnext/stock/report/stock_ledger_invariant_check/stock_ledger_invariant_check.py:273
 #: erpnext/stock/report/stock_ledger_variance/stock_ledger_variance.py:176
 msgid "(I) Valuation Rate"
-msgstr "(I) Värderingssats"
+msgstr "(I) Grund Pris"
 
 #: erpnext/stock/report/stock_ledger_invariant_check/stock_ledger_invariant_check.py:278
 #: erpnext/stock/report/stock_ledger_variance/stock_ledger_variance.py:181
 msgid "(J) Valuation Rate as per FIFO"
-msgstr "(J) Värderingssats enligt FIFO"
+msgstr "(J) Grund Pris enligt FIFO"
 
 #: erpnext/stock/report/stock_ledger_invariant_check/stock_ledger_invariant_check.py:288
 #: erpnext/stock/report/stock_ledger_variance/stock_ledger_variance.py:191
@@ -10411,17 +10411,17 @@ msgstr "Hämta Framsteg"
 #. Collection'
 #: erpnext/accounts/doctype/loyalty_program_collection/loyalty_program_collection.json
 msgid "Collection Factor (=1 LP)"
-msgstr "Insamling Faktor (= 1 LP)"
+msgstr "Inlösen Faktor (= 1 LP)"
 
 #. Label of the collection_rules (Table) field in DocType 'Loyalty Program'
 #: erpnext/accounts/doctype/loyalty_program/loyalty_program.json
 msgid "Collection Rules"
-msgstr "Insamling Regler"
+msgstr "Inlösen Regler"
 
 #. Label of the rules (Section Break) field in DocType 'Loyalty Program'
 #: erpnext/accounts/doctype/loyalty_program/loyalty_program.json
 msgid "Collection Tier"
-msgstr "Insamling Nivå"
+msgstr "Inlösen Nivå"
 
 #. Label of the standing_color (Select) field in DocType 'Supplier Scorecard
 #. Scoring Standing'
@@ -28432,7 +28432,7 @@ msgstr "Lojalitet Poäng Post"
 #. Name of a DocType
 #: erpnext/accounts/doctype/loyalty_point_entry_redemption/loyalty_point_entry_redemption.json
 msgid "Loyalty Point Entry Redemption"
-msgstr "Lojalitet Poäng Post Insamling"
+msgstr "Lojalitet Poäng Inlösen Post"
 
 #. Label of the loyalty_points (Int) field in DocType 'Loyalty Point Entry'
 #. Label of the loyalty_points (Int) field in DocType 'POS Invoice'
@@ -28457,11 +28457,11 @@ msgstr "Lojalitet Poäng"
 #: erpnext/accounts/doctype/pos_invoice/pos_invoice.json
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.json
 msgid "Loyalty Points Redemption"
-msgstr "Lojalitet Poäng Insamling"
+msgstr "Lojalitet Poäng Inlösen"
 
 #: erpnext/accounts/doctype/loyalty_program/loyalty_program.js:8
 msgid "Loyalty Points will be calculated from the spent done (via the Sales Invoice), based on collection factor mentioned."
-msgstr "Lojaliitet poäng kommer att beräknas från spenderad belopp (via försäljning faktura), baserat på vald insamling faktor."
+msgstr "Lojalitet poäng kommer att beräknas från spenderad belopp (via försäljning faktura), baserat på vald inlösen faktor."
 
 #: erpnext/public/js/utils.js:109
 msgid "Loyalty Points: {0}"
@@ -28487,7 +28487,7 @@ msgstr "Lojalitet Program"
 #. Name of a DocType
 #: erpnext/accounts/doctype/loyalty_program_collection/loyalty_program_collection.json
 msgid "Loyalty Program Collection"
-msgstr "Lojalitet Program Insamling"
+msgstr "Lojalitet Program Inlösen"
 
 #. Label of the loyalty_program_help (HTML) field in DocType 'Loyalty Program'
 #: erpnext/accounts/doctype/loyalty_program/loyalty_program.json
@@ -36909,7 +36909,7 @@ msgstr "Välj Bolag"
 
 #: erpnext/accounts/doctype/loyalty_program/loyalty_program.js:65
 msgid "Please select the Multiple Tier Program type for more than one collection rules."
-msgstr "Välj Fler Nivå Program typ för mer än en insamling regel."
+msgstr "Välj Fler Nivå Program typ för mer än en inlösning regel."
 
 #: erpnext/accounts/doctype/coupon_code/coupon_code.py:48
 msgid "Please select the customer."
@@ -41971,7 +41971,7 @@ msgstr "Inlösta Poäng"
 #. Label of the redemption (Section Break) field in DocType 'Loyalty Program'
 #: erpnext/accounts/doctype/loyalty_program/loyalty_program.json
 msgid "Redemption"
-msgstr "Insamling"
+msgstr "Inlösen"
 
 #. Label of the loyalty_redemption_account (Link) field in DocType 'POS
 #. Invoice'
@@ -41980,7 +41980,7 @@ msgstr "Insamling"
 #: erpnext/accounts/doctype/pos_invoice/pos_invoice.json
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.json
 msgid "Redemption Account"
-msgstr "Insamling Konto"
+msgstr "Inlösen Konto"
 
 #. Label of the loyalty_redemption_cost_center (Link) field in DocType 'POS
 #. Invoice'
@@ -41989,13 +41989,13 @@ msgstr "Insamling Konto"
 #: erpnext/accounts/doctype/pos_invoice/pos_invoice.json
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.json
 msgid "Redemption Cost Center"
-msgstr "Insamling Resultat Enhet"
+msgstr "Inlösen Resultat Enhet"
 
 #. Label of the redemption_date (Date) field in DocType 'Loyalty Point Entry
 #. Redemption'
 #: erpnext/accounts/doctype/loyalty_point_entry_redemption/loyalty_point_entry_redemption.json
 msgid "Redemption Date"
-msgstr "Insamling Datum"
+msgstr "Inlösen Datum"
 
 #. Label of the ref_code (Data) field in DocType 'Item Customer Detail'
 #: erpnext/stock/doctype/item_customer_detail/item_customer_detail.json
@@ -47363,7 +47363,7 @@ msgstr "Serie Nummer och Parti Reservation"
 #. Name of a report
 #: erpnext/stock/report/serial_and_batch_summary/serial_and_batch_summary.json
 msgid "Serial and Batch Summary"
-msgstr "Serie- och batchnummer kommer att reserveras automatiskt baserat på <b>Välj serie/batch baserat på</b>"
+msgstr "Serie och Parti Översikt"
 
 #: erpnext/stock/utils.py:409
 msgid "Serial number {0} entered more than once"
@@ -57048,27 +57048,27 @@ msgstr "Värdering Sätt"
 #: erpnext/stock/report/stock_balance/stock_balance.py:485
 #: erpnext/stock/report/stock_ledger/stock_ledger.py:297
 msgid "Valuation Rate"
-msgstr "Värderingssats"
+msgstr "Grund Pris"
 
 #: erpnext/stock/report/incorrect_serial_no_valuation/incorrect_serial_no_valuation.py:166
 msgid "Valuation Rate (In / Out)"
-msgstr "Värderingssats (In/Ut)"
+msgstr "Grund Pris (In/Ut)"
 
 #: erpnext/stock/stock_ledger.py:1844
 msgid "Valuation Rate Missing"
-msgstr "Värderingssats Saknas"
+msgstr "Grund Pris Saknas"
 
 #: erpnext/stock/stock_ledger.py:1822
 msgid "Valuation Rate for the Item {0}, is required to do accounting entries for {1} {2}."
-msgstr "Värderingssats för Artikel {0} erfodras att skapa bokföring poster för {1} {2}."
+msgstr "Grund Pris för Artikel {0} erfodras att skapa bokföring poster för {1} {2}."
 
 #: erpnext/stock/doctype/item/item.py:264
 msgid "Valuation Rate is mandatory if Opening Stock entered"
-msgstr "Värderingssats erfordras om Öppning Lager anges"
+msgstr "Grund Pris erfodras om Öppning Lager anges"
 
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.py:709
 msgid "Valuation Rate required for Item {0} at row {1}"
-msgstr "Värderingssats erfordras för Artikel {0} på rad {1}"
+msgstr "Grund Pris erfordras för Artikel {0} på rad {1}"
 
 #. Option for the 'Consider Tax or Charge for' (Select) field in DocType
 #. 'Purchase Taxes and Charges'
@@ -57078,7 +57078,7 @@ msgstr "Värdering och Totalt"
 
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.py:918
 msgid "Valuation rate for customer provided items has been set to zero."
-msgstr "Värderingssats för Kund Försedda Artiklar angavs till noll."
+msgstr "Grund Pris för Kund Försedda Artiklar sattes till noll."
 
 #. Description of the 'Sales Incoming Rate' (Currency) field in DocType
 #. 'Purchase Invoice Item'
@@ -57087,7 +57087,7 @@ msgstr "Värderingssats för Kund Försedda Artiklar angavs till noll."
 #: erpnext/accounts/doctype/purchase_invoice_item/purchase_invoice_item.json
 #: erpnext/stock/doctype/purchase_receipt_item/purchase_receipt_item.json
 msgid "Valuation rate for the item as per Sales Invoice (Only for Internal Transfers)"
-msgstr "Värderingssats för artikel enligt Försäljning Faktura (endast för Interna Överföringar)"
+msgstr "Grund Pris för artikel enligt Försäljning Faktura (endast för Interna Överföringar)"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:2264
 #: erpnext/controllers/accounts_controller.py:2873
