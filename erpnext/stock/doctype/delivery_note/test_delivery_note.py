@@ -2468,6 +2468,27 @@ class TestDeliveryNote(FrappeTestCase):
 		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':dn.name})
 		self.assertEqual(sle.qty_after_transaction, -5)
 
+	def test_dn_cancel_amend_with_item_details_change_TC_S_132(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item
+		)
+		
+		make_test_item("_Test Item 1")
+		make_stock_entry(item_code="_Test Item", qty=5, rate=1000, target="_Test Warehouse - _TC")
+		make_stock_entry(item_code="_Test Item 1", qty=5, rate=1000, target="_Test Warehouse - _TC")
+		dn = create_delivery_note(qty = 5, rate = 1000)
+		dn.cancel()
+		dn.reload()	
+		self.assertEqual(dn.status, "Cancelled")
+		
+		amended_dn = frappe.copy_doc(dn)
+		amended_dn.docstatus = 0
+		amended_dn.amended_from = dn.name
+		amended_dn.items[0].item_code ='_Test Item 1'
+		amended_dn.save()
+		amended_dn.submit()
+		self.assertEqual(amended_dn.status, "To Bill")
+
 def create_delivery_note(**args):
 	dn = frappe.new_doc("Delivery Note")
 	args = frappe._dict(args)
