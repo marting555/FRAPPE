@@ -5583,6 +5583,82 @@ class TestSalesInvoice(FrappeTestCase):
 					total_amount += item_wise_tax_detail["_Test GST Item"][1]
 			self.assertEquals(total_tax,rate.get('total_tax'))
 			self.assertEquals(total_amount,rate.get('total_amount'))
+   
+	def test_determine_address_tax_category_from_billing_address_TC_ACC_134(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.accounts.party import get_address_tax_category
+		address_args = [
+				{	"name":"_Test Company Address-Office",
+					"address_title": "_Test Company Address",
+					"address_type": "Office",
+					"is_primary_address": 1,
+					"state": "Maharashtra",
+					"pincode":"423701",
+					"address_line1":"Test Address 10",
+					"country": "India",
+					"is_your_company_address": 1,
+					"company": "_Test Company"
+				},
+				
+				{	"name":"Customer Billing Address-Billing",
+					"address_title": "Customer Billing Address",
+					"address_type": "Billing",
+					"is_primary_address": 0,
+					"address_line1":"Test Address 11",
+					"state": "Karnataka",
+					"pincode":"587316",
+					"country": "India",
+					"is_your_company_address": 0,
+					"doctype": "Customer",
+					"docname": "_Test Customer"
+				},
+				
+				{	"name":"Customer Shipping Address-Shipping",
+					"address_title": "Customer Shipping Address",
+					"address_type": "Shipping",
+					"is_primary_address": 0,
+					"address_line1":"Test Address 11",
+					"state": "Kerala",
+					"pincode":"686582",
+					"country": "India",
+					"is_your_company_address": 0,
+					"doctype": "Customer",
+					"docname": "_Test Customer"
+				}
+		]
+		for d in address_args:
+			create_address(**d)
+
+		company_address = frappe.get_doc("Address","_Test Company Address-Office")
+		customer_billing = frappe.get_doc("Address","Customer Billing Address-Billing")
+		if company_address.state and customer_billing.state and company_address.state == customer_billing.state:
+			customer_billing.tax_category="In-State"
+		else:
+			customer_billing.tax_category="Out-State"
+		customer_billing.save()
+  
+		account_setting= frappe.get_doc("Accounts Settings")
+		account_setting.determine_address_tax_category_from="Billing Address"
+		account_setting.save()
+
+		self.assertEquals("Billing Address",account_setting.determine_address_tax_category_from)
+
+		item = make_test_item("_Test Item")
+		tax_category=get_address_tax_category(None,customer_billing.name,None)
+		si = create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				item_code=item.name,
+				qty=1,
+				rate=1000,
+				do_not_submit=True
+		)
+		si.customer_address=customer_billing.name
+		si.company_address=company_address.name
+		si.tax_category=tax_category
+		si.save()
+		self.assertEqual(tax_category,si.tax_category)
+		
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
@@ -5948,3 +6024,32 @@ def setup_bank_accounts():
 			"name",
 		):
 			frappe.get_doc(method).insert(ignore_permissions=True)
+   
+   
+def create_address(**args):
+	
+	if not frappe.db.exists("Address", args.get("name")):
+		address = frappe.get_doc({
+				"doctype": "Address",
+				"address_title":args.get('address_title'),
+				"address_type":args.get('address_type'),
+				"city":"Test Town",
+				"address_line1":args.get('address_line1'),
+				"is_primary_address":args.get("is_primary_address"),
+				"state": args.get('state'),
+				"country":args.get("country"),
+				"pincode":args.get('pincode')
+			}).insert()
+		if args.get('is_your_company_address'):
+			address.append("links",{
+				"link_doctype":"Company",
+				"link_name":args.get('company')
+			})
+		else:
+			address.append("links",{
+				"link_doctype":args.get('doctype'),
+				"link_name":args.get('docname')
+			})
+		address.save()
+		frappe.db.commit()
+		return address
