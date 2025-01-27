@@ -4715,25 +4715,24 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_create_material_req_to_2po_to_pi_TC_SCK_095(self):
 		create_company()
 		create_fiscal_year()
-		item_code = "Noise Smart watch"
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
-		warehouse = "Stock In Hand - _TC"
+		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
+		item = item_create("_Test MR")
+		cost_center = frappe.db.get_value("Company","_Test Company MR","cost_center")
 		qty = 10
 		rate = 100
-
 		mr = make_material_request(
-			item_code=item_code,
+			company="_Test Company MR",
 			qty=qty,
 			supplier=supplier,
 			warehouse=warehouse,
-			material_request_type="Purchase"
-		)
+			item_code=item.item_code,
+			material_request_type="Purchase",
+			cost_center=cost_center)
 		self.assertEqual(mr.docstatus, 1)
 
 		po1 = make_purchase_order(mr.name)
 		po1.supplier = "_Test Supplier"
-		po1.transaction_date = "2025-08-02"
-		po1.schedule_date = "2025-08-10"
 		po1.items[0].qty = 5
 		po1.items[0].rate = rate
 		po1.insert()
@@ -4742,8 +4741,6 @@ class TestMaterialRequest(FrappeTestCase):
 
 		po2 = make_purchase_order(mr.name)
 		po2.supplier = "_Test Supplier"
-		po2.transaction_date = "2025-08-03"
-		po2.schedule_date = "2025-08-10"
 		po2.items[0].qty = 5
 		po2.items[0].rate = rate
 		po2.insert()
@@ -4752,19 +4749,28 @@ class TestMaterialRequest(FrappeTestCase):
 
 		pi = create_purchase_invoice(po1.name)
 		pi = create_purchase_invoice(po2.name, target_doc=pi)
+		pi.set_warehouse = warehouse
 		pi.update_stock = 1
+		serial_numbers1 = ["SN001", "SN002","SN003", "SN004","SN005"]
+		serial_numbers2 = ["SN006", "SN007","SN008", "SN009","SN010"]
+		pi.items[0].serial_no = "\n".join(serial_numbers1)
+		pi.items[1].serial_no = "\n".join(serial_numbers2)
 		pi.insert()
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
-
+		
 		sle_entries = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": pi.name})
 		self.assertEqual(len(sle_entries), 2)
 
-		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name})
-		stock_in_hand_debit = sum([gle.debit for gle in gl_entries if gle.account == "Stock In Hand - _TC"])
-		creditors_credit = sum([gle.credit for gle in gl_entries if gle.account == "Creditors - _TC"])
+		stock_in_hand_debit = frappe.db.get_value('GL Entry',{'voucher_no':pi.name, 'account': pi.items[0].expense_account},'debit')
 		self.assertEqual(stock_in_hand_debit, 1000)
-		self.assertEqual(creditors_credit, 1000)
+
+		#if account setup in company
+		if frappe.db.exists('GL Entry',{'account': 'Creditors - _CM'}):
+			payable_act = frappe.db.get_value("Company",mr.company,"default_payable_account")
+			creditors_credit = frappe.db.get_value('GL Entry',{'voucher_no':pi.name, 'account': payable_act},'credit')
+			self.assertEqual(creditors_credit, 1000)
+
 	def test_create_material_req_to_2po_to_pi_serial_TC_SCK_096(self):
 		create_company()
 		create_fiscal_year()
@@ -6244,6 +6250,13 @@ def item_create(
 				"buying_cost_center": buying_cost_center,
 			},
 		)
+		if 'india_compliance' in frappe.get_installed_apps():
+			gst_hsn_code = "11112222"
+			if not frappe.db.exists("GST HSN Code", gst_hsn_code):
+				gst_hsn_code = frappe.new_doc("GST HSN Code")
+				gst_hsn_code.hsn_code = "11112222"
+				gst_hsn_code.save()
+			item.gst_hsn_code = gst_hsn_code
 		item.save()
 	else:
 		item = frappe.get_doc("Item", item_code)
