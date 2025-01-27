@@ -178,12 +178,13 @@ def get_data_when_grouped_by_invoice(columns, gross_profit_data, filters, group_
 	# removing Item Code and Item Name columns
 	del columns[4:6]
 
-	total_row = {"qty": 0.0, "base_amount": 0.0, "buying_amount": 0.0, "gross_profit": 0.0}
+	total_base_amount = 0
+	total_buying_amount = 0
 
 	for src in gross_profit_data.si_list:
 		if src.indent == 1:
-			for key in total_row:
-				total_row[key] += src.get(key, 0.0)
+			total_base_amount += src.base_amount or 0.0
+			total_buying_amount += src.buying_amount or 0.0
 
 		row = frappe._dict()
 		row.indent = src.indent
@@ -195,15 +196,16 @@ def get_data_when_grouped_by_invoice(columns, gross_profit_data, filters, group_
 
 		data.append(row)
 
-	total_row.update(
+	total_gross_profit = total_base_amount - total_buying_amount
+	data.append(
 		{
 			"sales_invoice": "Total",
-			"selling_amount": total_row["base_amount"],
-			"gross_profit_%": flt((total_row["gross_profit"] / total_row["base_amount"]) * 100.0, 3),
+			"selling_amount": total_base_amount,
+			"buying_amount": total_buying_amount,
+			"gross_profit": total_gross_profit,
+			"gross_profit_%": flt((total_gross_profit / total_base_amount) * 100.0, 3),
 		}
 	)
-
-	data.append(total_row)
 
 
 def get_data_when_not_grouped_by_invoice(gross_profit_data, filters, group_wise_columns, data):
