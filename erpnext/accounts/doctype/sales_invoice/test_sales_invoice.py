@@ -5543,6 +5543,48 @@ class TestSalesInvoice(FrappeTestCase):
 		amended_si.submit()
 		self.assertEqual(amended_si.status, "Unpaid")
 
+	def test_si_cancel_amend_with_payment_terms_change_TC_S_130(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_terms_template
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_term
+		make_stock_entry(item_code="_Test Item", qty=5, rate=1000, target="_Test Warehouse - _TC")
+		create_payment_term("Basic Amount Receivable for Selling")
+
+		if not frappe.db.exists("Payment Terms Template", "Test Receivable Template Selling"):
+			frappe.get_doc(
+				{
+					"doctype": "Payment Terms Template",
+					"template_name": "Test Receivable Template Selling",
+					"allocate_payment_based_on_payment_terms": 1,
+					"terms": [
+						{
+							"doctype": "Payment Terms Template Detail",
+							"payment_term": "Basic Amount Receivable for Selling",
+							"invoice_portion": 100,
+							"credit_days_based_on": "Day(s) after invoice date",
+							"credit_days": 1,
+						}
+					],
+				}
+			).insert()
+
+		create_payment_terms_template()
+		si = create_sales_invoice(qty=2, rate=500,do_not_save=True)
+		si.payment_terms_template ='Test Receivable Template'
+		si.save()
+		si.submit()
+		si.cancel()
+		si.reload()	
+		self.assertEqual(si.status, "Cancelled")
+
+		amended_si = frappe.copy_doc(si)
+		amended_si.docstatus = 0
+		amended_si.amended_from = si.name
+		amended_si.payment_terms_template = 'Test Receivable Template Selling'
+		amended_si.save()
+		amended_si.submit()
+
+		self.assertEqual(amended_si.status, "Unpaid")
+
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
