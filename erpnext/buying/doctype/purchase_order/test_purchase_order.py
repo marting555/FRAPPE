@@ -6183,6 +6183,179 @@ class TestPurchaseOrder(FrappeTestCase):
 		})
 		self.assertTrue(gl_entries_pe)
 
+	def test_shipping_rule_net_weight_restricted_country_po_pr_pi_pe_TC_B_114(self):
+		get_company_supplier = create_company_and_supplier()
+		company = get_company_supplier.get("company")
+		supplier = get_company_supplier.get("supplier")
+		warehouse = "Stores - -TCNI_"
+		item_code = "test_item_with_fixed_shipping_rule"
+		gst_hsn_code = "888890"
+
+		# Ensure Item exists
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"gst_hsn_code": gst_hsn_code,
+				"is_stock_item": 1
+			}).insert()
+
+		# Create Shipping Rule with Fixed Amount
+		shipping_rule = frappe.get_doc({
+			"doctype": "Shipping Rule",
+			"company": company,
+			"label": "_Test shipping rule wtih country address",
+			"calculate_based_on": "Net Weight",
+			"shipping_rule_type": "Buying",
+			"account": "TDS Payable - -TCNI_",
+			"cost_center": "Main - -TCNI_",
+			"conditions": [
+				{
+					"from_value": 1,
+					"to_value": 9,
+					"shipping_amount": 100
+				},
+				{
+					"from_value": 10,
+					"to_value": 0,
+					"shipping_amount": 120
+				}
+			],
+			"countries":[
+				{
+					"country": "Australia"
+				}
+			]
+		}).insert()
+
+		po = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"supplier": supplier,
+			"company": company,
+			"schedule_date": today(),
+			"set_warehouse": warehouse,
+			"currency": "AUD",
+			"conversion_rate": 53.352000000,
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": 15,
+					"rate": 1.87,
+					"warehouse": warehouse,
+				}
+			],
+			"shipping_rule": shipping_rule.name
+		})
+		po.insert()
+		po.submit()
+		self.assertEqual(po.docstatus, 1)
+		self.assertEqual(po.taxes_and_charges_added, 2.25)
+		self.assertEqual(po.grand_total, 30.30)
+		self.assertEqual(po.base_grand_total,  1616.57)
+
+		pr = frappe.get_doc({
+			"doctype": "Purchase Receipt",
+			"supplier": po.supplier,
+			"company": po.company,
+			"posting_date": today(),
+			"set_warehouse": warehouse,
+			"currency": po.currency,
+			"conversion_rate": po.conversion_rate,
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": 15,
+					"rate": 1.87,
+					"purchase_order": po.name
+				}
+			],
+			"shipping_rule": shipping_rule.name
+		})
+		pr.insert()
+		pr.submit()
+		self.assertEqual(pr.docstatus, 1)
+		self.assertEqual(pr.taxes_and_charges_added, 2.25)
+		self.assertEqual(pr.grand_total, 30.30)
+		self.assertEqual(pr.base_grand_total,  1616.57)
+		get_pr_stock_ledger = frappe.db.get_all("Stock Ledger Entry",{"voucher_no": pr.name}, ['valuation_rate', 'actual_qty'])
+		self.assertTrue(get_pr_stock_ledger)
+		# Create Purchase Invoice from Purchase Receipt
+		pi = frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"supplier": pr.supplier,
+			"company": pr.company,
+			"credit_to": "Creditors - -TCNI_",
+			"currency": pr.currency,
+			"conversion_rate": pr.conversion_rate,
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": 15,
+					"rate": 1.87,
+					"purchase_receipt": pr.name
+				}
+			],
+			"shipping_rule": shipping_rule.name,
+		})
+		pi.insert()
+		pi.submit()
+		self.assertEqual(pi.docstatus, 1)
+		self.assertEqual(pi.taxes_and_charges_added, 2.25)
+		self.assertEqual(pi.grand_total, 30.30)
+		self.assertEqual(pi.base_grand_total,  1616.57)
+
+		pe = frappe.get_doc({
+			"doctype": "Payment Entry",
+			"payment_type": "Pay",
+			"posting_date": today(),
+			"company": pi.company,
+			"mode_of_payment": "Cash",
+			"party_type": "Supplier",
+			"party": pi.supplier,
+			"paid_from": "Cash - -TCNI_",
+			"paid_to": "Creditors - -TCNI_",
+			"paid_from_account_currency": "INR",
+			"paid_to_account_currency": "INR",
+			"paid_amount": pi.base_grand_total,
+			"references": [{
+				"reference_doctype": "Purchase Invoice",
+				"reference_name": pi.name,
+				"total_amount": pi.base_grand_total,
+				"allocated_amount": pi.base_grand_total,
+				"outstanding_amount": 0,
+				"exchange_rate": 1,
+			}],
+			"received_amount": pi.base_grand_total
+		})
+		pe.insert()
+		pe.submit()
+		self.assertEqual(pe.docstatus, 1)
+		gl_entries_pr = frappe.get_all("GL Entry", filters={
+			"voucher_type": "Purchase Receipt",
+			"voucher_no": pr.name
+		})
+		self.assertTrue(gl_entries_pr)
+
+		sle_pr = frappe.get_all("Stock Ledger Entry", filters={
+			"voucher_type": "Purchase Receipt",
+			"voucher_no": pr.name
+		})
+		self.assertTrue(sle_pr)
+		gl_entries_pi = frappe.get_all("GL Entry", filters={
+			"voucher_type": "Purchase Invoice",
+			"voucher_no": pi.name
+		})
+		self.assertTrue(gl_entries_pi)
+		pi_outstanding = frappe.db.get_value("Purchase Invoice", pi.name, "outstanding_amount")
+		self.assertEqual(pi_outstanding, 0)
+		gl_entries_pe = frappe.get_all("GL Entry", filters={
+			"voucher_type": "Payment Entry",
+			"voucher_no": pe.name
+		})
+		self.assertTrue(gl_entries_pe)
+
+
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
