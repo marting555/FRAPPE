@@ -5678,6 +5678,35 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		frappe.db.commit()
 
 		self.assertEqual(amended_so.status, "To Deliver and Bill")
+	
+	def test_so_to_si_with_deferred_revenue_item_TC_S_134(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.accounts.doctype.account.test_account import create_account
+		
+		item=make_test_item("_Test Item 1")
+		item.enable_deferred_revenue =1
+		item.no_of_months =5
+		item.save()
+	
+		make_stock_entry(item_code="_Test Item 1", qty=10, rate=5000, target="_Test Warehouse - _TC")
+
+		sales_order = make_sales_order(item='_Test Item 1',qty=1, rate=5000)
+		sales_order.save()
+		sales_order.submit()
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+
+		deferred_account = create_account(
+			account_name="Deferred Revenue",
+			parent_account="Current Liabilities - _TC",
+			company="_Test Company",
+		)
+		si = make_sales_invoice(sales_order.name)
+		si.items[0].enable_deferred_revenue = 1
+		si.items[0].deferred_revenue_account = deferred_account
+		si.save()
+		si.submit()
+		self.assertEqual(si.status, "Unpaid")
+
 
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
