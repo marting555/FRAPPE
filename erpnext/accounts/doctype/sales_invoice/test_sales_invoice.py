@@ -5503,7 +5503,27 @@ class TestSalesInvoice(FrappeTestCase):
 		except Exception as e:
 			error_msg = str(e)
 			self.assertEqual(error_msg,f'Cannot delete or cancel because Sales Invoice {si.name} is linked with Payment Entry {pe.name} at Row: 1')
-    
+
+	def test_si_cancel_amend_with_item_details_change_TC_S_128(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item
+		)
+		
+		make_test_item("_Test Item 1")
+		make_stock_entry(item_code="_Test Item", qty=5, rate=1000, target="_Test Warehouse - _TC")
+		make_stock_entry(item_code="_Test Item 1", qty=5, rate=1000, target="_Test Warehouse - _TC")
+		si = create_sales_invoice(qty=2, rate=500)
+		si.cancel()
+		si.reload()	
+		self.assertEqual(si.status, "Cancelled")
+
+		amended_si = frappe.copy_doc(si)
+		amended_si.docstatus = 0
+		amended_si.amended_from = si.name
+		amended_si.items[0].item_code ='_Test Item 1'
+		amended_si.save()
+		amended_si.submit()
+		self.assertEqual(amended_si.status, "Unpaid")
 	 
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
