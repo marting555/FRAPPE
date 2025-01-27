@@ -12,6 +12,7 @@
   "make",
   "column_break_3",
   "model",
+  "company",
   "vehicle_details",
   "last_odometer",
   "acquisition_date",
@@ -193,6 +194,13 @@
    "options": "Vehicle",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "Company"
   }
  ],
  "links": [],
