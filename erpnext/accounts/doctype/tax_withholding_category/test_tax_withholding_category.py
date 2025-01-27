@@ -608,7 +608,7 @@ class TestTaxWithholdingCategory(FrappeTestCase):
 		pi2.cancel()
 		pi3.cancel()
 
-	def test_lower_deduction_certificate_TC_ACC_090_andTC_ACC_091(self):
+	def test_lower_deduction_certificate_TC_ACC_090_and_TC_ACC_091(self):
 		frappe.db.set_value(
 			"Supplier",
 			"Test LDC Supplier",
