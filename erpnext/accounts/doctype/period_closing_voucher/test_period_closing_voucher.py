@@ -317,6 +317,60 @@ class TestPeriodClosingVoucher(unittest.TestCase):
 		repost_doc.posting_date = today()
 		repost_doc.save()
 
+	def test_auto_ledger_entry_for_income_and_expense_accounts_TC_ACC_089(self):
+		# Cleanup
+		frappe.db.sql("delete from `tabGL Entry` where company='Test PCV Company'")
+		frappe.db.sql("delete from `tabPeriod Closing Voucher` where company='Test PCV Company'")
+		
+		# Create required data
+		company = create_company()
+		surplus_account = create_account()
+		cost_center = create_cost_center("Main")
+		
+		# Create Journal Entries for Income and Expense
+		create_sales_invoice(
+			company=company,
+			cost_center=cost_center,
+			income_account="Sales - TPC",
+			expense_account="Cost of Goods Sold - TPC",
+			rate=1000,
+			debit_to="Debtors - TPC",
+			currency="USD",
+			customer="_Test Customer USD",
+			posting_date="2021-03-15",
+		)
+		
+		# Create a Period Closing Voucher
+		pcv = self.make_period_closing_voucher(posting_date="2021-03-31", submit=False)
+		pcv.save()
+		pcv.submit()
+		surplus_account = pcv.closing_account_head
+		
+		# Fetch GL Entries created by Period Closing Voucher
+		gle = frappe.db.sql(
+			"""
+			SELECT account, debit, credit
+			FROM `tabGL Entry`
+			WHERE voucher_type='Period Closing Voucher' AND voucher_no=%s
+			ORDER BY account
+			""",
+			(pcv.name),
+			as_dict=True,
+		)
+		# Expected entries: Surplus Account, Sales (income), and Expense accounts
+		expected_gle = [
+			{"account": surplus_account, "debit": 0.0, "credit": 1000.0},
+			{"account": "Sales - TPC", "debit": 1000.0, "credit": 0.0},	
+		]
+		
+		# Assert GL Entries match the expected outcome
+		self.assertEqual(len(gle), len(expected_gle))
+		for i, entry in enumerate(expected_gle):
+			self.assertEqual(gle[i]["account"], entry["account"])
+			self.assertEqual(gle[i]["debit"], entry["debit"])
+			self.assertEqual(gle[i]["credit"], entry["credit"])
+
+
 	def make_period_closing_voucher(self, posting_date, submit=True):
 		surplus_account = create_account()
 		cost_center = create_cost_center("Test Cost Center 1")
@@ -350,7 +404,10 @@ def create_company():
 			"default_currency": "USD",
 		}
 	)
-	company.insert(ignore_if_duplicate=True)
+	try:
+		company.insert(ignore_if_duplicate=True)
+	except frappe.DuplicateEntryError:
+		pass
 	return company.name
 
 
