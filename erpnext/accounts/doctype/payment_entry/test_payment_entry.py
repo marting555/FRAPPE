@@ -1967,7 +1967,73 @@ class TestPaymentEntry(FrappeTestCase):
 					}
 					]
 			self.assertEqual(gl,expected_result)
-    
+
+	def test_tds_computation_summary_report_TC_ACC_095(self):
+		from frappe.desk.query_report import get_report_result
+		company = "_Test Company"
+		create_records('_Test Supplier TDS Testing For PE')
+		supplier=frappe.get_doc("Supplier",'_Test Supplier TDS Testing For PE')
+		if supplier:
+			self.assertEqual(supplier.tax_withholding_category,"Test - TDS - 194C - Company")
+			
+			tax_withholding_category=frappe.get_doc("Tax Withholding Category","Test - TDS - 194C - Company")
+			
+			if len(tax_withholding_category.accounts) >0:
+				self.assertEqual(tax_withholding_category.accounts[0].account,"_Test TDS Payable - _TC")
+			
+			payment_entry=create_payment_entry(
+				party_type="Supplier",
+				party=supplier.name,
+				payment_type="Pay",
+				paid_from="Cash - _TC",
+				paid_to="Creditors - _TC",
+				save=True
+			)
+			payment_entry.apply_tax_withholding_amount=1
+			payment_entry.tax_withholding_category="Test - TDS - 194C - Company"
+			payment_entry.paid_amount=80000
+			payment_entry.append(
+						"taxes",
+						{
+							"account_head": "_Test TDS Payable - _TC",
+							"charge_type": "On Paid Amount",
+							"rate": 0,
+							"add_deduct_tax": "Deduct",
+							"description": "Cash",
+						},
+					)
+			payment_entry.save()
+			payment_entry.submit()
+			# Fetch the TDS Computation Summary report
+			report_name = "TDS Computation Summary"
+			filters = {
+				"company": company,
+				"party_type": "Supplier",
+				"from_date": add_days(nowdate(), -30),
+				"to_date": nowdate(),
+			}
+			report = frappe.get_doc("Report", report_name)
+			report_data = get_report_result(report, filters) or []
+			rows = report_data[1]
+			expected_data = {
+				"party": supplier.name,
+				"section_code": tax_withholding_category.name,
+				"entity_type": "Company",
+				"rate": 10.0,  # TDS rate
+				"total_amount": 30000.0,  # Total amount for the invoice
+				"tax_amount": 3000.0,  # TDS amount deducted
+			}	
+			matching_row = None
+			for row in rows:
+				if row["party"] == expected_data["party"] and row["section_code"] == expected_data["section_code"]:
+					matching_row = row
+					break
+
+			# Assert the matching row exists
+			self.assertIsNotNone(matching_row, "The expected row for the supplier and section code was not found.")
+			payment_entry.cancel()
+
+
 	def test_link_advance_payment_with_purchase_invoice_TC_ACC_022(self):
 		create_records('_Test Supplier TDS')
 		supplier=frappe.get_doc("Supplier","_Test Supplier TDS")
