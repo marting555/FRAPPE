@@ -713,10 +713,10 @@ erpnext.utils.update_child_items = function (opts) {
 							);
 							if (row) {
 								Object.assign(row, {
-									conversion_factor: me.doc.conversion_factor || conversion_factor,
-									uom: me.doc.uom || uom,
-									qty: me.doc.qty || qty,
-									rate: me.doc.rate || rate,
+									conversion_factor: conversion_factor,
+									uom: uom,
+									qty: qty,
+									rate: rate,
 								});
 								dialog.fields_dict.trans_items.grid.refresh();
 							}
