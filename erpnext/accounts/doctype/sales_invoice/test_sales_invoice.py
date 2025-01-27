@@ -5524,7 +5524,25 @@ class TestSalesInvoice(FrappeTestCase):
 		amended_si.save()
 		amended_si.submit()
 		self.assertEqual(amended_si.status, "Unpaid")
-	 
+		
+	def test_si_cancel_amend_with_customer_change_TC_S_129(self):
+
+		create_customer(customer_name="_Test Customer Selling",company="_Test Company")
+		make_stock_entry(item_code="_Test Item", qty=5, rate=1000, target="_Test Warehouse - _TC")
+
+		si = create_sales_invoice(qty=2, rate=500)
+		si.cancel()
+		si.reload()	
+		self.assertEqual(si.status, "Cancelled")
+
+		amended_si = frappe.copy_doc(si)
+		amended_si.docstatus = 0
+		amended_si.amended_from = si.name
+		amended_si.customer = '_Test Customer Selling'
+		amended_si.save()
+		amended_si.submit()
+		self.assertEqual(amended_si.status, "Unpaid")
+
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
