@@ -5585,6 +5585,29 @@ class TestSalesInvoice(FrappeTestCase):
 
 		self.assertEqual(amended_si.status, "Unpaid")
 
+	def test_si_with_deferred_revenue_item_TC_S_135(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.accounts.doctype.account.test_account import create_account
+		
+		item=make_test_item("_Test Item 1")
+		item.enable_deferred_revenue =1
+		item.no_of_months =5
+		item.save()
+	
+		make_stock_entry(item_code="_Test Item 1", qty=10, rate=5000, target="_Test Warehouse - _TC")
+
+		deferred_account = create_account(
+			account_name="Deferred Revenue",
+			parent_account="Current Liabilities - _TC",
+			company="_Test Company",
+		)
+		si = create_sales_invoice(item=item.name, qty=5,rate=3000, do_not_submit=True)
+		si.items[0].enable_deferred_revenue = 1
+		si.items[0].deferred_revenue_account = deferred_account
+		si.save()
+		si.submit()
+		self.assertEqual(si.status, "Unpaid")	
+
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
