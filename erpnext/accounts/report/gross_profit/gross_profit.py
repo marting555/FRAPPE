@@ -201,6 +201,9 @@ def get_data_when_grouped_by_invoice(columns, gross_profit_data, filters, group_
 		frappe._dict(
 			{
 				"sales_invoice": "Total",
+				"qty": None,
+				"avg._selling_rate": None,
+				"valuation_rate": None,
 				"selling_amount": total_base_amount,
 				"buying_amount": total_buying_amount,
 				"gross_profit": total_gross_profit,
