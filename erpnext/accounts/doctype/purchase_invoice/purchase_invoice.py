@@ -783,6 +783,36 @@ class PurchaseInvoice(BuyingController):
 
 		self.process_common_party_accounting()
 
+	def before_update_after_submit(self):
+		if self.apply_tds and self.tax_withheld_vouchers:
+			self.remove_canceled_tax_withheld_vouchers()
+
+	def remove_canceled_tax_withheld_vouchers(self):
+		purchase_invoice = frappe.qb.DocType("Purchase Invoice")
+		tax_withheld_vouchers = frappe.qb.DocType("Tax Withheld Vouchers")
+
+		cancelled_vouchers = (
+			frappe.qb.from_(tax_withheld_vouchers)
+			.inner_join(purchase_invoice)
+			.on(
+				(tax_withheld_vouchers.voucher_name == purchase_invoice.name)
+				& (tax_withheld_vouchers.voucher_type == "Purchase Invoice")
+			)
+			.select(purchase_invoice.name)
+			.where((purchase_invoice.docstatus == 2) & (tax_withheld_vouchers.parent == self.name))
+		).run()
+
+		cancelled_vouchers = [voucher[0] for voucher in cancelled_vouchers]
+		if cancelled_vouchers:
+			frappe.db.delete(
+				"Tax Withheld Vouchers", {"voucher_name": ["in", cancelled_vouchers], "parent": self.name}
+			)
+
+			for idx, row in enumerate(self.tax_withheld_vouchers):
+				row.db_set("idx", idx + 1)
+
+			self.reload()
+
 	def on_update_after_submit(self):
 		fields_to_check = [
 			"cash_bank_account",
