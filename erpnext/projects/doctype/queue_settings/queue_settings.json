@@ -7,6 +7,7 @@
  "field_order": [
   "auto_move_paused",
   "aws_url",
+  "cars_per_day",
   "job_workload_status"
  ],
  "fields": [
@@ -26,12 +27,20 @@
    "fieldtype": "Table",
    "label": "Job Workload Status",
    "options": "Job Workload Item"
+  },
+  {
+   "default": "4",
+   "fieldname": "cars_per_day",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Cars per day",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-11-25 20:29:07.829213",
+ "modified": "2025-01-14 20:52:37.025632",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Queue Settings",

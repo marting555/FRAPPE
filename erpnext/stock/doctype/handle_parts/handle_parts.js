@@ -164,7 +164,7 @@ frappe.ui.form.on("Handle Parts", {
             });
             return;
         }
-    
+
         const response = await fetch(data.parts_errors_url);
         if (response.ok) {
             const errors = await response.json();
@@ -176,8 +176,8 @@ frappe.ui.form.on("Handle Parts", {
                 })
             }
             const createdAt = errors.length > 0 ? errors[0].created_at : '';
-            const title = __('Parts Errors was no created. Fields are missing');
-    
+            const title = __('Parts Errors was no created. Fields are missing and are required.');
+
             let dialog = new frappe.ui.Dialog({
                 title: title,
                 fields: [
@@ -194,7 +194,7 @@ frappe.ui.form.on("Handle Parts", {
                 keyboard: false,
                 size: "1024px"
             });
-    
+
             dialog.show();
             dialog.$wrapper.find('.modal-dialog').css("width", "90%").css("max-width", "90%");
             frm.page.clear_indicator();
@@ -276,16 +276,12 @@ function generate_parts_error_table(errors, createdAt) {
                 <tr>
                     <th>Item Code</th>
                     <th>Item Name</th>
-                    <th>Item Group</th>
-                    <th>Stock UOM</th>
                     <th>Item Category</th>
                     <th>Sub Category Name</th>
                     <th>Condition</th>
                     <th>Brand</th>
                     <th>Supplier</th>
                     <th>TVS PN</th>
-                    <th>OE PN</th>
-                    <th>OEM PN</th>
                 </tr>
             </thead>
             <tbody>
@@ -305,16 +301,12 @@ function generate_parts_error_table(errors, createdAt) {
             <tr>
                 <td style="${!error.item_code ? 'background-color: #f8d7da;' : ''}">${error.item_code || ''}</td>
                 <td style="${!error.item_name ? 'background-color: #f8d7da;' : ''}">${error.item_name || ''}</td>
-                <td style="${!error.item_group ? 'background-color: #f8d7da;' : ''}">${error.item_group || ''}</td>
-                <td style="${!error.stock_uom ? 'background-color: #f8d7da;' : ''}">${error.stock_uom || ''}</td>
                 <td style="${!error.item_category ? 'background-color: #f8d7da;' : ''}">${error.item_category || ''}</td>
                 <td style="${!error.sub_category_name ? 'background-color: #f8d7da;' : ''}">${error.sub_category_name || ''}</td>
                 <td style="${!error.condition ? 'background-color: #f8d7da;' : ''}">${error.condition || ''}</td>
                 <td style="${!error.brand ? 'background-color: #f8d7da;' : ''}">${error.brand || ''}</td>
                 <td style="${!error.supplier ? 'background-color: #f8d7da;' : ''}">${error.supplier || ''}</td>
                 <td style="${!error.tvs_pn ? 'background-color: #f8d7da;' : ''}">${error.tvs_pn || ''}</td>
-                <td style="${!error.oe_pn ? 'background-color: #f8d7da;' : ''}">${error.oe_pn || ''}</td>
-                <td style="${!error.oem_pn ? 'background-color: #f8d7da;' : ''}">${error.oem_pn || ''}</td>
             </tr>
         `;
     });
