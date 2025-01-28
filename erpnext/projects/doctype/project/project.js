@@ -171,7 +171,7 @@ frappe.ui.form.on("Project", {
 			})
 		}
 
-		if (! await erpnext.utils.isWorkshopViewer(this.frm)) {
+		if (!await erpnext.utils.isWorkshopViewer(this.frm)) {
 			installChat(frm);
 			installQuotationItems(frm);
 			insertCarousel(frm);
@@ -715,7 +715,7 @@ function showSentMessageAfterRemoteDiagnoseDialog(project_name) {
 	dialog.show();
 }
 async function insertResendPaymentLink(frm) {
-	if (!["Completed", "Cancelled"].includes(frm.doc.status)) {
+	if (["Quality check approved"].includes(frm.doc.status)) {
 		frm.add_custom_button(__('Resend Payment Link'), () => {
 			var d = new frappe.ui.Dialog({
 				title: __("The message and payment Link will be sent to the client"),
