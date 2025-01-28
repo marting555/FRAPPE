@@ -8,6 +8,7 @@ import frappe
 from erpnext.accounts.doctype.tax_rule.tax_rule import ConflictingTaxRule, get_tax_template
 from crm.crm.doctype.opportunity.opportunity import make_quotation
 from crm.crm.doctype.opportunity.test_opportunity import make_opportunity
+from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import  create_sales_invoice
 
 test_records = frappe.get_test_records("Tax Rule")
 
@@ -288,6 +289,30 @@ class TestTaxRule(unittest.TestCase):
 
 		# Check if accounts heads and rate fetched are also fetched from tax template or not
 		self.assertTrue(len(quotation.taxes) > 0)
+
+	def test_create_tax_rule_and_apply_to_sales_invoice_TC_ACC_101(self):
+		# Step 1: Create a tax rule for a customer with a sales tax template
+		make_tax_rule(
+			customer="_Test Customer",
+			sales_tax_template="_Test Sales Taxes and Charges Template - _TC",
+			save=1,
+		)
+
+		# Step 3: Create a sales invoice for the customer
+		sales_invoice = create_sales_invoice(
+			customer="_Test Customer",
+			save=1,
+		)
+
+		# Step 4: Fetch the sales tax based on the created tax rule and check the tax rate applied
+		applied_tax_template = sales_invoice.taxes_and_charges
+		
+		# Step 5: Assert that the correct tax template is applied based on the customer's tax rule
+		self.assertEqual(
+			applied_tax_template,
+			"_Test Sales Taxes and Charges Template - _TC",
+		)
+
 
 
 def make_tax_rule(**args):
