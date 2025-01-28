@@ -1159,7 +1159,6 @@ class TestPricingRule(FrappeTestCase):
 
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule with Min Qty - 1")
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule with Min Qty - 2")
-		pi = make_purchase_invoice(do_not_submit=True, supplier="_Test Supplier 1", qty=1)
 
 	def test_pricing_rules_with_min_qty_for_pi_TC_ACC_104(self):
 		make_pricing_rule(
