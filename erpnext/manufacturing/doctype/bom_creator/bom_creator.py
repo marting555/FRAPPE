@@ -204,7 +204,7 @@ class BOMCreator(Document):
 
 		for field, label in fields.items():
 			if not self.get(field):
-				frappe.throw(_("Please set {0} in BOM Creator {1}").format(label, self.name))
+				frappe.throw(_("Please set {0} in BOM Creator {1}").format(_(label), self.name))
 
 	def on_submit(self):
 		self.enqueue_create_boms()
@@ -471,7 +471,7 @@ def get_parent_row_no(doc, name):
 			return row.idx
 	frappe.msgprint(_("Parent Row No not found for {0}").format(name))
 
-	
+
 
 @frappe.whitelist()
 def delete_node(**kwargs):
