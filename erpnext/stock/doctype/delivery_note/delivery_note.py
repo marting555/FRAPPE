@@ -720,7 +720,7 @@ class DeliveryNote(SellingController):
 				if (
 					item.item_code not in product_bundle_list
 					and flt(item.packed_qty)
-					and flt(item.packed_qty) != flt(item.qty)
+					and flt(item.packed_qty) != flt(item.stock_qty)
 				):
 					frappe.throw(
 						_("Row {0}: Packed Qty must be equal to {1} Qty.").format(
@@ -808,7 +808,7 @@ class DeliveryNote(SellingController):
 		product_bundle_list = self.get_product_bundle_list()
 
 		for item in self.items + self.packed_items:
-			if item.item_code not in product_bundle_list and flt(item.packed_qty) < flt(item.qty):
+			if item.item_code not in product_bundle_list and flt(item.packed_qty) < flt(item.stock_qty):
 				return True
 
 		return False
@@ -1108,7 +1108,7 @@ def make_packing_slip(source_name, target_doc=None):
 		target.run_method("set_missing_values")
 
 	def update_item(obj, target, source_parent):
-		target.qty = flt(obj.qty) - flt(obj.packed_qty)
+		target.qty = flt(obj.stock_qty) - flt(obj.packed_qty)
 
 	doclist = get_mapped_doc(
 		"Delivery Note",
@@ -1126,7 +1126,7 @@ def make_packing_slip(source_name, target_doc=None):
 					"item_name": "item_name",
 					"batch_no": "batch_no",
 					"description": "description",
-					"qty": "qty",
+					"stock_qty": "qty",
 					"stock_uom": "stock_uom",
 					"name": "dn_detail",
 				},

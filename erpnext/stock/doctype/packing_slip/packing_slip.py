@@ -41,7 +41,7 @@ class PackingSlip(StatusUpdater):
 				"join_field": "dn_detail",
 				"target_field": "packed_qty",
 				"target_parent_dt": "Delivery Note",
-				"target_ref_field": "qty",
+				"target_ref_field": "stock_qty",
 				"source_dt": "Packing Slip Item",
 				"source_field": "qty",
 			},
@@ -132,7 +132,7 @@ class PackingSlip(StatusUpdater):
 			remaining_qty = frappe.db.get_value(
 				"Delivery Note Item" if item.dn_detail else "Packed Item",
 				{"name": item.dn_detail or item.pi_detail, "docstatus": 0},
-				["sum(qty - packed_qty)"],
+				[f"sum({'stock_qty' if item.dn_detail else 'qty'} - packed_qty)"],
 			)
 
 			if remaining_qty is None:
