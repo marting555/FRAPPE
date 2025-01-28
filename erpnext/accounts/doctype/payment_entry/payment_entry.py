@@ -1683,6 +1683,7 @@ class PaymentEntry(AccountsController):
 			return self.paid_from
 
 	def get_value_in_transaction_currency(self, account_currency, gl_dict, field):
+		# Convert base currency to transaction currency
 		company_currency = erpnext.get_company_currency(self.company)
 		conversion_rate = self.target_exchange_rate
 		if self.paid_from_account_currency != company_currency:
