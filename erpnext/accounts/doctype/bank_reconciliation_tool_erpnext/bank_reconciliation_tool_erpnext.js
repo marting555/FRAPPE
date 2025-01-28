@@ -521,10 +521,10 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 			},
 		});
 		setTimeout(() => {
-			if (!(frm.doc.bank_statement.length) && !(frm.doc.erp_transaction.length)){
+			if (!(frm.doc.bank_statement.length) && !(frm.doc.erp_transaction.length)) {
 				frappe.throw("No records found")
 			}
-		}, 500);
+		}, 700);
 	},
 
 	update_bal(frm) {

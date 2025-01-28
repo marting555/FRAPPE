@@ -271,14 +271,16 @@ def get_erp_transaction(bank_account, company, from_statement_date=None, to_stat
             """, (company, from_statement_date, to_statement_date, account,), as_dict=True) or ''
             if not unlinked_journal_entries:
                print(f"No unlinked journal entries found for account: {account}")
-            print(unlinked_journal_entries)
+            # print(unlinked_journal_entries)
+            if unlinked_journal_entries:
+                result.extend(unlinked_journal_entries)
         except Exception as e:
             print(f"Error occurred: {e}")
 
         if unlinked_payment_entries:
             result.extend(unlinked_payment_entries)
-        elif unlinked_journal_entries:
-            result.extend(unlinked_journal_entries)
+        # elif unlinked_journal_entries:
+        #     result.extend(unlinked_journal_entries)
 
         for payment in result:
             if payment['doctype'] == "Journal Entry":
