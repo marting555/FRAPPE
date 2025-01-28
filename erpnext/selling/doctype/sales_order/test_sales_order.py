@@ -5431,6 +5431,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 	def test_so_to_si_with_loyalty_point_creating_payment_TC_S_108(self):
 		from erpnext.accounts.doctype.loyalty_program.loyalty_program import get_loyalty_program_details_with_points
+		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="_Test Warehouse - _TC")
 
 		so = make_sales_order(qty=4,rate=5000)	
@@ -5467,7 +5468,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		si.submit()
 		self.assertEqual(si.status, "Partly Paid")
 
-		pe=self.create_and_submit_payment_entry(dt="Sales Invoice", dn=si.name)
+		pe = get_payment_entry(dt="Sales Invoice",dn=si.name)
+		pe.save()
+		pe.submit()
+		self.assertEqual(pe.status, 'Submitted')
 		si.reload()
 		self.assertEqual(si.status, "Paid")
 	
