@@ -5722,6 +5722,20 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(si.grand_total,900)
 		self.assertEqual(si.status, "Unpaid")
 
+	def test_so_to_si_with_manual_discount_net_total_TC_S_137(self):
+		make_stock_entry(item_code="_Test Item", qty=10, rate=100, target="_Test Warehouse - _TC")
+		so = make_sales_order(qty=10, rate=100)
+		self.assertEqual(so.status, "To Deliver and Bill")
+
+		si = make_sales_invoice(so.name)
+		
+		self.assertEqual(si.grand_total,1000)
+		si.apply_discount_on = 'Net Total'
+		si.additional_discount_percentage = 10
+		si.save()
+		si.submit()
+		self.assertEqual(si.grand_total,900)
+		self.assertEqual(si.status, "Unpaid")
 
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
