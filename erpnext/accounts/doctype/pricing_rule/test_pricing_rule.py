@@ -1137,6 +1137,29 @@ class TestPricingRule(FrappeTestCase):
 		so.save()
 		self.assertEqual(len(so.items), 1)
 
+	def test_pricing_rules_with_min_qty_for_si_TC_ACC_103(self):
+		make_pricing_rule(
+			discount_percentage=10,
+			selling=1,
+			priority=2,
+			min_qty=4,
+			title="_Test Pricing Rule with Min Qty - 2",
+		)
+
+		si = create_sales_invoice(do_not_submit=True, customer="_Test Customer 1", qty=1)
+		item = si.items[0]
+		item.stock_qty = 1
+		si.save()
+		self.assertFalse(item.discount_percentage)
+		item.qty = 5
+		item.stock_qty = 5
+		si.save()
+		self.assertEqual(item.discount_percentage, 10)
+		si.delete()
+
+		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule with Min Qty - 1")
+		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule with Min Qty - 2")
+
 	def test_pricing_rule_for_product_free_item_round_free_qty(self):
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
 		test_record = {
