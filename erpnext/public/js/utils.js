@@ -568,7 +568,7 @@ erpnext.utils.select_alternate_items = function (opts) {
 					qty = row.qty;
 				}
 				row[item_field] = d.alternate_item;
-				frappe.model.set_value(row.doctype, row.name, "qty", qty);
+				frappe.model.set_value(row.doctype, row.name, "required_qty", qty);
 				frappe.model.set_value(row.doctype, row.name, opts.original_item_field, d.item_code);
 				frm.trigger(item_field, row.doctype, row.name);
 			});
