@@ -5585,6 +5585,56 @@ class TestSalesInvoice(FrappeTestCase):
 
 		self.assertEqual(amended_si.status, "Unpaid")
 
+	def test_si_credit_note_cancel_amend_with_payment_terms_change_TC_S_131(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_terms_template
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_term
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_sales_return
+
+		make_stock_entry(item_code="_Test Item", qty=5, rate=1000, target="_Test Warehouse - _TC")
+		create_payment_term("Basic Amount Receivable for Selling")
+
+		if not frappe.db.exists("Payment Terms Template", "Test Receivable Template Selling"):
+			frappe.get_doc(
+				{
+					"doctype": "Payment Terms Template",
+					"template_name": "Test Receivable Template Selling",
+					"allocate_payment_based_on_payment_terms": 1,
+					"terms": [
+						{
+							"doctype": "Payment Terms Template Detail",
+							"payment_term": "Basic Amount Receivable for Selling",
+							"invoice_portion": 100,
+							"credit_days_based_on": "Day(s) after invoice date",
+							"credit_days": 1,
+						}
+					],
+				}
+			).insert()
+
+		create_payment_terms_template()
+		si = create_sales_invoice(qty=2, rate=500,do_not_save=True)
+		si.payment_terms_template ='Test Receivable Template'
+		si.save()
+		si.submit()
+		self.assertEqual(si.status, "Unpaid")
+
+		sir=make_sales_return(si.name)
+		sir.save()
+		sir.submit()
+		sir.cancel()
+		self.assertEqual(sir.status, "Cancelled")
+
+
+		amended_sir = frappe.copy_doc(sir)
+		amended_sir.docstatus = 0
+		amended_sir.amended_from = sir.name
+		amended_sir.payment_terms_template = 'Test Receivable Template Selling'
+		amended_sir.save()
+		amended_sir.submit()
+
+		self.assertEqual(amended_sir.status, "Return")
+
+
 	def test_si_with_deferred_revenue_item_TC_S_135(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		from erpnext.accounts.doctype.account.test_account import create_account
