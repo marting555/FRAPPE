@@ -3818,7 +3818,39 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 					total_amount += item_wise_tax_detail["_Test GST Item"][1]
 			self.assertEquals(total_tax,rate.get('total_tax'))
 			self.assertEquals(total_amount,rate.get('total_amount'))
-  
+	def test_supplier_invoice_number_uniqueness_validation_TC_ACC_136(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+
+		account_setting=frappe.get_doc("Accounts Settings")
+		account_setting.check_supplier_invoice_uniqueness=1
+		account_setting.save()
+		item = make_test_item("_Test Item")
+
+		pi = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item_code=item.name,
+			qty=1,
+			rate=1000,
+			do_not_submit=True
+		)
+		pi.bill_no="ADF01234"
+		pi.save()
+		pi.submit()
+		try:
+			_pi = make_purchase_invoice(
+				supplier="_Test Supplier",
+				company="_Test Company",
+				item_code=item.name,
+				qty=1,
+				rate=1000,
+				do_not_submit=True
+			)
+			_pi.bill_no="ADF01234"
+			_pi.save()
+		except Exception as e:
+			error_msg = str(e)
+			self.assertEqual(error_msg, f'Supplier Invoice No exists in Purchase Invoice {pi.name}')
 	
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
