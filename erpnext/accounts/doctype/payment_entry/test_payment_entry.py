@@ -1900,7 +1900,7 @@ class TestPaymentEntry(FrappeTestCase):
 		rate=2,
 		from_date=frappe.utils.get_date_str('01-04-2024'),
 		to_date=frappe.utils.get_date_str('31-03-2025'),
-		account="Test TDS Payable - _TC",
+		account="_Test TDS Payable - _TC",
 		single_threshold=30000,
 		cumulative_threshold=100000,
 		consider_party_ledger_amount=1,
@@ -1961,7 +1961,7 @@ class TestPaymentEntry(FrappeTestCase):
 					'against_voucher': None
 					},
 					{
-					'account': '_Test TDS Payable - _TC', 
+					'account': 'Test TDS Payable - _TC', 
 					'debit': 0.0, 'credit': 1600.0, 
 					'against_voucher': None
 					}
