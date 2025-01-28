@@ -2489,6 +2489,50 @@ class TestDeliveryNote(FrappeTestCase):
 		amended_dn.submit()
 		self.assertEqual(amended_dn.status, "To Bill")
 
+	def test_so_to_2dn_with_2si_TC_S_133(self):
+		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+
+		make_stock_entry(item_code="_Test Item", qty=5, rate=5000, target="_Test Warehouse - _TC")
+
+		so = make_sales_order(qty=4,rate=4000)
+		so.submit()
+
+		self.assertEqual(so.status, "To Deliver and Bill")
+
+		dn1 = make_delivery_note(so.name)
+		for item in dn1.items:
+			item.qty = 2
+		dn1.save()
+		dn1.submit()
+		so.reload()
+		self.assertEqual(dn1.status, "To Bill")
+		self.assertEqual(so.status, "To Deliver and Bill")
+
+		dn2 = make_delivery_note(so.name)
+		dn2.submit()
+		so.reload()
+		self.assertEqual(dn2.status, "To Bill")
+		self.assertEqual(so.status, "To Bill")
+
+		si1 = make_sales_invoice(dn1.name)
+		si1.save()
+		si1.submit()
+
+		si2 = make_sales_invoice(dn2.name)
+		si2.save()
+		si2.submit()
+		so.reload()
+		dn1.reload()
+		dn2.reload()
+		self.assertEqual(si1.status, "Unpaid")
+		self.assertEqual(si2.status, "Unpaid")
+		self.assertEqual(so.status, "Completed")
+		self.assertEqual(dn1.status, "Completed")
+		self.assertEqual(dn2.status, "Completed")
+
+
+
 def create_delivery_note(**args):
 	dn = frappe.new_doc("Delivery Note")
 	args = frappe._dict(args)
