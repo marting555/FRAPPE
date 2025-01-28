@@ -1159,6 +1159,30 @@ class TestPricingRule(FrappeTestCase):
 
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule with Min Qty - 1")
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule with Min Qty - 2")
+		pi = make_purchase_invoice(do_not_submit=True, supplier="_Test Supplier 1", qty=1)
+
+	def test_pricing_rules_with_min_qty_for_pi_TC_ACC_104(self):
+		make_pricing_rule(
+			discount_percentage=10,
+			buying=1,
+			priority=1,
+			min_qty=4,
+			title="_Test Pricing Rule",
+		)
+
+		pi = make_purchase_invoice(do_not_submit=True, supplier="_Test Supplier 1", qty=1)
+		item = pi.items[0]
+		item.stock_qty = 1
+		pi.save()
+		self.assertFalse(item.discount_percentage)
+		item.qty = 5
+		item.stock_qty = 5
+		pi.save()
+		self.assertEqual(item.discount_percentage, 10)
+		pi.delete()
+
+		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule with Min Qty - 1")
+		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule with Min Qty - 2")
 
 	def test_pricing_rule_for_product_free_item_round_free_qty(self):
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
