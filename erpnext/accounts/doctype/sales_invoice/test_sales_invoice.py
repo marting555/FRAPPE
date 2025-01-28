@@ -5678,6 +5678,27 @@ class TestSalesInvoice(FrappeTestCase):
 
 		self.assertEqual(si.total_taxes_and_charges, 100)
 		self.assertEqual(si.grand_total, 1100)
+
+	def test_si_with_sr_calculate_with_net_total_TC_S_140(self):
+		from erpnext.accounts.doctype.shipping_rule.test_shipping_rule import create_shipping_rule
+
+		shipping_rule = create_shipping_rule(
+			shipping_rule_type="Selling", 
+			shipping_rule_name="Shipping Rule - Test Net Total",
+			args={"calculate_based_on": "Net Total"}
+    	)
+		self.assertEqual(shipping_rule.docstatus, 1)
+		make_stock_entry(item_code="_Test Item", qty=10, rate=500, target="_Test Warehouse - _TC")
+		si = create_sales_invoice(qty=5,rate=200, do_not_submit=True)
+
+		si.shipping_rule = shipping_rule.name
+		si.save()
+		si.submit()
+
+		self.assertEqual(si.net_total, 1000)
+
+		self.assertEqual(si.total_taxes_and_charges, 200)
+		self.assertEqual(si.grand_total, 1200)
 		
 	def test_fetch_payment_terms_from_order_TC_ACC_129(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
