@@ -5504,7 +5504,161 @@ class TestSalesInvoice(FrappeTestCase):
 			error_msg = str(e)
 			self.assertEqual(error_msg,f'Cannot delete or cancel because Sales Invoice {si.name} is linked with Payment Entry {pe.name} at Row: 1')
     
-	 
+	def test_fetch_payment_terms_from_order_TC_ACC_129(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item
+		)
+		from erpnext.selling.doctype.sales_order.test_sales_order import (
+			 make_sales_order,
+			 make_sales_invoice	
+		)
+
+		account_setting = frappe.get_doc("Accounts Settings")
+		account_setting.automatically_fetch_payment_terms=1
+		account_setting.save()
+		
+		item = make_test_item("_Test Item")
+
+		so = make_sales_order(
+			customer="_Test Customer",
+			company="_Test Company",
+			item_code=item.name,
+			qty=1,
+			rate=1000,
+			do_not_submit=True
+		)
+		so.payment_terms_template="_Test Payment Term Template"
+		so.save().submit()
+
+		si = make_sales_invoice(so.name)
+		self.assertEquals(si.payment_terms_template,"_Test Payment Term Template")
+	
+	def test_generate_sales_invoice_with_items_different_gst_rates_TC_ACC_131(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		import json
+
+		item = make_test_item("_Test GST Item")
+
+		gst_rates = [
+			{"rate": 5, "template": "GST 5% - _TC", "range": (500, 1000)},
+			{"rate": 12, "template": "GST 12% - _TC", "range": (1001, 10000)},
+			{"rate": 18, "template": "GST 18% - _TC", "range": (10001, 100000)}
+		]
+
+		if not item.taxes:
+			for gst in gst_rates:
+				item.append('taxes', {
+					"item_tax_template": gst["template"],
+					"valid_from": frappe.utils.add_months(nowdate(), -1),
+					"minimum_net_rate": gst["range"][0],
+					"maximum_net_rate": gst["range"][1]
+				})
+				item.save()
+		rate_tax=[
+			{"total_amount":25,"total_tax":5,"item_rate":500},
+			{"total_amount":132,"total_tax":12,"item_rate":1100},
+			{"total_amount":1980,"total_tax":18,"item_rate":11000}
+			]
+		for rate in rate_tax:
+			si = create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				item_code=item.name,
+				qty=1,
+				rate=rate.get('item_rate'),
+				do_not_submit=True
+			)
+			si.taxes_and_charges="Output GST In-state - _TC"
+			si.save()
+			total_tax=0.0
+			total_amount=0.0
+			for taxes in si.taxes:
+				item_wise_tax_detail = taxes.item_wise_tax_detail
+				
+				if isinstance(item_wise_tax_detail, str):
+					item_wise_tax_detail = json.loads(item_wise_tax_detail)
+				
+				if "_Test GST Item" in item_wise_tax_detail:
+					total_tax += item_wise_tax_detail["_Test GST Item"][0]
+					total_amount += item_wise_tax_detail["_Test GST Item"][1]
+			self.assertEquals(total_tax,rate.get('total_tax'))
+			self.assertEquals(total_amount,rate.get('total_amount'))
+   
+	def test_determine_address_tax_category_from_billing_address_TC_ACC_134(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.accounts.party import get_address_tax_category
+		address_args = [
+				{	"name":"_Test Company Address-Office",
+					"address_title": "_Test Company Address",
+					"address_type": "Office",
+					"is_primary_address": 1,
+					"state": "Maharashtra",
+					"pincode":"423701",
+					"address_line1":"Test Address 10",
+					"country": "India",
+					"is_your_company_address": 1,
+					"company": "_Test Company"
+				},
+				
+				{	"name":"Customer Billing Address-Billing",
+					"address_title": "Customer Billing Address",
+					"address_type": "Billing",
+					"is_primary_address": 0,
+					"address_line1":"Test Address 11",
+					"state": "Karnataka",
+					"pincode":"587316",
+					"country": "India",
+					"is_your_company_address": 0,
+					"doctype": "Customer",
+					"docname": "_Test Customer"
+				},
+				
+				{	"name":"Customer Shipping Address-Shipping",
+					"address_title": "Customer Shipping Address",
+					"address_type": "Shipping",
+					"is_primary_address": 0,
+					"address_line1":"Test Address 11",
+					"state": "Kerala",
+					"pincode":"686582",
+					"country": "India",
+					"is_your_company_address": 0,
+					"doctype": "Customer",
+					"docname": "_Test Customer"
+				}
+		]
+		for d in address_args:
+			create_address(**d)
+
+		company_address = frappe.get_doc("Address","_Test Company Address-Office")
+		customer_billing = frappe.get_doc("Address","Customer Billing Address-Billing")
+		if company_address.state and customer_billing.state and company_address.state == customer_billing.state:
+			customer_billing.tax_category="In-State"
+		else:
+			customer_billing.tax_category="Out-State"
+		customer_billing.save()
+  
+		account_setting= frappe.get_doc("Accounts Settings")
+		account_setting.determine_address_tax_category_from="Billing Address"
+		account_setting.save()
+
+		self.assertEquals("Billing Address",account_setting.determine_address_tax_category_from)
+
+		item = make_test_item("_Test Item")
+		tax_category=get_address_tax_category(None,customer_billing.name,None)
+		si = create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				item_code=item.name,
+				qty=1,
+				rate=1000,
+				do_not_submit=True
+		)
+		si.customer_address=customer_billing.name
+		si.company_address=company_address.name
+		si.tax_category=tax_category
+		si.save()
+		self.assertEqual(tax_category,si.tax_category)
+		
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
@@ -5870,3 +6024,32 @@ def setup_bank_accounts():
 			"name",
 		):
 			frappe.get_doc(method).insert(ignore_permissions=True)
+   
+   
+def create_address(**args):
+	
+	if not frappe.db.exists("Address", args.get("name")):
+		address = frappe.get_doc({
+				"doctype": "Address",
+				"address_title":args.get('address_title'),
+				"address_type":args.get('address_type'),
+				"city":"Test Town",
+				"address_line1":args.get('address_line1'),
+				"is_primary_address":args.get("is_primary_address"),
+				"state": args.get('state'),
+				"country":args.get("country"),
+				"pincode":args.get('pincode')
+			}).insert()
+		if args.get('is_your_company_address'):
+			address.append("links",{
+				"link_doctype":"Company",
+				"link_name":args.get('company')
+			})
+		else:
+			address.append("links",{
+				"link_doctype":args.get('doctype'),
+				"link_name":args.get('docname')
+			})
+		address.save()
+		frappe.db.commit()
+		return address
