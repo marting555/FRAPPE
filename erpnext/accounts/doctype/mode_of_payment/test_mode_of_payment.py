@@ -10,7 +10,7 @@ import frappe
 class TestModeofPayment(unittest.TestCase):
 	def test_mode_of_payment_in_payment_entry_TC_ACC_105(self):
 		from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
-		from erpnext.accounts.doctype.payment_entry.payment_entry import create_payment_entry
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
 
 		# Step 1: Get the account for the selected mode of payment (Cash)
 		paid_from = get_bank_cash_account("Cash", "_Test Company").get('account')
