@@ -148,7 +148,11 @@ class TestJournalEntry(unittest.TestCase):
 		)
 
 		if account_bal == stock_bal:
+<<<<<<< HEAD
 			self.assertRaises(StockAccountInvalidTransaction, jv.insert)
+=======
+			self.assertRaises(StockAccountInvalidTransaction, jv.save)
+>>>>>>> 9f20854bd9 (fix: get stock balance filtered by company for validating stock value in jv (#45549))
 			frappe.db.rollback()
 		else:
 			jv.insert()
