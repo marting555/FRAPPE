@@ -207,7 +207,10 @@ def get_data_when_grouped_by_invoice(columns, gross_profit_data, filters, group_
 				"selling_amount": total_base_amount,
 				"buying_amount": total_buying_amount,
 				"gross_profit": total_gross_profit,
-				"gross_profit_%": flt((total_gross_profit / total_base_amount) * 100.0, 3)
+				"gross_profit_%": flt(
+					(total_gross_profit / total_base_amount) * 100.0,
+					cint(frappe.db.get_default("currency_precision")) or 3,
+				)
 				if total_base_amount
 				else 0,
 			}
