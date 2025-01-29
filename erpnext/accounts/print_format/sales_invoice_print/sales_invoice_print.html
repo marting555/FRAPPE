@@ -71,7 +71,7 @@
 	</div>
 
 	<div class="section-break">
-		<table border=1 style="width: 100%; border-collapse: collapse; border: 1px solid black; font-size: 12px;">
+		<table class="table table-bordered table-condensed" style="width: 100%; border-collapse: collapse; font-size: 12px;">
 			<colgroup>
 				<col style="width: 5%">
 				<col style="width: 35%">
@@ -127,15 +127,15 @@
 					<b>{{ doc.in_words }}</b>
 				</td>
 				<td style="text-align: right;"><b>Sub Total</b></td>
-				<td style="text-align: right;"><b>{{ doc.get_formatted("net_total", doc) }}</b></td>
+				<td style="text-align: right;">{{ doc.get_formatted("net_total", doc) }}</td>
 			</tr>
 			<tr>
 				<td style="text-align: right;"><b>V.A.T.</b></td>
-				<td style="text-align: right;"><b>{{ doc.get_formatted("total_taxes_and_charges", doc) }}</b></td>
+				<td style="text-align: right;">{{ doc.get_formatted("total_taxes_and_charges", doc) }}</td>
 			</tr>
 			<tr>
 				<td style="text-align: right;"><b>Total</b></td>
-				<td style="text-align: right;"><b>{{ doc.get_formatted("grand_total", doc) }}</b></td>
+				<td style="text-align: right;">{{ doc.get_formatted("grand_total", doc) }}</td>
 			</tr>
 		</table>
 	</div>
