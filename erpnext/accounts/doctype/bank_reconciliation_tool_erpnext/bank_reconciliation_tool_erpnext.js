@@ -84,6 +84,8 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 				"difference_amount",
 				(frm.doc.closing_balance_as_per_bank_statement - frm.doc.closing_balance_as_per_erp)
 			);
+			frm.doc.bank_statement = []
+			frm.doc.erp_transaction = []
 			frm.trigger("unreconcile_entries");
 			// frappe.call({
 			// 	method: "erpnext.accounts.doctype.bank_reconciliation_tool_erpnext.bank_reconciliation_tool_erpnext.get_bank_transaction",
@@ -519,10 +521,10 @@ frappe.ui.form.on("Bank Reconciliation Tool ERPNext", {
 			},
 		});
 		setTimeout(() => {
-			if (!(frm.doc.bank_statement.length) && !(frm.doc.erp_transaction.length)){
+			if (!(frm.doc.bank_statement.length) && !(frm.doc.erp_transaction.length)) {
 				frappe.throw("No records found")
 			}
-		}, 500);
+		}, 700);
 	},
 
 	update_bal(frm) {

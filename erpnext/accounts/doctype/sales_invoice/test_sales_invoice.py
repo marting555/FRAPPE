@@ -4686,6 +4686,7 @@ class TestSalesInvoice(FrappeTestCase):
 		setting.save()
 
 		self.assertEqual(setting.so_required, 'No')
+		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="Stores - _TIRC")
 
 		company = frappe.get_all("Company", {"name": "_Test Indian Registered Company"}, ["gstin", "gst_category"])
 		customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
@@ -4752,6 +4753,8 @@ class TestSalesInvoice(FrappeTestCase):
 		customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
 		company_add = frappe.get_all("Address", {"name": "_Test Indian Registered Company-Billing"}, ["name", "gstin", "gst_category"])
 		customer_add = frappe.get_all("Address", {"name": "_Test Registered Customer-Billing"}, ["name", "gstin", "gst_category"])
+
+		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="Stores - _TIRC")
   
 		if company[0].get("gst_category") == "Registered Regular" and customer[0].get("gst_category") == "Registered Regular" and customer[0].get("gstin") and customer[0].get("gstin"):
 			if company_add[0].get("gst_category") == "Registered Regular" and customer_add[0].get("gst_category") == "Registered Regular" and company_add[0].get("gstin") and customer_add[0].get("gstin"):
@@ -5340,6 +5343,322 @@ class TestSalesInvoice(FrappeTestCase):
 			error_msg = str(e)
 			self.assertEqual(error_msg,'This document is over limit by Amount 100.0 for item _Test Item. Are you making another Sales Invoice against the same Sales Order Item?To allow over billing, update "Over Billing Allowance" in Accounts Settings or the Item.')
 
+	def test_create_sales_invoice_for_interstate_branch_transfer_TC_ACC_123(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		internal_customer=frappe.get_value("Customer",{"is_internal_customer":1,"represents_company":"_Test Company"})
+		if not internal_customer:
+			customer = frappe.get_doc({
+				"doctype": "Customer",
+				"customer_name": "_Test Internal Customer 4",
+				"customer_type": "Company",
+				"is_internal_customer": 1,
+				"represents_company": "_Test Company",
+				"companies":[
+					{
+					"company": "_Test Company",
+					}]
+				}).insert()
+			frappe.db.commit()
+		elif internal_customer:
+			customer=frappe.get_doc("Customer",internal_customer)
+		else:
+			customer=frappe.get_doc("Customer","_Test Internal Customer 4")
+		
+		item=make_test_item("_Test Item")
+		si= create_sales_invoice(
+			company="_Test Company",
+			customer=customer.name,
+			item=item.name,
+			qty=1,
+			rate=10000,
+			do_not_submit=True
+		)
+		si.taxes_and_charges="Output GST Out-state - _TC"
+		si.save()
+		si.submit()
+		expected_gl_entries = [
+			['Output Tax IGST - _TC', 0.0, si.total_taxes_and_charges, si.posting_date],
+			['Unrealized Profit - _TC',si.total_taxes_and_charges, 0.0, si.posting_date],
+		]
+		check_gl_entries(self, si.name, expected_gl_entries, si.posting_date)
+  
+	def test_create_sales_invoice_for_common_party_TC_ACC_124(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item,
+			create_supplier,
+			create_purchase_invoice
+		)
+		from erpnext.accounts.doctype.party_link.party_link import create_party_link
+		supplier=create_supplier(supplier_name="_Test Common Party",company="_Test Company")
+		if supplier.accounts:
+			supplier.accounts.clear()
+			supplier.flags.ignore_mandatory = True
+			supplier.save()
+			frappe.db.commit()
+		create_customer(customer_name="_Test Common Party",company="_Test Company")
+		if not frappe.get_value("Party Link",{"primary_party":"_Test Common Party","secondary_party":"_Test Common Party","primary_role":"Supplier"}):
+			create_party_link(
+				primary_role="Supplier",
+				primary_party=supplier.name,
+				secondary_party=supplier.name
+			)
+		
+		item=make_test_item("_Test Item")
+		pi=create_purchase_invoice(
+			supplier=supplier.name,
+			item_code=item.name,
+			company="_Test Company",
+			qty=1,
+			rate=10000
+		)
+		pi.save().submit()
+
+		si=create_sales_invoice(
+			customer="_Test Common Party",
+			company="_Test Company",
+			item_code=item.name,
+			qty=1,
+			rate=15000,
+			debit_to="Debtors - _TC"
+		)
+		jv_parent=frappe.get_value(
+      		"Journal Entry Account",{
+            "reference_type":"Sales Invoice",
+            "reference_name":si.name},"parent"
+        )
+		jv_doc=frappe.get_doc("Journal Entry",jv_parent)
+		expected_gl_entries = [
+			['Creditors - _TC',jv_doc.total_credit, 0.0, jv_doc.posting_date],
+			['Debtors - _TC',0.0, jv_doc.total_debit, jv_doc.posting_date],
+		]
+		check_gl_entries(self, jv_doc.name, expected_gl_entries, jv_doc.posting_date, "Journal Entry")
+	
+	def test_prevent_sale_below_purchase_rate_TC_ACC_125(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			create_purchase_invoice,
+			make_test_item,
+			create_supplier,
+		)
+
+		selling_setting = frappe.get_doc("Selling Settings")
+		selling_setting.validate_selling_price = 1
+		selling_setting.save()
+
+		supplier = create_supplier(supplier_name="_Test Supplier")
+
+		item = make_test_item("_Test Sell Item")
+
+		pi = create_purchase_invoice(
+			supplier=supplier.name,
+			company="_Test Company",
+			item_code=item.name,
+			qty=1,
+			rate=100
+		)
+		pi.save().submit()
+
+		try:
+			si = create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				item_code=item.name,
+				qty=1,
+				rate=99
+			)
+		except Exception as e:
+			error_msg = str(e)
+		self.assertEqual(
+            error_msg,
+            (
+                "Row #1: Selling rate for item _Test Item is lower than its last purchase rate.\n"
+                "\t\t\t\t\tSelling net rate should be atleast 100.0.Alternatively,\n"
+                "\t\t\t\t\tyou can disable selling price validation in Selling Settings to bypass\n"
+                "\t\t\t\t\tthis validation."
+            )
+        )
+	
+	def test_test_unlink_payment_on_invoice_cancellation_TC_ACC_126(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item
+		)
+
+		account_setting = frappe.get_doc("Accounts Settings")
+		account_setting.unlink_payment_on_cancellation_of_invoice = 0
+		account_setting.save()
+		item = make_test_item("_Test Item")
+		try:
+			si = create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				item_code=item.name,
+				qty=1,
+				rate=100
+			)
+			
+			pe = get_payment_entry(si.doctype,si.name,bank_account="Cash - _TC")
+			pe.submit()
+			si.load_from_db()
+			
+			si.cancel()
+		except Exception as e:
+			error_msg = str(e)
+			self.assertEqual(error_msg,f'Cannot delete or cancel because Sales Invoice {si.name} is linked with Payment Entry {pe.name} at Row: 1')
+    
+	def test_fetch_payment_terms_from_order_TC_ACC_129(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item
+		)
+		from erpnext.selling.doctype.sales_order.test_sales_order import (
+			 make_sales_order,
+			 make_sales_invoice	
+		)
+
+		account_setting = frappe.get_doc("Accounts Settings")
+		account_setting.automatically_fetch_payment_terms=1
+		account_setting.save()
+		
+		item = make_test_item("_Test Item")
+
+		so = make_sales_order(
+			customer="_Test Customer",
+			company="_Test Company",
+			item_code=item.name,
+			qty=1,
+			rate=1000,
+			do_not_submit=True
+		)
+		so.payment_terms_template="_Test Payment Term Template"
+		so.save().submit()
+
+		si = make_sales_invoice(so.name)
+		self.assertEquals(si.payment_terms_template,"_Test Payment Term Template")
+	
+	def test_generate_sales_invoice_with_items_different_gst_rates_TC_ACC_131(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		import json
+
+		item = make_test_item("_Test GST Item")
+
+		gst_rates = [
+			{"rate": 5, "template": "GST 5% - _TC", "range": (500, 1000)},
+			{"rate": 12, "template": "GST 12% - _TC", "range": (1001, 10000)},
+			{"rate": 18, "template": "GST 18% - _TC", "range": (10001, 100000)}
+		]
+
+		if not item.taxes:
+			for gst in gst_rates:
+				item.append('taxes', {
+					"item_tax_template": gst["template"],
+					"valid_from": frappe.utils.add_months(nowdate(), -1),
+					"minimum_net_rate": gst["range"][0],
+					"maximum_net_rate": gst["range"][1]
+				})
+				item.save()
+		rate_tax=[
+			{"total_amount":25,"total_tax":5,"item_rate":500},
+			{"total_amount":132,"total_tax":12,"item_rate":1100},
+			{"total_amount":1980,"total_tax":18,"item_rate":11000}
+			]
+		for rate in rate_tax:
+			si = create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				item_code=item.name,
+				qty=1,
+				rate=rate.get('item_rate'),
+				do_not_submit=True
+			)
+			si.taxes_and_charges="Output GST In-state - _TC"
+			si.save()
+			total_tax=0.0
+			total_amount=0.0
+			for taxes in si.taxes:
+				item_wise_tax_detail = taxes.item_wise_tax_detail
+				
+				if isinstance(item_wise_tax_detail, str):
+					item_wise_tax_detail = json.loads(item_wise_tax_detail)
+				
+				if "_Test GST Item" in item_wise_tax_detail:
+					total_tax += item_wise_tax_detail["_Test GST Item"][0]
+					total_amount += item_wise_tax_detail["_Test GST Item"][1]
+			self.assertEquals(total_tax,rate.get('total_tax'))
+			self.assertEquals(total_amount,rate.get('total_amount'))
+   
+	def test_determine_address_tax_category_from_billing_address_TC_ACC_134(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.accounts.party import get_address_tax_category
+		address_args = [
+				{	"name":"_Test Company Address-Office",
+					"address_title": "_Test Company Address",
+					"address_type": "Office",
+					"is_primary_address": 1,
+					"state": "Maharashtra",
+					"pincode":"423701",
+					"address_line1":"Test Address 10",
+					"country": "India",
+					"is_your_company_address": 1,
+					"company": "_Test Company"
+				},
+				
+				{	"name":"Customer Billing Address-Billing",
+					"address_title": "Customer Billing Address",
+					"address_type": "Billing",
+					"is_primary_address": 0,
+					"address_line1":"Test Address 11",
+					"state": "Karnataka",
+					"pincode":"587316",
+					"country": "India",
+					"is_your_company_address": 0,
+					"doctype": "Customer",
+					"docname": "_Test Customer"
+				},
+				
+				{	"name":"Customer Shipping Address-Shipping",
+					"address_title": "Customer Shipping Address",
+					"address_type": "Shipping",
+					"is_primary_address": 0,
+					"address_line1":"Test Address 11",
+					"state": "Kerala",
+					"pincode":"686582",
+					"country": "India",
+					"is_your_company_address": 0,
+					"doctype": "Customer",
+					"docname": "_Test Customer"
+				}
+		]
+		for d in address_args:
+			create_address(**d)
+
+		company_address = frappe.get_doc("Address","_Test Company Address-Office")
+		customer_billing = frappe.get_doc("Address","Customer Billing Address-Billing")
+		if company_address.state and customer_billing.state and company_address.state == customer_billing.state:
+			customer_billing.tax_category="In-State"
+		else:
+			customer_billing.tax_category="Out-State"
+		customer_billing.save()
+  
+		account_setting= frappe.get_doc("Accounts Settings")
+		account_setting.determine_address_tax_category_from="Billing Address"
+		account_setting.save()
+
+		self.assertEquals("Billing Address",account_setting.determine_address_tax_category_from)
+
+		item = make_test_item("_Test Item")
+		tax_category=get_address_tax_category(None,customer_billing.name,None)
+		si = create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				item_code=item.name,
+				qty=1,
+				rate=1000,
+				do_not_submit=True
+		)
+		si.customer_address=customer_billing.name
+		si.company_address=company_address.name
+		si.tax_category=tax_category
+		si.save()
+		self.assertEqual(tax_category,si.tax_category)
+		
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
@@ -5705,3 +6024,32 @@ def setup_bank_accounts():
 			"name",
 		):
 			frappe.get_doc(method).insert(ignore_permissions=True)
+   
+   
+def create_address(**args):
+	
+	if not frappe.db.exists("Address", args.get("name")):
+		address = frappe.get_doc({
+				"doctype": "Address",
+				"address_title":args.get('address_title'),
+				"address_type":args.get('address_type'),
+				"city":"Test Town",
+				"address_line1":args.get('address_line1'),
+				"is_primary_address":args.get("is_primary_address"),
+				"state": args.get('state'),
+				"country":args.get("country"),
+				"pincode":args.get('pincode')
+			}).insert()
+		if args.get('is_your_company_address'):
+			address.append("links",{
+				"link_doctype":"Company",
+				"link_name":args.get('company')
+			})
+		else:
+			address.append("links",{
+				"link_doctype":args.get('doctype'),
+				"link_name":args.get('docname')
+			})
+		address.save()
+		frappe.db.commit()
+		return address
