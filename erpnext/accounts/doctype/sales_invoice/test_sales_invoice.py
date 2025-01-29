@@ -5505,6 +5505,161 @@ class TestSalesInvoice(FrappeTestCase):
 		except Exception as e:
 			error_msg = str(e)
 			self.assertEqual(error_msg,f'Cannot delete or cancel because Sales Invoice {si.name} is linked with Payment Entry {pe.name} at Row: 1')
+
+	def test_si_cancel_amend_with_item_details_change_TC_S_128(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item
+		)
+		
+		make_test_item("_Test Item 1")
+		make_stock_entry(item_code="_Test Item", qty=5, rate=1000, target="_Test Warehouse - _TC")
+		make_stock_entry(item_code="_Test Item 1", qty=5, rate=1000, target="_Test Warehouse - _TC")
+		si = create_sales_invoice(qty=2, rate=500)
+		si.cancel()
+		si.reload()	
+		self.assertEqual(si.status, "Cancelled")
+
+		amended_si = frappe.copy_doc(si)
+		amended_si.docstatus = 0
+		amended_si.amended_from = si.name
+		amended_si.items[0].item_code ='_Test Item 1'
+		amended_si.save()
+		amended_si.submit()
+		self.assertEqual(amended_si.status, "Unpaid")
+		
+	def test_si_cancel_amend_with_customer_change_TC_S_129(self):
+
+		create_customer(customer_name="_Test Customer Selling",company="_Test Company")
+		make_stock_entry(item_code="_Test Item", qty=5, rate=1000, target="_Test Warehouse - _TC")
+
+		si = create_sales_invoice(qty=2, rate=500)
+		si.cancel()
+		si.reload()	
+		self.assertEqual(si.status, "Cancelled")
+
+		amended_si = frappe.copy_doc(si)
+		amended_si.docstatus = 0
+		amended_si.amended_from = si.name
+		amended_si.customer = '_Test Customer Selling'
+		amended_si.save()
+		amended_si.submit()
+		self.assertEqual(amended_si.status, "Unpaid")
+
+	def test_si_cancel_amend_with_payment_terms_change_TC_S_130(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_terms_template
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_term
+		make_stock_entry(item_code="_Test Item", qty=5, rate=1000, target="_Test Warehouse - _TC")
+		create_payment_term("Basic Amount Receivable for Selling")
+
+		if not frappe.db.exists("Payment Terms Template", "Test Receivable Template Selling"):
+			frappe.get_doc(
+				{
+					"doctype": "Payment Terms Template",
+					"template_name": "Test Receivable Template Selling",
+					"allocate_payment_based_on_payment_terms": 1,
+					"terms": [
+						{
+							"doctype": "Payment Terms Template Detail",
+							"payment_term": "Basic Amount Receivable for Selling",
+							"invoice_portion": 100,
+							"credit_days_based_on": "Day(s) after invoice date",
+							"credit_days": 1,
+						}
+					],
+				}
+			).insert()
+
+		create_payment_terms_template()
+		si = create_sales_invoice(qty=2, rate=500,do_not_save=True)
+		si.payment_terms_template ='Test Receivable Template'
+		si.save()
+		si.submit()
+		si.cancel()
+		si.reload()	
+		self.assertEqual(si.status, "Cancelled")
+
+		amended_si = frappe.copy_doc(si)
+		amended_si.docstatus = 0
+		amended_si.amended_from = si.name
+		amended_si.payment_terms_template = 'Test Receivable Template Selling'
+		amended_si.save()
+		amended_si.submit()
+
+		self.assertEqual(amended_si.status, "Unpaid")
+
+	def test_si_credit_note_cancel_amend_with_payment_terms_change_TC_S_131(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_terms_template
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_term
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_sales_return
+
+		make_stock_entry(item_code="_Test Item", qty=5, rate=1000, target="_Test Warehouse - _TC")
+		create_payment_term("Basic Amount Receivable for Selling")
+
+		if not frappe.db.exists("Payment Terms Template", "Test Receivable Template Selling"):
+			frappe.get_doc(
+				{
+					"doctype": "Payment Terms Template",
+					"template_name": "Test Receivable Template Selling",
+					"allocate_payment_based_on_payment_terms": 1,
+					"terms": [
+						{
+							"doctype": "Payment Terms Template Detail",
+							"payment_term": "Basic Amount Receivable for Selling",
+							"invoice_portion": 100,
+							"credit_days_based_on": "Day(s) after invoice date",
+							"credit_days": 1,
+						}
+					],
+				}
+			).insert()
+
+		create_payment_terms_template()
+		si = create_sales_invoice(qty=2, rate=500,do_not_save=True)
+		si.payment_terms_template ='Test Receivable Template'
+		si.save()
+		si.submit()
+		self.assertEqual(si.status, "Unpaid")
+
+		sir=make_sales_return(si.name)
+		sir.save()
+		sir.submit()
+		sir.cancel()
+		self.assertEqual(sir.status, "Cancelled")
+
+
+		amended_sir = frappe.copy_doc(sir)
+		amended_sir.docstatus = 0
+		amended_sir.amended_from = sir.name
+		amended_sir.payment_terms_template = 'Test Receivable Template Selling'
+		amended_sir.save()
+		amended_sir.submit()
+
+		self.assertEqual(amended_sir.status, "Return")
+
+
+	def test_si_with_deferred_revenue_item_TC_S_135(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.accounts.doctype.account.test_account import create_account
+		
+		item=make_test_item("_Test Item 1")
+		item.enable_deferred_revenue =1
+		item.no_of_months =5
+		item.save()
+	
+		make_stock_entry(item_code="_Test Item 1", qty=10, rate=5000, target="_Test Warehouse - _TC")
+
+		deferred_account = create_account(
+			account_name="Deferred Revenue",
+			parent_account="Current Liabilities - _TC",
+			company="_Test Company",
+		)
+		si = create_sales_invoice(item=item.name, qty=5,rate=3000, do_not_submit=True)
+		si.items[0].enable_deferred_revenue = 1
+		si.items[0].deferred_revenue_account = deferred_account
+		si.save()
+		si.submit()
+		self.assertEqual(si.status, "Unpaid")	
+
     
 	def test_fetch_payment_terms_from_order_TC_ACC_129(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
