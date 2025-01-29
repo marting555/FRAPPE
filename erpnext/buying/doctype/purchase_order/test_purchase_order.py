@@ -3,7 +3,7 @@
 
 
 import json
-
+import random
 import frappe
 # import pandas as pd
 from frappe.tests.utils import FrappeTestCase, change_settings
@@ -5077,7 +5077,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		warehouse = "Stores - _TC"
 		supplier = "_Test Supplier 1"
 		item_code = "test_item_with_net_weight_shipping_rule"
-		gst_hsn_code = "888890"
+		gst_hsn_code = random.choice(frappe.db.get_all("GST HSN Code", pluck = 'name'))
 
 		# Ensure Item exists with weight specification
 		if not frappe.db.exists("Item", item_code):
