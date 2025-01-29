@@ -1520,6 +1520,35 @@ class TestPricingRule(FrappeTestCase):
 		self.assertEqual(len(so.items), 2)
 		self.assertEqual(so.items[1].rate, 10)
 
+	def test_pr_to_so_with_applied_on_item_group_TC_S_144(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		
+		make_test_item("_Test Item 1")
+		make_stock_entry(item_code="_Test Item 1", qty=5, rate=500, target="Stores - _TC")
+		make_stock_entry(item_code="_Test Item", qty=5, rate=500, target="Stores - _TC")
+		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
+		pricing_rule = frappe.get_doc({
+			"doctype": "Pricing Rule",
+			"title": "_Test Pricing Rule",
+			"apply_on": "Item Group",
+			"selling": 1,
+			"warehouse": "Stores - _TC",
+			"price_or_product_discount": "Product",
+			"free_item": "_Test Item 1",
+			"free_qty": 1,
+			"free_item_rate": 10,
+			"condition": "customer=='_Test Customer'",
+			"company" : "_Test Company",
+			"item_groups": [{"item_group": "_Test Item Group"}]
+		})
+		pricing_rule.insert(ignore_permissions=True)
+		so = make_sales_order(qty=5, warehouse="Stores - _TC",do_not_save=True)
+		so.set_warehouse = "Stores - _TC"
+		so.save()
+		so.submit()
+		self.assertEqual(len(so.items), 2)
+		self.assertEqual(so.items[1].rate, 10)
+
 test_dependencies = ["Campaign"]
 
 
