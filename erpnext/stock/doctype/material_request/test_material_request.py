@@ -6274,7 +6274,7 @@ class TestMaterialRequest(FrappeTestCase):
 			"has_expiry_date": 1,
 			"warranty_period": 365,
 			"shelf_life_in_days": 365,
-			"batch_naming_series": "Test-SBBTYT-NNS.#####",
+			"batch_number_series": "Test-SBBTYT-NNS.#####",
 		}
 
 		if frappe.db.has_column("Item", "gst_hsn_code"):
@@ -6341,8 +6341,7 @@ class TestMaterialRequest(FrappeTestCase):
 		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
 			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':se.name, 'account': 'Stock In Hand - _TC'},'debit')
 			self.assertEqual(gl_stock_debit, 500)
-		a=frappe.get_doc('Serial and Batch Bundle',{'voucher_no':se.name})
-		print(a.as_dict())
+		
 		# After stock entry cancel
 		current_bin_qty = (
 			frappe.db.get_value("Bin", {"item_code": item, "warehouse": target_warehouse}, "actual_qty") or 0
