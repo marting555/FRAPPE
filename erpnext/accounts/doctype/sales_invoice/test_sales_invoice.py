@@ -5146,9 +5146,11 @@ class TestSalesInvoice(FrappeTestCase):
 		sales_invoice.save()
 		sales_invoice.submit()
 		expected_gl_entries = [
-			['Debtors - _TC', sales_invoice.grand_total, 0.0, sales_invoice.posting_date],
-			['Deferred Revenue - _TC', 0.0, sales_invoice.grand_total, sales_invoice.posting_date]
-		]
+                ['Cost of Goods Sold - _TC', 100.0, 0.0, sales_invoice.posting_date],
+                ['Stock In Hand - _TC', 0.0, 100.0, sales_invoice.posting_date],
+                ['Debtors - _TC', sales_invoice.grand_total, 0.0, sales_invoice.posting_date],
+                ['Deferred Revenue - _TC', 0.0, sales_invoice.grand_total, sales_invoice.posting_date]
+        ]
 		check_gl_entries(self, sales_invoice.name, expected_gl_entries, sales_invoice.posting_date)
     
 	def test_deferred_revenue_invoice_multiple_item_TC_ACC_040(self):
