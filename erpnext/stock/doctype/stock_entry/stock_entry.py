@@ -1616,17 +1616,37 @@ class StockEntry(StockController):
 
 	@frappe.whitelist()
 	def get_item_details(self, args: ItemDetailsCtx = None, for_update=False):
-		item = frappe.db.sql(
-			"""select i.name, i.stock_uom, i.description, i.image, i.item_name, i.item_group,
-				i.has_batch_no, i.sample_quantity, i.has_serial_no, i.allow_alternative_item,
-				id.expense_account, id.buying_cost_center
-			from `tabItem` i LEFT JOIN `tabItem Default` id ON i.name=id.parent and id.company=%s
-			where i.name=%s
-				and i.disabled=0
-				and (i.end_of_life is null or i.end_of_life<'1900-01-01' or i.end_of_life > %s)""",
-			(self.company, args.get("item_code"), nowdate()),
-			as_dict=1,
+		item = frappe.qb.DocType("Item")
+		item_default = frappe.qb.DocType("Item Default")
+
+		query = (
+			frappe.qb.from_(item)
+			.left_join(item_default)
+			.on((item.name == item_default.parent) & (item_default.company == self.company))
+			.select(
+				item.name,
+				item.stock_uom,
+				item.description,
+				item.image,
+				item.item_name,
+				item.item_group,
+				item.has_batch_no,
+				item.sample_quantity,
+				item.has_serial_no,
+				item.allow_alternative_item,
+				item_default.buying_cost_center,
+			)
+			.where(
+				(item.name == args.get("item_code"))
+				& (item.disabled == 0)
+				& (
+					(item.end_of_life.isnull())
+					| (item.end_of_life < "1900-01-01")
+					| (item.end_of_life > nowdate())
+				)
+			)
 		)
+		item = query.run(as_dict=True)
 
 		if not item:
 			frappe.throw(
