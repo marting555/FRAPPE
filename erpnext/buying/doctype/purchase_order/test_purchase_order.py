@@ -6650,6 +6650,101 @@ class TestPurchaseOrder(FrappeTestCase):
 				if entry["credit"]:
 					self.assertEqual(entry["credit"], expected_pi_entries[entry["account"]])
 
+	def test_apply_only_margin_amount_rate_po_pr_pi_TC_B_125(self):
+		company = "_Test Company"
+		supplier = "_Test Supplier 1"
+		item_code = "Testing-31"
+		target_warehouse = "Stores - _TC"
+
+		po = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"supplier": supplier,
+			"company": company,
+			"schedule_date": today(),
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": 10,
+					"price_list_rate": 100,
+					"margin_type": "Amount",
+					"margin_rate_or_amount": 60
+				}
+			]
+		})
+		po.insert()
+		po.submit()
+		self.assertEqual(po.docstatus, 1)
+		self.assertEqual(po.items[0].rate, 160)
+		self.assertEqual(po.total, 1600)
+		self.assertEqual(po.grand_total, 1600)
+
+		pr = frappe.get_doc({
+			"doctype": "Purchase Receipt",
+			"supplier": supplier,
+			"company": company,
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": 10,
+					"price_list_rate": 100,
+					"margin_type": "Amount",
+					"margin_rate_or_amount": 60,
+					"warehouse": target_warehouse,
+					"purchase_order": po.name
+				}
+			]
+		})
+		pr.insert()
+		pr.submit()
+		self.assertEqual(pr.docstatus, 1)
+		self.assertEqual(pr.items[0].rate, 160)
+		self.assertEqual(flt(pr.items[0].amount), 1600)
+
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pr.name}, fields=["account", "debit", "credit"])
+		expected_pr_entries = {
+			"Stock In Hand - _TC": 1600,
+			"Stock Received But Not Billed - _TC": 1600
+		}
+		for entry in gl_entries:
+			if entry["account"] in expected_pr_entries:
+				if entry["debit"]:
+					self.assertEqual(entry["debit"], expected_pr_entries[entry["account"]])
+				if entry["credit"]:
+					self.assertEqual(entry["credit"], expected_pr_entries[entry["account"]])
+
+		pi = frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"supplier": supplier,
+			"company": company,
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": 10,
+					"price_list_rate": 100,
+					"margin_type": "Amount",
+					"margin_rate_or_amount": 60,
+					"warehouse": target_warehouse,
+					"purchase_receipt": pr.name
+				}
+			]
+		})
+		pi.insert()
+		pi.submit()
+		self.assertEqual(pi.docstatus, 1)
+		self.assertEqual(pi.items[0].rate, 160)
+		self.assertEqual(flt(pi.items[0].amount), 1600)
+
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
+		expected_pi_entries = {
+			"Stock Received But Not Billed - _TC": 1600,
+			"Creditors - _TC": 1600
+		}
+		for entry in gl_entries:
+			if entry["account"] in expected_pi_entries:
+				if entry["debit"]:
+					self.assertEqual(entry["debit"], expected_pi_entries[entry["account"]])
+				if entry["credit"]:
+					self.assertEqual(entry["credit"], expected_pi_entries[entry["account"]])
 
 
 def create_po_for_sc_testing():
