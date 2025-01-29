@@ -557,4 +557,86 @@ class TestGrossProfit(FrappeTestCase):
 			"gross_profit_%": 12.5,
 		}
 		gp_entry = [x for x in data if x.parent_invoice == sinv.name]
+<<<<<<< HEAD
 		self.assertDictContainsSubset(expected_entry, gp_entry[0])
+=======
+		report_output = {k: v for k, v in gp_entry[0].items() if k in expected_entry}
+		self.assertEqual(report_output, expected_entry)
+
+	def test_valuation_rate_without_previous_sle(self):
+		"""
+		Test Valuation rate calculation when stock ledger is empty and invoices are against different warehouses
+		"""
+		stock_settings = frappe.get_doc("Stock Settings")
+		stock_settings.valuation_method = "FIFO"
+		stock_settings.save()
+
+		item = create_item(
+			item_code="_Test Wirebound Notebook",
+			is_stock_item=1,
+		)
+		item.allow_negative_stock = True
+		item.save()
+		self.item = item.item_code
+
+		item.reload()
+		item.valuation_rate = 1900
+		item.save()
+		sinv1 = self.create_sales_invoice(qty=1, rate=2000, posting_date=nowdate(), do_not_submit=True)
+		sinv1.update_stock = 1
+		sinv1.set_warehouse = self.warehouse
+		sinv1.items[0].warehouse = self.warehouse
+		sinv1.save().submit()
+
+		item.reload()
+		item.valuation_rate = 1800
+		item.save()
+		sinv2 = self.create_sales_invoice(qty=1, rate=2000, posting_date=nowdate(), do_not_submit=True)
+		sinv2.update_stock = 1
+		sinv2.set_warehouse = self.finished_warehouse
+		sinv2.items[0].warehouse = self.finished_warehouse
+		sinv2.save().submit()
+
+		filters = frappe._dict(
+			company=self.company, from_date=nowdate(), to_date=nowdate(), group_by="Invoice"
+		)
+		columns, data = execute(filters=filters)
+
+		item_from_sinv1 = [x for x in data if x.parent_invoice == sinv1.name]
+		self.assertEqual(len(item_from_sinv1), 1)
+		self.assertEqual(1900, item_from_sinv1[0].valuation_rate)
+
+		item_from_sinv2 = [x for x in data if x.parent_invoice == sinv2.name]
+		self.assertEqual(len(item_from_sinv2), 1)
+		self.assertEqual(1800, item_from_sinv2[0].valuation_rate)
+
+	def test_gross_profit_groupby_invoices(self):
+		create_sales_invoice(
+			qty=1,
+			rate=100,
+			company=self.company,
+			customer=self.customer,
+			item_code=self.item,
+			item_name=self.item,
+			cost_center=self.cost_center,
+			warehouse=self.warehouse,
+			debit_to=self.debit_to,
+			parent_cost_center=self.cost_center,
+			update_stock=0,
+			currency="INR",
+			income_account=self.income_account,
+			expense_account=self.expense_account,
+		)
+
+		filters = frappe._dict(
+			company=self.company, from_date=nowdate(), to_date=nowdate(), group_by="Invoice"
+		)
+
+		_, data = execute(filters=filters)
+		total = data[-1]
+
+		self.assertEqual(total.selling_amount, 100.0)
+		self.assertEqual(total.buying_amount, 0.0)
+		self.assertEqual(total.gross_profit, 100.0)
+		self.assertEqual(total.get("gross_profit_%"), 100.0)
+>>>>>>> aaf720ab61 (fix: Gross Profit Report with Correct Totals and Gross Margin (#45548))
