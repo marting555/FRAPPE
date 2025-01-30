@@ -5029,7 +5029,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		dn.submit()
 
 		self.assertEqual(dn.status, "To Bill", "Delivery Note not created")
-		qty_change = frappe.db.get_value('Stock Ledger Entry', {'voucher_no': dn.name, 'warehouse': '_Test Warehouse - _TC', 'item_code': '_Test Item'},'actual_qty') 
+		qty_change = frappe.db.get_value('Stock Ledger Entry', {'voucher_no': dn.name, 'warehouse': 'Stores - _TIRC', 'item_code': '_Test Item'},'actual_qty') 
 		self.assertEqual(qty_change, -1)
   
 		driver, vehicle, add = get_transport_details(customer = "_Test Registered Customer")
@@ -5053,8 +5053,8 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		si.submit()
 		si.reload()
 		self.assertEqual(si.status, 'Unpaid')
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Sales - _TC'}, 'credit'), 5000)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Debtors - _TC'}, 'debit'), 5000)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Sales - _TIRC'}, 'credit'), 5000)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Debtors - _TIRC'}, 'debit'), 5900)
   
 		so.reload()
 		self.assertEqual(so.per_billed, 100)
