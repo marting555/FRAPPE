@@ -1579,6 +1579,86 @@ class TestPricingRule(FrappeTestCase):
 		self.assertEqual(len(so.items), 2)
 		self.assertEqual(so.items[1].rate, 10)
 
+	def test_cc_with_promotional_link_pr_TC_S_146(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		
+		make_test_item("_Test Item 1")
+		make_stock_entry(item_code="_Test Item 1", qty=5, rate=500, target="Stores - _TC")
+		make_stock_entry(item_code="_Test Item", qty=5, rate=500, target="Stores - _TC")
+		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
+		pr=make_pricing_rule(
+			selling=1,
+			min_qty=0,
+			price_or_product_discount="Product",
+			apply_on= "Item Code",
+			warehouse = "Stores - _TC",
+			items=[{"item_code": "_Test Item 1"}],
+			free_item="_Test Item 1",
+			free_qty=1,
+			free_item_rate=10,
+			condition="customer=='_Test Customer'",
+			company = "_Test Company"
+		)
+		pr.coupon_code_based =1
+		pr.save()
+
+		frappe.delete_doc_if_exists("Coupon Code", "SAVE30")
+		
+		coupon_code = frappe.get_doc(
+			{
+				"doctype": "Coupon Code",
+				"coupon_type":"Promotional",
+				"coupon_name": "SAVE30",
+				"coupon_code": "SAVE30",
+				"pricing_rule": pr.name,
+				"maximum_use": 1,
+				"used": 0,
+			}
+		)
+		coupon_code.insert()
+		self.assertEqual(coupon_code.coupon_type, "Promotional")
+		self.assertEqual(coupon_code.pricing_rule, pr.name)
+	
+	def test_cc_with_gift_card_link_pr_TC_S_147(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		
+		make_test_item("_Test Item 1")
+		make_stock_entry(item_code="_Test Item 1", qty=5, rate=500, target="Stores - _TC")
+		make_stock_entry(item_code="_Test Item", qty=5, rate=500, target="Stores - _TC")
+		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule")
+		pr=make_pricing_rule(
+			selling=1,
+			min_qty=0,
+			price_or_product_discount="Product",
+			apply_on= "Item Code",
+			warehouse = "Stores - _TC",
+			items=[{"item_code": "_Test Item 1"}],
+			free_item="_Test Item 1",
+			free_qty=1,
+			free_item_rate=10,
+			condition="customer=='_Test Customer'",
+			company = "_Test Company"
+		)
+		pr.coupon_code_based =1
+		pr.save()
+
+		frappe.delete_doc_if_exists("Coupon Code", "SAVE30")
+		
+		coupon_code = frappe.get_doc(
+			{
+				"doctype": "Coupon Code",
+				"coupon_type":"Gift Card",
+				"customer":"_Test Customer",
+				"coupon_name": "SAVE30",
+				"coupon_code": "SAVE30",
+				"pricing_rule": pr.name,
+				"maximum_use": 1,
+				"used": 0,
+			}
+		)
+		coupon_code.insert()
+		self.assertEqual(coupon_code.coupon_type, "Gift Card")
+		self.assertEqual(coupon_code.pricing_rule, pr.name)
 test_dependencies = ["Campaign"]
 
 
