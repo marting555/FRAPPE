@@ -5997,6 +5997,37 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertEqual(si.status, "Unpaid")
 		self.assertEqual(si.grand_total, 100)
   
+	def test_sales_invoice_creating_dunning_from_si_TC_S_154(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+  
+		item = make_test_item("_Test Item")
+		si = create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				item_code=item.name,
+				qty=1,
+				rate=1000,
+				do_not_submit=False
+		)
+
+		self.assertEqual(si.status, "Unpaid")
+  
+		if not frappe.db.exists("Dunning Type", "_Test Dunning"):
+			dun_type = frappe.new_doc("Dunning Type")
+			dun_type.dunning_type = "_Test Dunning"
+			dun_type.company = "_Test Company"
+			dun_type.rate_of_interest = 5.0
+			dun_type.save()
+  
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import create_dunning
+		dun = create_dunning(si.name)
+		dun.posting_date = add_days(nowdate(), 1)
+		dun.dunning_type = "_Test Dunning"
+		dun.save()
+		dun.submit()
+  
+		self.assertEqual(dun.grand_total, 1000.013698630137)
+  
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
