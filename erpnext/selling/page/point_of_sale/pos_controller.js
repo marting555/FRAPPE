@@ -459,6 +459,8 @@ erpnext.PointOfSale.Controller = class {
 							() => this.make_return_invoice(doc),
 							() => this.cart.load_invoice(),
 							() => this.item_selector.toggle_component(true),
+							() => this.item_selector.resize_selector(false),
+							() => this.item_details.toggle_component(false),
 						]);
 					});
 				},
