@@ -5962,6 +5962,41 @@ class TestSalesInvoice(FrappeTestCase):
 		si.save()
 		self.assertEqual(tax_category,si.tax_category)
   
+	def test_sales_invoice_with_child_item_rates_of_product_bundle_TC_S_152(self):
+		from erpnext.selling.doctype.product_bundle.test_product_bundle import make_product_bundle
+		from erpnext.stock.doctype.item.test_item import make_item
+  
+		selling_setting = frappe.get_doc('Stock Settings')
+		selling_setting.editable_bundle_item_rates = 1
+		selling_setting.save()
+  
+		if not frappe.db.exists("Item", "_Test Product Bundle Item New"):
+			bundle_item = make_item("_Test Product Bundle Item New", {"is_stock_item": 0})
+			bundle_item.append(
+				"item_defaults", {"company": "_Test Company", "default_warehouse": "_Test Warehouse - _TC"}
+			)
+			bundle_item.save(ignore_permissions=True)
+
+		make_item("_Packed Item New 1", {"is_stock_item": 1})
+		make_product_bundle("_Test Product Bundle Item New", ["_Packed Item New 1"], 2)
+
+		si = create_sales_invoice(
+			item_code="_Test Product Bundle Item New",
+			update_stock=1,
+			warehouse="_Test Warehouse - _TC",
+			transaction_date=add_days(nowdate(), -1),
+			do_not_submit=1,
+		)
+
+		make_stock_entry(item="_Packed Item New 1", target="_Test Warehouse - _TC", qty=120, rate=100)
+
+		si.transaction_date = nowdate()
+		si.save()
+		si.submit()
+		
+		self.assertEqual(si.status, "Unpaid")
+		self.assertEqual(si.grand_total, 100)
+  
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
