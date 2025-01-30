@@ -6800,6 +6800,82 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.total_taxes_and_charges, 1350)
 		self.assertEqual(po.grand_total, 8850)
 
+	def test_po_with_partial_pr_and_update_items_TC_B_129(self):
+		company = "_Test Company"
+		warehouse = "Stores - _TC"
+		supplier = "_Test Supplier 1"
+		item_code = "test_item_with_update_item"
+		gst_hsn_code = "888890"
+
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"gst_hsn_code": gst_hsn_code,
+				"is_stock_item": 1,
+			}).insert()
+
+		po = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"supplier": supplier,
+			"company": company,
+			"schedule_date": today(),
+			"set_warehouse": warehouse,
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": 10,
+					"warehouse": warehouse,
+					"rate": 1000,
+				}
+			],
+			"taxes_and_charges": "Input GST In-state - _TC"
+		})
+		po.insert()
+		po.submit()
+		self.assertEqual(po.docstatus, 1)
+		self.assertEqual(po.items[0].qty, 10)
+		self.assertEqual(po.items[0].rate, 1000)
+		self.assertEqual(po.total_taxes_and_charges, 1800)
+		self.assertEqual(po.grand_total, 11800)
+
+		pr = frappe.get_doc({
+			"doctype": "Purchase Receipt",
+			"purchase_order": po.name,
+			"supplier": supplier,
+			"company": company,
+			"set_warehouse": warehouse,
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": 2,
+					"rate": 1000,
+				}
+			],
+			"taxes_and_charges": "Input GST In-state - _TC"
+		})
+		pr.insert()
+		pr.submit()
+		self.assertEqual(pr.docstatus, 1)
+		self.assertEqual(pr.items[0].qty, 2)
+		self.assertEqual(pr.total_taxes_and_charges, 360)
+		self.assertEqual(pr.grand_total, 2360)
+
+		trans_item = json.dumps(
+			[{"item_code": po.items[0].item_code, "rate": 1000, "qty": 2, "docname": po.items[0].name}]
+		)
+
+		update_child_qty_rate("Purchase Order", trans_item, po.name)
+
+		po.reload()
+
+		self.assertEqual(po.docstatus, 1)
+		self.assertEqual(po.items[0].qty, 2)
+		self.assertEqual(po.items[0].rate, 1000)
+		self.assertEqual(po.total_taxes_and_charges, 360)
+		self.assertEqual(po.grand_total, 2360)
+
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
