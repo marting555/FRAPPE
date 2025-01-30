@@ -5729,6 +5729,27 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		self.assertEqual(delivery_note.status, "Completed")
 
+	def test_discount_in_dn_apply_in_grand_total_TS_S_151(self):
+		make_stock_entry(item_code="_Test Item", qty=10, rate=100, target="_Test Warehouse - _TC")
+		sales_order = make_sales_order(qty=1, rate=5000)
+		sales_order.save()
+		sales_order.submit()
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+
+		sales_invoice = make_sales_invoice(sales_order.name)
+		sales_invoice.save()
+		sales_invoice.submit()
+		self.assertEqual(sales_invoice.status, "Unpaid")
+
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
+		delivery_note = make_delivery_note(sales_invoice.name)
+		delivery_note.apply_discount_on = "Grand Total"
+		delivery_note.discount_amount = 1000
+		delivery_note.save()
+		delivery_note.submit()
+
+		self.assertEqual(delivery_note.status, "Completed")
+
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
 		sales_order.delivery_date = nowdate()
