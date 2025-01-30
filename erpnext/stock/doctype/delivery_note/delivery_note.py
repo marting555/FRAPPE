@@ -1108,7 +1108,7 @@ def make_packing_slip(source_name, target_doc=None):
 		target.run_method("set_missing_values")
 
 	def update_item(obj, target, source_parent):
-		target.qty = flt(obj.qty) - flt(obj.packed_qty)
+		target.qty = flt(obj.stock_qty) - flt(obj.packed_qty)
 
 	doclist = get_mapped_doc(
 		"Delivery Note",
@@ -1126,7 +1126,6 @@ def make_packing_slip(source_name, target_doc=None):
 					"item_name": "item_name",
 					"batch_no": "batch_no",
 					"description": "description",
-					"qty": "qty",
 					"stock_uom": "stock_uom",
 					"name": "dn_detail",
 				},
@@ -1143,7 +1142,6 @@ def make_packing_slip(source_name, target_doc=None):
 					"item_name": "item_name",
 					"batch_no": "batch_no",
 					"description": "description",
-					"qty": "qty",
 					"name": "pi_detail",
 				},
 				"postprocess": update_item,
