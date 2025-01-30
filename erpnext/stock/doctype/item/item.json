@@ -975,8 +975,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Supplier",
-   "options": "Supplier",
-   "reqd": 1
+   "options": "Supplier"
   },
   {
    "fieldname": "purchase_pn",
