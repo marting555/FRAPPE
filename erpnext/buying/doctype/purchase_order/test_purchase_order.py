@@ -6746,6 +6746,59 @@ class TestPurchaseOrder(FrappeTestCase):
 				if entry["credit"]:
 					self.assertEqual(entry["credit"], expected_pi_entries[entry["account"]])
 
+	def test_po_with_update_items_TC_B_128(self):
+		company = "_Test Company"
+		warehouse = "Stores - _TC"
+		supplier = "_Test Supplier 1"
+		item_code = "test_item_with_update_item"
+		gst_hsn_code = "888890"
+
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"gst_hsn_code": gst_hsn_code,
+				"is_stock_item": 1,
+			}).insert()
+
+		po = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"supplier": supplier,
+			"company": company,
+			"schedule_date": today(),
+			"set_warehouse": warehouse,
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": 1,
+					"warehouse": warehouse,
+					"rate": 1000,
+				}
+			],
+			"taxes_and_charges": "Input GST In-state - _TC"
+		})
+		po.insert()
+		po.submit()
+		self.assertEqual(po.docstatus, 1)
+		self.assertEqual(po.items[0].qty, 1)
+		self.assertEqual(po.items[0].rate, 1000)
+		self.assertEqual(po.total_taxes_and_charges, 180)
+		self.assertEqual(po.grand_total, 1180)
+
+		trans_item = json.dumps(
+			[{"item_code": po.items[0].item_code, "rate": 1500, "qty": 5, "docname": po.items[0].name}]
+		)
+
+		update_child_qty_rate("Purchase Order", trans_item, po.name)
+
+		po.reload()
+
+		self.assertEqual(po.docstatus, 1)
+		self.assertEqual(po.items[0].qty, 5)
+		self.assertEqual(po.items[0].rate, 1500)
+		self.assertEqual(po.total_taxes_and_charges, 1350)
+		self.assertEqual(po.grand_total, 8850)
 
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
