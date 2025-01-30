@@ -5431,6 +5431,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 	def test_so_to_si_with_loyalty_point_creating_payment_TC_S_108(self):
 		from erpnext.accounts.doctype.loyalty_program.loyalty_program import get_loyalty_program_details_with_points
+		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="_Test Warehouse - _TC")
 
 		so = make_sales_order(qty=4,rate=5000)	
@@ -5467,7 +5468,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		si.submit()
 		self.assertEqual(si.status, "Partly Paid")
 
-		pe=self.create_and_submit_payment_entry(dt="Sales Invoice", dn=si.name)
+		pe = get_payment_entry(dt="Sales Invoice",dn=si.name)
+		pe.save()
+		pe.submit()
+		self.assertEqual(pe.status, 'Submitted')
 		si.reload()
 		self.assertEqual(si.status, "Paid")
 	
@@ -5707,6 +5711,35 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		si.submit()
 		self.assertEqual(si.status, "Unpaid")
 
+	def test_so_to_si_with_manual_discount_grand_total_TC_S_136(self):
+		make_stock_entry(item_code="_Test Item", qty=10, rate=100, target="_Test Warehouse - _TC")
+		so = make_sales_order(qty=10, rate=100)
+		self.assertEqual(so.status, "To Deliver and Bill")
+
+		si = make_sales_invoice(so.name)
+		
+		self.assertEqual(si.grand_total,1000)
+		si.apply_discount_on = 'Grand Total'
+		si.additional_discount_percentage = 10
+		si.save()
+		si.submit()
+		self.assertEqual(si.grand_total,900)
+		self.assertEqual(si.status, "Unpaid")
+
+	def test_so_to_si_with_manual_discount_net_total_TC_S_137(self):
+		make_stock_entry(item_code="_Test Item", qty=10, rate=100, target="_Test Warehouse - _TC")
+		so = make_sales_order(qty=10, rate=100)
+		self.assertEqual(so.status, "To Deliver and Bill")
+
+		si = make_sales_invoice(so.name)
+		
+		self.assertEqual(si.grand_total,1000)
+		si.apply_discount_on = 'Net Total'
+		si.additional_discount_percentage = 10
+		si.save()
+		si.submit()
+		self.assertEqual(si.grand_total,900)
+		self.assertEqual(si.status, "Unpaid")
 
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
