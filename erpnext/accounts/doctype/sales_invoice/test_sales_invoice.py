@@ -5146,9 +5146,11 @@ class TestSalesInvoice(FrappeTestCase):
 		sales_invoice.save()
 		sales_invoice.submit()
 		expected_gl_entries = [
-			['Debtors - _TC', sales_invoice.grand_total, 0.0, sales_invoice.posting_date],
-			['Deferred Revenue - _TC', 0.0, sales_invoice.grand_total, sales_invoice.posting_date]
-		]
+                ['Cost of Goods Sold - _TC', 100.0, 0.0, sales_invoice.posting_date],
+                ['Stock In Hand - _TC', 0.0, 100.0, sales_invoice.posting_date],
+                ['Debtors - _TC', sales_invoice.grand_total, 0.0, sales_invoice.posting_date],
+                ['Deferred Revenue - _TC', 0.0, sales_invoice.grand_total, sales_invoice.posting_date]
+        ]
 		check_gl_entries(self, sales_invoice.name, expected_gl_entries, sales_invoice.posting_date)
     
 	def test_deferred_revenue_invoice_multiple_item_TC_ACC_040(self):
@@ -5658,7 +5660,77 @@ class TestSalesInvoice(FrappeTestCase):
 		si.submit()
 		self.assertEqual(si.status, "Unpaid")	
 
-    
+	def test_si_with_sr_calculate_with_fixed_TC_S_139(self):
+		from erpnext.accounts.doctype.shipping_rule.test_shipping_rule import create_shipping_rule
+
+		shipping_rule = create_shipping_rule(
+			shipping_rule_type="Selling", 
+			shipping_rule_name="Shipping Rule - Test Fixed",
+			args={"calculate_based_on": "Fixed", "shipping_amount": 100}
+    	)
+		self.assertEqual(shipping_rule.docstatus, 1)
+		make_stock_entry(item_code="_Test Item", qty=10, rate=500, target="_Test Warehouse - _TC")
+		si = create_sales_invoice(qty=5,rate=200, do_not_submit=True)
+
+		si.shipping_rule = shipping_rule.name
+		si.save()
+		si.submit()
+
+		self.assertEqual(si.net_total, 1000)
+
+		self.assertEqual(si.total_taxes_and_charges, 100)
+		self.assertEqual(si.grand_total, 1100)
+
+	def test_si_with_sr_calculate_with_net_total_TC_S_140(self):
+		from erpnext.accounts.doctype.shipping_rule.test_shipping_rule import create_shipping_rule
+
+		shipping_rule = create_shipping_rule(
+			shipping_rule_type="Selling", 
+			shipping_rule_name="Shipping Rule - Test Net Total",
+			args={"calculate_based_on": "Net Total"}
+    	)
+		self.assertEqual(shipping_rule.docstatus, 1)
+		make_stock_entry(item_code="_Test Item", qty=10, rate=500, target="_Test Warehouse - _TC")
+		si = create_sales_invoice(qty=5,rate=200, do_not_submit=True)
+
+		si.shipping_rule = shipping_rule.name
+		si.save()
+		si.submit()
+
+		self.assertEqual(si.net_total, 1000)
+
+		self.assertEqual(si.total_taxes_and_charges, 200)
+		self.assertEqual(si.grand_total, 1200)
+		
+	def test_si_with_sr_calculate_with_net_weight_TC_S_141(self):
+		from erpnext.accounts.doctype.shipping_rule.test_shipping_rule import create_shipping_rule
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+
+
+		shipping_rule = create_shipping_rule(
+			shipping_rule_type="Selling", 
+			shipping_rule_name="Shipping Rule - Test Net Weight",
+			args={"calculate_based_on": "Net Weight"}
+    	)
+		self.assertEqual(shipping_rule.docstatus, 1)
+		
+		item=make_test_item("_Test Item 1")
+		item.weight_per_unit =250
+		item.weight_uom ="Nos"
+		item.save
+		make_stock_entry(item_code="_Test Item 1", qty=10, rate=500, target="_Test Warehouse - _TC")
+		si = create_sales_invoice(item=item.name, qty=5,rate=200, do_not_submit=True)
+
+		si.shipping_rule = shipping_rule.name
+		si.items[0].weight_per_unit = 250
+		si.items[0].weight_uom = 'Nos'
+		si.save()
+		si.submit()
+
+		self.assertEqual(si.net_total, 1000)
+		self.assertEqual(si.total_taxes_and_charges, 200)
+		self.assertEqual(si.grand_total, 1200)
+
 	def test_fetch_payment_terms_from_order_TC_ACC_129(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			make_test_item
@@ -5813,7 +5885,83 @@ class TestSalesInvoice(FrappeTestCase):
 		si.tax_category=tax_category
 		si.save()
 		self.assertEqual(tax_category,si.tax_category)
+  
+	def test_determine_address_tax_category_from_shipping_address_TC_ACC_135(self):
 		
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.accounts.party import get_address_tax_category
+		address_args = [
+				{	"name":"_Test Company Address-Office",
+					"address_title": "_Test Company Address",
+					"address_type": "Office",
+					"is_primary_address": 1,
+					"state": "Maharashtra",
+					"pincode":"423701",
+					"address_line1":"Test Address 10",
+					"country": "India",
+					"is_your_company_address": 1,
+					"company": "_Test Company"
+				},
+				
+				{	"name":"Customer Billing Address-Billing",
+					"address_title": "Customer Billing Address",
+					"address_type": "Billing",
+					"is_primary_address": 0,
+					"address_line1":"Test Address 11",
+					"state": "Karnataka",
+					"pincode":"587316",
+					"country": "India",
+					"is_your_company_address": 0,
+					"doctype": "Customer",
+					"docname": "_Test Customer"
+				},
+				
+				{	"name":"Customer Shipping Address-Shipping",
+					"address_title": "Customer Shipping Address",
+					"address_type": "Shipping",
+					"is_primary_address": 0,
+					"address_line1":"Test Address 11",
+					"state": "Kerala",
+					"pincode":"686582",
+					"country": "India",
+					"is_your_company_address": 0,
+					"doctype": "Customer",
+					"docname": "_Test Customer"
+				}
+		]
+		for d in address_args:
+			create_address(**d)
+
+		company_address = frappe.get_doc("Address","_Test Company Address-Office")
+		customer_shipping = frappe.get_doc("Address","Customer Billing Address-Billing")
+		if company_address.state and customer_shipping.state and company_address.state == customer_shipping.state:
+			customer_shipping.tax_category="In-State"
+		else:
+			customer_shipping.tax_category="Out-State"
+		customer_shipping.save()
+  
+		account_setting= frappe.get_doc("Accounts Settings")
+		account_setting.determine_address_tax_category_from="Billing Address"
+		account_setting.save()
+
+		self.assertEquals("Billing Address",account_setting.determine_address_tax_category_from)
+
+		item = make_test_item("_Test Item")
+		tax_category=get_address_tax_category(None,customer_shipping.name,None)
+		si = create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				item_code=item.name,
+				qty=1,
+				rate=1000,
+				do_not_submit=True
+		)
+		si.customer_address=customer_shipping.name
+		si.company_address=company_address.name
+		si.tax_category=tax_category
+		si.save()
+		self.assertEqual(tax_category,si.tax_category)
+  
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
