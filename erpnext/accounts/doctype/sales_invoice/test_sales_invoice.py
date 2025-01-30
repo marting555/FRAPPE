@@ -5962,6 +5962,54 @@ class TestSalesInvoice(FrappeTestCase):
 		si.save()
 		self.assertEqual(tax_category,si.tax_category)
   
+	def test_calculate_commission_for_sales_partner_TC_ACC_143(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.accounts.utils import get_fiscal_year
+		fiscal_year = get_fiscal_year(nowdate())[0]
+		if not frappe.db.exists("Monthly Distribution", "_Test Sales Distribution"):
+			month_distribution = frappe.get_doc({
+				"distribution_id": "_Test Sales Distribution",
+				"doctype": "Monthly Distribution",
+				"fiscal_year":fiscal_year
+			})
+			get_months(month_distribution)
+			month_distribution.insert()
+		if not frappe.db.exists("Sales Partner", "_Test Sales Distributor"):
+			month_distribution = frappe.get_doc("Monthly Distribution", "_Test Sales Distribution")
+			
+			sales_paerter = frappe.get_doc({
+				"partner_name": "_Test Sales Distributor",
+				"doctype": "Sales Partner",
+				"territory": "All Territories",
+				"sales_person": "_Test Sales Commission",
+				"partner_type": "Distributor",
+				"commission_rate":5,
+				"targets":[{
+					"item_group": "_Test Item Group",
+					"fiscal_year":fiscal_year,
+					"target_qty":10,
+					"target_amount":1000,
+					"distribution_id":month_distribution.name
+				}]
+			}).insert()
+		customer = frappe.get_doc("Customer","_Test Customer")
+		customer.default_sales_partner="_Test Sales Distributor"
+		customer.default_commission_rate=5
+		customer.save()
+		item = make_test_item("_Test Item")	
+		si = create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				item_code=item.name,
+				qty=10,
+				rate=1000,
+				do_not_submit=True
+		)
+		si.submit()
+		self.assertEqual(si.total_commission,500)
+		self.assertEqual(si.commission_rate,5)
+		self.assertEqual(si.amount_eligible_for_commission,10000)
+		self.assertEqual(si.sales_partner,"_Test Sales Distributor")
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
@@ -6356,3 +6404,26 @@ def create_address(**args):
 		address.save()
 		frappe.db.commit()
 		return address
+
+def get_months(doc):
+		month_list = [
+			"January",
+			"February",
+			"March",
+			"April",
+			"May",
+			"June",
+			"July",
+			"August",
+			"September",
+			"October",
+			"November",
+			"December",
+		]
+		idx = 1
+		for m in month_list:
+			mnth = doc.append("percentages")
+			mnth.month = m
+			mnth.percentage_allocation = 100.0 / 12
+			mnth.idx = idx
+			idx += 1
