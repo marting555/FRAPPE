@@ -3852,6 +3852,123 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			error_msg = str(e)
 			self.assertEqual(error_msg, f'Supplier Invoice No exists in Purchase Invoice {pi.name}')
 	
+		
+	def test_lcv_with_purchase_invoice_for_stock_item_TC_ACC_112(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item
+		)
+
+		item = make_test_item("_Test Item")
+		item.is_stock_item = 1
+		item.save()
+
+		pi = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item_code=item.name,
+			qty=1,
+			rate=1000,
+			do_not_submit=True,
+			update_stock=True
+		)
+		pi.submit()
+
+		lvc =frappe.get_doc({
+			"doctype":"Landed Cost Voucher",
+			"company":"_Test Company",
+			"posting_date":pi.posting_date,
+			"purchase_receipts":[
+				{
+					"receipt_document_type":"Purchase Invoice",
+					"receipt_document":pi.name,
+					"supplier":"_Test Supplier",
+					"grand_total":pi.grand_total,
+					"posting_date":pi.posting_date
+				}
+			]
+		})
+		lvc.get_items_from_purchase_receipts()
+		lvc.append("taxes",{
+			"expense_account":"Expenses Included In Valuation - _TC",
+			"amount":"300",
+			"account_currency":"INR",
+			"description":"test"
+		})
+		lvc.save()
+		lvc.submit()
+  
+		expected_gle = [
+			['Creditors - _TC', 0.0, pi.grand_total, pi.posting_date],
+			['Expenses Included In Valuation - _TC', 0.0, 300.0, pi.posting_date],
+			['Stock In Hand - _TC', pi.grand_total+300, 0.0, pi.posting_date]
+		]
+  
+		check_gl_entries(self ,pi.name,expected_gle=expected_gle,posting_date=pi.posting_date)
+  
+	def test_lcv_with_purchase_invoice_for_fixed_asset_item_TC_ACC_113(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item
+		)
+
+		item = make_test_item("_Test Asstes Item")
+
+		if not item.is_fixed_asset:
+			item.is_stock_item = 0
+			item.is_fixed_asset = 1
+			item.auto_create_assets = 1
+			item.asset_category = "Test_Category"
+			item.asset_naming_series = "ACC-ASS-.YYYY.-"
+			item.flags.ignore_mandatory = 1
+			item.save()
+  
+		pi = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item_code=item.name,
+			qty=1,
+			rate=1000,
+			do_not_submit=True,
+			update_stock=True,
+			do_not_save=True
+		)
+  
+		pi.items[0].asset_location = "Test Location"
+  
+		pi.insert().submit()
+  
+		lvc =frappe.get_doc({
+			"doctype":"Landed Cost Voucher",
+			"company":"_Test Company",
+			"posting_date":pi.posting_date,
+			"purchase_receipts":[
+				{
+					"receipt_document_type":"Purchase Invoice",
+					"receipt_document":pi.name,
+					"supplier":"_Test Supplier",
+					"grand_total":pi.grand_total,
+					"posting_date":pi.posting_date	
+				}
+			]
+		})
+  
+		lvc.get_items_from_purchase_receipts()
+		lvc.append("taxes",{
+			"expense_account":"Expenses Included In Valuation - _TC",
+			"amount":"300",
+			"account_currency":"INR",
+			"description":"test"
+		})
+  
+		lvc.save()
+		lvc.submit()
+  
+		expected_gle =[
+			['Capital Equipments - _TC',pi.grand_total+300, 0.0, pi.posting_date],
+			['Creditors - _TC', 0.0, 1000.0, pi.posting_date],
+			['Expenses Included In Valuation - _TC', 0.0, 300.0, pi.posting_date],
+		]
+		
+		check_gl_entries(self ,pi.name,expected_gle=expected_gle,posting_date=pi.posting_date)
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
