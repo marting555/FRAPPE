@@ -1317,6 +1317,25 @@ class TestQuotation(FrappeTestCase):
 		self.assertAlmostEqual(gl_credits["Output Tax SGST - _TC"], 450)
 		self.assertAlmostEqual(gl_credits["Output Tax CGST - _TC"], 450)
 		self.assertAlmostEqual(gl_credits["Sales - _TC"], 5000)
+  
+	def test_quotation_expired_to_create_sales_order_TC_S_153(self):
+		selling_setting = frappe.get_doc('Stock Settings')
+		selling_setting.allow_sales_order_creation_for_expired_quotation = 1
+		selling_setting.save()
+  
+		quotation = make_quotation(qty=1, rate=100, transaction_date=add_days(nowdate(), -1), do_not_submit=1)
+		quotation.submit()
+  
+		self.assertEqual(quotation.grand_total, 100)
+		self.assertEqual(quotation.status, "Open")
+  
+		sales_order = make_sales_order(quotation.name)
+		sales_order.delivery_date = nowdate()
+		sales_order.set("payment_schedule", [])
+		sales_order.save()
+		sales_order.submit()
+  
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
 
 	def stock_check(self,voucher,qty):
 		stock_entries = frappe.get_all(

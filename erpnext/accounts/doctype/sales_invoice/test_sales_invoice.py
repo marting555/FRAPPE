@@ -6095,10 +6095,12 @@ class TestSalesInvoice(FrappeTestCase):
 		dun = create_dunning(si.name)
 		dun.posting_date = add_days(nowdate(), 1)
 		dun.dunning_type = "_Test Dunning"
+		dun.rate_of_interest = 5.0
 		dun.save()
 		dun.submit()
-  
-		self.assertEqual(dun.grand_total, 1000.013698630137)
+		dun.reload()
+		
+		self.assertEqual(dun.grand_total, 1000.136986301)
   
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
