@@ -2078,6 +2078,26 @@ class TestStockEntry(FrappeTestCase):
 
 		return se
 
+	def test_stock_enrty_with_batch_TC_SCK_076(self):
+		fields = {
+			"is_stock_item": 1, 
+			"has_batch_no":1,
+			"create_new_batch":1,
+			"batch_number_series":"ABC.##"
+
+		}
+		if frappe.db.has_column("Item", "gst_hsn_code"):
+			fields["gst_hsn_code"] = "01011010"
+
+		item = make_item("_Test Batch Item", properties=fields).name
+		se = make_stock_entry(item_code=item, qty=10, rate=100, target="_Test Warehouse - _TC",purpose="Material Receipt")
+
+		batch = frappe.get_all('Batch',filters={'item': item,"reference_name":se.name},fields=['name',"batch_qty",'item',"reference_name"])
+		
+		self.assertEqual(len(batch), 1)
+		self.assertEqual(batch[0]['item'], item)
+		self.assertEqual(batch[0]['batch_qty'], 10)
+		self.assertEqual(batch[0]['reference_name'], se.name)
 
 def create_bom(bom_item, rm_items, company=None, qty=None, properties=None):
 		bom = frappe.new_doc("BOM")
