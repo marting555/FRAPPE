@@ -163,6 +163,7 @@ class PaymentEntry(AccountsController):
 			self.party_account_currency = self.paid_to_account_currency
 
 	def validate(self):
+		self.validate_amounts_if_currency_exchange()
 		self.setup_party_account_field()
 		self.set_missing_values()
 		self.set_liability_account()
@@ -195,7 +196,6 @@ class PaymentEntry(AccountsController):
 	def on_submit(self):
 		if self.difference_amount:
 			frappe.throw(_("Difference Amount must be zero"))
-		self.validate_amounts_if_currency_exchnage()
 		self.make_gl_entries()
 		self.update_outstanding_amounts()
 		self.update_payment_schedule()
@@ -204,7 +204,7 @@ class PaymentEntry(AccountsController):
 		self.update_advance_paid()  # advance_paid_status depends on the payment request amount
 		self.set_status()
 
-	def validate_amounts_if_currency_exchnage(self):
+	def validate_amounts_if_currency_exchange(self):
 		if self.paid_from_account_currency != self.paid_to_account_currency:
 			self.paid_amount = self.received_amount * self.target_exchange_rate
 
