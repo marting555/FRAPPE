@@ -6498,6 +6498,7 @@ def create_address(**args):
 		return address
 
 def create_company_and_supplier():
+	fiscal_year = get_active_fiscal_year()
 	parent_company= "Test Company-1122"
 	child_company = "Test Company-3344"
 	price_list = "Test Inter Company Transfer"
@@ -6517,6 +6518,10 @@ def create_company_and_supplier():
 			}
 		).insert()
 
+		set_parent_company_fiscal_year = frappe.get_doc("Fiscal Year", fiscal_year)
+		set_parent_company_fiscal_year.append("companies",{"company": parent_company})
+		set_parent_company_fiscal_year.save()
+
 	if not frappe.db.exists("Company", child_company):
 		frappe.get_doc(
 			{
@@ -6529,6 +6534,11 @@ def create_company_and_supplier():
 				"parent_company": parent_company
 			}
 		).insert()
+
+		set_child_company_fiscal_year = frappe.get_doc("Fiscal Year", fiscal_year)
+		set_child_company_fiscal_year.append("companies",{"company": child_company})
+		set_child_company_fiscal_year.save()
+
 
 	if not frappe.db.exists("Price List", price_list):
 		frappe.get_doc(
@@ -6644,3 +6654,24 @@ def create_company_and_supplier():
 		"customer": customer,
 		"price_list": price_list
 	}
+
+def get_active_fiscal_year():
+	from datetime import datetime
+	get_fiscal_year = frappe.db.get_value(
+		"Fiscal Year",
+		{"disabled": 0, "year_start_date": ["<", today()], "year_end_date": [">", today()]},
+		pluck="name",
+		order_by="creation ASC"
+	)
+
+	if not get_fiscal_year:
+		current_year = datetime.today().year
+		get_fiscal_year = frappe.get_doc({
+			"doctype": "Fiscal Year",
+			"year": f"{current_year}",
+			"year_start_date": f"{current_year}-01-01",
+			"year_end_date": f"{current_year}-12-31"
+		}).insert(ignore_permissions=True).name
+
+	return get_fiscal_year
+
