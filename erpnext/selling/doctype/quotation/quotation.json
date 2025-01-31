@@ -10,7 +10,6 @@
  "engine": "InnoDB",
  "field_order": [
   "customer_section",
-  "title",
   "naming_series",
   "quotation_to",
   "party_name",
@@ -96,8 +95,9 @@
   "shipping_address",
   "company_address_section",
   "company_address",
-  "column_break_87",
   "company_address_display",
+  "column_break_87",
+  "company_contact_person",
   "terms_tab",
   "payment_schedule_section",
   "payment_terms_template",
@@ -140,16 +140,6 @@
    "fieldname": "customer_section",
    "fieldtype": "Section Break",
    "options": "fa fa-user"
-  },
-  {
-   "allow_on_submit": 1,
-   "default": "{customer_name}",
-   "fieldname": "title",
-   "fieldtype": "Data",
-   "hidden": 1,
-   "label": "Title",
-   "no_copy": 1,
-   "print_hide": 1
   },
   {
    "fieldname": "naming_series",
@@ -1092,13 +1082,20 @@
    "fieldname": "disable_rounded_total",
    "fieldtype": "Check",
    "label": "Disable Rounded Total"
+  },
+  {
+   "fieldname": "company_contact_person",
+   "fieldtype": "Link",
+   "label": "Company Contact Person",
+   "options": "Contact",
+   "print_hide": 1
   }
  ],
  "icon": "fa fa-shopping-cart",
  "idx": 82,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-11-07 18:37:11.715189",
+ "modified": "2025-01-06 15:00:08.774925",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Quotation",
@@ -1195,5 +1192,5 @@
  "sort_order": "DESC",
  "states": [],
  "timeline_field": "party_name",
- "title_field": "title"
+ "title_field": "customer_name"
 }

@@ -98,8 +98,8 @@ def get_item_details(
 
 	get_item_tax_template(ctx, item, out)
 	out.item_tax_rate = get_item_tax_map(
-		ctx.company,
-		out.item_tax_template or ctx.item_tax_template,
+		doc=doc or ctx,
+		tax_template=out.item_tax_template or ctx.item_tax_template,
 		as_json=True,
 	)
 
@@ -133,6 +133,13 @@ def get_item_details(
 	data = get_pricing_rule_for_item(ctx, doc=doc, for_validate=for_validate)
 
 	out.update(data)
+
+	if (
+		frappe.db.get_single_value("Stock Settings", "auto_create_serial_and_batch_bundle_for_outward")
+		and not ctx.get("serial_and_batch_bundle")
+		and (ctx.get("use_serial_batch_fields") or ctx.get("doctype") == "POS Invoice")
+	):
+		update_stock(ctx, out, doc)
 
 	if ctx.transaction_date and item.lead_time_days:
 		out.schedule_date = out.lead_time_date = add_days(ctx.transaction_date, item.lead_time_days)
@@ -172,6 +179,92 @@ def set_valuation_rate(out: ItemDetails | dict, ctx: ItemDetailsCtx):
 
 	else:
 		out.update(get_valuation_rate(ctx.item_code, ctx.company, out.get("warehouse")))
+
+
+def update_stock(ctx, out, doc=None):
+	from erpnext.stock.doctype.batch.batch import get_available_batches
+	from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos_for_outward
+
+	if (
+		(
+			ctx.get("doctype") in ["Delivery Note", "POS Invoice"]
+			or (ctx.get("doctype") == "Sales Invoice" and ctx.get("update_stock"))
+		)
+		and out.warehouse
+		and out.stock_qty > 0
+	):
+		kwargs = frappe._dict(
+			{
+				"item_code": ctx.item_code,
+				"warehouse": ctx.warehouse,
+				"based_on": frappe.db.get_single_value("Stock Settings", "pick_serial_and_batch_based_on"),
+			}
+		)
+
+		if ctx.get("ignore_serial_nos"):
+			kwargs["ignore_serial_nos"] = ctx.get("ignore_serial_nos")
+
+		qty = out.stock_qty
+		batches = []
+		if out.has_batch_no and not ctx.get("batch_no"):
+			batches = get_available_batches(kwargs)
+			if doc:
+				filter_batches(batches, doc)
+
+			for batch_no, batch_qty in batches.items():
+				if batch_qty >= qty:
+					out.update({"batch_no": batch_no, "actual_batch_qty": qty})
+					break
+				else:
+					qty -= batch_qty
+
+				out.update({"batch_no": batch_no, "actual_batch_qty": batch_qty})
+
+		if out.has_serial_no and out.has_batch_no and has_incorrect_serial_nos(ctx, out):
+			kwargs["batches"] = [ctx.get("batch_no")] if ctx.get("batch_no") else [out.get("batch_no")]
+			serial_nos = get_serial_nos_for_outward(kwargs)
+			serial_nos = get_filtered_serial_nos(serial_nos, doc)
+
+			out["serial_no"] = "\n".join(serial_nos[: cint(out.stock_qty)])
+
+		elif out.has_serial_no and not ctx.get("serial_no"):
+			serial_nos = get_serial_nos_for_outward(kwargs)
+			serial_nos = get_filtered_serial_nos(serial_nos, doc)
+
+			out["serial_no"] = "\n".join(serial_nos[: cint(out.stock_qty)])
+
+
+def has_incorrect_serial_nos(ctx, out):
+	from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
+
+	if not ctx.get("serial_no"):
+		return True
+
+	serial_nos = get_serial_nos(ctx.get("serial_no"))
+	if len(serial_nos) != out.get("stock_qty"):
+		return True
+
+	return False
+
+
+def filter_batches(batches, doc):
+	for row in doc.get("items"):
+		if row.get("batch_no") in batches:
+			batches[row.get("batch_no")] -= row.get("qty")
+			if batches[row.get("batch_no")] <= 0:
+				del batches[row.get("batch_no")]
+
+
+def get_filtered_serial_nos(serial_nos, doc):
+	from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
+
+	for row in doc.get("items"):
+		if row.get("serial_no"):
+			for serial_no in get_serial_nos(row.get("serial_no")):
+				if serial_no in serial_nos:
+					serial_nos.remove(serial_no)
+
+	return serial_nos
 
 
 def update_bin_details(ctx: ItemDetailsCtx, out: ItemDetails, doc):
@@ -528,7 +621,7 @@ def get_barcode_data(items_list=None, item_code=None):
 
 
 @frappe.whitelist()
-def get_item_tax_info(company, tax_category, item_codes, item_rates=None, item_tax_templates=None):
+def get_item_tax_info(doc, tax_category, item_codes, item_rates=None, item_tax_templates=None):
 	out = {}
 
 	if item_tax_templates is None:
@@ -537,14 +630,10 @@ def get_item_tax_info(company, tax_category, item_codes, item_rates=None, item_t
 	if item_rates is None:
 		item_rates = {}
 
-	if isinstance(item_codes, str):
-		item_codes = json.loads(item_codes)
-
-	if isinstance(item_rates, str):
-		item_rates = json.loads(item_rates)
-
-	if isinstance(item_tax_templates, str):
-		item_tax_templates = json.loads(item_tax_templates)
+	doc = parse_json(doc)
+	item_codes = parse_json(item_codes)
+	item_rates = parse_json(item_rates)
+	item_tax_templates = parse_json(item_tax_templates)
 
 	for item_code in item_codes:
 		if not item_code or item_code[1] in out or not item_tax_templates.get(item_code[1]):
@@ -553,7 +642,7 @@ def get_item_tax_info(company, tax_category, item_codes, item_rates=None, item_t
 		out[item_code[1]] = ItemDetails()
 		item = frappe.get_cached_doc("Item", item_code[0])
 		ctx: ItemDetailsCtx = {
-			"company": company,
+			"company": doc.company,
 			"tax_category": tax_category,
 			"base_net_rate": item_rates.get(item_code[1]),
 		}
@@ -563,7 +652,9 @@ def get_item_tax_info(company, tax_category, item_codes, item_rates=None, item_t
 
 		get_item_tax_template(ctx, item, out[item_code[1]])
 		out[item_code[1]]["item_tax_rate"] = get_item_tax_map(
-			company, out[item_code[1]].get("item_tax_template"), as_json=True
+			doc=doc,
+			tax_template=out[item_code[1]].get("item_tax_template"),
+			as_json=True,
 		)
 
 	return out
@@ -632,7 +723,9 @@ def _get_item_tax_template(
 			if tax.valid_from or tax.maximum_net_rate:
 				# In purchase Invoice first preference will be given to supplier invoice date
 				# if supplier date is not present then posting date
-				validation_date = ctx.get("bill_date") or ctx.get("transaction_date")
+				validation_date = (
+					ctx.get("bill_date") or ctx.get("posting_date") or ctx.get("transaction_date")
+				)
 
 				if getdate(tax.valid_from) <= getdate(validation_date) and is_within_valid_range(ctx, tax):
 					taxes_with_validity.append(tax)
@@ -689,12 +782,16 @@ def is_within_valid_range(ctx: ItemDetailsCtx, tax) -> bool:
 
 
 @frappe.whitelist()
-def get_item_tax_map(company, item_tax_template, as_json=True):
+def get_item_tax_map(*, doc: str | dict | Document, tax_template: str | None = None, as_json=True):
+	doc = parse_json(doc)
 	item_tax_map = {}
-	if item_tax_template:
-		template = frappe.get_cached_doc("Item Tax Template", item_tax_template)
+	for t in (t for t in (doc.get("taxes") or []) if not t.get("set_by_item_tax_template")):
+		item_tax_map[t.get("account_head")] = t.get("rate")
+
+	if tax_template:
+		template = frappe.get_cached_doc("Item Tax Template", tax_template)
 		for d in template.taxes:
-			if frappe.get_cached_value("Account", d.tax_type, "company") == company:
+			if frappe.get_cached_value("Account", d.tax_type, "company") == doc.get("company"):
 				item_tax_map[d.tax_type] = d.tax_rate
 
 	return json.dumps(item_tax_map) if as_json else item_tax_map

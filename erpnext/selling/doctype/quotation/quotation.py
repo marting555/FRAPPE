@@ -49,6 +49,7 @@ class Quotation(SellingController):
 		company: DF.Link
 		company_address: DF.Link | None
 		company_address_display: DF.TextEditor | None
+		company_contact_person: DF.Link | None
 		competitors: DF.TableMultiSelect[CompetitorDetail]
 		contact_display: DF.SmallText | None
 		contact_email: DF.Data | None
@@ -106,7 +107,6 @@ class Quotation(SellingController):
 		tc_name: DF.Link | None
 		terms: DF.TextEditor | None
 		territory: DF.Link | None
-		title: DF.Data | None
 		total: DF.Currency
 		total_net_weight: DF.Float
 		total_qty: DF.Float
@@ -412,7 +412,11 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		2. If selections: Is Alternative Item/Has Alternative Item: Map if selected and adequate qty
 		3. If selections: Simple row: Map if adequate qty
 		"""
-		has_qty = item.qty > 0
+		balance_qty = item.qty - ordered_items.get(item.item_code, 0.0)
+		if balance_qty <= 0:
+			return False
+
+		has_qty = balance_qty
 
 		if not selected_rows:
 			return not item.is_alternative
@@ -570,7 +574,7 @@ def handle_mandatory_error(e, customer, lead_name):
 	from frappe.utils import get_link_to_form
 
 	mandatory_fields = e.args[0].split(":")[1].split(",")
-	mandatory_fields = [customer.meta.get_label(field.strip()) for field in mandatory_fields]
+	mandatory_fields = [_(customer.meta.get_label(field.strip())) for field in mandatory_fields]
 
 	frappe.local.message_log = []
 	message = _("Could not auto create Customer due to the following missing mandatory field(s):") + "<br>"

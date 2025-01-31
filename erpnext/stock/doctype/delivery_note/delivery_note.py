@@ -12,7 +12,6 @@ from frappe.utils import cint, flt
 
 from erpnext.controllers.accounts_controller import get_taxes_and_charges, merge_taxes
 from erpnext.controllers.selling_controller import SellingController
-from erpnext.stock.doctype.serial_no.serial_no import get_delivery_note_serial_no
 
 form_grid_templates = {"items": "templates/form_grid/item_grid.html"}
 
@@ -52,9 +51,10 @@ class DeliveryNote(SellingController):
 		company: DF.Link
 		company_address: DF.Link | None
 		company_address_display: DF.TextEditor | None
+		company_contact_person: DF.Link | None
 		contact_display: DF.SmallText | None
 		contact_email: DF.Data | None
-		contact_mobile: DF.Data | None
+		contact_mobile: DF.SmallText | None
 		contact_person: DF.Link | None
 		conversion_rate: DF.Float
 		cost_center: DF.Link | None
@@ -76,7 +76,7 @@ class DeliveryNote(SellingController):
 		ignore_pricing_rule: DF.Check
 		in_words: DF.Data | None
 		incoterm: DF.Link | None
-		installation_status: DF.LiteralNone
+		installation_status: DF.Literal[None]
 		instructions: DF.Text | None
 		inter_company_reference: DF.Link | None
 		is_internal_customer: DF.Check
@@ -128,7 +128,6 @@ class DeliveryNote(SellingController):
 		tc_name: DF.Link | None
 		terms: DF.TextEditor | None
 		territory: DF.Link | None
-		title: DF.Data | None
 		total: DF.Currency
 		total_commission: DF.Currency
 		total_net_weight: DF.Float
@@ -982,11 +981,6 @@ def make_sales_invoice(source_name, target_doc=None, args=None):
 	def update_item(source_doc, target_doc, source_parent):
 		target_doc.qty = to_make_invoice_qty_map[source_doc.name]
 
-		if source_doc.serial_no and source_parent.per_billed > 0 and not source_parent.is_return:
-			target_doc.serial_no = get_delivery_note_serial_no(
-				source_doc.item_code, target_doc.qty, source_parent.name
-			)
-
 	def get_pending_qty(item_row):
 		pending_qty = item_row.qty - invoiced_qty_map.get(item_row.name, 0)
 
@@ -1048,7 +1042,7 @@ def make_sales_invoice(source_name, target_doc=None, args=None):
 	automatically_fetch_payment_terms = cint(
 		frappe.db.get_single_value("Accounts Settings", "automatically_fetch_payment_terms")
 	)
-	if automatically_fetch_payment_terms:
+	if automatically_fetch_payment_terms and not doc.is_return:
 		doc.set_payment_schedule()
 
 	return doc

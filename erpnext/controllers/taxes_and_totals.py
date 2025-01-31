@@ -8,7 +8,6 @@ import frappe
 from frappe import _, scrub
 from frappe.model.document import Document
 from frappe.utils import cint, flt, round_based_on_smallest_currency_fraction
-from frappe.utils.deprecations import deprecated
 
 import erpnext
 from erpnext.accounts.doctype.journal_entry.journal_entry import get_exchange_rate
@@ -18,7 +17,8 @@ from erpnext.controllers.accounts_controller import (
 	validate_inclusive_tax,
 	validate_taxes_and_charges,
 )
-from erpnext.stock.get_item_details import ItemDetailsCtx, _get_item_tax_template
+from erpnext.deprecation_dumpster import deprecated
+from erpnext.stock.get_item_details import ItemDetailsCtx, _get_item_tax_template, get_item_tax_map
 from erpnext.utilities.regional import temporary_flag
 
 logger = frappe.logger(__name__)
@@ -33,6 +33,11 @@ class calculate_taxes_and_totals:
 		frappe.flags.round_row_wise_tax = frappe.db.get_single_value(
 			"Accounts Settings", "round_row_wise_tax"
 		)
+
+		if doc.get("round_off_applicable_accounts_for_tax_withholding"):
+			frappe.flags.round_off_applicable_accounts.append(
+				doc.round_off_applicable_accounts_for_tax_withholding
+			)
 
 		self._items = self.filter_rows() if self.doc.doctype == "Quotation" else self.doc.get("items")
 
@@ -74,6 +79,7 @@ class calculate_taxes_and_totals:
 		self.validate_conversion_rate()
 		self.calculate_item_values()
 		self.validate_item_tax_template()
+		self.update_item_tax_map()
 		self.initialize_taxes()
 		self.determine_exclusive_rate()
 		self.calculate_net_total()
@@ -139,6 +145,14 @@ class calculate_taxes_and_totals:
 								item.idx, frappe.bold(item.item_code)
 							)
 						)
+
+	def update_item_tax_map(self):
+		for item in self.doc.items:
+			item.item_tax_rate = get_item_tax_map(
+				doc=self.doc,
+				tax_template=item.item_tax_template,
+				as_json=True,
+			)
 
 	def validate_conversion_rate(self):
 		# validate conversion rate
@@ -501,9 +515,7 @@ class calculate_taxes_and_totals:
 				)
 
 		elif tax.charge_type == "On Net Total":
-			if not item_tax_map:
-				current_net_amount = item.net_amount
-			elif tax.account_head in item_tax_map:
+			if tax.account_head in item_tax_map:
 				current_net_amount = item.net_amount
 			current_tax_amount = (tax_rate / 100.0) * item.net_amount
 		elif tax.charge_type == "On Previous Row Amount":
@@ -569,7 +581,12 @@ class calculate_taxes_and_totals:
 			tax.base_tax_amount = round(tax.base_tax_amount, 0)
 			tax.base_tax_amount_after_discount_amount = round(tax.base_tax_amount_after_discount_amount, 0)
 
-	@deprecated
+	@deprecated(
+		f"{__name__}.calculate_taxes_and_totals.manipulate_grand_total_for_inclusive_tax",
+		"unknown",
+		"v16",
+		"No known instructions.",
+	)
 	def manipulate_grand_total_for_inclusive_tax(self):
 		# for backward compatablility - if in case used by an external application
 		return self.adjust_grand_total_for_inclusive_tax()

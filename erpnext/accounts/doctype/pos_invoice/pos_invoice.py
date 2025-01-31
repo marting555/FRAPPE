@@ -32,12 +32,8 @@ class POSInvoice(SalesInvoice):
 		from erpnext.accounts.doctype.payment_schedule.payment_schedule import PaymentSchedule
 		from erpnext.accounts.doctype.pos_invoice_item.pos_invoice_item import POSInvoiceItem
 		from erpnext.accounts.doctype.pricing_rule_detail.pricing_rule_detail import PricingRuleDetail
-		from erpnext.accounts.doctype.sales_invoice_advance.sales_invoice_advance import (
-			SalesInvoiceAdvance,
-		)
-		from erpnext.accounts.doctype.sales_invoice_payment.sales_invoice_payment import (
-			SalesInvoicePayment,
-		)
+		from erpnext.accounts.doctype.sales_invoice_advance.sales_invoice_advance import SalesInvoiceAdvance
+		from erpnext.accounts.doctype.sales_invoice_payment.sales_invoice_payment import SalesInvoicePayment
 		from erpnext.accounts.doctype.sales_invoice_timesheet.sales_invoice_timesheet import (
 			SalesInvoiceTimesheet,
 		)
@@ -74,6 +70,7 @@ class POSInvoice(SalesInvoice):
 		company: DF.Link
 		company_address: DF.Link | None
 		company_address_display: DF.TextEditor | None
+		company_contact_person: DF.Link | None
 		consolidated_invoice: DF.Link | None
 		contact_display: DF.SmallText | None
 		contact_email: DF.Data | None
@@ -164,7 +161,6 @@ class POSInvoice(SalesInvoice):
 		terms: DF.TextEditor | None
 		territory: DF.Link | None
 		timesheets: DF.Table[SalesInvoiceTimesheet]
-		title: DF.Data | None
 		to_date: DF.Date | None
 		total: DF.Currency
 		total_advance: DF.Currency
@@ -240,6 +236,7 @@ class POSInvoice(SalesInvoice):
 			from erpnext.accounts.doctype.pricing_rule.utils import update_coupon_code_count
 
 			update_coupon_code_count(self.coupon_code, "used")
+		self.clear_unallocated_mode_of_payments()
 
 	def before_cancel(self):
 		if (
@@ -277,6 +274,12 @@ class POSInvoice(SalesInvoice):
 			update_coupon_code_count(self.coupon_code, "cancelled")
 
 		self.delink_serial_and_batch_bundle()
+
+	def clear_unallocated_mode_of_payments(self):
+		self.set("payments", self.get("payments", {"amount": ["not in", [0, None, ""]]}))
+
+		sip = frappe.qb.DocType("Sales Invoice Payment")
+		frappe.qb.from_(sip).delete().where(sip.parent == self.name).where(sip.amount == 0).run()
 
 	def delink_serial_and_batch_bundle(self):
 		for row in self.items:

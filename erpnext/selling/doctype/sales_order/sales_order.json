@@ -11,7 +11,6 @@
  "field_order": [
   "customer_section",
   "column_break0",
-  "title",
   "naming_series",
   "customer",
   "customer_name",
@@ -113,8 +112,9 @@
   "dispatch_address",
   "col_break46",
   "company_address",
-  "column_break_92",
   "company_address_display",
+  "column_break_92",
+  "company_contact_person",
   "payment_schedule_section",
   "payment_terms_section",
   "payment_terms_template",
@@ -184,18 +184,6 @@
    "hide_seconds": 1,
    "oldfieldtype": "Column Break",
    "width": "50%"
-  },
-  {
-   "allow_on_submit": 1,
-   "default": "{customer_name}",
-   "fieldname": "title",
-   "fieldtype": "Data",
-   "hidden": 1,
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Title",
-   "no_copy": 1,
-   "print_hide": 1
   },
   {
    "fieldname": "naming_series",
@@ -1644,16 +1632,16 @@
   },
   {
    "fieldname": "utm_medium",
-   "print_hide": 1,
    "fieldtype": "Link",
    "label": "Medium",
-   "options": "UTM Medium"
+   "options": "UTM Medium",
+   "print_hide": 1
   },
   {
    "fieldname": "utm_content",
-   "print_hide": 1,
    "fieldtype": "Data",
-   "label": "Content"
+   "label": "Content",
+   "print_hide": 1
   },
   {
    "fieldname": "utm_source",
@@ -1676,13 +1664,20 @@
    "oldfieldtype": "Link",
    "options": "UTM Campaign",
    "print_hide": 1
+  },
+  {
+   "fieldname": "company_contact_person",
+   "fieldtype": "Link",
+   "label": "Company Contact Person",
+   "options": "Contact",
+   "print_hide": 1
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-06-28 10:36:23.824623",
+ "modified": "2025-01-06 15:01:45.771616",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

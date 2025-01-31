@@ -469,6 +469,9 @@ class PurchaseOrder(BuyingController):
 		if self.is_against_so():
 			self.update_status_updater()
 
+		if self.is_against_pp():
+			self.update_status_updater_if_from_pp()
+
 		self.update_prevdoc_status()
 		if not self.is_subcontracted or self.is_old_subcontracting_flow:
 			self.update_requested_qty()
@@ -550,6 +553,20 @@ class PurchaseOrder(BuyingController):
 			}
 		)
 
+	def update_status_updater_if_from_pp(self):
+		self.status_updater.append(
+			{
+				"source_dt": "Purchase Order Item",
+				"target_dt": "Production Plan Sub Assembly Item",
+				"join_field": "production_plan_sub_assembly_item",
+				"target_field": "received_qty",
+				"target_parent_dt": "Production Plan",
+				"target_parent_field": "",
+				"target_ref_field": "qty",
+				"source_field": "fg_item_qty",
+			}
+		)
+
 	def update_delivered_qty_in_sales_order(self):
 		"""Update delivered qty in Sales Order for drop ship"""
 		sales_orders_to_update = []
@@ -569,6 +586,9 @@ class PurchaseOrder(BuyingController):
 
 	def is_against_so(self):
 		return any(d.sales_order for d in self.items if d.sales_order)
+
+	def is_against_pp(self):
+		return any(d.production_plan for d in self.items if d.production_plan)
 
 	def set_received_qty_for_drop_ship_items(self):
 		for item in self.items:
@@ -871,27 +891,40 @@ def make_inter_company_sales_order(source_name, target_doc=None):
 
 @frappe.whitelist()
 def make_subcontracting_order(source_name, target_doc=None, save=False, submit=False, notify=False):
-	target_doc = get_mapped_subcontracting_order(source_name, target_doc)
+	if not is_po_fully_subcontracted(source_name):
+		target_doc = get_mapped_subcontracting_order(source_name, target_doc)
 
-	if (save or submit) and frappe.has_permission(target_doc.doctype, "create"):
-		target_doc.save()
+		if (save or submit) and frappe.has_permission(target_doc.doctype, "create"):
+			target_doc.save()
 
-		if submit and frappe.has_permission(target_doc.doctype, "submit", target_doc):
-			try:
-				target_doc.submit()
-			except Exception as e:
-				target_doc.add_comment("Comment", _("Submit Action Failed") + "<br><br>" + str(e))
+			if submit and frappe.has_permission(target_doc.doctype, "submit", target_doc):
+				try:
+					target_doc.submit()
+				except Exception as e:
+					target_doc.add_comment("Comment", _("Submit Action Failed") + "<br><br>" + str(e))
 
-		if notify:
-			frappe.msgprint(
-				_("Subcontracting Order {0} created.").format(
-					get_link_to_form(target_doc.doctype, target_doc.name)
-				),
-				indicator="green",
-				alert=True,
-			)
+			if notify:
+				frappe.msgprint(
+					_("Subcontracting Order {0} created.").format(
+						get_link_to_form(target_doc.doctype, target_doc.name)
+					),
+					indicator="green",
+					alert=True,
+				)
 
-	return target_doc
+		return target_doc
+	else:
+		frappe.throw(_("This PO has been fully subcontracted."))
+
+
+def is_po_fully_subcontracted(po_name):
+	table = frappe.qb.DocType("Purchase Order Item")
+	query = (
+		frappe.qb.from_(table)
+		.select(table.name)
+		.where((table.parent == po_name) & (table.qty != table.sco_qty))
+	)
+	return not query.run(as_dict=True)
 
 
 def get_mapped_subcontracting_order(source_name, target_doc=None):
@@ -943,7 +976,8 @@ def get_mapped_subcontracting_order(source_name, target_doc=None):
 					"material_request": "material_request",
 					"material_request_item": "material_request_item",
 				},
-				"field_no_map": [],
+				"field_no_map": ["qty", "fg_item_qty", "amount"],
+				"condition": lambda item: item.qty != item.sco_qty,
 			},
 		},
 		target_doc,
@@ -951,12 +985,3 @@ def get_mapped_subcontracting_order(source_name, target_doc=None):
 	)
 
 	return target_doc
-
-
-@frappe.whitelist()
-def is_subcontracting_order_created(po_name) -> bool:
-	return (
-		True
-		if frappe.db.exists("Subcontracting Order", {"purchase_order": po_name, "docstatus": ["=", 1]})
-		else False
-	)
