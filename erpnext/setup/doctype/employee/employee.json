@@ -63,11 +63,7 @@
   "permanent_address",
   "permanent_accommodation_type",
   "emergency_contact_details",
-  "person_to_be_contacted",
-  "column_break_55",
-  "emergency_phone_number",
-  "column_break_19",
-  "relation",
+  "emergency_contacts",
   "attendance_and_leave_details",
   "attendance_device_id",
   "column_break_44",
@@ -254,24 +250,6 @@
    "fieldname": "emergency_contact_details",
    "fieldtype": "Section Break",
    "label": "Emergency Contact"
-  },
-  {
-   "bold": 1,
-   "fieldname": "emergency_phone_number",
-   "fieldtype": "Data",
-   "label": "Emergency Phone",
-   "options": "Phone"
-  },
-  {
-   "bold": 1,
-   "fieldname": "person_to_be_contacted",
-   "fieldtype": "Data",
-   "label": "Emergency Contact Name"
-  },
-  {
-   "fieldname": "relation",
-   "fieldtype": "Data",
-   "label": "Relation"
   },
   {
    "collapsible": 1,
@@ -711,10 +689,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "column_break_19",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "salary_currency",
    "fieldtype": "Link",
    "label": "Salary Currency",
@@ -792,10 +766,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "column_break_55",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "column_break_99",
    "fieldtype": "Column Break"
   },
@@ -817,6 +787,12 @@
    "fieldname": "iban",
    "fieldtype": "Data",
    "label": "IBAN"
+  },
+  {
+   "fieldname": "emergency_contacts",
+   "fieldtype": "Table",
+   "label": "Emergency Contacts",
+   "options": "Employee Emergency Contacts"
   }
  ],
  "icon": "fa fa-user",
@@ -824,7 +800,7 @@
  "image_field": "image",
  "is_tree": 1,
  "links": [],
- "modified": "2024-03-27 13:09:36.900706",
+ "modified": "2025-01-31 03:35:26.406470",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Employee",
