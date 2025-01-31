@@ -163,7 +163,6 @@ class PaymentEntry(AccountsController):
 			self.party_account_currency = self.paid_to_account_currency
 
 	def validate(self):
-		self.validate_amounts_if_currency_exchange()
 		self.setup_party_account_field()
 		self.set_missing_values()
 		self.set_liability_account()
@@ -203,10 +202,6 @@ class PaymentEntry(AccountsController):
 		self.make_advance_payment_ledger_entries()
 		self.update_advance_paid()  # advance_paid_status depends on the payment request amount
 		self.set_status()
-
-	def validate_amounts_if_currency_exchange(self):
-		if self.paid_from_account_currency != self.paid_to_account_currency:
-			self.paid_amount = self.received_amount * self.target_exchange_rate
 
 	def set_liability_account(self):
 		# Auto setting liability account should only be done during 'draft' status
