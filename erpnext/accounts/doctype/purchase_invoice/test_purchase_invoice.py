@@ -3851,6 +3851,125 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		except Exception as e:
 			error_msg = str(e)
 			self.assertEqual(error_msg, f'Supplier Invoice No exists in Purchase Invoice {pi.name}')
+
+	def setUp(self):
+		from erpnext.accounts.doctype.pricing_rule.test_pricing_rule import make_pricing_rule
+		import random
+        # Ensure supplier exists
+		supplier = create_supplier(
+			supplier_name="Monica",
+			supplier_type="Company",
+		)
+		# self.supplier = frappe.get_doc({
+        #     "doctype": "Supplier",
+        #     "supplier_name": "Monica",
+        #     "supplier_type": "Company"
+        # })
+		if not frappe.db.exists("Supplier", supplier.supplier_name):
+			supplier.insert()
+
+        # Ensure Item exists with rate rules
+		self.item = frappe.get_doc({
+            "doctype": "Item",
+            "item_code": "Boat Earpods",
+            "item_name": "Boat Earpods",
+            "is_stock_item": 1,
+            "stock_uom": "Nos",
+            "valuation_rate": 5000,
+            "standard_rate": 5000
+        })
+		if not frappe.db.exists("Item", self.item.item_code):
+			self.make_item(
+			"Boat Earpods",
+			{
+				"item_name": "Boat Earpods",
+				"is_stock_item": 1,
+				"stock_uom": "Nos",
+				"gst_hsn_code": random.choice(frappe.db.get_all("GST HSN Code", pluck = 'name')),
+				"valuation_rate": 5000,
+				"standard_rate": 5000,
+			},
+			)
+			print('item_rate',frappe.db.get_value("Item", "Boat Earpods", "valuation_rate"))
+
+        # Define Pricing Rule
+		pricing_rule = frappe.get_doc({
+                "doctype": "Pricing Rule",
+                "title": "Boat Earpods - Monica Discount",
+                "apply_on": "Item Code",
+                "items": [{"item_code": "Boat Earpods"}],
+                "supplier": "Monica",
+				"company": "PP Ltd",
+                "min_qty": 10,
+				"valid_from":"2024-12-01",
+                "rate_or_discount": "Discount Percentage",
+                "discount_percentage": 10,
+                "valid_from": "2024-12-01",
+				"price_or_product_discount": "Price",
+                "apply_on_transaction": "Purchase Invoice",
+				"warehouse": "Stores - PP Ltd"
+                # "apply_discount_on": "Rate"
+            })
+		print(pricing_rule.name)
+		if not frappe.db.exists("Pricing Rule", {"title" : pricing_rule.title}):
+			self.pricing_rule =make_pricing_rule(
+				apply_on="Item Code",
+				title="Boat Earpods - Monica Discount",
+				items=[{"item_code": "Boat Earpods"}],
+				supplier="Monica",
+				min_qty= 10,
+				company= "PP Ltd",
+				rate_or_discount="Discount Percentage",
+				discount_percentage=10,
+				valid_from="2024-12-01",
+				selling = 0,
+				buying = 1,
+				apply_discount_on = "Rate",
+				price_or_product_discount= "Price",
+				apply_rule_on = "Transaction",
+				apply_on_transaction = "Purchase Invoice"
+			)
+			# self.pricing_rule.insert()
+			frappe.db.commit()
+		
+	def test_purchase_invoice_discount(self):
+        # Create Purchase Invoice
+		pi = make_purchase_invoice(
+			company = "PP Ltd",
+			supplier= "Monica",
+            posting_date= "2024-12-15",
+            update_stock= 1,
+			set_warehouse= "Stores - PP Ltd",
+			warehouse= "Stores - PP Ltd",
+			cost_center= "Main - PP Ltd",
+			qty=20,
+			item_code="Boat Earpods",
+		)
+		# print(pi.name)
+		# purchase_invoice = frappe.get_doc({
+        #     "doctype": "Purchase Invoice",
+        #     "supplier": "Monica",
+        #     "posting_date": "2024-12-15",
+        #     "update_stock": 1,
+        #     "items": [{
+        #         "item_code": "TEST_ITEM",
+        #         "qty": 20,
+        #         "rate": 4500  # Expected rate after discount
+        #     }]
+        # })
+		if not frappe.db.exists("Purchase Invoice", pi.name):
+			pi.insert()
+			pi.submit()
+
+        # Validate Stock Ledger Entry
+		sle = frappe.get_all("Stock Ledger Entry", 
+                             filters={"voucher_no": pi.name},
+                             fields=["actual_qty", "valuation_rate", "incoming_rate", "stock_value", "stock_value_difference"])
+		print(sle[0]["actual_qty"], sle[0]["valuation_rate"], sle[0]["incoming_rate"], sle[0]["stock_value"], sle[0]["stock_value_difference"])
+		self.assertEqual(sle[0]["actual_qty"], 20)
+		self.assertEqual(sle[0]["valuation_rate"], 4500)
+
+  
 	
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
