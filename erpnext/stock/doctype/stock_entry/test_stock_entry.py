@@ -2488,6 +2488,89 @@ class TestStockEntry(FrappeTestCase):
 				]
 			),
 		)
+	def test_partial_material_transfer_TC_SCK_209(self):
+		company = "_Test Company"
+		fields = {
+			"shelf_life_in_days": 365,
+			"end_of_life": "2099-12-31",
+			"is_stock_item": 1,
+			"has_batch_no": 1,
+			"create_new_batch": 1,
+			"has_expiry_date": 1,
+			"batch_number_series": "Test-SABBMRP-Bno.#####",
+			"has_serial_no": 1,
+			"serial_no_series": "Test-SL-SN.#####",
+			"valuation_rate": 100,
+		}
+		if frappe.db.has_column("Item", "gst_hsn_code"):
+			fields["gst_hsn_code"] = "01011010"
+
+		item_code = make_item("COOKIES (BT-SL)", fields).name
+
+		source_warehouse = "Stores - _TC"
+		target_warehouse = create_warehouse(
+			warehouse_name="Department Store",
+			properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
+			company=company,
+		)
+		qty = 10
+
+		# Stock Receipt
+		se_receipt = make_stock_entry(
+			item_code=item_code,
+			qty=qty,
+			to_warehouse=target_warehouse,
+			company=company,
+		)
+
+		# Create Material Request
+		mr = make_material_request(
+			material_request_type="Material Transfer",
+			qty=qty,
+			warehouse=target_warehouse,
+			item_code=item_code,
+			company=company,
+			posting_date="2024-12-19",
+			required_by_date="2024-12-20",
+		)
+		self.assertEqual(mr.status, "Pending")
+
+		se1 = make_mr_se(mr.name)
+		se1.company = company
+		se1.items[0].qty = 5
+		se1.from_warehouse = target_warehouse
+		se1.items[0].t_warehouse = source_warehouse
+		se1.items[0].expense_account = "Cost of Goods Sold - _TC"
+		se1.insert()
+		se1.submit()
+
+		self.assertEqual(se1.stock_entry_type, "Material Transfer")
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Partially Received")
+
+		# Check Stock Ledger Entries
+		self.check_stock_ledger_entries(
+			"Stock Entry",
+			se1.name,
+			[
+				[item_code, target_warehouse, -5],
+				[item_code, source_warehouse, 5],
+			],
+		)
+
+		# Check GL Entries
+		stock_in_hand_account = get_inventory_account(company, source_warehouse)
+		cogs_account = "Cost of Goods Sold - _TC"
+		self.check_gl_entries(
+			"Stock Entry",
+			se1.name,
+			sorted(
+				[
+					[stock_in_hand_account, 500.0, 0.0],
+					[cogs_account, 0.0, 500.0],
+				]
+			),
+		)
 def create_bom(bom_item, rm_items, company=None, qty=None, properties=None):
 		bom = frappe.new_doc("BOM")
 		bom.update(
