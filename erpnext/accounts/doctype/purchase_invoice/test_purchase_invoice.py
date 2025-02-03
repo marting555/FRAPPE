@@ -3967,6 +3967,54 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		]
 		
 		check_gl_entries(self ,pi.name,expected_gle=expected_gle,posting_date=pi.posting_date)
+  
+	def test_payment_term_discount_for_pi_at_fully_paid_TC_ACC_098(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item
+		)
+		if not frappe.db.exists("Payment Term","_Test Discount Term"):
+			pt = frappe.get_doc({
+				"doctype":"Payment Term",
+				"payment_term_name":"_Test Discount Term",
+				"invoice_portion":100,
+				"mode_of_payment":"Cash",
+				"discount_type":"Percentage",
+				"due_date_based_on":"Day(s) after invoice date",	
+				"discount":10
+			}).insert()
+
+		pt = frappe.get_doc("Payment Term","_Test Discount Term")
+		
+		item = make_test_item("_Test Item")
+  
+		pi = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item_code=item.name,
+			qty=1,
+			rate=1000,
+			do_not_submit=True,
+   			do_not_save = True
+		)
+  
+		pi.append("payment_schedule",{
+			"payment_term":"_Test Discount Term",
+			"due_date":add_days(nowdate(),1),
+			"invoice_portion":100,
+			"payment_amount":pi.grand_total,
+			"discount_date":add_days(nowdate(),1),
+		})
+		pi.insert().submit()
+		pe = get_payment_entry(pi.doctype,pi.name,bank_account="Cash - _TC",reference_date=nowdate())
+		pe.reference_no = "1"
+		pe.deductions[0].account="_Test Account Discount - _TC"
+		pe.save().submit()
+		expected_gle =[
+			['Cash - _TC', 0.0,(pi.grand_total-pi.grand_total * 0.1), nowdate()],
+			['Creditors - _TC',  pi.grand_total,0.0, nowdate()],
+			['_Test Account Discount - _TC', 0.0,pi.grand_total * 0.1, nowdate()]
+		]
+		check_gl_entries(self,voucher_no=pe.name,expected_gle=expected_gle,posting_date=nowdate(),voucher_type="Payment Entry")
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",

@@ -6152,6 +6152,51 @@ class TestSalesInvoice(FrappeTestCase):
 			self.assertEqual(si.commission_rate,5)
 			self.assertEqual(si.amount_eligible_for_commission,10000)
 			self.assertEqual(si.sales_partner,"_Test Sales Distributor")
+   
+	def test_payment_term_discount_for_si_at_fully_paid_TC_ACC_097(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+
+		if not frappe.db.exists("Payment Term","_Test Discount Term"):
+			pt = frappe.get_doc({
+				"doctype":"Payment Term",
+				"payment_term_name":"_Test Discount Term",
+				"invoice_portion":100,
+				"mode_of_payment":"Cash",
+				"discount_type":"Percentage",
+				"due_date_based_on":"Day(s) after invoice date",	
+				"discount":10
+			}).insert()
+
+		pt = frappe.get_doc("Payment Term","_Test Discount Term")
+		
+		item = make_test_item("_Test Item")
+		sales_invoice =  create_sales_invoice(
+			customer="_Test Customer",
+			company="_Test Company",
+			item_code=item.name,
+			qty=1,
+			rate=1000,
+			do_not_submit=True,
+			do_not_save=True
+		)
+		sales_invoice.append("payment_schedule",{
+			"payment_term":"_Test Discount Term",
+			"due_date":add_days(nowdate(),1),
+			"invoice_portion":100,
+			"payment_amount":sales_invoice.grand_total,
+			"discount_date":add_days(nowdate(),1),
+		})
+		sales_invoice.insert().submit()
+		pe = get_payment_entry(sales_invoice.doctype,sales_invoice.name,bank_account="Cash - _TC",reference_date=nowdate())
+		pe.reference_no = "1"
+		pe.deductions[0].account="_Test Account Discount - _TC"
+		pe.save().submit()
+		expected_gle =[
+			['Cash - _TC', (sales_invoice.grand_total-sales_invoice.grand_total * 0.1), 0.0, nowdate()],
+			['Debtors - _TC', 0.0, sales_invoice.grand_total, nowdate()],
+			['_Test Account Discount - _TC', sales_invoice.grand_total * 0.1, 0.0, nowdate()]
+		]
+		check_gl_entries(self,voucher_no=pe.name,expected_gle=expected_gle,posting_date=nowdate(),voucher_type="Payment Entry")
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
