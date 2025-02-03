@@ -314,6 +314,25 @@ class TestBlanketOrder(FrappeTestCase):
 		self.assertEqual(quotation.docstatus, 1)
 		self.assertEqual(quotation.grand_total, 50000)
   
+	def test_blanket_order_to_validate_allowance_in_sales_order_TC_S_161(self):
+		selling_setting = frappe.get_doc('Selling Settings')
+		selling_setting.blanket_order_allowance = 5.0
+		selling_setting.save()
+  
+		frappe.flags.args.doctype = "Sales Order"
+
+		bo = make_blanket_order(blanket_order_type="Selling",quantity=20,rate=100)
+		self.assertEqual(bo.docstatus, 1)
+  
+		so = make_order(bo.name)
+		so.delivery_date = add_days(nowdate(), 5)
+		for itm in so.items:
+			itm.qty = 21
+		so.save()
+		so.submit()
+		so.reload()
+  
+		self.assertEqual(so.status, "To Deliver and Bill")
 
 def make_blanket_order(**args):
 	args = frappe._dict(args)
