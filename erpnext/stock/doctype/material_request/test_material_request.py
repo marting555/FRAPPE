@@ -6595,6 +6595,97 @@ class TestMaterialRequest(FrappeTestCase):
 		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi1.name, 'account': 'Stock In Hand - _TC'},'credit')
 		self.assertEqual(gl_stock_debit, 500)
 
+	def test_create_mr_po_2pr_serial_part_return_tc_sck_211(self):
+		company = "_Test Company"
+		warehouse = "Stores - _TC"
+		supplier = "_Test Supplier 1"
+		item_code = "_Test Item With Serial No"
+		quantity = 3
+
+		if not frappe.db.exists("Item", item_code):
+			item = frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"stock_uom": "Nos",
+				"is_stock_item": 1,
+				"item_group": "_Test Item Group",
+				"default_warehouse": warehouse,
+				"company": company,
+				"has_serial_no": 1
+			})
+			if 'india_compliance' in frappe.get_installed_apps():
+				gst_hsn_code = "11112222"
+				if not frappe.db.exists("GST HSN Code", gst_hsn_code):
+					gst_hsn_code = frappe.new_doc("GST HSN Code")
+					gst_hsn_code.hsn_code = "11112222"
+					gst_hsn_code.save()
+				item.gst_hsn_code = gst_hsn_code
+			item.insert()
+		mr = make_material_request(item_code=item_code)
+		
+		po = make_purchase_order(mr.name)
+		po.supplier = "_Test Supplier"
+		po.get("items")[0].rate = 100
+		po.get("items")[0].qty = 10
+		po.insert()
+		po.submit()
+
+		bin_qty = frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": "_Test Warehouse - _TC"}, "actual_qty")
+		pr = make_purchase_receipt(po.name)
+		serial_numbers = [f"test_item1_00{i}" for i in range(1, 5 + 1)]
+		pr.items[0].serial_no = "\n".join(serial_numbers)
+		pr.items[0].qty = 5
+		pr.insert()
+		pr.submit()
+		
+		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':pr.name})
+		self.assertEqual(sle.qty_after_transaction, bin_qty + 5)
+		self.assertEqual(sle.warehouse, mr.get("items")[0].warehouse)
+		
+		#if account setup in company
+		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
+			self.assertEqual(gl_temp_credit, 500)
+		
+		#if account setup in company
+		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit')
+			self.assertEqual(gl_stock_debit, 500)
+
+		bin_qty = frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": "_Test Warehouse - _TC"}, "actual_qty")
+		pr1 = make_purchase_receipt(po.name)
+		serial_numbers = [f"test_item2_00{i}" for i in range(1, 5 + 1)]
+		pr1.items[0].serial_no = "\n".join(serial_numbers)
+		pr1.insert()
+		pr1.submit()
+		
+		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':pr1.name})
+		self.assertEqual(sle.qty_after_transaction, bin_qty + 5)
+		self.assertEqual(sle.warehouse, mr.get("items")[0].warehouse)
+		
+		#if account setup in company
+		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr1.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
+			self.assertEqual(gl_temp_credit, 500)
+		
+		#if account setup in company
+		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr1.name, 'account': 'Stock In Hand - _TC'},'debit')
+			self.assertEqual(gl_stock_debit, 500)
+
+		pr1.load_from_db()
+		from erpnext.controllers.sales_and_purchase_return import make_return_doc
+		return_pi1 = make_return_doc("Purchase Receipt", pr1.name)
+		return_pi1.submit()
+		
+		debit_act = frappe.db.get_value("Company",return_pi1.company,"stock_received_but_not_billed")
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi1.name, 'account': debit_act},'debit')
+		self.assertEqual(gl_temp_credit, 500)
+		
+		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi1.name, 'account': 'Stock In Hand - _TC'},'credit')
+		self.assertEqual(gl_stock_debit, 500)
+
 def get_in_transit_warehouse(company):
 	if not frappe.db.exists("Warehouse Type", "Transit"):
 		frappe.get_doc(
