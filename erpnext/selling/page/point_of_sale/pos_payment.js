@@ -605,7 +605,7 @@ erpnext.PointOfSale.Payment = class {
 		const remaining = grand_total - doc.paid_amount;
 		const change = doc.change_amount || remaining <= 0 ? -1 * remaining : undefined;
 		const currency = doc.currency;
-		const label = __("Change Amount");
+		const label = remaining <= 0 ? __("Change Amount") : __("Remaining Amount");
 
 		doc.write_off_amount = 0;
 		doc.base_write_off_amount = 0;
