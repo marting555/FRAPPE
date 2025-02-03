@@ -1163,3 +1163,11 @@ def get_available_serial_nos(serial_nos, warehouse):
 def get_payment_data(invoice):
 	payment = frappe.db.get_all("Sales Invoice Payment", {"parent": invoice}, ["mode_of_payment", "amount"])
 	return payment
+
+
+@frappe.whitelist()
+def get_pos_inv_item_returned_qty(invoice, customer, item_name):
+	POS_INVOICE = "POS Invoice"
+	is_return, docstatus = frappe.db.get_value(POS_INVOICE, invoice, ["is_return", "docstatus"])
+	if not is_return and docstatus == 1:
+		return get_returned_qty_map_for_row(invoice, customer, item_name, POS_INVOICE)

@@ -24,7 +24,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 					<div class="abs-container">
 						<div class="upper-section"></div>
 						<div class="label">${__("Items")}</div>
-						<div class="items-container summary-container"></div>
+						<div class="items-container summary-container order-summary-container"></div>
 						<div class="label">${__("Totals")}</div>
 						<div class="totals-container summary-container"></div>
 						<div class="label">${__("Payments")}</div>
@@ -90,12 +90,18 @@ erpnext.PointOfSale.PastOrderSummary = class {
 				</div>`;
 	}
 
-	get_item_html(doc, item_data) {
+	async get_item_html(doc, item_data) {
+		const item_refund_data = doc.is_return || doc.docstatus === 0 ? "" : await get_returned_qty();
+
 		return `<div class="item-row-wrapper">
+				<div class="item-row-data">
 					<div class="item-name">${item_data.item_name}</div>
 					<div class="item-qty">${item_data.qty || 0} ${item_data.uom}</div>
 					<div class="item-rate-disc">${get_rate_discount_html()}</div>
-				</div>`;
+				</div>
+
+				${item_refund_data}
+		</div>`;
 
 		function get_rate_discount_html() {
 			if (item_data.rate && item_data.price_list_rate && item_data.rate !== item_data.price_list_rate) {
@@ -107,6 +113,27 @@ erpnext.PointOfSale.PastOrderSummary = class {
 					doc.currency
 				)}</div>`;
 			}
+		}
+
+		async function get_returned_qty() {
+			const r = await frappe.call({
+				method: "erpnext.controllers.sales_and_purchase_return.get_pos_inv_item_returned_qty",
+				args: {
+					invoice: doc.name,
+					customer: doc.customer,
+					item_name: item_data.name,
+				},
+			});
+
+			console.log(doc.name, doc.customer, item_data.name);
+
+			if (!r.message.qty) {
+				return "";
+			}
+
+			return `<div class="item-row-refund">
+				<strong>${r.message.qty}</strong> Refunded
+			</div>`;
 		}
 	}
 
@@ -370,13 +397,13 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		});
 	}
 
-	attach_items_info(doc) {
+	async attach_items_info(doc) {
 		this.$items_container.html("");
-		doc.items.forEach((item) => {
-			const item_dom = this.get_item_html(doc, item);
+		for (const item of doc.items) {
+			const item_dom = await this.get_item_html(doc, item);
 			this.$items_container.append(item_dom);
 			this.set_dynamic_rate_header_width();
-		});
+		}
 	}
 
 	set_dynamic_rate_header_width() {
