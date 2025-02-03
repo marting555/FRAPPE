@@ -3852,6 +3852,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 	def setUp(self):
 		from erpnext.accounts.doctype.pricing_rule.test_pricing_rule import make_pricing_rule
+		from erpnext.stock.doctype.item.test_item import make_item
+
 		import random
         # Ensure supplier exists
 		supplier = create_supplier(
@@ -3867,68 +3869,58 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			supplier.insert()
 
         # Ensure Item exists with rate rules
-		self.item = frappe.get_doc({
-            "doctype": "Item",
-            "item_code": "Boat Earpods",
-            "item_name": "Boat Earpods",
+		it_fields = {
+			"item_name": "Boat Earpods",
             "is_stock_item": 1,
             "stock_uom": "Nos",
             "valuation_rate": 5000,
             "standard_rate": 5000
-        })
-		if not frappe.db.exists("Item", self.item.item_code):
-			self.make_item(
-			"Boat Earpods",
-			{
-				"item_name": "Boat Earpods",
-				"is_stock_item": 1,
-				"stock_uom": "Nos",
-				"gst_hsn_code": random.choice(frappe.db.get_all("GST HSN Code", pluck = 'name')),
-				"valuation_rate": 5000,
-				"standard_rate": 5000,
-			},
-			)
-			print('item_rate',frappe.db.get_value("Item", "Boat Earpods", "valuation_rate"))
+		}
+		# self.item = frappe.get_doc({
+        #     "doctype": "Item",
+        #     "item_code": "Boat Earpods",
+        #     "item_name": "Boat Earpods",
+        #     "is_stock_item": 1,
+        #     "stock_uom": "Nos",
+        #     "valuation_rate": 5000,
+        #     "standard_rate": 5000
+        # })
+		item = make_item("Boat Earpods", it_fields).name
+		# if not frappe.db.exists("Item", self.item.item_code):
+		# 	self.make_item(
+		# 	"Boat Earpods",
+		# 	{
+		# 		"item_name": "Boat Earpods",
+		# 		"is_stock_item": 1,
+		# 		"stock_uom": "Nos",
+		# 		"gst_hsn_code": random.choice(frappe.db.get_all("GST HSN Code", pluck = 'name')),
+		# 		"valuation_rate": 5000,
+		# 		"standard_rate": 5000,
+		# 	},
+		# 	)
+		# 	print('item_rate',frappe.db.get_value("Item", "Boat Earpods", "valuation_rate"))
 
         # Define Pricing Rule
-		pricing_rule = frappe.get_doc({
-                "doctype": "Pricing Rule",
-                "title": "Boat Earpods - Monica Discount",
-                "apply_on": "Item Code",
-                "items": [{"item_code": "Boat Earpods"}],
-                "supplier": "Monica",
-				"company": "PP Ltd",
-                "min_qty": 10,
-				"valid_from":"2024-12-01",
-                "rate_or_discount": "Discount Percentage",
-                "discount_percentage": 10,
-                "valid_from": "2024-12-01",
-				"price_or_product_discount": "Price",
-                "apply_on_transaction": "Purchase Invoice",
-				"warehouse": "Stores - PP Ltd"
-                # "apply_discount_on": "Rate"
-            })
-		print(pricing_rule.name)
-		if not frappe.db.exists("Pricing Rule", {"title" : pricing_rule.title}):
-			self.pricing_rule =make_pricing_rule(
-				apply_on="Item Code",
-				title="Boat Earpods - Monica Discount",
-				items=[{"item_code": "Boat Earpods"}],
-				supplier="Monica",
-				min_qty= 10,
-				company= "PP Ltd",
-				rate_or_discount="Discount Percentage",
-				discount_percentage=10,
-				valid_from="2024-12-01",
-				selling = 0,
-				buying = 1,
-				apply_discount_on = "Rate",
-				price_or_product_discount= "Price",
-				apply_rule_on = "Transaction",
-				apply_on_transaction = "Purchase Invoice"
-			)
-			# self.pricing_rule.insert()
-			frappe.db.commit()
+		# if not frappe.db.exists("Pricing Rule", {"title" : pricing_rule.title}):
+		self.pricing_rule =make_pricing_rule(
+			apply_on="Item Code",
+			title="Boat Earpods - Monica Discount",
+			items=[{"item_code": "Boat Earpods"}],
+			supplier="Monica",
+			min_qty= 10,
+			company= "PP Ltd",
+			rate_or_discount="Discount Percentage",
+			discount_percentage=10,
+			valid_from="2024-12-01",
+			selling = 0,
+			buying = 1,
+			apply_discount_on = "Rate",
+			price_or_product_discount= "Price",
+			apply_rule_on = "Transaction",
+			apply_on_transaction = "Purchase Invoice"
+		)
+		# self.pricing_rule.insert()
+		frappe.db.commit()
 		
 	def test_purchase_invoice_discount(self):
         # Create Purchase Invoice
@@ -3955,9 +3947,9 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
         #         "rate": 4500  # Expected rate after discount
         #     }]
         # })
-		if not frappe.db.exists("Purchase Invoice", pi.name):
-			pi.insert()
-			pi.submit()
+		# if not frappe.db.exists("Purchase Invoice", pi.name):
+		pi.insert()
+		pi.submit()
 
         # Validate Stock Ledger Entry
 		sle = frappe.get_all("Stock Ledger Entry", 
