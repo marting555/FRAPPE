@@ -2623,6 +2623,87 @@ class TestDeliveryNote(FrappeTestCase):
 			if row.item_code == serial_item.name:
 				self.assertTrue(row.serial_no)
 
+	def test_dn_submission(self):
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		# from crm.crm.doctype.lead.lead import make_customer
+		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
+		"""Test Purchase Receipt Creation, Submission, and Stock Ledger Update"""
+
+		# Create Purchase Receipt
+		item_fields = {
+			"item_name": "Ball point Pen",
+			"is_stock_item": 1,
+			"stock_uom": "Box",
+			"uoms": [{'uom': "Pcs", 'conversion_factor': 20}],
+		}
+
+		dn_fields = {
+			'customer' : "SS Ltd",
+			'posting_date':"03-02-2025",
+			'item_code': "Ball point Pen",
+			'qty': 30,
+			'uom': "Pcs",
+			'company': "_Test Company",
+			'set_warehouse': "Stores - PP Ltd"
+		}
+		dn_data = {
+			"company" : "_Test Company",
+			"item_code" : "Ball point Pen",
+			"warehouse" : create_warehouse("_Test Warehouse", properties=None, company=dn_fields['company']),
+			"customer": "SS Ltd",
+            "schedule_date": "2025-02-03",
+			"qty" : 20,
+			# "rate" : 130,
+		}
+		customer = frappe.get_doc("Customer",{'customer_name':"SS Ltd"}).insert()
+		# self.supplier = frappe.get_doc({
+		# 	"doctype": "Supplier",
+		# 	"supplier_name": "Test Supplier 1",
+		# 	"supplier_group": "All Supplier Groups",
+		# 	"supplier_type": "Company"
+		# })
+		# self.supplier.insert(ignore_if_duplicate=True)
+		target_warehouse = create_warehouse("_Test Warehouse", properties=None, company=dn_data['company'])
+		item = make_item("Ball point Pen", item_fields).name
+		# self.item_code = "Ball Point Pen"
+		# purchase_receipt = frappe.get_doc({
+		# 	"doctype": "Purchase Receipt",
+		# 	"supplier": "Test Supplier 1",
+		# 	"posting_date": "2025-01-03",
+		# 	"set_warehouse": "Stores - PP Ltd",
+		# 	"items": [
+		# 		{
+		# 			"item_code": "Ball Point Pen",
+		# 			"qty": 5,
+		# 			"uom": "Box",
+		# 			"conversion_factor": 1,
+		# 			"received_qty": 5
+		# 		}
+		# 	]
+		# })
+		# purchase_receipt.insert()
+		# purchase_receipt.submit()
+		dn = create_delivery_note(item_code=item, qty=30, uom="Pcs", stock_uom="Box", company=dn_data['company'], customer=customer, warehouse=target_warehouse,)
+		# doc_pr = make_purchase_receipt(**pr_data)
+		# doc_pr.append("taxes", {
+        #             "charge_type": "On Net Total",
+        #             "account_head": account_name,
+        #             "rate": 12,
+        #             "description": "Input GST",
+        #         })
+		dn.submit()
+
+		sle = frappe.get_doc("Stock Ledger Entry", {"voucher_no": dn.name})
+		# print('qty',sle.qty_after_transaction)
+
+		# Verify if stock ledger has the correct stock entry
+
+		self.assertEqual(sle.qty_after_transaction, 1.5, "Stock Ledger did not update correctly!")
+
+	def tearDown(self):
+		"""Clean up test data after running the test"""
+		frappe.db.rollback()  # Rollback changes to maintain a clean test environment
+
 def create_delivery_note(**args):
 	dn = frappe.new_doc("Delivery Note")
 	args = frappe._dict(args)

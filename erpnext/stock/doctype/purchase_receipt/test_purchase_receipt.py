@@ -5,6 +5,7 @@ import frappe
 from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, cint, cstr, flt, get_datetime, getdate, nowtime, today
 from pypika import functions as fn
+from erpnext.stock.utils import get_incoming_rate, get_stock_balance
 
 import erpnext
 from erpnext.accounts.doctype.account.test_account import get_inventory_account
@@ -4815,6 +4816,164 @@ class TestPurchaseReceipt(FrappeTestCase):
 		doc_pi_return.submit()
 
 		self.assertEqual(doc_pi_return.status, 'Return')
+
+	# def setUp(self):
+	# 	import random
+	# 	"""Set up test data before running the test"""
+	# 	item_fields = {
+	# 		"item_name": "Ball point Pen",
+	# 		"is_stock_item": 1,
+	# 		"stock_uom": "Box",
+	# 		"uoms": [{'uom': "Pcs", 'conversion_factor': 20}],
+	# 	}
+
+	# 	pr_fields = {
+	# 		'supplier' : "Test Supplier 1",
+	# 		'posting_date':"03-01-2025",
+	# 		'item_code': "Ball point Pen",
+	# 		'qty': 5,
+	# 		'uom': "Box",
+	# 		'company': "_Test Company",
+	# 		'set_warehouse': "Stores - PP Ltd"
+	# 	}
+	# 	# self.supplier = frappe.get_doc({
+	# 	# 	"doctype": "Supplier",
+	# 	# 	"supplier_name": "Test Supplier 1",
+	# 	# 	"supplier_group": "All Supplier Groups",
+	# 	# 	"supplier_type": "Company"
+	# 	# })
+	# 	# self.supplier.insert(ignore_if_duplicate=True)
+	# 	target_warehouse = create_warehouse("_Test Warehouse", properties=None, company=pr_fields.company)
+	# 	item = make_item("Ball point Pen", item_fields).name
+	# 	# self.item_code = "Ball Point Pen"
+	# 	supplier = create_supplier(
+	# 		supplier_name="Test Supplier 1",
+	# 		supplier_group="All Supplier Groups",
+	# 		supplier_type="Company"
+	# 	)
+
+		# if not frappe.db.exists("Item", "Ball Point Pen"):
+		# 	make_item(
+		# 		"Ball Point Pen",
+		# 		{
+		# 			"item_name": "Ball Point Pen",
+		# 			"is_stock_item": 1,
+		# 			"stock_uom": "Box",
+		# 			"custom_item_type": "RM",
+		# 			"gst_hsn_code": random.choice(frappe.db.get_all("GST HSN Code", pluck = 'name')),
+		# 			"is_stock_item": 1,
+		# 			"conversion_factor": 1,
+		# 			"uoms": [
+		# 				{"uom": "Box", "conversion_factor": 1},
+		# 				{"uom": "Pcs", "conversion_factor": 20}
+		# 			]
+		# 		},
+		# 		)
+		# self.item = frappe.get_doc("Item", item) if frappe.db.exists("Item", item) else None
+		# if not self.item:
+		# 	self.item = frappe.get_doc({
+		# 		"doctype": "Item",
+		# 		"item_code": self.item_code,
+		# 		"item_name": self.item_code,
+		# 		"stock_uom": "Box",
+		# 		"gst_hsn_code": random.choice(frappe.db.get_all("GST HSN Code", pluck = 'name')),
+		# 		"is_stock_item": 1,
+		# 		"uoms": [
+		# 			{"uom": "Box", "conversion_factor": 1},
+		# 			{"uom": "Pcs", "conversion_factor": 20}
+		# 		]
+		# 	})
+		# 	self.item.insert()
+
+		# self.warehouse = frappe.get_doc({
+		# 	"doctype": "Warehouse",
+		# 	"warehouse_name": "Stores - PP Ltd",
+		# 	"company": frappe.defaults.get_defaults().get("company")
+		# })
+		# self.warehouse.insert(ignore_if_duplicate=True)
+
+	def test_purchase_receipt_submission(self):
+		"""Test Purchase Receipt Creation, Submission, and Stock Ledger Update"""
+
+		# Create Purchase Receipt
+		item_fields = {
+			"item_name": "Ball point Pen",
+			"is_stock_item": 1,
+			"stock_uom": "Box",
+			"uoms": [{'uom': "Pcs", 'conversion_factor': 20}],
+		}
+
+		pr_fields = {
+			'supplier' : "Test Supplier 1",
+			'posting_date':"03-01-2025",
+			'item_code': "Ball point Pen",
+			'qty': 5,
+			'uom': "Box",
+			'company': "_Test Company",
+			'set_warehouse': "Stores - PP Ltd"
+		}
+		pr_data = {
+			"company" : "_Test Company",
+			"item_code" : "Ball point Pen",
+			"warehouse" : create_warehouse("_Test Warehouse", properties=None, company=pr_fields['company']),
+			"supplier": "Test Supplier 1",
+            "schedule_date": "2025-02-03",
+			"qty" : 5,
+			# "rate" : 130,
+		}
+		# self.supplier = frappe.get_doc({
+		# 	"doctype": "Supplier",
+		# 	"supplier_name": "Test Supplier 1",
+		# 	"supplier_group": "All Supplier Groups",
+		# 	"supplier_type": "Company"
+		# })
+		# self.supplier.insert(ignore_if_duplicate=True)
+		target_warehouse = create_warehouse("_Test Warehouse", properties=None, company=pr_fields['company'])
+		item = make_item("Ball point Pen", item_fields).name
+		# self.item_code = "Ball Point Pen"
+		supplier = create_supplier(
+			supplier_name="Test Supplier 1",
+			supplier_group="All Supplier Groups",
+			supplier_type="Company"
+		)
+		# purchase_receipt = frappe.get_doc({
+		# 	"doctype": "Purchase Receipt",
+		# 	"supplier": "Test Supplier 1",
+		# 	"posting_date": "2025-01-03",
+		# 	"set_warehouse": "Stores - PP Ltd",
+		# 	"items": [
+		# 		{
+		# 			"item_code": "Ball Point Pen",
+		# 			"qty": 5,
+		# 			"uom": "Box",
+		# 			"conversion_factor": 1,
+		# 			"received_qty": 5
+		# 		}
+		# 	]
+		# })
+		# purchase_receipt.insert()
+		# purchase_receipt.submit()
+		doc_pr = make_purchase_receipt(**pr_data)
+		print(doc_pr.posting_date, doc_pr.total_qty)
+		# doc_pr.append("taxes", {
+        #             "charge_type": "On Net Total",
+        #             "account_head": account_name,
+        #             "rate": 12,
+        #             "description": "Input GST",
+        #         })
+		doc_pr.submit()
+
+		sle = frappe.get_doc("Stock Ledger Entry", {"voucher_no": doc_pr.name})
+		# print('qty',sle.qty_after_transaction)
+
+		# Verify if stock ledger has the correct stock entry
+
+		self.assertEqual(sle.qty_after_transaction, 5, "Stock Ledger did not update correctly!")
+
+	def tearDown(self):
+		"""Clean up test data after running the test"""
+		frappe.db.rollback()  # Rollback changes to maintain a clean test environment
+
 
 def prepare_data_for_internal_transfer():
 	from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_internal_supplier
