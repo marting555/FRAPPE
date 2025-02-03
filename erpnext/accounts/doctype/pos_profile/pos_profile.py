@@ -71,7 +71,7 @@ class POSProfile(Document):
 		self.validate_accounting_dimensions()
 
 	def validate_accounting_dimensions(self):
-		acc_dim_names = required_accounting_dimensions()
+		acc_dim_names = required_accounting_dimensions(self.company)
 		for acc_dim in acc_dim_names:
 			if not self.get(acc_dim):
 				frappe.throw(
@@ -217,20 +217,25 @@ def get_child_nodes(group_type, root):
 	)
 
 
-def required_accounting_dimensions():
+def required_accounting_dimensions(company=None):
 	p = frappe.qb.DocType("Accounting Dimension")
 	c = frappe.qb.DocType("Accounting Dimension Detail")
 
-	acc_dim_doc = (
+	dimension_query = (
 		frappe.qb.from_(p)
 		.inner_join(c)
 		.on(p.name == c.parent)
-		.select(c.parent)
+		.select(p.document_type)
 		.where((c.mandatory_for_bs == 1) | (c.mandatory_for_pl == 1))
 		.where(p.disabled == 0)
-	).run(as_dict=1)
+	)
 
-	acc_dim_names = [scrub(d.parent) for d in acc_dim_doc]
+	if company:
+		dimension_query = dimension_query.where(c.company == company)
+
+	acc_dim_doc = dimension_query.run(as_dict=1)
+
+	acc_dim_names = [scrub(d.document_type) for d in acc_dim_doc]
 	return acc_dim_names
 
 
