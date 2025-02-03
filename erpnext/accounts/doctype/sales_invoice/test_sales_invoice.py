@@ -6149,6 +6149,32 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertEqual(si.status, "Unpaid")
 		self.assertEqual(si.grand_total, 10000)
   
+	def test_sales_invoice_to_allow_item_multiple_times_TC_S_159(self):
+		selling_setting = frappe.get_doc('Selling Settings')
+		selling_setting.allow_multiple_items = 1
+		selling_setting.save()
+  
+		si_items = [
+			{
+				"item_code": "_Test Item",
+				"qty": 1,
+				"rate": 200
+			},
+			{
+				"item_code": "_Test Item",
+				"qty": 1,
+				"rate": 200
+			},
+		]
+  
+		si = create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				item_list=si_items,
+				do_not_submit=False
+			)
+		self.assertEqual(si.status, "Unpaid")
+  
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
@@ -6230,30 +6256,35 @@ def create_sales_invoice(**args):
 			)
 		).name
 
-	si.append(
-		"items",
-		{
-			"item_code": args.item or args.item_code or "_Test Item",
-			"item_name": args.item_name or "_Test Item",
-			"description": args.description or "_Test Item",
-			"warehouse": args.warehouse or "_Test Warehouse - _TC",
-			"target_warehouse": args.target_warehouse,
-			"qty": args.qty or 1,
-			"uom": args.uom or "Nos",
-			"stock_uom": args.uom or "Nos",
-			"rate": args.rate if args.get("rate") is not None else 100,
-			"price_list_rate": args.price_list_rate if args.get("price_list_rate") is not None else 100,
-			"income_account": args.income_account or "Sales - _TC",
-			"expense_account": args.expense_account or "Cost of Goods Sold - _TC",
-			"discount_account": args.discount_account or None,
-			"discount_amount": args.discount_amount or 0,
-			"asset": args.asset or None,
-			"cost_center": args.cost_center or "_Test Cost Center - _TC",
-			"conversion_factor": args.get("conversion_factor", 1),
-			"incoming_rate": args.incoming_rate or 0,
-			"serial_and_batch_bundle": bundle_id,
-		},
-	)
+	if args.item_list:
+		for item in args.item_list:
+			si.append("items", item)
+
+	else:
+		si.append(
+			"items",
+			{
+				"item_code": args.item or args.item_code or "_Test Item",
+				"item_name": args.item_name or "_Test Item",
+				"description": args.description or "_Test Item",
+				"warehouse": args.warehouse or "_Test Warehouse - _TC",
+				"target_warehouse": args.target_warehouse,
+				"qty": args.qty or 1,
+				"uom": args.uom or "Nos",
+				"stock_uom": args.uom or "Nos",
+				"rate": args.rate if args.get("rate") is not None else 100,
+				"price_list_rate": args.price_list_rate if args.get("price_list_rate") is not None else 100,
+				"income_account": args.income_account or "Sales - _TC",
+				"expense_account": args.expense_account or "Cost of Goods Sold - _TC",
+				"discount_account": args.discount_account or None,
+				"discount_amount": args.discount_amount or 0,
+				"asset": args.asset or None,
+				"cost_center": args.cost_center or "_Test Cost Center - _TC",
+				"conversion_factor": args.get("conversion_factor", 1),
+				"incoming_rate": args.incoming_rate or 0,
+				"serial_and_batch_bundle": bundle_id,
+			},
+		)
 
 	if not args.do_not_save:
 		si.insert()
