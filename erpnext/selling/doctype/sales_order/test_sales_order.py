@@ -5751,6 +5751,25 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		delivery_note.submit()
 
 		self.assertEqual(delivery_note.status, "Completed")
+  
+	def test_sales_order_to_show_customer_tax_id_TC_S_160(self):
+		customer = frappe.get_doc("Customer", "_Test Customer")
+		customer.tax_id = "ABC12345"
+		customer.save()
+  
+		selling_setting = frappe.get_doc('Selling Settings')
+		selling_setting.hide_tax_id = 1
+		selling_setting.save()
+  
+		def is_field_hidden(doctype, fieldname):
+			meta = frappe.get_meta(doctype)
+			field = meta.get_field(fieldname)
+			
+			if field:
+				return field.hidden
+			return None
+		
+		self.assertEqual(is_field_hidden("Sales Order", "tax_id"),  1)
 
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
