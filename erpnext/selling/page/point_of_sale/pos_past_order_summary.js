@@ -125,8 +125,6 @@ erpnext.PointOfSale.PastOrderSummary = class {
 				},
 			});
 
-			console.log(doc.name, doc.customer, item_data.name);
-
 			if (!r.message.qty) {
 				return "";
 			}
