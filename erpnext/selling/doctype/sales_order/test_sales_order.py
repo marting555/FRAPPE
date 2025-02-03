@@ -15,7 +15,9 @@ from erpnext.controllers.accounts_controller import update_child_qty_rate
 from erpnext.maintenance.doctype.maintenance_schedule.test_maintenance_schedule import (
 	make_maintenance_schedule,
 )
-
+from erpnext.maintenance.doctype.maintenance_visit.test_maintenance_visit import (
+	make_maintenance_visit,
+)
 from erpnext.manufacturing.doctype.blanket_order.test_blanket_order import make_blanket_order
 from erpnext.selling.doctype.product_bundle.test_product_bundle import make_product_bundle
 from erpnext.selling.doctype.sales_order.sales_order import (
@@ -5667,6 +5669,88 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		si.save()
 		si.submit()
 		self.assertEqual(si.status, "Unpaid")
+
+	def test_discount_in_si_apply_in_net_total_TS_S_148(self):
+		make_stock_entry(item_code="_Test Item", qty=10, rate=100, target="_Test Warehouse - _TC")
+		sales_order = make_sales_order(qty=1, rate=5000)
+		sales_order.save()
+		sales_order.submit()
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+
+		delivery_note = make_delivery_note(sales_order.name)
+		delivery_note.save()
+		delivery_note.submit()
+		self.assertEqual(delivery_note.status, "To Bill")
+
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+		sales_invoice = make_sales_invoice(delivery_note.name)
+		sales_invoice.apply_discount_on = "Net Total"
+		sales_invoice.discount_amount = 1000
+		sales_invoice.save()
+		sales_invoice.submit()
+		self.assertEqual(sales_invoice.status, "Unpaid")
+
+	def test_discount_in_si_apply_in_grand_total_TS_S_149(self):
+		make_stock_entry(item_code="_Test Item", qty=10, rate=100, target="_Test Warehouse - _TC")
+		sales_order = make_sales_order(qty=1, rate=5000)
+		sales_order.save()
+		sales_order.submit()
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+
+		delivery_note = make_delivery_note(sales_order.name)
+		delivery_note.save()
+		delivery_note.submit()
+		self.assertEqual(delivery_note.status, "To Bill")
+
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+		sales_invoice = make_sales_invoice(delivery_note.name)
+		sales_invoice.apply_discount_on = "Grand Total"
+		sales_invoice.discount_amount = 1000
+		sales_invoice.save()
+		sales_invoice.submit()
+		self.assertEqual(sales_invoice.status, "Unpaid")
+
+	def test_discount_in_dn_apply_in_net_total_TS_S_150(self):
+		make_stock_entry(item_code="_Test Item", qty=10, rate=100, target="_Test Warehouse - _TC")
+		sales_order = make_sales_order(qty=1, rate=5000)
+		sales_order.save()
+		sales_order.submit()
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+
+		sales_invoice = make_sales_invoice(sales_order.name)
+		sales_invoice.save()
+		sales_invoice.submit()
+		self.assertEqual(sales_invoice.status, "Unpaid")
+
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
+		delivery_note = make_delivery_note(sales_invoice.name)
+		delivery_note.apply_discount_on = "Net Total"
+		delivery_note.discount_amount = 1000
+		delivery_note.save()
+		delivery_note.submit()
+
+		self.assertEqual(delivery_note.status, "Completed")
+
+	def test_discount_in_dn_apply_in_grand_total_TS_S_151(self):
+		make_stock_entry(item_code="_Test Item", qty=10, rate=100, target="_Test Warehouse - _TC")
+		sales_order = make_sales_order(qty=1, rate=5000)
+		sales_order.save()
+		sales_order.submit()
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+
+		sales_invoice = make_sales_invoice(sales_order.name)
+		sales_invoice.save()
+		sales_invoice.submit()
+		self.assertEqual(sales_invoice.status, "Unpaid")
+
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
+		delivery_note = make_delivery_note(sales_invoice.name)
+		delivery_note.apply_discount_on = "Grand Total"
+		delivery_note.discount_amount = 1000
+		delivery_note.save()
+		delivery_note.submit()
+
+		self.assertEqual(delivery_note.status, "Completed")
 
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
