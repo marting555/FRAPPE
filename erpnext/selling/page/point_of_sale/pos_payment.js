@@ -633,6 +633,7 @@ erpnext.PointOfSale.Payment = class {
 			`
 		);
 		this.$totals.find(".total_difference").attr("contenteditable", remaining < 0 ? "true" : "false");
+		this.$totals.find(".total_difference").attr("contenteditable", !doc.is_return ? "true" : "false");
 		this.add_write_off_events(doc, remaining, change, currency);
 	}
 
