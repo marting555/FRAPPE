@@ -302,6 +302,18 @@ class TestBlanketOrder(FrappeTestCase):
 		gl_credits = {entry.account: entry.credit for entry in gl_entries}
 		self.assertAlmostEqual(gl_debits[debtor_account], 50000)
 		self.assertAlmostEqual(gl_credits[sales_account], 50000)
+  
+	def test_blanket_order_creating_quotation_TC_S_157(self):
+		frappe.flags.args.doctype = "Quotation"
+		bo = make_blanket_order(blanket_order_type="Selling",quantity=50,rate=1000)
+		self.assertEqual(bo.docstatus, 1)
+  
+		quotation = make_order(bo.name)
+		quotation.submit()
+		quotation.reload()
+		self.assertEqual(quotation.docstatus, 1)
+		self.assertEqual(quotation.grand_total, 50000)
+  
 
 def make_blanket_order(**args):
 	args = frappe._dict(args)
