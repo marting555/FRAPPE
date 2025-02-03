@@ -191,7 +191,16 @@ erpnext.PointOfSale.PastOrderSummary = class {
 	}
 
 	bind_events() {
-		this.$summary_container.on("click", ".return-btn", () => {
+		this.$summary_container.on("click", ".return-btn", async () => {
+			const r = await this.allow_return(this.doc.name);
+			if (!r) {
+				frappe.msgprint({
+					title: __("Invalid Return"),
+					indicator: "orange",
+					message: __("All the items have been already returned."),
+				});
+				return;
+			}
 			this.events.process_return(this.doc.name);
 			this.toggle_component(false);
 			this.$component.find(".no-summary-placeholder").css("display", "flex");
@@ -462,5 +471,15 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		if (res.message.print_receipt_on_order_complete) {
 			this.print_receipt();
 		}
+	}
+
+	async allow_return(invoice) {
+		const r = await frappe.call({
+			method: "erpnext.controllers.sales_and_purchase_return.allow_pos_invoice_return",
+			args: {
+				invoice: invoice,
+			},
+		});
+		return r.message;
 	}
 };
