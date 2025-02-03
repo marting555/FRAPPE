@@ -134,9 +134,9 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 					this.make_invoice_discounting.bind(this),
 					__("Create")
 				);
-
+				const date_now = frappe.datetime.now_date();
 				const payment_is_overdue = doc.payment_schedule
-					.map((row) => Date.parse(row.due_date) < Date.now())
+					.map((row) => row.due_date < date_now)
 					.reduce((prev, current) => prev || current, false);
 
 				if (payment_is_overdue) {
