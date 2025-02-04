@@ -4,6 +4,7 @@
 
 import json
 from collections import defaultdict
+from frappe.utils.data import getdate as convert_to_date
 
 import frappe
 from frappe import _, bold, qb, throw
@@ -2951,6 +2952,7 @@ def get_advance_payment_entries(
 			(payment_ref.allocated_amount).as_("amount"),
 			(payment_ref.name).as_("reference_row"),
 			(payment_ref.reference_name).as_("against_order"),
+			(payment_entry.book_advance_payments_in_separate_party_account),
 		)
 
 		q = q.where(payment_ref.reference_doctype == order_doctype)
@@ -2995,6 +2997,7 @@ def get_common_query(
 			(payment_entry.name).as_("reference_name"),
 			payment_entry.posting_date,
 			(payment_entry.remarks).as_("remarks"),
+			(payment_entry.book_advance_payments_in_separate_party_account),
 		)
 		.where(payment_entry.payment_type == payment_type)
 		.where(payment_entry.party_type == party_type)
@@ -3670,6 +3673,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 						).format(frappe.bold(parent.name))
 					)
 	else:  # Sales Order
+		parent.validate_for_duplicate_items()
 		parent.validate_warehouse()
 		parent.update_reserved_qty()
 		# parent.update_project()
