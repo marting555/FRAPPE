@@ -19,9 +19,9 @@ frappe.ui.form.on("Bank Reconciliation Tool", {
 	},
 
 	onload: function (frm) {
-		// set default company
-		const default_company = frappe.defaults.get_default("company");
-		frm.set_value("company", default_company);
+		if (!frm.doc.company) {
+			frm.set_value("company", frappe.defaults.get_default("company"));
+		}
 
 		// Set default filter dates
 		let today = frappe.datetime.get_today();
