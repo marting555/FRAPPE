@@ -6243,6 +6243,51 @@ class TestSalesInvoice(FrappeTestCase):
 			['_Test Account Discount - _TC', sales_invoice.grand_total * 0.05, 0.0, nowdate()]
 		]
 		check_gl_entries(self,voucher_no=pe.name,expected_gle=expected_gle,posting_date=nowdate(),voucher_type="Payment Entry")
+  
+	def test_tax_with_holding_with_si_TC_ACC_109(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import(
+			make_test_item,
+			create_account
+		)
+		from erpnext.accounts.doctype.tax_withholding_category.test_tax_withholding_category import create_tax_withholding_category
+  
+		create_account()
+
+		create_tax_withholding_category(
+			category_name="Test - TCS - 194C - Company",
+			rate=2,
+			from_date=frappe.utils.get_date_str('01-04-2024'),
+			to_date=frappe.utils.get_date_str('31-03-2025'),
+			account="_Test TCS Payable - _TC",
+			single_threshold=30000,
+			cumulative_threshold=100000,
+			consider_party_ledger_amount=1,
+		)
+		frappe.db.commit()
+		customer = frappe.get_doc("Customer","_Test Customer")
+		if not customer.tax_withholding_category or customer.tax_withholding_category != "Test - TCS - 194C - Company":
+			customer.tax_withholding_category = "Test - TCS - 194C - Company"
+			customer.save()
+			
+		item = make_test_item("_Test Item")
+		sales_invoice =  create_sales_invoice(
+			customer="_Test Customer",
+			company="_Test Company",
+			item_code=item.name,
+			qty=1,
+			rate=150000,
+		)
+		expected_gle =[
+			['Debtors - _TC', sales_invoice.grand_total, 0.0,sales_invoice.posting_date],
+			['Sales - _TC', 0.0, (sales_invoice.grand_total-sales_invoice.total_taxes_and_charges),sales_invoice.posting_date],
+			['_Test TCS Payable - _TC', 0.0, sales_invoice.total_taxes_and_charges,sales_invoice.posting_date],
+		]
+		check_gl_entries(self,voucher_no=sales_invoice.name,expected_gle=expected_gle,posting_date=nowdate(),voucher_type="Sales Invoice")
+		if customer.tax_withholding_category:
+			customer.load_from_db()
+			customer.tax_withholding_category = ""
+			customer.save()
+			frappe.db.commit()
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
