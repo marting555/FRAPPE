@@ -6175,6 +6175,28 @@ class TestSalesInvoice(FrappeTestCase):
 			)
 		self.assertEqual(si.status, "Unpaid")
   
+	def test_sales_invoice_dont_reserve_sales_order_qty_on_sales_return_TC_S_158(self):
+		selling_setting = frappe.get_doc('Selling Settings')
+		selling_setting.dont_reserve_sales_order_qty_on_sales_return = 1
+		selling_setting.save()
+  
+		si = create_sales_invoice(qty= 1, rate=300, update_stock=1, warehouse="_Test Warehouse - _TC", do_not_submit=0)
+		self.assertEqual(si.status, "Unpaid")
+  
+		qty_change = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': si.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change, -1)
+  
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_sales_return
+
+		si_return = make_sales_return(si.name)
+		si_return.save().submit()
+		si_return.reload()
+  
+		self.assertEqual(si_return.status, "Return")
+  
+		qty_change = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': si_return.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change, 1)
+  
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
