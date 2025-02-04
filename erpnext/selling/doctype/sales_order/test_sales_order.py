@@ -4761,10 +4761,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(pi.status, "Unpaid")
   
 		payable_account = frappe.db.get_value("Company", "_Test Company", "default_payable_account")
-		expense_account = frappe.db.get_value("Company", "_Test Company", "default_expense_account")
+		excise_account = frappe.db.get_value("Company", "_Test Company", "default_deferred_revenue_account")
   
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': payable_account}, 'credit'), 5000)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': expense_account}, 'debit'), 5000)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': excise_account}, 'debit'), 5000)
   
 	def test_sales_order_for_stock_unreserve_TC_S_071(self):
 		so = self.test_sales_order_for_stock_reservation_TC_S_063(get_so_with_stock_reserved=1)
