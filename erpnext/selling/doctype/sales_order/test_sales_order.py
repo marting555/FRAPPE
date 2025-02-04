@@ -3887,7 +3887,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
   
 		self.assertEqual(pe.status, 'Submitted')
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe.name, 'account': 'Debtors - _TIRC'}, 'credit'), 2000)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe.name, 'account': '_Test Registered Bank Account - _TIRC'}, 'debit'), 2000)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe.name, 'account': 'Cash - _TIRC'}, 'debit'), 2000)
 
 		dn = make_delivery_note(so.name)
 		dn.submit()
@@ -3926,7 +3926,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		self.assertEqual(pe2.status, 'Submitted')
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe2.name, 'account': 'Debtors - _TIRC'}, 'credit'), 3900)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe2.name, 'account': '_Test Registered Bank Account - _TIRC'}, 'debit'), 3900)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe2.name, 'account': 'Cash - _TIRC'}, 'debit'), 3900)
 
 		si.reload()
 		self.assertEqual(si.outstanding_amount, 0)
@@ -3986,8 +3986,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
 		self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
-  
-		create_registered_bank_account()
 
 		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
@@ -5956,6 +5954,7 @@ def create_registered_bank_account():
 	if not frappe.db.exists('Account', {'name': '_Test Registered Bank Account - _TIRC'}):
 		acc_doc = frappe.new_doc("Account")
 		acc_data = {
+			"account_name": "_Test Registered Bank Account",
 			"company": "_Test Indian Registered Company",
 			"parent_account":"Bank Accounts - _TIRC"
 		}
