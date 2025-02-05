@@ -878,7 +878,6 @@ class TestPOSInvoice(IntegrationTestCase):
 		pos_inv1.paid_amount = 300
 		pos_inv1.save()
 		pos_inv1.submit()
-		print(pos_inv1.items[0].as_dict())
 
 		pos_inv2 = create_pos_invoice(item=item.name, rate=300, qty=2, do_not_submit=1)
 
