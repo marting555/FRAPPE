@@ -4067,6 +4067,123 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		]
 
 		check_gl_entries(self,voucher_no=pe.name,expected_gle=expected_gle,posting_date=nowdate(),voucher_type="Payment Entry")
+  
+	def test_stop_pi_creation_when_value_exceeds_budget_TC_ACC_133(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.accounts.utils import get_fiscal_year
+		
+		year = get_fiscal_year(date=nowdate(), company="_Test Company")[0]
+		company = frappe.get_doc("Company","_Test Company")
+		if company.stock_received_but_not_billed !="Cost of Goods Sold - _TC":
+			company.stock_received_but_not_billed = "Cost of Goods Sold - _TC"
+			company.save()
+			frappe.db.commit()
+		budget = frappe.get_doc({
+			"doctype":"Budget",
+			"budget_against":"Cost Center",
+			"company":"_Test Company",
+			"cost_center":"_Test Write Off Cost Center - _TC",
+			"fiscal_year":year,
+			"applicable_on_purchase_order":1,
+			"action_if_annual_budget_exceeded_on_po": "Stop",
+			"action_if_accumulated_monthly_budget_exceeded_on_po": "Stop",
+			"applicable_on_booking_actual_expenses":1,
+			"action_if_annual_budget_exceeded": "Stop",
+			"action_if_accumulated_monthly_budget_exceeded": "Stop",
+			"accounts":[{
+				"account":"Cost of Goods Sold - _TC",
+				"budget_amount":10000
+			}]
+		}).insert().submit()
+  
+		item = make_test_item("_Test Item")
+		try:
+			pi = make_purchase_invoice(
+				supplier="_Test Supplier",
+				company="_Test Company",
+				item_code=item.name,
+				qty=1,
+				rate=11000,
+				expense_account = "Cost of Goods Sold - _TC",
+				do_not_submit=True,
+			)
+	
+			pi.cost_center = "_Test Write Off Cost Center - _TC"
+			pi.items[0].cost_center = "_Test Write Off Cost Center - _TC"
+
+			pi.save().submit()
+		except Exception as e:
+			print(str(e))
+			self.assertEqual(str(e),"""Annual Budget for Account Cost of Goods Sold - _TC against Cost Center _Test Write Off Cost Center - _TC is ₹ 10,000.00. It will be exceed by ₹ 1,000.00Total Expenses booked through - Actual Expenses - ₹ 0.00Material Requests - ₹ 0.00Unbilled Orders - ₹ 0.00""")
+
+			budget.cancel()
+			budget.load_from_db()
+			pi.cancel()
+			pi.load_from_db()
+			frappe.delete_doc("Budget", budget.name,force=1)
+			frappe.delete_doc("Purchase Invoice", pi.name,force=1)
+			frappe.db.commit()
+   
+	def test_warn_pi_creation_when_value_exceeds_budget_TC_ACC_145(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.accounts.utils import get_fiscal_year
+		
+		year = get_fiscal_year(date=nowdate(), company="_Test Company")[0]
+		company = frappe.get_doc("Company","_Test Company")
+		if company.stock_received_but_not_billed !="Cost of Goods Sold - _TC":
+			company.stock_received_but_not_billed = "Cost of Goods Sold - _TC"
+			company.save()
+			frappe.db.commit()
+		budget = frappe.get_doc({
+			"doctype":"Budget",
+			"budget_against":"Cost Center",
+			"company":"_Test Company",
+			"cost_center":"_Test Write Off Cost Center - _TC",
+			"fiscal_year":year,
+			"applicable_on_purchase_order":1,
+			"action_if_annual_budget_exceeded_on_po": "Warn",
+			"action_if_accumulated_monthly_budget_exceeded_on_po": "Warn",
+			"applicable_on_booking_actual_expenses":1,
+			"action_if_annual_budget_exceeded": "Warn",
+			"action_if_accumulated_monthly_budget_exceeded": "Warn",
+			"accounts":[{
+				"account":"Cost of Goods Sold - _TC",
+				"budget_amount":10000
+			}]
+		}).insert().submit()
+  
+		item = make_test_item("_Test Item")
+		
+		pi = make_purchase_invoice(
+				supplier="_Test Supplier",
+			company="_Test Company",
+			item_code=item.name,
+			qty=1,
+			rate=11000,
+			expense_account = "Cost of Goods Sold - _TC",
+			do_not_submit=True,
+		)
+
+		pi.cost_center = "_Test Write Off Cost Center - _TC"
+		pi.items[0].cost_center = "_Test Write Off Cost Center - _TC"
+
+		pi.save().submit()
+		budget_exceeded_found = False
+
+		for msg in frappe.get_message_log():
+			if msg.get("title") == "Budget Exceeded" and msg.get("indicator") == "orange":
+				if "Annual Budget for Account" in msg.get("message", ""):
+					budget_exceeded_found = True
+					break  
+
+		self.assertTrue(budget_exceeded_found, "Budget exceeded message not found")
+		budget.cancel()
+		budget.load_from_db()
+		pi.cancel()
+		pi.load_from_db()
+		frappe.delete_doc("Budget", budget.name,force=1)
+		frappe.delete_doc("Purchase Order", pi.name,force=1)
+		frappe.db.commit()
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
