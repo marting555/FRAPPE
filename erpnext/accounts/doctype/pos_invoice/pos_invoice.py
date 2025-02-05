@@ -210,6 +210,7 @@ class POSInvoice(SalesInvoice):
 		self.validate_payment_amount()
 		self.validate_loyalty_transaction()
 		self.validate_company_with_pos_company()
+		self.validate_paid_amount()
 		if self.coupon_code:
 			from erpnext.accounts.doctype.pricing_rule.utils import validate_coupon_code
 
@@ -483,6 +484,16 @@ class POSInvoice(SalesInvoice):
 
 		if self.redeem_loyalty_points and self.loyalty_program and self.loyalty_points:
 			validate_loyalty_points(self, self.loyalty_points)
+
+	def validate_paid_amount(self):
+		invoice_total = self.rounded_total or self.grand_total
+
+		if self.is_return:
+			if self.paid_amount != self.grand_total:
+				frappe.throw(_("Partial payment is not allowed."))
+
+		if self.paid_amount < invoice_total:
+			frappe.throw(_("Partial payment is not allowed."))
 
 	def set_status(self, update=False, status=None, update_modified=True):
 		if self.is_new():
