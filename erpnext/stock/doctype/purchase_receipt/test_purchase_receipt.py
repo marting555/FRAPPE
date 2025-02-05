@@ -4199,7 +4199,53 @@ class TestPurchaseReceipt(FrappeTestCase):
 		# Cancel Stock Reco and check SLE and GL
 		sr.cancel()
 		self.check_cancel_stock_gl_sle(sr, 20, -3000.0)
-	
+	def test_purchase_receipt_with_serialized_item_TC_SCK_145(self):
+		item_code = "ADI-SH-W09"
+		warehouse = "Stores - _TC"
+		supplier = "Test Supplier 1"
+		company = "_Test Company"
+		qty = 5
+
+		if not frappe.db.exists("Item", item_code):
+			item = frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_stock_item": 1,
+				"is_purchase_item": 1,
+				"has_serial_no": 1,
+				"serial_no_series": "SERI-.#####",
+				"company": company
+			})
+			item.insert()
+
+		pr = frappe.get_doc({
+			"doctype": "Purchase Receipt",
+			"supplier": supplier,
+			"company": company,
+			"posting_date": "2025-01-03",
+			"set_warehouse": warehouse,
+			"items": [{
+				"item_code": item_code,
+				"warehouse": warehouse,
+				"qty": qty,
+				"rate": 100
+			}]
+		})
+		pr.insert()
+		pr.submit()
+
+		self.assertEqual(pr.docstatus, 1)
+		self.assertEqual(len(pr.items), 1)
+		self.assertEqual(pr.items[0].item_code, item_code)
+		self.assertEqual(pr.items[0].qty, qty)
+
+		serial_nos = get_serial_nos_from_bundle(pr.items[0].serial_and_batch_bundle)
+		self.assertEqual(len(serial_nos), qty)
+
+		for serial_no in serial_nos:
+			status = frappe.db.get_value("Serial No", serial_no, "status")
+			self.assertEqual(status, "Active")
 	def _test_create_2pr_with_item_fifo_and_sr(self):
 		from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import (
 			create_stock_reconciliation,
@@ -4600,6 +4646,175 @@ class TestPurchaseReceipt(FrappeTestCase):
 		warehouse_qty = sum(entry.actual_qty for entry in stock_ledger_entries if entry.warehouse == warehouse)
 		self.assertEqual(warehouse_qty, 20)
 
+	def test_pr_with_additional_discount_TC_B_053(self):
+		# Scenario : PR => PI [With Additional Discount]
+		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
+			make_purchase_invoice as make_pi_from_pr,
+		)
+
+		pr_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"supplier": "_Test Supplier",
+            "schedule_date": "2025-01-13",
+			"qty" : 1,
+			"rate" : 10000,
+			"apply_discount_on" : "Net Total",
+			"additional_discount_percentage" :10 ,
+			"do_not_submit":1
+		}
+
+		acc = frappe.new_doc("Account")
+		acc.account_name = "Input Tax IGST"
+		acc.parent_account = "Tax Assets - _TC"
+		acc.company = "_Test Company"
+		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
+		if not account_name:
+			account_name = acc.insert()
+
+		doc_pr = make_purchase_receipt(**pr_data)
+		doc_pr.append("taxes", {
+                    "charge_type": "On Net Total",
+                    "account_head": account_name,
+                    "rate": 12,
+                    "description": "Input GST",
+                })
+		doc_pr.submit()
+		self.assertEqual(doc_pr.discount_amount, 1000)
+		self.assertEqual(doc_pr.grand_total, 10080)
+
+		pi = make_pi_from_pr(doc_pr.name)
+		pi.insert()
+		pi.submit()
+
+		self.assertEqual(pi.discount_amount, 1000)
+		self.assertEqual(pi.grand_total, 10080)
+
+		# Accounting Ledger Checks
+		pi_gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
+
+		# PI Ledger Validation
+		pi_total = sum(entry["debit"] for entry in pi_gl_entries)
+		self.assertEqual(pi_total, 10080)
+
+	def test_pr_to_pi_with_additional_discount_TC_B_059(self):
+		# Scenario : PR => PI [With Applied Additional Discount on Grand Total]
+		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
+			make_purchase_invoice as make_pi_from_pr,
+		)
+
+		pr_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"supplier": "_Test Supplier",
+            "schedule_date": "2025-01-13",
+			"qty" : 1,
+			"rate" : 10000,
+			"apply_discount_on" : "Grand Total",
+			"additional_discount_percentage" :10 ,
+			"do_not_submit":1
+		}
+
+		acc = frappe.new_doc("Account")
+		acc.account_name = "Input Tax IGST"
+		acc.parent_account = "Tax Assets - _TC"
+		acc.company = "_Test Company"
+		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
+		if not account_name:
+			account_name = acc.insert()
+
+		doc_pr = make_purchase_receipt(**pr_data)
+		doc_pr.append("taxes", {
+                    "charge_type": "On Net Total",
+                    "account_head": account_name,
+                    "rate": 12,
+                    "description": "Input GST",
+                })
+		doc_pr.submit()
+		self.assertEqual(doc_pr.discount_amount, 1120)
+		self.assertEqual(doc_pr.grand_total, 10080)
+
+		pi = make_pi_from_pr(doc_pr.name)
+		pi.insert()
+		pi.submit()
+
+		self.assertEqual(pi.discount_amount, 1120)
+		self.assertEqual(pi.grand_total, 10080)
+
+		# Accounting Ledger Checks
+		pi_gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
+
+		# PI Ledger Validation
+		pi_total = sum(entry["debit"] for entry in pi_gl_entries)
+		self.assertEqual(pi_total, 10080)
+
+	def test_standalone_pr_with_additional_discount_TC_B_062(self):
+		# Scenario : Standalone PR [With Applied Additional Discount on Grand Total]
+
+		pr_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"supplier": "_Test Supplier",
+            "schedule_date": "2025-01-13",
+			"qty" : 1,
+			"rate" : 10000,
+			"apply_discount_on" : "Grand Total",
+			"additional_discount_percentage" :10 ,
+			"do_not_submit":1
+		}
+
+		acc = frappe.new_doc("Account")
+		acc.account_name = "Input Tax IGST"
+		acc.parent_account = "Tax Assets - _TC"
+		acc.company = "_Test Company"
+		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
+		if not account_name:
+			account_name = acc.insert()
+
+		doc_pr = make_purchase_receipt(**pr_data)
+		doc_pr.append("taxes", {
+                    "charge_type": "On Net Total",
+                    "account_head": account_name,
+                    "rate": 12,
+                    "description": "Input GST",
+                })
+		doc_pr.submit()
+		self.assertEqual(doc_pr.discount_amount, 1120)
+		self.assertEqual(doc_pr.grand_total, 10080)
+
+	def test_pr_to_pi_with_return_TC_B_043(self):
+		# Scenario : PR => PI => PI [Return]
+		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
+			make_purchase_invoice as make_pi_from_pr,
+		)
+
+		from erpnext.controllers.sales_and_purchase_return import make_return_doc
+
+		pr_data = {
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"supplier": "_Test Supplier",
+            "schedule_date": "2025-01-13",
+			"qty" : 1,
+			"rate" : 130,
+		}
+
+		doc_pr = make_purchase_receipt(**pr_data)
+		self.assertEqual(doc_pr.docstatus, 1)
+
+		doc_pi = make_pi_from_pr(doc_pr.name)
+		doc_pi.insert()
+		doc_pi.submit()
+
+		doc_pi_return = make_return_doc(doc_pi.doctype, doc_pi.name)
+		doc_pi_return.insert()
+		doc_pi_return.submit()
+
+		self.assertEqual(doc_pi_return.status, 'Return')
 
 def prepare_data_for_internal_transfer():
 	from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_internal_supplier
@@ -4774,6 +4989,8 @@ def make_purchase_receipt(**args):
 	pr.is_return = args.is_return
 	pr.return_against = args.return_against
 	pr.apply_putaway_rule = args.apply_putaway_rule
+	pr.additional_discount_percentage = args.additional_discount_percentage or None
+	pr.apply_discount_on = args.apply_discount_on or None
 	qty = args.qty or 5
 	rejected_qty = args.rejected_qty or 0
 	received_qty = args.received_qty or flt(rejected_qty) + flt(qty)
