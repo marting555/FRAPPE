@@ -909,6 +909,29 @@ class TestItem(FrappeTestCase):
 
 		self.assertRaises(frappe.ValidationError, item_doc.save)
 
+	def test_item_cr(self):
+		item_fields = {
+			"item_name": "Ball point Pen",
+			"is_stock_item": 1,
+			"stock_uom": "Box",
+			"item_defaults": [{'company': "Pcs", 'default_warehouse': "Stores - PP Ltd"}],
+		}
+		item = make_item("Ball point Pen", item_fields)
+		self.assertEqual(item.name, "Ball point Pen")
+
+	def test_item_group_cr(self):
+		itm_grp = frappe.new_doc("Item Group")
+		itm_grp.item_group_name = "Software"
+		itm_grp.parent_item_group = "Technology"
+		itm_grp.insert()
+		self.assertEqual(itm_grp.name, "Software")
+		self.assertEqual(itm_grp.parent_item_group, "Technology")
+
+	def tearDown(self):
+        # Cleanup created price lists
+		if frappe.db.exists("Item Group", 'Software'):
+			frappe.delete_doc("Item Group", 'Software')
+
 
 def set_item_variant_settings(fields):
 	doc = frappe.get_doc("Item Variant Settings")
