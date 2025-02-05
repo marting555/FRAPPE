@@ -9,7 +9,7 @@ from frappe.utils.data import getdate as convert_to_date
 import frappe
 from frappe import _, bold, qb, throw
 from frappe.model.workflow import get_workflow_name, is_transition_condition_satisfied
-from frappe.query_builder import Criterion
+from frappe.query_builder import Criterion, DocType
 from frappe.query_builder.custom import ConstantColumn
 from frappe.query_builder.functions import Abs, Sum
 from frappe.utils import (
@@ -252,6 +252,8 @@ class AccountsController(TransactionBase):
 
 			self.validate_deferred_income_expense_account()
 			self.set_inter_company_account()
+		
+		self.set_taxes_and_charges()
 
 		if self.doctype == "Purchase Invoice":
 			self.calculate_paid_amount()
@@ -267,6 +269,7 @@ class AccountsController(TransactionBase):
 
 		self.set_total_in_words()
 		self.set_default_letter_head()
+		self.validate_company_in_accounting_dimension()
 
 	def set_default_letter_head(self):
 		if hasattr(self, "letter_head") and not self.letter_head:
@@ -404,6 +407,37 @@ class AccountsController(TransactionBase):
 		)
 		for row in batches:
 			frappe.delete_doc("Batch", row.name)
+
+	
+	def validate_company_in_accounting_dimension(self):
+		doc_field = DocType("DocField")
+		accounting_dimension = DocType("Accounting Dimension")
+		dimension_list = (
+			frappe.qb.from_(accounting_dimension)
+			.select(accounting_dimension.document_type)
+			.join(doc_field)
+			.on(doc_field.parent == accounting_dimension.document_type)
+			.where(doc_field.fieldname == "company")
+		).run(as_list=True)
+		dimension_list = sum(dimension_list, ["Project"])
+		self.validate_company(dimension_list)
+		for child in self.get_all_children() or []:
+			self.validate_company(dimension_list, child)
+
+	def validate_company(self, dimension_list, child=None):
+		for dimension in dimension_list:
+			if not child:
+				dimension_value = self.get(frappe.scrub(dimension))
+			else:
+				dimension_value = child.get(frappe.scrub(dimension))
+			if dimension_value:
+				company = frappe.get_cached_value(dimension, dimension_value, "company")
+				if company and company != self.company:
+					frappe.throw(
+						_("{0}: {1} does not belong to the Company: {2}").format(
+							dimension, frappe.bold(dimension_value), self.company
+						)
+					)
 
 	def validate_return_against_account(self):
 		if self.doctype in ["Sales Invoice", "Purchase Invoice"] and self.is_return and self.return_against:
@@ -936,6 +970,12 @@ class AccountsController(TransactionBase):
 			and self.pos_profile != frappe.db.get_value("Sales Invoice", self.name, "pos_profile")
 		):
 			return True
+
+	def set_taxes_and_charges(self):
+		if frappe.db.get_single_value("Accounts Settings", "add_taxes_from_item_tax_template"):
+			if hasattr(self, "taxes_and_charges") and not self.get("taxes") and not self.get("is_pos"):
+				if tax_master_doctype := self.meta.get_field("taxes_and_charges").options:
+					self.append_taxes_from_master(tax_master_doctype)
 
 	def append_taxes_from_master(self, tax_master_doctype=None):
 		if self.get("taxes_and_charges"):
