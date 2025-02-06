@@ -1566,7 +1566,9 @@ def get_voucherwise_gl_entries(future_stock_vouchers, posting_date):
 		select name, account, credit, debit, cost_center, project, voucher_type, voucher_no
 			from `tabGL Entry`
 		where
-			posting_date >= {} and voucher_no in ({})""".format("%s", ", ".join(["%s"] * len(voucher_nos))),
+			posting_date >= {} and voucher_no in ({})
+   		""".format(", project" if "projects" in frappe.get_installed_apps() else "",
+                	"%s",", ".join(["%s"] * len(voucher_nos))),
 		tuple([posting_date, *voucher_nos]),
 		as_dict=1,
 	)

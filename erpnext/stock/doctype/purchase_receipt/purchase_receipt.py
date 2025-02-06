@@ -549,7 +549,7 @@ class PurchaseReceipt(BuyingController):
 							against_account=stock_asset_account_name,
 							credit_in_account_currency=flt(amount["amount"]),
 							account_currency=account_currency,
-							project=item.project,
+							project=item.get("project"),
 							item=item,
 						)
 
@@ -565,7 +565,7 @@ class PurchaseReceipt(BuyingController):
 					remarks=_("Adjustment based on Purchase Invoice rate"),
 					against_account=stock_asset_account_name,
 					account_currency=account_currency,
-					project=item.project,
+					project=item.get("project"),
 					item=item,
 				)
 
@@ -618,7 +618,7 @@ class PurchaseReceipt(BuyingController):
 					remarks=remarks,
 					against_account=stock_asset_account_name,
 					account_currency=account_currency,
-					project=item.project,
+					project=item.get("project"),
 					item=item,
 				)
 
@@ -717,7 +717,7 @@ class PurchaseReceipt(BuyingController):
 			remarks=remarks,
 			against_account=expense_account,
 			account_currency=credit_currency,
-			project=item.project,
+			project=item.get("project"),
 			voucher_detail_no=item.name,
 			item=item,
 			posting_date=posting_date,
@@ -732,7 +732,7 @@ class PurchaseReceipt(BuyingController):
 			remarks=remarks,
 			against_account=provisional_account,
 			account_currency=debit_currency,
-			project=item.project,
+			project=item.get("project"),
 			voucher_detail_no=item.name,
 			item=item,
 			posting_date=posting_date,
