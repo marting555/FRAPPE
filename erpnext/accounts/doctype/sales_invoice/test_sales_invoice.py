@@ -6266,6 +6266,192 @@ class TestSalesInvoice(FrappeTestCase):
 			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
 
   
+	def test_calculate_commission_for_sales_partner_TC_ACC_143(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.accounts.utils import get_fiscal_year
+		from frappe.tests.utils import if_app_installed
+		fiscal_year = get_fiscal_year(nowdate())[0]
+		if if_app_installed("Sales Commission"):
+			if not frappe.db.exists("Monthly Distribution", "_Test Sales Distribution"):
+				month_distribution = frappe.get_doc({
+					"distribution_id": "_Test Sales Distribution",
+					"doctype": "Monthly Distribution",
+					"fiscal_year":fiscal_year
+				})
+				get_months(month_distribution)
+				month_distribution.insert()
+			if not frappe.db.exists("Sales Partner", "_Test Sales Distributor"):
+				month_distribution = frappe.get_doc("Monthly Distribution", "_Test Sales Distribution")
+				
+				sales_paerter = frappe.get_doc({
+					"partner_name": "_Test Sales Distributor",
+					"doctype": "Sales Partner",
+					"territory": "All Territories",
+					"sales_person": "_Test Sales Commission",
+					"partner_type": "Distributor",
+					"commission_rate":5,
+					"targets":[{
+						"item_group": "_Test Item Group",
+						"fiscal_year":fiscal_year,
+						"target_qty":10,
+						"target_amount":1000,
+						"distribution_id":month_distribution.name
+					}]
+				}).insert()
+			customer = frappe.get_doc("Customer","_Test Customer")
+			customer.default_sales_partner="_Test Sales Distributor"
+			customer.default_commission_rate=5
+			customer.save()
+			item = make_test_item("_Test Item")	
+			si = create_sales_invoice(
+					customer="_Test Customer",
+					company="_Test Company",
+					item_code=item.name,
+					qty=10,
+					rate=1000,
+					do_not_submit=True
+			)
+			si.submit()
+			self.assertEqual(si.total_commission,500)
+			self.assertEqual(si.commission_rate,5)
+			self.assertEqual(si.amount_eligible_for_commission,10000)
+			self.assertEqual(si.sales_partner,"_Test Sales Distributor")
+   
+	def test_payment_term_discount_for_si_at_fully_paid_TC_ACC_097(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+
+		if not frappe.db.exists("Payment Term","_Test Discount Term"):
+			pt = frappe.get_doc({
+				"doctype":"Payment Term",
+				"payment_term_name":"_Test Discount Term",
+				"invoice_portion":100,
+				"mode_of_payment":"Cash",
+				"discount_type":"Percentage",
+				"due_date_based_on":"Day(s) after invoice date",	
+				"discount":10
+			}).insert()
+
+		pt = frappe.get_doc("Payment Term","_Test Discount Term")
+		
+		item = make_test_item("_Test Item")
+		sales_invoice =  create_sales_invoice(
+			customer="_Test Customer",
+			company="_Test Company",
+			item_code=item.name,
+			qty=1,
+			rate=1000,
+			do_not_submit=True,
+			do_not_save=True
+		)
+		sales_invoice.append("payment_schedule",{
+			"payment_term":"_Test Discount Term",
+			"due_date":add_days(nowdate(),1),
+			"invoice_portion":100,
+			"payment_amount":sales_invoice.grand_total,
+			"discount_date":add_days(nowdate(),1),
+		})
+		sales_invoice.insert().submit()
+		pe = get_payment_entry(sales_invoice.doctype,sales_invoice.name,bank_account="Cash - _TC",reference_date=nowdate())
+		pe.reference_no = "1"
+		pe.deductions[0].account="_Test Account Discount - _TC"
+		pe.save().submit()
+		expected_gle =[
+			['Cash - _TC', (sales_invoice.grand_total-sales_invoice.grand_total * 0.1), 0.0, nowdate()],
+			['Debtors - _TC', 0.0, sales_invoice.grand_total, nowdate()],
+			['_Test Account Discount - _TC', sales_invoice.grand_total * 0.1, 0.0, nowdate()]
+		]
+		check_gl_entries(self,voucher_no=pe.name,expected_gle=expected_gle,posting_date=nowdate(),voucher_type="Payment Entry")
+  
+	def test_payment_term_discount_for_si_at_partially_paid_TC_ACC_099(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+
+		if not frappe.db.exists("Payment Term","_Test partially Discount Term"):
+			pt = frappe.get_doc({
+				"doctype":"Payment Term",
+				"payment_term_name":"_Test partially Discount Term",
+				"invoice_portion":70,
+				"mode_of_payment":"Cash",
+				"discount_type":"Percentage",
+				"due_date_based_on":"Day(s) after invoice date",	
+				"discount":5.
+    		}).insert()
+
+		pt = frappe.get_doc("Payment Term","_Test partially Discount Term")
+		
+		item = make_test_item("_Test Item")
+		sales_invoice =  create_sales_invoice(
+			customer="_Test Customer",
+			company="_Test Company",
+			item_code=item.name,
+			qty=1,
+			rate=1000,
+			do_not_submit=True,
+			do_not_save=True
+		)
+  
+		sales_invoice.append("payment_schedule",{
+			"payment_term":"_Test partially Discount Term",
+			"due_date":add_days(nowdate(),1),
+			"invoice_portion":70,
+			"payment_amount":1000 * 0.7,
+			"discount_date":add_days(nowdate(),1),
+		})
+		sales_invoice.insert().submit()
+		pe = get_payment_entry(sales_invoice.doctype,sales_invoice.name,bank_account="Cash - _TC",reference_date=nowdate())
+		pe.reference_no = "1"
+		pe.deductions[0].account="_Test Account Discount - _TC"
+		pe.save().submit()
+		expected_gle =[
+			['Cash - _TC', (sales_invoice.grand_total-sales_invoice.grand_total * 0.05), 0.0, nowdate()],
+			['Debtors - _TC', 0.0, sales_invoice.grand_total, nowdate()],
+			['_Test Account Discount - _TC', sales_invoice.grand_total * 0.05, 0.0, nowdate()]
+		]
+		check_gl_entries(self,voucher_no=pe.name,expected_gle=expected_gle,posting_date=nowdate(),voucher_type="Payment Entry")
+  
+	def test_tax_with_holding_with_si_TC_ACC_109(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import(
+			make_test_item,
+			create_account
+		)
+		from erpnext.accounts.doctype.tax_withholding_category.test_tax_withholding_category import create_tax_withholding_category
+  
+		create_account()
+
+		create_tax_withholding_category(
+			category_name="Test - TCS - 194C - Company",
+			rate=2,
+			from_date=frappe.utils.get_date_str('01-04-2024'),
+			to_date=frappe.utils.get_date_str('31-03-2025'),
+			account="_Test TCS Payable - _TC",
+			single_threshold=30000,
+			cumulative_threshold=100000,
+			consider_party_ledger_amount=1,
+		)
+		frappe.db.commit()
+		customer = frappe.get_doc("Customer","_Test Customer")
+		if not customer.tax_withholding_category or customer.tax_withholding_category != "Test - TCS - 194C - Company":
+			customer.tax_withholding_category = "Test - TCS - 194C - Company"
+			customer.save()
+			
+		item = make_test_item("_Test Item")
+		sales_invoice =  create_sales_invoice(
+			customer="_Test Customer",
+			company="_Test Company",
+			item_code=item.name,
+			qty=1,
+			rate=150000,
+		)
+		expected_gle =[
+			['Debtors - _TC', sales_invoice.grand_total, 0.0,sales_invoice.posting_date],
+			['Sales - _TC', 0.0, (sales_invoice.grand_total-sales_invoice.total_taxes_and_charges),sales_invoice.posting_date],
+			['_Test TCS Payable - _TC', 0.0, sales_invoice.total_taxes_and_charges,sales_invoice.posting_date],
+		]
+		check_gl_entries(self,voucher_no=sales_invoice.name,expected_gle=expected_gle,posting_date=nowdate(),voucher_type="Sales Invoice")
+		if customer.tax_withholding_category:
+			customer.load_from_db()
+			customer.tax_withholding_category = ""
+			customer.save()
+			frappe.db.commit()
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
@@ -6661,6 +6847,28 @@ def create_address(**args):
 		frappe.db.commit()
 		return address
 
+def get_months(doc):
+		month_list = [
+			"January",
+			"February",
+			"March",
+			"April",
+			"May",
+			"June",
+			"July",
+			"August",
+			"September",
+			"October",
+			"November",
+			"December",
+		]
+		idx = 1
+		for m in month_list:
+			mnth = doc.append("percentages")
+			mnth.month = m
+			mnth.percentage_allocation = 100.0 / 12
+			mnth.idx = idx
+			idx += 1
 def create_company_and_supplier():
 	parent_company= "Test Company-1122"
 	child_company = "Test Company-3344"
