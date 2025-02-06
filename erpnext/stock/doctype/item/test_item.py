@@ -911,8 +911,13 @@ class TestItem(FrappeTestCase):
 
 		self.assertRaises(frappe.ValidationError, item_doc.save)
 
-	def test_item_cr(self):
+	def test_item_cr_TC_SCK_153(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
 		item_fields = {
 			"item_name": "Ball point Pen1",
 			"is_stock_item": 1,
@@ -922,7 +927,7 @@ class TestItem(FrappeTestCase):
 		item = make_item("Ball point Pen1", item_fields)
 		self.assertEqual(item.name, "Ball point Pen1")
 
-	def test_item_group_cr(self):
+	def test_item_group_cr_TC_SCK_154(self):
 		parent_itm_grp = frappe.new_doc("Item Group")
 		parent_itm_grp.item_group_name = "Test Parent Item Group"
 		parent_itm_grp.is_group = 1
