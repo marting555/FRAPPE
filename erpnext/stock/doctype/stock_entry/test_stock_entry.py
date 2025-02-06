@@ -2186,6 +2186,47 @@ class TestStockEntry(FrappeTestCase):
 				self.assertEqual(serial['purchase_document_no'], se.name)
 				self.assertEqual(serial['batch_no'], batch[0]['name'])
 
+	def test_stock_entry_for_multiple_items_with_batch_no_TC_SCK_079(self):
+		fields = {
+			"is_stock_item": 1, 
+			"has_batch_no": 1,
+			"create_new_batch": 1,
+			"batch_number_series": "ABC.##"
+		}
+
+		if frappe.db.has_column("Item", "gst_hsn_code"):
+			fields["gst_hsn_code"] = "01011010"
+
+		item_1 = make_item("_Test Batch Item 1", properties=fields).name
+		item_2 = make_item("_Test Batch Item 2", properties=fields).name
+
+		se = make_stock_entry(
+			item_code=item_1, qty=5, rate=100, target="_Test Warehouse - _TC",
+			purpose="Material Receipt", do_not_save=True
+		)
+
+		se.append("items", {
+			"item_code": item_2,
+			"qty": 5,
+			"basic_rate": 150,
+			"t_warehouse": "_Test Warehouse - _TC"
+		})
+
+		se.save()
+		se.submit()
+
+		for item, expected_qty in [(item_1, 5), (item_2, 5)]:
+			batch = frappe.get_all(
+				'Batch',
+				filters={'item': item, "reference_name": se.name},
+				fields=['name', "batch_qty", 'item', "reference_name"]
+			)
+
+			self.assertEqual(len(batch), 1, f"Batch record mismatch for {item}")
+			self.assertEqual(batch[0]['item'], item)
+			self.assertEqual(batch[0]['batch_qty'], expected_qty)
+			self.assertEqual(batch[0]['reference_name'], se.name)
+
 def create_bom(bom_item, rm_items, company=None, qty=None, properties=None):
 		bom = frappe.new_doc("BOM")
 		bom.update(
