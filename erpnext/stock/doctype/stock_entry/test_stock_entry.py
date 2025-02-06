@@ -1986,6 +1986,204 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(warehouse_qty["_Test Target Warehouse - _TC"], 0)
 		self.assertEqual(warehouse_qty["_Test Warehouse - _TC"], 0)
 
+	def test_create_stock_entry_TC_SCK_231(self):
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+		# Create test item
+		item_fields = {
+			"item_name": "Test Pen",
+			"is_stock_item": 1,
+			"valuation_rate": 500,
+		}
+		item = make_item("Test Pen", item_fields)
+		parent_acc = frappe.get_doc({
+			"doctype": "Account",
+			"account_name": "Current Assets - _TC",
+			"account_type": "Fixed Asset",
+			"parent_account": "_Test Account Tax Assets - _TC",
+			"root_type": "Asset",
+			"is_group": 1,
+			"company": "_Test Company"
+		})
+		parent_acc.save()
+		asset_account = frappe.get_doc({
+			"doctype": "Account",
+			"account_name": "Stock Adjustment - _TC",
+			"account_type": "Fixed Asset",
+			"parent_account": "Current Assets - _TC",
+			"company": "_Test Company"
+		})
+		asset_account.save()
+		# item = make_test_objects("Item", {"item_code": "Test Pen", "item_name": "Test Pen"})
+
+		# Set stock entry details
+		stock_entry_type = "Material Receipt"
+		posting_date = "2025-01-10"
+		target_warehouse = create_warehouse("Stores-test", properties=None, company="_Test Company")
+		item_code = item.name
+		qty = 5
+
+		# Create stock entry
+		se = make_stock_entry(
+			item_code=item_code, 
+			company = "_Test Company", 
+			purpose=stock_entry_type, 
+			expense_account= asset_account.name,
+			qty=qty,
+			do_not_submit=True,
+			do_not_save=True
+		)
+		se.items[0].t_warehouse = target_warehouse
+		se.items[0].is_opening = "Yes"
+		se.save()
+		se.submit()
+
+		# Assert opening balance
+		bin = frappe.get_doc("Bin", {"item_code": item_code, "warehouse": target_warehouse})
+		self.assertEqual(bin.actual_qty, qty)
+
+		# Tear down
+		# frappe.delete_doc("Stock Entry", se.name)
+		# frappe.delete_doc("Item", item.name)
+
+	def test_stock_reco_TC_SCK_232(self):
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+		item_fields = {
+			"item_name": "Test CPU",
+			"is_stock_item": 1,
+			"valuation_rate": 500,
+		}
+		self.warehouse = create_warehouse("Stores", properties=None, company="_Test Company")
+		self.company = "_Test Company"
+		self.item_code = make_item("Test CPU", item_fields).name
+		from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import (
+			create_stock_reconciliation,
+		)
+		sr = create_stock_reconciliation(purpose="Opening Stock",expense_account="Temporary Opening - _TC",item_code=self.item_code, warehouse=self.warehouse, qty=5, rate=500)
+		sr.submit()
+		reserved_qty = frappe.db.get_value("Bin", {"item_code": self.item_code, "warehouse": self.warehouse}, "actual_qty")
+		self.assertEqual(reserved_qty, 5)
+
+	def test_stock_ent_TC_SCK_233(self):
+		from erpnext.stock.utils import get_bin
+		warehouse = create_warehouse("Stores-test", properties=None, company="_Test Company")
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+		item_fields = {
+			"item_name": "Test 1231",
+			"is_stock_item": 1,
+			"valuation_rate": 100,
+			"stock_uom": "Nos",
+			"gst_hsn_code": "01011010",
+			"opening_stock": 5,
+			"item_defaults": [{'company': "_Test Company", 'default_warehouse': warehouse}],
+		}
+		self.item_code = make_item("Test 1231", item_fields)
+		bin = get_bin(self.item_code.name, warehouse)
+		
+		self.assertEqual(bin.actual_qty, item_fields["opening_stock"])
+
+	def test_stock_reco_TC_SCK_127(self):
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+		self.source_warehouse = create_warehouse("Stores-test", properties=None, company="_Test Company")
+		self.target_warehouse = create_warehouse("Department Stores-test", properties=None, company="_Test Company")
+		item_fields1 = {
+			"item_name": "Test Brown Rice",
+			"is_stock_item": 1,
+			"valuation_rate": 100,
+			"stock_uom": "Kg",
+		}
+		self.item_code1 = make_item("Test Brown Rice", item_fields1)
+		item_fields2 = {
+			"item_name": "Test Brown Rice 5kg",
+			"is_stock_item": 1,
+			"valuation_rate": 100,
+			"stock_uom": "Kg",
+		}
+		self.item_code2 = make_item("Test Brown Rice 5kg", item_fields2)
+		item_fields3 = {
+			"item_name": "Test Brown Rice 500g",
+			"is_stock_item": 1,
+			"valuation_rate": 100,
+			"stock_uom": "Kg",
+		}
+		self.item_code3 = make_item("Test Brown Rice 500g", item_fields3)
+		se1 = make_stock_entry(
+			item_code=self.item_code1.name, 
+			company = "_Test Company", 
+			purpose="Material Receipt", 
+			qty=10,
+			do_not_submit=True,
+			do_not_save=True
+		)
+		se1.items[0].t_warehouse = self.source_warehouse
+		se1.save()
+		se1.submit()
+
+		self.material_request = frappe.get_doc({
+            "doctype": "Material Request",
+            "material_request_type": "Material Transfer",
+			"set_from_warehouse": self.source_warehouse,
+			"set_warehouse": self.target_warehouse,
+			"company": "_Test Company",
+            "items": [
+                {"item_code": self.item_code1.name, "qty": 10, "schedule_date": frappe.utils.nowdate()},
+                {"item_code": self.item_code3.name, "qty": 10, "schedule_date": frappe.utils.nowdate()},
+                {"item_code": self.item_code2.name, "qty": 2, "schedule_date": frappe.utils.nowdate()},
+            ]
+        })
+		self.material_request.insert()
+		self.material_request.submit()
+
+		se = frappe.get_doc({
+            "doctype": "Stock Entry",
+            "stock_entry_type": "Repack",
+            "company": "_Test Company",
+            "items": []
+        })
+		se.append("items", {
+			"item_code": self.item_code1.name,
+			"qty": 10,
+			"s_warehouse": self.source_warehouse
+		})
+		se.append("items", {
+			"item_code": self.item_code3.name,
+			"qty": 10,  # Fixed the qty
+			"t_warehouse": self.target_warehouse
+		})
+		se.append("items", {
+			"item_code": self.item_code2.name,
+			"qty": 2,  # Fixed the qty
+			"t_warehouse": self.target_warehouse
+		})
+		se.save()
+		se.submit()
+		stock_ledger_entries = frappe.get_all(
+            "Stock Ledger Entry",
+            filters={"voucher_no": se.name},
+            fields=["item_code", "actual_qty"]
+        )
+
+		stock_movements = {s["item_code"]: s["actual_qty"] for s in stock_ledger_entries}
+
+		self.assertEqual(stock_movements.get(self.item_code1.name), -10, "Brown Rice should be 10 Outward")
+		self.assertEqual(stock_movements.get(self.item_code3.name), 10, "Brown Rice 500g should be 10 Inward")
+		self.assertEqual(stock_movements.get(self.item_code2.name), 2, "Brown Rice 5kg should be 2 Inward")
+
 	def create_stock_repack_via_bom_TC_SCK_016(self):
 		t_warehouse = create_warehouse(
 			warehouse_name="_Test Target Warehouse",
