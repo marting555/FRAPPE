@@ -6119,7 +6119,6 @@ class TestSalesInvoice(FrappeTestCase):
 		customer = get_required_data.get("customer")
 		price_list = get_required_data.get("price_list")
 		item = make_test_item("test_service")
-
 		so = frappe.get_doc(
 			{
 				"doctype": "Sales Order",
@@ -6157,7 +6156,7 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertEqual(po.total_taxes_and_charges, 180)
 		self.assertEqual(po.grand_total, 1180)
 
-		make_stock_entry(company = parent_company, target = "Stores - TC-1", qty = 10, rate = 1000)
+		make_stock_entry(company = parent_company, target = "Stores - TC-1", item_code = item.item_code, qty = 10, rate = 1000)
 
 		dn = make_delivery_note(so.name)
 		dn.insert()
