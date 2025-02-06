@@ -27,6 +27,9 @@ def update_reference_reports(reference_report):
 
 
 def update_report_json(report):
+	if not report.json:
+		return
+
 	report_json = json.loads(report.json)
 	report_filter = report_json.get("filters")
 
