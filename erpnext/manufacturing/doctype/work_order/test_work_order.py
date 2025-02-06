@@ -3599,7 +3599,61 @@ class TestWorkOrder(FrappeTestCase):
 		self.assertEqual(serial_cnt, 1)
 
 		self.assertEqual(wo_doc.status, "Completed")
-	
+
+	@change_settings(
+		"Manufacturing Settings", 
+		{"backflush_raw_materials_based_on": "Material Transferred for Manufacture",
+		"material_consumption":1,
+		"get_rm_cost_from_consumption_entry": 0
+		}
+	)
+	def test_wo_wth_consum_skp_transf_scp_tc_sck_217(self):
+		item = make_item(
+			"Test FG Item To Test Return Case",
+			{
+				"is_stock_item": 1,
+			},
+		)
+		
+		item_raw = make_item("Test raw material")
+		item_code = item.name
+		bom_doc = make_bom(
+			item=item_code,
+			source_warehouse="Stores - _TC",
+			raw_materials=[item_raw],
+			rm_qty=10,
+			do_not_submit=True
+		)
+		item_scrap = make_item("Test scrap material1")
+		frappe.db.set_value('Item',item_scrap.item_code,'valuation_rate',20)
+		bom_doc.append("scrap_items", {"item_code": item_scrap.item_code, "qty": 1})
+		bom_doc.submit()
+
+		# Create a work order
+		wo_doc = make_wo_order_test_record(production_item=item_code, qty=10,do_not_submit=1)
+		wo_doc.skip_transfer = 1
+		wo_doc.save()
+		wo_doc.submit()
+		self.assertEqual(wo_doc.bom_no, bom_doc.name)
+		self.assertEqual(wo_doc.status, "Not Started")
+
+		# Create a stock entry to consumption the item
+		ste_doc = frappe.get_doc(make_stock_entry(wo_doc.name, "Material Consumption for Manufacture", 10))
+		for row in ste_doc.items:
+			test_stock_entry.make_stock_entry(
+				item_code=row.item_code, target="Stores - _TC", qty=row.qty, basic_rate=100
+			)
+		ste_doc.save()
+		ste_doc.submit()
+		
+		# Create a stock entry to manufacture the item
+		ste_doc = frappe.get_doc(make_stock_entry(wo_doc.name, "Manufacture", 10))
+		ste_doc.save()
+		ste_doc.submit()
+		wo_doc.load_from_db()
+
+		self.assertEqual(wo_doc.status, "Completed")
+
 def make_operation(**kwargs):
 	kwargs = frappe._dict(kwargs)
 
