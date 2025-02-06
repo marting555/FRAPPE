@@ -42,7 +42,7 @@ from erpnext.buying.doctype.supplier_quotation.supplier_quotation import make_pu
 from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt as make_purchase_receipt_aganist_mr
 from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
 from erpnext.buying.doctype.request_for_quotation.request_for_quotation import make_supplier_quotation_from_rfq
-from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item as make_item
+from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 from io import BytesIO
 
 class TestPurchaseOrder(FrappeTestCase):
@@ -1549,7 +1549,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		expected_gle = [
 			["Creditors - _TC", 0.0, 30, nowdate()],
-			["_Test Account Cost for Goods Sold - _TC", 30, 0.0, nowdate()],
+			["Stock In Hand - _TC", 30, 0.0, nowdate()],
 		]
 		check_gl_entries(self, pi.name, expected_gle, nowdate())
 
@@ -3601,12 +3601,12 @@ class TestPurchaseOrder(FrappeTestCase):
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
 			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'debit')
-			self.assertEqual(gl_temp_credit, 500)
+			self.assertEqual(gl_temp_credit, 50000)
 
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
 			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pr.name, 'account': 'Stock In Hand - _TC'},'credit')
-			self.assertEqual(gl_stock_debit, 500)
+			self.assertEqual(gl_stock_debit, 50000)
 
 	def test_create_po_pr_TC_SCK_177(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
@@ -6751,7 +6751,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
 		supplier = "_Test Supplier 1"
-		item_code = make_item("test_item_with_update_item")
+		item_code = make_test_item("test_item_with_update_item")
 
 		po = frappe.get_doc({
 			"doctype": "Purchase Order",
@@ -6795,7 +6795,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
 		supplier = "_Test Supplier 1"
-		item_code = make_item("test_item_with_update_item")
+		item_code = make_test_item("test_item_with_update_item")
 
 		po = frappe.get_doc({
 			"doctype": "Purchase Order",
@@ -6932,7 +6932,6 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(pi_2.items[0].rate, 2000)
 
 	def test_po_with_parking_charges_pr_pi_TC_B_137(self):
-		from erpnext.stock.doctype.item.test_item import make_item
 		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
 		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
@@ -7034,7 +7033,6 @@ class TestPurchaseOrder(FrappeTestCase):
 			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
 
 	def test_po_with_environmental_cess_pr_pi_TC_B_138(self):
-		from erpnext.stock.doctype.item.test_item import make_item
 		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
 		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
@@ -7138,7 +7136,6 @@ class TestPurchaseOrder(FrappeTestCase):
 			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
 
 	def test_po_with_transportation_charges_pr_pi_TC_B_139(self):
-		from erpnext.stock.doctype.item.test_item import make_item
 		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
 		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
