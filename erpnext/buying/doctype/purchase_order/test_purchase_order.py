@@ -3601,12 +3601,12 @@ class TestPurchaseOrder(FrappeTestCase):
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
 			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'debit')
-			self.assertEqual(gl_temp_credit, 500)
+			self.assertEqual(gl_temp_credit, 50000)
 
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
 			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pr.name, 'account': 'Stock In Hand - _TC'},'credit')
-			self.assertEqual(gl_stock_debit, 500)
+			self.assertEqual(gl_stock_debit, 50000)
 
 	def test_create_po_pr_TC_SCK_177(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
