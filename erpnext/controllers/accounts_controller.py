@@ -545,7 +545,7 @@ class AccountsController(TransactionBase):
 			):
 				self.update_outstanding_for_self = 1
 				msg = (
-					"The outstanding amount {0} in {1} is lesser than {2}. Updating the outstanding to this invoice. <br><br>And"
+					"The outstanding amount {} in {} is lesser than {}. Updating the outstanding to this invoice. <br><br>And"
 				).format(
 					against_voucher_outstanding,
 					get_link_to_form(self.doctype, self.get("return_against")),
