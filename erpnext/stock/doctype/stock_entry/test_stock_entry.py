@@ -2251,6 +2251,36 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(stock[0]["valuation_rate"], 100)
 		self.assertEqual(stock[0]["stock_value"], 1500)
 
+	def test_item_opening_stock_with_item_defaults_TC_SCK_081(self):
+		stock_in_hand_account = get_inventory_account("_Test Company", "_Test Warehouse - _TC")
+		frappe.db.set_value("Company", "_Test Company", "stock_adjustment_account", "Cost of Goods Sold - _TC")
+		frappe.db.set_value("Company", "_Test Company", "default_inventory_account", stock_in_hand_account)
+		frappe.db.set_single_value("Stock Settings", "default_warehouse", "_Test Warehouse - _TC")
+		frappe.db.set_single_value("Global Defaults", "default_company", "_Test Company")
+		fields = {
+			"is_stock_item": 1, 
+			"opening_stock":15,
+			"valuation_rate":100
+		}
+
+		if frappe.db.has_column("Item", "gst_hsn_code"):
+			fields["gst_hsn_code"] = "01011010"
+
+		item_1 = create_item(item_code="_Test Stock OP", is_stock_item=1, opening_stock=15,valuation_rate=100)
+		item_1.item_defaults=[]
+		item_1.append("item_defaults", {
+			"company": "_Test Company",
+			"default_warehouse": "_Test Warehouse - _TC"
+		})
+		item_1.save()
+		stock = frappe.get_all("Stock Ledger Entry", filters={"item_code": item_1.name}, 
+							 fields=["warehouse", "actual_qty", "valuation_rate", "stock_value"])
+		
+		self.assertEqual(stock[0]["warehouse"], "_Test Warehouse - _TC")
+		self.assertEqual(stock[0]["actual_qty"], 15)
+		self.assertEqual(stock[0]["valuation_rate"], 100)
+		self.assertEqual(stock[0]["stock_value"], 1500)
+
 def create_bom(bom_item, rm_items, company=None, qty=None, properties=None):
 		bom = frappe.new_doc("BOM")
 		bom.update(
