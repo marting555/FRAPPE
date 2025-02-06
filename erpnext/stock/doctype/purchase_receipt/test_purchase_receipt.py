@@ -4818,24 +4818,44 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(doc_pi_return.status, 'Return')
 
 	def test_stock_receipt_TC_SCK_223(self):
-		self.item_code = "Book"
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+		item_fields = {
+			"item_name": "_Test Book",
+			"is_stock_item": 1,
+			"valuation_rate": 200
+		}
+		self.item_code = make_item("_Test Book", item_fields).name
 		self.warehouse = create_warehouse("Stores", properties=None, company="_Test Company")
 		self.qty_received = 10
 		self.qty_issued = 5
 		self.qty_reserved = 3
-		self.company = "PP Ltd"
+		self.company = "_Test Company"
 		pr = make_purchase_receipt(item_code=self.item_code, qty=self.qty_received, warehouse=self.warehouse)
 		pr.submit()
 		stock_qty = get_stock_balance(self.item_code, self.warehouse)
 		self.assertEqual(stock_qty, self.qty_received)
 
 	def test_stock_issue_TC_SCK_223(self):
-		self.item_code = "Book"
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+		item_fields = {
+			"item_name": "_Test Book",
+			"is_stock_item": 1,
+			"valuation_rate": 200
+		}
+		self.item_code = make_item("_Test Book", item_fields).name
 		self.warehouse = create_warehouse("Stores", properties=None, company="_Test Company")
 		self.qty_received = 10
 		self.qty_issued = 5
 		self.qty_reserved = 3
-		self.company = "PP Ltd"
+		self.company = "_Test Company"
 		se1 = make_stock_entry(item_code=self.item_code, qty=self.qty_received, to_warehouse=self.warehouse, purpose="Material Receipt")
 		se = make_stock_entry(item_code=self.item_code, qty=self.qty_issued, from_warehouse=self.warehouse, purpose="Material Issue")
 		se.submit()
@@ -4843,12 +4863,22 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(stock_qty, self.qty_received - self.qty_issued)
 
 	def test_sales_order_reservation_TC_SCK_223(self):
-		self.item_code = "Book"
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+		item_fields = {
+			"item_name": "_Test Book",
+			"is_stock_item": 1,
+			"valuation_rate": 200
+		}
+		self.item_code = make_item("_Test Book", item_fields).name
 		self.warehouse = create_warehouse("Stores", properties=None, company="_Test Company")
 		self.qty_received = 10
 		self.qty_issued = 5
 		self.qty_reserved = 3
-		self.company = "PP Ltd"
+		self.company = "_Test Company"
 		so = frappe.get_doc({
 			"doctype": "Sales Order",
 			"customer": "Test Customer",
@@ -4861,7 +4891,6 @@ class TestPurchaseReceipt(FrappeTestCase):
 			}]
 		})
 		so.insert()
-		# so = make_sales_order(item_code=self.item_code, qty=self.qty_reserved, warehouse=self.warehouse)
 		so.submit()
 		reserved_qty = frappe.db.get_value("Bin", {"item_code": self.item_code, "warehouse": self.warehouse}, "reserved_qty")
 		self.assertEqual(reserved_qty, self.qty_reserved)
