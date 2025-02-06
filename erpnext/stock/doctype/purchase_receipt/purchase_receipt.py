@@ -267,6 +267,10 @@ class PurchaseReceipt(BuyingController):
 				item.provisional_expense_account = default_provisional_account
 
 	def validate_with_previous_doc(self):
+		compare_fields_item = [["uom", "="], ["item_code", "="]]
+		if "projects" in frappe.get_installed_apps():
+			compare_fields_item.append(["project", "="])     
+   
 		super().validate_with_previous_doc(
 			{
 				"Purchase Order": {
@@ -275,7 +279,7 @@ class PurchaseReceipt(BuyingController):
 				},
 				"Purchase Order Item": {
 					"ref_dn_field": "purchase_order_item",
-					"compare_fields": [["project", "="], ["uom", "="], ["item_code", "="]],
+					"compare_fields": compare_fields_item,
 					"is_child_table": True,
 					"allow_duplicate_prev_row_id": True,
 				},
