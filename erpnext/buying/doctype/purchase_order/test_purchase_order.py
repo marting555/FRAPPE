@@ -42,7 +42,7 @@ from erpnext.buying.doctype.supplier_quotation.supplier_quotation import make_pu
 from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt as make_purchase_receipt_aganist_mr
 from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
 from erpnext.buying.doctype.request_for_quotation.request_for_quotation import make_supplier_quotation_from_rfq
-from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item as make_item
+from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 from io import BytesIO
 
 class TestPurchaseOrder(FrappeTestCase):
@@ -1549,7 +1549,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		expected_gle = [
 			["Creditors - _TC", 0.0, 30, nowdate()],
-			["_Test Account Cost for Goods Sold - _TC", 30, 0.0, nowdate()],
+			["Stock In Hand - _TC", 30, 0.0, nowdate()],
 		]
 		check_gl_entries(self, pi.name, expected_gle, nowdate())
 
@@ -3601,12 +3601,12 @@ class TestPurchaseOrder(FrappeTestCase):
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
 			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'debit')
-			self.assertEqual(gl_temp_credit, 500)
+			self.assertEqual(gl_temp_credit, 50000)
 
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
 			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pr.name, 'account': 'Stock In Hand - _TC'},'credit')
-			self.assertEqual(gl_stock_debit, 500)
+			self.assertEqual(gl_stock_debit, 50000)
 
 	def test_create_po_pr_TC_SCK_177(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
@@ -6751,7 +6751,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
 		supplier = "_Test Supplier 1"
-		item_code = make_item("test_item_with_update_item")
+		item_code = make_test_item("test_item_with_update_item")
 
 		po = frappe.get_doc({
 			"doctype": "Purchase Order",
@@ -6795,7 +6795,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
 		supplier = "_Test Supplier 1"
-		item_code = make_item("test_item_with_update_item")
+		item_code = make_test_item("test_item_with_update_item")
 
 		po = frappe.get_doc({
 			"doctype": "Purchase Order",
@@ -6931,6 +6931,428 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(pi_2.items[0].qty, 7)
 		self.assertEqual(pi_2.items[0].rate, 2000)
 
+	def test_po_with_parking_charges_pr_pi_TC_B_137(self):
+		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
+		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
+		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
+		get_company_supplier = create_data()
+		company = get_company_supplier.get("child_company")
+		supplier = get_company_supplier.get("supplier")
+		parking_charges_account = "Parking Charges Account - TC-1"
+		item = make_item("test_item")
+		if not frappe.db.exists("Account", parking_charges_account):
+			frappe.get_doc(
+				{
+					"doctype": "Account",
+					"account_name": "Parking Charges Account",
+					"company": get_company_supplier.get("parent_company"),
+					"parent_account": "Indirect Expenses - TC-1",
+					"account_type": "Chargeable",
+					"account_currency": "INR"
+				}
+			).insert()
+
+		po = frappe.get_doc(
+			{
+				"doctype": "Purchase Order",
+				"company": company,
+				"supplier": supplier,
+				"set_warehouse": "Stores - TC-3",
+				"items": [
+					{
+						"item_code": item.item_code,
+						"schedule_date": today(),
+						"qty": 10,
+						"rate": 1000
+					}
+				]
+			}
+		)
+		po.insert()
+		po.append("taxes", {
+			"charge_type": "On Net Total",
+			"account_head": "Parking Charges Account - TC-3",  # Replace with actual account
+			"rate": 5,  # Replace with your required tax rate
+			"category": "Valuation",
+			"description": "Parking Charges Account"
+		})
+		po.save()
+		po.submit()
+		self.assertEqual(po.docstatus, 1)
+		self.assertEqual(po.total_taxes_and_charges, 1800)
+		self.assertEqual(po.grand_total, 11800)
+
+		pr = make_purchase_receipt(po.name)
+		pr.save()
+		pr.submit()
+		self.assertEqual(pr.docstatus, 1)
+		self.assertEqual(pr.total_taxes_and_charges, 1800)
+		self.assertEqual(pr.grand_total, 11800)
+
+		get_pr_stock_ledger = frappe.get_all(
+			"Stock Ledger Entry",
+			{
+				"voucher_type": "Purchase Receipt",
+				"voucher_no": pr.name
+			},
+			[
+				"warehouse",
+				"actual_qty"
+			]
+		)
+		self.assertEqual(get_pr_stock_ledger[0].get("warehouse"), "Stores - TC-3")
+		self.assertEqual(get_pr_stock_ledger[0].get("actual_qty"), 10)
+
+		pr_gle_entries = frappe.get_all("GL Entry", filters={"voucher_no": pr.name}, fields=["account", "debit", "credit"])
+		expected_si_entries = {
+			"Stock In Hand - TC-3": {"debit": 10500, "credit": 0},
+			"Stock Received But Not Billed - TC-3": {"debit": 0, "credit": 10000},
+			"Parking Charges Account - TC-3": {"debit": 0, "credit": 500},
+		}
+		for entry in pr_gle_entries:
+			self.assertEqual(entry["debit"], expected_si_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_si_entries.get(entry["account"], {}).get("credit", 0))
+
+		pi = make_purchase_invoice(pr.name)
+		pi.bill_no = "test_bill - 1122"
+		pi.insert()
+		pi.submit()
+		self.assertEqual(pi.docstatus, 1)
+		self.assertEqual(pi.total_taxes_and_charges, 1800)
+		self.assertEqual(pi.grand_total, 11800)
+
+		pi_gle_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
+		expected_pi_entries = {
+			"Stock Received But Not Billed - TC-3": {"debit": 10000, "credit": 0},
+			"Input Tax CGST - TC-3": {"debit": 900, "credit": 0},
+			"Input Tax SGST - TC-3": {"debit": 900, "credit": 0},
+			"Creditors - TC-3": {"debit": 0, "credit": 11800},
+		}
+		for entry in pi_gle_entries:
+			self.assertEqual(entry["debit"], expected_pi_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
+
+	def test_po_with_environmental_cess_pr_pi_TC_B_138(self):
+		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
+		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
+		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
+		get_company_supplier = create_data()
+		company = get_company_supplier.get("child_company")
+		supplier = get_company_supplier.get("supplier")
+		parking_charges_account = "Environmental Cess - TC-1"
+		item = make_item("test_item")
+		if not frappe.db.exists("Account", parking_charges_account):
+			frappe.get_doc(
+				{
+					"doctype": "Account",
+					"account_name": "Environmental Cess",
+					"company": get_company_supplier.get("parent_company"),
+					"parent_account": "Duties and Taxes - TC-1",
+					"account_type": "Tax",
+					"account_currency": "INR"
+				}
+			).insert()
+
+		po = frappe.get_doc(
+			{
+				"doctype": "Purchase Order",
+				"company": company,
+				"supplier": supplier,
+				"set_warehouse": "Stores - TC-3",
+				"items": [
+					{
+						"item_code": item.item_code,
+						"schedule_date": today(),
+						"qty": 10,
+						"rate": 1000
+					}
+				]
+			}
+		)
+		po.insert()
+		po.append("taxes", {
+			"charge_type": "On Previous Row Total",
+			"account_head": "Environmental Cess - TC-3",
+			"rate": 5,
+			"category": "Total",
+			"description": "Environmental Cess",
+			"row_id":2
+		})
+		po.save()
+		po.submit()
+		self.assertEqual(po.docstatus, 1)
+		self.assertEqual(po.total_taxes_and_charges, 2390)
+		self.assertEqual(po.grand_total, 12390)
+
+		pr = make_purchase_receipt(po.name)
+		pr.save()
+		pr.submit()
+		self.assertEqual(pr.docstatus, 1)
+		self.assertEqual(pr.total_taxes_and_charges, 2390)
+		self.assertEqual(pr.grand_total, 12390)
+
+		get_pr_stock_ledger = frappe.get_all(
+			"Stock Ledger Entry",
+			{
+				"voucher_type": "Purchase Receipt",
+				"voucher_no": pr.name
+			},
+			[
+				"warehouse",
+				"actual_qty"
+			]
+		)
+		self.assertEqual(get_pr_stock_ledger[0].get("warehouse"), "Stores - TC-3")
+		self.assertEqual(get_pr_stock_ledger[0].get("actual_qty"), 10)
+
+		pr_gle_entries = frappe.get_all("GL Entry", filters={"voucher_no": pr.name}, fields=["account", "debit", "credit"])
+		expected_si_entries = {
+			"Stock In Hand - TC-3": {"debit": 10000, "credit": 0},
+			"Stock Received But Not Billed - TC-3": {"debit": 0, "credit": 10000},
+		}
+		for entry in pr_gle_entries:
+			self.assertEqual(entry["debit"], expected_si_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_si_entries.get(entry["account"], {}).get("credit", 0))
+
+		pi = make_purchase_invoice(pr.name)
+		pi.bill_no = "test_bill - 1122"
+		pi.insert()
+		pi.submit()
+		self.assertEqual(pi.docstatus, 1)
+		self.assertEqual(pi.total_taxes_and_charges, 2390)
+		self.assertEqual(pi.grand_total, 12390)
+
+		pi_gle_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
+		expected_pi_entries = {
+			"Stock Received But Not Billed - TC-3": {"debit": 10000, "credit": 0},
+			"Input Tax CGST - TC-3": {"debit": 900, "credit": 0},
+			"Input Tax SGST - TC-3": {"debit": 900, "credit": 0},
+			"Creditors - TC-3": {"debit": 0, "credit": 12390},
+			"Environmental Cess - TC-3": {"debit": 590, "credit": 0},
+
+		}
+		for entry in pi_gle_entries:
+			self.assertEqual(entry["debit"], expected_pi_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
+
+	def test_po_with_transportation_charges_pr_pi_TC_B_139(self):
+		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
+		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
+		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
+		get_company_supplier = create_data()
+		company = get_company_supplier.get("child_company")
+		supplier = get_company_supplier.get("supplier")
+		parking_charges_account = "Transportation Chargess - TC-1"
+		item = make_item("test_item")
+		item_1 = make_item("test_item_1")
+		if not frappe.db.exists("Account", parking_charges_account):
+			frappe.get_doc(
+				{
+					"doctype": "Account",
+					"account_name": "Transportation Charges",
+					"company": get_company_supplier.get("parent_company"),
+					"parent_account": "Indirect Expenses - TC-1",
+					"account_type": "Chargeable",
+					"account_currency": "INR"
+				}
+			).insert()
+
+		po = frappe.get_doc(
+			{
+				"doctype": "Purchase Order",
+				"company": company,
+				"supplier": supplier,
+				"set_warehouse": "Stores - TC-3",
+				"items": [
+					{
+						"item_code": item.item_code,
+						"schedule_date": today(),
+						"qty": 10,
+						"rate": 1000
+					},
+					{
+						"item_code": item_1.item_code,
+						"schedule_date": today(),
+						"qty": 5,
+						"rate": 200
+					}
+				]
+			}
+		)
+		po.insert()
+		po.append("taxes", {
+			"charge_type": "On Item Quantity",
+			"account_head": "Transportation Charges - TC-3",
+			"rate": 20,
+			"category": "Valuation and Total",
+			"description": "Transportation Charges",
+		})
+		po.save()
+		po.submit()
+		self.assertEqual(po.docstatus, 1)
+		self.assertEqual(po.total_taxes_and_charges, 2280)
+		self.assertEqual(po.grand_total, 13280)
+
+		pr = make_purchase_receipt(po.name)
+		pr.save()
+		pr.submit()
+		self.assertEqual(pr.docstatus, 1)
+		self.assertEqual(pr.total_taxes_and_charges, 2280)
+		self.assertEqual(pr.grand_total, 13280)
+
+		get_pr_stock_ledger = frappe.get_all(
+			"Stock Ledger Entry",
+			{
+				"voucher_type": "Purchase Receipt",
+				"voucher_no": pr.name
+			},
+			[
+				"warehouse",
+				"actual_qty"
+			]
+		)
+		self.assertEqual(get_pr_stock_ledger[0].get("warehouse"), "Stores - TC-3")
+		self.assertEqual(get_pr_stock_ledger[0].get("actual_qty"), 5)
+		self.assertEqual(get_pr_stock_ledger[1].get("warehouse"), "Stores - TC-3")
+		self.assertEqual(get_pr_stock_ledger[1].get("actual_qty"), 10)
+
+		pr_gle_entries = frappe.get_all("GL Entry", filters={"voucher_no": pr.name}, fields=["account", "debit", "credit"])
+		expected_si_entries = {
+			"Stock In Hand - TC-3": {"debit": 11300, "credit": 0},
+			"Stock Received But Not Billed - TC-3": {"debit": 0, "credit": 11000},
+			"Transportation Charges - TC-3": {"debit": 0, "credit": 300},
+		}
+		for entry in pr_gle_entries:
+			self.assertEqual(entry["debit"], expected_si_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_si_entries.get(entry["account"], {}).get("credit", 0))
+
+		pi = make_purchase_invoice(pr.name)
+		pi.bill_no = "test_bill - 1122"
+		pi.insert()
+		pi.submit()
+		self.assertEqual(pi.docstatus, 1)
+		self.assertEqual(pi.total_taxes_and_charges, 2280)
+		self.assertEqual(pi.grand_total, 13280)
+
+		pi_gle_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
+		expected_pi_entries = {
+			"Stock Received But Not Billed - TC-3": {"debit": 11000, "credit": 0},
+			"Input Tax CGST - TC-3": {"debit": 990, "credit": 0},
+			"Input Tax SGST - TC-3": {"debit": 990, "credit": 0},
+			"Creditors - TC-3": {"debit": 0, "credit": 13280},
+			"Transportation Charges - TC-3": {"debit": 300, "credit": 0},
+		}
+		for entry in pi_gle_entries:
+			self.assertEqual(entry["debit"], expected_pi_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
+	
+	def test_stop_po_creation_when_value_exceeds_budget_TC_ACC_132(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.accounts.utils import get_fiscal_year
+		
+		year = get_fiscal_year(date=nowdate(), company="_Test Company")[0]
+		
+		budget = frappe.get_doc({
+			"doctype":"Budget",
+			"budget_against":"Cost Center",
+			"company":"_Test Company",
+			"cost_center":"_Test Write Off Cost Center - _TC",
+			"fiscal_year":year,
+			"applicable_on_purchase_order":1,
+			"action_if_annual_budget_exceeded_on_po": "Stop",
+			"action_if_accumulated_monthly_budget_exceeded_on_po": "Stop",
+			"applicable_on_booking_actual_expenses":1,
+			"action_if_annual_budget_exceeded": "Stop",
+			"action_if_accumulated_monthly_budget_exceeded": "Stop",
+			"accounts":[{
+				"account":"Administrative Expenses - _TC",
+				"budget_amount":10000
+			}]
+		}).insert().submit()
+  
+		item = make_test_item("_Test Item")
+		try:
+			po = create_purchase_order(
+				supplier = "_Test Supplier",
+				company = "_Test Company",
+				item_code=item.name,
+				rate=11000,
+				qty=1,
+				do_not_submit=True
+			)
+	
+			po.cost_center = "_Test Write Off Cost Center - _TC"
+			po.items[0].expense_account = "Administrative Expenses - _TC"
+			po.items[0].cost_center = "_Test Write Off Cost Center - _TC"
+	
+			po.save().submit()
+		except Exception as e:
+			self.assertEqual(str(e),"""Annual Budget for Account Administrative Expenses - _TC against Cost Center _Test Write Off Cost Center - _TC is ₹ 10,000.00. It will be exceed by ₹ 1,000.00Total Expenses booked through - Actual Expenses - ₹ 0.00Material Requests - ₹ 0.00Unbilled Orders - ₹ 11,000.00""")
+
+			budget.cancel()
+			budget.load_from_db()
+			po.cancel()
+			po.load_from_db()
+			frappe.delete_doc("Budget", budget.name,force=1)
+			frappe.delete_doc("Purchase Order", po.name,force=1)
+			frappe.db.commit()
+	def test_warn_po_creation_when_value_exceeds_budget_TC_ACC_144(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.accounts.utils import get_fiscal_year
+		
+		year = get_fiscal_year(date=nowdate(), company="_Test Company")[0]
+		
+		budget = frappe.get_doc({
+			"doctype":"Budget",
+			"budget_against":"Cost Center",
+			"company":"_Test Company",
+			"cost_center":"_Test Write Off Cost Center - _TC",
+			"fiscal_year":year,
+			"applicable_on_purchase_order":1,
+			"action_if_annual_budget_exceeded_on_po": "Warn",
+			"action_if_accumulated_monthly_budget_exceeded_on_po": "Warn",
+			"applicable_on_booking_actual_expenses":1,
+			"action_if_annual_budget_exceeded": "Warn",
+			"action_if_accumulated_monthly_budget_exceeded": "Warn",
+			"accounts":[{
+				"account":"Administrative Expenses - _TC",
+				"budget_amount":10000
+			}]
+		}).insert().submit()
+  
+		item = make_test_item("_Test Item")
+		
+		po = create_purchase_order(
+			supplier = "_Test Supplier",
+			company = "_Test Company",
+			item_code=item.name,
+			rate=11000,
+			qty=1,
+			do_not_submit=True
+		)
+
+		po.cost_center = "_Test Write Off Cost Center - _TC"
+		po.items[0].expense_account = "Administrative Expenses - _TC"
+		po.items[0].cost_center = "_Test Write Off Cost Center - _TC"
+
+		po.save().submit()
+		budget_exceeded_found = False
+
+		for msg in frappe.get_message_log():
+			if msg.get("title") == "Budget Exceeded" and msg.get("indicator") == "orange":
+				if "Annual Budget for Account" in msg.get("message", ""):
+					budget_exceeded_found = True
+					break  
+
+		self.assertTrue(budget_exceeded_found, "Budget exceeded message not found")
+		budget.cancel()
+		budget.load_from_db()
+		po.cancel()
+		po.load_from_db()
+		frappe.delete_doc("Budget", budget.name,force=1)
+		frappe.delete_doc("Purchase Order", po.name,force=1)
+		frappe.db.commit()
+	
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,

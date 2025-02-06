@@ -1982,7 +1982,8 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(sle.qty_after_transaction, bin_qty + 5)
 		self.assertEqual(sle.warehouse, mr.get("items")[0].warehouse)
 		
-		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
+		debit_act = frappe.db.get_value("Company",pr.company,"stock_received_but_not_billed")
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': debit_act},'credit')
 		self.assertEqual(gl_temp_credit, 500)
 		
 		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit')
@@ -1999,7 +2000,8 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(sle.qty_after_transaction, bin_qty + 5)
 		self.assertEqual(sle.warehouse, mr.get("items")[0].warehouse)
 		
-		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr1.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
+		debit_act = frappe.db.get_value("Company",pr.company,"stock_received_but_not_billed")
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr1.name, 'account': debit_act},'credit')
 		self.assertEqual(gl_temp_credit, 500)
 		
 		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr1.name, 'account': 'Stock In Hand - _TC'},'debit')
@@ -2425,7 +2427,8 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(sle.qty_after_transaction, bin_qty + 10)
 		self.assertEqual(sle.warehouse, mr.get("items")[0].warehouse)
 		
-		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
+		debit_act = frappe.db.get_value("Company",pr.company,"stock_received_but_not_billed")
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': debit_act},'credit')
 		self.assertEqual(gl_temp_credit, 1000)
 		
 		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit')
@@ -2850,7 +2853,8 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(sle.qty_after_transaction, bin_qty + 5)
 		self.assertEqual(sle.warehouse, mr.get("items")[0].warehouse)
 		
-		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
+		debit_act = frappe.db.get_value("Company",pr.company,"stock_received_but_not_billed")
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': debit_act},'credit')
 		self.assertEqual(gl_temp_credit, 500)
 		
 		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit')
@@ -2867,7 +2871,8 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(sle.qty_after_transaction, bin_qty + 5)
 		self.assertEqual(sle.warehouse, mr.get("items")[0].warehouse)
 		
-		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr1.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
+		debit_act = frappe.db.get_value("Company",pr.company,"stock_received_but_not_billed")
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr1.name, 'account': debit_act},'credit')
 		self.assertEqual(gl_temp_credit, 500)
 		
 		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr1.name, 'account': 'Stock In Hand - _TC'},'debit')
@@ -2998,6 +3003,7 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(cogs_gle[0], cogs_gle[1])
 		self.assertEqual(current_bin_qty, bin_qty)
 
+	@change_settings("Stock Settings",{"allow_negative_stock": 1})
 	def test_mr_transfer_to_se_cancel_TC_SCK_061(self):
 		source_wh = create_warehouse(
 			warehouse_name="_Test Source Warehouse",
@@ -4119,18 +4125,21 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(doc_mr.status, "Received")
 		doc_pr.load_from_db()
 		from erpnext.controllers.sales_and_purchase_return import make_return_doc
+		warehouse_rej = create_warehouse("_Test warehouse Rejected", company="_Test Company")
 		return_pi = make_return_doc("Purchase Receipt", doc_pr.name)
+		return_pi.get("items")[0].qty = -5
 		return_pi.get("items")[0].rejected_qty = -5
+		return_pi.get("items")[0].rejected_warehouse = warehouse_rej
 		return_pi.submit()
 
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
-			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': 'Stock Received But Not Billed - _TC'},'debit')
 			self.assertEqual(gl_temp_credit, 500)
 		
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
-			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': 'Stock In Hand - _TC'},'debit')
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': 'Stock In Hand - _TC'},'credit')
 			self.assertEqual(gl_stock_debit, 500)
 
 	def test_mr_po_2pr_partial_return_TC_SCK_041(self):
