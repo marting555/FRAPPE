@@ -387,6 +387,15 @@ class TestPOSInvoice(IntegrationTestCase):
 		inv.payments = []
 		self.assertRaises(frappe.ValidationError, inv.insert)
 
+	def test_partial_payment(self):
+		pos_inv = create_pos_invoice(rate=10000, do_not_save=1)
+		pos_inv.append(
+			"payments",
+			{"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 9000},
+		)
+		pos_inv.insert()
+		self.assertRaises(frappe.ValidationError, pos_inv.submit)
+
 	def test_serialized_item_transaction(self):
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_serialized_item
 
