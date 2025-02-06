@@ -42,6 +42,14 @@ class TestAccountingDimension(unittest.TestCase):
 		self.assertEqual(gle.get("department"), "_Test Department - _TC")
   
 	def test_auto_creation_of_accounts_on_company_creation_TC_ACC_066(self):
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.abbr = "_TC"
+			company.default_currency = "INR"
+			company.create_chart_of_accounts_based_on = "Standard"
+			company.save()
+		
 		if not frappe.db.exists("Company", "_Test Agro"):
 			company = frappe.new_doc("Company")
 			company.company_name = "_Test Agro"
