@@ -6530,6 +6530,11 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_make_mr_TC_SCK_185(self):
 			from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry as _make_stock_entry
+			if not frappe.db.exists("Company", "_Test Company"):
+				company = frappe.new_doc("Company")
+				company.company_name = "_Test Company"
+				company.default_currency = "INR"
+				company.insert()
 
 			fields = {
 				"has_serial_no": 1,
@@ -6625,6 +6630,12 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_make_mr_TC_SCK_186(self):
 		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry as _make_stock_entry
+
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
 
 		fields = {
 			"has_batch_no": 1,
@@ -6726,6 +6737,12 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_make_mr_TC_SCK_187(self):
 			from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry as _make_stock_entry
 
+			if not frappe.db.exists("Company", "_Test Company"):
+				company = frappe.new_doc("Company")
+				company.company_name = "_Test Company"
+				company.default_currency = "INR"
+				company.insert()
+
 			fields = {
 				"has_serial_no": 1,
 				"is_stock_item": 1,
@@ -6820,6 +6837,12 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_make_mr_TC_SCK_188(self):
 			from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry as _make_stock_entry
+
+			if not frappe.db.exists("Company", "_Test Company"):
+				company = frappe.new_doc("Company")
+				company.company_name = "_Test Company"
+				company.default_currency = "INR"
+				company.insert()
 
 			fields = {
 				"has_serial_no": 1,

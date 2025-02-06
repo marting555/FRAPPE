@@ -2671,14 +2671,20 @@ class TestDeliveryNote(FrappeTestCase):
 			if row.item_code == serial_item.name:
 				self.assertTrue(row.serial_no)
 
-	def test_dn_submission(self):
+	def test_dn_submission_TC_SCK_148(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 		from erpnext.buying.doctype.supplier.test_supplier import create_supplier
 		# from crm.crm.doctype.lead.lead import make_customer
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 		"""Test Purchase Receipt Creation, Submission, and Stock Ledger Update"""
 
-		# Create Purchase Receipt
+		# Create Purchase Receiptif not frappe.db.exists("Company", "_Test Company"):
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+
 		item_fields = {
 			"item_name": "Ball point Pen",
 			"is_stock_item": 1,
@@ -2723,18 +2729,10 @@ class TestDeliveryNote(FrappeTestCase):
 			"uom" : "Box",
 			"stock_uom":"Box",
 			"conversion_factor": 1
-			# "rate" : 130,
 		}
-		# self.supplier = frappe.get_doc({
-		# 	"doctype": "Supplier",
-		# 	"supplier_name": "Test Supplier 1",
-		# 	"supplier_group": "All Supplier Groups",
-		# 	"supplier_type": "Company"
-		# })
-		# self.supplier.insert(ignore_if_duplicate=True)
+		
 		target_warehouse = create_warehouse("_Test Warehouse", properties=None, company=pr_fields['company'])
 		item = make_item("Ball point Pen", item_fields).name
-		# self.item_code = "Ball Point Pen"
 		supplier = create_supplier(
 			supplier_name="Test Supplier 1",
 			supplier_group="All Supplier Groups",
@@ -2760,8 +2758,7 @@ class TestDeliveryNote(FrappeTestCase):
 		dn.submit()
 
 		sle = frappe.get_doc("Stock Ledger Entry", {"voucher_no": dn.name})
-		# print('qty',sle.qty_after_transaction)
-
+		
 		# Verify if stock ledger has the correct stock entry
 
 		self.assertEqual(sle.actual_qty, 1.5, "Stock Ledger did not update correctly!") if sle.actual_qty > 0 else self.assertEqual(-sle.actual_qty, 1.5, "Stock Ledger did not update correctly!")
