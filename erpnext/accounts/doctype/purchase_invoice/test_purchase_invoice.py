@@ -3860,11 +3860,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			supplier_name="Monica",
 			supplier_type="Company",
 		)
-		# self.supplier = frappe.get_doc({
-        #     "doctype": "Supplier",
-        #     "supplier_name": "Monica",
-        #     "supplier_type": "Company"
-        # })
+
 		if not frappe.db.exists("Supplier", supplier.supplier_name):
 			supplier.insert()
 
@@ -3876,32 +3872,9 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
             "valuation_rate": 5000,
             "standard_rate": 5000
 		}
-		# self.item = frappe.get_doc({
-        #     "doctype": "Item",
-        #     "item_code": "Boat Earpods",
-        #     "item_name": "Boat Earpods",
-        #     "is_stock_item": 1,
-        #     "stock_uom": "Nos",
-        #     "valuation_rate": 5000,
-        #     "standard_rate": 5000
-        # })
+		
 		item = make_item("Boat Earpods", it_fields).name
-		# if not frappe.db.exists("Item", self.item.item_code):
-		# 	self.make_item(
-		# 	"Boat Earpods",
-		# 	{
-		# 		"item_name": "Boat Earpods",
-		# 		"is_stock_item": 1,
-		# 		"stock_uom": "Nos",
-		# 		"gst_hsn_code": random.choice(frappe.db.get_all("GST HSN Code", pluck = 'name')),
-		# 		"valuation_rate": 5000,
-		# 		"standard_rate": 5000,
-		# 	},
-		# 	)
-		# 	print('item_rate',frappe.db.get_value("Item", "Boat Earpods", "valuation_rate"))
-
-        # Define Pricing Rule
-		# if not frappe.db.exists("Pricing Rule", {"title" : pricing_rule.title}):
+		
 		self.pricing_rule =make_pricing_rule(
 			apply_on="Item Code",
 			title="Boat Earpods - Monica Discount",
@@ -3919,7 +3892,6 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			apply_rule_on = "Transaction",
 			apply_on_transaction = "Purchase Invoice"
 		)
-		# self.pricing_rule.insert()
 		frappe.db.commit()
 		
 	def test_purchase_invoice_discount(self):
@@ -3935,19 +3907,6 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			qty=20,
 			item_code="Boat Earpods",
 		)
-		# print(pi.name)
-		# purchase_invoice = frappe.get_doc({
-        #     "doctype": "Purchase Invoice",
-        #     "supplier": "Monica",
-        #     "posting_date": "2024-12-15",
-        #     "update_stock": 1,
-        #     "items": [{
-        #         "item_code": "TEST_ITEM",
-        #         "qty": 20,
-        #         "rate": 4500  # Expected rate after discount
-        #     }]
-        # })
-		# if not frappe.db.exists("Purchase Invoice", pi.name):
 		pi.insert()
 		pi.submit()
 
