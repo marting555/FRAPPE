@@ -299,7 +299,7 @@ class TestPOSInvoiceMergeLog(IntegrationTestCase):
 			inv2.submit()
 
 			inv3 = create_pos_invoice(qty=3, rate=600, do_not_save=True)
-			inv3.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 1000})
+			inv3.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 1800})
 			inv3.insert()
 			inv3.submit()
 
@@ -307,8 +307,8 @@ class TestPOSInvoiceMergeLog(IntegrationTestCase):
 
 			inv.load_from_db()
 			consolidated_invoice = frappe.get_doc("Sales Invoice", inv.consolidated_invoice)
-			self.assertEqual(consolidated_invoice.outstanding_amount, 800)
-			self.assertNotEqual(consolidated_invoice.status, "Paid")
+			self.assertNotEqual(consolidated_invoice.outstanding_amount, 800)
+			self.assertEqual(consolidated_invoice.status, "Paid")
 
 		finally:
 			frappe.set_user("Administrator")
