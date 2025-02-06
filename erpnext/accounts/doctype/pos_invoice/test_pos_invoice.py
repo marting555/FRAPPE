@@ -604,7 +604,7 @@ class TestPOSInvoice(IntegrationTestCase):
 			"payments",
 			{"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 10000},
 		)
-		inv.paid_amount = 10000
+		inv.insert()
 		inv.submit()
 
 		lpe = frappe.get_doc(
@@ -671,12 +671,12 @@ class TestPOSInvoice(IntegrationTestCase):
 		test_user, pos_profile = init_user_and_profile()
 		pos_inv = create_pos_invoice(rate=300, additional_discount_percentage=10, do_not_submit=1)
 		pos_inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 270})
-		pos_inv.paid_amount = 270
+		pos_inv.save()
 		pos_inv.submit()
 
 		pos_inv2 = create_pos_invoice(rate=3200, do_not_submit=1)
 		pos_inv2.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 3200})
-		pos_inv2.paid_amount = 3200
+		pos_inv2.save()
 		pos_inv2.submit()
 
 		consolidate_pos_invoices()
@@ -708,7 +708,7 @@ class TestPOSInvoice(IntegrationTestCase):
 				"included_in_print_rate": 1,
 			},
 		)
-		pos_inv.paid_amount = 300
+		pos_inv.save()
 		pos_inv.submit()
 
 		pos_inv2 = create_pos_invoice(rate=300, qty=2, do_not_submit=1)
@@ -725,7 +725,7 @@ class TestPOSInvoice(IntegrationTestCase):
 				"included_in_print_rate": 1,
 			},
 		)
-		pos_inv2.paid_amount = 540
+		pos_inv2.save()
 		pos_inv2.submit()
 
 		consolidate_pos_invoices()
@@ -778,7 +778,7 @@ class TestPOSInvoice(IntegrationTestCase):
 				"included_in_print_rate": 1,
 			},
 		)
-		pos_inv2.paid_amount = 400
+		pos_inv2.save()
 		pos_inv2.submit()
 
 		consolidate_pos_invoices()
@@ -813,7 +813,6 @@ class TestPOSInvoice(IntegrationTestCase):
 			"payments",
 			{"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 4500},
 		)
-		pos_inv1.paid_amount = 4500
 		pos_inv1.items[0].batch_no = batch_no
 		pos_inv1.save()
 		pos_inv1.submit()
@@ -835,7 +834,7 @@ class TestPOSInvoice(IntegrationTestCase):
 			"payments",
 			{"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 3000},
 		)
-		pos_inv2.paid_amount = 3000
+		pos_inv2.save()
 		pos_inv2.submit()
 		pos_inv2.reload()
 		self.assertTrue(pos_inv2.items[0].serial_and_batch_bundle)
@@ -875,7 +874,6 @@ class TestPOSInvoice(IntegrationTestCase):
 			"payments",
 			{"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 300},
 		)
-		pos_inv1.paid_amount = 300
 		pos_inv1.save()
 		pos_inv1.submit()
 
