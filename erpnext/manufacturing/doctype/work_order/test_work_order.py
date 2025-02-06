@@ -3599,7 +3599,7 @@ class TestWorkOrder(FrappeTestCase):
 		self.assertEqual(serial_cnt, 1)
 
 		self.assertEqual(wo_doc.status, "Completed")
-
+	
 def make_operation(**kwargs):
 	kwargs = frappe._dict(kwargs)
 
