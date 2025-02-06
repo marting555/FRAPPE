@@ -553,7 +553,7 @@ class AccountsController(TransactionBase):
 				)
 
 			if msg:
-				msg += " you can use {0} tool to reconcile against {1} later.".format(
+				msg += " you can use {} tool to reconcile against {} later.".format(
 					get_link_to_form("Payment Reconciliation"),
 					get_link_to_form(self.doctype, self.get("return_against")),
 				)
