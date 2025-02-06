@@ -6520,9 +6520,11 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(current_bin_qty, bin_qty)
 
 	def test_create_mr_po_pr_serl_part_retn_tc_sck_210(self):
-		company = "_Test Company"
-		warehouse = "Stores - _TC"
-		supplier = "_Test Supplier 1"
+		create_company()
+		create_fiscal_year()
+		company = "_Test Company MR"
+		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
+		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		item_code = "_Test Item With Serial No"
 
 		if not frappe.db.exists("Item", item_code):
@@ -6551,13 +6553,13 @@ class TestMaterialRequest(FrappeTestCase):
 		
 		#partially qty
 		po = make_purchase_order(mr.name)
-		po.supplier = "_Test Supplier"
+		po.supplier = supplier
 		po.get("items")[0].rate = 100
 		po.get("items")[0].qty = 10
 		po.insert()
 		po.submit()
 
-		bin_qty = frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": "_Test Warehouse - _TC"}, "actual_qty")
+		bin_qty = frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": "_Test Warehouse - _TC"}, "actual_qty") or 0
 		pr1 = make_purchase_receipt(po.name)
 		serial_numbers = [f"test_item11_00{i}" for i in range(1, 10 + 1)]
 		pr1.items[0].serial_no = "\n".join(serial_numbers)
@@ -6596,9 +6598,11 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(gl_stock_debit, 500)
 
 	def test_create_mr_po_2pr_serial_part_return_tc_sck_211(self):
-		company = "_Test Company"
-		warehouse = "Stores - _TC"
-		supplier = "_Test Supplier 1"
+		create_company()
+		create_fiscal_year()
+		company = "_Test Company MR"
+		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
+		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		item_code = "_Test Item With Serial No"
 		quantity = 3
 
@@ -6625,13 +6629,13 @@ class TestMaterialRequest(FrappeTestCase):
 		mr = make_material_request(item_code=item_code)
 		
 		po = make_purchase_order(mr.name)
-		po.supplier = "_Test Supplier"
+		po.supplier = supplier
 		po.get("items")[0].rate = 100
 		po.get("items")[0].qty = 10
 		po.insert()
 		po.submit()
 
-		bin_qty = frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": "_Test Warehouse - _TC"}, "actual_qty")
+		bin_qty = frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": "_Test Warehouse - _TC"}, "actual_qty") or 0
 		pr = make_purchase_receipt(po.name)
 		serial_numbers = [f"test_item1_00{i}" for i in range(1, 5 + 1)]
 		pr.items[0].serial_no = "\n".join(serial_numbers)
@@ -6687,9 +6691,11 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(gl_stock_debit, 500)
 
 	def test_mr_2po_2pr_serl_part_retn_tc_sck_212(self):
-		company = "_Test Company"
-		warehouse = "Stores - _TC"
-		supplier = "_Test Supplier 1"
+		create_company()
+		create_fiscal_year()
+		company = "_Test Company MR"
+		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
+		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		item_code = "_Test Item With Serial No"
 		quantity = 3
 
@@ -6717,13 +6723,13 @@ class TestMaterialRequest(FrappeTestCase):
 		
 		#partially qty
 		po = make_purchase_order(mr.name)
-		po.supplier = "_Test Supplier"
+		po.supplier = supplier
 		po.get("items")[0].rate = 100
 		po.get("items")[0].qty = 5
 		po.insert()
 		po.submit()
 
-		bin_qty = frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": "_Test Warehouse - _TC"}, "actual_qty")
+		bin_qty = frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": "_Test Warehouse - _TC"}, "actual_qty") or 0
 		pr = make_purchase_receipt(po.name)
 		serial_numbers = [f"test_item_00{i}" for i in range(1, int(po.get("items")[0].qty) + 1)]
 		pr.items[0].serial_no = "\n".join(serial_numbers)
@@ -6786,9 +6792,11 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(gl_stock_debit, 500)
 
 	def test_create_mr_to_2po_to_1pr_serl_part_retn_tc_sck_213(self):
-		company = "_Test Company"
-		warehouse = "Stores - _TC"
-		supplier = "_Test Supplier 1"
+		create_company()
+		create_fiscal_year()
+		company = "_Test Company MR"
+		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
+		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		item_code = "_Test Item With Serial No"
 
 		if not frappe.db.exists("Item", item_code):
@@ -6829,7 +6837,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po1.insert()
 		po1.submit()
 
-		bin_qty = frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": "_Test Warehouse - _TC"}, "actual_qty")
+		bin_qty = frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": "_Test Warehouse - _TC"}, "actual_qty") or 0
 		pr1 = make_purchase_receipt(po.name)
 		pr1 = make_purchase_receipt(po1.name, target_doc=pr1)
 		serial_numbers = [f"test_item11_00{i}" for i in range(1, 5 + 1)]
