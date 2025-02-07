@@ -1,7 +1,8 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
-
+import frappe
+from frappe import _
 from frappe.model.document import Document
 
 
@@ -22,4 +23,11 @@ class POSSettings(Document):
 	# end: auto-generated types
 
 	def validate(self):
-		pass
+		self.validate_invoice_fields()
+
+	def validate_invoice_fields(self):
+		invoice_fields_count = {}
+		for d in self.invoice_fields:
+			if invoice_fields_count.get(d.fieldname):
+				frappe.throw(_("Each POSField in the POS Settings can only have one instance."))
+			invoice_fields_count[d.fieldname] = 1
