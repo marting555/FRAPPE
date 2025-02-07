@@ -383,6 +383,10 @@ class PurchaseInvoice(BuyingController):
 				check_on_hold_or_closed_status("Purchase Order", d.purchase_order)
 
 	def validate_with_previous_doc(self):
+		compare_fields_pr_item = [["item_code", "="], ["uom", "="]]
+		if "projects" in frappe.get_installed_apps():
+			compare_fields_pr_item.append(["project", "="])
+
 		super().validate_with_previous_doc(
 			{
 				"Purchase Order": {
@@ -391,7 +395,7 @@ class PurchaseInvoice(BuyingController):
 				},
 				"Purchase Order Item": {
 					"ref_dn_field": "po_detail",
-					"compare_fields": [["project", "="], ["item_code", "="], ["uom", "="]],
+					"compare_fields": compare_fields_pr_item,
 					"is_child_table": True,
 					"allow_duplicate_prev_row_id": True,
 				},
@@ -401,7 +405,7 @@ class PurchaseInvoice(BuyingController):
 				},
 				"Purchase Receipt Item": {
 					"ref_dn_field": "pr_detail",
-					"compare_fields": [["project", "="], ["item_code", "="], ["uom", "="]],
+					"compare_fields": compare_fields_pr_item,
 					"is_child_table": True,
 				},
 			}
@@ -851,7 +855,7 @@ class PurchaseInvoice(BuyingController):
 			else grand_total,
 			"against_voucher": against_voucher,
 			"against_voucher_type": self.doctype,
-			"project": self.project,
+			"project": self.get("project"),
 			"cost_center": self.cost_center,
 			"_skip_merge": skip_merge,
 		}

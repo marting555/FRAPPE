@@ -71,12 +71,14 @@ def make_item(item_code=None, properties=None, uoms=None, barcode=None):
 			},
 		)
 	if 'india_compliance' in frappe.get_installed_apps():
-		gst_hsn_code = random.choice(frappe.db.get_all("GST HSN Code", pluck = 'name'))
-		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
-			gst_hsn_code = frappe.new_doc("GST HSN Code")
-			gst_hsn_code.hsn_code = "11112222"
-			gst_hsn_code.save()
-		item.gst_hsn_code = gst_hsn_code
+		from india_compliance.gst_india.utils import get_hsn_settings
+		valid_hsn_length = get_hsn_settings()
+
+		gst_hsn_code = frappe.db.get_all("GST HSN Code", pluck = "name")
+		for code in gst_hsn_code:
+			if len(code) in valid_hsn_length[1]:
+				item.gst_hsn_code = code
+				break
 	item.insert()
 
 	return item
@@ -908,6 +910,46 @@ class TestItem(FrappeTestCase):
 		)
 
 		self.assertRaises(frappe.ValidationError, item_doc.save)
+
+	def test_cr_item_TC_SCK_128(self):
+		from frappe.utils import random_string
+		item_fields1 = {
+			"item_name": f"_Test-{random_string(5)}",
+			"valuation_rate": 100,
+			"has_batch_no": 1,
+			"has_expiry_date": 1,
+			"shelf_life_in_days": 30
+		}
+		item = make_item(item_fields1["item_name"], item_fields1)
+		self.assertEqual(item.has_batch_no, 1)
+		self.assertEqual(item.has_expiry_date, 1)
+		self.assertEqual(item.shelf_life_in_days, 30)
+
+	def test_cr_item_TC_SCK_129(self):
+		from frappe.utils import random_string
+		item_fields1 = {
+			"item_name": f"_Test-{random_string(5)}",
+			"valuation_rate": 100,
+			"has_serial_no": 1,
+			"has_expiry_date": 1,
+			"shelf_life_in_days": 30
+		}
+		item = make_item(item_fields1["item_name"], item_fields1)
+		self.assertEqual(item.has_serial_no, 1)
+		self.assertEqual(item.has_expiry_date, 1)
+		self.assertEqual(item.shelf_life_in_days, 30)
+
+	def test_cr_item_TC_SCK_130(self):
+		from frappe.utils import random_string
+		item_fields1 = {
+			"item_name": f"_Test-{random_string(5)}",
+			"is_stock_item": 0,
+			"valuation_rate": 100,
+			"shelf_life_in_days": 30
+		}
+		item = make_item(item_fields1["item_name"], item_fields1)
+		self.assertEqual(item.is_stock_item, 0)
+		self.assertEqual(item.shelf_life_in_days, 30)
 
 
 def set_item_variant_settings(fields):

@@ -2564,6 +2564,54 @@ class TestDeliveryNote(FrappeTestCase):
 		for serial_no in serial_nos:
 			sn = frappe.get_doc("Serial No", serial_no)
 			self.assertEqual(sn.status, "Delivered")
+		
+	def test_so_dn_with_packing_slip_TC_SCK_075(self):
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_packing_slip
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_packing_slip
+
+		product_bundle = make_item("_Test Product Bundle", {"is_stock_item": 0})
+		make_item("_Test Bundle Item 1", {"is_stock_item": 1})
+		make_item("_Test Bundle Item 2", {"is_stock_item": 1})
+
+		make_product_bundle("_Test Product Bundle", ["_Test Bundle Item 1", "_Test Bundle Item 2"])
+		make_stock_entry(item_code="_Test Bundle Item 1", qty=10, rate=1000, target="_Test Warehouse - _TC")
+		make_stock_entry(item_code="_Test Bundle Item 2", qty=10, rate=1000, target="_Test Warehouse - _TC")
+
+		sales_order = make_sales_order(item="_Test Product Bundle",qty=4, rate=1000)
+		sales_order.save()
+		sales_order.submit()
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+
+		from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+		sales_invoice = make_sales_invoice(sales_order.name)
+		sales_invoice.save()
+		sales_invoice.submit()
+		self.assertEqual(sales_invoice.status, "Unpaid")
+
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
+		delivery_note = make_delivery_note(sales_invoice.name)
+		delivery_note.save()
+
+		ps = make_packing_slip(delivery_note.name)
+		ps.save()
+		ps.submit()
+		delivery_note.load_from_db()
+		for item in delivery_note.items:
+			if not frappe.db.exists("Product Bundle", {"new_item_code": item.item_code}):
+				self.assertEqual(item.packed_qty, 4)
+
+		for item in delivery_note.packed_items:
+			self.assertEqual(item.packed_qty, 4)
+
+		delivery_note.submit()
+		self.assertEqual(delivery_note.status, "Completed")
+
+		sle = frappe.get_doc("Stock Ledger Entry", {"voucher_type": "Delivery Note", "voucher_no": delivery_note.name})
+		self.assertEqual(sle.actual_qty, -4)
+		self.assertEqual(sle.warehouse, '_Test Warehouse - _TC')
+
+		self.assertEqual(delivery_note.status, "Completed")
+
 	def test_auto_set_serial_batch_for_draft_dn(self):
 		frappe.db.set_single_value("Stock Settings", "auto_create_serial_and_batch_bundle_for_outward", 1)
 		frappe.db.set_single_value("Stock Settings", "pick_serial_and_batch_based_on", "FIFO")
@@ -2622,6 +2670,12 @@ class TestDeliveryNote(FrappeTestCase):
 				self.assertTrue(row.batch_no)
 			if row.item_code == serial_item.name:
 				self.assertTrue(row.serial_no)
+
+	def test_dn_freeze_tc_sck_152(self):
+		from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import StockFreezeError
+		frappe.db.set_single_value("Stock Settings", "stock_frozen_upto", nowdate())
+		dn = create_delivery_note(posting_date="2025-01-01",do_not_submit=True)
+		self.assertRaises(StockFreezeError, dn.submit)
 
 def create_delivery_note(**args):
 	dn = frappe.new_doc("Delivery Note")
