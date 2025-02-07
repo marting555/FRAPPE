@@ -2671,6 +2671,12 @@ class TestDeliveryNote(FrappeTestCase):
 			if row.item_code == serial_item.name:
 				self.assertTrue(row.serial_no)
 
+	def test_dn_freeze_tc_sck_152(self):
+		from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import StockFreezeError
+		frappe.db.set_single_value("Stock Settings", "stock_frozen_upto", nowdate())
+		dn = create_delivery_note(posting_date="2025-01-01",do_not_submit=True)
+		self.assertRaises(StockFreezeError, dn.submit)
+
 def create_delivery_note(**args):
 	dn = frappe.new_doc("Delivery Note")
 	args = frappe._dict(args)
