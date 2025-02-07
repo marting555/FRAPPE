@@ -3816,6 +3816,44 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 					total_amount += item_wise_tax_detail["_Test GST Item"][1]
 			self.assertEquals(total_tax,rate.get('total_tax'))
 			self.assertEquals(total_amount,rate.get('total_amount'))
+	def test_direct_purchase_invoice_via_update_stock_TC_SCK_131(self):
+		# Create Purchase Invoice with Update Stock
+		pi = make_purchase_invoice(
+			supplier="_Test Supplier 1",
+			item_code="Book",
+			qty=5,
+			update_stock=True,
+			warehouse="Stores - _TC",
+			do_not_save=True
+		)
+		pi.save()
+		pi.submit()
+
+		# Check Stock Ledger Entries
+		sle = frappe.get_all(
+			"Stock Ledger Entry",
+			filters={"voucher_no": pi.name},
+			fields=["item_code", "warehouse", "actual_qty", "stock_value_difference"]
+		)
+		self.assertEqual(len(sle), 1)
+		self.assertEqual(sle[0].item_code, "Book")
+		self.assertEqual(sle[0].warehouse, "Stores - _TC")
+		self.assertEqual(sle[0].actual_qty, 5)
+
+		# Check Accounting Ledger Entries
+		gl_entries = frappe.get_all(
+			"GL Entry",
+			filters={"voucher_no": pi.name},
+			fields=["account", "debit", "credit"]
+		)
+		print(gl_entries,pi.as_dict().grand_total)
+		self.assertTrue(gl_entries)
+		expected_gl_entries = [
+			{"account": "Creditors - _TC", "debit": 0, "credit": pi.grand_total},
+			{"account": "Stock In Hand - _TC", "debit": pi.grand_total, "credit": 0}
+		]
+		for gle in expected_gl_entries:
+			self.assertTrue(any(entry["account"] == gle["account"] and entry["debit"] == gle["debit"] and entry["credit"] == gle["credit"] for entry in gl_entries))
 	def test_supplier_invoice_number_uniqueness_validation_TC_ACC_136(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 

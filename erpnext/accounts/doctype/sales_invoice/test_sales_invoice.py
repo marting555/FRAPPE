@@ -6033,7 +6033,50 @@ class TestSalesInvoice(FrappeTestCase):
 			self.assertEqual(entry["debit"], expected_pi_entries.get(entry["account"], {}).get("debit", 0))
 			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
 
-  
+	def test_direct_sales_invoice_via_update_stock_TC_SCK_132(self):
+		customer = "_Test Customer"
+		warehouse = "_Test Warehouse - _TC"
+		item_code = "_Test Item"
+		qty = 5
+
+		# Create stock entry to add initial stock
+		make_stock_entry(item_code=item_code, qty=10, rate=100, target=warehouse)
+
+		# Create Sales Invoice
+		si = create_sales_invoice(
+			customer=customer,
+			warehouse=warehouse,
+			item_code=item_code,
+			qty=qty,
+			rate=100,
+			update_stock=1,
+			do_not_submit=True
+		)
+		si.save()
+		si.submit()
+
+		# Check Stock Ledger Entry
+		sle = frappe.get_all(
+			"Stock Ledger Entry",
+			filters={"voucher_no": si.name, "warehouse": warehouse},
+			fields=["actual_qty"]
+		)
+		self.assertEqual(sum([entry.actual_qty for entry in sle]), -qty)
+
+		# Check GL Entry
+		gl_entries = frappe.get_all(
+			"GL Entry",
+			filters={"voucher_no": si.name},
+			fields=["account", "debit", "credit"]
+		)
+		expected_gl_entries = {
+			"Debtors - _TC": 500,
+			"Sales - _TC": -500,
+			"Stock In Hand - _TC": -500,
+			"Cost of Goods Sold - _TC": 500
+		}
+		for entry in gl_entries:
+			self.assertEqual(expected_gl_entries.get(entry.account, 0), entry.debit - entry.credit)
 	def test_sales_invoice_with_child_item_rates_of_product_bundle_TC_S_152(self):
 		from erpnext.selling.doctype.product_bundle.test_product_bundle import make_product_bundle
 		from erpnext.stock.doctype.item.test_item import make_item
