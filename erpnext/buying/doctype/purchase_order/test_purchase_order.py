@@ -6250,6 +6250,82 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(gl_entries_pe[1].get("account"), "_Test Creditors - _TC")
 		self.assertEqual(gl_entries_pe[1].get("credit"), 1400)
 
+	def test_get_item_from_po_to_pr_TC_B_147(self):
+		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
+		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		supplier = create_supplier(supplier_name="_Test Supplier PO")
+		company = "_Test Company"
+		if not frappe.db.exists("Company", company):
+			company = frappe.new_doc("Company")
+			company.company_name = company
+			company.country="India",
+			company.default_currency= "INR",
+			company.save()
+		else:
+			company = frappe.get_doc("Company", company)
+		item = create_item("_Test Item")
+		po_data = {
+			"company" : company.name,
+			"item_code" : item.item_code,
+			"supplier": supplier.name,
+			"warehouse" : create_warehouse("Stores - _TC", company=company.name),
+			"qty" : 10,
+			"rate" : 1000,
+			"do_not_submit":True
+		}
+		doc_po = create_purchase_order(**po_data)
+		acc = frappe.new_doc("Account")
+		acc.account_name = "Input Tax CGST"
+		acc.parent_account = "Tax Assets - _TC"
+		acc.company = "_Test Company"
+		account_name_cgst = frappe.db.exists("Account", {"account_name" : "Input Tax CGST","company": "_Test Company" })
+		if not account_name_cgst:
+			account_name_cgst = acc.insert()
+
+		
+		acc = frappe.new_doc("Account")
+		acc.account_name = "Input Tax SGST"
+		acc.parent_account = "Tax Assets - _TC"
+		acc.company = "_Test Company"
+		account_name_sgst = frappe.db.exists("Account", {"account_name" : "Input Tax SGST","company": "_Test Company" })
+		if not account_name_sgst:
+			account_name_sgst = acc.insert()
+		
+		taxes =  [
+			{
+                    "charge_type": "On Net Total",
+                    "account_head": account_name_cgst,
+                    "rate": 2.5,
+                    "description": "Input GST",
+            },
+			{
+                    "charge_type": "On Net Total",
+                    "account_head": account_name_sgst,
+                    "rate": 2.5,
+                    "description": "Input GST",
+            }
+		]
+		for tax in taxes:
+			doc_po.append("taxes", tax)
+		doc_po.save()
+		doc_po.submit()
+		self.assertEqual(doc_po.grand_total, 10500)
+		doc_pr = make_purchase_receipt(doc_po.name)
+		doc_pr.save()
+		doc_pr.submit()
+		self.assertEqual(doc_pr.items[0].qty, 10)
+		self.assertEqual(doc_pr.items[0].rate, 1000)
+		gl_entries_pr = frappe.get_all("GL Entry", filters={"voucher_no": doc_pr.name}, fields=["account", "debit", "credit"])
+		for gl_entries in gl_entries_pr:
+			if gl_entries['account'] == "Stock In Hand - _TC":
+				self.assertEqual(gl_entries['debit'], 10000)
+			elif gl_entries['account'] == "Stock Received But Not Billed - _TC":
+				self.assertEqual(gl_entries['credit'], 10000)
+		doc_pi= make_purchase_invoice(doc_pr.name)
+		doc_pi.save()
+		doc_pi.submit()
+
 	def test_apply_only_discount_amount_on_price_list_rate_po_pr_pi_TC_B_122(self):
 		company = "_Test Company"
 		supplier = "_Test Supplier 1"
