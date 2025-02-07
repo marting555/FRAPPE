@@ -2384,6 +2384,16 @@ class TestStockEntry(FrappeTestCase):
 				self.assertEqual(serial['purchase_document_no'], se.name)
 				self.assertEqual(serial['batch_no'], batch[0]['name'])
 
+	def test_stock_entry_tc_sck_136(self):
+		item_code = make_item("_Test Item Stock Entry New", {"valuation_rate": 100})
+
+		se = make_stock_entry(item_code=item_code, target="_Test Warehouse - _TC", qty=1, do_not_submit=True)
+		se.stock_entry_type = "Manufacture"
+		se.items[0].is_finished_item = 1
+		se.submit()
+		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':se.name})
+		self.assertEqual(sle.qty_after_transaction, 1)
+
 def create_bom(bom_item, rm_items, company=None, qty=None, properties=None):
 		bom = frappe.new_doc("BOM")
 		bom.update(
