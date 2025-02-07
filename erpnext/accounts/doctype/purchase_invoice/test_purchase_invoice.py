@@ -3539,7 +3539,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			item.enable_deferred_expense=1
 			item.no_of_months_exp=12
 			item.save()
-			frappe.db.commit()
+			
 		pi = make_purchase_invoice(
 			qty=1,
 			item_code=items_list[0],
@@ -4115,7 +4115,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		if company.stock_received_but_not_billed !="Cost of Goods Sold - _TC":
 			company.stock_received_but_not_billed = "Cost of Goods Sold - _TC"
 			company.save()
-			frappe.db.commit()
+			
 		budget = frappe.get_doc({
 			"doctype":"Budget",
 			"budget_against":"Cost Center",
@@ -4160,7 +4160,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			pi.load_from_db()
 			frappe.delete_doc("Budget", budget.name,force=1)
 			frappe.delete_doc("Purchase Invoice", pi.name,force=1)
-			frappe.db.commit()
+			
    
 	def test_warn_pi_creation_when_value_exceeds_budget_TC_ACC_145(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
@@ -4171,7 +4171,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		if company.stock_received_but_not_billed !="Cost of Goods Sold - _TC":
 			company.stock_received_but_not_billed = "Cost of Goods Sold - _TC"
 			company.save()
-			frappe.db.commit()
+			
 		budget = frappe.get_doc({
 			"doctype":"Budget",
 			"budget_against":"Cost Center",
@@ -4221,7 +4221,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi.load_from_db()
 		frappe.delete_doc("Budget", budget.name,force=1)
 		frappe.delete_doc("Purchase Order", pi.name,force=1)
-		frappe.db.commit()
+		
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
@@ -4496,7 +4496,7 @@ def update_ldc_details(supplier):
             setattr(supplier,'pan','DAJPC4150P')
         supplier.flags.ignore_mandatory = True
         supplier.save()
-        frappe.db.commit()
+        
 
 def create_ldc(supplier):
     from erpnext.accounts.utils import get_fiscal_year

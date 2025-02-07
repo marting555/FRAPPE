@@ -4300,7 +4300,7 @@ class TestSalesInvoice(FrappeTestCase):
 			)
 			item.save()
 		
-		frappe.db.commit()
+		
 
 		si = create_sales_invoice(
 			customer="_Test Customer USD",
@@ -4397,7 +4397,7 @@ class TestSalesInvoice(FrappeTestCase):
 			)
 			item.save()
 		
-		frappe.db.commit()
+		
 
 		customer =frappe.get_doc("Customer", "_Test Customer USD")
 
@@ -4514,7 +4514,7 @@ class TestSalesInvoice(FrappeTestCase):
 			)
 			item.save()
 		
-		frappe.db.commit()
+		
 
 		customer =frappe.get_doc("Customer", "_Test Customer")
 
@@ -4607,7 +4607,7 @@ class TestSalesInvoice(FrappeTestCase):
 			)
 			item.save()
 		
-		frappe.db.commit()
+		
 
 		customer =frappe.get_doc("Customer", "_Test Customer")
 
@@ -5125,7 +5125,7 @@ class TestSalesInvoice(FrappeTestCase):
 			)
 			item.save()
 		
-		frappe.db.commit()
+		
 
 		customer = frappe.get_doc("Customer", "_Test Customer")
 		sales_invoice = create_sales_invoice(
@@ -5193,7 +5193,7 @@ class TestSalesInvoice(FrappeTestCase):
 			item.enable_deferred_expense=1
 			item.no_of_months_exp=12
 			item.save()	
-			frappe.db.commit()
+			
 		customer = frappe.get_doc("Customer", "_Test Customer")
 		sales_invoice = create_sales_invoice(
 			item=items_list[0],
@@ -5361,7 +5361,7 @@ class TestSalesInvoice(FrappeTestCase):
 					"company": "_Test Company",
 					}]
 				}).insert()
-			frappe.db.commit()
+			
 		elif internal_customer:
 			customer=frappe.get_doc("Customer",internal_customer)
 		else:
@@ -5397,7 +5397,7 @@ class TestSalesInvoice(FrappeTestCase):
 			supplier.accounts.clear()
 			supplier.flags.ignore_mandatory = True
 			supplier.save()
-			frappe.db.commit()
+			
 		create_customer(customer_name="_Test Common Party",company="_Test Company")
 		if not frappe.get_value("Party Link",{"primary_party":"_Test Common Party","secondary_party":"_Test Common Party","primary_role":"Supplier"}):
 			create_party_link(
@@ -6469,7 +6469,7 @@ class TestSalesInvoice(FrappeTestCase):
 			cumulative_threshold=100000,
 			consider_party_ledger_amount=1,
 		)
-		frappe.db.commit()
+		
 		customer = frappe.get_doc("Customer","_Test Customer")
 		if not customer.tax_withholding_category or customer.tax_withholding_category != "Test - TCS - 194C - Company":
 			customer.tax_withholding_category = "Test - TCS - 194C - Company"
@@ -6493,7 +6493,7 @@ class TestSalesInvoice(FrappeTestCase):
 			customer.load_from_db()
 			customer.tax_withholding_category = ""
 			customer.save()
-			frappe.db.commit()
+			
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
@@ -6811,7 +6811,7 @@ def create_customer(**args):
 					"account": args.get("account")
 				})
 			customer.save()
-			frappe.db.commit()
+			
    
 def create_accounts(**args):
 	 if not frappe.db.exists("Account", f"{args.get('account_name')} - _TC"):  # Ensure proper check with "- _TC"
@@ -6825,7 +6825,7 @@ def create_accounts(**args):
 					"root_type": args.get('root_type') or "Liability",
 					"account_currency": args.get('account_currency') or "INR",
 				}).insert()
-				frappe.db.commit()
+				
 			except Exception as e:
 				frappe.log_error(f"Failed to insert {args.get('account_name')}", str(e))
 	
@@ -6886,7 +6886,7 @@ def create_address(**args):
 				"link_name":args.get('docname')
 			})
 		address.save()
-		frappe.db.commit()
+		
 		return address
 
 def get_months(doc):
@@ -7049,7 +7049,7 @@ def create_company_and_supplier():
 				]
 			}
 		).insert()
-	frappe.db.commit()
+	
 
 	return {
 		"parent_company": parent_company,

@@ -54,7 +54,6 @@ class TestGLClosing(FrappeTestCase):
             self.assertEqual("The account Creditors - _TC is closed and cannot be used in this Purchase Invoice", error_message)
             gl_closing.gl_closing_details[0].closed = 0
             gl_closing.save()
-            frappe.db.commit()
             
             
             
@@ -75,7 +74,6 @@ class TestGLClosing(FrappeTestCase):
             for d in frappe.get_all("GL Closing"):
                 if d.name and d.name == "_Test GL Closing":
                     frappe.delete_doc("GL Closing", d.name)
-                    frappe.db.commit()
 
 
 @frappe.whitelist(allow_guest=True)

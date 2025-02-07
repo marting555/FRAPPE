@@ -1205,7 +1205,6 @@ class TestPOSInvoice(unittest.TestCase):
 				]
 			})
 			product_bundle.insert()
-			frappe.db.commit()
 		inv = create_pos_invoice(rate=3000,do_not_save=1)
 		inv.items =[]
 		inv.append("items",
