@@ -266,7 +266,7 @@ def get_employee_email(employee_doc):
 
 
 def get_holiday_list_for_employee(employee, raise_exception=True, as_on=None):
-	hrms_override = frappe.get_hooks("employee_holiday_list", app_name="hrms")
+	hrms_override = frappe.get_hooks("employee_holiday_list")
 	if hrms_override:
 		return frappe.get_attr(hrms_override[-1])(employee, raise_exception, as_on)
 
