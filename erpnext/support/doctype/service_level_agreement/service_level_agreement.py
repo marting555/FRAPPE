@@ -236,9 +236,9 @@ class ServiceLevelAgreement(Document):
 		meta = frappe.get_meta(self.document_type, cached=False)
 
 		if meta.custom:
-			self.create_docfields(meta, service_level_agreement_fields)
-		else:
 			self.create_custom_fields(meta, service_level_agreement_fields)
+		else:
+			self.create_docfields(meta, service_level_agreement_fields)
 
 	def on_trash(self):
 		set_documents_with_active_service_level_agreement()
