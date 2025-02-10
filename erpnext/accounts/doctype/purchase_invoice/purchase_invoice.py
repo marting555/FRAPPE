@@ -11,7 +11,6 @@ from datetime import datetime
 import erpnext
 from erpnext.budget.doctype.work_breakdown_structure.work_breakdown_structure import check_available_budget
 from erpnext.accounts.deferred_revenue import validate_service_stop_date
-from erpnext.accounts.doctype.gl_entry.gl_entry import update_outstanding_amt
 from erpnext.accounts.doctype.repost_accounting_ledger.repost_accounting_ledger import (
 	validate_docs_for_deferred_accounting,
 	validate_docs_for_voucher_types,
@@ -34,7 +33,7 @@ from erpnext.accounts.general_ledger import (
 	merge_similar_entries,
 )
 from erpnext.accounts.party import get_due_date, get_party_account
-from erpnext.accounts.utils import get_account_currency, get_fiscal_year
+from erpnext.accounts.utils import get_account_currency, get_fiscal_year, update_voucher_outstanding
 from erpnext.buying.utils import check_on_hold_or_closed_status
 from erpnext.controllers.accounts_controller import validate_account_head
 from erpnext.controllers.buying_controller import BuyingController
@@ -786,12 +785,12 @@ class PurchaseInvoice(BuyingController):
 
 	def update_supplier_outstanding(self, update_outstanding):
 		if update_outstanding == "No":
-			update_outstanding_amt(
-				self.credit_to,
-				"Supplier",
-				self.supplier,
-				self.doctype,
-				self.return_against if cint(self.is_return) and self.return_against else self.name,
+			update_voucher_outstanding(
+				voucher_type=self.doctype,
+				voucher_no=self.return_against if cint(self.is_return) and self.return_against else self.name,
+				account=self.credit_to,
+				party_type="Supplier",
+				party=self.supplier,
 			)
 
 	def get_gl_entries(self, warehouse_account=None):
@@ -1681,13 +1680,13 @@ class PurchaseInvoice(BuyingController):
 			self.remove(d)
 
 		## Add pending vouchers on which tax was withheld
-		for voucher_no, voucher_details in voucher_wise_amount.items():
+		for row in voucher_wise_amount:
 			self.append(
 				"tax_withheld_vouchers",
 				{
-					"voucher_name": voucher_no,
-					"voucher_type": voucher_details.get("voucher_type"),
-					"taxable_amount": voucher_details.get("amount"),
+					"voucher_name": row.voucher_name,
+					"voucher_type": row.voucher_type,
+					"taxable_amount": row.taxable_amount,
 				},
 			)
 

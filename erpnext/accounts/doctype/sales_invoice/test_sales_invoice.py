@@ -3181,6 +3181,7 @@ class TestSalesInvoice(FrappeTestCase):
 	def test_total_billed_amount(self):
 		si = create_sales_invoice(do_not_submit=True)
 		project = frappe.new_doc("Project")
+		project.company = "_Test Company"
 		project.project_name = "Test Total Billed Amount"
 		project.save()
 		si.project = project.name
@@ -5236,6 +5237,31 @@ class TestSalesInvoice(FrappeTestCase):
 		]
 		check_gl_entries(self, sales_invoice.name, expected_gl_entries, sales_invoice.posting_date)
 	
+
+	def test_pos_returns_with_party_account_currency(self):
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_sales_return
+		pos_profile = make_pos_profile()
+		pos_profile.payments = []
+		pos_profile.append("payments", {"default": 1, "mode_of_payment": "Cash"})
+		pos_profile.save()
+		pos = create_sales_invoice(
+			customer="_Test Customer USD",
+			currency="USD",
+			conversion_rate=86.595000000,
+			qty=2,
+			do_not_save=True,
+		)
+		pos.is_pos = 1
+		pos.pos_profile = pos_profile.name
+		pos.debit_to = "_Test Receivable USD - _TC"
+		pos.append("payments", {"mode_of_payment": "Cash", "account": "_Test Bank - _TC", "amount": 20.35})
+		pos.save().submit()
+		pos_return = make_sales_return(pos.name)
+		self.assertEqual(abs(pos_return.payments[0].amount), pos.payments[0].amount)
+
+
+
+
 	def test_repost_account_ledger_for_si_TC_ACC_118(self):
 		from erpnext.accounts.doctype.repost_accounting_ledger.test_repost_accounting_ledger import update_repost_settings
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
@@ -6308,6 +6334,7 @@ class TestSalesInvoice(FrappeTestCase):
 			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
 
   
+
 	def test_calculate_commission_for_sales_partner_TC_ACC_143(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		from erpnext.accounts.utils import get_fiscal_year
@@ -6494,6 +6521,7 @@ class TestSalesInvoice(FrappeTestCase):
 			customer.tax_withholding_category = ""
 			customer.save()
 			frappe.db.commit()
+
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
