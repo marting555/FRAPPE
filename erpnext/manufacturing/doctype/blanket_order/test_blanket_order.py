@@ -3,6 +3,7 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import add_months, today ,add_days,nowdate
+from frappe.tests.utils import FrappeTestCase, change_settings
 
 from erpnext import get_company_currency
 from erpnext.stock.doctype.item.test_item import make_item
@@ -314,6 +315,7 @@ class TestBlanketOrder(FrappeTestCase):
 		self.assertEqual(quotation.docstatus, 1)
 		self.assertEqual(quotation.grand_total, 50000)
   
+	@change_settings("Selling Settings", {"blanket_order_allowance": 5.0})
 	def test_blanket_order_to_validate_allowance_in_sales_order_TC_S_161(self):
 		selling_setting = frappe.get_doc('Selling Settings')
 		selling_setting.blanket_order_allowance = 5.0

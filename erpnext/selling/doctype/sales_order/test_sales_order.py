@@ -5750,6 +5750,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		self.assertEqual(delivery_note.status, "Completed")
   
+	@change_settings("Selling Settings", {"hide_tax_id": 1})
 	def test_sales_order_to_show_customer_tax_id_TC_S_160(self):
 		customer = frappe.get_doc("Customer", "_Test Customer")
 		customer.tax_id = "ABC12345"
