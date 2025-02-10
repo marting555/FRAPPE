@@ -760,6 +760,7 @@ def make_purchase_invoice_from_portal(purchase_order_name):
 	if doc.contact_email != frappe.session.user:
 		frappe.throw(_("Not Permitted"), frappe.PermissionError)
 	doc.save()
+	frappe.db.commit()
 	frappe.response["type"] = "redirect"
 	frappe.response.location = "/purchase-invoices/" + doc.name
 
