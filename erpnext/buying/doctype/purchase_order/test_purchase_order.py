@@ -6251,9 +6251,6 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(gl_entries_pe[1].get("credit"), 1400)
 
 	def test_get_item_from_po_to_pr_TC_B_147(self):
-		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
-		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
-		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 		supplier = create_supplier(supplier_name="_Test Supplier PO")
 		company = "_Test Company"
 		if not frappe.db.exists("Company", company):
@@ -6311,9 +6308,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		doc_po.save()
 		doc_po.submit()
 		self.assertEqual(doc_po.grand_total, 10500)
-		doc_pr = make_purchase_receipt(doc_po.name)
-		doc_pr.save()
-		doc_pr.submit()
+		doc_pr = make_test_pr(doc_po.name)
 		self.assertEqual(doc_pr.items[0].qty, 10)
 		self.assertEqual(doc_pr.items[0].rate, 1000)
 		gl_entries_pr = frappe.get_all("GL Entry", filters={"voucher_no": doc_pr.name}, fields=["account", "debit", "credit"])
@@ -6327,9 +6322,6 @@ class TestPurchaseOrder(FrappeTestCase):
 		doc_pi.submit()
 
 	def test_po_to_qi_to_pr_pi_TC_B_148(self):
-		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
-		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
-		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 		item = create_item("Testing Item QI")
 		supplier = create_supplier(supplier_name="_Test Supplier PO")
 		company = "_Test Company"
@@ -6360,10 +6352,8 @@ class TestPurchaseOrder(FrappeTestCase):
 			"rate" : 200
 		}
 		po = create_purchase_order(**po_data)
-		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
-		pr = make_purchase_receipt(po.name)
+		pr = make_purchase_receipt_aganist_mr(po.name)
 		pr.save()
-		from erpnext.stock.doctype.quality_inspection.test_quality_inspection import create_quality_inspection
 		readings = [
 			{
 				"specification": "Needle Shape",
@@ -6382,7 +6372,7 @@ class TestPurchaseOrder(FrappeTestCase):
 				"reading_value": 5,
 			},
 		]
-
+		from erpnext.stock.doctype.quality_inspection.test_quality_inspection import create_quality_inspection
 		qi = create_quality_inspection(reference_type=pr.doctype, reference_name=pr.name,inspection_type="Incoming", item_code=item.item_code, readings=readings, do_not_save=True)
 		qi.save()
 		qi.submit()
