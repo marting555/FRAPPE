@@ -24,7 +24,6 @@ class MaintenanceVisitPurpose(Document):
 		prevdoc_docname: DF.DynamicLink | None
 		prevdoc_doctype: DF.Link | None
 		serial_no: DF.Link | None
-		service_person: DF.Link
 		work_done: DF.SmallText
 	# end: auto-generated types
 
