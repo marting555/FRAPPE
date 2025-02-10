@@ -5,7 +5,7 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, cint, flt, getdate, nowdate, today, get_year_start, get_year_ending
-
+from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 import erpnext
 from erpnext.accounts.doctype.account.test_account import create_account, get_inventory_account
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
@@ -3894,6 +3894,12 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		import random
         # Ensure supplier exists
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+
 		supplier = create_supplier(
 			supplier_name="Monica",
 			supplier_type="Company",
@@ -3919,7 +3925,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			items=[{"item_code": "Boat Earpods"}],
 			supplier="Monica",
 			min_qty= 10,
-			company= "PP Ltd",
+			company= "_Test Company",
 			rate_or_discount="Discount Percentage",
 			discount_percentage=10,
 			valid_from="2024-12-01",
@@ -3935,18 +3941,17 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 	def test_purchase_invoice_discount(self):
         # Create Purchase Invoice
 		pi = make_purchase_invoice(
-			company = "PP Ltd",
+			company = "_Test Company",
 			supplier= "Monica",
             posting_date= "2024-12-15",
             update_stock= 1,
-			set_warehouse= "Stores - PP Ltd",
-			warehouse= "Stores - PP Ltd",
-			cost_center= "Main - PP Ltd",
+			set_warehouse= create_warehouse("Stores-test", properties=None, company="_Test Company"),
+			warehouse= create_warehouse("Stores-test", properties=None, company="_Test Company"),
 			qty=20,
 			item_code="Boat Earpods",
 		)
-		pi.insert()
-		pi.submit()
+		# pi.insert()
+		# pi.submit()
 
         # Validate Stock Ledger Entry
 		sle = frappe.get_all("Stock Ledger Entry", 
