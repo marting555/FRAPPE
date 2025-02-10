@@ -6652,15 +6652,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
 		supplier = "_Test Supplier 1"
-		item_code = "test_item_with_update_item"
-
-		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"is_stock_item": 1,
-			}).insert(ignore_mandatory=True)
+		item_code = make_item("test_item_with_update_item")
 
 		po = frappe.get_doc({
 			"doctype": "Purchase Order",
@@ -6670,7 +6662,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"set_warehouse": warehouse,
 			"items": [
 				{
-					"item_code": item_code,
+					"item_code": item_code.item_code,
 					"qty": 10,
 					"warehouse": warehouse,
 					"rate": 1000,
@@ -6696,17 +6688,15 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(pi_1.items[0].qty, 3)
 		self.assertEqual(pi_1.items[0].rate, 1000)
 
-		first_item_of_po = po.get("items")[0]
-
 		trans_item = json.dumps(
 			[
 				{
-					"item_code": first_item_of_po.item_code,
-					"rate": first_item_of_po.rate,
+					"item_code": po.items[0].item_code,
+					"rate": po.items[0].rate,
 					"qty": 3,
-					"docname": first_item_of_po.name,
+					"docname": po.items[0].name,
 				},
-				{"item_code": item_code, "rate": 2000, "qty": 7},
+				{"item_code": item_code.item_code, "rate": 2000, "qty": 7},
 			]
 		)
 		update_child_qty_rate("Purchase Order", trans_item, po.name)
