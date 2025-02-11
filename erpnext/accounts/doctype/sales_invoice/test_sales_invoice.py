@@ -3181,6 +3181,7 @@ class TestSalesInvoice(FrappeTestCase):
 	def test_total_billed_amount(self):
 		si = create_sales_invoice(do_not_submit=True)
 		project = frappe.new_doc("Project")
+		project.company = "_Test Company"
 		project.project_name = "Test Total Billed Amount"
 		project.save()
 		si.project = project.name
@@ -5236,6 +5237,31 @@ class TestSalesInvoice(FrappeTestCase):
 		]
 		check_gl_entries(self, sales_invoice.name, expected_gl_entries, sales_invoice.posting_date)
 	
+
+	def test_pos_returns_with_party_account_currency(self):
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_sales_return
+		pos_profile = make_pos_profile()
+		pos_profile.payments = []
+		pos_profile.append("payments", {"default": 1, "mode_of_payment": "Cash"})
+		pos_profile.save()
+		pos = create_sales_invoice(
+			customer="_Test Customer USD",
+			currency="USD",
+			conversion_rate=86.595000000,
+			qty=2,
+			do_not_save=True,
+		)
+		pos.is_pos = 1
+		pos.pos_profile = pos_profile.name
+		pos.debit_to = "_Test Receivable USD - _TC"
+		pos.append("payments", {"mode_of_payment": "Cash", "account": "_Test Bank - _TC", "amount": 20.35})
+		pos.save().submit()
+		pos_return = make_sales_return(pos.name)
+		self.assertEqual(abs(pos_return.payments[0].amount), pos.payments[0].amount)
+
+
+
+
 	def test_repost_account_ledger_for_si_TC_ACC_118(self):
 		from erpnext.accounts.doctype.repost_accounting_ledger.test_repost_accounting_ledger import update_repost_settings
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
@@ -6308,6 +6334,7 @@ class TestSalesInvoice(FrappeTestCase):
 			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
 
   
+
 	def test_calculate_commission_for_sales_partner_TC_ACC_143(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		from erpnext.accounts.utils import get_fiscal_year
@@ -6494,6 +6521,7 @@ class TestSalesInvoice(FrappeTestCase):
 			customer.tax_withholding_category = ""
 			customer.save()
 			frappe.db.commit()
+
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
 		"Company",
@@ -6912,6 +6940,7 @@ def get_months(doc):
 			mnth.idx = idx
 			idx += 1
 def create_company_and_supplier():
+	fiscal_year = get_active_fiscal_year()
 	parent_company= "Test Company-1122"
 	child_company = "Test Company-3344"
 	price_list = "Test Inter Company Transfer"
@@ -6931,6 +6960,10 @@ def create_company_and_supplier():
 			}
 		).insert()
 
+		set_parent_company_fiscal_year = frappe.get_doc("Fiscal Year", fiscal_year)
+		set_parent_company_fiscal_year.append("companies",{"company": parent_company})
+		set_parent_company_fiscal_year.save()
+
 	if not frappe.db.exists("Company", child_company):
 		frappe.get_doc(
 			{
@@ -6943,6 +6976,11 @@ def create_company_and_supplier():
 				"parent_company": parent_company
 			}
 		).insert()
+
+		set_child_company_fiscal_year = frappe.get_doc("Fiscal Year", fiscal_year)
+		set_child_company_fiscal_year.append("companies",{"company": child_company})
+		set_child_company_fiscal_year.save()
+
 
 	if not frappe.db.exists("Price List", price_list):
 		frappe.get_doc(
@@ -7058,3 +7096,24 @@ def create_company_and_supplier():
 		"customer": customer,
 		"price_list": price_list
 	}
+
+def get_active_fiscal_year():
+	from datetime import datetime
+	get_fiscal_year = frappe.db.get_value(
+		"Fiscal Year",
+		{"disabled": 0, "year_start_date": ["<", today()], "year_end_date": [">", today()]},
+		pluck="name",
+		order_by="creation ASC"
+	)
+
+	if not get_fiscal_year:
+		current_year = datetime.today().year
+		get_fiscal_year = frappe.get_doc({
+			"doctype": "Fiscal Year",
+			"year": f"{current_year}",
+			"year_start_date": f"{current_year}-01-01",
+			"year_end_date": f"{current_year}-12-31"
+		}).insert(ignore_permissions=True).name
+
+	return get_fiscal_year
+
