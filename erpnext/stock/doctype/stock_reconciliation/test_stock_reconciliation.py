@@ -1592,12 +1592,31 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 			company.default_currency = "INR"
 			company.insert()
 		
-		item_fields = {
-			"item_name" : "_Test Item146",
-			"valuation_rate" : 500,
-			"has_serial_no": 1,
-			"serial_no_series": "Test-SABBMRP-Sno.#####",
-		}
+		app_name = "india_compliance"
+		
+		if app_name in frappe.get_installed_apps():
+			if not frappe.db.exists("GST HSN Code", '888890'):
+					frappe.get_doc({
+						"doctype": 'GST HSN Code',
+						"hsn_code": '888890',
+						"description": 'test'
+					}).insert()
+					
+			item_fields = {
+				"item_name" : "_Test Item146",
+				"valuation_rate" : 500,
+				"has_serial_no": 1,
+				"hsn_code": '888890',
+				"serial_no_series": "Test-SABBMRP-Sno.#####",
+			}
+
+		else:
+			item_fields = {
+				"item_name" : "_Test Item146",
+				"valuation_rate" : 500,
+				"has_serial_no": 1,
+				"serial_no_series": "Test-SABBMRP-Sno.#####",
+			}
 
 		item = make_item("_Test Item146", item_fields)
 
