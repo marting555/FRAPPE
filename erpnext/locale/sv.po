@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-02-09 09:34+0000\n"
-"PO-Revision-Date: 2025-02-10 22:09\n"
+"PO-Revision-Date: 2025-02-11 22:06\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -57015,7 +57015,7 @@ msgstr "Användning av negativ lager inaktiverar FIFO/MA värdering sätt när l
 #: erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts.py:71
 #: erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts_with_account_number.py:95
 msgid "Utility Expenses"
-msgstr "Verktyg Kostnader Konto"
+msgstr "Pension Kostnader"
 
 #. Label of the vat_accounts (Table) field in DocType 'South Africa VAT
 #. Settings'
