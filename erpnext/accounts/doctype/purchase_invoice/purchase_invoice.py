@@ -855,7 +855,7 @@ class PurchaseInvoice(BuyingController):
 			else grand_total,
 			"against_voucher": against_voucher,
 			"against_voucher_type": self.doctype,
-			"project": self.get("project"),
+			"project": self.get("project") if "projects" in frappe.get_installed_apps() else "",
 			"cost_center": self.cost_center,
 			"_skip_merge": skip_merge,
 		}
