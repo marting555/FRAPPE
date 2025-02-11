@@ -4035,7 +4035,7 @@ class TestWorkOrder(FrappeTestCase):
 		"Manufacturing Settings", 
 		{"backflush_raw_materials_based_on": "Material Transferred for Manufacture"}
 	)
-	def test_wo_without_consum_manu_bth_srl_TC_SCK_239(self):
+	def test_wo_without_consum_manu_bth_srl_tc_sck_239(self):
 		item = make_item(
 			"Test FG Item To Test Return Case",
 			{
