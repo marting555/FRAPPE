@@ -2746,8 +2746,8 @@ class TestStockEntry(FrappeTestCase):
 		self.assertCountEqual(sle_records[item_1], [10, -10])
 		self.assertCountEqual(sle_records[item_2], [10, -10])
 
+	@change_settings("Stock Settings", {"default_warehouse": "_Test Warehouse - _TC"})
 	def test_item_creation_TC_SCK_118(self):
-		frappe.db.set_single_value("Stock Settings", "default_warehouse", "_Test Warehouse - _TC")
 		item_1 = create_item(item_code="_Test Item New", is_stock_item=1, opening_stock=15,valuation_rate=100)
 		stock = frappe.get_all("Stock Ledger Entry", filters={"item_code": item_1.name}, 
 							 fields=["warehouse", "actual_qty"])
