@@ -1593,6 +1593,13 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 			company.insert()
 		
 		app_name = "india_compliance"
+		item_fields = {
+				"item_name" : "_Test Item146",
+				"valuation_rate" : 500,
+				"has_serial_no": 1,
+				"serial_no_series": "Test-SABBMRP-Sno.#####",
+			}
+		hsn_code = "888890"
 		
 		if app_name in frappe.get_installed_apps():
 			if not frappe.db.exists("GST HSN Code", '888890'):
@@ -1602,21 +1609,7 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 						"description": 'test'
 					}).insert()
 					
-			item_fields = {
-				"item_name" : "_Test Item146",
-				"valuation_rate" : 500,
-				"has_serial_no": 1,
-				"hsn_code": '888890',
-				"serial_no_series": "Test-SABBMRP-Sno.#####",
-			}
-
-		else:
-			item_fields = {
-				"item_name" : "_Test Item146",
-				"valuation_rate" : 500,
-				"has_serial_no": 1,
-				"serial_no_series": "Test-SABBMRP-Sno.#####",
-			}
+			item_fields["gst_hsn_code"] = hsn_code	
 
 		item = make_item("_Test Item146", item_fields)
 
