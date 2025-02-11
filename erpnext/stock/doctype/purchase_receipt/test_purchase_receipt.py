@@ -4979,12 +4979,17 @@ class TestPurchaseReceipt(FrappeTestCase):
 		item = []
 		warehouse = []
 		date = []
+		warehouse_new = create_warehouse("Stores", properties=None, company="_Test Company")
+		item_code = make_item("_Test Item225", {'item_name':"_Test Item225", "valuation_rate":500, "is_stock_item":1}).name
+		se1 = make_stock_entry(item_code=item_code, qty=10, to_warehouse=warehouse_new, purpose="Material Receipt")
+
 		from erpnext.stock.report.stock_ledger.stock_ledger import execute
+		
 		filters = frappe._dict({  # Convert to allow dot notation
         "from_date": "2024-01-13",
-        "to_date": "2024-12-18",
-        "item_code": "Air Freshner Cool Water",
-        "warehouse": "Stores - PP Ltd",
+        "to_date": "2025-12-12",
+        "item_code": item_code,
+        "warehouse": warehouse_new,
     	})
 
 		columns, data = execute(filters)  # Unpacking the returned tuple
@@ -5011,19 +5016,26 @@ class TestPurchaseReceipt(FrappeTestCase):
 		item = []
 		warehouse = []
 		date = []
+		if not frappe.db.exists("Item Group", {"item_group_name":"_Test Group"}):
+			item_group = frappe.new_doc("Item Group")
+			item_group.item_group_name =  "_Test Group"
+			item_group.insert()
+		warehouse_new = create_warehouse("Stores", properties=None, company="_Test Company")
+		item_code = make_item("_Test Item225", {'item_name':"_Test Item225", "valuation_rate":500, "is_stock_item":1, "item_group": "_Test Group"}).name
+		se1 = make_stock_entry(item_code=item_code, qty=10, to_warehouse=warehouse_new, purpose="Material Receipt")
 		from erpnext.stock.report.stock_ledger.stock_ledger import execute
 		filters = frappe._dict({  # Convert to allow dot notation
         "from_date": "2024-01-13",
-        "to_date": "2024-12-18",
-        "item_group": "Products",
-        "warehouse": "Stores - PP Ltd",
+        "to_date": "2025-12-12",
+        "item_group": "_Test Group",
+        "warehouse": warehouse_new,
     	})
 
 		columns, data = execute(filters)  # Unpacking the returned tuple
-
+		
 		# print(data)  # Debugging: Check report structure
 
-		for i in range(1,len(data)):
+		for i in range(len(data)):
 			item.append(data[i]['item_group'])
 			warehouse.append(data[i]['warehouse'])
 			date.append(data[i]['posting_date'])
