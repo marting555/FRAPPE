@@ -1,6 +1,8 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from collections import Counter
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -26,8 +28,11 @@ class POSSettings(Document):
 		self.validate_invoice_fields()
 
 	def validate_invoice_fields(self):
-		invoice_fields_count = {}
-		for d in self.invoice_fields:
-			if invoice_fields_count.get(d.fieldname):
-				frappe.throw(_("Each POSField in the POS Settings can only have one instance."))
-			invoice_fields_count[d.fieldname] = 1
+		invoice_fields = [field.fieldname for field in self.invoice_fields]
+		duplicate_invoice_fields = {key for key, value in Counter(invoice_fields).items() if value > 1}
+
+		if len(duplicate_invoice_fields):
+			for field in duplicate_invoice_fields:
+				frappe.throw(
+					title=_("Duplicate POS Fields"), msg=_("'{0}' has been already added.").format(field)
+				)
