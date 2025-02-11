@@ -173,15 +173,14 @@ def get_ar_filters(doc, entry):
 
 def get_html(doc, filters, entry, col, res, ageing):
 	base_template_path = "frappe/www/printview.html"
+	template_path = "erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts_accounts_receivable.html"
+	if doc.report == "General Ledger":
+		template_path = "erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts.html"	
 
 	process_soa_html = frappe.get_hooks("process_soa_html")
-	# fetching custom print format of Process Statement of Accounts
-	if process_soa_html.get(doc.report):
+	# fetching custom print format for Process Statement of Accounts
+	if process_soa_html and process_soa_html.get(doc.report):
 		template_path = process_soa_html[doc.report][-1]
-	elif doc.report == "General Ledger":
-		template_path = "erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts.html"	
-	else:
-		template_path = "erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts_accounts_receivable.html"
 
 	if doc.letter_head:
 		from frappe.www.printview import get_letter_head
