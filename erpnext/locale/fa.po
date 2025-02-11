@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-02-09 09:34+0000\n"
-"PO-Revision-Date: 2025-02-09 21:47\n"
+"PO-Revision-Date: 2025-02-11 22:07\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Persian\n"
 "MIME-Version: 1.0\n"
@@ -2611,7 +2611,7 @@ msgstr "افزودن هزینه عملیات اصلاحی در ارزش گذار
 
 #: erpnext/public/js/event.js:24
 msgid "Add Customers"
-msgstr "مشتریان را اضافه کنید"
+msgstr "افزودن مشتریان"
 
 #: erpnext/selling/page/point_of_sale/pos_item_cart.js:92
 #: erpnext/selling/page/point_of_sale/pos_item_cart.js:423
@@ -2631,7 +2631,7 @@ msgstr "افزودن آیتم"
 #: erpnext/public/js/utils/item_selector.js:20
 #: erpnext/public/js/utils/item_selector.js:35
 msgid "Add Items"
-msgstr "آیتم‌ها را اضافه کنید"
+msgstr "افزودن آیتم‌ها"
 
 #: erpnext/maintenance/doctype/maintenance_visit/maintenance_visit.py:56
 msgid "Add Items in the Purpose Table"
@@ -2639,17 +2639,17 @@ msgstr "افزودن آیتم‌ها در جدول هدف"
 
 #: erpnext/crm/doctype/lead/lead.js:83
 msgid "Add Lead to Prospect"
-msgstr "لید را به Prospect اضافه کنید"
+msgstr "افزودن سرنخ به Prospect"
 
 #: erpnext/public/js/event.js:16
 msgid "Add Leads"
-msgstr "سرنخ ها را اضافه کنید"
+msgstr "افزودن سرنخ ها"
 
 #. Label of the add_local_holidays (Section Break) field in DocType 'Holiday
 #. List'
 #: erpnext/setup/doctype/holiday_list/holiday_list.json
 msgid "Add Local Holidays"
-msgstr "تعطیلات محلی را اضافه کنید"
+msgstr "افزودن تعطیلات محلی"
 
 #. Label of the add_manually (Check) field in DocType 'Repost Payment Ledger'
 #: erpnext/accounts/doctype/repost_payment_ledger/repost_payment_ledger.json
@@ -2740,7 +2740,7 @@ msgstr "افزودن زیر مونتاژ"
 #: erpnext/buying/doctype/request_for_quotation/request_for_quotation.js:473
 #: erpnext/public/js/event.js:32
 msgid "Add Suppliers"
-msgstr "تامین کنندگان را اضافه کنید"
+msgstr "افزودن تامین کنندگان"
 
 #. Label of the add_template (Button) field in DocType 'Shipment'
 #: erpnext/stock/doctype/shipment/shipment.json
@@ -2749,21 +2749,21 @@ msgstr "افزودن الگو"
 
 #: erpnext/utilities/activation.py:123
 msgid "Add Timesheets"
-msgstr "جدول زمانی را اضافه کنید"
+msgstr "افزودن جدول زمانی"
 
 #. Label of the add_weekly_holidays (Section Break) field in DocType 'Holiday
 #. List'
 #: erpnext/setup/doctype/holiday_list/holiday_list.json
 msgid "Add Weekly Holidays"
-msgstr "تعطیلات هفتگی را اضافه کنید"
+msgstr "افزودن تعطیلات هفتگی"
 
 #: erpnext/public/js/utils/crm_activities.js:142
 msgid "Add a Note"
-msgstr "یک یادداشت اضافه کنید"
+msgstr "افزودن یک یادداشت"
 
 #: erpnext/www/book_appointment/index.html:42
 msgid "Add details"
-msgstr "جزئیات را اضافه کنید"
+msgstr "افزودن جزئیات"
 
 #: erpnext/stock/doctype/pick_list/pick_list.js:71
 #: erpnext/stock/doctype/pick_list/pick_list.py:765
@@ -2784,18 +2784,18 @@ msgstr "بقیه سازمان خود را به عنوان کاربران خود 
 #. Label of the get_local_holidays (Button) field in DocType 'Holiday List'
 #: erpnext/setup/doctype/holiday_list/holiday_list.json
 msgid "Add to Holidays"
-msgstr "به تعطیلات اضافه کنید"
+msgstr "افزودن به تعطیلات"
 
 #: erpnext/crm/doctype/lead/lead.js:37
 msgid "Add to Prospect"
-msgstr "به Prospect اضافه کنید"
+msgstr "افزودن به Prospect"
 
 #. Label of the add_to_transit (Check) field in DocType 'Stock Entry'
 #. Label of the add_to_transit (Check) field in DocType 'Stock Entry Type'
 #: erpnext/stock/doctype/stock_entry/stock_entry.json
 #: erpnext/stock/doctype/stock_entry_type/stock_entry_type.json
 msgid "Add to Transit"
-msgstr "به ترانزیت اضافه کنید"
+msgstr "افزودن به ترانزیت"
 
 #: erpnext/accounts/doctype/coupon_code/coupon_code.js:36
 msgid "Add/Edit Coupon Conditions"
@@ -6220,7 +6220,7 @@ msgstr "ایجاد خودکار رسید خرید"
 #. in DocType 'Stock Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "Auto Create Serial and Batch Bundle For Outward"
-msgstr "ایجاد خودکار باندل سریال و دسته برای بیرون"
+msgstr "ایجاد خودکار باندل سریال و دسته برای خروج"
 
 #. Label of the auto_create_subcontracting_order (Check) field in DocType
 #. 'Buying Settings'
@@ -21902,7 +21902,7 @@ msgstr "کالاهای منتقل شده"
 
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:1745
 msgid "Goods are already received against the outward entry {0}"
-msgstr "کالاها قبلاً در مقابل ورودی خارجی دریافت شده اند {0}"
+msgstr "کالاها قبلاً در مقابل ثبت خروج {0} دریافت شده اند"
 
 #: erpnext/setup/setup_wizard/operations/install_fixtures.py:173
 msgid "Government"
@@ -22991,7 +22991,8 @@ msgstr "در صورت فعال بودن، تمام فایل های پیوست ش
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "If enabled, do not update serial / batch values in the stock transactions on creation of auto Serial \n"
 " / Batch Bundle. "
-msgstr ""
+msgstr "در صورت فعال بودن، مقادیر سریال / دسته را در تراکنش‌های موجودی هنگام ایجاد خودکار باندل سریال \n"
+" / دسته به روز نکنید. "
 
 #. Description of the 'Create Ledger Entries for Change Amount' (Check) field
 #. in DocType 'Accounts Settings'
@@ -24112,7 +24113,7 @@ msgstr "شماره سریال نادرست مصرف شده است"
 #. Name of a report
 #: erpnext/stock/report/incorrect_serial_and_batch_bundle/incorrect_serial_and_batch_bundle.json
 msgid "Incorrect Serial and Batch Bundle"
-msgstr ""
+msgstr "باندل سریال و دسته نادرست"
 
 #. Name of a report
 #: erpnext/stock/report/incorrect_stock_value_report/incorrect_stock_value_report.json
@@ -24760,7 +24761,7 @@ msgstr "قیمت فروش نامعتبر"
 
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:1399
 msgid "Invalid Serial and Batch Bundle"
-msgstr ""
+msgstr "باندل سریال و دسته نامعتبر"
 
 #: erpnext/utilities/doctype/video/video.py:114
 msgid "Invalid URL"
@@ -25033,7 +25034,7 @@ msgstr "ویژگی های صورتحساب"
 #: erpnext/stock/doctype/inventory_dimension/inventory_dimension.json
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.json
 msgid "Inward"
-msgstr "درون"
+msgstr "ورود"
 
 #. Label of the is_account_payable (Check) field in DocType 'Cheque Print
 #. Template'
@@ -25372,7 +25373,7 @@ msgstr "آیا ثبت افتتاحیه است"
 #. Label of the is_outward (Check) field in DocType 'Serial and Batch Entry'
 #: erpnext/stock/doctype/serial_and_batch_entry/serial_and_batch_entry.json
 msgid "Is Outward"
-msgstr "بیرونی است"
+msgstr "خروج است"
 
 #. Label of the is_paid (Check) field in DocType 'Purchase Invoice'
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.json
@@ -32395,7 +32396,7 @@ msgstr "با گسترش یک ردیف در جدول Items to Manufacture، گز�
 #. 'Stock Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "On submission of the stock transaction, system will auto create the Serial and Batch Bundle based on the Serial No / Batch fields."
-msgstr ""
+msgstr "پس از ارسال تراکنش موجودی، سیستم به صورت خودکار باندل سریال و دسته را بر اساس فیلدهای شماره سریال / دسته ایجاد می کند."
 
 #: erpnext/setup/default_energy_point_rules.py:43
 msgid "On {0} Creation"
@@ -33542,7 +33543,7 @@ msgstr "معوقه برای {0} نمی تواند کمتر از صفر باشد 
 #: erpnext/stock/doctype/inventory_dimension/inventory_dimension.json
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.json
 msgid "Outward"
-msgstr "بیرونی"
+msgstr "خروج"
 
 #. Label of the over_billing_allowance (Currency) field in DocType 'Accounts
 #. Settings'
@@ -42618,7 +42619,7 @@ msgstr ""
 
 #: erpnext/stock/report/incorrect_serial_and_batch_bundle/incorrect_serial_and_batch_bundle.js:27
 msgid "Remove SABB Entry"
-msgstr ""
+msgstr "حذف ثبت SABB"
 
 #: erpnext/stock/doctype/landed_cost_voucher/landed_cost_voucher.js:38
 msgid "Remove item if charges is not applicable to that item"
@@ -44141,7 +44142,7 @@ msgstr "ردیف # {0}: نمی توان بیش از {1} را برای مورد {
 
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.py:182
 msgid "Row # {0}: Please add Serial and Batch Bundle for Item {1}"
-msgstr ""
+msgstr "ردیف # {0}: لطفاً باندل سریال و دسته را برای آیتم {1} اضافه کنید"
 
 #: erpnext/controllers/sales_and_purchase_return.py:140
 msgid "Row # {0}: Rate cannot be greater than the rate used in {1} {2}"
@@ -46795,7 +46796,7 @@ msgstr "لیست قیمت انتخاب شده باید دارای فیلدهای
 
 #: erpnext/stock/report/incorrect_serial_and_batch_bundle/incorrect_serial_and_batch_bundle.py:107
 msgid "Selected Serial and Batch Bundle entries have been removed."
-msgstr ""
+msgstr "ثبت های باندل سریال و دسته انتخاب شده حذف شده اند."
 
 #. Label of the repost_vouchers (Table) field in DocType 'Repost Payment
 #. Ledger'
@@ -47340,7 +47341,7 @@ msgstr "باندل سریال و دسته به روز شد"
 
 #: erpnext/controllers/stock_controller.py:122
 msgid "Serial and Batch Bundle {0} is already used in {1} {2}."
-msgstr ""
+msgstr "باندل سریال و دسته {0} قبلاً در {1} {2} استفاده شده است."
 
 #. Label of the section_break_45 (Section Break) field in DocType
 #. 'Subcontracting Receipt Item'
@@ -53035,7 +53036,7 @@ msgstr ""
 
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:1396
 msgid "The Serial and Batch Bundle {0} is not valid for this transaction. The 'Type of Transaction' should be 'Outward' instead of 'Inward' in Serial and Batch Bundle {0}"
-msgstr ""
+msgstr "باندل سریال و دسته {0} برای این تراکنش معتبر نیست. «نوع تراکنش» باید به جای «ورود» در باندل سریال و دسته {0} «خروج» باشد"
 
 #: erpnext/manufacturing/doctype/manufacturing_settings/manufacturing_settings.js:17
 msgid "The Stock Entry of type 'Manufacture' is known as backflush. Raw materials being consumed to manufacture finished goods is known as backflushing. <br><br> When creating Manufacture Entry, raw-material items are backflushed based on BOM of production item. If you want raw-material items to be backflushed based on Material Transfer entry made against that Work Order instead, then you can set it under this field."
@@ -53242,7 +53243,7 @@ msgstr "فروشنده و خریدار نمی توانند یکسان باشند
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py:125
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py:132
 msgid "The serial and batch bundle {0} not linked to {1} {2}"
-msgstr ""
+msgstr "باندل سریال و دسته {0} به {1} {2} مرتبط نیست"
 
 #: erpnext/stock/doctype/batch/batch.py:400
 msgid "The serial no {0} does not belong to item {1}"
@@ -53299,7 +53300,7 @@ msgstr ""
 
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.js:10
 msgid "The user cannot submit the Serial and Batch Bundle manually"
-msgstr ""
+msgstr "کاربر نمی تواند باندل سریال و دسته را به صورت دستی ارسال کند"
 
 #. Description of the 'Role Allowed to Edit Frozen Stock' (Link) field in
 #. DocType 'Stock Settings'
@@ -60033,7 +60034,7 @@ msgstr "{0} مورد در حال انجام است"
 
 #: erpnext/manufacturing/doctype/work_order/work_order.js:447
 msgid "{0} items lost during process."
-msgstr ""
+msgstr "{0} آیتم در طول فرآیند گم شده است."
 
 #: erpnext/manufacturing/doctype/work_order/work_order.js:417
 msgid "{0} items produced"
