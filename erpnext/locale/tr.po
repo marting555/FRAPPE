@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-02-09 09:34+0000\n"
-"PO-Revision-Date: 2025-02-10 22:09\n"
+"PO-Revision-Date: 2025-02-11 22:07\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Turkish\n"
 "MIME-Version: 1.0\n"
@@ -22346,7 +22346,7 @@ msgstr "Malzeme Talebine Göre Gruplandır"
 #: erpnext/accounts/report/general_ledger/general_ledger.js:132
 #: erpnext/accounts/report/payment_ledger/payment_ledger.js:82
 msgid "Group by Party"
-msgstr "Taraflara Göre Gruplandır"
+msgstr "Cariye Göre"
 
 #: erpnext/buying/report/purchase_order_analysis/purchase_order_analysis.js:70
 msgid "Group by Purchase Order"
@@ -27458,7 +27458,7 @@ msgstr "Varlık amortismanı için Yevmiye Kaydı türü Amortisman Kaydı olara
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:666
 msgid "Journal Entry {0} does not have account {1} or already matched against other voucher"
-msgstr "Yevmiye Kaydı {0} , {1} hesabına sahip değil veya zaten başka bir makbuzla eşleştirilmiş"
+msgstr "Defter Girişi {1} için , {2} hesabı mevcut değil veya zaten başka bir giriş ile eşleştirilmiş."
 
 #: erpnext/accounts/doctype/exchange_rate_revaluation/exchange_rate_revaluation.js:97
 msgid "Journal entries have been created"
@@ -39685,7 +39685,7 @@ msgstr "Satın Alma Siparişi Tutarı (Şirket Para Birimi)"
 #: erpnext/buying/workspace/buying/buying.json
 #: erpnext/stock/workspace/stock/stock.json
 msgid "Purchase Order Analysis"
-msgstr "Satın Alma Emri Analizi"
+msgstr "Satın Alma Analizi"
 
 #: erpnext/buying/report/procurement_tracker/procurement_tracker.py:76
 msgid "Purchase Order Date"
@@ -43853,7 +43853,7 @@ msgstr "İade Miktarı"
 #. Label of the returned_qty (Float) field in DocType 'Work Order Item'
 #: erpnext/manufacturing/doctype/work_order_item/work_order_item.json
 msgid "Returned Qty "
-msgstr "İade Edilen Mik "
+msgstr "İade edilen Miktar "
 
 #. Label of the returned_qty (Float) field in DocType 'Delivery Note Item'
 #. Label of the returned_qty (Float) field in DocType 'Purchase Receipt Item'
@@ -44471,7 +44471,7 @@ msgstr "Satır #{0}: {1} bir stok kalemi değildir"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:773
 msgid "Row #{0}: Journal Entry {1} does not have account {2} or already matched against another voucher"
-msgstr "Satır #{0}: Yevmiye Kaydı {1} , {2} hesabına sahip değil veya zaten başka bir makbuzla eşleştirilmiş"
+msgstr "Satır #{0}: Defter Girişi {1} için , {2} hesabı mevcut değil veya zaten başka bir giriş ile eşleştirilmiş."
 
 #: erpnext/selling/doctype/sales_order/sales_order.py:571
 msgid "Row #{0}: Not allowed to change Supplier as Purchase Order already exists"
