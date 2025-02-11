@@ -5,7 +5,7 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, cint, flt, getdate, nowdate, today, get_year_start, get_year_ending
-
+from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 import erpnext
 from erpnext.accounts.doctype.account.test_account import create_account, get_inventory_account
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
@@ -3887,6 +3887,81 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		except Exception as e:
 			error_msg = str(e)
 			self.assertEqual(error_msg, f'Supplier Invoice No exists in Purchase Invoice {pi.name}')
+
+	def setUp(self):
+		from erpnext.accounts.doctype.pricing_rule.test_pricing_rule import make_pricing_rule
+		from erpnext.stock.doctype.item.test_item import make_item
+
+		import random
+        # Ensure supplier exists
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+
+		supplier = create_supplier(
+			supplier_name="Monica",
+			supplier_type="Company",
+		)
+
+		if not frappe.db.exists("Supplier", supplier.supplier_name):
+			supplier.insert()
+
+        # Ensure Item exists with rate rules
+		it_fields = {
+			"item_name": "Boat Earpods",
+            "is_stock_item": 1,
+            "stock_uom": "Nos",
+            "valuation_rate": 5000,
+            "standard_rate": 5000
+		}
+		
+		item = make_item("Boat Earpods", it_fields).name
+		
+		self.pricing_rule =make_pricing_rule(
+			apply_on="Item Code",
+			title="Boat Earpods - Monica Discount",
+			items=[{"item_code": "Boat Earpods"}],
+			supplier="Monica",
+			min_qty= 10,
+			company= "_Test Company",
+			rate_or_discount="Discount Percentage",
+			discount_percentage=10,
+			valid_from="2024-12-01",
+			selling = 0,
+			buying = 1,
+			apply_discount_on = "Rate",
+			price_or_product_discount= "Price",
+			apply_rule_on = "Transaction",
+			apply_on_transaction = "Purchase Invoice"
+		)
+		frappe.db.commit()
+		
+	def test_purchase_invoice_discount(self):
+        # Create Purchase Invoice
+		pi = make_purchase_invoice(
+			company = "_Test Company",
+			supplier= "Monica",
+            posting_date= "2024-12-15",
+            update_stock= 1,
+			set_warehouse= create_warehouse("Stores-test", properties=None, company="_Test Company"),
+			warehouse= create_warehouse("Stores-test", properties=None, company="_Test Company"),
+			qty=20,
+			item_code="Boat Earpods",
+		)
+		# pi.insert()
+		# pi.submit()
+
+        # Validate Stock Ledger Entry
+		sle = frappe.get_all("Stock Ledger Entry", 
+                             filters={"voucher_no": pi.name},
+                             fields=["actual_qty", "valuation_rate", "incoming_rate", "stock_value", "stock_value_difference"])
+		print(sle[0]["actual_qty"], sle[0]["valuation_rate"], sle[0]["incoming_rate"], sle[0]["stock_value"], sle[0]["stock_value_difference"])
+		self.assertEqual(sle[0]["actual_qty"], 20)
+		self.assertEqual(sle[0]["valuation_rate"], 4500)
+
+  
 	
 		
 	def test_lcv_with_purchase_invoice_for_stock_item_TC_ACC_112(self):
