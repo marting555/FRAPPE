@@ -208,15 +208,11 @@ erpnext.PointOfSale.Payment = class {
 			const paid_amount = doc.paid_amount;
 			const items = doc.items;
 
-<<<<<<< HEAD
-			if (paid_amount == 0 || !items.length) {
-=======
 			if (!this.validate_reqd_invoice_fields()) {
 				return;
 			}
 
 			if (!items.length || (paid_amount == 0 && doc.additional_discount_percentage != 100)) {
->>>>>>> b95b13ecd8 (fix: added validation for required invoice_fields in POS (#45780))
 				const message = items.length
 					? __("You cannot submit the order without payment.")
 					: __("You cannot submit empty order.");
