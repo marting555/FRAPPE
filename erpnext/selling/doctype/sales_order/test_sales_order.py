@@ -5553,7 +5553,51 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		frappe.db.commit()
 
 		self.assertEqual(amended_so.status, "To Deliver and Bill")
-	
+
+	def test_sales_order_with_product_bundle_TC_SCK_133(self):
+
+		item1 = make_item("_Test Door",properties={	"is_stock_item": 0	})
+		item2 = make_item("_Test Door Handle Set")
+		item3 = make_item("_Test Door Stopper")
+		item4 = make_item("_Test Door Tower Bolt")
+		make_stock_entry(item_code=item2.item_code, qty=10, rate=100, target="_Test Warehouse - _TC")
+		make_stock_entry(item_code=item3.item_code, qty=10, rate=100, target="_Test Warehouse - _TC")
+		make_stock_entry(item_code=item4.item_code, qty=10, rate=100, target="_Test Warehouse - _TC")
+		# Create Product Bundle
+		product_bundle = make_product_bundle(
+			 "_Test Door",
+				["_Test Door Handle Set", "_Test Door Stopper","_Test Door Tower Bolt"	]
+		)
+		product_bundle.save()
+		product_bundle.submit()
+
+		# Create Sales Order
+		sales_order = make_sales_order(
+			item_code="_Test Door",
+			qty=1,
+			rate=5000,
+			do_not_save=True,
+		)
+		sales_order.delivery_date = nowdate()
+		sales_order.save()
+		sales_order.submit()
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+
+		# Create Delivery Note from Sales Order
+		delivery_note = make_delivery_note(sales_order.name)
+		delivery_note.save()
+		delivery_note.submit()
+		self.assertEqual(delivery_note.status, "To Bill")
+
+		# Check Stock Ledger Entries for sub-items
+		for item_code in ["_Test Door Handle Set", "_Test Door Stopper", "_Test Door Tower Bolt"]:
+			qty_change = frappe.db.get_value(
+				"Stock Ledger Entry",
+				{"voucher_no": delivery_note.name, "warehouse": "_Test Warehouse - _TC", "item_code": item_code},
+				"actual_qty",
+			)
+			self.assertEqual(qty_change, -1)
+			
 	def test_so_to_si_with_deferred_revenue_item_TC_S_134(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		from erpnext.accounts.doctype.account.test_account import create_account
