@@ -2480,12 +2480,12 @@ class TestStockEntry(FrappeTestCase):
 			self.assertEqual(batch[0]['batch_qty'], expected_qty)
 			self.assertEqual(batch[0]['reference_name'], se.name)
 
+	@change_settings("Stock Settings", {"default_warehouse": "_Test Warehouse - _TC"},
+		"Global Defaults", {"default_company": "_Test Company"})
 	def test_item_opening_stock_TC_SCK_080(self):
 		stock_in_hand_account = get_inventory_account("_Test Company", "_Test Warehouse - _TC")
 		frappe.db.set_value("Company", "_Test Company", "stock_adjustment_account", "Stock Adjustment - _TC")
 		frappe.db.set_value("Company", "_Test Company", "default_inventory_account", stock_in_hand_account)
-		frappe.db.set_single_value("Stock Settings", "default_warehouse", "_Test Warehouse - _TC")
-		frappe.db.set_single_value("Global Defaults", "default_company", "_Test Company")
 		
 		fields = {
 			"is_stock_item": 1, 
@@ -2504,12 +2504,12 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(stock[0]["valuation_rate"], 100)
 		self.assertEqual(stock[0]["stock_value"], 1500)
 
+	@change_settings("Stock Settings", {"default_warehouse": "_Test Warehouse - _TC"},
+		"Global Defaults", {"default_company": "_Test Company"})
 	def test_item_opening_stock_with_item_defaults_TC_SCK_081(self):
 		stock_in_hand_account = get_inventory_account("_Test Company", "_Test Warehouse - _TC")
 		frappe.db.set_value("Company", "_Test Company", "stock_adjustment_account", "Cost of Goods Sold - _TC")
 		frappe.db.set_value("Company", "_Test Company", "default_inventory_account", stock_in_hand_account)
-		frappe.db.set_single_value("Stock Settings", "default_warehouse", "_Test Warehouse - _TC")
-		frappe.db.set_single_value("Global Defaults", "default_company", "_Test Company")
 		fields = {
 			"is_stock_item": 1, 
 			"opening_stock":15,
@@ -2533,7 +2533,7 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(stock[0]["actual_qty"], 15)
 		self.assertEqual(stock[0]["valuation_rate"], 100)
 		self.assertEqual(stock[0]["stock_value"], 1500)
-
+	@change_settings("Stock Settings", {"use_serial_batch_fields": 1,"disable_serial_no_and_batch_selector":1,"auto_create_serial_and_batch_bundle_for_outward":1,"pick_serial_and_batch_based_on":"FIFO"})
 	def test_material_transfer_with_enable_selector_TC_SCK_090(self):
 		fields = {
 			"is_stock_item": 1, 
@@ -2550,11 +2550,6 @@ class TestStockEntry(FrappeTestCase):
 
 		item_1 = make_item("_Test Batch Item 1", properties=fields).name
 		item_2 = make_item("_Test Batch Item 2", properties=fields).name
-
-		frappe.db.set_single_value("Stock Settings", "use_serial_batch_fields", 1)
-		frappe.db.set_single_value("Stock Settings", "disable_serial_no_and_batch_selector", 1)
-		frappe.db.set_single_value("Stock Settings", "auto_create_serial_and_batch_bundle_for_outward", 1)
-		frappe.db.set_single_value("Stock Settings", "pick_serial_and_batch_based_on", "FIFO")
 
 		semr = make_stock_entry(
 			item_code=item_1, qty=15, rate=100, target="_Test Warehouse - _TC",
@@ -2596,6 +2591,7 @@ class TestStockEntry(FrappeTestCase):
 		self.assertCountEqual(sle_records[item_1], [10, -10])
 		self.assertCountEqual(sle_records[item_2], [10, -10])
 
+	@change_settings("Stock Settings", {"use_serial_batch_fields": 0,"disable_serial_no_and_batch_selector":0,"auto_create_serial_and_batch_bundle_for_outward":1,"pick_serial_and_batch_based_on":"FIFO"})
 	def test_material_transfer_with_disable_selector_TC_SCK_091(self):
 		fields = {
 			"is_stock_item": 1, 
@@ -2612,11 +2608,6 @@ class TestStockEntry(FrappeTestCase):
 
 		item_1 = make_item("_Test Batch Item 1", properties=fields).name
 		item_2 = make_item("_Test Batch Item 2", properties=fields).name
-
-		frappe.db.set_single_value("Stock Settings", "use_serial_batch_fields", 0)
-		frappe.db.set_single_value("Stock Settings", "disable_serial_no_and_batch_selector", 0)
-		frappe.db.set_single_value("Stock Settings", "auto_create_serial_and_batch_bundle_for_outward", 1)
-		frappe.db.set_single_value("Stock Settings", "pick_serial_and_batch_based_on", "FIFO")
 
 		semr = make_stock_entry(
 			item_code=item_1, qty=15, rate=100, target="_Test Warehouse - _TC",
@@ -2658,6 +2649,7 @@ class TestStockEntry(FrappeTestCase):
 		self.assertCountEqual(sle_records[item_1], [10, -10])
 		self.assertCountEqual(sle_records[item_2], [10, -10])
 	
+	@change_settings("Stock Settings", {"use_serial_batch_fields": 0,"disable_serial_no_and_batch_selector":0,"auto_create_serial_and_batch_bundle_for_outward":0,"pick_serial_and_batch_based_on":"FIFO"})
 	def test_mt_with_disable_serial_batch_no_outward_TC_SCK_116(self):
 		fields = {
 			"is_stock_item": 1, 
@@ -2673,11 +2665,6 @@ class TestStockEntry(FrappeTestCase):
 			fields["gst_hsn_code"] = "01011010"
 
 		item_1 = make_item("_Test Batch Item 1", properties=fields).name
-
-		frappe.db.set_single_value("Stock Settings", "use_serial_batch_fields", 0)
-		frappe.db.set_single_value("Stock Settings", "disable_serial_no_and_batch_selector", 0)
-		frappe.db.set_single_value("Stock Settings", "auto_create_serial_and_batch_bundle_for_outward", 0)
-		frappe.db.set_single_value("Stock Settings", "pick_serial_and_batch_based_on", "FIFO")
 
 		semr = make_stock_entry(
 			item_code=item_1, qty=15, rate=100, target="_Test Warehouse - _TC",
@@ -2701,6 +2688,7 @@ class TestStockEntry(FrappeTestCase):
 
 		self.assertCountEqual(sle_records[item_1], [10, -10])
 
+	@change_settings("Stock Settings", {"use_serial_batch_fields": 0,"disable_serial_no_and_batch_selector":0,"auto_create_serial_and_batch_bundle_for_outward":0,"pick_serial_and_batch_based_on":"FIFO"})
 	def test_mt_with_multiple_items_disable_serial_batch_no_outward_TC_SCK_117(self):
 		fields = {
 			"is_stock_item": 1, 
@@ -2717,11 +2705,6 @@ class TestStockEntry(FrappeTestCase):
 
 		item_1 = make_item("_Test Batch Item 1", properties=fields).name
 		item_2 = make_item("_Test Batch Item 2", properties=fields).name
-
-		frappe.db.set_single_value("Stock Settings", "use_serial_batch_fields", 0)
-		frappe.db.set_single_value("Stock Settings", "disable_serial_no_and_batch_selector", 0)
-		frappe.db.set_single_value("Stock Settings", "auto_create_serial_and_batch_bundle_for_outward", 0)
-		frappe.db.set_single_value("Stock Settings", "pick_serial_and_batch_based_on", "FIFO")
 
 		semr = make_stock_entry(
 			item_code=item_1, qty=15, rate=100, target="_Test Warehouse - _TC",
@@ -2772,6 +2755,7 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(stock[0]["warehouse"], "_Test Warehouse - _TC")
 		self.assertEqual(stock[0]["actual_qty"], 15)
 
+	@change_settings("Stock Settings", {"use_serial_batch_fields": 0,"disable_serial_no_and_batch_selector":0,"auto_create_serial_and_batch_bundle_for_outward":0,"pick_serial_and_batch_based_on":"FIFO"})
 	def test_mt_with_different_warehouse_disable_serial_batch_no_outward_TC_SCK_119(self):
 		fields = {
 			"is_stock_item": 1, 
@@ -2788,11 +2772,6 @@ class TestStockEntry(FrappeTestCase):
 
 		item_1 = make_item("_Test Batch Item 1", properties=fields).name
 		item_2 = make_item("_Test Batch Item 2", properties=fields).name
-
-		frappe.db.set_single_value("Stock Settings", "use_serial_batch_fields", 0)
-		frappe.db.set_single_value("Stock Settings", "disable_serial_no_and_batch_selector", 0)
-		frappe.db.set_single_value("Stock Settings", "auto_create_serial_and_batch_bundle_for_outward", 0)
-		frappe.db.set_single_value("Stock Settings", "pick_serial_and_batch_based_on", "FIFO")
 
 		semr = make_stock_entry(
 			item_code=item_1, qty=15, rate=100, target="_Test Warehouse - _TC",
