@@ -7040,9 +7040,6 @@ class TestMaterialRequest(FrappeTestCase):
 			frappe.db.get_value("Bin", {"item_code": item, "warehouse": target_warehouse}, "actual_qty") or 0
 		)
 		stock_in_hand_account = get_inventory_account(company, target_warehouse)
-		print(stock_in_hand_account)
-		cogs_account = get_inventory_account(company, source_warehouse)
-		print(cogs_account)
 
 		# Make stock entry against material request issue
 		se = frappe.new_doc("Stock Entry")
