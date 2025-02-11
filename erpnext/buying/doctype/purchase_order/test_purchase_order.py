@@ -6250,6 +6250,150 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(gl_entries_pe[1].get("account"), "_Test Creditors - _TC")
 		self.assertEqual(gl_entries_pe[1].get("credit"), 1400)
 
+	def test_get_item_from_po_to_pr_TC_B_147(self):
+		supplier = create_supplier(supplier_name="_Test Supplier PO")
+		company = "_Test Company"
+		if not frappe.db.exists("Company", company):
+			company = frappe.new_doc("Company")
+			company.company_name = company
+			company.country="India",
+			company.default_currency= "INR",
+			company.save()
+		else:
+			company = frappe.get_doc("Company", company)
+		item = create_item("_Test Item")
+		po_data = {
+			"company" : company.name,
+			"item_code" : item.item_code,
+			"supplier": supplier.name,
+			"warehouse" : create_warehouse("Stores - _TC", company=company.name),
+			"qty" : 10,
+			"rate" : 1000,
+			"do_not_submit":True
+		}
+		doc_po = create_purchase_order(**po_data)
+		acc = frappe.new_doc("Account")
+		acc.account_name = "Input Tax CGST"
+		acc.parent_account = "Tax Assets - _TC"
+		acc.company = "_Test Company"
+		account_name_cgst = frappe.db.exists("Account", {"account_name" : "Input Tax CGST","company": "_Test Company" })
+		if not account_name_cgst:
+			account_name_cgst = acc.insert()
+
+		
+		acc = frappe.new_doc("Account")
+		acc.account_name = "Input Tax SGST"
+		acc.parent_account = "Tax Assets - _TC"
+		acc.company = "_Test Company"
+		account_name_sgst = frappe.db.exists("Account", {"account_name" : "Input Tax SGST","company": "_Test Company" })
+		if not account_name_sgst:
+			account_name_sgst = acc.insert()
+		
+		taxes =  [
+			{
+                    "charge_type": "On Net Total",
+                    "account_head": account_name_cgst,
+                    "rate": 2.5,
+                    "description": "Input GST",
+            },
+			{
+                    "charge_type": "On Net Total",
+                    "account_head": account_name_sgst,
+                    "rate": 2.5,
+                    "description": "Input GST",
+            }
+		]
+		for tax in taxes:
+			doc_po.append("taxes", tax)
+		doc_po.save()
+		doc_po.submit()
+		self.assertEqual(doc_po.grand_total, 10500)
+		doc_pr = make_test_pr(doc_po.name)
+		self.assertEqual(doc_pr.items[0].qty, 10)
+		self.assertEqual(doc_pr.items[0].rate, 1000)
+		gl_entries_pr = frappe.get_all("GL Entry", filters={"voucher_no": doc_pr.name}, fields=["account", "debit", "credit"])
+		for gl_entries in gl_entries_pr:
+			if gl_entries['account'] == "Stock In Hand - _TC":
+				self.assertEqual(gl_entries['debit'], 10000)
+			elif gl_entries['account'] == "Stock Received But Not Billed - _TC":
+				self.assertEqual(gl_entries['credit'], 10000)
+		doc_pi= make_purchase_invoice(doc_pr.name)
+		doc_pi.save()
+		doc_pi.submit()
+
+	def test_po_to_qi_to_pr_pi_TC_B_148(self):
+		item = create_item("Testing Item QI")
+		supplier = create_supplier(supplier_name="_Test Supplier PO")
+		company = "_Test Company"
+		if not frappe.db.exists("Company", company):
+			company = frappe.new_doc("Company")
+			company.company_name = company
+			company.country="India",
+			company.default_currency= "INR",
+			company.save()
+		else:
+			company = frappe.get_doc("Company", company)
+		item.inspection_required_before_purchase = 1
+		template = "Syringe"
+		if not frappe.db.exists("Quality Inspection Template", template):
+			template = create_quality_inspection_template(template)
+		item.inspection_required_before_delivery = 1
+		item.quality_inspection_template = template
+		item.opening_stock = 1000
+		item.valuation_rate = 100
+		item.save()
+
+		po_data = {
+			"company" : company.name,
+			"supplier": supplier.name,
+			"item_code" : item.item_code,
+			"warehouse" : create_warehouse("_Test Warehouse 1 - _TC", company=company.name),
+			"qty" : 5,
+			"rate" : 200
+		}
+		po = create_purchase_order(**po_data)
+		pr = make_purchase_receipt_aganist_mr(po.name)
+		pr.save()
+		readings = [
+			{
+				"specification": "Needle Shape",
+				"reading_value": "OK",
+			},
+			{
+				"specification": "Syringe Shape",
+				"reading_value": "OK",
+			},
+			{
+				"specification": "Plastic Clarity",
+				"reading_value": "OK",
+			},
+			{
+				"specification": "Syringe Length",
+				"reading_value": 5,
+			},
+		]
+		from erpnext.stock.doctype.quality_inspection.test_quality_inspection import create_quality_inspection
+		qi = create_quality_inspection(reference_type=pr.doctype, reference_name=pr.name,inspection_type="Incoming", item_code=item.item_code, readings=readings, do_not_save=True)
+		qi.save()
+		qi.submit()
+		self.assertEqual(qi.readings[0].status, "Accepted")
+		self.assertEqual(qi.readings[1].status, "Accepted")
+		self.assertEqual(qi.readings[2].status, "Accepted")
+		self.assertEqual(qi.readings[3].status, "Accepted")
+		pr.reload()
+		pr.submit()
+		self.assertEqual(pr.status, "To Bill")
+		gl_entries_pr = frappe.get_all("GL Entry", filters={"voucher_no": pr.name}, fields=["account", "debit", "credit"])
+		for gl_entries in gl_entries_pr:
+			if gl_entries['account'] == "Stock In Hand - _TC":
+				self.assertEqual(gl_entries['debit'], 1000)
+			elif gl_entries['account'] == "Stock Received But Not Billed - _TC":
+				self.assertEqual(gl_entries['credit'], 1000)
+		doc_pi= make_purchase_invoice(pr.name)
+		doc_pi.save()
+		doc_pi.submit()
+		self.assertEqual(doc_pi.status, "Unpaid")
+
 	def test_apply_only_discount_amount_on_price_list_rate_po_pr_pi_TC_B_122(self):
 		company = "_Test Company"
 		supplier = "_Test Supplier 1"
@@ -8025,3 +8169,32 @@ def get_item_tax_template(company, tax_template, rate):
 		tax_template.insert(ignore_if_duplicate=True)
 
 		return tax_template.name
+
+def create_quality_inspection_template(template):
+	if not frappe.db.exists(template):
+		qi_template = frappe.get_doc(
+			{
+			"doctype":"Quality Inspection Template",
+			"item_quality_inspection_parameter":[
+				{
+					"specification":"Needle Shape",
+					"value":"OK"
+				},
+				{
+					"specification":"Syringe Shape",
+					"value":"OK"
+				},
+				{
+					"specification":"Plastic Clarity",
+					"value":"OK"
+				},
+				{
+					"specification":"Syringe Length",
+					"min_value":4,
+					"max_value":6
+				},
+			]
+			}
+		)
+		qi_template.insert(ignore_if_duplicate=True)
+		return qi_template.name
