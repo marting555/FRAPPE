@@ -1044,13 +1044,14 @@ class StockController(AccountsController):
 
 	def validate_qi_presence(self, row):
 		"""Check if QI is present on row level. Warn on save and stop on submit if missing."""
+		action = frappe.db.get_single_value("Stock Settings", "action_if_quality_inspection_is_not_submitted")
 		if not row.quality_inspection:
 			msg = _("Row #{0}: Quality Inspection is required for Item {1}").format(
 				row.idx, frappe.bold(row.item_code)
 			)
-			if self.docstatus == 1:
+			if self.docstatus == 1 and action == "Stop":
 				frappe.throw(msg, title=_("Inspection Required"), exc=QualityInspectionRequiredError)
-			else:
+			elif self.docstatus == 0:
 				frappe.msgprint(msg, title=_("Inspection Required"), indicator="blue")
 
 	def validate_qi_submission(self, row):
