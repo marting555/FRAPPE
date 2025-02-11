@@ -235,6 +235,15 @@ class ServiceLevelAgreement(Document):
 		service_level_agreement_fields = get_service_level_agreement_fields()
 		meta = frappe.get_meta(self.document_type, cached=False)
 
+		# remove fields if already exists
+		fields_to_remove = []
+		for field in service_level_agreement_fields:
+			if meta.has_field(field.get("fieldname")):
+				fields_to_remove.append(field)
+		service_level_agreement_fields = [
+			field for field in service_level_agreement_fields if field not in fields_to_remove
+		]
+
 		if meta.custom:
 			self.create_docfields(meta, service_level_agreement_fields)
 		else:
