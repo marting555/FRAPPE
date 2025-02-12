@@ -2480,8 +2480,8 @@ class TestStockEntry(FrappeTestCase):
 			self.assertEqual(batch[0]['batch_qty'], expected_qty)
 			self.assertEqual(batch[0]['reference_name'], se.name)
 
-	@change_settings("Stock Settings", {"default_warehouse": "_Test Warehouse - _TC"},
-		"Global Defaults", {"default_company": "_Test Company"})
+	@change_settings("Stock Settings", {"default_warehouse": "_Test Warehouse - _TC"})
+	@change_settings("Global Defaults", {"default_company": "_Test Company"})
 	def test_item_opening_stock_TC_SCK_080(self):
 		stock_in_hand_account = get_inventory_account("_Test Company", "_Test Warehouse - _TC")
 		frappe.db.set_value("Company", "_Test Company", "stock_adjustment_account", "Stock Adjustment - _TC")
@@ -2504,8 +2504,8 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(stock[0]["valuation_rate"], 100)
 		self.assertEqual(stock[0]["stock_value"], 1500)
 
-	@change_settings("Stock Settings", {"default_warehouse": "_Test Warehouse - _TC"},
-		"Global Defaults", {"default_company": "_Test Company"})
+	@change_settings("Stock Settings", {"default_warehouse": "_Test Warehouse - _TC"})
+	@change_settings("Global Defaults", {"default_company": "_Test Company"})
 	def test_item_opening_stock_with_item_defaults_TC_SCK_081(self):
 		stock_in_hand_account = get_inventory_account("_Test Company", "_Test Warehouse - _TC")
 		frappe.db.set_value("Company", "_Test Company", "stock_adjustment_account", "Cost of Goods Sold - _TC")
