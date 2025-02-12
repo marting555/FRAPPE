@@ -160,15 +160,18 @@ class Quotation(SellingController):
 
 	def get_ordered_status(self):
 		status = "Open"
-		ordered_items = frappe._dict(
-			frappe.db.get_all(
-				"Sales Order Item",
-				{"prevdoc_docname": self.name, "docstatus": 1},
-				["item_code", "sum(qty)"],
-				group_by="item_code",
-				as_list=1,
-			)
+
+		ordered_items = frappe._dict()
+		ordered_rows = frappe.db.get_all(
+			"Sales Order Item",
+			filters={"prevdoc_docname": self.name, "docstatus": 1},
+			fields=["quotation_item", "sum(qty) as ordered_qty"],
+			group_by="quotation_item",
+			as_list=0,
 		)
+
+		for row in ordered_rows:
+			ordered_items[row["quotation_item"]] = row["ordered_qty"]
 
 		if not ordered_items:
 			return status
@@ -176,7 +179,16 @@ class Quotation(SellingController):
 		has_alternatives = any(row.is_alternative for row in self.get("items"))
 		self._items = self.get_valid_items() if has_alternatives else self.get("items")
 
-		if any(row.qty > ordered_items.get(row.item_code, 0.0) for row in self._items):
+		partially_ordered = False
+
+		# Check order status per row using quotation_item
+		for row in self._items:
+			ordered_qty = ordered_items.get(row.name, 0.0)  # Match exact Quotation Item row ID
+			if row.qty > ordered_qty:
+				partially_ordered = True
+				break
+
+		if partially_ordered:
 			status = "Partially Ordered"
 		else:
 			status = "Ordered"
@@ -356,15 +368,17 @@ def make_sales_order(source_name: str, target_doc=None):
 
 def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	customer = _make_customer(source_name, ignore_permissions)
-	ordered_items = frappe._dict(
-		frappe.db.get_all(
-			"Sales Order Item",
-			{"prevdoc_docname": source_name, "docstatus": 1},
-			["item_code", "sum(qty)"],
-			group_by="item_code",
-			as_list=1,
-		)
+	ordered_items = frappe._dict()
+	ordered_rows = frappe.db.get_all(
+		"Sales Order Item",
+		filters={"prevdoc_docname": source_name, "docstatus": 1},
+		fields=["quotation_item", "sum(qty) as ordered_qty"],
+		group_by="quotation_item",
+		as_list=0,
 	)
+
+	for row in ordered_rows:
+		ordered_items[row["quotation_item"]] = row["ordered_qty"]
 
 	selected_rows = [x.get("name") for x in frappe.flags.get("args", {}).get("selected_items", [])]
 
@@ -396,7 +410,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		target.run_method("calculate_taxes_and_totals")
 
 	def update_item(obj, target, source_parent):
-		balance_qty = obj.qty - ordered_items.get(obj.item_code, 0.0)
+		balance_qty = obj.qty - ordered_items.get(obj.name, 0.0)
 		target.qty = balance_qty if balance_qty > 0 else 0
 		target.stock_qty = flt(target.qty) * flt(obj.conversion_factor)
 
@@ -412,7 +426,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		2. If selections: Is Alternative Item/Has Alternative Item: Map if selected and adequate qty
 		3. If selections: Simple row: Map if adequate qty
 		"""
-		balance_qty = item.qty - ordered_items.get(item.item_code, 0.0)
+		balance_qty = item.qty - ordered_items.get(item.name, 0.0)
 		if balance_qty <= 0:
 			return False
 
