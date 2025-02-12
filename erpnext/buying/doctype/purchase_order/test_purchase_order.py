@@ -8129,3 +8129,11 @@ def create_quality_inspection_template(template):
 		)
 		qi_template.insert(ignore_if_duplicate=True)
 		return qi_template.name
+
+
+def get_gl_entries(voucher_no):
+	return frappe.get_all("GL Entry", filters={"voucher_no": voucher_no}, fields=["account", "debit", "credit"])
+
+
+def get_sle(voucher_no):
+	return frappe.get_all("Stock Ledger Entry", filters={"voucher_no": voucher_no}, fields=['actual_qty', 'item_code'])
