@@ -11,7 +11,6 @@ class TestManufacturingSettings(unittest.TestCase):
 		create_warehouse("_Test WIP Warehouse", company=company)
 		create_warehouse("_Test Scrap Warehouse", company=company)
 		create_warehouse("_Test Finished Goods Warehouse", company=company)
-		print(create_warehouse("_Test Finished Goods Warehouse", company=company))
 		settings = frappe.get_doc({
 			"doctype": "Manufacturing Settings",
 			"default_wip_warehouse": "_Test WIP Warehouse - _TC",
