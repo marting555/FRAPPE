@@ -2173,6 +2173,7 @@ def create_account():
 		{"name": "Duties and Taxes", "parent": "Current Liabilities - _TC"},
 		{"name": "_Test TDS Payable", "parent": "Duties and Taxes - _TC","account_type":"Tax"},
 		{"name": "_Test TCS Payable", "parent": "Duties and Taxes - _TC","account_type":"Tax"},
+		{"name": "_Test Subsidy", "parent": "Stock Expenses - _TC","account_type":"Cost of Goods Sold"},
 		{"name": "_Test Creditors", "parent": "Accounts Payable - _TC","account_type":"Payable"},
 		{"name": "_Test Payable USD", "parent": "Accounts Payable - _TC","account_type":"Payable"},
 		{"name": "_Test Cash", "parent": "Cash In Hand - _TC"},
