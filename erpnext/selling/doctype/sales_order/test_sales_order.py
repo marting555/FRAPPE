@@ -5756,10 +5756,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		customer.tax_id = "ABC12345"
 		customer.save()
   
-		selling_setting = frappe.get_doc('Selling Settings')
-		selling_setting.hide_tax_id = 1
-		selling_setting.save()
-  
 		def is_field_hidden(doctype, fieldname):
 			meta = frappe.get_meta(doctype)
 			field = meta.get_field(fieldname)

@@ -317,10 +317,6 @@ class TestBlanketOrder(FrappeTestCase):
   
 	@change_settings("Selling Settings", {"blanket_order_allowance": 5.0})
 	def test_blanket_order_to_validate_allowance_in_sales_order_TC_S_161(self):
-		selling_setting = frappe.get_doc('Selling Settings')
-		selling_setting.blanket_order_allowance = 5.0
-		selling_setting.save()
-  
 		frappe.flags.args.doctype = "Sales Order"
 
 		bo = make_blanket_order(blanket_order_type="Selling",quantity=20,rate=100)

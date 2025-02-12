@@ -6382,10 +6382,6 @@ class TestSalesInvoice(FrappeTestCase):
   
 	@change_settings("Selling Settings", {"allow_multiple_items": 1})
 	def test_sales_invoice_to_allow_item_multiple_times_TC_S_159(self):
-		selling_setting = frappe.get_doc('Selling Settings')
-		selling_setting.allow_multiple_items = 1
-		selling_setting.save()
-  
 		si_items = [
 			{
 				"item_code": "_Test Item",
@@ -6409,10 +6405,6 @@ class TestSalesInvoice(FrappeTestCase):
   
 	@change_settings("Selling Settings", {"dont_reserve_sales_order_qty_on_sales_return": 1})
 	def test_sales_invoice_dont_reserve_sales_order_qty_on_sales_return_TC_S_158(self):
-		selling_setting = frappe.get_doc('Selling Settings')
-		selling_setting.dont_reserve_sales_order_qty_on_sales_return = 1
-		selling_setting.save()
-
 		si = create_sales_invoice(qty= 1, rate=300, update_stock=1, warehouse="_Test Warehouse - _TC", do_not_submit=0)
 		self.assertEqual(si.status, "Unpaid")
 
