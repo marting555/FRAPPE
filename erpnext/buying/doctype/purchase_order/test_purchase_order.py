@@ -2878,23 +2878,32 @@ class TestPurchaseOrder(FrappeTestCase):
 
 	def test_po_pi_pr_flow_TC_B_067(self):
 		# Scenario : PO => PI => PR [With Shipping Rule]
-		
 		args = {
 					"calculate_based_on" : "Fixed",
 					"shipping_amount" : 200
 				}
-		shipping_rule_name = get_shipping_rule_name(args)
-		
+		doc_shipping_rule = create_shipping_rule("Buying", "_Test Shipping Rule _TC", args)
+		item = create_item("_Test Item")
+		supplier = create_supplier(supplier_name="_Test Supplier PO")
+		company = "_Test Company"
+		if not frappe.db.exists("Company", company):
+			company = frappe.new_doc("Company")
+			company.company_name = company
+			company.country="India",
+			company.default_currency= "INR",
+			company.save()
+		else:
+			company = frappe.get_doc("Company", company)
 		po_data = {
-			"company" : "_Test Company",
-			"item_code" : "_Test Item",
-			"warehouse" : "Stores - _TC",
+			"company" : company.name,
+			"supplier":supplier.name,
+			"item_code" : item.item_code,
+			"warehouse" : create_warehouse("Stores - _TC", company=company.name),
 			"qty" : 1,
 			"rate" : 3000,
-			"shipping_rule" :shipping_rule_name
+			"shipping_rule" :doc_shipping_rule.name
 
 		}
-		
 		doc_po = create_purchase_order(**po_data)
 		self.assertEqual(doc_po.docstatus, 1)
 
@@ -2905,26 +2914,6 @@ class TestPurchaseOrder(FrappeTestCase):
 		doc_po.reload()
 		self.assertEqual(doc_po.status, 'Completed')
 		self.assertEqual(doc_pr.status, 'Completed')
-
-	def test_po_pr_multiple_pi_flow_TC_B_066(self):
-		#Scenario : PO=>PR=>2PI 
-
-		po = frappe.get_doc({
-			"doctype": "Purchase Order",
-			"company": "_Test Company",
-			"supplier": "_Test Supplier",
-			"set_posting_time": 1,
-			"posting_date": "2025-01-15",
-			"required_by_date": "2025-01-20",
-			"shipping_rule": "Ship-Buy",
-			"items": [
-				{
-					"item_code": "_Test Item",
-					"warehouse": "_Test Warehouse 1 - _TC",
-					"qty": 4,
-					"rate": 3000
-     }]
-		})
 	
 	def test_inter_state_CGST_and_SGST_TC_B_097(self):
 		po = create_purchase_order(qty=1,rate = 100,do_not_save=True)
