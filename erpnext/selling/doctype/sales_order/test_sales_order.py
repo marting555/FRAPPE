@@ -3887,7 +3887,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
   
 		self.assertEqual(pe.status, 'Submitted')
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe.name, 'account': 'Debtors - _TIRC'}, 'credit'), 2000)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe.name, 'account': '_Test Registered Bank Account - _TIRC'}, 'debit'), 2000)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe.name, 'account': 'Cash - _TIRC'}, 'debit'), 2000)
 
 		dn = make_delivery_note(so.name)
 		dn.submit()
@@ -3926,7 +3926,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		self.assertEqual(pe2.status, 'Submitted')
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe2.name, 'account': 'Debtors - _TIRC'}, 'credit'), 3900)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe2.name, 'account': '_Test Registered Bank Account - _TIRC'}, 'debit'), 3900)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe2.name, 'account': 'Cash - _TIRC'}, 'debit'), 3900)
 
 		si.reload()
 		self.assertEqual(si.outstanding_amount, 0)
@@ -3986,8 +3986,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
 		self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
-  
-		create_registered_bank_account()
 
 		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
@@ -4763,10 +4761,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(pi.status, "Unpaid")
   
 		payable_account = frappe.db.get_value("Company", "_Test Company", "default_payable_account")
-		expense_account = frappe.db.get_value("Company", "_Test Company", "default_expense_account")
+		excise_account = frappe.db.get_value("Company", "_Test Company", "default_deferred_revenue_account")
   
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': payable_account}, 'credit'), 5000)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': expense_account}, 'debit'), 5000)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': excise_account}, 'debit'), 5000)
   
 	def test_sales_order_for_stock_unreserve_TC_S_071(self):
 		so = self.test_sales_order_for_stock_reservation_TC_S_063(get_so_with_stock_reserved=1)
@@ -5751,6 +5749,22 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		delivery_note.submit()
 
 		self.assertEqual(delivery_note.status, "Completed")
+  
+	@change_settings("Selling Settings", {"hide_tax_id": 1})
+	def test_sales_order_to_show_customer_tax_id_TC_S_160(self):
+		customer = frappe.get_doc("Customer", "_Test Customer")
+		customer.tax_id = "ABC12345"
+		customer.save()
+  
+		def is_field_hidden(doctype, fieldname):
+			meta = frappe.get_meta(doctype)
+			field = meta.get_field(fieldname)
+			
+			if field:
+				return field.hidden
+			return None
+		
+		self.assertEqual(is_field_hidden("Sales Order", "tax_id"),  1)
 
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
@@ -5962,6 +5976,7 @@ def create_registered_bank_account():
 	if not frappe.db.exists('Account', {'name': '_Test Registered Bank Account - _TIRC'}):
 		acc_doc = frappe.new_doc("Account")
 		acc_data = {
+			"account_name": "_Test Registered Bank Account",
 			"company": "_Test Indian Registered Company",
 			"parent_account":"Bank Accounts - _TIRC"
 		}
