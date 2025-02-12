@@ -34,4 +34,15 @@ class TestManufacturingSettings(unittest.TestCase):
 
 		# Verify the overproduction percentage is set correctly
 		self.assertEqual(settings.overproduction_percentage_for_work_order, 10)
+		
+	def test_overproduction_percentage_for_sales_order_TC_SCK_222(self):
+		# Set up the overproduction percentage for sales orders
+		settings = frappe.get_doc({
+			"doctype": "Manufacturing Settings",
+			"overproduction_percentage_for_sales_order": 15
+		})
+		settings.insert()
+
+		# Verify the overproduction percentage is set correctly
+		self.assertEqual(settings.overproduction_percentage_for_sales_order, 15)
 	
