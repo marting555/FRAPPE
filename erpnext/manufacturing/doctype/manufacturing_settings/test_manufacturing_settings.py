@@ -6,4 +6,32 @@ from erpnext.manufacturing.doctype.manufacturing_settings.manufacturing_settings
 from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
 class TestManufacturingSettings(unittest.TestCase):
+	def test_manufacturing_settings_TC_SCK_220(self):
+		company = "_Test Company"
+		create_warehouse("_Test WIP Warehouse", company=company)
+		create_warehouse("_Test Scrap Warehouse", company=company)
+		create_warehouse("_Test Finished Goods Warehouse", company=company)
+		print(create_warehouse("_Test Finished Goods Warehouse", company=company))
+		settings = frappe.get_doc({
+			"doctype": "Manufacturing Settings",
+			"default_wip_warehouse": "_Test WIP Warehouse - _TC",
+			"default_scrap_warehouse": "_Test Scrap Warehouse - _TC",
+			"default_fg_warehouse": "_Test Finished Goods Warehouse - _TC",
+		})
+		settings.insert()
 
+		self.assertEqual(settings.default_wip_warehouse, "_Test WIP Warehouse - _TC")
+		self.assertEqual(settings.default_scrap_warehouse, "_Test Scrap Warehouse - _TC")
+		self.assertEqual(settings.default_fg_warehouse, "_Test Finished Goods Warehouse - _TC")
+
+	def test_overproduction_percentage_for_work_order_TC_SCK_221(self):
+		# Set up the overproduction percentage for work orders
+		settings = frappe.get_doc({
+			"doctype": "Manufacturing Settings",
+			"overproduction_percentage_for_work_order": 10
+		})
+		settings.insert()
+
+		# Verify the overproduction percentage is set correctly
+		self.assertEqual(settings.overproduction_percentage_for_work_order, 10)
+	
