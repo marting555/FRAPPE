@@ -5932,6 +5932,25 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 	
 		self.assertRaises(frappe.ValidationError, sales_order.submit)
 	
+	def test_stock_reservation_from_so_to_dn_TC_SCK_143(self):
+		so = self.create_and_submit_sales_order_with_gst("_Test Item", qty=5, rate=20)
+		from erpnext.stock.doctype.stock_reservation_entry.stock_reservation_entry import create_stock_reservation_entries_for_so_items
+  
+		item_details = [{'__checked': 1, 'sales_order_item': so.items[0].get("name"), 'item_code': '_Test Item', 
+                   'warehouse': 'Stores - _TIRC', 'qty_to_reserve': 5, 'idx': 1, 'name': 'row 1'}]
+  
+		create_stock_reservation_entries_for_so_items(
+			sales_order=so,
+			items_details=item_details,
+			from_voucher_type=None,
+			notify=True,
+		)
+  
+		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so.name}, "status"), "Reserved")
+		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so.name}, "reserved_qty"), 5)
+		dn = make_delivery_note(so.name)
+		dn.save()
+		dn.submit()
       
 def get_transport_details(customer):
 	# create a driver
