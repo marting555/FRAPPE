@@ -5514,7 +5514,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(sales_order.status, "To Deliver and Bill")
 
 		sales_order.cancel()
-		frappe.db.commit()
 		sales_order.reload()		
 		self.assertEqual(sales_order.status, "Cancelled")
 		
@@ -5524,7 +5523,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		amended_so.items[0].qty = 2
 		amended_so.save()
 		amended_so.submit()
-		frappe.db.commit()
 
 		self.assertEqual(amended_so.status, "To Deliver and Bill")
 
@@ -5538,7 +5536,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(sales_order.status, "To Deliver and Bill")
 
 		sales_order.cancel()
-		frappe.db.commit()
 		sales_order.reload()		
 		self.assertEqual(sales_order.status, "Cancelled")
 		
@@ -5548,7 +5545,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		amended_so.items[0].rate = 3000
 		amended_so.save()
 		amended_so.submit()
-		frappe.db.commit()
 
 		self.assertEqual(amended_so.status, "To Deliver and Bill")
 	
@@ -5917,8 +5913,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		if len(custeomer.credit_limits) == 0: 
 			custeomer.append("credit_limits", {"company": "_Test Company", "credit_limit": 1000})
 			custeomer.save()
-			frappe.db.commit()
-		item = make_test_item("_Test Item")
+			item = make_test_item("_Test Item")
 		
 		sales_order = make_sales_order(
 			customer="_Test Customer",

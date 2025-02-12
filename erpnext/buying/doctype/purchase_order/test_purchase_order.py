@@ -1662,7 +1662,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
 		self.assertEqual(pi_status, "Paid")
 
-		frappe.db.commit()
+		
 
 
 	def test_status_po_on_pi_cancel_TC_B_038(self):
@@ -1806,7 +1806,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		})
 		purchase_invoice.insert()
 		purchase_invoice.submit()
-		frappe.db.commit()
+		
 
 		purchase_invoice_return = frappe.get_doc({
 			"doctype": "Purchase Invoice",
@@ -1827,7 +1827,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		})
 		purchase_invoice_return.insert()
 		purchase_invoice_return.submit()
-		frappe.db.commit()
+		
 
 		gl_entries = frappe.get_all(
 			"GL Entry",
@@ -1894,7 +1894,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		})
 		purchase_invoice.insert()
 		purchase_invoice.submit()
-		frappe.db.commit()
+		
 
 		purchase_invoice_return = frappe.get_doc({
 			"doctype": "Purchase Invoice",
@@ -1956,7 +1956,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 	def test_pr_to_lcv_add_value_to_stock_TC_B_034(self):
 		frappe.db.set_value("Company", "_Test Company", {"enable_perpetual_inventory":1, "stock_received_but_not_billed": "_Test Account Excise Duty - _TC"})
-		frappe.db.commit()
+		
 
 		# Step 1: Create Purchase Receipt
 		doc_pr = frappe.get_doc({
@@ -4218,7 +4218,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		supplier = "_Test Supplier 1"
 		item_code = "_Test Item With Default Uom"
 		gst_hsn_code = "11112222"
-		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
+		if frappe.db.exists("DocType", "GST HSN Code") and not frappe.db.exists("GST HSN Code", gst_hsn_code):
 			frappe.get_doc({
 				"doctype": "GST HSN Code",
 				"hsn_code": gst_hsn_code,
@@ -7220,7 +7220,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			po.load_from_db()
 			frappe.delete_doc("Budget", budget.name,force=1)
 			frappe.delete_doc("Purchase Order", po.name,force=1)
-			frappe.db.commit()
+			
 	def test_warn_po_creation_when_value_exceeds_budget_TC_ACC_144(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		from erpnext.accounts.utils import get_fiscal_year
@@ -7276,7 +7276,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		po.load_from_db()
 		frappe.delete_doc("Budget", budget.name,force=1)
 		frappe.delete_doc("Purchase Order", po.name,force=1)
-		frappe.db.commit()
+		
 	
 	def test_po_with_damage_claims_pr_pi_TC_B_140(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item as make_item
@@ -8139,7 +8139,7 @@ def create_company_and_supplier():
 		supplier_address.insert()
 	company_name = frappe.get_doc("Company", company)
 	supplier_name = frappe.get_doc("Supplier", supplier)
-	frappe.db.commit()
+	
 	return {
 		"company": company_name.name,
 		"supplier": supplier_name.name

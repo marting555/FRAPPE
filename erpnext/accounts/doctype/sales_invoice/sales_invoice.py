@@ -812,16 +812,14 @@ class SalesInvoice(SellingController):
 		)
 
 	def validate_with_previous_doc(self):
+		compare_fields_pr_item = [["customer", "="],["company", "="],["currency", "="]]
+		if "projects" in frappe.get_installed_apps():
+			compare_fields_pr_item.append(["project", "="])
 		super().validate_with_previous_doc(
 			{
 				"Sales Order": {
 					"ref_dn_field": "sales_order",
-					"compare_fields": [
-						["customer", "="],
-						["company", "="],
-						["project", "="],
-						["currency", "="],
-					],
+					"compare_fields": compare_fields_pr_item
 				},
 				"Sales Order Item": {
 					"ref_dn_field": "so_detail",
@@ -831,12 +829,7 @@ class SalesInvoice(SellingController):
 				},
 				"Delivery Note": {
 					"ref_dn_field": "delivery_note",
-					"compare_fields": [
-						["customer", "="],
-						["company", "="],
-						["project", "="],
-						["currency", "="],
-					],
+					"compare_fields": compare_fields_pr_item
 				},
 				"Delivery Note Item": {
 					"ref_dn_field": "dn_detail",
