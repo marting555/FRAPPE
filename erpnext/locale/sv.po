@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-02-09 09:34+0000\n"
-"PO-Revision-Date: 2025-02-11 22:06\n"
+"PO-Revision-Date: 2025-02-12 22:34\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -15487,7 +15487,7 @@ msgstr "Standard Enhet för Artikel {0} kan inte ändras direkt eftersom man red
 
 #: erpnext/stock/doctype/item/item.py:902
 msgid "Default Unit of Measure for Variant '{0}' must be same as in Template '{1}'"
-msgstr "Standard Måtenhet för Variant '{0}' måste vara samma som i Mall '{1}'"
+msgstr "Standard Enhet för Variant '{0}' måste vara samma som i Mall '{1}'"
 
 #. Label of the valuation_method (Select) field in DocType 'Stock Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
@@ -32202,7 +32202,7 @@ msgstr "Avisera Annan"
 #. Reposting Settings'
 #: erpnext/stock/doctype/stock_reposting_settings/stock_reposting_settings.json
 msgid "Notify Reposting Error to Role"
-msgstr "Avisera ompostering fel till Roll"
+msgstr "Avisera Ompostering fel till Roll"
 
 #. Label of the notify_supplier (Check) field in DocType 'Supplier Scorecard'
 #. Label of the notify_supplier (Check) field in DocType 'Supplier Scorecard
@@ -35219,7 +35219,7 @@ msgstr "Betalning Plan"
 
 #: erpnext/accounts/print_format/payment_receipt_voucher/payment_receipt_voucher.html:4
 msgid "Payment Receipt Note"
-msgstr "Betalning Faktura"
+msgstr "Betalning Påminnelse"
 
 #: erpnext/selling/page/point_of_sale/pos_payment.js:252
 msgid "Payment Received"
@@ -35462,7 +35462,7 @@ msgstr "Betalning Typ"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:609
 msgid "Payment Type must be one of Receive, Pay and Internal Transfer"
-msgstr "Betalning Typ måste vara en av: In Ut eller Intern Överföring"
+msgstr "Betalning Typ måste vara en av Inbetalning, Utbetalning eller Intern Överföring"
 
 #. Label of the payment_url (Data) field in DocType 'Payment Request'
 #: erpnext/accounts/doctype/payment_request/payment_request.json
@@ -56273,7 +56273,7 @@ msgstr "Enhet"
 
 #: erpnext/stock/doctype/item/item.py:382
 msgid "Unit of Measure {0} has been entered more than once in Conversion Factor Table"
-msgstr "Måtenhet {0} är angiven mer än en gång i Konvertering Faktor Tabell"
+msgstr "Enhet {0} är angiven mer än en gång i Konvertering Faktor Tabell"
 
 #. Label of the unit_of_measure_conversion (Section Break) field in DocType
 #. 'Item'
