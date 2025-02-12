@@ -2913,6 +2913,10 @@ class TestStockEntry(FrappeTestCase):
 								"voucher_no":[se.name]})
 		result_list = serial_and_batch.get("result", [])
 		self.assertEqual(len(result_list), 150)
+		sle_entries = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": se.name}, fields=['item_code', 'actual_qty'])
+		for sle in sle_entries:
+			if sle['item_code'] == item.item_code:
+				self.assertEqual(sle['actual_qty'], 150)
 	
 def create_bom(bom_item, rm_items, company=None, qty=None, properties=None):
 		bom = frappe.new_doc("BOM")
