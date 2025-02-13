@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-02-09 09:34+0000\n"
-"PO-Revision-Date: 2025-02-12 22:34\n"
+"PO-Revision-Date: 2025-02-13 22:42\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Turkish\n"
 "MIME-Version: 1.0\n"
@@ -27740,7 +27740,7 @@ msgstr "Son Sipariş Tarihi"
 #: erpnext/stock/doctype/item/item.json
 #: erpnext/stock/report/item_prices/item_prices.py:56
 msgid "Last Purchase Rate"
-msgstr "Son Alım Fiyatı"
+msgstr "Son Alış Fiyatı"
 
 #: erpnext/stock/doctype/stock_ledger_entry/stock_ledger_entry.py:325
 msgid "Last Stock Transaction for item {0} under warehouse {1} was on {2}."
