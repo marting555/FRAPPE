@@ -1015,7 +1015,12 @@ class TestItem(FrappeTestCase):
 		self.assertIsNotNone(batch, "Batch not created")
 		self.assertEqual(str(batch.expiry_date), str(expiry), "Expiry date mismatch in batch")
 
-		# Check Stock Ledger for product bundle entry
+	@change_settings("Stock Settings", {"valuation_method": "FIFO"})
+	def test_default_valuation_method_TC_SCK_180(self):
+		expected_valuation_method = "FIFO"
+		updated_stock_settings = frappe.get_doc("Stock Settings")
+		self.assertEqual(updated_stock_settings.valuation_method, expected_valuation_method, "Valuation method not set correctly in Stock Settings")
+
 
 def set_item_variant_settings(fields):
 	doc = frappe.get_doc("Item Variant Settings")
