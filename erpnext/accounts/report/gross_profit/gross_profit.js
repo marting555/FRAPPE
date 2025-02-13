@@ -51,43 +51,6 @@ frappe.query_reports["Gross Profit"] = {
 			fieldtype: "Link",
 			options: "Sales Person",
 		},
-<<<<<<< HEAD
-=======
-		{
-			fieldname: "warehouse",
-			label: __("Warehouse"),
-			fieldtype: "Link",
-			options: "Warehouse",
-			get_query: function () {
-				var company = frappe.query_report.get_filter_value("company");
-				return {
-					filters: [["Warehouse", "company", "=", company]],
-				};
-			},
-		},
-		{
-			fieldname: "cost_center",
-			label: __("Cost Center"),
-			fieldtype: "MultiSelectList",
-			options: "Cost Center",
-			get_data: function (txt) {
-				return frappe.db.get_link_options("Cost Center", txt, {
-					company: frappe.query_report.get_filter_value("company"),
-				});
-			},
-		},
-		{
-			fieldname: "project",
-			label: __("Project"),
-			fieldtype: "MultiSelectList",
-			options: "Project",
-			get_data: function (txt) {
-				return frappe.db.get_link_options("Project", txt, {
-					company: frappe.query_report.get_filter_value("company"),
-				});
-			},
-		},
->>>>>>> 8785342fce (fix(report): add options to multiselectlist fields)
 	],
 	tree: true,
 	name_field: "parent",
