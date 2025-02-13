@@ -2816,41 +2816,13 @@ class TestStockEntry(FrappeTestCase):
 
 	def test_stock_entry_tc_sck_136(self):
 		item_code = make_item("_Test Item Stock Entry New", {"valuation_rate": 100})
-
 		se = make_stock_entry(item_code=item_code, target="_Test Warehouse - _TC", qty=1, do_not_submit=True)
 		se.stock_entry_type = "Manufacture"
 		se.items[0].is_finished_item = 1
 		se.submit()
 		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':se.name})
 		self.assertEqual(sle.qty_after_transaction, 1)
-
-		self.assertEqual(se1.stock_entry_type, "Material Issue")
-		mr.load_from_db()
-		self.assertEqual(mr.status, "Partially Ordered")
-
-		# Check Stock Ledger Entries
-		self.check_stock_ledger_entries(
-			"Stock Entry",
-			se1.name,
-			[
-				[item_code, target_warehouse, -5],
-				[item_code, source_warehouse, 5],
-			],
-		)
-
-		# Check GL Entries
-		stock_in_hand_account = get_inventory_account(company, target_warehouse)
-		cogs_account = "Cost of Goods Sold - _TC"
-		self.check_gl_entries(
-			"Stock Entry",
-			se1.name,
-			sorted(
-				[
-					[stock_in_hand_account, 0.0, 500.0],
-					[cogs_account, 500.0, 0.0],
-				]
-			),
-		)
+		
 	def test_partial_material_issue_TC_SCK_205(self):
 		company="_Test Company"
 		fields = {
