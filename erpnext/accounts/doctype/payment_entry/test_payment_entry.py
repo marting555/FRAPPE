@@ -2083,7 +2083,7 @@ def create_payment_terms_template():
 					},
 				],
 			}
-		).insert()
+		).insert(ignore_permissions=True)
 
 
 def create_payment_terms_template_with_discount(
@@ -2115,7 +2115,7 @@ def create_payment_terms_template_with_discount(
 					}
 				],
 			}
-		).insert()
+		).insert(ignore_permissions=True)
 
 
 def create_payment_term(name):
@@ -2132,7 +2132,7 @@ def create_customer(name="_Test Customer 2 USD", currency="USD"):
 		customer.customer_name = name
 		customer.default_currency = currency
 		customer.type = "Individual"
-		customer.save()
+		customer.insert(ignore_permissions=True)
 		customer = customer.name
 	return customer
 def create_supplier(**args):
@@ -2162,7 +2162,7 @@ def create_supplier(**args):
 		doc.supplier_group = args.supplier_group or "Services"
   
 
-	doc.insert(ignore_mandatory=True)
+	doc.insert(ignore_mandatory=True,ignore_permissions=True)
 	frappe.db.commit()
 	return doc
 
@@ -2205,7 +2205,7 @@ def create_account():
 			if account["parent"]:
 				doc.parent_account = account["parent"]
 			
-			doc.insert(ignore_mandatory=True)
+			doc.insert(ignore_mandatory=True,ignore_permissions=True)
 			frappe.db.commit()
 
 		except Exception as e:
@@ -2248,7 +2248,7 @@ def make_test_item(item_name=None):
 					"doctype": 'GST HSN Code',
 					"hsn_code": '888890',
 					"description": 'test'
-				}).insert()
+				}).insert(ignore_permissions=True)
 				frappe.db.commit()
 			
 			item= make_item(
@@ -2324,5 +2324,5 @@ def create_company():
 			"default_currency": "INR",
 			"company_email": "test@example.com",
 			"abbr":"_TC"
-		}).insert()
+		}).insert(ignore_permissions=True)
 		frappe.db.commit()

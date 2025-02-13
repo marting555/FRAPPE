@@ -1101,7 +1101,7 @@ def create_tax_withholding_category(
 				],
 				"accounts": [{"company": "_Test Company", "account": account}],
 			}
-		).insert()
+		).insert(ignore_permissions=True)
 	elif frappe.db.exists("Tax Withholding Category", category_name):
 		doc = frappe.get_doc("Tax Withholding Category",category_name)
 		if doc.accounts:
