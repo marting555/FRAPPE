@@ -103,6 +103,7 @@ class TestWarehouse(FrappeTestCase):
 		children = get_children("Warehouse", parent=company, company=company, is_root=True)
 		self.assertTrue(any(wh["value"] == "_Test Warehouse - _TC" for wh in children))
 
+
 def create_warehouse(warehouse_name, properties=None, company=None):
 	if not company:
 		company = "_Test Company"
