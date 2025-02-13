@@ -5990,6 +5990,7 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertEqual(tax_category,si.tax_category)
 
 	def test_si_to_pi_for_service_internal_transfer_TC_B_126(self):
+		frappe.set_user("Administrator")
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		get_required_data = create_company_and_supplier()
 		parent_company = get_required_data.get("parent_company")
@@ -6172,6 +6173,7 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertEqual(dun.grand_total, 1000.136986301)
 
 	def test_internal_goods_supply_TC_B_127(self):
+		frappe.set_user("Administrator")
 		# SO =>PO, SO => DN => PR, From DN => SI => PI (For goods)
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		from erpnext.selling.doctype.sales_order.sales_order import make_inter_company_purchase_order
