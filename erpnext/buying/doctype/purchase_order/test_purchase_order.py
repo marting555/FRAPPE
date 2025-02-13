@@ -7572,8 +7572,6 @@ class TestPurchaseOrder(FrappeTestCase):
 			self.assertEqual(entry["debit"], expected_pi_entries.get(entry["account"], {}).get("debit", 0))
 			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
 
-
-
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
