@@ -3297,8 +3297,8 @@ class TestStockEntry(FrappeTestCase):
 		if not frappe.db.exists("Company", company):
 			company_doc = frappe.new_doc("Company")
 			company_doc.company_doc_name = company
-			company_doc.country="India",
-			company_doc.default_currency= "INR",
+			company_doc.country="India"
+			company_doc.default_currency= "INR"
 			company_doc.save()
 		else:
 			company_doc = frappe.get_doc("Company", company) 
