@@ -1964,10 +1964,10 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(sa_gle[0], sa_gle[1])
 
 	def test_create_stock_repack_via_bom_TC_SCK_016(self):
-		self.create_stock_repack_via_bom_TC_SCK_016()
+		self.create_stock_repack_via_bom()
 
 	def test_create_and_cancel_stock_repack_via_bom_TC_SCK_065(self):
-		se = self.create_stock_repack_via_bom_TC_SCK_016()
+		se = self.create_stock_repack_via_bom()
 		se.cancel()
 
 		sl_entry_cancelled = frappe.db.get_all(
@@ -2186,7 +2186,8 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(stock_movements.get(self.item_code3.name), 10, "Brown Rice 500g should be 10 Inward")
 		self.assertEqual(stock_movements.get(self.item_code2.name), 2, "Brown Rice 5kg should be 2 Inward")
 
-	def create_stock_repack_via_bom_TC_SCK_016(self):
+	def create_stock_repack_via_bom(self):
+		frappe.db.set_value("Company", "_Test Company", "stock_adjustment_account", "Stock Adjustment - _TC")
 		t_warehouse = create_warehouse(
 			warehouse_name="_Test Target Warehouse",
 			properties={"parent_warehouse": "All Warehouses - _TC"},
