@@ -10,6 +10,9 @@ from erpnext.stock.utils import get_stock_balance
 from erpnext.stock.utils import get_incoming_rate, get_stock_balance
 
 import erpnext
+from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
+from erpnext.stock.utils import get_stock_balance
+from datetime import datetime
 from erpnext.accounts.doctype.account.test_account import get_inventory_account
 from erpnext.buying.doctype.supplier.test_supplier import create_supplier
 from erpnext.controllers.buying_controller import QtyMismatchError
@@ -20,6 +23,7 @@ from erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle impor
 	SerialNoDuplicateError,
 	SerialNoExistsInFutureTransactionError,
 )
+from erpnext.controllers.stock_controller import get_stock_ledger_preview
 from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
 	get_batch_from_bundle,
 	get_serial_nos_from_bundle,
@@ -4954,6 +4958,98 @@ class TestPurchaseReceipt(FrappeTestCase):
 		"""Clean up test data after running the test"""
 		frappe.db.rollback()  # Rollback changes to maintain a clean test environment
 
+
+	def test_stock_reconciliation_TC_SCK_224(self):
+		# self.item_code = "Book"
+		self.warehouse = create_warehouse("Stores", properties=None, company="_Test Company")
+		self.qty_received = 10
+		self.qty_issued = 5
+		self.qty_reserved = 3
+		self.qty_reconciled = 8
+		self.item_code = make_item("Book", {'item_name':"Book", "valuation_rate":500, "is_stock_item":1}).name
+		from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import (
+			create_stock_reconciliation,
+		)
+		sr = create_stock_reconciliation(item_code=self.item_code, warehouse=self.warehouse, qty=self.qty_reconciled, rate=500)
+		sr.submit()
+		stock_qty = get_stock_balance(self.item_code, self.warehouse)
+		self.assertEqual(stock_qty, self.qty_reconciled)
+
+	def test_stock_ledger_report_TC_SCK_225(self):
+		item = []
+		warehouse = []
+		date = []
+		warehouse_new = create_warehouse("Stores", properties=None, company="_Test Company")
+		item_code = make_item("_Test Item225", {'item_name':"_Test Item225", "valuation_rate":500, "is_stock_item":1}).name
+		se1 = make_stock_entry(item_code=item_code, qty=10, to_warehouse=warehouse_new, purpose="Material Receipt")
+
+		from erpnext.stock.report.stock_ledger.stock_ledger import execute
+		
+		filters = frappe._dict({  # Convert to allow dot notation
+        "from_date": "2024-01-13",
+        "to_date": "2025-12-12",
+        "item_code": item_code,
+        "warehouse": warehouse_new,
+    	})
+
+		columns, data = execute(filters)  # Unpacking the returned tuple
+
+		# print(data)  # Debugging: Check report structure
+
+		for i in range(1,len(data)):
+			item.append(data[i]['item_code'])
+			warehouse.append(data[i]['warehouse'])
+			date.append(data[i]['posting_date'])
+		item = set(item)
+		item = list(item)
+		warehouse = set(warehouse)
+		warehouse = list(warehouse)
+
+		self.assertTrue(filters["item_code"] == item[0], "Item tc failed")
+		self.assertTrue(filters["warehouse"] == warehouse[0], "Warehouse tc failed")
+		from_date = datetime.strptime(filters["from_date"], "%Y-%m-%d").date()
+		to_date = datetime.strptime(filters["to_date"], "%Y-%m-%d").date()
+		for i in date:
+			self.assertTrue(from_date <= i <= to_date)
+
+	def test_stock_ledger_report_TC_SCK_226(self):
+		item = []
+		warehouse = []
+		date = []
+		if not frappe.db.exists("Item Group", {"item_group_name":"_Test Group"}):
+			item_group = frappe.new_doc("Item Group")
+			item_group.item_group_name =  "_Test Group"
+			item_group.insert()
+		warehouse_new = create_warehouse("Stores", properties=None, company="_Test Company")
+		item_code = make_item("_Test Item225", {'item_name':"_Test Item225", "valuation_rate":500, "is_stock_item":1, "item_group": "_Test Group"}).name
+		se1 = make_stock_entry(item_code=item_code, qty=10, to_warehouse=warehouse_new, purpose="Material Receipt")
+		from erpnext.stock.report.stock_ledger.stock_ledger import execute
+		filters = frappe._dict({  # Convert to allow dot notation
+        "from_date": "2024-01-13",
+        "to_date": "2025-12-12",
+        "item_group": "_Test Group",
+        "warehouse": warehouse_new,
+    	})
+
+		columns, data = execute(filters)  # Unpacking the returned tuple
+		
+		# print(data)  # Debugging: Check report structure
+
+		for i in range(len(data)):
+			item.append(data[i]['item_group'])
+			warehouse.append(data[i]['warehouse'])
+			date.append(data[i]['posting_date'])
+		item = set(item)
+		item = list(item)
+		warehouse = set(warehouse)
+		warehouse = list(warehouse)
+
+		self.assertTrue(filters["item_group"] == item[0], "Item tc failed")
+		self.assertTrue(filters["warehouse"] == warehouse[0], "Warehouse tc failed")
+		from_date = datetime.strptime(filters["from_date"], "%Y-%m-%d").date()
+		to_date = datetime.strptime(filters["to_date"], "%Y-%m-%d").date()
+		for i in date:
+			self.assertTrue(from_date <= i <= to_date)
 
 def prepare_data_for_internal_transfer():
 	from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_internal_supplier
