@@ -1123,7 +1123,8 @@ def get_bom_items_as_dict(
 	project_group_by = "bom.project," if project_column else ""
 
 	# Base SQL Query
-	query = """SELECT
+	
+	query = """select
 				bom_item.item_code,
 				bom_item.idx,
 				item.item_name,
