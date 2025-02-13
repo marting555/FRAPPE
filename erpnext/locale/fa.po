@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-02-09 09:34+0000\n"
-"PO-Revision-Date: 2025-02-12 22:34\n"
+"PO-Revision-Date: 2025-02-13 22:42\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Persian\n"
 "MIME-Version: 1.0\n"
@@ -9325,7 +9325,7 @@ msgstr "نمی توان از تحویل با شماره سریال اطمینا�
 
 #: erpnext/public/js/utils/barcode_scanner.js:54
 msgid "Cannot find Item with this Barcode"
-msgstr "نمی توان موردی را با این بارکد پیدا کرد"
+msgstr "نمی‌توان آیتمی را با این بارکد پیدا کرد"
 
 #: erpnext/controllers/accounts_controller.py:3376
 msgid "Cannot find a default warehouse for item {0}. Please set one in the Item Master or in Stock Settings."
