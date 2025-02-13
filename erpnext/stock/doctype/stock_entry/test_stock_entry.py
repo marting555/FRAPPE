@@ -3296,7 +3296,7 @@ class TestStockEntry(FrappeTestCase):
 		company = "_Test Company"
 		if not frappe.db.exists("Company", company):
 			company_doc = frappe.new_doc("Company")
-			company_doc.company_doc_name = company
+			company_doc.company_name = company
 			company_doc.country="India"
 			company_doc.default_currency= "INR"
 			company_doc.save()
@@ -3328,7 +3328,7 @@ class TestStockEntry(FrappeTestCase):
 		se.submit()
 		self.assertEqual(se.purpose, "Manufacture")
 		self.assertEqual(se.items[0].is_finished_item, 1)
-		self.assertEqual(se.items[0].is_scrap_item, 1)
+		self.assertEqual(se.items[1].is_scrap_item, 1)
 		sle_entries = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": se.name}, fields=['item_code', 'actual_qty'])
 		for sle in sle_entries:
 			if sle['item_code'] == item_1.item_code:
