@@ -1117,7 +1117,7 @@ def get_bom_items_as_dict(
 	fetch_qty_in_stock_uom=True,
 ):
 	item_dict = {}
-	project_column = ", bom.project" if "projects" in frappe.get_installed_apps() else ""
+	project_column = "bom.project," if "projects" in frappe.get_installed_apps() else ""
  
 	# Did not use qty_consumed_per_unit in the query, as it leads to rounding loss
 	query = """select
