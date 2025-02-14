@@ -113,6 +113,8 @@ class JournalEntry(AccountsController):
 		super().__init__(*args, **kwargs)
 
 	def validate(self):
+		self.validate_company_in_accounting_dimension()
+
 		if self.voucher_type == "Opening Entry":
 			self.is_opening = "Yes"
 

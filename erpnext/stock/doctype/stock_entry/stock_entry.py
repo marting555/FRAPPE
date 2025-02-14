@@ -193,6 +193,8 @@ class StockEntry(StockController):
 			apply_putaway_rule(self.doctype, self.get("items"), self.company, purpose=self.purpose)
 
 	def validate(self):
+		self.validate_company_in_accounting_dimension()
+
 		self.pro_doc = frappe._dict()
 		if self.work_order:
 			self.pro_doc = frappe.get_doc("Work Order", self.work_order)
