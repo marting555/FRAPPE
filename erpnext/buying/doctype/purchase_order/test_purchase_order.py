@@ -2880,7 +2880,9 @@ class TestPurchaseOrder(FrappeTestCase):
 		pr = make_pr_for_po(doc_po.name, received_qty=10)
 		self.assertEqual(pr.items[0].received_qty, 10)
 		self.assertEqual(pr.items[0].rate, 100)
-		make_pi_against_pr(pr.name)
+		pi = make_pi_against_pr(pr.name)
+		self.assertEqual(pi.items[0].qty, 10)
+		self.assertEqual(pi.items[0].rate, 100)
 
 	def test_po_pr_pi_with_shipping_rule_TC_B_064(self):
 		# Scenario : PO=>PR=>PI [With Shipping Rule]
