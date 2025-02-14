@@ -6,7 +6,7 @@ import json
 import random
 import frappe
 # import pandas as pd
-from frappe.tests.utils import FrappeTestCase, change_settings
+from frappe.tests.utils import FrappeTestCase, change_settings, if_app_installed
 from frappe.utils import add_days, flt, getdate, nowdate, add_years, today, get_year_start, get_year_ending
 from frappe.utils.data import today
 from datetime import date
@@ -6723,6 +6723,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.total_taxes_and_charges, 360)
 		self.assertEqual(po.grand_total, 2360)
 	
+	@if_app_installed("india_compliance")
 	def test_po_with_create_tax_template_5_pr_pi_2_TC_B_145(self):
 		supplier = create_supplier(supplier_name="_Test Supplier PO")
 		company = "_Test Company"
@@ -6740,7 +6741,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		item_group = frappe.get_doc("Item Group", "Raw Material")
 		item_group.append("taxes", {"item_tax_template": tax_template})
 		item_group.save()
-		item = create_item("_Test Item")
+		item = create_item("_Test Items")
 		item.item_group = "Raw Material"
 		item.save()
 		po_data = {
@@ -6766,6 +6767,8 @@ class TestPurchaseOrder(FrappeTestCase):
 		doc_pi = make_purchase_invoice(doc_pr.name)
 		doc_pi.save()
 		doc_pi.submit()
+		self.assertEqual(doc_pi.items[0].qty, 10)
+		self.assertEqual(doc_pi.items[0].rate, 1000)
 
 	def test_po_with_partial_pi_and_update_items_TC_B_130(self):
 		company = "_Test Company"
