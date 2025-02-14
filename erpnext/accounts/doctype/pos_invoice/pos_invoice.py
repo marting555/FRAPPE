@@ -20,6 +20,10 @@ from erpnext.controllers.queries import item_query as _item_query
 from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 
 
+class PartialPaymentValidationError(frappe.ValidationError):
+	pass
+
+
 class POSInvoice(SalesInvoice):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
@@ -490,10 +494,14 @@ class POSInvoice(SalesInvoice):
 
 		if self.docstatus != 0:
 			if self.is_return and self.paid_amount != invoice_total:
-				frappe.throw(_("Partial Payment in POS Invoice is not allowed."))
+				frappe.throw(
+					msg=_("Partial Payment in POS Invoice is not allowed."), exc=PartialPaymentValidationError
+				)
 
 			if self.paid_amount < invoice_total:
-				frappe.throw(_("Partial Payment in POS Invoice is not allowed."))
+				frappe.throw(
+					msg=_("Partial Payment in POS Invoice is not allowed."), exc=PartialPaymentValidationError
+				)
 
 	def set_status(self, update=False, status=None, update_modified=True):
 		if self.is_new():
