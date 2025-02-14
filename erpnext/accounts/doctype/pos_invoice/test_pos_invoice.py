@@ -7,7 +7,7 @@ import frappe
 from frappe import _
 from frappe.tests import IntegrationTestCase
 
-from erpnext.accounts.doctype.pos_invoice.pos_invoice import make_sales_return
+from erpnext.accounts.doctype.pos_invoice.pos_invoice import PartialPaymentValidationError, make_sales_return
 from erpnext.accounts.doctype.pos_profile.test_pos_profile import make_pos_profile
 from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
 from erpnext.stock.doctype.item.test_item import make_item
@@ -394,7 +394,7 @@ class TestPOSInvoice(IntegrationTestCase):
 			{"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 9000},
 		)
 		pos_inv.insert()
-		self.assertRaises(frappe.ValidationError, pos_inv.submit)
+		self.assertRaises(PartialPaymentValidationError, pos_inv.submit)
 
 	def test_serialized_item_transaction(self):
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_serialized_item
