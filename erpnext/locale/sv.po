@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-02-09 09:34+0000\n"
-"PO-Revision-Date: 2025-02-13 22:41\n"
+"PO-Revision-Date: 2025-02-14 23:06\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -6201,7 +6201,7 @@ msgstr "Bilagor"
 #. 'Employee'
 #: erpnext/setup/doctype/employee/employee.json
 msgid "Attendance & Leaves"
-msgstr "Närvaro & Ledighet"
+msgstr "Närvaro & Frånvaro"
 
 #. Label of the attendance_device_id (Data) field in DocType 'Employee'
 #: erpnext/setup/doctype/employee/employee.json
@@ -7652,11 +7652,11 @@ msgstr "Baserad på Värde"
 
 #: erpnext/setup/doctype/holiday_list/holiday_list.js:60
 msgid "Based on your HR Policy, select your leave allocation period's end date"
-msgstr "Baserat på din Personal Regel välj slutdatum för din ledighet tilldelning"
+msgstr "Baserat på din Personal Regel välj slutdatum för din frånvaro tilldelning"
 
 #: erpnext/setup/doctype/holiday_list/holiday_list.js:55
 msgid "Based on your HR Policy, select your leave allocation period's start date"
-msgstr "Baserat på din Personal Regel välj startdatum för ledighet period"
+msgstr "Baserat på din Personal Regel välj startdatum för frånvaro period"
 
 #. Label of the basic_amount (Currency) field in DocType 'Stock Entry Detail'
 #: erpnext/stock/doctype/stock_entry_detail/stock_entry_detail.json
@@ -10202,7 +10202,7 @@ msgstr "Klicka på \"Hämta Färdiga Artiklar för Produktion\" för att hämta 
 
 #: erpnext/setup/doctype/holiday_list/holiday_list.js:70
 msgid "Click on Add to Holidays. This will populate the holidays table with all the dates that fall on the selected weekly off. Repeat the process for populating the dates for all your weekly holidays"
-msgstr "Klicka på 'Lägg till Helgdagar'. Detta kommer att fylla helg tabell med alla datum som infaller på valda veckovis ledighet. Upprepa processen för att fylla i datum för alla helgdagar"
+msgstr "Klicka på 'Lägg till Helgdagar'. Detta kommer att fylla helg tabell med alla datum som infaller på valda veckovis frånvaro. Upprepa processen för att fylla i datum för alla helgdagar"
 
 #: erpnext/manufacturing/doctype/production_plan/production_plan.js:601
 msgid "Click on Get Sales Orders to fetch sales orders based on the above filters."
@@ -27936,7 +27936,7 @@ msgstr "Lär dig om <a href=\"https://docs.erpnext.com/docs/v13/user/manual/en/a
 #. Label of the leave_encashed (Select) field in DocType 'Employee'
 #: erpnext/setup/doctype/employee/employee.json
 msgid "Leave Encashed?"
-msgstr "Ledighet Uttagen?"
+msgstr "Frånvaro Uttagen?"
 
 #. Description of the 'Success Redirect URL' (Data) field in DocType
 #. 'Appointment Booking Settings'
@@ -46639,7 +46639,7 @@ msgstr "Välj Födelsedag. Detta kommer att validera personal ålder och förhin
 
 #: erpnext/setup/doctype/employee/employee.js:115
 msgid "Select Date of joining. It will have impact on the first salary calculation, Leave allocation on pro-rata bases."
-msgstr "Välj Anställning Datum. Detta kommer att påverka första lön, Ledighet tilldelning på proportionell bas."
+msgstr "Välj Anställning Datum. Detta kommer att påverka första lön, Frånvaro tilldelning på proportionell bas."
 
 #: erpnext/buying/report/supplier_quotation_comparison/supplier_quotation_comparison.js:114
 #: erpnext/buying/report/supplier_quotation_comparison/supplier_quotation_comparison.js:145
@@ -50787,7 +50787,7 @@ msgstr "Godkänn Arbetsorder för vidare behandling."
 
 #: erpnext/buying/doctype/request_for_quotation/request_for_quotation.py:264
 msgid "Submit your Quotation"
-msgstr "Skicka Offert"
+msgstr "Godkänn Offert"
 
 #. Option for the 'Status' (Select) field in DocType 'Payment Entry'
 #. Option for the 'Status' (Select) field in DocType 'POS Closing Entry'
@@ -57812,7 +57812,7 @@ msgstr "Verifikat Nummer Erfodras"
 #: erpnext/stock/doctype/stock_reservation_entry/stock_reservation_entry.json
 #: erpnext/stock/report/reserved_stock/reserved_stock.py:117
 msgid "Voucher Qty"
-msgstr "Verifikat Kvantitet"
+msgstr "Kvantitet"
 
 #. Label of the voucher_subtype (Small Text) field in DocType 'GL Entry'
 #: erpnext/accounts/doctype/gl_entry/gl_entry.json
