@@ -1166,26 +1166,25 @@ def get_payment_data(invoice):
 
 
 @frappe.whitelist()
-def get_pos_inv_item_returned_qty(invoice, customer, item_name):
-	POS_INVOICE = "POS Invoice"
-	is_return, docstatus = frappe.db.get_value(POS_INVOICE, invoice, ["is_return", "docstatus"])
+def get_pos_invoice_item_returned_qty(pos_invoice, customer, item_row_name):
+	is_return, docstatus = frappe.db.get_value("POS Invoice", pos_invoice, ["is_return", "docstatus"])
 	if not is_return and docstatus == 1:
-		return get_returned_qty_map_for_row(invoice, customer, item_name, POS_INVOICE)
+		return get_returned_qty_map_for_row(pos_invoice, customer, item_row_name, "POS Invoice")
 
 
 @frappe.whitelist()
-def allow_pos_invoice_return(invoice):
-	POS_INVOICE = "POS Invoice"
-	is_return, docstatus = frappe.db.get_value(POS_INVOICE, invoice, ["is_return", "docstatus"])
+def is_pos_invoice_returnable(pos_invoice):
+	is_return, docstatus, customer = frappe.db.get_value(
+		"POS Invoice", pos_invoice, ["is_return", "docstatus", "customer"]
+	)
 	if is_return or docstatus == 0:
 		return False
 
-	customer = frappe.db.get_value(POS_INVOICE, invoice, "customer")
-	invoice_item_qty = frappe.db.get_all(f"{POS_INVOICE} Item", {"parent": invoice}, ["name", "qty"])
+	invoice_item_qty = frappe.db.get_all("POS Invoice Item", {"parent": pos_invoice}, ["name", "qty"])
 
 	already_full_returned = 0
 	for d in invoice_item_qty:
-		returned_qty = get_returned_qty_map_for_row(invoice, customer, d.name, POS_INVOICE)
+		returned_qty = get_returned_qty_map_for_row(pos_invoice, customer, d.name, "POS Invoice")
 		if returned_qty.qty == d.qty:
 			already_full_returned += 1
 

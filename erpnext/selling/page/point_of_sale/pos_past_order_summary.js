@@ -117,11 +117,11 @@ erpnext.PointOfSale.PastOrderSummary = class {
 
 		async function get_returned_qty() {
 			const r = await frappe.call({
-				method: "erpnext.controllers.sales_and_purchase_return.get_pos_inv_item_returned_qty",
+				method: "erpnext.controllers.sales_and_purchase_return.get_pos_invoice_item_returned_qty",
 				args: {
-					invoice: doc.name,
+					pos_invoice: doc.name,
 					customer: doc.customer,
-					item_name: item_data.name,
+					item_row_name: item_data.name,
 				},
 			});
 
@@ -130,7 +130,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 			}
 
 			return `<div class="item-row-refund">
-				<strong>${r.message.qty}</strong> Returned
+				<strong>${r.message.qty}</strong> ${__("Returned")}
 			</div>`;
 		}
 	}
@@ -192,7 +192,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 
 	bind_events() {
 		this.$summary_container.on("click", ".return-btn", async () => {
-			const r = await this.allow_return(this.doc.name);
+			const r = await this.is_pos_invoice_returnable(this.doc.name);
 			if (!r) {
 				frappe.msgprint({
 					title: __("Invalid Return"),
@@ -473,11 +473,11 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		}
 	}
 
-	async allow_return(invoice) {
+	async is_pos_invoice_returnable(invoice) {
 		const r = await frappe.call({
-			method: "erpnext.controllers.sales_and_purchase_return.allow_pos_invoice_return",
+			method: "erpnext.controllers.sales_and_purchase_return.is_pos_invoice_returnable",
 			args: {
-				invoice: invoice,
+				pos_invoice: invoice,
 			},
 		});
 		return r.message;
