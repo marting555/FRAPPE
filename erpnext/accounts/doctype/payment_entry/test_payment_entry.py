@@ -2142,7 +2142,7 @@ def create_supplier(**args):
 		doc = frappe.get_doc("Supplier", args.supplier_name)
 		if doc.name == "_Test Supplier USD" and not frappe.db.exists("Party Account", {"parent": doc.name, "account": "_Test Payable USD - _TC"}):
 			doc.append("accounts", {"company": args.company, "account": "_Test Payable USD - _TC"})
-			frappe.db.commit()
+			
 		return doc
 	doc = frappe.get_doc(
 		{
@@ -2234,7 +2234,7 @@ def create_records(supplier):
 		default_currency="USD" if supplier == "_Test Supplier USD" else "INR",
 		)
 
-	frappe.db.commit()
+	
 
 
 

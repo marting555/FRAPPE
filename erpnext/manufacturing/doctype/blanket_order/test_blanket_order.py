@@ -3,6 +3,7 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import add_months, today ,add_days,nowdate
+from frappe.tests.utils import FrappeTestCase, change_settings
 
 from erpnext import get_company_currency
 from erpnext.stock.doctype.item.test_item import make_item
@@ -302,6 +303,34 @@ class TestBlanketOrder(FrappeTestCase):
 		gl_credits = {entry.account: entry.credit for entry in gl_entries}
 		self.assertAlmostEqual(gl_debits[debtor_account], 50000)
 		self.assertAlmostEqual(gl_credits[sales_account], 50000)
+  
+	def test_blanket_order_creating_quotation_TC_S_157(self):
+		frappe.flags.args.doctype = "Quotation"
+		bo = make_blanket_order(blanket_order_type="Selling",quantity=50,rate=1000)
+		self.assertEqual(bo.docstatus, 1)
+  
+		quotation = make_order(bo.name)
+		quotation.submit()
+		quotation.reload()
+		self.assertEqual(quotation.docstatus, 1)
+		self.assertEqual(quotation.grand_total, 50000)
+  
+	@change_settings("Selling Settings", {"blanket_order_allowance": 5.0})
+	def test_blanket_order_to_validate_allowance_in_sales_order_TC_S_161(self):
+		frappe.flags.args.doctype = "Sales Order"
+
+		bo = make_blanket_order(blanket_order_type="Selling",quantity=20,rate=100)
+		self.assertEqual(bo.docstatus, 1)
+  
+		so = make_order(bo.name)
+		so.delivery_date = add_days(nowdate(), 5)
+		for itm in so.items:
+			itm.qty = 21
+		so.save()
+		so.submit()
+		so.reload()
+  
+		self.assertEqual(so.status, "To Deliver and Bill")
 
 def make_blanket_order(**args):
 	args = frappe._dict(args)

@@ -3887,7 +3887,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
   
 		self.assertEqual(pe.status, 'Submitted')
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe.name, 'account': 'Debtors - _TIRC'}, 'credit'), 2000)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe.name, 'account': '_Test Registered Bank Account - _TIRC'}, 'debit'), 2000)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe.name, 'account': 'Cash - _TIRC'}, 'debit'), 2000)
 
 		dn = make_delivery_note(so.name)
 		dn.submit()
@@ -3926,7 +3926,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		self.assertEqual(pe2.status, 'Submitted')
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe2.name, 'account': 'Debtors - _TIRC'}, 'credit'), 3900)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe2.name, 'account': '_Test Registered Bank Account - _TIRC'}, 'debit'), 3900)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pe2.name, 'account': 'Cash - _TIRC'}, 'debit'), 3900)
 
 		si.reload()
 		self.assertEqual(si.outstanding_amount, 0)
@@ -3986,8 +3986,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
 		self.assertEqual(so.grand_total, so.total + so.total_taxes_and_charges)
-  
-		create_registered_bank_account()
 
 		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
@@ -4763,10 +4761,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(pi.status, "Unpaid")
   
 		payable_account = frappe.db.get_value("Company", "_Test Company", "default_payable_account")
-		expense_account = frappe.db.get_value("Company", "_Test Company", "default_expense_account")
+		excise_account = frappe.db.get_value("Company", "_Test Company", "default_deferred_revenue_account")
   
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': payable_account}, 'credit'), 5000)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': expense_account}, 'debit'), 5000)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': excise_account}, 'debit'), 5000)
   
 	def test_sales_order_for_stock_unreserve_TC_S_071(self):
 		so = self.test_sales_order_for_stock_reservation_TC_S_063(get_so_with_stock_reserved=1)
@@ -5516,7 +5514,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(sales_order.status, "To Deliver and Bill")
 
 		sales_order.cancel()
-		frappe.db.commit()
 		sales_order.reload()		
 		self.assertEqual(sales_order.status, "Cancelled")
 		
@@ -5526,7 +5523,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		amended_so.items[0].qty = 2
 		amended_so.save()
 		amended_so.submit()
-		frappe.db.commit()
 
 		self.assertEqual(amended_so.status, "To Deliver and Bill")
 
@@ -5540,7 +5536,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(sales_order.status, "To Deliver and Bill")
 
 		sales_order.cancel()
-		frappe.db.commit()
 		sales_order.reload()		
 		self.assertEqual(sales_order.status, "Cancelled")
 		
@@ -5550,10 +5545,53 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		amended_so.items[0].rate = 3000
 		amended_so.save()
 		amended_so.submit()
-		frappe.db.commit()
 
 		self.assertEqual(amended_so.status, "To Deliver and Bill")
-	
+
+	def test_sales_order_with_product_bundle_TC_SCK_133(self):
+
+		item1 = make_item("_Test Door",properties={	"is_stock_item": 0	})
+		item2 = make_item("_Test Door Handle Set")
+		item3 = make_item("_Test Door Stopper")
+		item4 = make_item("_Test Door Tower Bolt")
+		make_stock_entry(item_code=item2.item_code, qty=10, rate=100, target="_Test Warehouse - _TC")
+		make_stock_entry(item_code=item3.item_code, qty=10, rate=100, target="_Test Warehouse - _TC")
+		make_stock_entry(item_code=item4.item_code, qty=10, rate=100, target="_Test Warehouse - _TC")
+		# Create Product Bundle
+		product_bundle = make_product_bundle(
+			 "_Test Door",
+				["_Test Door Handle Set", "_Test Door Stopper","_Test Door Tower Bolt"	]
+		)
+		product_bundle.save()
+		product_bundle.submit()
+
+		# Create Sales Order
+		sales_order = make_sales_order(
+			item_code="_Test Door",
+			qty=1,
+			rate=5000,
+			do_not_save=True,
+		)
+		sales_order.delivery_date = nowdate()
+		sales_order.save()
+		sales_order.submit()
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+
+		# Create Delivery Note from Sales Order
+		delivery_note = make_delivery_note(sales_order.name)
+		delivery_note.save()
+		delivery_note.submit()
+		self.assertEqual(delivery_note.status, "To Bill")
+
+		# Check Stock Ledger Entries for sub-items
+		for item_code in ["_Test Door Handle Set", "_Test Door Stopper", "_Test Door Tower Bolt"]:
+			qty_change = frappe.db.get_value(
+				"Stock Ledger Entry",
+				{"voucher_no": delivery_note.name, "warehouse": "_Test Warehouse - _TC", "item_code": item_code},
+				"actual_qty",
+			)
+			self.assertEqual(qty_change, -1)
+			
 	def test_so_to_si_with_deferred_revenue_item_TC_S_134(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		from erpnext.accounts.doctype.account.test_account import create_account
@@ -5751,6 +5789,22 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		delivery_note.submit()
 
 		self.assertEqual(delivery_note.status, "Completed")
+  
+	@change_settings("Selling Settings", {"hide_tax_id": 1})
+	def test_sales_order_to_show_customer_tax_id_TC_S_160(self):
+		customer = frappe.get_doc("Customer", "_Test Customer")
+		customer.tax_id = "ABC12345"
+		customer.save()
+  
+		def is_field_hidden(doctype, fieldname):
+			meta = frappe.get_meta(doctype)
+			field = meta.get_field(fieldname)
+			
+			if field:
+				return field.hidden
+			return None
+		
+		self.assertEqual(is_field_hidden("Sales Order", "tax_id"),  1)
 
 	def create_and_submit_sales_order(self, qty=None, rate=None):
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
@@ -5903,8 +5957,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		if len(custeomer.credit_limits) == 0: 
 			custeomer.append("credit_limits", {"company": "_Test Company", "credit_limit": 1000})
 			custeomer.save()
-			frappe.db.commit()
-		item = make_test_item("_Test Item")
+			item = make_test_item("_Test Item")
 		
 		sales_order = make_sales_order(
 			customer="_Test Customer",
@@ -5918,6 +5971,33 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 	
 		self.assertRaises(frappe.ValidationError, sales_order.submit)
 	
+	def test_stock_reservation_from_so_to_dn_TC_SCK_143(self):
+		so = make_sales_order(item_code="_Test Item", qty=5, do_not_save=True)
+		so.reserve_stock = 1
+		so.save()
+		so.submit()
+		from erpnext.stock.doctype.stock_reservation_entry.stock_reservation_entry import create_stock_reservation_entries_for_so_items
+
+		item_details = [{'__checked': 1, 'sales_order_item': so.items[0].get("name"), 'item_code': '_Test Item', 
+                   'warehouse': 'Stores - _TIRC', 'qty_to_reserve': 5, 'idx': 1, 'name': 'row 1'}]
+  
+		create_stock_reservation_entries_for_so_items(
+			sales_order=so,
+			items_details=item_details,
+			from_voucher_type=None,
+			notify=True,
+		)
+  
+		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so.name}, "status"), "Reserved")
+		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so.name}, "reserved_qty"), 5)
+		dn = make_delivery_note(so.name)
+		dn.save()
+		dn.submit()
+		self.assertEqual(dn.status, "To Bill", "Delivery Note not created")
+		qty_change = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change, -5)
+		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so.name}, "status"), "Delivered")
+  
       
 def get_transport_details(customer):
 	# create a driver
@@ -5962,6 +6042,7 @@ def create_registered_bank_account():
 	if not frappe.db.exists('Account', {'name': '_Test Registered Bank Account - _TIRC'}):
 		acc_doc = frappe.new_doc("Account")
 		acc_data = {
+			"account_name": "_Test Registered Bank Account",
 			"company": "_Test Indian Registered Company",
 			"parent_account":"Bank Accounts - _TIRC"
 		}

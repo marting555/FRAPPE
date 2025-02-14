@@ -1300,6 +1300,8 @@ def make_subcontracted_items():
 		},
 		"Subcontracted Item SA5": {},
 		"Subcontracted Item SA6": {},
+  		"Subcontracted Item SA7": {},
+		"Subcontracted Item SA8": {},
 		"Subcontracted Item SA9": {"stock_uom": "Litre"},
 	}
 
