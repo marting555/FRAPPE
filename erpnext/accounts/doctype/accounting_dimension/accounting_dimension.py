@@ -103,6 +103,7 @@ class AccountingDimension(Document):
 
 	def on_update(self):
 		frappe.flags.accounting_dimensions = None
+		frappe.flags.accounting_dimensions_details = None
 
 
 def make_dimension_in_accounting_doctypes(doc, doclist=None):
