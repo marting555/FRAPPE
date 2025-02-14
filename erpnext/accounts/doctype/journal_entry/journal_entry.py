@@ -127,6 +127,7 @@ class JournalEntry(AccountsController):
 		self.set_amounts_in_company_currency()
 		self.validate_debit_credit_amount()
 		self.set_total_debit_credit()
+		self.validate_company_in_accounting_dimension()
 
 		if not frappe.flags.is_reverse_depr_entry:
 			self.validate_against_jv()
