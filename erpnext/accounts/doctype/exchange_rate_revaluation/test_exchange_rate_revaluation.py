@@ -735,7 +735,6 @@ def gain_loss_account(company:str):
 		doc.db_set("exchange_gain_loss_account", "Exchange Gain/Loss - _TC")
 	if not doc.unrealized_exchange_gain_loss_account or doc.unrealized_exchange_gain_loss_account != "_Test Unrealized Profit - _TC":
 		doc.db_set("unrealized_exchange_gain_loss_account", "_Test Unrealized Profit - _TC")
-	frappe.db.commit()
  
  
 def create_account(**args):
@@ -765,7 +764,6 @@ def create_account(**args):
 			if args.get('company'):
 				doc.company = args.get('company')
 			doc.insert(ignore_mandatory=True)
-			frappe.db.commit()
 		except Exception as e:
 			frappe.log_error(f"Account Creation Failed: {account_name}", str(e))
 	
@@ -848,7 +846,6 @@ def create_records_for_err():
 			},
 		)
 		supplier.save()
-	frappe.db.commit()
  
 def create_warehouse(**args):
 	warehouse_name = args.get('warehouse_name')
@@ -862,8 +859,6 @@ def create_warehouse(**args):
 				"company": company,
 			}
 		).insert(ignore_mandatory=True)
-		frappe.db.commit()
-
 
   
 def create_cost_center(**args):
@@ -879,4 +874,3 @@ def create_cost_center(**args):
 			cc.is_group = args.is_group or 0
 			cc.parent_cost_center = args.parent_cost_center or "_Test Company - _TC"
 			cc.insert()
-			frappe.db.commit()	
