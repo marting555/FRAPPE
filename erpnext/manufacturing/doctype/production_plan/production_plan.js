@@ -592,7 +592,7 @@ frappe.tour["Production Plan"] = [
 		fieldname: "get_items_from",
 		title: "Get Items From",
 		description: __(
-			"Select whether to get items from a Sales Order or a Material Request. For now select <b>Sales Order</b>.\n A Production Plan can also be created manually where you can select the Items to manufacture."
+			"Select whether to get items from a Sales Order or a Material Request or Both. For now select <b>Sales Order</b>.\n A Production Plan can also be created manually where you can select the Items to manufacture."
 		),
 	},
 	{

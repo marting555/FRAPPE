@@ -71,7 +71,7 @@ class ProductionPlan(Document):
 		for_warehouse: DF.Link | None
 		from_date: DF.Date | None
 		from_delivery_date: DF.Date | None
-		get_items_from: DF.Literal["", "Sales Order", "Material Request"]
+		get_items_from: DF.Literal["", "Sales Order", "Material Request", "Both"]
 		ignore_existing_ordered_qty: DF.Check
 		include_non_stock_items: DF.Check
 		include_safety_stock: DF.Check
@@ -289,17 +289,17 @@ class ProductionPlan(Document):
 				)
 
 			self.set("po_items", [])
-			self.add_items(items)
+			self.add_items(items, get_items_from="Sales Order")
 		else:
 			self.get_items()
 
 	@frappe.whitelist()
 	def get_items(self):
 		self.set("po_items", [])
-		if self.get_items_from == "Sales Order":
+		if self.get_items_from in ["Sales Order", "Both"]:
 			self.get_so_items()
 
-		elif self.get_items_from == "Material Request":
+		elif self.get_items_from in ["Material Request", "Both"]:
 			self.get_mr_items()
 
 	def get_so_mr_list(self, field, table):
@@ -403,7 +403,7 @@ class ProductionPlan(Document):
 
 		packed_items = packed_items_query.run(as_dict=True)
 
-		self.add_items(items + packed_items)
+		self.add_items(items + packed_items, get_items_from="Sales Order")
 		self.calculate_total_planned_qty()
 
 	def get_mr_items(self):
@@ -448,11 +448,14 @@ class ProductionPlan(Document):
 
 		items = items_query.run(as_dict=True)
 
-		self.add_items(items)
+		self.add_items(items, get_items_from="Material Request")
 		self.calculate_total_planned_qty()
 
-	def add_items(self, items):
+	def add_items(self, items, get_items_from=None):
 		refs = {}
+		if not get_items_from:
+			get_items_from = self.get_items_from
+
 		for data in items:
 			if not data.pending_qty:
 				continue
@@ -500,12 +503,12 @@ class ProductionPlan(Document):
 			)
 			pi._set_defaults()
 
-			if self.get_items_from == "Sales Order":
+			if get_items_from == "Sales Order":
 				pi.sales_order = data.parent
 				pi.sales_order_item = data.name
 				pi.description = data.description
 
-			elif self.get_items_from == "Material Request":
+			elif get_items_from == "Material Request":
 				pi.material_request = data.parent
 				pi.material_request_item = data.name
 				pi.description = data.description
@@ -692,7 +695,7 @@ class ProductionPlan(Document):
 			if not item_details["project"] and d.sales_order:
 				item_details["project"] = frappe.get_cached_value("Sales Order", d.sales_order, "project")
 
-			if self.get_items_from == "Material Request":
+			if d.material_request:
 				item_details.update({"qty": d.planned_qty})
 				item_dict[(d.item_code, d.material_request_item, d.warehouse)] = item_details
 			else:

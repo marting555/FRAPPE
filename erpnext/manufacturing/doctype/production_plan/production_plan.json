@@ -86,7 +86,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Get Items From",
-   "options": "\nSales Order\nMaterial Request"
+   "options": "\nSales Order\nMaterial Request\nBoth"
   },
   {
    "fieldname": "column_break1",
@@ -155,7 +155,7 @@
   {
    "collapsible": 1,
    "collapsible_depends_on": "eval: doc.__islocal",
-   "depends_on": "eval: doc.get_items_from == \"Sales Order\"",
+   "depends_on": "eval: [\"Sales Order\", \"Both\"].includes(doc.get_items_from)",
    "fieldname": "sales_orders_detail",
    "fieldtype": "Section Break",
    "label": "Sales Orders"
@@ -175,7 +175,7 @@
   {
    "collapsible": 1,
    "collapsible_depends_on": "eval: doc.__islocal",
-   "depends_on": "eval: doc.get_items_from == \"Material Request\"",
+   "depends_on": "eval: [\"Material Request\", \"Both\"].includes(doc.get_items_from)",
    "fieldname": "material_request_detail",
    "fieldtype": "Section Break",
    "label": "Material Request Detail"
@@ -440,7 +440,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-10 17:47:52.207209",
+ "modified": "2025-02-14 12:07:16.079109",
  "modified_by": "Administrator",
  "module": "Manufacturing",
  "name": "Production Plan",
