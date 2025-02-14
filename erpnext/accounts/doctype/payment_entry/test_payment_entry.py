@@ -2142,7 +2142,7 @@ def create_supplier(**args):
 		doc = frappe.get_doc("Supplier", args.supplier_name)
 		if doc.name == "_Test Supplier USD" and not frappe.db.exists("Party Account", {"parent": doc.name, "account": "_Test Payable USD - _TC"}):
 			doc.append("accounts", {"company": args.company, "account": "_Test Payable USD - _TC"})
-			frappe.db.commit()
+			
 		return doc
 	doc = frappe.get_doc(
 		{
@@ -2163,7 +2163,7 @@ def create_supplier(**args):
   
 
 	doc.insert(ignore_mandatory=True)
-	frappe.db.commit()
+	
 	return doc
 
 def create_account():
@@ -2205,7 +2205,7 @@ def create_account():
 				doc.parent_account = account["parent"]
 			
 			doc.insert(ignore_mandatory=True)
-			frappe.db.commit()
+			
 
 		except Exception as e:
 			frappe.log_error(f"Failed to insert {account['name']}", str(e))
@@ -2233,7 +2233,7 @@ def create_records(supplier):
 		default_currency="USD" if supplier == "_Test Supplier USD" else "INR",
 		)
 
-	frappe.db.commit()
+	
 
 
 
@@ -2248,7 +2248,7 @@ def make_test_item(item_name=None):
 					"hsn_code": '888890',
 					"description": 'test'
 				}).insert()
-				frappe.db.commit()
+				
 			
 			item= make_item(
 				item_name or "Test Item with Tax",
@@ -2280,7 +2280,7 @@ def make_test_item(item_name=None):
 			if not item.gst_hsn_code:
 				item.gst_hsn_code="888890"
 				item.save()
-			frappe.db.commit()
+			
 			return item
         
 def create_purchase_invoice(**args):
@@ -2324,4 +2324,4 @@ def create_company():
 			"company_email": "test@example.com",
 			"abbr":"_TC"
 		}).insert()
-		frappe.db.commit()
+		

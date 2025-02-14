@@ -4301,7 +4301,7 @@ class TestSalesInvoice(FrappeTestCase):
 			)
 			item.save()
 		
-		frappe.db.commit()
+		
 
 		si = create_sales_invoice(
 			customer="_Test Customer USD",
@@ -4398,7 +4398,7 @@ class TestSalesInvoice(FrappeTestCase):
 			)
 			item.save()
 		
-		frappe.db.commit()
+		
 
 		customer =frappe.get_doc("Customer", "_Test Customer USD")
 
@@ -4515,7 +4515,7 @@ class TestSalesInvoice(FrappeTestCase):
 			)
 			item.save()
 		
-		frappe.db.commit()
+		
 
 		customer =frappe.get_doc("Customer", "_Test Customer")
 
@@ -4608,7 +4608,7 @@ class TestSalesInvoice(FrappeTestCase):
 			)
 			item.save()
 		
-		frappe.db.commit()
+		
 
 		customer =frappe.get_doc("Customer", "_Test Customer")
 
@@ -5126,7 +5126,7 @@ class TestSalesInvoice(FrappeTestCase):
 			)
 			item.save()
 		
-		frappe.db.commit()
+		
 
 		customer = frappe.get_doc("Customer", "_Test Customer")
 		sales_invoice = create_sales_invoice(
@@ -5194,7 +5194,7 @@ class TestSalesInvoice(FrappeTestCase):
 			item.enable_deferred_expense=1
 			item.no_of_months_exp=12
 			item.save()	
-			frappe.db.commit()
+			
 		customer = frappe.get_doc("Customer", "_Test Customer")
 		sales_invoice = create_sales_invoice(
 			item=items_list[0],
@@ -5387,7 +5387,7 @@ class TestSalesInvoice(FrappeTestCase):
 					"company": "_Test Company",
 					}]
 				}).insert()
-			frappe.db.commit()
+			
 		elif internal_customer:
 			customer=frappe.get_doc("Customer",internal_customer)
 		else:
@@ -5423,7 +5423,7 @@ class TestSalesInvoice(FrappeTestCase):
 			supplier.accounts.clear()
 			supplier.flags.ignore_mandatory = True
 			supplier.save()
-			frappe.db.commit()
+			
 		create_customer(customer_name="_Test Common Party",company="_Test Company")
 		if not frappe.get_value("Party Link",{"primary_party":"_Test Common Party","secondary_party":"_Test Common Party","primary_role":"Supplier"}):
 			create_party_link(
@@ -6333,6 +6333,94 @@ class TestSalesInvoice(FrappeTestCase):
 			self.assertEqual(entry["debit"], expected_pi_entries.get(entry["account"], {}).get("debit", 0))
 			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
 
+	def test_sales_invoice_ignoring_pricing_rule_TC_S_156(self):
+		if not frappe.db.exists('Pricing Rule', {'title': 'Test Offer'}):
+			pricing_rule_doc = frappe.new_doc('Pricing Rule')
+			pricing_rule_data = {
+				"title": 'Test Offer',
+				"apply_on": 'Item Code',
+				"price_or_product_discount": 'Price',
+				"selling": 1,
+				"min_qty": 10,
+				"company": '_Test Company',
+				"margin_type": 'Percentage',
+				"discount_percentage": 10,
+				"for_price_list": 'Standard Selling',
+				"items":[ {"item_code": "_Test Item", "uom": '_Test UOM'}]
+			}
+			
+			pricing_rule_doc.update(pricing_rule_data)
+			pricing_rule_doc.save()
+
+		if not frappe.db.exists('Item Price', {'item_code': '_Test Item'}):
+			ip_doc = frappe.new_doc("Item Price")
+			item_price_data = {
+				"item_code": '_Test Item',
+				"uom": '_Test UOM',
+				"price_list": 'Standard Selling',
+				"selling": 1,
+				"price_list_rate": 1000
+			}
+			ip_doc.update(item_price_data)
+			ip_doc.save()
+   
+		si = create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				item_code="_Test Item",
+				qty=10,
+				rate=1000,
+				do_not_submit=True
+			)
+  
+		si.ignore_pricing_rule = 1
+		si.save()
+		si.submit()
+
+		self.assertEqual(si.status, "Unpaid")
+		self.assertEqual(si.grand_total, 10000)
+  
+	@change_settings("Selling Settings", {"allow_multiple_items": 1})
+	def test_sales_invoice_to_allow_item_multiple_times_TC_S_159(self):
+		si_items = [
+			{
+				"item_code": "_Test Item",
+				"qty": 1,
+				"rate": 200
+			},
+			{
+				"item_code": "_Test Item",
+				"qty": 1,
+				"rate": 200
+			},
+		]
+  
+		si = create_sales_invoice(
+				customer="_Test Customer",
+				company="_Test Company",
+				item_list=si_items,
+				do_not_submit=False
+			)
+		self.assertEqual(si.status, "Unpaid")
+  
+	@change_settings("Selling Settings", {"dont_reserve_sales_order_qty_on_sales_return": 1})
+	def test_sales_invoice_dont_reserve_sales_order_qty_on_sales_return_TC_S_158(self):
+		si = create_sales_invoice(qty= 1, rate=300, update_stock=1, warehouse="_Test Warehouse - _TC", do_not_submit=0)
+		self.assertEqual(si.status, "Unpaid")
+
+		qty_change = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': si.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change, -1)
+
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_sales_return
+
+		si_return = make_sales_return(si.name)
+		si_return.save().submit()
+		si_return.reload()
+
+		self.assertEqual(si_return.status, "Return")
+
+		qty_change = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': si_return.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change, 1)
   
 
 	def test_calculate_commission_for_sales_partner_TC_ACC_143(self):
@@ -6496,7 +6584,7 @@ class TestSalesInvoice(FrappeTestCase):
 			cumulative_threshold=100000,
 			consider_party_ledger_amount=1,
 		)
-		frappe.db.commit()
+		
 		customer = frappe.get_doc("Customer","_Test Customer")
 		if not customer.tax_withholding_category or customer.tax_withholding_category != "Test - TCS - 194C - Company":
 			customer.tax_withholding_category = "Test - TCS - 194C - Company"
@@ -6520,7 +6608,7 @@ class TestSalesInvoice(FrappeTestCase):
 			customer.load_from_db()
 			customer.tax_withholding_category = ""
 			customer.save()
-			frappe.db.commit()
+
 
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
@@ -6531,7 +6619,6 @@ def set_advance_flag(company, flag, default_account):
 			"default_advance_received_account": default_account,
 		},
 	)
-
 
 def check_gl_entries(doc, voucher_no, expected_gle, posting_date, voucher_type="Sales Invoice"):
 	gl = frappe.qb.DocType("GL Entry")
@@ -6604,30 +6691,35 @@ def create_sales_invoice(**args):
 			)
 		).name
 
-	si.append(
-		"items",
-		{
-			"item_code": args.item or args.item_code or "_Test Item",
-			"item_name": args.item_name or "_Test Item",
-			"description": args.description or "_Test Item",
-			"warehouse": args.warehouse or "_Test Warehouse - _TC",
-			"target_warehouse": args.target_warehouse,
-			"qty": args.qty or 1,
-			"uom": args.uom or "Nos",
-			"stock_uom": args.uom or "Nos",
-			"rate": args.rate if args.get("rate") is not None else 100,
-			"price_list_rate": args.price_list_rate if args.get("price_list_rate") is not None else 100,
-			"income_account": args.income_account or "Sales - _TC",
-			"expense_account": args.expense_account or "Cost of Goods Sold - _TC",
-			"discount_account": args.discount_account or None,
-			"discount_amount": args.discount_amount or 0,
-			"asset": args.asset or None,
-			"cost_center": args.cost_center or "_Test Cost Center - _TC",
-			"conversion_factor": args.get("conversion_factor", 1),
-			"incoming_rate": args.incoming_rate or 0,
-			"serial_and_batch_bundle": bundle_id,
-		},
-	)
+	if args.item_list:
+		for item in args.item_list:
+			si.append("items", item)
+
+	else:
+		si.append(
+			"items",
+			{
+				"item_code": args.item or args.item_code or "_Test Item",
+				"item_name": args.item_name or "_Test Item",
+				"description": args.description or "_Test Item",
+				"warehouse": args.warehouse or "_Test Warehouse - _TC",
+				"target_warehouse": args.target_warehouse,
+				"qty": args.qty or 1,
+				"uom": args.uom or "Nos",
+				"stock_uom": args.uom or "Nos",
+				"rate": args.rate if args.get("rate") is not None else 100,
+				"price_list_rate": args.price_list_rate if args.get("price_list_rate") is not None else 100,
+				"income_account": args.income_account or "Sales - _TC",
+				"expense_account": args.expense_account or "Cost of Goods Sold - _TC",
+				"discount_account": args.discount_account or None,
+				"discount_amount": args.discount_amount or 0,
+				"asset": args.asset or None,
+				"cost_center": args.cost_center or "_Test Cost Center - _TC",
+				"conversion_factor": args.get("conversion_factor", 1),
+				"incoming_rate": args.incoming_rate or 0,
+				"serial_and_batch_bundle": bundle_id,
+			},
+		)
 
 	if not args.do_not_save:
 		si.insert()
@@ -6839,7 +6931,7 @@ def create_customer(**args):
 					"account": args.get("account")
 				})
 			customer.save()
-			frappe.db.commit()
+			
    
 def create_accounts(**args):
 	 if not frappe.db.exists("Account", f"{args.get('account_name')} - _TC"):  # Ensure proper check with "- _TC"
@@ -6853,7 +6945,7 @@ def create_accounts(**args):
 					"root_type": args.get('root_type') or "Liability",
 					"account_currency": args.get('account_currency') or "INR",
 				}).insert()
-				frappe.db.commit()
+				
 			except Exception as e:
 				frappe.log_error(f"Failed to insert {args.get('account_name')}", str(e))
 	
@@ -6914,7 +7006,7 @@ def create_address(**args):
 				"link_name":args.get('docname')
 			})
 		address.save()
-		frappe.db.commit()
+		
 		return address
 
 def get_months(doc):
@@ -7087,7 +7179,7 @@ def create_company_and_supplier():
 				]
 			}
 		).insert()
-	frappe.db.commit()
+	
 
 	return {
 		"parent_company": parent_company,
@@ -7116,4 +7208,3 @@ def get_active_fiscal_year():
 		}).insert(ignore_permissions=True).name
 
 	return get_fiscal_year
-
