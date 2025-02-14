@@ -2249,7 +2249,6 @@ def make_test_item(item_name=None):
 					"hsn_code": '888890',
 					"description": 'test'
 				}).insert(ignore_permissions=True)
-				frappe.db.commit()
 			
 			item= make_item(
 				item_name or "Test Item with Tax",
@@ -2276,12 +2275,14 @@ def make_test_item(item_name=None):
 					"doctype": 'GST HSN Code',
 					"hsn_code": '888890',
 					"description": 'test'
-				}).insert()
+				}).insert(ignore_permissions=True)
 			item=frappe.get_doc("Item", item_name or "Test Item with Tax")
 			if not item.gst_hsn_code:
 				item.gst_hsn_code="888890"
 				item.save()
-			frappe.db.commit()
+			return item
+		else:
+			item=frappe.get_doc("Item", item_name)
 			return item
         
 def create_purchase_invoice(**args):
