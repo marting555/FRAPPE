@@ -3308,6 +3308,28 @@ class TestStockEntry(FrappeTestCase):
 			elif sle['item_code'] == item_2.item_code:
 				self.assertEqual(sle['actual_qty'], 50)
 	
+	def test_stock_manufacture_with_batch_TC_SCK_139(self):
+		company = "_Test Company"
+		if not frappe.db.exists("Company", company):
+			company_doc = frappe.new_doc("Company")
+			company_doc.company_doc_name = company
+			company_doc.country="India",
+			company_doc.default_currency= "INR",
+			company_doc.save()
+		else:
+			company_doc = frappe.get_doc("Company", company) 
+		item = make_item("ADI-SH-W07", {'has_batch_no':1, "create_new_batch":1, "valuation_rate":100})
+		se = make_stock_entry(item_code=item.name,purpose="Manufacture", company=company_doc.name,target=create_warehouse("Test Warehouse"), qty=150, basic_rate=100,do_not_save=True)
+		se.items[0].is_finished_item = 1
+		se.save()
+		se.submit()
+		self.assertEqual(se.purpose, "Manufacture")
+		self.assertEqual(se.items[0].is_finished_item, 1)
+		sle_entries = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": se.name}, fields=['item_code', 'actual_qty'])
+		for sle in sle_entries:
+			if sle['item_code'] == item.item_code:
+				self.assertEqual(sle['actual_qty'], 150)
+	
 def create_bom(bom_item, rm_items, company=None, qty=None, properties=None):
 		bom = frappe.new_doc("BOM")
 		bom.update(
