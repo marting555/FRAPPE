@@ -3,7 +3,7 @@
 
 
 import frappe
-from frappe.tests.utils import FrappeTestCase, change_settings
+from frappe.tests.utils import FrappeTestCase, change_settings, if_app_installed
 from frappe.utils import add_days, cint, flt, getdate, nowdate, today, get_year_start, get_year_ending
 from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 import erpnext
@@ -3481,38 +3481,36 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi_total = sum(entry["debit"] for entry in pi_gl_entries)
 		self.assertEqual(pi_total, 10080) 
 
+	@if_app_installed("india_compliance")
 	def test_pi_standalone_pi_with_deferred_expense_TC_B_095(self):
-		from frappe.tests.utils import if_app_installed
+		gst_hsn_code = "11112222"
+	
+		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
+			gst_hsn_doc = frappe.new_doc("GST HSN Code")
+			gst_hsn_doc.hsn_code = gst_hsn_code
+			gst_hsn_doc.insert()
 
-		if if_app_installed("India Compliance"):
-			gst_hsn_code = "11112222"
-		
-			if not frappe.db.exists("GST HSN Code", gst_hsn_code):
-				gst_hsn_doc = frappe.new_doc("GST HSN Code")
-				gst_hsn_doc.hsn_code = gst_hsn_code
-				gst_hsn_doc.insert()
-
-			if not frappe.db.exists("Item", "_Test Item"):
-				item = frappe.new_doc("Item")
-				item.item_code = "_Test Item"
-				item.gst_hsn_code = gst_hsn_code
-				item.item_group = "All Item Groups"
-				item.enable_deferred_expense = 1
-				item.no_of_months_exp = 12
-				item.insert()
-			else:
-				item = frappe.get_doc("Item", "_Test Item")
-				item.gst_hsn_code = gst_hsn_code
-				item.enable_deferred_expense = 1
-				item.no_of_months_exp = 12
-				item.save()
-			pi = make_purchase_invoice(item_code=item.item_code, qty=1, rate=100, do_not_submit=True)
-			if pi.items:
-				setattr(pi.items[0], 'enable_deferred_expense', 1)
-				setattr(pi.items[0], 'deferred_expense_account', 'Deferred Expense - _TC')
-				setattr(pi.items[0], 'service_start_date', today())
-				setattr(pi.items[0], 'service_end_date', add_days(today(), 1))
-			pi.submit()
+		if not frappe.db.exists("Item", "_Test Item"):
+			item = frappe.new_doc("Item")
+			item.item_code = "_Test Item"
+			item.gst_hsn_code = gst_hsn_code
+			item.item_group = "All Item Groups"
+			item.enable_deferred_expense = 1
+			item.no_of_months_exp = 12
+			item.insert()
+		else:
+			item = frappe.get_doc("Item", "_Test Item")
+			item.gst_hsn_code = gst_hsn_code
+			item.enable_deferred_expense = 1
+			item.no_of_months_exp = 12
+			item.save()
+		pi = make_purchase_invoice(item_code=item.item_code, qty=1, rate=100, do_not_submit=True)
+		if pi.items:
+			setattr(pi.items[0], 'enable_deferred_expense', 1)
+			setattr(pi.items[0], 'deferred_expense_account', 'Deferred Expense - _TC')
+			setattr(pi.items[0], 'service_start_date', today())
+			setattr(pi.items[0], 'service_end_date', add_days(today(), 1))
+		pi.submit()
 
 	def test_pi_with_uploader_TC_B_092(self):
 		# Test Data
