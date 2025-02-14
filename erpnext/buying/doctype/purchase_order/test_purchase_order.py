@@ -6,7 +6,7 @@ import json
 import random
 import frappe
 # import pandas as pd
-from frappe.tests.utils import FrappeTestCase, change_settings
+from frappe.tests.utils import FrappeTestCase, change_settings, if_app_installed
 from frappe.utils import add_days, flt, getdate, nowdate, add_years, today, get_year_start, get_year_ending
 from frappe.utils.data import today
 from datetime import date
@@ -6888,6 +6888,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			self.assertEqual(entry["debit"], expected_pi_entries.get(entry["account"], {}).get("debit", 0))
 			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
 
+	@if_app_installed("india_compliance")
 	def test_po_with_create_tax_template_5_pr_pi_3_TC_B_146(self):
 		supplier = create_supplier(supplier_name="_Test Supplier PO")
 		company = "_Test Company"
@@ -6975,6 +6976,8 @@ class TestPurchaseOrder(FrappeTestCase):
 		doc_pi_2= make_purchase_invoice(doc_pr_2.name)
 		doc_pi_2.save()
 		doc_pi_2.submit()
+		self.assertEqual(doc_pi_2.items[0].qty, 1)
+		self.assertEqual(doc_pi_2.items[0].rate, 100)
 
 	def test_po_with_environmental_cess_pr_pi_TC_B_138(self):
 		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
