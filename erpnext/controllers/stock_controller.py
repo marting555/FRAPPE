@@ -660,22 +660,26 @@ class StockController(AccountsController):
 		stock_ledger = {}
 
 		table = frappe.qb.DocType("Stock Ledger Entry")
+		fields = [
+			table.name,
+			table.warehouse,
+			table.stock_value_difference,
+			table.valuation_rate,
+			table.voucher_detail_no,
+			table.item_code,
+			table.posting_date,
+			table.posting_time,
+			table.actual_qty,
+			table.qty_after_transaction,
+		]
+
+		# Conditionally add the project field if the Projects module is installed
+		if "projects" in frappe.get_installed_apps():
+			fields.insert(fields.index(table.posting_date), table.project)
 
 		stock_ledger_entries = (
 			frappe.qb.from_(table)
-			.select(
-				table.name,
-				table.warehouse,
-				table.stock_value_difference,
-				table.valuation_rate,
-				table.voucher_detail_no,
-				table.item_code,
-				table.posting_date,
-				table.posting_time,
-				table.actual_qty,
-				table.qty_after_transaction,
-				table.project,
-			)
+			.select(*fields)
 			.where(
 				(table.voucher_type == self.doctype)
 				& (table.voucher_no == self.name)
