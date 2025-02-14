@@ -263,7 +263,7 @@ def get_checks_for_pl_and_bs_accounts():
 		frappe.flags.accounting_dimensions_details = frappe.db.sql(
 			"""SELECT p.label, p.disabled, p.fieldname, c.default_dimension, c.company, c.mandatory_for_pl, c.mandatory_for_bs
 			FROM `tabAccounting Dimension`p ,`tabAccounting Dimension Detail` c
-			WHERE p.name = c.parent""",
+			WHERE p.name = c.parent AND p.disabled = 0""",
 			as_dict=1,
 		)
 
