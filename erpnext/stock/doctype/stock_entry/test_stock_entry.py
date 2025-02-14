@@ -6,6 +6,7 @@ from frappe.permissions import add_user_permission, remove_user_permission
 from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, cstr, flt, get_time, getdate, nowtime, today
 from frappe.desk.query_report import run
+from erpnext.stock.doctype.material_request.test_material_request import create_company
 
 from erpnext.accounts.doctype.account.test_account import get_inventory_account
 from erpnext.stock.doctype.item.test_item import (
@@ -3480,7 +3481,22 @@ class TestStockEntry(FrappeTestCase):
 				self.assertEqual(sle['actual_qty'], 200)
 			elif sle['item_code'] == item_2.item_code:
 				self.assertEqual(sle['actual_qty'], 50)
-	
+
+	def test_create_two_stock_entries_TC_SCK_230(self):
+		company = create_company()
+		item_1 = make_item("Book")
+		warehouse_1 = create_warehouse("_Test warehouse PO", company=company)
+		se_1 = make_stock_entry(item_code=item_1.name, target=warehouse_1, qty=10, purpose="Material Receipt", company=company)
+		self.assertEqual(se_1.items[0].item_code, item_1.name)
+		self.assertEqual(se_1.items[0].qty, 10)
+		self.check_stock_ledger_entries("Stock Entry", se_1.name, [[item_1.name, warehouse_1, 10]])
+		item_2 = make_item("_Test Item")
+		warehouse_2 = create_warehouse("Stores", company=company)
+		se_2 = make_stock_entry(item_code=item_2.name, target=warehouse_2, qty=20, purpose="Material Receipt", company=company)
+		self.assertEqual(se_2.items[0].item_code, item_2.name)
+		self.assertEqual(se_2.items[0].qty, 20)
+		self.check_stock_ledger_entries("Stock Entry", se_2.name, [[item_2.name, warehouse_2, 20]])
+
 	def test_stock_manufacture_with_batch_TC_SCK_139(self):
 		company = "_Test Company"
 		if not frappe.db.exists("Company", company):
