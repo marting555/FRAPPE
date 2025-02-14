@@ -69,6 +69,7 @@ class SalesOrderItem(Document):
 		price_list_rate: DF.Currency
 		pricing_rules: DF.SmallText | None
 		produced_qty: DF.Float
+		product_bundle_name: DF.Link | None
 		production_plan_qty: DF.Float
 		project: DF.Link | None
 		projected_qty: DF.Float
