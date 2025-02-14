@@ -951,6 +951,27 @@ class TestItem(FrappeTestCase):
 		self.assertEqual(item.is_stock_item, 0)
 		self.assertEqual(item.shelf_life_in_days, 30)
 
+	def test_create_item_with_opening_stock_TC_SCK_229(self):
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		from frappe.utils import random_string
+		item_fields1 = {
+			"item_name": f"_Test-{random_string(5)}",
+			"is_stock_item": 1,
+			"item_group":"Raw Material",
+			"opening_stock":100,
+			"valuation_rate": 200,
+			"standard_rate":300,
+			"item_defaults": [{'company': "_Test Company", 'default_warehouse': create_warehouse("Stores-test", properties=None, company="_Test Company")}],
+		}
+		item = make_item(item_fields1["item_name"], item_fields1)
+		self.assertEqual(item.standard_rate, 300)		
+		self.assertTrue(
+			frappe.db.get_value("Stock Entry Detail", {"item_code": item.name}, "parent")
+		)
+		se = frappe.db.get_value("Stock Entry Detail", {"item_code": item.name}, "parent")
+		self.assertEqual(frappe.db.get_value("Stock Ledger Entry", {"item_code": item.name, "voucher_no": se}, "actual_qty"), 100)
+		self.assertEqual(frappe.db.get_value("Item Price", {"item_code": item.name}, "price_list_rate"), 300)
+
 	def test_item_cr_TC_SCK_153(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 		if not frappe.db.exists("Company", "_Test Company"):
