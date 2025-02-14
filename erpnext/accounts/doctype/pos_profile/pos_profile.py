@@ -75,7 +75,7 @@ class POSProfile(Document):
 		self.validate_accounting_dimensions()
 
 	def validate_accounting_dimensions(self):
-		acc_dims = get_enabled_accounting_dimensions_with_pl_bs_checks()
+		acc_dims = get_checks_for_pl_and_bs_accounts()
 		for acc_dim in acc_dims:
 			if not self.get(acc_dim.fieldname) and (acc_dim.mandatory_for_pl or acc_dim.mandatory_for_bs):
 				frappe.throw(
@@ -219,11 +219,6 @@ def get_child_nodes(group_type, root):
 			lft >= {lft} and rgt <= {rgt} order by lft""",
 		as_dict=1,
 	)
-
-
-def get_enabled_accounting_dimensions_with_pl_bs_checks():
-	accounting_dimensions = [d for d in get_checks_for_pl_and_bs_accounts() if not d.disabled]
-	return accounting_dimensions
 
 
 @frappe.whitelist()

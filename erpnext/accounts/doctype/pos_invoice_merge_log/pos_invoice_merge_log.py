@@ -12,8 +12,8 @@ from frappe.utils import cint, flt, get_time, getdate, nowdate, nowtime
 from frappe.utils.background_jobs import enqueue, is_job_enqueued
 from frappe.utils.scheduler import is_scheduler_inactive
 
-from erpnext.accounts.doctype.pos_profile.pos_profile import (
-	get_enabled_accounting_dimensions_with_pl_bs_checks,
+from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
+	get_checks_for_pl_and_bs_accounts,
 )
 from erpnext.controllers.taxes_and_totals import ItemWiseTaxDetail
 
@@ -295,7 +295,7 @@ class POSInvoiceMergeLog(Document):
 		invoice.disable_rounded_total = cint(
 			frappe.db.get_value("POS Profile", invoice.pos_profile, "disable_rounded_total")
 		)
-		accounting_dimensions = get_enabled_accounting_dimensions_with_pl_bs_checks()
+		accounting_dimensions = get_checks_for_pl_and_bs_accounts()
 		accounting_dimensions_fields = [d.fieldname for d in accounting_dimensions]
 		dimension_values = frappe.db.get_value(
 			"POS Profile", {"name": invoice.pos_profile}, accounting_dimensions_fields, as_dict=1
