@@ -41,6 +41,11 @@ class AccountingDimension(Document):
 		self.set_fieldname_and_label()
 
 	def validate(self):
+		self.validate_doctype()
+		validate_column_name(self.fieldname)
+		self.validate_dimension_defaults()
+
+	def validate_doctype(self):
 		if self.document_type in (
 			*core_doctypes_list,
 			"Accounting Dimension",
@@ -61,9 +66,6 @@ class AccountingDimension(Document):
 
 		if not self.is_new():
 			self.validate_document_type_change()
-
-		validate_column_name(self.fieldname)
-		self.validate_dimension_defaults()
 
 	def validate_document_type_change(self):
 		doctype_before_save = frappe.db.get_value("Accounting Dimension", self.name, "document_type")
