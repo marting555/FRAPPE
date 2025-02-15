@@ -781,7 +781,9 @@ class BuyingController(SubcontractingController):
 							is_plural = "s" if len(created_assets) != 1 else ""
 							messages.append(
 								_("Asset{is_plural} {assets_link} created for {item_code}").format(
-									is_plural=is_plural, assets_link=assets_link, item_code=frappe.bold(d.item_code)
+									is_plural=is_plural,
+									assets_link=assets_link,
+									item_code=frappe.bold(d.item_code),
 								)
 							)
 					else:
