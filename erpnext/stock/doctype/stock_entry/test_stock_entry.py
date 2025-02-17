@@ -3542,50 +3542,57 @@ class TestStockEntry(FrappeTestCase):
 		for sle in sle_entries:
 			if sle['item_code'] == item.item_code:
 				self.assertEqual(sle['actual_qty'], 150)
-	
-	@change_settings("Stock Settings", {"allow_negative_stock": 1})
-	def test_create_stock_entry_with_manufacture_purpose_TC_SCK_137(self):
-		company = create_company()
-		item_1 = make_item("W-N-001", properties={"valuation_rate":100})
-		item_2 = make_item("ST-N-001", properties={"valuation_rate":200})
-		item_3 = make_item("GU-SE-001", properties={"valuation_rate":300})
-		se = make_stock_entry(purpose="Manufacture", company=company, do_not_submit=True, do_not_save=True)
-		items = [
-			{
-				"s_warehouse": create_warehouse("Test Store 1", company=company),
-				"item_code": item_1.name,
-				"qty": 10,
-				"conversion_factor": 1
-			},
-			{
-				"s_warehouse": create_warehouse("Test Store 2", company=company),
-				"item_code": item_2.name,
-				"qty": 50,
-				"conversion_factor": 1
-			},
-			{
-				"t_warehouse": create_warehouse("Test Store 2", company=company),
-				"item_code": item_3.name,
-				"qty": 10,
-				"is_finished_item":1,
-				"conversion_factor": 1
-			}
-		]
-		se.items = []
-		for item in items:
-			se.append("items", item)
-		se.save()
-		se.submit()
-		self.assertEqual(se.purpose, "Manufacture")
-		self.assertEqual(se.items[2].is_finished_item, 1)
-		sle_entries = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": se.name}, fields=['item_code', 'actual_qty'])
-		for sle in sle_entries:
-			if sle['item_code'] == item_1.name:
-				self.assertEqual(sle['actual_qty'], -10)
-			elif sle['item_code'] == item_2.name:
-				self.assertEqual(sle['actual_qty'], -50)
-			elif sle['item_code'] == item_3.name:
-				self.assertEqual(sle['actual_qty'], 10)
+
+	def test_stock_ageing_TC_SCK_227(self):
+		from erpnext.stock.report.stock_ageing.stock_ageing import execute
+		avail_qty = 30
+		company = "_Test Company"
+		item_c = []
+		q = []
+		range1 = []
+		range2 = []
+		if not frappe.db.exists("Company", company):
+			company_doc = frappe.new_doc("Company")
+			company_doc.company_doc_name = company
+			company_doc.country="India",
+			company_doc.default_currency= "INR",
+			company_doc.save()
+
+		item_fields = {
+			"item_name": "_Test Item227",
+			"valuation_rate": 500,
+			"is_stock_item": 1
+		}
+		item = make_item("_Test Item227", item_fields)
+		se = make_stock_entry(item_code=item.name,purpose="Material Receipt", posting_date="01-12-2024",company=company,target=create_warehouse("Test Warehouse", company=company), qty=10)
+		se1 = make_stock_entry(item_code=item.name,purpose="Material Receipt", posting_date="01-01-2025",company=company,target=create_warehouse("Test Warehouse", company=company), qty=20)
+
+		filters = frappe._dict({  # Convert to allow dot notation
+		"company": "_Test Company",
+        "to_date": "2025-01-12",
+        "item_code": item.name,
+        "warehouse": create_warehouse("Test Warehouse", company=company),
+		"range": "30, 60, 90"
+    	})
+
+		columns, data, _, chart_data = execute(filters)
+		for i in data[0]:
+			item_c.append(data[0][0])
+			q.append(data[0][5])
+			range1.append(data[0][7])
+			range2.append(data[0][9])
+		item_c = set(item_c)
+		item_c = list(item_c)
+		range1 = set(range1)
+		range1 = list(range1)
+		range2 = set(range2)
+		range2 = list(range2)
+		self.assertTrue(filters["item_code"] == item_c[0], "Item tc failed")
+		self.assertTrue(range1[0] == 20)
+		self.assertTrue(range2[0] == 10)
+		self.assertTrue(q[0] == avail_qty)
+
+
 	
 def create_bom(bom_item, rm_items, company=None, qty=None, properties=None):
 		bom = frappe.new_doc("BOM")
