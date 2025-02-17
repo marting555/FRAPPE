@@ -29,11 +29,10 @@ class ProcessStatementOfAccounts(Document):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from erpnext.accounts.doctype.process_statement_of_accounts_cc.process_statement_of_accounts_cc import (
-			ProcessStatementOfAccountsCC,
-		)
+		from erpnext.accounts.doctype.process_statement_of_accounts_cc.process_statement_of_accounts_cc import ProcessStatementOfAccountsCC
 		from erpnext.accounts.doctype.process_statement_of_accounts_customer.process_statement_of_accounts_customer import ProcessStatementOfAccountsCustomer
 		from erpnext.accounts.doctype.psoa_cost_center.psoa_cost_center import PSOACostCenter
+		from frappe.types import DF
 
 		account: DF.Link | None
 		ageing_based_on: DF.Literal["Due Date", "Posting Date"]
@@ -44,7 +43,7 @@ class ProcessStatementOfAccounts(Document):
 		company: DF.Link
 		cost_center: DF.TableMultiSelect[PSOACostCenter]
 		currency: DF.Link | None
-		customer_collection: DF.Literal["", "Customer Group", "Territory", "Sales Partner", "Sales Person"]
+		customer_collection: DF.Literal["", "Customer Group", "Territory"]
 		customers: DF.Table[ProcessStatementOfAccountsCustomer]
 		enable_auto_email: DF.Check
 		filter_duration: DF.Int
@@ -63,7 +62,6 @@ class ProcessStatementOfAccounts(Document):
 		posting_date: DF.Date | None
 		primary_mandatory: DF.Check
 		report: DF.Literal["General Ledger", "Accounts Receivable"]
-		sales_person: DF.Link | None
 		sender: DF.Link | None
 		show_net_values_in_party_account: DF.Check
 		show_remarks: DF.Check
