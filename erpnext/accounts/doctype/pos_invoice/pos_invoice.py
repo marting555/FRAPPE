@@ -492,7 +492,7 @@ class POSInvoice(SalesInvoice):
 	def validate_full_payment(self):
 		invoice_total = flt(self.rounded_total) or flt(self.grand_total)
 
-		if self.docstatus != 0:
+		if self.docstatus == 1:
 			if self.is_return and self.paid_amount != invoice_total:
 				frappe.throw(
 					msg=_("Partial Payment in POS Invoice is not allowed."), exc=PartialPaymentValidationError
