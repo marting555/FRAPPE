@@ -358,13 +358,21 @@ class AssetDepreciationSchedule(Document):
 				and not self.opening_accumulated_depreciation
 				and not self.flags.wdv_it_act_applied
 			):
-				from_date = asset_doc.available_for_use_date
+				if cint(frappe.db.get_single_value("Accounts Settings", "calculate_depr_using_first_day_of_month")) and not has_wdv_or_dd_non_yearly_pro_rata:
+					from_date = get_first_day(asset_doc.available_for_use_date)
+				else:
+					from_date = asset_doc.available_for_use_date
+				
+				if cint(frappe.db.get_single_value("Accounts Settings", "calculate_depr_using_last_day_of_month")):
+					to_date = get_last_day(row.depreciation_start_date)
+				else:
+					to_date = row.depreciation_start_date		
 				# needed to calc depr amount for available_for_use_date too
 				depreciation_amount, days, months = _get_pro_rata_amt(
 					row,
 					depreciation_amount,
 					from_date,
-					row.depreciation_start_date,
+					to_date,
 					has_wdv_or_dd_non_yearly_pro_rata,
 				)
 				if flt(depreciation_amount, asset_doc.precision("gross_purchase_amount")) <= 0:

@@ -61,6 +61,8 @@
   "assets_tab",
   "asset_settings_section",
   "calculate_depr_using_total_days",
+  "calculate_depr_using_first_day_of_month",
+  "calculate_depr_using_last_day_of_month",
   "column_break_gjcc",
   "book_asset_depreciation_entry_automatically",
   "closing_settings_tab",
@@ -532,6 +534,22 @@
    "fieldtype": "Select",
    "label": "Posting Date Inheritance for Exchange Gain / Loss",
    "options": "Invoice\nPayment\nReconciliation Date"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:!doc.calculate_depr_using_total_days",
+   "description": "Only active if depreciation starts in the same month. Cannot be combined with pro rata calculation.",
+   "fieldname": "calculate_depr_using_first_day_of_month",
+   "fieldtype": "Check",
+   "label": "Calculate depreciation using the first day of the available-of-use month"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:!doc.calculate_depr_using_total_days",
+   "description": "Only active if depreciation starts in the same month. Overrides the selected depreciation start date and selects the end of the month for calculation. Depreciation will be booked on selected date.\nCannot be combined with pro rata calculation.",
+   "fieldname": "calculate_depr_using_last_day_of_month",
+   "fieldtype": "Check",
+   "label": "Calculate depreciation using the last day of the start-of-depreciation month"
   }
  ],
  "icon": "icon-cog",
@@ -539,7 +557,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-01-23 13:15:44.077853",
+ "modified": "2025-02-17 14:24:11.417864",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Accounts Settings",
