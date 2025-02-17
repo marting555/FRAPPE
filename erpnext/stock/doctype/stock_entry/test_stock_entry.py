@@ -3584,7 +3584,6 @@ class TestStockEntry(FrappeTestCase):
     	})
 
 		columns, data = execute(filters)
-		print(data)
 		self.assertEqual(data[0]['territory'], "India")
 		self.assertEqual(data[0]['item'], item1.name)
 		filters1 = frappe._dict({  # Convert to allow dot notation
