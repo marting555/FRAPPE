@@ -3543,6 +3543,50 @@ class TestStockEntry(FrappeTestCase):
 			if sle['item_code'] == item.item_code:
 				self.assertEqual(sle['actual_qty'], 150)
 	
+	@change_settings("Stock Settings", {"allow_negative_stock": 1})
+	def test_create_stock_entry_with_manufacture_purpose_TC_SCK_137(self):
+		company = create_company()
+		item_1 = make_item("W-N-001", properties={"valuation_rate":100})
+		item_2 = make_item("ST-N-001", properties={"valuation_rate":200})
+		item_3 = make_item("GU-SE-001", properties={"valuation_rate":300})
+		se = make_stock_entry(purpose="Manufacture", company=company, do_not_submit=True, do_not_save=True)
+		items = [
+			{
+				"s_warehouse": create_warehouse("Test Store 1", company=company),
+				"item_code": item_1.name,
+				"qty": 10,
+				"conversion_factor": 1
+			},
+			{
+				"s_warehouse": create_warehouse("Test Store 2", company=company),
+				"item_code": item_2.name,
+				"qty": 50,
+				"conversion_factor": 1
+			},
+			{
+				"t_warehouse": create_warehouse("Test Store 2", company=company),
+				"item_code": item_3.name,
+				"qty": 10,
+				"is_finished_item":1,
+				"conversion_factor": 1
+			}
+		]
+		se.items = []
+		for item in items:
+			se.append("items", item)
+		se.save()
+		se.submit()
+		self.assertEqual(se.purpose, "Manufacture")
+		self.assertEqual(se.items[2].is_finished_item, 1)
+		sle_entries = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": se.name}, fields=['item_code', 'actual_qty'])
+		for sle in sle_entries:
+			if sle['item_code'] == item_1.name:
+				self.assertEqual(sle['actual_qty'], -10)
+			elif sle['item_code'] == item_2.name:
+				self.assertEqual(sle['actual_qty'], -50)
+			elif sle['item_code'] == item_3.name:
+				self.assertEqual(sle['actual_qty'], 10)
+	
 def create_bom(bom_item, rm_items, company=None, qty=None, properties=None):
 		bom = frappe.new_doc("BOM")
 		bom.update(
