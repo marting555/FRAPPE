@@ -449,12 +449,13 @@ class AccountsController(TransactionBase):
 			party, party_type = self.customer, "Customer"
 			billing_address, shipping_address = self.get("customer_address"), self.get("shipping_address")
 			self.validate_party_address(party, party_type, billing_address, shipping_address)
+			self.validate_party_contact(party, party_type)
+
 		elif self.get("supplier"):
 			party, party_type = self.supplier, "Supplier"
 			billing_address = self.get("supplier_address")
 			self.validate_party_address(party, party_type, billing_address)
-
-		self.validate_party_contact(party, party_type)
+			self.validate_party_contact(party, party_type)
 
 	def validate_party_address(self, party, party_type, billing_address, shipping_address=None):
 		if billing_address or shipping_address:
