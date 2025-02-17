@@ -272,6 +272,7 @@ class AccountsController(TransactionBase):
 		self.set_total_in_words()
 		self.set_default_letter_head()
 		self.validate_company_in_accounting_dimension()
+		self.validate_party_address_and_contact()
 
 	def set_default_letter_head(self):
 		if hasattr(self, "letter_head") and not self.letter_head:
@@ -442,6 +443,40 @@ class AccountsController(TransactionBase):
 							dimension, frappe.bold(dimension_value), self.company
 						)
 					)
+
+	def validate_party_address_and_contact(self):
+		if self.get("customer"):
+			party, party_type = self.customer, "Customer"
+			billing_address, shipping_address = self.get("customer_address"), self.get("shipping_address")
+			self.validate_party_address(party, party_type, billing_address, shipping_address)
+		elif self.get("supplier"):
+			party, party_type = self.supplier, "Supplier"
+			billing_address = self.get("supplier_address")
+			self.validate_party_address(party, party_type, billing_address)
+
+		self.validate_party_contact(party, party_type)
+
+	def validate_party_address(self, party, party_type, billing_address, shipping_address=None):
+		if billing_address or shipping_address:
+			party_address = frappe.get_list(
+				"Dynamic Link",
+				{"link_doctype": party_type, "link_name": party, "parenttype": "Address"},
+				pluck="parent",
+			)
+			if billing_address and billing_address not in party_address:
+				frappe.throw(f"Billing Address does not belong to the {party}")
+			elif shipping_address and shipping_address not in party_address:
+				frappe.throw(f"Shipping Address does not belong to the {party}")
+
+	def validate_party_contact(self, party, party_type):
+		if self.get("contact_person"):
+			contact = frappe.get_list(
+				"Dynamic Link",
+				{"link_doctype": party_type, "link_name": party, "parenttype": "Contact"},
+				pluck="parent",
+			)
+			if self.contact_person and self.contact_person not in contact:
+				frappe.throw(f"Contact Person does not belong to the {party}")
 
 	def validate_return_against_account(self):
 		if self.doctype in ["Sales Invoice", "Purchase Invoice"] and self.is_return and self.return_against:
@@ -3531,7 +3566,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 
 		1. Change rate of subcontracting - regardless of other changes.
 		2. Change qty and/or add new items and/or remove items
-		        Exception: Transfer/Consumption is already made, qty change not allowed.
+		                Exception: Transfer/Consumption is already made, qty change not allowed.
 		"""
 
 		supplied_items_processed = any(
