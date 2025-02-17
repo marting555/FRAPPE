@@ -605,13 +605,13 @@ erpnext.PointOfSale.Payment = class {
 		const remaining = grand_total - doc.paid_amount;
 		const change = doc.change_amount || remaining <= 0 ? -1 * remaining : undefined;
 		const currency = doc.currency;
+		const is_cash_mode_used = this.is_cash_mode_used(doc);
 		const label = remaining <= 0 ? __("Change Amount") : __("Remaining Amount");
 
 		doc.write_off_amount = 0;
 		doc.base_write_off_amount = 0;
 
-		this.$totals.html(
-			`<div class="col">
+		let totals_html = `<div class="col">
 				<div class="total-label">${__("Grand Total")}</div>
 				<div class="value">${format_currency(grand_total, currency)}</div>
 			</div>
@@ -624,14 +624,17 @@ erpnext.PointOfSale.Payment = class {
 			<div class="col">
 				<div class="total-label">${label}</div>
 				<div class="value total_difference">${format_currency(change || remaining, currency)}</div>
-			</div>
-			<div class="seperator-y"></div>
+			</div>`;
+
+		if (is_cash_mode_used && !doc.is_return && remaining < 0) {
+			totals_html += `<div class="seperator-y"></div>
 			<div class="col">
 				<div class="total-label">${__("Write Off")}</div>
 				<div class="value total_write_off">${format_currency(doc.write_off_amount, currency)}</div>
-			</div>
-			`
-		);
+			</div>`;
+		}
+
+		this.$totals.html(totals_html);
 		this.$totals.find(".total_difference").attr("contenteditable", remaining < 0 ? "true" : "false");
 		this.$totals.find(".total_difference").attr("contenteditable", !doc.is_return ? "true" : "false");
 		this.add_write_off_events(doc, remaining, change, currency);
@@ -696,5 +699,18 @@ erpnext.PointOfSale.Payment = class {
 			}
 		}
 		return validation_flag;
+	}
+
+	is_cash_mode_used(doc) {
+		if (!doc) doc = this.events.get_frm().doc;
+		const payments = doc.payments;
+
+		for (let p of payments) {
+			if (p.type === "Cash" && p.amount > 0) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 };
