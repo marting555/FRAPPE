@@ -998,7 +998,39 @@ class TestItem(FrappeTestCase):
         # Cleanup created price lists
 		if frappe.db.exists("Item Group", 'Software'):
 			frappe.delete_doc("Item Group", 'Software')
+	
+	def test_create_stock_entry_with_batch_TC_SCK_155(self):
+		from datetime import datetime, timedelta
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+		company = "_Test Company"
+		item_fields = {
+			"item_name": "_Test Item155",
+			"is_stock_item": 1,
+			"valuation_rate": 500,
+			"has_batch_no": 1,
+			"batch_number_series": "BATCH-Item-.####",
+			"create_new_batch": 1,
+			"has_expiry_date": 1,
+			"shelf_life_in_days": 365
+		}
+		item = make_item("_Test Item155", item_fields)
+		se = make_stock_entry(
+			item_code=item.name, target=create_warehouse("_Test Stores", company="_Test Company"), qty=10, purpose="Material Receipt"
+		)
+		expiry = se.posting_date + timedelta(days=365)
+		self.assertEqual(se.docstatus, 1, "Stock Entry not submitted successfully")
 
+        # Fetch batch details
+		batch = frappe.get_last_doc("Batch", filters={"item": item.name})
+		self.assertIsNotNone(batch, "Batch not created")
+		self.assertEqual(str(batch.expiry_date), str(expiry), "Expiry date mismatch in batch")
+
+		# Check Stock Ledger for product bundle entry
 
 def set_item_variant_settings(fields):
 	doc = frappe.get_doc("Item Variant Settings")
