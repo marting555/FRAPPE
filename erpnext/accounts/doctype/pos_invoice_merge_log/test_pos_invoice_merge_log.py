@@ -128,11 +128,8 @@ class TestPOSInvoiceMergeLog(unittest.TestCase):
 				},
 			)
 			inv.insert()
-<<<<<<< HEAD
-=======
 			inv.payments[0].amount = inv.grand_total
 			inv.save()
->>>>>>> d94802067b (fix: disable partial payment in pos (#45752))
 			inv.submit()
 
 			inv2 = create_pos_invoice(qty=1, rate=100, do_not_save=True)
@@ -149,11 +146,8 @@ class TestPOSInvoiceMergeLog(unittest.TestCase):
 				},
 			)
 			inv2.insert()
-<<<<<<< HEAD
-=======
 			inv2.payments[0].amount = inv.grand_total
 			inv2.save()
->>>>>>> d94802067b (fix: disable partial payment in pos (#45752))
 			inv2.submit()
 
 			consolidate_pos_invoices()
