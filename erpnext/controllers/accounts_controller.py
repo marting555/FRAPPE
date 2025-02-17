@@ -1775,10 +1775,7 @@ class AccountsController(TransactionBase):
 			and self.get("additional_discount_account")
 		):
 			amount += item.distributed_discount_amount
-			base_amount += flt(
-				item.distributed_discount_amount * self.get("conversion_rate"),
-				item.precision("distributed_discount_amount"),
-			)
+			base_amount += item.distributed_discount_amount * self.get("conversion_rate")
 
 		return amount, base_amount
 
@@ -2938,14 +2935,12 @@ def set_balance_in_account_currency(
 	# set debit/credit in account currency if not provided
 	if flt(gl_dict.debit) and not flt(gl_dict.debit_in_account_currency):
 		gl_dict.debit_in_account_currency = (
-			gl_dict.debit if account_currency == company_currency else flt(gl_dict.debit / conversion_rate, 2)
+			gl_dict.debit if account_currency == company_currency else (gl_dict.debit / conversion_rate)
 		)
 
 	if flt(gl_dict.credit) and not flt(gl_dict.credit_in_account_currency):
 		gl_dict.credit_in_account_currency = (
-			gl_dict.credit
-			if account_currency == company_currency
-			else flt(gl_dict.credit / conversion_rate, 2)
+			gl_dict.credit if account_currency == company_currency else (gl_dict.credit / conversion_rate)
 		)
 
 

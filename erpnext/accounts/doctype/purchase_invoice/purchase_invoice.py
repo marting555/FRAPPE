@@ -1012,7 +1012,7 @@ class PurchaseInvoice(BuyingController):
 									"cost_center": item.cost_center,
 									"project": item.project or self.project,
 									"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
-									"debit": -1 * flt(credit_amount, item.precision("base_net_amount")),
+									"debit": -1 * credit_amount,
 								},
 								warehouse_account[item.from_warehouse]["account_currency"],
 								item=item,
@@ -1026,7 +1026,7 @@ class PurchaseInvoice(BuyingController):
 									{
 										"account": item.expense_account,
 										"against": self.supplier,
-										"debit": flt(item.base_net_amount, item.precision("base_net_amount")),
+										"debit": item.base_net_amount,
 										"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
 										"cost_center": item.cost_center,
 										"project": item.project,

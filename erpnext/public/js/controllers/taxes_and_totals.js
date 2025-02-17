@@ -161,7 +161,7 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 	set_in_company_currency(doc, fields) {
 		var me = this;
 		$.each(fields, function(i, f) {
-			doc["base_"+f] = flt(flt(doc[f], precision(f, doc)) * me.frm.doc.conversion_rate, precision("base_" + f, doc));
+			doc["base_"+f] = (flt(doc[f], precision(f, doc)) * me.frm.doc.conversion_rate);
 		});
 	}
 
@@ -306,7 +306,7 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 			me.frm.doc.base_net_total += item.base_net_amount;
 		});
 
-		frappe.model.round_floats_in(this.frm.doc, ["total", "base_total", "net_total", "base_net_total"]);
+		frappe.model.round_floats_in(this.frm.doc, ["total", "net_total"]);
 	}
 
 	calculate_shipping_charges() {
@@ -315,7 +315,7 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 			return;
 		}
 
-		frappe.model.round_floats_in(this.frm.doc, ["total", "base_total", "net_total", "base_net_total"]);
+		frappe.model.round_floats_in(this.frm.doc, ["total", "net_total"]);
 		if (frappe.meta.get_docfield(this.frm.doc.doctype, "shipping_rule", this.frm.doc.name)) {
 			return this.shipping_rule();
 		}
@@ -594,7 +594,7 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 
 		if(["Quotation", "Sales Order", "Delivery Note", "Sales Invoice", "POS Invoice"].includes(this.frm.doc.doctype)) {
 			this.frm.doc.base_grand_total = (this.frm.doc.total_taxes_and_charges) ?
-				flt(this.frm.doc.grand_total * this.frm.doc.conversion_rate) : this.frm.doc.base_net_total;
+				(this.frm.doc.grand_total * this.frm.doc.conversion_rate) : this.frm.doc.base_net_total;
 		} else {
 			// other charges added/deducted
 			this.frm.doc.taxes_and_charges_added = this.frm.doc.taxes_and_charges_deducted = 0.0;
@@ -613,8 +613,8 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 					["taxes_and_charges_added", "taxes_and_charges_deducted"]);
 			}
 
-			this.frm.doc.base_grand_total = flt((this.frm.doc.taxes_and_charges_added || this.frm.doc.taxes_and_charges_deducted) ?
-				flt(this.frm.doc.grand_total * this.frm.doc.conversion_rate) : this.frm.doc.base_net_total);
+			this.frm.doc.base_grand_total = ((this.frm.doc.taxes_and_charges_added || this.frm.doc.taxes_and_charges_deducted) ?
+				(this.frm.doc.grand_total * this.frm.doc.conversion_rate) : this.frm.doc.base_net_total);
 
 			this.set_in_company_currency(this.frm.doc,
 				["taxes_and_charges_added", "taxes_and_charges_deducted"]);
@@ -982,8 +982,7 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 				this.frm.doc.change_amount = flt(this.frm.doc.paid_amount - grand_total,
 					precision("change_amount"));
 
-				this.frm.doc.base_change_amount = flt(this.frm.doc.base_paid_amount -
-					base_grand_total, precision("base_change_amount"));
+					this.frm.doc.base_change_amount = (this.frm.doc.base_paid_amount - base_grand_total);
 			}
 		}
 	}

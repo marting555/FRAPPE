@@ -243,9 +243,7 @@ class calculate_taxes_and_totals:
 	def _set_in_company_currency(self, doc, fields):
 		"""set values in base currency"""
 		for f in fields:
-			val = flt(
-				flt(doc.get(f), doc.precision(f)) * self.doc.conversion_rate, doc.precision("base_" + f)
-			)
+			val = doc.get(f) * self.doc.conversion_rate
 			doc.set("base_" + f, val)
 
 	def initialize_taxes(self):
@@ -370,7 +368,7 @@ class calculate_taxes_and_totals:
 			self.doc.net_total += item.net_amount
 			self.doc.base_net_total += item.base_net_amount
 
-		self.doc.round_floats_in(self.doc, ["total", "base_total", "net_total", "base_net_total"])
+		self.doc.round_floats_in(self.doc, ["total", "net_total"])
 
 	def calculate_shipping_charges(self):
 		# Do not apply shipping rule for POS
@@ -643,7 +641,7 @@ class calculate_taxes_and_totals:
 			"POS Invoice",
 		]:
 			self.doc.base_grand_total = (
-				flt(self.doc.grand_total * self.doc.conversion_rate, self.doc.precision("base_grand_total"))
+				(self.doc.grand_total * self.doc.conversion_rate)
 				if self.doc.total_taxes_and_charges
 				else self.doc.base_net_total
 			)
@@ -659,14 +657,14 @@ class calculate_taxes_and_totals:
 			self.doc.round_floats_in(self.doc, ["taxes_and_charges_added", "taxes_and_charges_deducted"])
 
 			self.doc.base_grand_total = (
-				flt(self.doc.grand_total * self.doc.conversion_rate)
+				(self.doc.grand_total * self.doc.conversion_rate)
 				if (self.doc.taxes_and_charges_added or self.doc.taxes_and_charges_deducted)
 				else self.doc.base_net_total
 			)
 
 			self._set_in_company_currency(self.doc, ["taxes_and_charges_added", "taxes_and_charges_deducted"])
 
-		self.doc.round_floats_in(self.doc, ["grand_total", "base_grand_total"])
+		self.doc.round_floats_in(self.doc, ["grand_total"])
 
 		self.set_rounded_total()
 
