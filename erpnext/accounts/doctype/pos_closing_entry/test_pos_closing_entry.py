@@ -226,13 +226,23 @@ class TestPOSClosingEntry(unittest.TestCase):
 		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
 		pos_inv = create_pos_invoice(
-			item_code=item_code, qty=5, rate=300, use_serial_batch_fields=1, batch_no=batch_no
+			item_code=item_code,
+			qty=5,
+			rate=300,
+			use_serial_batch_fields=1,
+			batch_no=batch_no,
+			do_not_submit=True,
 		)
 		pos_inv.payments[0].amount = pos_inv.grand_total
 		pos_inv.save()
 		pos_inv.submit()
 		pos_inv2 = create_pos_invoice(
-			item_code=item_code, qty=5, rate=300, use_serial_batch_fields=1, batch_no=batch_no
+			item_code=item_code,
+			qty=5,
+			rate=300,
+			use_serial_batch_fields=1,
+			batch_no=batch_no,
+			do_not_submit=True,
 		)
 		pos_inv2.payments[0].amount = pos_inv2.grand_total
 		pos_inv2.save()
