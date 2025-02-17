@@ -187,7 +187,7 @@ frappe.ui.form.on("Project", {
 			}
 		}
 
-		if(!frm.previous_status){
+		if (!frm.previous_status) {
 			frm.previous_status = frm.doc.status
 		}
 	},
@@ -228,23 +228,31 @@ frappe.ui.form.on("Project", {
 	status: async function (frm) {
 		let new_value = frm.doc.status;
 
-		if (new_value !== "Quality check approved") {
-			return
+		if (new_value === "Quality check approved") {
+			const incomplete_requirements = frm.doc.requirements.filter(requirement => !requirement.completed)
+
+			const quotations = await frappe.db.get_list("Quotation", {
+				filters: [
+					['project_name', '=', frm.docname],
+					['status', "!=", "Approved"]
+				],
+				fields: ["name", "status"]
+			})
+
+			if (!quotations?.length && !incomplete_requirements.length) return
+
+			showConfirmationDialog(frm, quotations, incomplete_requirements)
 		}
 
-		const incomplete_requirements = frm.doc.requirements.filter(requirement => !requirement.completed)
+		if(new_value === "Completed"){
+			const loan_car = await frappe.db.get_list('Loan car', { fields: ["name", "status"], filters: [["project", "=", frm.docname],["status", "!=", "Paid"], ["status", "!=", "Done"], ["status", "!=", "Cancelled"]] })
 
-		const quotations = await frappe.db.get_list("Quotation", {
-			filters: [
-				['project_name', '=', frm.docname],
-				['status', "!=", "Approved"]
-			],
-			fields: ["name", "status"]
-		})
+			if(!loan_car.length) return 
 
-		if (!quotations?.length && !incomplete_requirements.length) return
+			frm.undo_manager.undo();
 
-		showConfirmationDialog(frm, quotations, incomplete_requirements)
+			showLoanCarNotPaidAlert(loan_car[0])
+		}
 	},
 	validate: function (frm) {
 		const regex = /^(?=.*[a-zA-Z0-9])[\s\S]{4,}$/g
@@ -269,6 +277,27 @@ function showConfirmationDialog(frm, quotations, incomplete_requirements) {
 			frm.undo_manager.undo();
 			dialog.hide();
 		}
+	});
+
+	dialog.$wrapper.find('.modal-header .modal-actions').hide();
+	dialog.$wrapper.modal({ backdrop: 'static', keyboard: false })
+
+	dialog.show();
+}
+
+function showLoanCarNotPaidAlert(loan_car) {
+	const dialog = new frappe.ui.Dialog({
+		title: 'Loan Car Alert',
+		fields: [
+			{
+				fieldtype: 'HTML',
+				options: `<p>Loan car: <a href="/app/loan-car/${loan_car.name}" target="__blank">${loan_car.name}</a> is is status: ${loan_car.status}</p> `
+			},
+		],
+		primary_action_label: 'Ok',
+		primary_action: function () {
+			dialog.hide();
+		},
 	});
 
 	dialog.$wrapper.find('.modal-header .modal-actions').hide();
