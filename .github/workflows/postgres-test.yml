@@ -109,6 +109,7 @@ jobs:
         run: |
           set +e  # Prevents script from exiting on error
           cd ~/frappe-bench/
+          bench --site test_site execute frappe.auth.login_as --args '["Administrator"]'
           bench --site test_site run-tests --app erpnext --coverage 2>&1 | tee test_output.log
           echo "Tests completed, proceeding with next steps..."
         env:
