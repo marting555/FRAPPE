@@ -925,6 +925,21 @@ class TestItem(FrappeTestCase):
 		self.assertEqual(item.has_expiry_date, 1)
 		self.assertEqual(item.shelf_life_in_days, 30)
 
+	def test_create_variant_item_TC_SCK_125(self):
+		item = make_item(
+			"_Test Template Item",
+			{
+				"variant_based_on":"Item Attribute",
+				"attributes": [
+					{"attribute": "Test Size"}
+				],
+				"has_variants": 1,
+			},
+		)
+		self.assertEqual(item.item_code, "_Test Template Item")
+		self.assertEqual(item.has_variants, 1)
+		self.assertEqual(item.attributes[0].attribute, "Test Size")
+
 	def test_cr_item_TC_SCK_129(self):
 		from frappe.utils import random_string
 		item_fields1 = {

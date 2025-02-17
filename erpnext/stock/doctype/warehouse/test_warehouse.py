@@ -111,7 +111,6 @@ class TestWarehouse(FrappeTestCase):
 				company.default_currency = "INR"
 				company.insert()
 		warehouse = create_warehouse("_Test Warehouse", properties=None, company="_Test Company")
-		print("Warehouse", warehouse)
 
 		# Fetch created warehouse
 		created_warehouse = frappe.get_doc("Warehouse", warehouse)

@@ -5971,6 +5971,33 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 	
 		self.assertRaises(frappe.ValidationError, sales_order.submit)
 	
+	def test_stock_reservation_from_so_to_dn_TC_SCK_143(self):
+		so = make_sales_order(item_code="_Test Item", qty=5, do_not_save=True)
+		so.reserve_stock = 1
+		so.save()
+		so.submit()
+		from erpnext.stock.doctype.stock_reservation_entry.stock_reservation_entry import create_stock_reservation_entries_for_so_items
+
+		item_details = [{'__checked': 1, 'sales_order_item': so.items[0].get("name"), 'item_code': '_Test Item', 
+                   'warehouse': 'Stores - _TIRC', 'qty_to_reserve': 5, 'idx': 1, 'name': 'row 1'}]
+  
+		create_stock_reservation_entries_for_so_items(
+			sales_order=so,
+			items_details=item_details,
+			from_voucher_type=None,
+			notify=True,
+		)
+  
+		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so.name}, "status"), "Reserved")
+		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so.name}, "reserved_qty"), 5)
+		dn = make_delivery_note(so.name)
+		dn.save()
+		dn.submit()
+		self.assertEqual(dn.status, "To Bill", "Delivery Note not created")
+		qty_change = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change, -5)
+		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so.name}, "status"), "Delivered")
+  
       
 def get_transport_details(customer):
 	# create a driver
