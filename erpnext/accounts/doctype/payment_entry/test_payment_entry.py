@@ -1949,24 +1949,13 @@ class TestPaymentEntry(FrappeTestCase):
 			
 			payment_entry.save()
 			payment_entry.submit()
-			gl=self.get_gle(payment_entry.name)
-			expected_result=[
-					{
-						'account': 'Cash - _TC', 
-						'debit': 0.0, 'credit': 78400.0,
-						'against_voucher': None}, 
-					{
-					'account': 'Creditors - _TC',
-					'debit': 80000.0, 'credit': 0.0, 
-					'against_voucher': None
-					},
-					{
-					'account': '_Test TDS Payable - _TC', 
-					'debit': 0.0, 'credit': 1600.0, 
-					'against_voucher': None 
-					}
-					]
-			self.assertEqual(gl,expected_result)
+			self.voucher_no = payment_entry.name
+			self.expected_gle =[
+       				{'account': '_Test TDS Payable - _TC', 'debit': 0.0, 'credit': payment_entry.base_total_taxes_and_charges}, 
+					{'account': 'Creditors - _TC', 'debit': payment_entry.base_paid_amount, 'credit': 0.0}, 
+     				{'account': 'Cash - _TC', 'debit': 0.0, 'credit':payment_entry.received_amount_after_tax}
+     			]	
+			self.check_gl_entries()
 
 	def test_tds_computation_summary_report_TC_ACC_095(self):
 		from frappe.desk.query_report import get_report_result
