@@ -5,8 +5,6 @@
 import frappe
 from frappe import _
 from frappe.utils import format_date, get_datetime
-from frappe.tests.utils import if_app_installed
-
 from erpnext.utilities.transaction_base import TransactionBase
 
 
@@ -137,7 +135,7 @@ class MaintenanceVisit(TransactionBase):
 				if d.prevdoc_docname and d.prevdoc_doctype == "Warranty Claim":
 					if flag == 1:
 						mntc_date = self.mntc_date
-						service_person = d.service_person if if_app_installed("sales_commission") else None
+						service_person = d.service_person if "sales_commission" in frappe.get_installed_apps() else None
 						work_done = d.work_done
 						status = "Open"
 						if self.completion_status == "Fully Completed":
