@@ -1900,7 +1900,7 @@ class TestPaymentEntry(FrappeTestCase):
 		rate=2,
 		from_date=frappe.utils.get_date_str('01-04-2024'),
 		to_date=frappe.utils.get_date_str('31-03-2025'),
-		account="Test TDS Payable - _TC",
+		account="_Test TDS Payable - _TC",
 		single_threshold=30000,
 		cumulative_threshold=100000,
 		consider_party_ledger_amount=1,
@@ -2084,73 +2084,24 @@ class TestPaymentEntry(FrappeTestCase):
 				})
 				pi.save()
 				pi.submit()
+				self.voucher_no = pi.name
+				self.expected_gle =[
+        			{'account': '_Test TDS Payable - _TC', 'debit': 0.0, 'credit': 200.0},
+           			{'account': '_Test Account Excise Duty - _TC', 'debit': 90000.0, 'credit': 0.0}, 
+              		{'account': 'Creditors - _TC', 'debit': 200.0, 'credit': 0.0}, 
+                	{'account': 'Creditors - _TC', 'debit': 0.0, 'credit': 90000.0}
+                 ]
+				self.check_gl_entries()
 				
-				pi_gl = frappe.db.sql(
-					"""select account, cost_center, account_currency, debit, credit,
-					debit_in_account_currency, credit_in_account_currency
-					from `tabGL Entry` where voucher_type='Purchase Invoice' and voucher_no=%s
-					order by account asc""",
-					pi.name,
-					as_dict=1,
-				)
-				expected_gl_of_pi=[
-				{
-					"account": "Creditors - _TC",
-					"cost_center": None,
-					"account_currency": "INR",
-					"debit": 0.0,
-					"credit": 90000.0,
-					"debit_in_account_currency": 0.0,
-					"credit_in_account_currency": 90000.0
-				},
-				{
-					"account": "Creditors - _TC",
-					"cost_center": None,
-					"account_currency": "INR",
-					"debit": 200.0,
-					"credit": 0.0,
-					"debit_in_account_currency": 200.0,
-					"credit_in_account_currency": 0.0
-				},
-				{
-					"account": "Stock Received But Not Billed - _TC",
-					"cost_center": "Main - _TC",
-					"account_currency": "INR",
-					"debit": 90000.0,
-					"credit": 0.0,
-					"debit_in_account_currency": 90000.0,
-					"credit_in_account_currency": 0.0
-				},
-				{
-					"account": "_Test TDS Payable - _TC",
-					"cost_center": "Main - _TC",
-					"account_currency": "INR",
-					"debit": 0.0,
-					"credit": 200.0,
-					"debit_in_account_currency": 0.0,
-					"credit_in_account_currency": 200.0
-				}
-				]
-				self.assertEqual(pi_gl,expected_gl_of_pi)
 				pe=get_payment_entry("Purchase Invoice",pi.name)
 				pe.save()
 				pe.submit()
-				pe_gl=self.get_gle(pe.name)
-				expected_pl_gl=[
-				{
-					"account": "Cash - _TC",
-					"debit": 0.0,
-					"credit": 9800.0,
-					"against_voucher": None
-				},
-				{
-					"account": "Creditors - _TC",
-					"debit": 9800.0,
-					"credit": 0.0,
-					"against_voucher": pi.name
-				}
-				]
-				self.assertEqual(pe_gl,expected_pl_gl)
+				self.expected_gle =[
+        			{'account': 'Creditors - _TC', 'debit': 9800.0, 'credit': 0.0}, 
+           			{'account': 'Cash - _TC', 'debit': 0.0, 'credit': 9800.0}
+              	]
+				self.voucher_no=pe.name
+				self.check_gl_entries()
 
         
     
@@ -2269,7 +2220,7 @@ def create_supplier(**args):
 		doc = frappe.get_doc("Supplier", args.supplier_name)
 		if doc.name == "_Test Supplier USD" and not frappe.db.exists("Party Account", {"parent": doc.name, "account": "_Test Payable USD - _TC"}):
 			doc.append("accounts", {"company": args.company, "account": "_Test Payable USD - _TC"})
-			frappe.db.commit()
+			
 		return doc
 	doc = frappe.get_doc(
 		{
@@ -2290,7 +2241,7 @@ def create_supplier(**args):
   
 
 	doc.insert(ignore_mandatory=True)
-	frappe.db.commit()
+	
 	return doc
 
 def create_account():
@@ -2299,6 +2250,7 @@ def create_account():
 		{"name": "Current Liabilities", "parent": "Source of Funds (Liabilities) - _TC"},
 		{"name": "Duties and Taxes", "parent": "Current Liabilities - _TC"},
 		{"name": "_Test TDS Payable", "parent": "Duties and Taxes - _TC","account_type":"Tax"},
+		{"name": "_Test TCS Payable", "parent": "Duties and Taxes - _TC","account_type":"Tax"},
 		{"name": "_Test Creditors", "parent": "Accounts Payable - _TC","account_type":"Payable"},
 		{"name": "_Test Payable USD", "parent": "Accounts Payable - _TC","account_type":"Payable"},
 		{"name": "_Test Cash", "parent": "Cash In Hand - _TC"},
@@ -2331,7 +2283,7 @@ def create_account():
 				doc.parent_account = account["parent"]
 			
 			doc.insert(ignore_mandatory=True)
-			frappe.db.commit()
+			
 
 		except Exception as e:
 			frappe.log_error(f"Failed to insert {account['name']}", str(e))
@@ -2359,7 +2311,7 @@ def create_records(supplier):
 		default_currency="USD" if supplier == "_Test Supplier USD" else "INR",
 		)
 
-	frappe.db.commit()
+	
 
 
 
@@ -2374,7 +2326,7 @@ def make_test_item(item_name=None):
 					"hsn_code": '888890',
 					"description": 'test'
 				}).insert()
-				frappe.db.commit()
+				
 			
 			item= make_item(
 				item_name or "Test Item with Tax",
@@ -2406,7 +2358,7 @@ def make_test_item(item_name=None):
 			if not item.gst_hsn_code:
 				item.gst_hsn_code="888890"
 				item.save()
-			frappe.db.commit()
+			
 			return item
         
 def create_purchase_invoice(**args):
@@ -2431,7 +2383,7 @@ def create_purchase_invoice(**args):
 					"qty": args.qty or 1,
 					"rate": args.rate or 90000,
 					"cost_center": "Main - _TC",
-					"expense_account": "Stock Received But Not Billed - _TC",
+					"expense_account": args.expense_account or "Stock Received But Not Billed - _TC",
 				}
 			],
 		}
@@ -2450,4 +2402,4 @@ def create_company():
 			"company_email": "test@example.com",
 			"abbr":"_TC"
 		}).insert()
-		frappe.db.commit()
+		

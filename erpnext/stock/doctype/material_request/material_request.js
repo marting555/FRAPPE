@@ -43,6 +43,14 @@ frappe.ui.form.on("Material Request", {
 			};
 		});
 
+		frm.set_query("project", "items", function (doc, cdt, cdn) {
+			return {
+				filters: {
+					company: doc.company,
+				},
+			};
+		});
+
 		var list = frm.fields_dict['items'].grid.get_field('work_breakdown_structure').get_query = function (doc, cdt, cdn) {
 			var child = locals[cdt][cdn];
 			return {

@@ -8,7 +8,7 @@ import json
 
 import frappe
 from frappe.tests.utils import FrappeTestCase, change_settings
-from frappe.utils import add_days, cstr, flt, nowdate, nowtime
+from frappe.utils import add_days, cstr, flt, nowdate, nowtime, today
 
 from erpnext.accounts.utils import get_stock_and_account_balance
 from erpnext.stock.doctype.item.test_item import create_item
@@ -1323,6 +1323,75 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 		)
 		self.assertEqual(stock_value_difference, 1500.00 * -1)
 
+	
+	def test_stock_reco_for_negative_batch(self):
+		from erpnext.stock.doctype.batch.batch import get_batch_qty
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
+		item_code = self.make_item(
+			"Test Item For Negative Batch",
+			{
+				"is_stock_item": 1,
+				"has_batch_no": 1,
+				"create_new_batch": 1,
+				"batch_number_series": "TEST-BATCH-NB-.###",
+			},
+		).name
+		warehouse = "_Test Warehouse - _TC"
+		se = make_stock_entry(
+			posting_date="2024-11-01",
+			posting_time="11:00",
+			item_code=item_code,
+			target=warehouse,
+			qty=10,
+			basic_rate=100,
+		)
+		batch_no = get_batch_from_bundle(se.items[0].serial_and_batch_bundle)
+		se = make_stock_entry(
+			posting_date="2024-11-01",
+			posting_time="11:00",
+			item_code=item_code,
+			source=warehouse,
+			qty=10,
+			basic_rate=100,
+			use_serial_batch_fields=1,
+			batch_no=batch_no,
+		)
+		sles = frappe.get_all(
+			"Stock Ledger Entry",
+			filters={"voucher_no": se.name, "is_cancelled": 0},
+		)
+		# intentionally setting negative qty
+		doc = frappe.get_doc("Stock Ledger Entry", sles[0].name)
+		doc.db_set(
+			{
+				"actual_qty": -20,
+				"qty_after_transaction": -10,
+			}
+		)
+		sabb_doc = frappe.get_doc("Serial and Batch Bundle", doc.serial_and_batch_bundle)
+		for row in sabb_doc.entries:
+			row.db_set("qty", -20)
+		batch_qty = get_batch_qty(batch_no, warehouse, item_code, consider_negative_batches=True)
+		self.assertEqual(batch_qty, -10)
+		sr = create_stock_reconciliation(
+			posting_date="2024-11-02",
+			posting_time="11:00",
+			item_code=item_code,
+			warehouse=warehouse,
+			use_serial_batch_fields=1,
+			batch_no=batch_no,
+			qty=0,
+			rate=100,
+			do_not_submit=True,
+		)
+		self.assertEqual(sr.items[0].current_qty, -10)
+		sr.submit()
+		sr.reload()
+		self.assertTrue(sr.items[0].current_serial_and_batch_bundle)
+		self.assertFalse(sr.items[0].serial_and_batch_bundle)
+
+		
+
 	def test_create_stock_reconciliation_for_opening(self):
 		from erpnext.accounts.utils import get_company_default
 		
@@ -1460,15 +1529,15 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 			frappe.db.rollback()
 			assert False, f"An error occurred while saving the document: {str(e)}\n{frappe.get_traceback()}"
 			
-		self.assertEqual(sr.expense_account, "Temporary Opening - PP Ltd")
-		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Temporary Opening - PP Ltd'},'credit')#get_difference_account API ref.
+		self.assertEqual(sr.expense_account, "Temporary Opening - _TC")
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Temporary Opening - _TC'},'credit')#get_difference_account API ref.
 		
 		self.assertEqual(gl_temp_credit, 50000)
 		
-		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Stock In Hand - PP Ltd'},'debit')#get_difference_account API ref.
+		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Stock In Hand - _TC'},'debit')#get_difference_account API ref.
 		self.assertEqual(gl_stock_debit, 50000)
 
-		actual_qty,incoming_rate = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':sr.name, 'voucher_type':'Stock Reconciliation','warehouse':'Stores - PP Ltd'},['qty_after_transaction','valuation_rate'])#get_difference_account API ref.
+		actual_qty,incoming_rate = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':sr.name, 'voucher_type':'Stock Reconciliation','warehouse':'Stores - _TC'},['qty_after_transaction','valuation_rate'])#get_difference_account API ref.
 		self.assertEqual(actual_qty, 100)
 		self.assertEqual(incoming_rate, 500)
 
@@ -1484,7 +1553,7 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 			"_Test Stock Reco Item",
 			is_stock_item=1,
 			valuation_rate=500,
-			warehouse="_Test reco Warehouse",
+			warehouse="_Test reco Warehouse - _TC",
 		)
 
 		stock_reco = create_stock_reconciliation(
@@ -1520,16 +1589,16 @@ def create_stock_reconciliation_for_opening():
 	
 	sr = frappe.new_doc("Stock Reconciliation")
 	sr.purpose = "Opening Stock"
-	sr.posting_date = "2024-04-01"
+	sr.posting_date = today()
 	sr.posting_time = nowtime()
 	sr.set_posting_time = 1
-	sr.company = "PP Ltd"
+	sr.company = "_Test Company"
 	sr.expense_account = frappe.db.get_value("Account", {"is_group": 0, "company": sr.company, "account_type": "Temporary"}, "name") #get_difference_account API ref.
 	sr.append(
 		"items",
 		{
 			"item_code": item1,
-			"warehouse": "Stores - PP Ltd",
+			"warehouse": "Stores - _TC",
 			"qty": 100,
 			"valuation_rate": 500,
 		},

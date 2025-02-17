@@ -710,6 +710,23 @@ def update_reference_in_payment_entry(
 	}
 	update_advance_paid = []
 
+	# Update Reconciliation effect date in reference
+	if payment_entry.book_advance_payments_in_separate_party_account:
+		if payment_entry.advance_reconciliation_takes_effect_on == "Advance Payment Date":
+			reconcile_on = payment_entry.posting_date
+
+		elif payment_entry.advance_reconciliation_takes_effect_on == "Oldest Of Invoice Or Advance":
+			date_field = "posting_date"
+			if d.against_voucher_type in ["Sales Order", "Purchase Order"]:
+				date_field = "transaction_date"
+			reconcile_on = frappe.db.get_value(d.against_voucher_type, d.against_voucher, date_field)
+			if getdate(reconcile_on) < getdate(payment_entry.posting_date):
+				reconcile_on = payment_entry.posting_date
+		elif payment_entry.advance_reconciliation_takes_effect_on == "Reconciliation Date":
+			reconcile_on = nowdate()
+		reference_details.update({"reconcile_effect_on": reconcile_on})
+		
+
 	if d.voucher_detail_no:
 		existing_row = payment_entry.get("references", {"name": d["voucher_detail_no"]})[0]
 
@@ -1546,10 +1563,12 @@ def get_voucherwise_gl_entries(future_stock_vouchers, posting_date):
 
 	gles = frappe.db.sql(
 		"""
-		select name, account, credit, debit, cost_center, project, voucher_type, voucher_no
+		select name, account, credit, debit, cost_center{}, voucher_type, voucher_no
 			from `tabGL Entry`
 		where
-			posting_date >= {} and voucher_no in ({})""".format("%s", ", ".join(["%s"] * len(voucher_nos))),
+			posting_date >= {} and voucher_no in ({})
+   		""".format(", project" if "projects" in frappe.get_installed_apps() else "",
+                	"%s",", ".join(["%s"] * len(voucher_nos))),
 		tuple([posting_date, *voucher_nos]),
 		as_dict=1,
 	)
@@ -1650,7 +1669,7 @@ def get_stock_and_account_balance(account=None, posting_date=None, company=None)
 			if wh_details.account == account and not wh_details.is_group
 		]
 
-	total_stock_value = get_stock_value_on(related_warehouses, posting_date)
+	total_stock_value = get_stock_value_on(related_warehouses, posting_date, company=company)
 
 	precision = frappe.get_precision("Journal Entry Account", "debit_in_account_currency")
 	return flt(account_balance, precision), flt(total_stock_value, precision), related_warehouses

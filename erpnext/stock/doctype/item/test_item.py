@@ -10,6 +10,8 @@ from frappe.test_runner import make_test_objects
 from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, today
 import re
+import random
+from erpnext.stock.doctype.warehouse.warehouse import convert_to_group_or_ledger
 
 from erpnext.controllers.item_variant import (
 	InvalidItemAttributeValueError,
@@ -69,7 +71,15 @@ def make_item(item_code=None, properties=None, uoms=None, barcode=None):
 				"barcode": barcode,
 			},
 		)
+	if 'india_compliance' in frappe.get_installed_apps():
+		from india_compliance.gst_india.utils import get_hsn_settings
+		valid_hsn_length = get_hsn_settings()
 
+		gst_hsn_code = frappe.db.get_all("GST HSN Code", pluck = "name")
+		for code in gst_hsn_code:
+			if len(code) in valid_hsn_length[1]:
+				item.gst_hsn_code = code
+				break
 	item.insert()
 
 	return item
@@ -902,6 +912,146 @@ class TestItem(FrappeTestCase):
 
 		self.assertRaises(frappe.ValidationError, item_doc.save)
 
+	def test_cr_item_TC_SCK_128(self):
+		from frappe.utils import random_string
+		item_fields1 = {
+			"item_name": f"_Test-{random_string(5)}",
+			"valuation_rate": 100,
+			"has_batch_no": 1,
+			"has_expiry_date": 1,
+			"shelf_life_in_days": 30
+		}
+		item = make_item(item_fields1["item_name"], item_fields1)
+		self.assertEqual(item.has_batch_no, 1)
+		self.assertEqual(item.has_expiry_date, 1)
+		self.assertEqual(item.shelf_life_in_days, 30)
+
+	def test_create_variant_item_TC_SCK_125(self):
+		item = make_item(
+			"_Test Template Item",
+			{
+				"variant_based_on":"Item Attribute",
+				"attributes": [
+					{"attribute": "Test Size"}
+				],
+				"has_variants": 1,
+			},
+		)
+		self.assertEqual(item.item_code, "_Test Template Item")
+		self.assertEqual(item.has_variants, 1)
+		self.assertEqual(item.attributes[0].attribute, "Test Size")
+
+	def test_auto_reorder_item_TC_SCK_126(self):
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		group_warehouse = frappe.get_doc("Warehouse", create_warehouse("TestGroup"))
+		convert_to_group_or_ledger(group_warehouse.name)
+		group_warehouse.reload()
+		self.assertEqual(group_warehouse.is_group, 1)
+		item = make_item(
+			"Test Auto Reorder Item",
+			{
+				"reorder_levels": [
+					{
+						"warehouse_group":group_warehouse.name,
+						"warehouse":create_warehouse("Test Store", {"parent_warehouse":group_warehouse.name}),
+						"warehouse_reorder_level":100,
+						"warehouse_reorder_qty":200,
+						"material_request_type":"Purchase"
+					}
+				]
+			}
+		)
+		self.assertEqual(item.reorder_levels[0].warehouse_group, group_warehouse.name)
+		self.assertEqual(item.reorder_levels[0].warehouse_reorder_level, 100)
+		self.assertEqual(item.reorder_levels[0].warehouse_reorder_qty, 200)
+		self.assertEqual(item.reorder_levels[0].material_request_type, "Purchase")
+
+	def test_cr_item_TC_SCK_129(self):
+		from frappe.utils import random_string
+		item_fields1 = {
+			"item_name": f"_Test-{random_string(5)}",
+			"valuation_rate": 100,
+			"has_serial_no": 1,
+			"has_expiry_date": 1,
+			"shelf_life_in_days": 30
+		}
+		item = make_item(item_fields1["item_name"], item_fields1)
+		self.assertEqual(item.has_serial_no, 1)
+		self.assertEqual(item.has_expiry_date, 1)
+		self.assertEqual(item.shelf_life_in_days, 30)
+
+	def test_cr_item_TC_SCK_130(self):
+		from frappe.utils import random_string
+		item_fields1 = {
+			"item_name": f"_Test-{random_string(5)}",
+			"is_stock_item": 0,
+			"valuation_rate": 100,
+			"shelf_life_in_days": 30
+		}
+		item = make_item(item_fields1["item_name"], item_fields1)
+		self.assertEqual(item.is_stock_item, 0)
+		self.assertEqual(item.shelf_life_in_days, 30)
+
+	def test_create_item_with_opening_stock_TC_SCK_229(self):
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		from frappe.utils import random_string
+		item_fields1 = {
+			"item_name": f"_Test-{random_string(5)}",
+			"is_stock_item": 1,
+			"item_group":"Raw Material",
+			"opening_stock":100,
+			"valuation_rate": 200,
+			"standard_rate":300,
+			"item_defaults": [{'company': "_Test Company", 'default_warehouse': create_warehouse("Stores-test", properties=None, company="_Test Company")}],
+		}
+		item = make_item(item_fields1["item_name"], item_fields1)
+		self.assertEqual(item.standard_rate, 300)		
+		self.assertTrue(
+			frappe.db.get_value("Stock Entry Detail", {"item_code": item.name}, "parent")
+		)
+		se = frappe.db.get_value("Stock Entry Detail", {"item_code": item.name}, "parent")
+		self.assertEqual(frappe.db.get_value("Stock Ledger Entry", {"item_code": item.name, "voucher_no": se}, "actual_qty"), 100)
+		self.assertEqual(frappe.db.get_value("Item Price", {"item_code": item.name}, "price_list_rate"), 300)
+
+	def test_item_cr_TC_SCK_153(self):
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+		item_fields = {
+			"item_name": "Ball point Pen1",
+			"is_stock_item": 1,
+			"stock_uom": "Box",
+			"item_defaults": [{'company': "_Test Company", 'default_warehouse': create_warehouse("Stores-test", properties=None, company="_Test Company")}],
+		}
+		item = make_item("Ball point Pen1", item_fields)
+		self.assertEqual(item.name, "Ball point Pen1")
+
+	def test_item_group_cr_TC_SCK_154(self):
+		parent_itm_grp = frappe.new_doc("Item Group")
+		parent_itm_grp.item_group_name = "Test Parent Item Group"
+		parent_itm_grp.is_group = 1
+		parent_itm_grp.insert()
+		itm_grp = frappe.new_doc("Item Group")
+		itm_grp.item_group_name = "Test Item Group"
+		itm_grp.parent_item_group = "Test Parent Item Group"
+		itm_grp.insert()
+		self.assertEqual(itm_grp.name, "Test Item Group")
+		self.assertEqual(itm_grp.parent_item_group, "Test Parent Item Group")
+
+	def tearDown(self):
+        # Cleanup created price lists
+		if frappe.db.exists("Item Group", 'Software'):
+			frappe.delete_doc("Item Group", 'Software')
+	
+	@change_settings("Stock Settings", {"valuation_method": "FIFO"})
+	def test_default_valuation_method_TC_SCK_180(self):
+		expected_valuation_method = "FIFO"
+		updated_stock_settings = frappe.get_doc("Stock Settings")
+		self.assertEqual(updated_stock_settings.valuation_method, expected_valuation_method, "Valuation method not set correctly in Stock Settings")
+
 
 def set_item_variant_settings(fields):
 	doc = frappe.get_doc("Item Variant Settings")
@@ -960,6 +1110,14 @@ def create_item(
 				"buying_cost_center": buying_cost_center,
 			},
 		)
+		
+		if 'india_compliance' in frappe.get_installed_apps():
+			gst_hsn_code = "11112222"
+			if not frappe.db.exists("GST HSN Code", gst_hsn_code):
+				gst_hsn_code = frappe.new_doc("GST HSN Code")
+				gst_hsn_code.hsn_code = "11112222"
+				gst_hsn_code.save()
+			item.gst_hsn_code = gst_hsn_code
 		item.save()
 	else:
 		item = frappe.get_doc("Item", item_code)

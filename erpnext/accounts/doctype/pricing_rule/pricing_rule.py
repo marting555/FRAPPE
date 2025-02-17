@@ -29,7 +29,7 @@ class PricingRule(Document):
 		from erpnext.accounts.doctype.pricing_rule_item_group.pricing_rule_item_group import PricingRuleItemGroup
 		from frappe.types import DF
 
-		applicable_for: DF.Literal["", "Customer", "Customer Group", "Territory", "Sales Partner", "Campaign", "Supplier", "Supplier Group"]
+		applicable_for: DF.Literal["", "Customer", "Customer Group", "Territory", "Supplier", "Supplier Group"]
 		apply_discount_on: DF.Literal["Grand Total", "Net Total"]
 		apply_discount_on_rate: DF.Check
 		apply_multiple_pricing_rules: DF.Check
@@ -379,8 +379,6 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 			"parent": args.parent,
 			"parenttype": args.parenttype,
 			"child_docname": args.get("child_docname"),
-			"discount_percentage": 0.0,
-			"discount_amount": 0,
 		}
 	)
 
