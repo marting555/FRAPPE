@@ -228,22 +228,16 @@ class TestPOSClosingEntry(unittest.TestCase):
 		pos_inv = create_pos_invoice(
 			item_code=item_code, qty=5, rate=300, use_serial_batch_fields=1, batch_no=batch_no
 		)
-<<<<<<< HEAD
-=======
 		pos_inv.payments[0].amount = pos_inv.grand_total
 		pos_inv.save()
 		pos_inv.submit()
->>>>>>> d94802067b (fix: disable partial payment in pos (#45752))
 		pos_inv2 = create_pos_invoice(
 			item_code=item_code, qty=5, rate=300, use_serial_batch_fields=1, batch_no=batch_no
 		)
-<<<<<<< HEAD
-=======
 		pos_inv2.payments[0].amount = pos_inv2.grand_total
 		pos_inv2.save()
 		pos_inv2.submit()
->>>>>>> d94802067b (fix: disable partial payment in pos (#45752))
-
+		
 		batch_qty_with_pos = get_batch_qty(batch_no, "_Test Warehouse - _TC", item_code)
 		self.assertEqual(batch_qty_with_pos, 0.0)
 
