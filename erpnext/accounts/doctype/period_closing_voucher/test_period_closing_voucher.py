@@ -5,7 +5,20 @@
 import unittest
 
 import frappe
-from frappe.utils import today
+from frappe.utils import (
+	today,
+	now_datetime,
+	add_years,
+	add_days,
+	add_months,
+	cstr,
+	flt,
+	get_first_day,
+	get_last_day,
+	getdate,
+	is_last_day_of_the_month,
+	nowdate,
+)
 
 from erpnext.accounts.doctype.finance_book.test_finance_book import create_finance_book
 from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
@@ -326,8 +339,8 @@ class TestPeriodClosingVoucher(unittest.TestCase):
 		company = create_company()
 		surplus_account = create_account()
 		cost_center = create_cost_center("Main")
-		
-		# Create Journal Entries for Income and Expense
+		backdate = add_years(nowdate(), -2)
+		last_date = get_last_day(backdate)
 		create_sales_invoice(
 			company=company,
 			cost_center=cost_center,
@@ -337,11 +350,11 @@ class TestPeriodClosingVoucher(unittest.TestCase):
 			debit_to="Debtors - TPC",
 			currency="USD",
 			customer="_Test Customer USD",
-			posting_date="2021-03-15",
+			posting_date=backdate,
 		)
 		
 		# Create a Period Closing Voucher
-		pcv = self.make_period_closing_voucher(posting_date="2021-03-31", submit=False)
+		pcv = self.make_period_closing_voucher(last_date, submit=False)
 		pcv.save()
 		pcv.submit()
 		surplus_account = pcv.closing_account_head
