@@ -1252,9 +1252,11 @@ class TestPurchaseOrder(FrappeTestCase):
 	
 	def test_mr_pi_TC_B_002(self):
 		# MR =>  PO => PR => PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		mr_dict_list = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 6,
 				"rate" : 100,
@@ -1274,10 +1276,12 @@ class TestPurchaseOrder(FrappeTestCase):
 
 	def test_mr_pi_TC_B_003(self):
 		# MR => RFQ => SQ => PO => PR => PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		args = frappe._dict()
 		args['mr'] = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 2,
 				"rate" : 100,
@@ -1747,6 +1751,8 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(doc_pr.reference_name, doc_po.name)
 		self.assertEqual(doc_pr.grand_total, doc_po.grand_total)
 	def test_po_to_partial_pr_TC_B_031(self):
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		po = frappe.get_doc({
 			"doctype": "Purchase Order",
 			"supplier": "_Test Supplier 1",
@@ -1754,7 +1760,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"schedule_date": frappe.utils.nowdate(),
 			"items": [
 				{
-					"item_code": "Testing-31",
+					"item_code": item.item_code,
 					"qty": 6,
 					"rate": 100,
 					"warehouse": "Stores - _TC",
@@ -1782,8 +1788,9 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(payment_request.reference_name, po.name)
 	
 	def test_purchase_invoice_return_TC_B_032(self):
+		frappe.set_user("Administrator")
 		company = "_Test Company"
-		item_code = "Testing-31"
+		item = make_test_item("Testing-31")
 		target_warehouse = "Stores - _TC"
 		supplier = "_Test Supplier 1"
 		qty = 6
@@ -1796,7 +1803,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"supplier": supplier,
 			"items": [
 				{
-					"item_code": item_code,
+					"item_code": item.item_code,
 					"warehouse": target_warehouse,
 					"qty": qty,
 					"rate": rate,
@@ -1817,7 +1824,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"return_against": purchase_invoice.name,
 			"items": [
 				{
-					"item_code": item_code,
+					"item_code": item.item_code,
 					"warehouse": target_warehouse,
 					"qty": -qty,
 					"rate": rate,
@@ -1868,8 +1875,9 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertTrue(stock_decrease_passed)
 
 	def test_partial_purchase_invoice_return_TC_B_033(self):
+		frappe.set_user("Administrator")
 		company = "_Test Company"
-		item_code = "Testing-31"
+		item = make_test_item("Testing-31")
 		target_warehouse = "Stores - _TC"
 		supplier = "_Test Supplier 1"
 		original_qty = 6
@@ -1884,7 +1892,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"supplier": supplier,
 			"items": [
 				{
-					"item_code": item_code,
+					"item_code": item.item_code,
 					"warehouse": target_warehouse,
 					"qty": original_qty,
 					"rate": rate,
@@ -1905,7 +1913,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"return_against": purchase_invoice.name,
 			"items": [
 				{
-					"item_code": item_code,
+					"item_code": item.item_code,
 					"warehouse": target_warehouse,
 					"qty": -return_qty,
 					"rate": rate,
@@ -1956,9 +1964,9 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertTrue(stock_decrease_passed)
 
 	def test_pr_to_lcv_add_value_to_stock_TC_B_034(self):
+		frappe.set_user("Administrator")
 		frappe.db.set_value("Company", "_Test Company", {"enable_perpetual_inventory":1, "stock_received_but_not_billed": "_Test Account Excise Duty - _TC"})
-		
-
+		item = make_test_item("Testing-31")
 		# Step 1: Create Purchase Receipt
 		doc_pr = frappe.get_doc({
 			"doctype": "Purchase Receipt",
@@ -1966,7 +1974,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"supplier": "_Test Supplier",
 			"items": [
 				{
-					"item_code": "Testing-31",
+					"item_code": item.item_code,
 					"warehouse": "Stores - _TC",
 					"qty": 10,
 					"rate": 100,
@@ -5285,11 +5293,10 @@ class TestPurchaseOrder(FrappeTestCase):
 			pi.submit()
 
 	def test_margin_percentage_discount_on_price_list_rate_po_pr_pi_TC_B_119(self):
-		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
-		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
+		frappe.set_user("Administrator")
 		company = "_Test Company"
 		supplier = "_Test Supplier 1"
-		item_code = "Testing-31"
+		item = make_test_item("Testing-31")
 		target_warehouse = "Stores - _TC"
 
 		po = frappe.get_doc({
@@ -5299,7 +5306,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"schedule_date": today(),
 			"items": [
 				{
-					"item_code": item_code,
+					"item_code": item.item_code,
 					"qty": 10,
 					"rate": 100,
 					"price_list_rate": 100,	
@@ -5357,9 +5364,10 @@ class TestPurchaseOrder(FrappeTestCase):
 					self.assertEqual(entry["credit"], expected_pi_entries[entry["account"]])
 
 	def test_margin_as_amount_discount_percentage_on_price_list_rate_po_pr_pi_TC_B_120(self):
+		frappe.set_user("Administrator")
 		company = "_Test Company"
 		supplier = "_Test Supplier 1"
-		item_code = "Testing-31"
+		item = make_test_item("Testing-31")
 		target_warehouse = "Stores - _TC"
 
 		po = frappe.get_doc({
@@ -5369,7 +5377,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"schedule_date": today(),
 			"items": [
 				{
-					"item_code": item_code,
+					"item_code": item.item_code,
 					"qty": 10,
 					"rate": 100,
 					"price_list_rate": 100,	
@@ -5388,25 +5396,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.total, 1350)
 		self.assertEqual(po.grand_total, 1350)
 
-		# Step 4: Create Purchase Receipt from PO
-		pr = frappe.get_doc({
-			"doctype": "Purchase Receipt",
-			"supplier": supplier,
-			"company": company,
-			"items": [
-				{
-					"item_code": item_code,
-					"qty": 10,
-					"rate": 100,
-					"price_list_rate": 100,	
-					"margin_type": "Amount",
-					"margin_rate_or_amount": 50,
-					"discount_percentage": 10,
-					"warehouse": target_warehouse,
-					"purchase_order": po.name
-				}
-			]
-		})
+		pr = make_purchase_receipt(po.name)
 		pr.insert()
 		pr.submit()
 
@@ -5428,29 +5418,12 @@ class TestPurchaseOrder(FrappeTestCase):
 				if entry["credit"]:
 					self.assertEqual(entry["credit"], expected_pr_entries[entry["account"]])
 
-		# Step 5: Create Purchase Invoice from PR
-		pi = frappe.get_doc({
-			"doctype": "Purchase Invoice",
-			"supplier": supplier,
-			"company": company,
-			"items": [
-				{
-					"item_code": item_code,
-					"qty": 10,
-					"rate": 100,
-					"price_list_rate": 100,	
-					"margin_type": "Amount",
-					"margin_rate_or_amount": 50,
-					"discount_percentage": 10,
-					"purchase_receipt": pr.name
-				}
-			]
-		})
+		pi = make_purchase_invoice(pr.name)
 		pi.insert()
 		pi.submit()
 
 		# Validate PI submission
-		self.assertEqual(pi.docstatus, 1)  # Ensure PI is submitted
+		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.items[0].rate, 135)
 		self.assertEqual(flt(pi.items[0].amount), 1350)
 
@@ -5468,9 +5441,10 @@ class TestPurchaseOrder(FrappeTestCase):
 					self.assertEqual(entry["credit"], expected_pi_entries[entry["account"]])
 
 	def test_margin_as_percentage_discount_as_percentage_on_price_list_rate_po_pr_pi_TC_B_121(self):
+		frappe.set_user("Administrator")
 		company = "_Test Company"
 		supplier = "_Test Supplier 1"
-		item_code = "Testing-31"
+		item = make_test_item("Testing-31")
 		target_warehouse = "Stores - _TC"
 
 		po = frappe.get_doc({
@@ -5480,7 +5454,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"schedule_date": today(),
 			"items": [
 				{
-					"item_code": item_code,
+					"item_code": item.item_code,
 					"qty": 10,
 					"rate": 100,
 					"price_list_rate": 100,	
@@ -5497,24 +5471,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.total, 1170)
 		self.assertEqual(po.grand_total, 1170)
 
-		pr = frappe.get_doc({
-			"doctype": "Purchase Receipt",
-			"supplier": supplier,
-			"company": company,
-			"items": [
-				{
-					"item_code": item_code,
-					"qty": 10,
-					"rate": 100,
-					"price_list_rate": 100,	
-					"margin_type": "Percentage",
-					"margin_rate_or_amount": 30,
-					"discount_percentage": 10,
-					"warehouse": target_warehouse,
-					"purchase_order": po.name
-				}
-			]
-		})
+		pr = make_purchase_receipt(po.name)
 		pr.insert()
 		pr.submit()
 		self.assertEqual(pr.docstatus, 1)
@@ -5533,23 +5490,7 @@ class TestPurchaseOrder(FrappeTestCase):
 				if entry["credit"]:
 					self.assertEqual(entry["credit"], expected_pr_entries[entry["account"]])
 
-		pi = frappe.get_doc({
-			"doctype": "Purchase Invoice",
-			"supplier": supplier,
-			"company": company,
-			"items": [
-				{
-					"item_code": item_code,
-					"qty": 10,
-					"rate": 100,
-					"price_list_rate": 100,	
-					"margin_type": "Percentage",
-					"margin_rate_or_amount": 30,
-					"discount_percentage": 10,
-					"purchase_receipt": pr.name
-				}
-			]
-		})
+		pi = make_purchase_invoice(pr.name)
 		pi.insert()
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
@@ -5569,9 +5510,10 @@ class TestPurchaseOrder(FrappeTestCase):
 					self.assertEqual(entry["credit"], expected_pi_entries[entry["account"]])
 
 	def test_apply_only_margin_on_price_list_rate_po_pr_pi_TC_B_124(self):
+		frappe.set_user("Administrator")
 		company = "_Test Company"
 		supplier = "_Test Supplier 1"
-		item_code = "Testing-31"
+		item = make_test_item("Testing-31")
 		target_warehouse = "Stores - _TC"
 
 		po = frappe.get_doc({
@@ -5581,7 +5523,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"schedule_date": today(),
 			"items": [
 				{
-					"item_code": item_code,
+					"item_code": item.item_code,
 					"qty": 10,
 					"rate": 100,
 					"price_list_rate": 100,	
@@ -5597,23 +5539,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.total, 1800)
 		self.assertEqual(po.grand_total, 1800)
 
-		pr = frappe.get_doc({
-			"doctype": "Purchase Receipt",
-			"supplier": supplier,
-			"company": company,
-			"items": [
-				{
-					"item_code": item_code,
-					"qty": 10,
-					"rate": 100,
-					"price_list_rate": 100,	
-					"margin_type": "Percentage",
-					"margin_rate_or_amount": 80,
-					"warehouse": target_warehouse,
-					"purchase_order": po.name
-				}
-			]
-		})
+		pr = make_purchase_receipt(po.name)
 		pr.insert()
 		pr.submit()
 		self.assertEqual(pr.docstatus, 1)
@@ -5632,22 +5558,7 @@ class TestPurchaseOrder(FrappeTestCase):
 				if entry["credit"]:
 					self.assertEqual(entry["credit"], expected_pr_entries[entry["account"]])
 
-		pi = frappe.get_doc({
-			"doctype": "Purchase Invoice",
-			"supplier": supplier,
-			"company": company,
-			"items": [
-				{
-					"item_code": item_code,
-					"qty": 10,
-					"rate": 100,
-					"price_list_rate": 100,	
-					"margin_type": "Percentage",
-					"margin_rate_or_amount": 80,
-					"purchase_receipt": pr.name
-				}
-			]
-		})
+		pi = make_purchase_invoice(pr.name)
 		pi.insert()
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
@@ -6198,9 +6109,10 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(doc_pi.status, "Unpaid")
 
 	def test_apply_only_discount_amount_on_price_list_rate_po_pr_pi_TC_B_122(self):
+		frappe.set_user("Administrator")
 		company = "_Test Company"
 		supplier = "_Test Supplier 1"
-		item_code = "Testing-31"
+		item = make_test_item("Testing-31")
 		target_warehouse = "Stores - _TC"
 
 		po = frappe.get_doc({
@@ -6210,7 +6122,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"schedule_date": today(),
 			"items": [
 				{
-					"item_code": item_code,
+					"item_code": item.item_code,
 					"qty": 10,
 					"price_list_rate": 100,
 					"discount_amount": 10
@@ -6225,22 +6137,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.total, 900)
 		self.assertEqual(po.grand_total, 900)
 
-		pr = frappe.get_doc({
-			"doctype": "Purchase Receipt",
-			"supplier": supplier,
-			"company": company,
-			"items": [
-				{
-					"item_code": item_code,
-					"qty": 10,
-					"price_list_rate": 100,
-					"discount_amount": 10,
-					"warehouse": target_warehouse,
-					"purchase_order": po.name
-				}
-			]
-		})
-		pr.items[0].rate = pr.items[0].price_list_rate - pr.items[0].discount_amount
+		pr = make_purchase_receipt(po.name)
 		pr.insert()
 		pr.submit()
 		self.assertEqual(pr.docstatus, 1)
@@ -6259,22 +6156,7 @@ class TestPurchaseOrder(FrappeTestCase):
 				if entry["credit"]:
 					self.assertEqual(entry["credit"], expected_pr_entries[entry["account"]])
 
-		pi = frappe.get_doc({
-			"doctype": "Purchase Invoice",
-			"supplier": supplier,
-			"company": company,
-			"items": [
-				{
-					"item_code": item_code,
-					"qty": 10,
-					"price_list_rate": 100,
-					"discount_amount": 10,
-					"warehouse": target_warehouse,
-					"purchase_receipt": pr.name
-				}
-			]
-		})
-		pi.items[0].rate = pi.items[0].price_list_rate - pi.items[0].discount_amount
+		pi = make_purchase_invoice(pr.name)
 		pi.insert()
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
@@ -6294,9 +6176,10 @@ class TestPurchaseOrder(FrappeTestCase):
 					self.assertEqual(entry["credit"], expected_pi_entries[entry["account"]])
 
 	def test_apply_discount_percentage_on_price_list_rate_po_pr_pi_TC_B_123(self):
+		frappe.set_user("Administrator")
 		company = "_Test Company"
 		supplier = "_Test Supplier 1"
-		item_code = "Testing-31"
+		item = make_test_item("Testing-31")
 		target_warehouse = "Stores - _TC"
 
 		po = frappe.get_doc({
@@ -6306,7 +6189,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"schedule_date": today(),
 			"items": [
 				{
-					"item_code": item_code,
+					"item_code": item.item_code,
 					"qty": 10,
 					"price_list_rate": 100,
 					"discount_percentage": 10
@@ -6321,22 +6204,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.total, 900)
 		self.assertEqual(po.grand_total, 900)
 
-		pr = frappe.get_doc({
-			"doctype": "Purchase Receipt",
-			"supplier": supplier,
-			"company": company,
-			"items": [
-				{
-					"item_code": item_code,
-					"qty": 10,
-					"price_list_rate": 100,
-					"discount_percentage": 10,
-					"warehouse": target_warehouse,
-					"purchase_order": po.name
-				}
-			]
-		})
-		pr.items[0].rate = pr.items[0].price_list_rate - pr.items[0].discount_percentage
+		pr = make_purchase_receipt(po.name)
 		pr.insert()
 		pr.submit()
 		self.assertEqual(pr.docstatus, 1)
@@ -6355,22 +6223,7 @@ class TestPurchaseOrder(FrappeTestCase):
 				if entry["credit"]:
 					self.assertEqual(entry["credit"], expected_pr_entries[entry["account"]])
 
-		pi = frappe.get_doc({
-			"doctype": "Purchase Invoice",
-			"supplier": supplier,
-			"company": company,
-			"items": [
-				{
-					"item_code": item_code,
-					"qty": 10,
-					"price_list_rate": 100,
-					"discount_percentage": 10,
-					"warehouse": target_warehouse,
-					"purchase_receipt": pr.name
-				}
-			]
-		})
-		pi.items[0].rate = pi.items[0].price_list_rate - pi.items[0].discount_percentage
+		pi = make_purchase_invoice(pr.name)
 		pi.insert()
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
@@ -6390,9 +6243,10 @@ class TestPurchaseOrder(FrappeTestCase):
 					self.assertEqual(entry["credit"], expected_pi_entries[entry["account"]])
 
 	def test_apply_only_margin_amount_rate_po_pr_pi_TC_B_125(self):
+		frappe.set_user("Administrator")
 		company = "_Test Company"
 		supplier = "_Test Supplier 1"
-		item_code = "Testing-31"
+		item = make_test_item("Testing-31")
 		target_warehouse = "Stores - _TC"
 
 		po = frappe.get_doc({
@@ -6402,7 +6256,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"schedule_date": today(),
 			"items": [
 				{
-					"item_code": item_code,
+					"item_code": item.item_code,
 					"qty": 10,
 					"price_list_rate": 100,
 					"margin_type": "Amount",
@@ -6417,22 +6271,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.total, 1600)
 		self.assertEqual(po.grand_total, 1600)
 
-		pr = frappe.get_doc({
-			"doctype": "Purchase Receipt",
-			"supplier": supplier,
-			"company": company,
-			"items": [
-				{
-					"item_code": item_code,
-					"qty": 10,
-					"price_list_rate": 100,
-					"margin_type": "Amount",
-					"margin_rate_or_amount": 60,
-					"warehouse": target_warehouse,
-					"purchase_order": po.name
-				}
-			]
-		})
+		pr = make_purchase_receipt(po.name)
 		pr.insert()
 		pr.submit()
 		self.assertEqual(pr.docstatus, 1)
@@ -6451,22 +6290,7 @@ class TestPurchaseOrder(FrappeTestCase):
 				if entry["credit"]:
 					self.assertEqual(entry["credit"], expected_pr_entries[entry["account"]])
 
-		pi = frappe.get_doc({
-			"doctype": "Purchase Invoice",
-			"supplier": supplier,
-			"company": company,
-			"items": [
-				{
-					"item_code": item_code,
-					"qty": 10,
-					"price_list_rate": 100,
-					"margin_type": "Amount",
-					"margin_rate_or_amount": 60,
-					"warehouse": target_warehouse,
-					"purchase_receipt": pr.name
-				}
-			]
-		})
+		pi = make_purchase_invoice(pr.name)
 		pi.insert()
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)

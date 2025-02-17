@@ -21,7 +21,6 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 	make_serial_batch_bundle,
 )
 from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
-from erpnext.stock.doctype.material_request.test_material_request import get_gle, make_material_request
 from erpnext.stock.doctype.material_request.material_request import make_stock_entry as make_mr_se
 from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 from erpnext.stock.doctype.serial_no.serial_no import *
@@ -1875,6 +1874,7 @@ class TestStockEntry(FrappeTestCase):
 			self.assertEqual(sle.stock_value, 100 * i)
 	
 	def test_create_partial_material_transfer_stock_entry_and_TC_SCK_048(self):
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		from erpnext.stock.doctype.material_request.material_request import make_stock_entry as _make_stock_entry
 		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry as __make_stock_entry
 		
@@ -1919,6 +1919,7 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(current_s_bin_qty, s_bin_qty)
 
 	def test_create_partial_material_request_stock_entry_for_batch_item_TC_SCK_189(self):
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		from erpnext.stock.doctype.material_request.material_request import make_stock_entry as _make_stock_entry
 		company = "_Test Company"
 		if not frappe.db.exists("Company", company):
@@ -1987,6 +1988,7 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(actual_qty, 10)
 	
 	def test_create_partial_material_request_stock_entry_for_serial_batch_item_TC_SCK_191(self):
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		from erpnext.stock.doctype.material_request.material_request import make_stock_entry as _make_stock_entry
 		company = "_Test Company"
 		if not frappe.db.exists("Company", company):
@@ -2018,6 +2020,7 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(mr.status, "Partially Ordered")
 
 	def test_stock_entry_ledgers_for_mr_purpose_and_TC_SCK_052(self):
+		from erpnext.stock.doctype.material_request.test_material_request import get_gle
 		stock_in_hand_account = get_inventory_account("_Test Company", "_Test Warehouse - _TC")
 		frappe.db.set_value("Company", "_Test Company","enable_perpetual_inventory", 1)
 		
@@ -2364,6 +2367,7 @@ class TestStockEntry(FrappeTestCase):
 		return se
 	
 	def test_partial_material_issue_TC_SCK_204(self):
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		company="_Test Company"
 		# item_code = "_Test Item"
 		fields = {
@@ -2943,6 +2947,7 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(sle.qty_after_transaction, 1)
 		
 	def test_partial_material_issue_TC_SCK_205(self):
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		company="_Test Company"
 		fields = {
 			"shelf_life_in_days": 365,
@@ -3021,6 +3026,7 @@ class TestStockEntry(FrappeTestCase):
 			),
 		)
 	def test_partial_material_issue_TC_SCK_206(self):
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		company="_Test Company"
 		fields = {
 			"shelf_life_in_days": 365,
@@ -3104,6 +3110,7 @@ class TestStockEntry(FrappeTestCase):
 			),
 		)
 	def test_partial_material_transfer_TC_SCK_207(self):
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		company = "_Test Company"
 		fields = {
 			"shelf_life_in_days": 365,
@@ -3187,6 +3194,7 @@ class TestStockEntry(FrappeTestCase):
 			),
 		)
 	def test_partial_material_transfer_TC_SCK_208(self):
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		company = "_Test Company"
 		fields = {
 			"shelf_life_in_days": 365,
@@ -3270,6 +3278,7 @@ class TestStockEntry(FrappeTestCase):
 			),
 		)
 	def test_partial_material_transfer_TC_SCK_209(self):
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		company = "_Test Company"
 		fields = {
 			"shelf_life_in_days": 365,

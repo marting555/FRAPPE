@@ -17,7 +17,6 @@ from erpnext.controllers.buying_controller import QtyMismatchError
 from erpnext.exceptions import InvalidCurrency
 from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.stock.doctype.material_request.material_request import make_purchase_order
-from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 	make_purchase_invoice as create_purchase_invoice_from_receipt,
 )
@@ -30,7 +29,6 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 	get_serial_nos_from_bundle,
 	make_serial_batch_bundle,
 )
-from erpnext.stock.doctype.stock_entry.test_stock_entry import get_qty_after_transaction
 from erpnext.stock.tests.test_utils import StockTestMixin
 import frappe.utils
 
@@ -75,6 +73,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi.delete()
 
 	def test_update_received_qty_in_material_request(self):
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_invoice
 
 		"""
@@ -852,6 +851,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		self.assertTrue(frappe.db.get_value("Batch", {"item": item_code, "reference_name": pi.name}))
 
 	def test_update_stock_and_purchase_return(self):
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import get_qty_after_transaction
 		actual_qty_0 = get_qty_after_transaction()
 
 		pi = make_purchase_invoice(
