@@ -210,6 +210,7 @@ class POSInvoice(SalesInvoice):
 		self.validate_payment_amount()
 		self.validate_loyalty_transaction()
 		self.validate_company_with_pos_company()
+		self.validate_payment_on_non_cash_mode_of_payment()
 		if self.coupon_code:
 			from erpnext.accounts.doctype.pricing_rule.utils import validate_coupon_code
 
@@ -483,6 +484,22 @@ class POSInvoice(SalesInvoice):
 
 		if self.redeem_loyalty_points and self.loyalty_program and self.loyalty_points:
 			validate_loyalty_points(self, self.loyalty_points)
+
+	def validate_payment_on_non_cash_mode_of_payment(self):
+		is_cash_mode_of_payment_used = False
+		grand_total = self.grand_total or self.rounded_total
+
+		if self.docstatus == 1:
+			for d in self.payments:
+				if d.type == "Cash" and d.amount > 0:
+					is_cash_mode_of_payment_used = True
+					break
+
+			if not is_cash_mode_of_payment_used and grand_total != self.paid_amount:
+				frappe.throw(
+					title=_("Non Cash Mode of Payment"),
+					msg=_("For Non Cash Mode of Payment, exact Grand Total amount is accepted only."),
+				)
 
 	def set_status(self, update=False, status=None, update_modified=True):
 		if self.is_new():
