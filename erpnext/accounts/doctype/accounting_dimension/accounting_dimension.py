@@ -16,7 +16,6 @@ from erpnext.accounts.doctype.repost_accounting_ledger.repost_accounting_ledger 
 	get_allowed_types_from_settings,
 )
 
-
 class AccountingDimension(Document):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
