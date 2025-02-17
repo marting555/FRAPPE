@@ -3438,6 +3438,30 @@ class TestStockEntry(FrappeTestCase):
 			elif sle['item_code'] == item_4.item_code:
 				self.assertEqual(sle['actual_qty'], 2)	
 
+	@change_settings("Stock Settings", {"allow_negative_stock": 1})
+	def test_create_mr_se_TC_SCK_063(self):
+		from erpnext.stock.doctype.material_request.material_request import make_stock_entry as _make_stock_entry
+		item = make_item("_Test Item")
+		target_warehouse = create_warehouse("_Test Warehouse", company="_Test Company")
+		source_warehouse = create_warehouse("_Test Source Warehouse", company="_Test Company")
+		mr = make_material_request(material_request_type="Material Transfer", qty=10, warehouse=target_warehouse, from_warehouse=source_warehouse, item=item.name)
+		self.assertEqual(mr.status, "Pending")
+		se_1 = _make_stock_entry(mr.name)
+		se_1.get("items")[0].qty = 5
+		se_1.insert()
+		se_1.submit()
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Partially Received")
+		self.check_stock_ledger_entries("Stock Entry", se_1.name, [[item.name, target_warehouse, 5], [item.name, source_warehouse, -5]])
+		se_2 = _make_stock_entry(mr.name)
+		se_2.get("items")[0].qty = 5
+		se_2.insert()
+		se_2.submit()
+		mr.load_from_db()
+		self.assertEqual(mr.material_request_type, "Material Transfer")
+		self.assertEqual(mr.status, "Transferred")
+		self.check_stock_ledger_entries("Stock Entry", se_2.name, [[item.name, target_warehouse, 5], [item.name, source_warehouse, -5]])
+
 	def test_stock_manufacture_with_batch_serial_TC_SCK_141(self):
 		company = "_Test Company"
 		if not frappe.db.exists("Company", company):
