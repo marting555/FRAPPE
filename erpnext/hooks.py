@@ -228,7 +228,7 @@ standard_portal_menu_items = [
 	{
 		"title": "Purchase Invoices",
 		"route": "/purchase-invoices",
-		"reference_doctype": "Purchase Invoicxe",
+		"reference_doctype": "Purchase Invoice",
 		"role": "Supplier",
 	},
 	{
