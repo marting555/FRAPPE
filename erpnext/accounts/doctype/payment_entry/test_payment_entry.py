@@ -1963,7 +1963,7 @@ class TestPaymentEntry(FrappeTestCase):
 					{
 					'account': '_Test TDS Payable - _TC', 
 					'debit': 0.0, 'credit': 1600.0, 
-					'against_voucher': None
+					'against_voucher': None 
 					}
 					]
 			self.assertEqual(gl,expected_result)
