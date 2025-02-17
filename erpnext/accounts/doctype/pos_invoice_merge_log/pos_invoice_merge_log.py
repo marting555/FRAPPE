@@ -12,15 +12,9 @@ from frappe.utils import cint, flt, get_time, getdate, nowdate, nowtime
 from frappe.utils.background_jobs import enqueue, is_job_enqueued
 from frappe.utils.scheduler import is_scheduler_inactive
 
-<<<<<<< HEAD
-from erpnext.accounts.doctype.pos_profile.pos_profile import required_accounting_dimensions
-=======
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 	get_checks_for_pl_and_bs_accounts,
 )
-from erpnext.controllers.taxes_and_totals import ItemWiseTaxDetail
->>>>>>> 60a5f4f30d (fix: pos accounting dimension fieldname error (#45899))
-
 
 class POSInvoiceMergeLog(Document):
 	# begin: auto-generated types
