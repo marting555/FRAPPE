@@ -25,6 +25,10 @@ from erpnext.stock.doctype.serial_no.serial_no import (
 )
 
 
+class PartialPaymentValidationError(frappe.ValidationError):
+	pass
+
+
 class POSInvoice(SalesInvoice):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -55,7 +59,11 @@ class POSInvoice(SalesInvoice):
 		self.validate_payment_amount()
 		self.validate_loyalty_transaction()
 		self.validate_company_with_pos_company()
+<<<<<<< HEAD
 		self.validate_duplicate_serial_no()
+=======
+		self.validate_full_payment()
+>>>>>>> d94802067b (fix: disable partial payment in pos (#45752))
 		if self.coupon_code:
 			from erpnext.accounts.doctype.pricing_rule.utils import validate_coupon_code
 
@@ -406,6 +414,20 @@ class POSInvoice(SalesInvoice):
 
 		if self.redeem_loyalty_points and self.loyalty_program and self.loyalty_points:
 			validate_loyalty_points(self, self.loyalty_points)
+
+	def validate_full_payment(self):
+		invoice_total = flt(self.rounded_total) or flt(self.grand_total)
+
+		if self.docstatus == 1:
+			if self.is_return and self.paid_amount != invoice_total:
+				frappe.throw(
+					msg=_("Partial Payment in POS Invoice is not allowed."), exc=PartialPaymentValidationError
+				)
+
+			if self.paid_amount < invoice_total:
+				frappe.throw(
+					msg=_("Partial Payment in POS Invoice is not allowed."), exc=PartialPaymentValidationError
+				)
 
 	def set_status(self, update=False, status=None, update_modified=True):
 		if self.is_new():
