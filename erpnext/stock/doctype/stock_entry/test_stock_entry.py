@@ -1947,6 +1947,29 @@ class TestStockEntry(FrappeTestCase):
 		mr.reload()
 		self.assertEqual(mr.status, "Partially Ordered")
 
+	def test_create_partial_material_request_stock_entry_for_serial_item_TC_SCK_190(self):
+		from erpnext.stock.doctype.material_request.material_request import make_stock_entry as _make_stock_entry
+		company = "_Test Company"
+		if not frappe.db.exists("Company", company):
+			company_doc = frappe.new_doc("Company")
+			company_doc.company_doc_name = company
+			company_doc.country="India"
+			company_doc.default_currency= "INR"
+			company_doc.save()
+		else:
+			company_doc = frappe.get_doc("Company", company) 
+		warehouse = create_warehouse("_Test Warehouse",  company=company_doc.name)
+		item = make_item("_Test Item MR", properties={"has_serial_no":1})
+		item.serial_no_series = f"{item.item_code}.-SL-.####."
+		item.save()
+		mr = make_material_request(material_request_type="Material Issue", qty=10, warehouse=warehouse, item=item.name)
+		se = _make_stock_entry(mr.name)
+		se.get("items")[0].qty = 5
+		se.save()
+		se.submit()
+		mr.reload()
+		self.assertEqual(mr.status, "Partially Ordered")
+
 	def test_stock_entry_for_mr_purpose(self):
 		company = frappe.db.get_value("Warehouse", "Stores - TCP1", "company")
 
@@ -3542,6 +3565,62 @@ class TestStockEntry(FrappeTestCase):
 		for sle in sle_entries:
 			if sle['item_code'] == item.item_code:
 				self.assertEqual(sle['actual_qty'], 150)
+
+	def test_inactive_sales_items_TC_SCK_228(self):
+		from erpnext.accounts.report.inactive_sales_items.inactive_sales_items import execute
+		avail_qty = 30
+		company = "_Test Company"
+		item_c = []
+		q = []
+		range1 = []
+		range2 = []
+		if not frappe.db.exists("Company", company):
+			company_doc = frappe.new_doc("Company")
+			company_doc.company_doc_name = company
+			company_doc.country="India",
+			company_doc.default_currency= "INR",
+			company_doc.save()
+
+		item_fields1 = {
+			"item_name": "_Test Item2271",
+			"valuation_rate": 500,
+			"is_stock_item": 1
+		}
+		item_fields2 = {
+			"item_name": "_Test Item2281",
+			"valuation_rate": 500,
+			"is_stock_item": 1
+		}
+		item1 = make_item("_Test Item2271", item_fields1)
+		item2 = make_item("_Test Item2281", item_fields2)
+		se = make_stock_entry(item_code=item1.name,purpose="Material Receipt", posting_date="01-12-2024",company=company,target=create_warehouse("Test Warehouse", company=company), qty=15)
+		se1 = make_stock_entry(item_code=item1.name,purpose="Material Receipt", posting_date="01-01-2025",company=company,target=create_warehouse("Test Warehouse", company=company), qty=25)
+		se2 = make_stock_entry(item_code=item1.name,set_posting_time=1,purpose="Material Issue", posting_date="01-01-2025",company=company,source=create_warehouse("Test Warehouse", company=company), qty=10)
+		se3 = make_stock_entry(item_code=item1.name,purpose="Material Issue", posting_date="02-07-2025",company=company,source=create_warehouse("Test Warehouse", company=company), qty=20)
+
+
+		filters = frappe._dict({  # Convert to allow dot notation
+		"territory": "India",
+        "item": item1.name,
+		"based_on": "Sales Invoice",
+		"days": "30"
+    	})
+
+		columns, data = execute(filters)
+		self.assertEqual(data[0]['territory'], "India")
+		self.assertEqual(data[0]['item'], item1.name)
+		filters1 = frappe._dict({  # Convert to allow dot notation
+		"territory": "India",
+        "item": item2.name,
+		"based_on": "Sales Invoice",
+		"days": "30"
+    	})
+
+		columns1, data1 = execute(filters1)
+		self.assertEqual(data1[0]['territory'], "India")
+		self.assertEqual(data1[0]['item'], item1.name)
+
+
 	
 	@change_settings("Stock Settings", {"allow_negative_stock": 1})
 	def test_create_stock_entry_with_manufacture_purpose_TC_SCK_137(self):
