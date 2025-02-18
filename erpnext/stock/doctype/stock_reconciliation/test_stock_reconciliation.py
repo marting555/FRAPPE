@@ -1553,7 +1553,7 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 			"_Test Stock Reco Item",
 			is_stock_item=1,
 			valuation_rate=500,
-			warehouse="_Test reco Warehouse",
+			warehouse="_Test reco Warehouse - _TC",
 		)
 
 		stock_reco = create_stock_reconciliation(
