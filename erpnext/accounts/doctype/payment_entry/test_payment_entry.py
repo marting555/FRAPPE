@@ -2150,7 +2150,7 @@ def create_payment_terms_template():
 					},
 				],
 			}
-		).insert()
+		).insert(ignore_permissions=True)
 
 
 def create_payment_terms_template_with_discount(
@@ -2182,7 +2182,7 @@ def create_payment_terms_template_with_discount(
 					}
 				],
 			}
-		).insert()
+		).insert(ignore_permissions=True)
 
 
 def create_payment_term(name):
@@ -2199,10 +2199,11 @@ def create_customer(name="_Test Customer 2 USD", currency="USD"):
 		customer.customer_name = name
 		customer.default_currency = currency
 		customer.type = "Individual"
-		customer.save()
+		customer.insert(ignore_permissions=True)
 		customer = customer.name
 	return customer
 def create_supplier(**args):
+	frappe.set_user("Administrator")
 	args = frappe._dict(args)
 
 	if frappe.db.exists("Supplier", args.supplier_name):
@@ -2229,17 +2230,18 @@ def create_supplier(**args):
 		doc.supplier_group = args.supplier_group or "Services"
   
 
-	doc.insert(ignore_mandatory=True)
-	
+	doc.insert(ignore_mandatory=True,ignore_permissions=True)
 	return doc
 
 def create_account():
+	frappe.set_user("Administrator")
 	accounts = [
 		{"name": "Source of Funds (Liabilities)", "parent": ""},
 		{"name": "Current Liabilities", "parent": "Source of Funds (Liabilities) - _TC"},
 		{"name": "Duties and Taxes", "parent": "Current Liabilities - _TC"},
 		{"name": "_Test TDS Payable", "parent": "Duties and Taxes - _TC","account_type":"Tax"},
 		{"name": "_Test TCS Payable", "parent": "Duties and Taxes - _TC","account_type":"Tax"},
+		{"name": "_Test Subsidy", "parent": "Stock Expenses - _TC","account_type":"Cost of Goods Sold"},
 		{"name": "_Test Creditors", "parent": "Accounts Payable - _TC","account_type":"Payable"},
 		{"name": "_Test Payable USD", "parent": "Accounts Payable - _TC","account_type":"Payable"},
 		{"name": "_Test Cash", "parent": "Cash In Hand - _TC"},
@@ -2271,13 +2273,14 @@ def create_account():
 			if account["parent"]:
 				doc.parent_account = account["parent"]
 			
-			doc.insert(ignore_mandatory=True)
-			
+			doc.insert(ignore_mandatory=True,ignore_permissions=True)
+		
 
 		except Exception as e:
 			frappe.log_error(f"Failed to insert {account['name']}", str(e))
 
 def create_records(supplier):
+	frappe.set_user("Administrator")
 	from erpnext.accounts.doctype.tax_withholding_category.test_tax_withholding_category import create_tax_withholding_category
 	create_company()
  
@@ -2305,6 +2308,7 @@ def create_records(supplier):
 
 
 def make_test_item(item_name=None):
+	frappe.set_user("Administrator")
 	from erpnext.stock.doctype.item.test_item import make_item
 	app_name = "india_compliance"
 	if not frappe.db.exists("Item", item_name or "Test Item with Tax"):
@@ -2314,8 +2318,7 @@ def make_test_item(item_name=None):
 					"doctype": 'GST HSN Code',
 					"hsn_code": '888890',
 					"description": 'test'
-				}).insert()
-				
+				}).insert(ignore_permissions=True)
 			
 			item= make_item(
 				item_name or "Test Item with Tax",
@@ -2342,16 +2345,18 @@ def make_test_item(item_name=None):
 					"doctype": 'GST HSN Code',
 					"hsn_code": '888890',
 					"description": 'test'
-				}).insert()
+				}).insert(ignore_permissions=True)
 			item=frappe.get_doc("Item", item_name or "Test Item with Tax")
 			if not item.gst_hsn_code:
 				item.gst_hsn_code="888890"
 				item.save()
-			
+			return item
+		else:
+			item=frappe.get_doc("Item", item_name)
 			return item
         
 def create_purchase_invoice(**args):
-	# return sales invoice doc object
+	frappe.set_user("Administrator")
 	args = frappe._dict(args)
 	pi = frappe.get_doc(
 		{
@@ -2382,6 +2387,7 @@ def create_purchase_invoice(**args):
 	return pi
 
 def create_company():
+	frappe.set_user("Administrator")
 	if not frappe.db.exists("Company", "_Test Company"):
 		frappe.get_doc({
 			"doctype": "Company",
@@ -2390,5 +2396,5 @@ def create_company():
 			"default_currency": "INR",
 			"company_email": "test@example.com",
 			"abbr":"_TC"
-		}).insert()
+		}).insert(ignore_permissions=True)
 		
