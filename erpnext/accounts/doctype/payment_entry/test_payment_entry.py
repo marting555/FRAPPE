@@ -1956,6 +1956,73 @@ class TestPaymentEntry(FrappeTestCase):
      				{'account': 'Cash - _TC', 'debit': 0.0, 'credit':payment_entry.received_amount_after_tax}
      			]	
 			self.check_gl_entries()
+
+	def test_tds_computation_summary_report_TC_ACC_095(self):
+		from frappe.desk.query_report import get_report_result
+		company = "_Test Company"
+		create_records('_Test Supplier TDS Testing For PE')
+		supplier=frappe.get_doc("Supplier",'_Test Supplier TDS Testing For PE')
+		if supplier:
+			self.assertEqual(supplier.tax_withholding_category,"Test - TDS - 194C - Company")
+			
+			tax_withholding_category=frappe.get_doc("Tax Withholding Category","Test - TDS - 194C - Company")
+			
+			if len(tax_withholding_category.accounts) >0:
+				self.assertEqual(tax_withholding_category.accounts[0].account,"_Test TDS Payable - _TC")
+			
+			payment_entry=create_payment_entry(
+				party_type="Supplier",
+				party=supplier.name,
+				payment_type="Pay",
+				paid_from="Cash - _TC",
+				paid_to="Creditors - _TC",
+				save=True
+			)
+			payment_entry.apply_tax_withholding_amount=1
+			payment_entry.tax_withholding_category="Test - TDS - 194C - Company"
+			payment_entry.paid_amount=80000
+			payment_entry.append(
+						"taxes",
+						{
+							"account_head": "_Test TDS Payable - _TC",
+							"charge_type": "On Paid Amount",
+							"rate": 0,
+							"add_deduct_tax": "Deduct",
+							"description": "Cash",
+						},
+					)
+			payment_entry.save()
+			payment_entry.submit()
+			# Fetch the TDS Computation Summary report
+			report_name = "TDS Computation Summary"
+			filters = {
+				"company": company,
+				"party_type": "Supplier",
+				"from_date": add_days(nowdate(), -30),
+				"to_date": nowdate(),
+			}
+			report = frappe.get_doc("Report", report_name)
+			report_data = get_report_result(report, filters) or []
+			rows = report_data[1]
+			expected_data = {
+				"party": supplier.name,
+				"section_code": tax_withholding_category.name,
+				"entity_type": "Company",
+				"rate": 10.0,  # TDS rate
+				"total_amount": 30000.0,  # Total amount for the invoice
+				"tax_amount": 3000.0,  # TDS amount deducted
+			}	
+			matching_row = None
+			for row in rows:
+				if row["party"] == expected_data["party"] and row["section_code"] == expected_data["section_code"]:
+					matching_row = row
+					break
+
+			# Assert the matching row exists
+			self.assertIsNotNone(matching_row, "The expected row for the supplier and section code was not found.")
+			payment_entry.cancel()
+
+
 	def test_link_advance_payment_with_purchase_invoice_TC_ACC_022(self):
 		create_records('_Test Supplier TDS')
 		supplier=frappe.get_doc("Supplier","_Test Supplier TDS")
@@ -2083,7 +2150,7 @@ def create_payment_terms_template():
 					},
 				],
 			}
-		).insert()
+		).insert(ignore_permissions=True)
 
 
 def create_payment_terms_template_with_discount(
@@ -2115,7 +2182,7 @@ def create_payment_terms_template_with_discount(
 					}
 				],
 			}
-		).insert()
+		).insert(ignore_permissions=True)
 
 
 def create_payment_term(name):
@@ -2132,10 +2199,11 @@ def create_customer(name="_Test Customer 2 USD", currency="USD"):
 		customer.customer_name = name
 		customer.default_currency = currency
 		customer.type = "Individual"
-		customer.save()
+		customer.insert(ignore_permissions=True)
 		customer = customer.name
 	return customer
 def create_supplier(**args):
+	frappe.set_user("Administrator")
 	args = frappe._dict(args)
 
 	if frappe.db.exists("Supplier", args.supplier_name):
@@ -2162,17 +2230,18 @@ def create_supplier(**args):
 		doc.supplier_group = args.supplier_group or "Services"
   
 
-	doc.insert(ignore_mandatory=True)
-	
+	doc.insert(ignore_mandatory=True,ignore_permissions=True)
 	return doc
 
 def create_account():
+	frappe.set_user("Administrator")
 	accounts = [
 		{"name": "Source of Funds (Liabilities)", "parent": ""},
 		{"name": "Current Liabilities", "parent": "Source of Funds (Liabilities) - _TC"},
 		{"name": "Duties and Taxes", "parent": "Current Liabilities - _TC"},
 		{"name": "_Test TDS Payable", "parent": "Duties and Taxes - _TC","account_type":"Tax"},
 		{"name": "_Test TCS Payable", "parent": "Duties and Taxes - _TC","account_type":"Tax"},
+		{"name": "_Test Subsidy", "parent": "Stock Expenses - _TC","account_type":"Cost of Goods Sold"},
 		{"name": "_Test Creditors", "parent": "Accounts Payable - _TC","account_type":"Payable"},
 		{"name": "_Test Payable USD", "parent": "Accounts Payable - _TC","account_type":"Payable"},
 		{"name": "_Test Cash", "parent": "Cash In Hand - _TC"},
@@ -2204,13 +2273,14 @@ def create_account():
 			if account["parent"]:
 				doc.parent_account = account["parent"]
 			
-			doc.insert(ignore_mandatory=True)
-			
+			doc.insert(ignore_mandatory=True,ignore_permissions=True)
+		
 
 		except Exception as e:
 			frappe.log_error(f"Failed to insert {account['name']}", str(e))
 
 def create_records(supplier):
+	frappe.set_user("Administrator")
 	from erpnext.accounts.doctype.tax_withholding_category.test_tax_withholding_category import create_tax_withholding_category
 	create_company()
  
@@ -2238,6 +2308,7 @@ def create_records(supplier):
 
 
 def make_test_item(item_name=None):
+	frappe.set_user("Administrator")
 	from erpnext.stock.doctype.item.test_item import make_item
 	app_name = "india_compliance"
 	if not frappe.db.exists("Item", item_name or "Test Item with Tax"):
@@ -2247,8 +2318,7 @@ def make_test_item(item_name=None):
 					"doctype": 'GST HSN Code',
 					"hsn_code": '888890',
 					"description": 'test'
-				}).insert()
-				
+				}).insert(ignore_permissions=True)
 			
 			item= make_item(
 				item_name or "Test Item with Tax",
@@ -2275,16 +2345,18 @@ def make_test_item(item_name=None):
 					"doctype": 'GST HSN Code',
 					"hsn_code": '888890',
 					"description": 'test'
-				}).insert()
+				}).insert(ignore_permissions=True)
 			item=frappe.get_doc("Item", item_name or "Test Item with Tax")
 			if not item.gst_hsn_code:
 				item.gst_hsn_code="888890"
 				item.save()
-			
+			return item
+		else:
+			item=frappe.get_doc("Item", item_name)
 			return item
         
 def create_purchase_invoice(**args):
-	# return sales invoice doc object
+	frappe.set_user("Administrator")
 	args = frappe._dict(args)
 	pi = frappe.get_doc(
 		{
@@ -2315,6 +2387,7 @@ def create_purchase_invoice(**args):
 	return pi
 
 def create_company():
+	frappe.set_user("Administrator")
 	if not frappe.db.exists("Company", "_Test Company"):
 		frappe.get_doc({
 			"doctype": "Company",
@@ -2323,5 +2396,5 @@ def create_company():
 			"default_currency": "INR",
 			"company_email": "test@example.com",
 			"abbr":"_TC"
-		}).insert()
+		}).insert(ignore_permissions=True)
 		

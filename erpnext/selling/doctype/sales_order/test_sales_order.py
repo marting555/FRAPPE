@@ -5924,7 +5924,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			make_test_item,
 			get_payment_entry
 		)
-		
+		sales_oreder_name = None
 		account_setting = frappe.get_doc("Accounts Settings")
 		account_setting.unlink_advance_payment_on_cancelation_of_order = 0
 		account_setting.save()
@@ -5938,14 +5938,14 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 				qty=1,
 				rate=1000,
 			)
-
+			sales_oreder_name = so.name
 			pe = get_payment_entry("Sales Order", so.name, bank_account="Cash - _TC")
 			pe.submit()
 			so.load_from_db()
 			so.cancel()
 		except Exception as e:
 			error_message = str(e)
-			self.assertEqual(error_message, f"Cannot delete or cancel because Sales Order {so.name} is linked with Payment Entry {pe.name} at Row: 1")
+			self.assertEqual(error_message, f"Cannot delete or cancel because Sales Order {sales_oreder_name} is linked with Payment Entry {pe.name} at Row: 1")
 		
 	def test_customer_credit_limit_bypass_TC_ACC_139(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
@@ -5970,7 +5970,101 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		sales_order.load_from_db()
 	
 		self.assertRaises(frappe.ValidationError, sales_order.submit)
+
+	@change_settings("Accounts Settings", {"over_billing_allowance": 25})
+	@change_settings("Stock Settings", {"over_delivery_receipt_allowance": 25})
+	def test_sales_order_and_delivery_TC_SCK_182(self):
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		from datetime import datetime, timedelta
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+		customer = frappe.new_doc("Customer")
+		customer.customer_name = "Test Customer 1"
+		customer.insert()
+		item_fields = {
+			"item_name": "_Test Book",
+			"is_stock_item": 1,
+			"valuation_rate": 100,
+		}
+		item = make_item("_Test Book", item_fields)
+		today = datetime.today().date()  # Get today's date
+		delivery_date = today + timedelta(days=10)  # Add 10 days
+		make_stock_entry(
+				item_code=item.name, to_warehouse=create_warehouse("_Test Stores", company="_Test Company"), qty=20, purpose="Material Receipt"
+			)
+
+		sales_order = frappe.get_doc({
+			"doctype": "Sales Order",
+			"customer": customer.name,
+			"delivery_date": delivery_date,
+			"company": "_Test Company",
+			"items": [{
+				"item_code": item.name,
+				"qty": 8,
+				"rate": 10,
+				"warehouse": create_warehouse("_Test Stores", company="_Test Company")
+			}]
+		})
+		sales_order.insert()
+		sales_order.submit()
+
+		sales_order_item = sales_order.items[0].name
+
+		# Create Delivery Note from Sales Order
+		delivery_note = frappe.get_doc({
+			"doctype": "Delivery Note",
+			"customer": customer.name,
+			"company": "_Test Company",
+			"items": [{
+				"item_code": item.name,
+				"qty": 10,  # Over-billed qty (within 20% limit)
+				"rate": 10,
+				"warehouse": create_warehouse("_Test Stores", company="_Test Company"),
+				"against_sales_order": sales_order.name,
+				"so_detail": sales_order_item
+			}]
+		})
+		delivery_note.insert()
+		delivery_note.submit()
+
+		# Check Stock Ledger
+		stock_ledger_entries = frappe.get_all("Stock Ledger Entry", 
+												filters={"voucher_no": delivery_note.name}, 
+												fields=["actual_qty", "warehouse"])
+
+		self.assertTrue(any(entry["actual_qty"] == -10 and entry["warehouse"] == "_Test Stores - _TC" for entry in stock_ledger_entries), "Stock Ledger did not update correctly")
+
 	
+	def test_stock_reservation_from_so_to_dn_TC_SCK_143(self):
+		so = make_sales_order(item_code="_Test Item", qty=5, do_not_save=True)
+		so.reserve_stock = 1
+		so.save()
+		so.submit()
+		from erpnext.stock.doctype.stock_reservation_entry.stock_reservation_entry import create_stock_reservation_entries_for_so_items
+
+		item_details = [{'__checked': 1, 'sales_order_item': so.items[0].get("name"), 'item_code': '_Test Item', 
+                   'warehouse': 'Stores - _TIRC', 'qty_to_reserve': 5, 'idx': 1, 'name': 'row 1'}]
+  
+		create_stock_reservation_entries_for_so_items(
+			sales_order=so,
+			items_details=item_details,
+			from_voucher_type=None,
+			notify=True,
+		)
+  
+		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so.name}, "status"), "Reserved")
+		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so.name}, "reserved_qty"), 5)
+		dn = make_delivery_note(so.name)
+		dn.save()
+		dn.submit()
+		self.assertEqual(dn.status, "To Bill", "Delivery Note not created")
+		qty_change = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': dn.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change, -5)
+		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so.name}, "status"), "Delivered")
+  
       
 def get_transport_details(customer):
 	# create a driver
