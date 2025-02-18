@@ -822,7 +822,11 @@ def make_material_request(source_name, target_doc=None):
 			},
 			"Sales Order Item": {
 				"doctype": "Material Request Item",
-				"field_map": {"name": "sales_order_item", "parent": "sales_order"},
+				"field_map": {
+					"name": "sales_order_item",
+					"parent": "sales_order",
+					"delivery_date": "required_by",
+				},
 				"condition": lambda item: not frappe.db.exists(
 					"Product Bundle", {"name": item.item_code, "disabled": 0}
 				)
@@ -939,7 +943,8 @@ def make_delivery_note(source_name, target_doc=None, kwargs=None):
 
 		if item:
 			target.cost_center = (
-				frappe.db.get_value("Project", source_parent.project, "cost_center")
+				frappe.db.exists("DocType", "Project")
+				and frappe.db.get_value("Project", source_parent.project, "cost_center")
 				or item.get("buying_cost_center")
 				or item_group.get("buying_cost_center")
 			)
@@ -1046,7 +1051,7 @@ def make_sales_invoice(source_name, target_doc=None, ignore_permissions=False):
 			else source.qty - source.returned_qty
 		)
 
-		if source_parent.project:
+		if frappe.db.exists("DocType", "Project") and source_parent.project:
 			target.cost_center = frappe.db.get_value("Project", source_parent.project, "cost_center")
 		if target.item_code:
 			item = get_item_defaults(target.item_code, source_parent.company)
@@ -1447,6 +1452,7 @@ def make_purchase_order(source_name, selected_items=None, target_doc=None):
 	)
 
 	set_delivery_date(doc.items, source_name)
+	doc.set_onload("load_after_mapping", False)
 
 	return doc
 

@@ -2,7 +2,8 @@
 # See license.txt
 import frappe
 from frappe.tests.utils import FrappeTestCase
-from frappe.utils import add_months, today
+from frappe.utils import add_months, today ,add_days,nowdate
+from frappe.tests.utils import FrappeTestCase, change_settings
 
 from erpnext import get_company_currency
 from erpnext.stock.doctype.item.test_item import make_item
@@ -114,6 +115,7 @@ class TestBlanketOrder(FrappeTestCase):
 		self.assertEqual(bo.items[0].party_item_code, "SUPP-PART-1")
 
 	def test_blanket_order_to_invoice_TC_B_102(self):
+		frappe.set_user("Administrator")
 		#Scenario : BO=>PO=>PR=PI
 		item_doc = make_item("_Test Item 1 for Blanket Order")
 		item_code = item_doc.name
@@ -203,6 +205,7 @@ class TestBlanketOrder(FrappeTestCase):
 		self.assertTrue(any(entry["account"] == "SGST" and entry["debit"] == 9000 for entry in pi_gl_entries))
 		self.assertTrue(any(entry["account"] == "Creditors" and entry["credit"] == 118000 for entry in pi_gl_entries))
 	def test_blanket_order_to_po_TC_B_093(self):
+		frappe.set_user("Administrator")
 		company = "_Test Company"
 		item_code = "Testing-31"
 		target_warehouse = "Stores - _TC"
@@ -249,6 +252,87 @@ class TestBlanketOrder(FrappeTestCase):
 		self.assertEqual(purchase_order.docstatus,1)
 		updated_blanket_order = frappe.get_doc("Blanket Order", blanket_order.name)
 		self.assertEqual(updated_blanket_order.items[0].ordered_qty, 2)
+	
+	def test_blanket_order_to_sales_invoice_TC_S_054(self):
+		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+		frappe.flags.args.doctype = "Sales Order"
+
+		bo = make_blanket_order(blanket_order_type="Selling",quantity=50,rate=1000)
+		so = make_order(bo.name)
+		so.delivery_date = add_days(nowdate(), 5)
+		so.submit()
+
+		bo.reload()
+		self.assertEqual(bo.items[0].ordered_qty, 50)
+
+		dn=make_delivery_note(so.name)
+		dn.submit()
+		self.assertEqual(dn.status, "To Bill")
+
+		si = make_sales_invoice(dn.name)
+		si.submit()
+
+		debtor_account = frappe.db.get_value("Company", "_Test Company", "default_receivable_account")
+		sales_account = frappe.db.get_value("Company", "_Test Company", "default_income_account")
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": si.name}, fields=["account", "debit", "credit"])
+		gl_debits = {entry.account: entry.debit for entry in gl_entries}
+		gl_credits = {entry.account: entry.credit for entry in gl_entries}
+		self.assertAlmostEqual(gl_debits[debtor_account], 50000)
+		self.assertAlmostEqual(gl_credits[sales_account], 50000)
+
+	def test_blanket_order_to_sales_invoice_with_update_stock_TC_S_055(self):
+		from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+		frappe.flags.args.doctype = "Sales Order"
+
+		bo = make_blanket_order(blanket_order_type="Selling",quantity=50,rate=1000)
+		so = make_order(bo.name)
+		so.delivery_date = add_days(nowdate(), 5)
+		so.submit()
+
+		bo.reload()
+		self.assertEqual(bo.items[0].ordered_qty, 50)
+
+		si = make_sales_invoice(so.name)
+		si.update_stock =1
+		si.insert()
+		si.submit()
+
+		debtor_account = frappe.db.get_value("Company", "_Test Company", "default_receivable_account")
+		sales_account = frappe.db.get_value("Company", "_Test Company", "default_income_account")
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": si.name}, fields=["account", "debit", "credit"])
+		gl_debits = {entry.account: entry.debit for entry in gl_entries}
+		gl_credits = {entry.account: entry.credit for entry in gl_entries}
+		self.assertAlmostEqual(gl_debits[debtor_account], 50000)
+		self.assertAlmostEqual(gl_credits[sales_account], 50000)
+  
+	def test_blanket_order_creating_quotation_TC_S_157(self):
+		frappe.flags.args.doctype = "Quotation"
+		bo = make_blanket_order(blanket_order_type="Selling",quantity=50,rate=1000)
+		self.assertEqual(bo.docstatus, 1)
+  
+		quotation = make_order(bo.name)
+		quotation.submit()
+		quotation.reload()
+		self.assertEqual(quotation.docstatus, 1)
+		self.assertEqual(quotation.grand_total, 50000)
+  
+	@change_settings("Selling Settings", {"blanket_order_allowance": 5.0})
+	def test_blanket_order_to_validate_allowance_in_sales_order_TC_S_161(self):
+		frappe.flags.args.doctype = "Sales Order"
+
+		bo = make_blanket_order(blanket_order_type="Selling",quantity=20,rate=100)
+		self.assertEqual(bo.docstatus, 1)
+  
+		so = make_order(bo.name)
+		so.delivery_date = add_days(nowdate(), 5)
+		for itm in so.items:
+			itm.qty = 21
+		so.save()
+		so.submit()
+		so.reload()
+  
+		self.assertEqual(so.status, "To Deliver and Bill")
 
 def make_blanket_order(**args):
 	args = frappe._dict(args)

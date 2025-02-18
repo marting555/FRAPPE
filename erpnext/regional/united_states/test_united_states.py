@@ -19,7 +19,6 @@ class TestUnitedStates(unittest.TestCase):
 			doc.tax_id = "04-1234567"
 			doc.irs_1099 = 1
 			doc.save()
-			frappe.db.commit()
 			supplier = frappe.get_doc("Supplier", "_US 1099 Test Supplier")
 			self.assertEqual(supplier.irs_1099, 1)
 

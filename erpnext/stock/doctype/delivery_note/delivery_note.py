@@ -12,7 +12,6 @@ from frappe.utils import cint, flt
 
 from erpnext.controllers.accounts_controller import get_taxes_and_charges, merge_taxes
 from erpnext.controllers.selling_controller import SellingController
-from erpnext.stock.doctype.serial_no.serial_no import get_delivery_note_serial_no
 
 form_grid_templates = {"items": "templates/form_grid/item_grid.html"}
 
@@ -264,16 +263,15 @@ class DeliveryNote(SellingController):
 		self.reset_default_field_value("set_warehouse", "items", "warehouse")
 
 	def validate_with_previous_doc(self):
+		compare_fields_pr_item = [["customer", "="], ["company", "="],["currency", "="]]
+		if "projects" in frappe.get_installed_apps():
+			compare_fields_pr_item.append(["project", "="])
+
 		super().validate_with_previous_doc(
 			{
 				"Sales Order": {
 					"ref_dn_field": "against_sales_order",
-					"compare_fields": [
-						["customer", "="],
-						["company", "="],
-						["project", "="],
-						["currency", "="],
-					],
+					"compare_fields": compare_fields_pr_item
 				},
 				"Sales Order Item": {
 					"ref_dn_field": "so_detail",
@@ -283,12 +281,7 @@ class DeliveryNote(SellingController):
 				},
 				"Sales Invoice": {
 					"ref_dn_field": "against_sales_invoice",
-					"compare_fields": [
-						["customer", "="],
-						["company", "="],
-						["project", "="],
-						["currency", "="],
-					],
+					"compare_fields": compare_fields_pr_item
 				},
 				"Sales Invoice Item": {
 					"ref_dn_field": "si_detail",
@@ -952,11 +945,6 @@ def make_sales_invoice(source_name, target_doc=None, args=None):
 
 	def update_item(source_doc, target_doc, source_parent):
 		target_doc.qty = to_make_invoice_qty_map[source_doc.name]
-
-		if source_doc.serial_no and source_parent.per_billed > 0 and not source_parent.is_return:
-			target_doc.serial_no = get_delivery_note_serial_no(
-				source_doc.item_code, target_doc.qty, source_parent.name
-			)
 
 	def get_pending_qty(item_row):
 		pending_qty = item_row.qty - invoiced_qty_map.get(item_row.name, 0)
