@@ -2968,6 +2968,45 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(sle_records[item_1], [-10])
 		self.assertEqual(sle_records[item_2], [-10])
 
+	def test_single_mr_with_multiple_se_tc_sck_123(self):
+		mr = make_material_request(material_request_type="Material Transfer")
+		
+		self.assertEqual(mr.status, "Pending")
+
+		se1 = make_mr_se(mr.name)
+		se1.items[0].qty = 5
+		se1.from_warehouse = "_Test Warehouse - _TC"
+		se1.items[0].t_warehouse = "Stores - _TC"
+		se1.insert()
+		se1.submit()
+
+		self.assertEqual(se1.stock_entry_type, "Material Transfer")
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Partially Received")
+		self.check_stock_ledger_entries(
+			"Stock Entry",
+			se1.name,
+			[
+				["_Test Item", "_Test Warehouse - _TC", -5],
+				["_Test Item", "Stores - _TC", 5],
+			],
+		)
+		se2 = make_mr_se(mr.name)
+		se2.from_warehouse = "_Test Warehouse - _TC"
+		se2.items[0].t_warehouse = "Stores - _TC"
+		se2.insert()
+		se2.submit()
+		self.check_stock_ledger_entries(
+			"Stock Entry",
+			se2.name,
+			[
+				["_Test Item", "_Test Warehouse - _TC", -5],
+				["_Test Item", "Stores - _TC", 5],
+			],
+		)
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Transferred")
+
 	def test_stock_entry_tc_sck_136(self):
 		item_code = make_item("_Test Item Stock Entry New", {"valuation_rate": 100})
 		se = make_stock_entry(item_code=item_code, target="_Test Warehouse - _TC", qty=1, do_not_submit=True)
