@@ -33,7 +33,7 @@ from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchas
 from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_invoice as create_purchase_invoice
 from erpnext.buying.doctype.supplier.test_supplier import create_supplier
 from erpnext.stock.doctype.material_request.material_request import make_purchase_order_based_on_supplier
-
+from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 
 class TestMaterialRequest(FrappeTestCase):
 	def test_make_purchase_order(self):
@@ -1309,34 +1309,14 @@ class TestMaterialRequest(FrappeTestCase):
 		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
 			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pr.name, 'account': 'Stock In Hand - _TC'},'credit')
 			self.assertEqual(gl_stock_debit, 1000)
-	
-	def test_mr_pi_TC_B_002(self):
-		# MR =>  PO => PR => PI
-		mr_dict_list = [{
-				"company" : "_Test Company",
-				"item_code" : "Testing-31",
-				"warehouse" : "Stores - _TC",
-				"qty" : 6,
-				"rate" : 100,
-			},
-		]
-
-		doc_mr = make_material_request(**mr_dict_list[0])
-		self.assertEqual(doc_mr.docstatus, 1)
-
-		doc_po = make_test_po(doc_mr.name)
-		doc_pr = make_test_pr(doc_po.name)
-		doc_pi = make_test_pi(doc_pr.name)
-
-		self.assertEqual(doc_pi.docstatus, 1)
-		doc_mr.reload()
-		self.assertEqual(doc_mr.status, "Received")
 		
 	def test_mr_pi_TC_B_009(self):
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		# MR =>  PO => PR => 2PI
 		mr_dict_list = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 6,
 				"rate" : 100,
@@ -1358,9 +1338,11 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_pi_TC_B_010(self):
 		# MR =>  PO => 2PR => 2PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		mr_dict_list = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 6,
 				"rate" : 100,
@@ -1382,9 +1364,11 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_pi_TC_B_011(self):
 		# MR =>  2PO => 2PR => 2PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		mr_dict_list = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 6,
 				"rate" : 100,
@@ -1405,16 +1389,18 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_pi_TC_B_013(self):
 		# 2MR =>  2PO => 1PR => 1PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		mr_dict_list = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 4,
 				"rate" : 100,
 			},
 			{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 2,
 				"rate" : 100,
@@ -1428,7 +1414,7 @@ class TestMaterialRequest(FrappeTestCase):
 			po_name_list.append(doc_po.name)
 		
 		pr_item_dict = {
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 2,
 				"rate" : 100,
@@ -1443,16 +1429,18 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_pi_TC_B_012(self):
 		# 2MR =>  1PO => 1PR => 1PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		mr_dict_list = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 4,
 				"rate" : 100,
 			},
 			{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 2,
 				"rate" : 100,
@@ -1466,12 +1454,11 @@ class TestMaterialRequest(FrappeTestCase):
 
 
 		po_item_dict = {
-				"item_code" : "Testing-31",
-				"warehouse" : "Stores - _TC",
-				"qty" : 2,
-				"rate" : 100,
-				"purchase_order" : mr_name_list[1]
-
+			"item_code" : item.item_code,
+			"warehouse" : "Stores - _TC",
+			"qty" : 2,
+			"rate" : 100,
+			"purchase_order" : mr_name_list[1]
 		}
 
 		doc_po = make_test_po(mr_name_list[0], item_dict=po_item_dict)
@@ -1483,16 +1470,18 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_pi_TC_B_014(self):
 		# 2MR =>  2PO => 2PR => 1PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		mr_dict_list = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 4,
 				"rate" : 100,
 			},
 			{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 2,
 				"rate" : 100,
@@ -1508,7 +1497,7 @@ class TestMaterialRequest(FrappeTestCase):
 			pr_name_list.append(doc_pr.name)
 
 		pr_item_dict = {
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 2,
 				"rate" : 100,
@@ -1521,10 +1510,11 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_pi_TC_B_015(self):
 		# MR => RFQ => SQ => PO => 1PR => 2PI
-
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		mr_dict_list = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 2,
 				"rate" : 100,
@@ -1544,37 +1534,14 @@ class TestMaterialRequest(FrappeTestCase):
 		doc_mr.reload()
 		self.assertEqual(doc_mr.status, 'Received')
 
-	def test_mr_pi_TC_B_003(self):
-		# MR => RFQ => SQ => PO => PR => PI
-		args = frappe._dict()
-		args['mr'] = [{
-				"company" : "_Test Company",
-				"item_code" : "Testing-31",
-				"warehouse" : "Stores - _TC",
-				"qty" : 2,
-				"rate" : 100,
-			},
-		]
-
-		doc_mr = make_material_request(**args['mr'][0])
-		self.assertEqual(doc_mr.docstatus, 1)
-
-		doc_rfq = make_test_rfq(doc_mr.name)
-		doc_sq= make_test_sq(doc_rfq.name, 100)
-		doc_po = make_test_po(doc_sq.name, type='Supplier Quotation')
-		doc_pr = make_test_pr(doc_po.name)
-		doc_pi = make_test_pi(doc_pr.name)
-
-		self.assertEqual(doc_pi.docstatus, 1)
-		doc_mr.reload()
-		self.assertEqual(doc_mr.status, "Received")
-
 	def test_mr_to_partial_pi_TC_B_016(self):
 		# MR => RFQ => SQ => PO => PR => 2PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		args = frappe._dict()
 		args['mr'] = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 2,
 				"rate" : 100,
@@ -1602,10 +1569,12 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_to_partial_pr_TC_B_017(self):
 		# MR => RFQ => SQ => PO => 2PR => 2PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		args = frappe._dict()
 		args['mr'] = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 2,
 				"rate" : 100,
@@ -1632,10 +1601,12 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_to_partial_pr_TC_B_018(self):
 		# MR => RFQ => 2SQ => 2PO => 2PR => 2PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		args = frappe._dict()
 		args['mr'] = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 20,
 				"rate" : 100,
@@ -1663,10 +1634,12 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_to_partial_pr_TC_B_019(self):
 		# MR => 2RFQ => 2SQ => 2PO => 2PR => 2PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		args = frappe._dict()
 		args['mr'] = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 20,
 				"rate" : 100,
@@ -1694,10 +1667,12 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_to_partial_pi_TC_B_020(self):
 		# MR => 2RFQ => 1SQ => 2PO => 2PR => 2PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		args = frappe._dict()
 		args['mr'] = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 20,
 				"rate" : 100,
@@ -1715,7 +1690,7 @@ class TestMaterialRequest(FrappeTestCase):
 			rfq_name_list.append(doc_rfq.name)
 
 		item_dict_sq = {
-			"item_code" : "Testing-31",
+			"item_code" : item.item_code,
 			"qty" : 20,
 			"rate" : 200,
 			"request_for_quotation" : rfq_name_list[1]
@@ -1735,10 +1710,12 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_to_partial_pi_TC_B_021(self):
 		# MR => 2RFQ => 2SQ => 1PO => 2PR => 2PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		args = frappe._dict()
 		args['mr'] = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 20,
 				"rate" : 100,
@@ -1758,7 +1735,7 @@ class TestMaterialRequest(FrappeTestCase):
 
 
 		item_dict_sq = {
-			"item_code" : "Testing-31",
+			"item_code" : item.item_code,
 			"qty" : 10,
 			"rate" : 100,
 			"supplier_quotation" : sq_name_list[1],
@@ -1771,7 +1748,7 @@ class TestMaterialRequest(FrappeTestCase):
 		index = 0
 		while index < len(pr_received_qty):
 			item_dict_pr = {
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"qty" : pr_received_qty[index],
 				"rate" : 100,
 				"purchase_order" : doc_po.name,
@@ -1789,10 +1766,12 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_to_partial_pi_TC_B_022(self):
 		# MR => 2RFQ => 2SQ => 2PO => 1PR => 1PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		args = frappe._dict()
 		args['mr'] = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 20,
 				"rate" : 100,
@@ -1813,7 +1792,7 @@ class TestMaterialRequest(FrappeTestCase):
 			total_pi_qty += doc_po.total_qty
 
 		item_dict_po = {
-			"item_code" : "Testing-31",
+			"item_code" : item.item_code,
 			"qty" : 10,
 			"rate" : 100,
 			"purchase_order" : po_name_list[1],
@@ -1827,17 +1806,19 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_to_partial_pi_TC_B_026(self):
 		# 2MR => 2RFQ => 2SQ => 1PO => 1PR => 1PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		args = frappe._dict()
 		args['mr'] = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 10,
 				"rate" : 100,
 			},
 			{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 10,
 				"rate" : 100,
@@ -1857,7 +1838,7 @@ class TestMaterialRequest(FrappeTestCase):
 			sq_name_list.append(doc_sq.name)
 		
 		item_dict = {
-			"item_code" : "Testing-31",
+			"item_code" : item.item_code,
 			"warehouse" : "Stores - _TC",
 			"qty" : 10,
 			"rate" : 100,
@@ -2278,17 +2259,19 @@ class TestMaterialRequest(FrappeTestCase):
 	
 	def test_mr_to_partial_pi_TC_B_027(self):
 		# 2MR => 2RFQ => 2SQ => 2PO => 1PR => 1PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		args = frappe._dict()
 		args['mr'] = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 10,
 				"rate" : 100,
 			},
 			{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 10,
 				"rate" : 100,
@@ -2310,7 +2293,7 @@ class TestMaterialRequest(FrappeTestCase):
 
 
 		item_dict = {
-			"item_code" : "Testing-31",
+			"item_code" : item.item_code,
 			"warehouse" : "Stores - _TC",
 			"qty" : 10,
 			"rate" : 100,
@@ -2325,17 +2308,19 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_to_partial_pi_TC_B_028(self):
 		# 2MR => 2RFQ => 2SQ => 2PO => 2PR => 1PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		args = frappe._dict()
 		args['mr'] = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 10,
 				"rate" : 100,
 			},
 			{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 10,
 				"rate" : 100,
@@ -2358,7 +2343,7 @@ class TestMaterialRequest(FrappeTestCase):
 
 
 		item_dict = {
-			"item_code" : "Testing-31",
+			"item_code" : item.item_code,
 			"warehouse" : "Stores - _TC",
 			"qty" : 10,
 			"rate" : 100,
@@ -2373,10 +2358,12 @@ class TestMaterialRequest(FrappeTestCase):
 	
 	def test_mr_to_partial_pi_TC_B_029(self):
 		# 1MR => 1RFQ => 1SQ => 1PO => 1PR => 2PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		args = frappe._dict()
 		args['mr'] = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 20,
 				"rate" : 100,
@@ -2577,10 +2564,12 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_to_partial_pr_TC_B_023(self):
 		# MR => 1RFQ => 2SQ => 2PO => 1PR => 1PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		args = frappe._dict()
 		args['mr'] = [{
 			"company": "_Test Company",
-			"item_code": "Testing-31",
+			"item_code": item.item_code,
 			"warehouse": "Stores - _TC",
 			"qty": 20,
 			"rate": 100,
@@ -2603,18 +2592,20 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_to_partial_pi_TC_B_024(self):
 		# 2MR => 1RFQ => 1SQ => 1PO => 1PR => 1PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		args = frappe._dict()
 		args['mr'] = [
 			{
 				"company": "_Test Company",
-				"item_code": "Testing-31",
+				"item_code": item.item_code,
 				"warehouse": "Stores - _TC",
 				"qty": 10,
 				"rate": 100,
 			},
 			{
 				"company": "_Test Company",
-				"item_code": "Testing-31",
+				"item_code": item.item_code,
 				"warehouse": "Stores - _TC",
 				"qty": 15,
 				"rate": 100,
@@ -2634,7 +2625,7 @@ class TestMaterialRequest(FrappeTestCase):
 		doc_sq = make_test_sq(rfq_name, 100)
 		self.assertEqual(doc_sq.docstatus, 1)
 		item_dict = {
-			"item_code": "Testing-31",
+			"item_code": item.item_code,
 			"warehouse": "Stores - _TC",
 			"qty": total_mr_qty,
 			"rate": 100,
@@ -2651,18 +2642,20 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_to_partial_pi_TC_B_025(self):
 		# 2MR => 2RFQ => 1SQ => 1PO => 1PR => 1PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		args = frappe._dict()
 		args['mr'] = [
 			{
 				"company": "_Test Company",
-				"item_code": "Testing-31",
+				"item_code": item.item_code,
 				"warehouse": "Stores - _TC",
 				"qty": 10,
 				"rate": 100,
 			},
 			{
 				"company": "_Test Company",
-				"item_code": "Testing-31",
+				"item_code": item.item_code,
 				"warehouse": "Stores - _TC",
 				"qty": 15,
 				"rate": 100,
@@ -2684,7 +2677,7 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(doc_sq.docstatus, 1)
 
 		item_dict = {
-			"item_code": "Testing-31",
+			"item_code": item.item_code,
 			"warehouse": "Stores - _TC",
 			"qty": total_mr_qty,
 			"rate": 100,
@@ -4595,6 +4588,8 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_purchase_flow_TC_B_068(self):
 		#Scenario : MR=>PO=>PR=>PI [With Shipping Rule]
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		
 		args = {
 					"calculate_based_on" : "Fixed",
@@ -4603,7 +4598,7 @@ class TestMaterialRequest(FrappeTestCase):
 		shipping_rule_name = get_shipping_rule_name(args)
 		mr_dict_list = {
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 4,
 				"rate" : 3000,
@@ -4629,6 +4624,8 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_purchase_flow_TC_B_069(self):
 		#Scenario: MR=>SQ=>PO=>PR=>PI [With SQ and Shipping Rule]
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		
 		args = {
 					"calculate_based_on" : "Fixed",
@@ -4637,7 +4634,7 @@ class TestMaterialRequest(FrappeTestCase):
 		shipping_rule_name = get_shipping_rule_name(args)
 		mr_dict_list = {
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 4,
 				"rate" : 3000,
@@ -5774,38 +5771,23 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(gl_stock_debit, 100)
 
 	def test_mr_to_po_pr_with_serial_no_TC_B_156(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		frappe.set_user("Administrator")
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
 		supplier = "_Test Supplier 1"
-		item_code = "_Test Item With Serial No"
+		item = make_test_item("_Test Item With Serial No")
+		item.has_serial_no = 1
+		item.save()
 		quantity = 2
-		gst_hsn_code = "11112222"
-		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
-			gst_hsn_code = frappe.new_doc("GST HSN Code")
-			gst_hsn_code.hsn_code = "11112222"
-			gst_hsn_code.save()
 
-		if not frappe.db.exists("Item", item_code):
-			item = frappe.get_doc({
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"stock_uom": "Nos",
-				"is_stock_item": 1,
-				"item_group": "_Test Item Group",
-				"default_warehouse": warehouse,
-				"company": company,
-				"gst_hsn_code": gst_hsn_code,
-				"has_serial_no": 1
-			})
-			item.insert()
 		mr = frappe.get_doc({
 			"doctype": "Material Request",
 			"material_request_type": "Purchase",
 			"transaction_date": today(),
 			"company": company,
 			"items": [{
-				"item_code": item_code,
+				"item_code": item.item_code,
 				"qty": quantity,
 				"warehouse": warehouse
 			}]
@@ -5813,44 +5795,22 @@ class TestMaterialRequest(FrappeTestCase):
 		mr.insert()
 		mr.submit()
 
-		po = frappe.get_doc({
-			"doctype": "Purchase Order",
-			"supplier": supplier,
-			"schedule_date": today(),
-			"company": mr.company,
-			"set_warehouse": warehouse,
-			"items": [{
-				"item_code": mr.items[0].item_code,
-				"qty": mr.items[0].qty,
-				"rate": 1000,
-				"material_request": mr.name
-			}]
-		})
+		po = make_purchase_order(mr.name)
+		po.supplier = supplier
+		po.items[0].rate = 1000
 		po.insert()
 		po.submit()
 
-		pr = frappe.get_doc({
-			"doctype": "Purchase Receipt",
-			"supplier": po.supplier,
-			"posting_date": today(),
-			"company": company,
-			"items": [{
-				"item_code": po.items[0].item_code,
-				"qty": po.items[0].qty,
-				"warehouse": po.items[0].warehouse,
-				"rate": po.items[0].rate
-			}]
-		})
+		pr = make_purchase_receipt(po.name)
 		pr.insert()
 
 		serial_numbers = ["test_item_001", "test_item_002"]
 		pr.items[0].serial_no = "\n".join(serial_numbers)
 		pr.save()
 		pr.submit()
-		print("Purchase Receipt submitted with Serial Numbers:", pr.name)
 		sle = frappe.db.get_all(
 			"Stock Ledger Entry",
-			filters={"voucher_no": pr.name, "item_code": item_code},
+			filters={"voucher_no": pr.name, "item_code": item.item_code},
 			fields=["actual_qty", "warehouse", "valuation_rate"]
 		)
 
@@ -5862,37 +5822,20 @@ class TestMaterialRequest(FrappeTestCase):
 		for serial_no in serial_numbers:
 			sn = frappe.get_doc("Serial No", serial_no)
 			self.assertEqual(sn.warehouse, warehouse)
-			self.assertEqual(sn.item_code, item_code)
+			self.assertEqual(sn.item_code, item.item_code)
 
 	def test_mr_to_po_pr_with_multiple_serial_nos_TC_B_157(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		frappe.set_user("Administrator")
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
 		supplier = "_Test Supplier 1"
-		item_code = "_Test Item With Serial No"
 		total_quantity = 5
 		first_pr_quantity = 3
 		second_pr_quantity = 2
-		gst_hsn_code = "11112222"
-
-		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
-			gst_hsn = frappe.new_doc("GST HSN Code")
-			gst_hsn.hsn_code = gst_hsn_code
-			gst_hsn.save()
-
-		if not frappe.db.exists("Item", item_code):
-			item = frappe.get_doc({
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"stock_uom": "Nos",
-				"is_stock_item": 1,
-				"item_group": "_Test Item Group",
-				"default_warehouse": warehouse,
-				"company": company,
-				"gst_hsn_code": gst_hsn_code,
-				"has_serial_no": 1
-			})
-			item.insert()
+		item = make_test_item("_Test Item With Serial No")
+		item.has_serial_no = 1
+		item.save()
 
 		mr = frappe.get_doc({
 			"doctype": "Material Request",
@@ -5900,7 +5843,7 @@ class TestMaterialRequest(FrappeTestCase):
 			"transaction_date": today(),
 			"company": company,
 			"items": [{
-				"item_code": item_code,
+				"item_code": item.item_code,
 				"qty": total_quantity,
 				"warehouse": warehouse
 			}]
@@ -5908,34 +5851,14 @@ class TestMaterialRequest(FrappeTestCase):
 		mr.insert()
 		mr.submit()
 
-		po = frappe.get_doc({
-			"doctype": "Purchase Order",
-			"supplier": supplier,
-			"schedule_date": today(),
-			"company": company,
-			"set_warehouse": warehouse,
-			"items": [{
-				"item_code": mr.items[0].item_code,
-				"qty": mr.items[0].qty,
-				"rate": 1000,
-				"material_request": mr.name
-			}]
-		})
+		po = make_purchase_order(mr.name)
+		po.supplier= supplier
+		po.items[0].rate = 1000
 		po.insert()
 		po.submit()
 
-		pr1 = frappe.get_doc({
-			"doctype": "Purchase Receipt",
-			"supplier": po.supplier,
-			"posting_date": today(),
-			"company": company,
-			"items": [{
-				"item_code": po.items[0].item_code,
-				"qty": first_pr_quantity,
-				"warehouse": po.items[0].warehouse,
-				"rate": po.items[0].rate
-			}]
-		})
+		pr1 = make_purchase_receipt(po.name)
+		pr1.items[0].qty = first_pr_quantity
 		pr1.insert()
 		serial_numbers1 = [f"test_item_00{i}" for i in range(1, first_pr_quantity + 1)]
 		pr1.items[0].serial_no = "\n".join(serial_numbers1)
@@ -5944,7 +5867,7 @@ class TestMaterialRequest(FrappeTestCase):
 
 		sle1 = frappe.db.get_all(
 			"Stock Ledger Entry",
-			filters={"voucher_no": pr1.name, "item_code": item_code},
+			filters={"voucher_no": pr1.name, "item_code": item.item_code},
 			fields=["actual_qty", "warehouse", "valuation_rate"]
 		)
 		self.assertEqual(len(sle1), 1)
@@ -5955,21 +5878,12 @@ class TestMaterialRequest(FrappeTestCase):
 		for serial_no in serial_numbers1:
 			sn = frappe.get_doc("Serial No", serial_no)
 			self.assertEqual(sn.warehouse, warehouse)
-			self.assertEqual(sn.item_code, item_code)
+			self.assertEqual(sn.item_code, item.item_code)
 
 		second_date = add_days(today(), 1)
-		pr2 = frappe.get_doc({
-			"doctype": "Purchase Receipt",
-			"supplier": po.supplier,
-			"posting_date": second_date,
-			"company": company,
-			"items": [{
-				"item_code": po.items[0].item_code,
-				"qty": second_pr_quantity,
-				"warehouse": po.items[0].warehouse,
-				"rate": po.items[0].rate
-			}]
-		})
+		pr2 = make_purchase_receipt(po.name)
+		pr2.posting_date = second_date
+		pr2.items[0].qty = second_pr_quantity
 		pr2.insert()
 		serial_numbers2 = [f"test_item_00{i}" for i in range(first_pr_quantity + 1, total_quantity + 1)]
 		pr2.items[0].serial_no = "\n".join(serial_numbers2)
@@ -5978,7 +5892,7 @@ class TestMaterialRequest(FrappeTestCase):
 
 		sle2 = frappe.db.get_all(
 			"Stock Ledger Entry",
-			filters={"voucher_no": pr2.name, "item_code": item_code},
+			filters={"voucher_no": pr2.name, "item_code": item.item_code},
 			fields=["actual_qty", "warehouse", "valuation_rate"]
 		)
 		self.assertEqual(len(sle2), 1)
@@ -5989,35 +5903,18 @@ class TestMaterialRequest(FrappeTestCase):
 		for serial_no in serial_numbers2:
 			sn = frappe.get_doc("Serial No", serial_no)
 			self.assertEqual(sn.warehouse, warehouse)
-			self.assertEqual(sn.item_code, item_code)
+			self.assertEqual(sn.item_code, item.item_code)
 
 	def test_mr_to_po_pi_with_serial_nos_TC_B_158(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		frappe.set_user("Administrator")
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
 		supplier = "_Test Supplier 1"
-		item_code = "_Test Item With Serial No"
 		quantity = 3
-		gst_hsn_code = "11112222"
-
-		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
-			gst_hsn = frappe.new_doc("GST HSN Code")
-			gst_hsn.hsn_code = gst_hsn_code
-			gst_hsn.save()
-
-		if not frappe.db.exists("Item", item_code):
-			item = frappe.get_doc({
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"stock_uom": "Nos",
-				"is_stock_item": 1,
-				"item_group": "_Test Item Group",
-				"default_warehouse": warehouse,
-				"company": company,
-				"gst_hsn_code": gst_hsn_code,
-				"has_serial_no": 1
-			})
-			item.insert()
+		item = make_test_item("_Test Item With Serial No")
+		item.has_serial_no = 1
+		item.save()
 
 		mr = frappe.get_doc({
 			"doctype": "Material Request",
@@ -6025,7 +5922,7 @@ class TestMaterialRequest(FrappeTestCase):
 			"transaction_date": today(),
 			"company": company,
 			"items": [{
-				"item_code": item_code,
+				"item_code": item.item_code,
 				"qty": quantity,
 				"warehouse": warehouse
 			}]
@@ -6033,35 +5930,14 @@ class TestMaterialRequest(FrappeTestCase):
 		mr.insert()
 		mr.submit()
 
-		po = frappe.get_doc({
-			"doctype": "Purchase Order",
-			"supplier": supplier,
-			"schedule_date": today(),
-			"company": company,
-			"set_warehouse": warehouse,
-			"items": [{
-				"item_code": mr.items[0].item_code,
-				"qty": mr.items[0].qty,
-				"rate": 1000,
-				"material_request": mr.name
-			}]
-		})
+		po = make_purchase_order(mr.name)
+		po.supplier = supplier
+		po.items[0].rate = 1000
 		po.insert()
 		po.submit()
 
-		pi = frappe.get_doc({
-			"doctype": "Purchase Invoice",
-			"supplier": po.supplier,
-			"posting_date": today(),
-			"company": company,
-			"update_stock": 1,
-			"items": [{
-				"item_code": po.items[0].item_code,
-				"qty": po.items[0].qty,
-				"warehouse": po.items[0].warehouse,
-				"rate": po.items[0].rate
-			}]
-		})
+		pi = create_purchase_invoice(po.name)
+		pi.update_stock = 1
 		pi.insert()
 		serial_numbers = [f"test_item_00{i}" for i in range(1, quantity + 1)]
 		pi.items[0].serial_no = "\n".join(serial_numbers)
@@ -6070,7 +5946,7 @@ class TestMaterialRequest(FrappeTestCase):
 
 		sle = frappe.db.get_all(
 			"Stock Ledger Entry",
-			filters={"voucher_no": pi.name, "item_code": item_code},
+			filters={"voucher_no": pi.name, "item_code": item.item_code},
 			fields=["actual_qty", "warehouse", "valuation_rate", "posting_date"]
 		)
 		self.assertEqual(len(sle), 1)
@@ -6082,13 +5958,15 @@ class TestMaterialRequest(FrappeTestCase):
 		for serial_no in serial_numbers:
 			sn = frappe.get_doc("Serial No", serial_no)
 			self.assertEqual(sn.warehouse, warehouse)
-			self.assertEqual(sn.item_code, item_code)
+			self.assertEqual(sn.item_code, item.item_code)
 
 	def test_mr_to_pi_with_PE_TC_B_076(self):
 		# MR =>  PO => PE => PR => PI
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		mr_dict_list = {
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 1,
 				"rate" : 3000,
@@ -6125,9 +6003,11 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_to_pi_with_partial_PE_TC_B_077(self):
 		# MR =>  PO => [Partial]PE => PR => PI [PE with oustanding amount]
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		mr_dict_list = {
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 4,
 				"rate" : 3000,
@@ -6173,6 +6053,8 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_to_pi_TC_B_078(self):
 		#Scenario: MR=>SQ=>PO=>PE=>PR=>PI [With SQ, Shipping Rule and Shipping Rule]
+		frappe.set_user("Administrator")
+		item = make_test_item("Testing-31")
 		
 		args = {
 					"calculate_based_on" : "Fixed",
@@ -6181,7 +6063,7 @@ class TestMaterialRequest(FrappeTestCase):
 		shipping_rule_name = get_shipping_rule_name(args)
 		mr_dict_list = {
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 4,
 				"rate" : 3000,
