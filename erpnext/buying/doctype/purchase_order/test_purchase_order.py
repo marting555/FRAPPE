@@ -7582,6 +7582,44 @@ class TestPurchaseOrder(FrappeTestCase):
 			self.assertEqual(entry["debit"], expected_pi_entries.get(entry["account"], {}).get("debit", 0))
 			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
 
+	def test_single_po_pi_multi_pr_TC_SCK_122(self):
+		# Scenario : 1PO => 2PR => 1PI
+		
+		purchase_order_list = [{
+			"company" : "_Test Company",
+			"item_code" : "_Test Item",
+			"warehouse" : "Stores - _TC",
+			"qty" : 6,
+			"rate" : 100,
+		}]
+
+		pur_receipt_qty = [3, 3]
+		pur_receipt_name_list = []
+
+		doc_po = create_purchase_order(**purchase_order_list[0])
+		self.assertEqual(doc_po.docstatus, 1)
+
+		for received_qty in pur_receipt_qty:
+			doc_pr = make_pr_for_po(doc_po.name, received_qty)
+			self.assertEqual(doc_pr.docstatus, 1)
+			
+			pur_receipt_name_list.append(doc_pr.name)
+		
+		item_dict = [
+					{"item_code" : "_Test Item",
+					"warehouse" : "Stores - _TC",
+					"qty" : 3,
+					"rate" : 100,
+					"purchase_receipt":pur_receipt_name_list[1]
+					}]
+		
+		doc_pi = make_pi_against_pr(pur_receipt_name_list[0], item_dict_list= item_dict)
+		
+		self.assertEqual(doc_pi.docstatus, 1)
+		self.assertEqual(doc_po.total_qty, doc_pi.total_qty)
+		self.assertEqual(doc_po.grand_total, doc_pi.grand_total)
+
+
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
