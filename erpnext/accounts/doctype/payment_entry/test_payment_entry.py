@@ -2136,6 +2136,7 @@ def create_customer(name="_Test Customer 2 USD", currency="USD"):
 		customer = customer.name
 	return customer
 def create_supplier(**args):
+	frappe.set_user("Administrator")
 	args = frappe._dict(args)
 
 	if frappe.db.exists("Supplier", args.supplier_name):
@@ -2163,10 +2164,10 @@ def create_supplier(**args):
   
 
 	doc.insert(ignore_mandatory=True,ignore_permissions=True)
-	frappe.db.commit()
 	return doc
 
 def create_account():
+	frappe.set_user("Administrator")
 	accounts = [
 		{"name": "Source of Funds (Liabilities)", "parent": ""},
 		{"name": "Current Liabilities", "parent": "Source of Funds (Liabilities) - _TC"},
@@ -2206,12 +2207,13 @@ def create_account():
 				doc.parent_account = account["parent"]
 			
 			doc.insert(ignore_mandatory=True,ignore_permissions=True)
-			frappe.db.commit()
+		
 
 		except Exception as e:
 			frappe.log_error(f"Failed to insert {account['name']}", str(e))
 
 def create_records(supplier):
+	frappe.set_user("Administrator")
 	from erpnext.accounts.doctype.tax_withholding_category.test_tax_withholding_category import create_tax_withholding_category
 	create_company()
  
@@ -2239,6 +2241,7 @@ def create_records(supplier):
 
 
 def make_test_item(item_name=None):
+	frappe.set_user("Administrator")
 	from erpnext.stock.doctype.item.test_item import make_item
 	app_name = "india_compliance"
 	if not frappe.db.exists("Item", item_name or "Test Item with Tax"):
@@ -2286,7 +2289,7 @@ def make_test_item(item_name=None):
 			return item
         
 def create_purchase_invoice(**args):
-	# return sales invoice doc object
+	frappe.set_user("Administrator")
 	args = frappe._dict(args)
 	pi = frappe.get_doc(
 		{
@@ -2317,6 +2320,7 @@ def create_purchase_invoice(**args):
 	return pi
 
 def create_company():
+	frappe.set_user("Administrator")
 	if not frappe.db.exists("Company", "_Test Company"):
 		frappe.get_doc({
 			"doctype": "Company",
@@ -2326,4 +2330,4 @@ def create_company():
 			"company_email": "test@example.com",
 			"abbr":"_TC"
 		}).insert(ignore_permissions=True)
-		frappe.db.commit()
+		
