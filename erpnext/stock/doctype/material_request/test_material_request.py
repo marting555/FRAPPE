@@ -34,7 +34,6 @@ from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_i
 from erpnext.buying.doctype.supplier.test_supplier import create_supplier
 from erpnext.stock.doctype.material_request.material_request import make_purchase_order_based_on_supplier
 
-
 class TestMaterialRequest(FrappeTestCase):
 	def test_make_purchase_order(self):
 		mr = frappe.copy_doc(test_records[0]).insert()
@@ -5774,38 +5773,23 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(gl_stock_debit, 100)
 
 	def test_mr_to_po_pr_with_serial_no_TC_B_156(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		frappe.set_user("Administrator")
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
 		supplier = "_Test Supplier 1"
-		item_code = "_Test Item With Serial No"
+		item = make_test_item("_Test Item With Serial No")
+		item.has_serial_no = 1
+		item.save()
 		quantity = 2
-		gst_hsn_code = "11112222"
-		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
-			gst_hsn_code = frappe.new_doc("GST HSN Code")
-			gst_hsn_code.hsn_code = "11112222"
-			gst_hsn_code.save()
 
-		if not frappe.db.exists("Item", item_code):
-			item = frappe.get_doc({
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"stock_uom": "Nos",
-				"is_stock_item": 1,
-				"item_group": "_Test Item Group",
-				"default_warehouse": warehouse,
-				"company": company,
-				"gst_hsn_code": gst_hsn_code,
-				"has_serial_no": 1
-			})
-			item.insert()
 		mr = frappe.get_doc({
 			"doctype": "Material Request",
 			"material_request_type": "Purchase",
 			"transaction_date": today(),
 			"company": company,
 			"items": [{
-				"item_code": item_code,
+				"item_code": item.item_code,
 				"qty": quantity,
 				"warehouse": warehouse
 			}]
@@ -5813,44 +5797,22 @@ class TestMaterialRequest(FrappeTestCase):
 		mr.insert()
 		mr.submit()
 
-		po = frappe.get_doc({
-			"doctype": "Purchase Order",
-			"supplier": supplier,
-			"schedule_date": today(),
-			"company": mr.company,
-			"set_warehouse": warehouse,
-			"items": [{
-				"item_code": mr.items[0].item_code,
-				"qty": mr.items[0].qty,
-				"rate": 1000,
-				"material_request": mr.name
-			}]
-		})
+		po = make_purchase_order(mr.name)
+		po.supplier = supplier
+		po.items[0].rate = 1000
 		po.insert()
 		po.submit()
 
-		pr = frappe.get_doc({
-			"doctype": "Purchase Receipt",
-			"supplier": po.supplier,
-			"posting_date": today(),
-			"company": company,
-			"items": [{
-				"item_code": po.items[0].item_code,
-				"qty": po.items[0].qty,
-				"warehouse": po.items[0].warehouse,
-				"rate": po.items[0].rate
-			}]
-		})
+		pr = make_purchase_receipt(po.name)
 		pr.insert()
 
 		serial_numbers = ["test_item_001", "test_item_002"]
 		pr.items[0].serial_no = "\n".join(serial_numbers)
 		pr.save()
 		pr.submit()
-		print("Purchase Receipt submitted with Serial Numbers:", pr.name)
 		sle = frappe.db.get_all(
 			"Stock Ledger Entry",
-			filters={"voucher_no": pr.name, "item_code": item_code},
+			filters={"voucher_no": pr.name, "item_code": item.item_code},
 			fields=["actual_qty", "warehouse", "valuation_rate"]
 		)
 
@@ -5862,37 +5824,20 @@ class TestMaterialRequest(FrappeTestCase):
 		for serial_no in serial_numbers:
 			sn = frappe.get_doc("Serial No", serial_no)
 			self.assertEqual(sn.warehouse, warehouse)
-			self.assertEqual(sn.item_code, item_code)
+			self.assertEqual(sn.item_code, item.item_code)
 
 	def test_mr_to_po_pr_with_multiple_serial_nos_TC_B_157(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		frappe.set_user("Administrator")
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
 		supplier = "_Test Supplier 1"
-		item_code = "_Test Item With Serial No"
 		total_quantity = 5
 		first_pr_quantity = 3
 		second_pr_quantity = 2
-		gst_hsn_code = "11112222"
-
-		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
-			gst_hsn = frappe.new_doc("GST HSN Code")
-			gst_hsn.hsn_code = gst_hsn_code
-			gst_hsn.save()
-
-		if not frappe.db.exists("Item", item_code):
-			item = frappe.get_doc({
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"stock_uom": "Nos",
-				"is_stock_item": 1,
-				"item_group": "_Test Item Group",
-				"default_warehouse": warehouse,
-				"company": company,
-				"gst_hsn_code": gst_hsn_code,
-				"has_serial_no": 1
-			})
-			item.insert()
+		item = make_test_item("_Test Item With Serial No")
+		item.has_serial_no = 1
+		item.save()
 
 		mr = frappe.get_doc({
 			"doctype": "Material Request",
@@ -5900,7 +5845,7 @@ class TestMaterialRequest(FrappeTestCase):
 			"transaction_date": today(),
 			"company": company,
 			"items": [{
-				"item_code": item_code,
+				"item_code": item.item_code,
 				"qty": total_quantity,
 				"warehouse": warehouse
 			}]
@@ -5908,34 +5853,14 @@ class TestMaterialRequest(FrappeTestCase):
 		mr.insert()
 		mr.submit()
 
-		po = frappe.get_doc({
-			"doctype": "Purchase Order",
-			"supplier": supplier,
-			"schedule_date": today(),
-			"company": company,
-			"set_warehouse": warehouse,
-			"items": [{
-				"item_code": mr.items[0].item_code,
-				"qty": mr.items[0].qty,
-				"rate": 1000,
-				"material_request": mr.name
-			}]
-		})
+		po = make_purchase_order(mr.name)
+		po.supplier= supplier
+		po.items[0].rate = 1000
 		po.insert()
 		po.submit()
 
-		pr1 = frappe.get_doc({
-			"doctype": "Purchase Receipt",
-			"supplier": po.supplier,
-			"posting_date": today(),
-			"company": company,
-			"items": [{
-				"item_code": po.items[0].item_code,
-				"qty": first_pr_quantity,
-				"warehouse": po.items[0].warehouse,
-				"rate": po.items[0].rate
-			}]
-		})
+		pr1 = make_purchase_receipt(po.name)
+		pr1.items[0].qty = first_pr_quantity
 		pr1.insert()
 		serial_numbers1 = [f"test_item_00{i}" for i in range(1, first_pr_quantity + 1)]
 		pr1.items[0].serial_no = "\n".join(serial_numbers1)
@@ -5944,7 +5869,7 @@ class TestMaterialRequest(FrappeTestCase):
 
 		sle1 = frappe.db.get_all(
 			"Stock Ledger Entry",
-			filters={"voucher_no": pr1.name, "item_code": item_code},
+			filters={"voucher_no": pr1.name, "item_code": item.item_code},
 			fields=["actual_qty", "warehouse", "valuation_rate"]
 		)
 		self.assertEqual(len(sle1), 1)
@@ -5955,21 +5880,12 @@ class TestMaterialRequest(FrappeTestCase):
 		for serial_no in serial_numbers1:
 			sn = frappe.get_doc("Serial No", serial_no)
 			self.assertEqual(sn.warehouse, warehouse)
-			self.assertEqual(sn.item_code, item_code)
+			self.assertEqual(sn.item_code, item.item_code)
 
 		second_date = add_days(today(), 1)
-		pr2 = frappe.get_doc({
-			"doctype": "Purchase Receipt",
-			"supplier": po.supplier,
-			"posting_date": second_date,
-			"company": company,
-			"items": [{
-				"item_code": po.items[0].item_code,
-				"qty": second_pr_quantity,
-				"warehouse": po.items[0].warehouse,
-				"rate": po.items[0].rate
-			}]
-		})
+		pr2 = make_purchase_receipt(po.name)
+		pr2.posting_date = second_date
+		pr2.items[0].qty = second_pr_quantity
 		pr2.insert()
 		serial_numbers2 = [f"test_item_00{i}" for i in range(first_pr_quantity + 1, total_quantity + 1)]
 		pr2.items[0].serial_no = "\n".join(serial_numbers2)
@@ -5978,7 +5894,7 @@ class TestMaterialRequest(FrappeTestCase):
 
 		sle2 = frappe.db.get_all(
 			"Stock Ledger Entry",
-			filters={"voucher_no": pr2.name, "item_code": item_code},
+			filters={"voucher_no": pr2.name, "item_code": item.item_code},
 			fields=["actual_qty", "warehouse", "valuation_rate"]
 		)
 		self.assertEqual(len(sle2), 1)
@@ -5989,35 +5905,18 @@ class TestMaterialRequest(FrappeTestCase):
 		for serial_no in serial_numbers2:
 			sn = frappe.get_doc("Serial No", serial_no)
 			self.assertEqual(sn.warehouse, warehouse)
-			self.assertEqual(sn.item_code, item_code)
+			self.assertEqual(sn.item_code, item.item_code)
 
 	def test_mr_to_po_pi_with_serial_nos_TC_B_158(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		frappe.set_user("Administrator")
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
 		supplier = "_Test Supplier 1"
-		item_code = "_Test Item With Serial No"
 		quantity = 3
-		gst_hsn_code = "11112222"
-
-		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
-			gst_hsn = frappe.new_doc("GST HSN Code")
-			gst_hsn.hsn_code = gst_hsn_code
-			gst_hsn.save()
-
-		if not frappe.db.exists("Item", item_code):
-			item = frappe.get_doc({
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"stock_uom": "Nos",
-				"is_stock_item": 1,
-				"item_group": "_Test Item Group",
-				"default_warehouse": warehouse,
-				"company": company,
-				"gst_hsn_code": gst_hsn_code,
-				"has_serial_no": 1
-			})
-			item.insert()
+		item = make_test_item("_Test Item With Serial No")
+		item.has_serial_no = 1
+		item.save()
 
 		mr = frappe.get_doc({
 			"doctype": "Material Request",
@@ -6025,7 +5924,7 @@ class TestMaterialRequest(FrappeTestCase):
 			"transaction_date": today(),
 			"company": company,
 			"items": [{
-				"item_code": item_code,
+				"item_code": item.item_code,
 				"qty": quantity,
 				"warehouse": warehouse
 			}]
@@ -6033,35 +5932,14 @@ class TestMaterialRequest(FrappeTestCase):
 		mr.insert()
 		mr.submit()
 
-		po = frappe.get_doc({
-			"doctype": "Purchase Order",
-			"supplier": supplier,
-			"schedule_date": today(),
-			"company": company,
-			"set_warehouse": warehouse,
-			"items": [{
-				"item_code": mr.items[0].item_code,
-				"qty": mr.items[0].qty,
-				"rate": 1000,
-				"material_request": mr.name
-			}]
-		})
+		po = make_purchase_order(mr.name)
+		po.supplier = supplier
+		po.items[0].rate = 1000
 		po.insert()
 		po.submit()
 
-		pi = frappe.get_doc({
-			"doctype": "Purchase Invoice",
-			"supplier": po.supplier,
-			"posting_date": today(),
-			"company": company,
-			"update_stock": 1,
-			"items": [{
-				"item_code": po.items[0].item_code,
-				"qty": po.items[0].qty,
-				"warehouse": po.items[0].warehouse,
-				"rate": po.items[0].rate
-			}]
-		})
+		pi = create_purchase_invoice(po.name)
+		pi.update_stock = 1
 		pi.insert()
 		serial_numbers = [f"test_item_00{i}" for i in range(1, quantity + 1)]
 		pi.items[0].serial_no = "\n".join(serial_numbers)
@@ -6070,7 +5948,7 @@ class TestMaterialRequest(FrappeTestCase):
 
 		sle = frappe.db.get_all(
 			"Stock Ledger Entry",
-			filters={"voucher_no": pi.name, "item_code": item_code},
+			filters={"voucher_no": pi.name, "item_code": item.item_code},
 			fields=["actual_qty", "warehouse", "valuation_rate", "posting_date"]
 		)
 		self.assertEqual(len(sle), 1)
@@ -6082,7 +5960,7 @@ class TestMaterialRequest(FrappeTestCase):
 		for serial_no in serial_numbers:
 			sn = frappe.get_doc("Serial No", serial_no)
 			self.assertEqual(sn.warehouse, warehouse)
-			self.assertEqual(sn.item_code, item_code)
+			self.assertEqual(sn.item_code, item.item_code)
 
 	def test_mr_to_pi_with_PE_TC_B_076(self):
 		# MR =>  PO => PE => PR => PI
