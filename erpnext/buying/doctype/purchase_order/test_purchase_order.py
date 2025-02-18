@@ -2733,8 +2733,8 @@ class TestPurchaseOrder(FrappeTestCase):
 	def test_partial_pr_pi_flow_TC_B_103(self):
 		# Scenario : PO > PR > PI
 		from frappe.desk.query_report import run
-		item_1= create_item("_Test Item")
-		item_2= create_item("Book")
+		item_1= create_item("_Test Items")
+		item_2= create_item("Books")
 		supplier = create_supplier(supplier_name="_Test Supplier")
 		company = "_Test Company"
 		if not frappe.db.exists("Company", company):
@@ -2836,7 +2836,14 @@ class TestPurchaseOrder(FrappeTestCase):
 					self.assertEqual(result_2.get("qty_to_bill"), 5)
 					self.assertEqual(result_2.get("pending_amount"), 2500)
 					self.assertEqual(result_2.get("received_qty"), 5)
-		make_test_pi(pr.name)
+		pi = make_test_pi(pr.name)
+		self.assertEqual(pi.items[0].qty, 10)
+		self.assertEqual(pi.items[0].rate, 100)
+		self.assertEqual(pi.items[0].amount, 1000)
+		self.assertEqual(pi.items[1].qty, 5)
+		self.assertEqual(pi.items[1].rate, 500)
+		self.assertEqual(pi.items[1].amount, 2500)
+		self.assertEqual(pi.total, 3500)
 
 	def test_previous_row_total_flow_TC_B_141(self):
 		supplier = create_supplier(supplier_name="_Test Supplier")
