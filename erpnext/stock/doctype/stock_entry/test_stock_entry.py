@@ -3007,6 +3007,25 @@ class TestStockEntry(FrappeTestCase):
 		mr.load_from_db()
 		self.assertEqual(mr.status, "Transferred")
 
+	def test_mr_to_se_with_in_transit_tc_sck_124(self):
+		from erpnext.stock.doctype.material_request.material_request import make_in_transit_stock_entry
+		from erpnext.stock.doctype.material_request.test_material_request import  get_in_transit_warehouse
+
+		mr = make_material_request(material_request_type="Material Transfer")
+		self.assertEqual(mr.status, "Pending")
+
+		in_transit_warehouse = get_in_transit_warehouse(mr.company)
+		transit_entry = make_in_transit_stock_entry(mr.name, in_transit_warehouse)
+		transit_entry.items[0].s_warehouse = "_Test Warehouse - _TC"
+		transit_entry.insert()
+		transit_entry.submit()
+
+		end_transit_entry = make_stock_in_entry(transit_entry.name)
+		end_transit_entry.submit()
+
+		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':end_transit_entry.name})
+		self.assertEqual(sle.actual_qty, 10)
+		
 	def test_stock_entry_tc_sck_136(self):
 		item_code = make_item("_Test Item Stock Entry New", {"valuation_rate": 100})
 		se = make_stock_entry(item_code=item_code, target="_Test Warehouse - _TC", qty=1, do_not_submit=True)
