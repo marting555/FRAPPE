@@ -48,7 +48,7 @@ frappe.ui.form.on("Asset", {
 					method: "erpnext.assets.doctype.asset.asset.make_asset_movement",
 					freeze: true,
 					args: {
-						assets: [{ name: cur_frm.doc.name }],
+						assets: [{ name: frm.doc.name }],
 					},
 					callback: function (r) {
 						if (r.message) {
@@ -609,9 +609,7 @@ frappe.ui.form.on("Asset", {
 		frm.trigger("toggle_reference_doc");
 		if (frm.doc.purchase_receipt) {
 			if (frm.doc.item_code) {
-				frappe.db.get_doc("Purchase Receipt", frm.doc.purchase_receipt).then((pr_doc) => {
-					frm.events.set_values_from_purchase_doc(frm, "Purchase Receipt", pr_doc);
-				});
+				frm.events.set_values_from_purchase_doc(frm, "Purchase Receipt");
 			} else {
 				frm.set_value("purchase_receipt", "");
 				frappe.msgprint({
@@ -626,9 +624,7 @@ frappe.ui.form.on("Asset", {
 		frm.trigger("toggle_reference_doc");
 		if (frm.doc.purchase_invoice) {
 			if (frm.doc.item_code) {
-				frappe.db.get_doc("Purchase Invoice", frm.doc.purchase_invoice).then((pi_doc) => {
-					frm.events.set_values_from_purchase_doc(frm, "Purchase Invoice", pi_doc);
-				});
+				frm.events.set_values_from_purchase_doc(frm, "Purchase Invoice");
 			} else {
 				frm.set_value("purchase_invoice", "");
 				frappe.msgprint({
@@ -639,34 +635,6 @@ frappe.ui.form.on("Asset", {
 		}
 	},
 
-<<<<<<< HEAD
-	set_values_from_purchase_doc: function (frm, doctype, purchase_doc) {
-		frm.set_value("company", purchase_doc.company);
-		if (purchase_doc.bill_date) {
-			frm.set_value("purchase_date", purchase_doc.bill_date);
-		} else {
-			frm.set_value("purchase_date", purchase_doc.posting_date);
-		}
-		if (!frm.doc.is_existing_asset && !frm.doc.available_for_use_date) {
-			frm.set_value("available_for_use_date", frm.doc.purchase_date);
-		}
-		const item = purchase_doc.items.find((item) => item.item_code === frm.doc.item_code);
-		if (!item) {
-			let doctype_field = frappe.scrub(doctype);
-			frm.set_value(doctype_field, "");
-			frappe.msgprint({
-				title: __("Invalid {0}", [__(doctype)]),
-				message: __("The selected {0} does not contain the selected Asset Item.", [__(doctype)]),
-				indicator: "red",
-			});
-		}
-		frappe.db.get_value("Item", item.item_code, "is_grouped_asset", (r) => {
-			var asset_quantity = r.is_grouped_asset ? item.qty : 1;
-			var purchase_amount = flt(
-				item.valuation_rate * asset_quantity,
-				precision("gross_purchase_amount")
-			);
-=======
 	set_values_from_purchase_doc: (frm, doctype) => {
 		frappe.call({
 			method: "erpnext.assets.doctype.asset.asset.get_values_from_purchase_doc",
@@ -684,23 +652,18 @@ frappe.ui.form.on("Asset", {
 					frm.set_value("purchase_amount", data.gross_purchase_amount);
 					frm.set_value("asset_quantity", data.asset_quantity);
 					frm.set_value("cost_center", data.cost_center);
-					if (data.asset_location) {
-						frm.set_value("location", data.asset_location);
-					}
->>>>>>> 7f8d08c8eb (fix: reset location only if there is value in row item location field)
 
-			frm.set_value("gross_purchase_amount", purchase_amount);
-			frm.set_value("purchase_amount", purchase_amount);
-			frm.set_value("asset_quantity", asset_quantity);
-			frm.set_value("cost_center", item.cost_center || purchase_doc.cost_center);
-			if (item.asset_location) {
-				frm.set_value("location", item.asset_location);
-			}
-			if (doctype === "Purchase Receipt") {
-				frm.set_value("purchase_receipt_item", item.name);
-			} else if (doctype === "Purchase Invoice") {
-				frm.set_value("purchase_invoice_item", item.name);
-			}
+					if (doctype === "Purchase Receipt") {
+						frm.set_value("purchase_receipt_item", data.purchase_receipt_item);
+					} else {
+						frm.set_value("purchase_invoice_item", data.purchase_invoice_item);
+					}
+
+					let is_editable = !data.is_multiple_items; // if multiple items, then fields should be read-only
+					frm.set_df_property("gross_purchase_amount", "read_only", is_editable);
+					frm.set_df_property("asset_quantity", "read_only", is_editable);
+				}
+			},
 		});
 	},
 
@@ -825,17 +788,33 @@ frappe.ui.form.on("Asset Finance Book", {
 });
 
 erpnext.asset.scrap_asset = function (frm) {
-	frappe.confirm(__("Do you really want to scrap this asset?"), function () {
-		frappe.call({
-			args: {
-				asset_name: frm.doc.name,
+	var scrap_dialog = new frappe.ui.Dialog({
+		title: __("Enter date to scrap asset"),
+		fields: [
+			{
+				label: __("Select the date"),
+				fieldname: "scrap_date",
+				fieldtype: "Date",
+				reqd: 1,
 			},
-			method: "erpnext.assets.doctype.asset.depreciation.scrap_asset",
-			callback: function (r) {
-				cur_frm.reload_doc();
-			},
-		});
+		],
+		size: "medium",
+		primary_action_label: "Submit",
+		primary_action(values) {
+			frappe.call({
+				args: {
+					asset_name: frm.doc.name,
+					scrap_date: values.scrap_date,
+				},
+				method: "erpnext.assets.doctype.asset.depreciation.scrap_asset",
+				callback: function (r) {
+					frm.reload_doc();
+					scrap_dialog.hide();
+				},
+			});
+		},
 	});
+	scrap_dialog.show();
 };
 
 erpnext.asset.restore_asset = function (frm) {
@@ -845,19 +824,17 @@ erpnext.asset.restore_asset = function (frm) {
 				asset_name: frm.doc.name,
 			},
 			method: "erpnext.assets.doctype.asset.depreciation.restore_asset",
-			callback: function (r) {
-				cur_frm.reload_doc();
-			},
+			callback: (r) => frm.reload_doc(),
 		});
 	});
 };
 
-erpnext.asset.transfer_asset = function () {
+erpnext.asset.transfer_asset = function (frm) {
 	frappe.call({
 		method: "erpnext.assets.doctype.asset.asset.make_asset_movement",
 		freeze: true,
 		args: {
-			assets: [{ name: cur_frm.doc.name }],
+			assets: [{ name: frm.doc.name }],
 			purpose: "Transfer",
 		},
 		callback: function (r) {
