@@ -139,8 +139,8 @@ def get_balances_within_period(filters, account_filter=None):
 		frappe.qb.from_(GL_Entry)
 		.select(
 			GL_Entry.party,
-			Sum(GL_Entry.debit).as_("opening_debit"),
-			Sum(GL_Entry.credit).as_("opening_credit"),
+			Sum(GL_Entry.debit).as_("debit"),
+			Sum(GL_Entry.credit).as_("credit"),
 		)
 		.where(
 			(GL_Entry.company == filters.company)
