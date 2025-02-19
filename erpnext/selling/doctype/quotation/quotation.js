@@ -409,7 +409,10 @@ frappe.ui.form.on('Quotation Item', {
 
 	qty: function (frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
-
+		if (row.qty < 0) {
+			row.qty = Math.abs(row.qty);
+			refreshQuotationFields(frm);
+		}
 		if (row.is_product_bundle) {
 			const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
 			const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
@@ -778,7 +781,7 @@ async function insertResendQuotationApprovalButton(frm) {
 				primary_action_label: __("Send"),
 				primary_action: async function () {
 					const { aws_url } = await frappe.db.get_doc('Queue Settings')
-					console.log({aws_url})
+					console.log({ aws_url })
 					const url = `${aws_url}quotation/created`;
 					const obj = {
 						"party_name": frm.doc.party_name,

@@ -1041,7 +1041,7 @@ frappe.ui.form.on('Sales Invoice', {
 			method: "erpnext.accounts.doctype.sales_invoice.sales_invoice.create_dunning",
 			frm: frm
 		});
-	}
+	},
 });
 
 frappe.ui.form.on("Sales Invoice Timesheet", {
@@ -1095,3 +1095,20 @@ var select_loyalty_program = function (frm, loyalty_programs) {
 
 	dialog.show();
 }
+
+frappe.ui.form.on("Sales Invoice Item", {
+	qty: function (frm, cdt, cdn) {
+		let row = locals[cdt][cdn];
+		if (row.qty < 0) {
+			row.qty = Math.abs(row.qty);
+		}
+		frm.refresh_field("items");
+		refreshSalesInvoicesFields(frm);
+	}
+});
+
+function refreshSalesInvoicesFields(frm) {
+	frm.trigger("calculate_taxes_and_totals");
+	frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+}
+
