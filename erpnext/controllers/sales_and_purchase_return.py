@@ -26,9 +26,53 @@ def validate_return(doc):
 		validate_return_against(doc)
 
 		if doc.doctype in ("Sales Invoice", "Purchase Invoice") and not doc.update_stock:
+			validate_returned_invoice_items_qty(doc)
 			return
 
 		validate_returned_items(doc)
+
+
+def validate_returned_invoice_items_qty(doc):
+	child_ref_field_name = "sales_invoice_item" if doc.doctype == "Sales Invoice" else "purchase_invoice_item"
+	for item in doc.get("items"):
+		against_voucher_item_qty = (
+			frappe.db.get_values(
+				f"{doc.doctype} Item",
+				{
+					"parent": doc.return_against,
+					"docstatus": 1,
+				},
+				"sum(qty)",
+			)[0][0]
+			or 0
+		)
+		already_returned_qty = (
+			frappe.db.get_values(
+				f"{doc.doctype} Item",
+				{
+					child_ref_field_name: item.get(child_ref_field_name),
+					"docstatus": 1,
+				},
+				"sum(qty)",
+			)[0][0]
+			or 0
+		)
+
+		if abs(already_returned_qty) >= against_voucher_item_qty:
+			frappe.throw(
+				_("Row # {0}: Item {1} has already been returned").format(
+					frappe.bold(item.idx), frappe.bold(item.item_code)
+				)
+			)
+		elif item.qty and abs(already_returned_qty + item.qty) > against_voucher_item_qty:
+			against_voucher_item_qty = against_voucher_item_qty - abs(already_returned_qty)
+			frappe.throw(
+				_("Row # {0}: Cannot return more than {1} qty for Item {2}").format(
+					frappe.bold(item.idx),
+					frappe.bold(abs(against_voucher_item_qty)),
+					frappe.bold(item.item_code),
+				)
+			)
 
 
 def validate_return_against(doc):
