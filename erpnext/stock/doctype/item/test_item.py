@@ -80,7 +80,7 @@ def make_item(item_code=None, properties=None, uoms=None, barcode=None):
 			if len(code) in valid_hsn_length[1]:
 				item.gst_hsn_code = code
 				break
-	item.insert()
+	item.insert(ignore_permissions=True)
 
 	return item
 
