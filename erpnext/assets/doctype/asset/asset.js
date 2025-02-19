@@ -639,6 +639,7 @@ frappe.ui.form.on("Asset", {
 		}
 	},
 
+<<<<<<< HEAD
 	set_values_from_purchase_doc: function (frm, doctype, purchase_doc) {
 		frm.set_value("company", purchase_doc.company);
 		if (purchase_doc.bill_date) {
@@ -665,6 +666,28 @@ frappe.ui.form.on("Asset", {
 				item.valuation_rate * asset_quantity,
 				precision("gross_purchase_amount")
 			);
+=======
+	set_values_from_purchase_doc: (frm, doctype) => {
+		frappe.call({
+			method: "erpnext.assets.doctype.asset.asset.get_values_from_purchase_doc",
+			args: {
+				purchase_doc_name: frm.doc.purchase_receipt || frm.doc.purchase_invoice,
+				item_code: frm.doc.item_code,
+				doctype: doctype,
+			},
+			callback: (r) => {
+				if (r.message) {
+					let data = r.message;
+					frm.set_value("company", data.company);
+					frm.set_value("purchase_date", data.purchase_date);
+					frm.set_value("gross_purchase_amount", data.gross_purchase_amount);
+					frm.set_value("purchase_amount", data.gross_purchase_amount);
+					frm.set_value("asset_quantity", data.asset_quantity);
+					frm.set_value("cost_center", data.cost_center);
+					if (data.asset_location) {
+						frm.set_value("location", data.asset_location);
+					}
+>>>>>>> 7f8d08c8eb (fix: reset location only if there is value in row item location field)
 
 			frm.set_value("gross_purchase_amount", purchase_amount);
 			frm.set_value("purchase_amount", purchase_amount);
