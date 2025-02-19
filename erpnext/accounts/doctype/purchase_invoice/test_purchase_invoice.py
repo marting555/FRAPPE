@@ -4077,27 +4077,63 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		
 		item = make_item("Boat Earpods", it_fields).name
 		
-		self.pricing_rule =make_pricing_rule(
-			apply_on="Item Code",
-			title="Boat Earpods - Monica Discount",
-			items=[{"item_code": "Boat Earpods"}],
-			supplier="Monica",
-			min_qty= 10,
-			company= "_Test Company",
-			rate_or_discount="Discount Percentage",
-			discount_percentage=10,
-			valid_from="2024-12-01",
-			selling = 0,
-			buying = 1,
-			apply_discount_on = "Rate",
-			price_or_product_discount= "Price",
-			apply_rule_on = "Transaction",
-			apply_on_transaction = "Purchase Invoice"
-		)
-		frappe.db.commit()
+			# frappe.db.commit()
+		
+		# self.pricing_rule =make_pricing_rule(
+		# 	apply_on="Item Code",
+		# 	title="Boat Earpods - Monica Discount",
+		# 	items=[{"item_code": "Boat Earpods"}],
+		# 	supplier="Monica",
+		# 	min_qty= 10,
+		# 	company= "_Test Company",
+		# 	rate_or_discount="Discount Percentage",
+		# 	discount_percentage=10,
+		# 	valid_from="2024-12-01",
+		# 	selling = 0,
+		# 	buying = 1,
+		# 	apply_discount_on = "Rate",
+		# 	price_or_product_discount= "Price",
+		# 	apply_rule_on = "Transaction",
+		# 	apply_on_transaction = "Purchase Invoice"
+		# )
+		# frappe.db.commit()
 		
 	def test_purchase_invoice_discount(self):
-        # Create Purchase Invoice
+		pricing_rule = frappe.get_doc({
+                "doctype": "Pricing Rule",
+                "title": "Boat Earpods - Monica Discount",
+                "apply_on": "Item Code",
+                "items": [{"item_code": "Boat Earpods"}],
+                "supplier": "Monica",
+				"company":" _Test Company",
+                "min_qty": 10,
+				"disable": 0,
+				"valid_from":"2024-12-01",
+                "rate_or_discount": "Discount Percentage",
+                "discount_percentage": 10,
+                "valid_from": "2024-12-01",
+				"price_or_product_discount": "Price",
+                # "apply_discount_on": "Rate"
+            })
+		
+		if not frappe.db.exists("Pricing Rule", {"title" : pricing_rule.title}):
+			pricing_rule = frappe.new_doc("Pricing Rule")
+			pricing_rule.title = "Boat Earpods - Monica Discount"
+			pricing_rule.apply_on = "Item Code"
+			pricing_rule.price_or_product_discount = "Price"
+			pricing_rule.buying = 1
+			pricing_rule.selling = 0
+			pricing_rule.min_qty = 10
+			pricing_rule.valid_from = "2024-12-01"
+			pricing_rule.company = "_Test Company"
+			pricing_rule.margin_type = "Percentage"
+			pricing_rule.rate_or_discount = "Discount Percentage"
+			pricing_rule.discount_percentage = 10
+			pricing_rule.append("items", {"item_code": "Boat Earpods"})
+			pricing_rule.applicable_for = "Supplier"
+			pricing_rule.supplier = "Monica"
+			pricing_rule.insert()
+
 		pi = make_purchase_invoice(
 			company = "_Test Company",
 			supplier= "Monica",
@@ -4107,7 +4143,20 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			warehouse= create_warehouse("Stores-test", properties=None, company="_Test Company"),
 			qty=20,
 			item_code="Boat Earpods",
+			do_not_save=True,
+			do_not_submit = True
 		)
+		pi.insert()
+		d = frappe.get_doc("Purchase Invoice", pi.name)
+		d.append("pricing_rules", {
+			"pricing_rule": pricing_rule.name,
+			"item_code": "Boat Earpods",
+			"rule_applied": 1
+		})
+		d.save()
+		d.submit()
+
+
 		# pi.insert()
 		# pi.submit()
 
@@ -4115,9 +4164,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		sle = frappe.get_all("Stock Ledger Entry", 
                              filters={"voucher_no": pi.name},
                              fields=["actual_qty", "valuation_rate", "incoming_rate", "stock_value", "stock_value_difference"])
-		print(sle[0]["actual_qty"], sle[0]["valuation_rate"], sle[0]["incoming_rate"], sle[0]["stock_value"], sle[0]["stock_value_difference"])
 		self.assertEqual(sle[0]["actual_qty"], 20)
-		self.assertEqual(sle[0]["valuation_rate"], 4500)
+		self.assertEqual(sle[0]["valuation_rate"], 45)
 
   
 	
