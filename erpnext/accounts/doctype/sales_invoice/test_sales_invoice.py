@@ -4329,6 +4329,32 @@ class TestSalesInvoice(IntegrationTestCase):
 		pos_return = make_sales_return(pos.name)
 		self.assertEqual(abs(pos_return.payments[0].amount), pos.payments[0].amount)
 
+	def test_return_qty_above_against_voucher_qty(self):
+		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
+		from erpnext.controllers.sales_and_purchase_return import make_return_doc
+
+		invoice = create_sales_invoice(qty=10)
+		return_doc = make_return_doc(invoice.doctype, invoice.name)
+		return_doc.items[0].qty = -11
+
+		self.assertRaises(frappe.ValidationError, return_doc.save)
+
+	def test_return_qty_above_against_voucher_qty_with_multiple_return_invoices(self):
+		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
+		from erpnext.controllers.sales_and_purchase_return import make_return_doc
+
+		invoice = create_sales_invoice(qty=10)
+
+		return_doc = make_return_doc(invoice.doctype, invoice.name)
+		return_doc.items[0].qty = -5
+		return_doc.save()
+		return_doc.submit()
+
+		return_doc = make_return_doc(invoice.doctype, invoice.name)
+		return_doc.items[0].qty = -6
+
+		self.assertRaises(frappe.ValidationError, return_doc.save)
+
 
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
