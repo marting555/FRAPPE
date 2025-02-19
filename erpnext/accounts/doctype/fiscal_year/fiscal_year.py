@@ -135,7 +135,11 @@ def check_duplicate_fiscal_year(doc):
 @frappe.whitelist()
 def auto_create_fiscal_year():
 	for d in frappe.db.sql(
-		"""select name from `tabFiscal Year` where year_end_date = date_add(current_date, interval 3 day)"""
+		"""
+		SELECT name
+		FROM `tabFiscal Year`
+		WHERE year_end_date = current_date + 3
+		"""
 	):
 		try:
 			current_fy = frappe.get_doc("Fiscal Year", d[0])

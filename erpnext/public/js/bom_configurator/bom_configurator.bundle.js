@@ -25,6 +25,9 @@ class BOMConfigurator {
 		};
 
 		frappe.views.trees["BOM Configurator"] = new frappe.views.TreeView(options);
+		let node = frappe.views.trees["BOM Configurator"].tree.root_node;
+		frappe.views.trees["BOM Configurator"].tree.show_toolbar(node);
+		frappe.views.trees["BOM Configurator"].tree.load_children(node, true);
 		this.tree_view = frappe.views.trees["BOM Configurator"];
 	}
 
@@ -137,17 +140,17 @@ class BOMConfigurator {
 								btnClass: "hidden-xs",
 							},
 							{
-								label: __("Expand All"),
+								label: __("Collapse All"),
 								click: function (node) {
 									let view = frappe.views.trees["BOM Configurator"];
 
 									if (!node.expanded) {
 										view.tree.load_children(node, true);
 										$(node.parent[0]).find(".tree-children").show();
-										node.$toolbar.find(".expand-all-btn").html("Collapse All");
+										node.$toolbar.find(".expand-all-btn").html(__("Collapse All"));
 									} else {
 										node.$tree_link.trigger("click");
-										node.$toolbar.find(".expand-all-btn").html("Expand All");
+										node.$toolbar.find(".expand-all-btn").html(__("Expand All"));
 									}
 								},
 								condition: function (node) {
@@ -187,10 +190,10 @@ class BOMConfigurator {
 									if (!node.expanded) {
 										view.tree.load_children(node, true);
 										$(node.parent[0]).find(".tree-children").show();
-										node.$toolbar.find(".expand-all-btn").html("Collapse All");
+										node.$toolbar.find(".expand-all-btn").html(__("Collapse All"));
 									} else {
 										node.$tree_link.trigger("click");
-										node.$toolbar.find(".expand-all-btn").html("Expand All");
+										node.$toolbar.find(".expand-all-btn").html(__("Expand All"));
 									}
 								},
 								condition: function (node) {
@@ -283,6 +286,12 @@ class BOMConfigurator {
 				fieldtype: "Float",
 				reqd: 1,
 				read_only: read_only,
+				change() {
+					this.layout.fields_dict.items.grid.data.forEach((row) => {
+						row.qty = flt(this.value);
+					});
+					this.layout.fields_dict.items.grid.refresh();
+				},
 			},
 			{ fieldtype: "Section Break" },
 			{

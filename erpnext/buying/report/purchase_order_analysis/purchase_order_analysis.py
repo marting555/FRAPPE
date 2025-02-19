@@ -18,9 +18,12 @@ def execute(filters=None):
 
 	columns = get_columns(filters)
 	data = get_data(filters)
+	
 
 	if not data:
 		return [], [], None, []
+	
+	update_received_amount(data)
 
 	data, chart_data = prepare_data(data, filters)
 
@@ -37,62 +40,121 @@ def validate_filters(filters):
 
 
 def get_data(filters):
-	po = frappe.qb.DocType("Purchase Order")
-	po_item = frappe.qb.DocType("Purchase Order Item")
-	pi_item = frappe.qb.DocType("Purchase Invoice Item")
+    query_result = frappe.db.sql(
+        f"""SELECT 
+                "tabPurchase Order"."transaction_date" AS "date",
+                "tabPurchase Order Item"."schedule_date" AS "required_date",
+                "tabPurchase Order Item"."project",
+                "tabPurchase Order"."name" AS "purchase_order",
+                "tabPurchase Order"."status",
+                "tabPurchase Order"."supplier",
+                "tabPurchase Order Item"."item_code",
+                "tabPurchase Order Item"."qty",
+                "tabPurchase Order Item"."received_qty",
+                "tabPurchase Order Item"."qty" - "tabPurchase Order Item"."received_qty" AS "pending_qty",
+                SUM(COALESCE("tabPurchase Invoice Item"."qty", 0)) AS "billed_qty",
+                "tabPurchase Order Item"."base_amount" AS "amount",
+                "tabPurchase Order Item"."billed_amt" * COALESCE("tabPurchase Order"."conversion_rate", 1) AS "billed_amount",
+                "tabPurchase Order Item"."base_amount" - ("tabPurchase Order Item"."billed_amt" * COALESCE("tabPurchase Order"."conversion_rate", 1)) AS "pending_amount",
+                "tabPurchase Order"."set_warehouse" AS "warehouse",
+                "tabPurchase Order"."company",
+                "tabPurchase Order Item"."name",
+                (ARRAY_AGG("tabPurchase Invoice Item"."name"))[1] AS "invoice_items"
+            FROM 
+                "tabPurchase Order"
+            JOIN 
+                "tabPurchase Order Item" 
+                ON "tabPurchase Order Item"."parent" = "tabPurchase Order"."name"
+            LEFT JOIN 
+                "tabPurchase Invoice Item" 
+                ON "tabPurchase Invoice Item"."po_detail" = "tabPurchase Order Item"."name" 
+                AND "tabPurchase Invoice Item"."docstatus" = 1
+            WHERE 
+                "tabPurchase Order"."status" NOT IN ('Stopped', 'Closed')
+                AND "tabPurchase Order"."docstatus" = 1
+                
+            GROUP BY 
+                "tabPurchase Order"."transaction_date",
+                "tabPurchase Order Item"."schedule_date",
+                "tabPurchase Order Item"."project",
+                "tabPurchase Order"."name",
+                "tabPurchase Order"."status",
+                "tabPurchase Order"."supplier",
+                "tabPurchase Order Item"."item_code",
+                "tabPurchase Order Item"."qty",
+                "tabPurchase Order Item"."received_qty",
+                "tabPurchase Order Item"."base_amount",
+                "tabPurchase Order Item"."billed_amt",
+                "tabPurchase Order"."conversion_rate",
+                "tabPurchase Order"."set_warehouse",
+                "tabPurchase Order"."company",
+                "tabPurchase Order Item"."name"
+            ORDER BY 
+                "tabPurchase Order"."transaction_date";
+        """,
+        as_dict=True
+    )
+    filtered_data = []
+    
+    for row in query_result:
+        include_row = True
+        
+        if filters.get("company") and row["company"] != filters.get("company"):
+            include_row = False
+            
+        if filters.get("name") and row["purchase_order"] != filters.get("name"):
+            include_row = False
+            
+        if filters.get("from_date") and filters.get("to_date"):
+            if not ((getdate(filters.get("from_date")) <= row["date"]) and (row["date"] <= getdate(filters.get("to_date")))):
+                include_row = False
+                
+        if filters.get("status"):
+            if isinstance(filters["status"], list):
+                if row["status"] not in filters["status"]:
+                    include_row = False
+            else:
+                if row["status"] != filters["status"]:
+                    include_row = False
+                    
+        if filters.get("project") and row["project"] != filters.get("project"):
+            include_row = False
+            
+        if include_row:
+            filtered_data.append(row)
+
+    return filtered_data
+
+def update_received_amount(data):
+	pr_data = get_received_amount_data(data)
+	for row in data:
+		row.received_qty_amount = flt(pr_data.get(row.name))
+  
+def get_received_amount_data(data):
+	pr = frappe.qb.DocType("Purchase Receipt")
 	pr_item = frappe.qb.DocType("Purchase Receipt Item")
 
+	po_items = [row.name for row in data]
+	if not po_items:
+		return frappe._dict()
+	
+
 	query = (
-		frappe.qb.from_(po)
-		.inner_join(po_item)
-		.on(po_item.parent == po.name)
-		.left_join(pi_item)
-		.on((pi_item.po_detail == po_item.name) & (pi_item.docstatus == 1))
-		.left_join(pr_item)
-		.on((pr_item.purchase_order_item == po_item.name) & (pr_item.docstatus == 1))
+		frappe.qb.from_(pr)
+		.inner_join(pr_item)
+		.on(pr_item.parent == pr.name)
 		.select(
-			po.transaction_date.as_("date"),
-			po_item.schedule_date.as_("required_date"),
-			po_item.project,
-			po.name.as_("purchase_order"),
-			po.status,
-			po.supplier,
-			po_item.item_code,
-			po_item.qty,
-			po_item.received_qty,
-			(po_item.qty - po_item.received_qty).as_("pending_qty"),
-			Sum(IfNull(pi_item.qty, 0)).as_("billed_qty"),
-			po_item.base_amount.as_("amount"),
-			(pr_item.base_amount).as_("received_qty_amount"),
-			(po_item.billed_amt * IfNull(po.conversion_rate, 1)).as_("billed_amount"),
-			(po_item.base_amount - (po_item.billed_amt * IfNull(po.conversion_rate, 1))).as_(
-				"pending_amount"
-			),
-			po.set_warehouse.as_("warehouse"),
-			po.company,
-			po_item.name,
+			pr_item.purchase_order_item,
+			Sum(pr_item.base_amount).as_("received_qty_amount"),
 		)
-		.where((po_item.parent == po.name) & (po.status.notin(("Stopped", "Closed"))) & (po.docstatus == 1))
-		.groupby(po_item.name)
-		.orderby(po.transaction_date)
+		.where((pr.docstatus == 1) & (pr_item.purchase_order_item.isin(po_items)))
+		.groupby(pr_item.purchase_order_item)
 	)
 
-	for field in ("company", "name"):
-		if filters.get(field):
-			query = query.where(po[field] == filters.get(field))
-
-	if filters.get("from_date") and filters.get("to_date"):
-		query = query.where(po.transaction_date.between(filters.get("from_date"), filters.get("to_date")))
-
-	if filters.get("status"):
-		query = query.where(po.status.isin(filters.get("status")))
-
-	if filters.get("project"):
-		query = query.where(po_item.project == filters.get("project"))
-
-	data = query.run(as_dict=True)
-
-	return data
+	data = query.run()
+	if not data:
+		return frappe._dict()
+	return frappe._dict(data)
 
 
 def prepare_data(data, filters):

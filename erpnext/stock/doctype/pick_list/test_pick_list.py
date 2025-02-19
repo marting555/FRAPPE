@@ -20,6 +20,7 @@ from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 from erpnext.stock.doctype.stock_reconciliation.stock_reconciliation import (
 	EmptyStockReconciliationItemsError,
 )
+from frappe.utils import add_days, add_months, flt, getdate, nowdate
 
 test_dependencies = ["Item", "Sales Invoice", "Stock Entry", "Batch"]
 
@@ -1266,3 +1267,238 @@ class TestPickList(FrappeTestCase):
 		delivery_note = create_delivery_note(pl.name)
 
 		self.assertEqual(len(delivery_note.items), 1)
+
+	def test_pick_list_to_unreservation_TC_S_072(self):
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
+		from erpnext.stock.doctype.stock_reservation_entry.stock_reservation_entry import cancel_stock_reservation_entries
+
+		frappe.db.set_single_value("Stock Settings", "enable_stock_reservation", 1)
+		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=5, rate=4000)
+
+		sales_order = make_sales_order(item_code="_Test Item Home Desktop 100", qty=4, rate=5000)
+		self.assertEqual(sales_order.status, "To Deliver and Bill")  
+
+		pick_list = create_pick_list(sales_order.name)
+		pick_list.save()
+		pick_list.submit()
+		so_items_details_map = {}
+		for location in pick_list.locations:
+			if location.warehouse and location.sales_order and location.sales_order_item:
+				item_details = {
+					"sales_order_item": location.sales_order_item,
+					"item_code": location.item_code,
+					"warehouse": location.warehouse,
+					"qty_to_reserve": (flt(location.picked_qty) - flt(location.stock_reserved_qty)),
+					"from_voucher_no": location.parent,
+					"from_voucher_detail_no": location.name,
+					"serial_and_batch_bundle": location.serial_and_batch_bundle,
+				}
+				so_items_details_map.setdefault(location.sales_order, []).append(item_details)
+
+		if so_items_details_map:
+			for so, items_details in so_items_details_map.items():
+				so_doc = frappe.get_doc("Sales Order", so)
+				so_doc.create_stock_reservation_entries(
+					items_details=items_details,
+					from_voucher_type="Pick List",
+					notify=None,
+				)
+     
+		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so_doc.name}, "status"), "Reserved")
+	
+		cancel_stock_reservation_entries(
+			from_voucher_type="Pick List", from_voucher_no=pick_list.name, notify=False
+		)
+		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so_doc.name}, "status"), "Cancelled")
+
+	def test_quotation_to_sales_invoice_with_pick_list_TC_S_085(self):
+		from erpnext.selling.doctype.quotation.quotation import make_sales_order
+		from erpnext.selling.doctype.quotation.test_quotation import make_quotation
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+
+		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=10, rate=4000)
+		quotation = make_quotation(
+			item="_Test Item Home Desktop 100",
+			qty=4,
+			rate=5000,
+			warehouse="Stores - _TC",
+		)
+		quotation.save()
+		quotation.submit()
+		self.assertEqual(quotation.status, "Open")
+
+		sales_order = make_sales_order(quotation.name)
+		sales_order.delivery_date = add_days(nowdate(), 5)
+		sales_order.insert()
+		sales_order.submit()
+
+		self.assertEqual(sales_order.status, "To Deliver and Bill")  
+		quotation.reload()
+		self.assertEqual(quotation.status, "Ordered")
+		# Pick list
+		pick_list = create_pick_list(sales_order.name)
+		pick_list.save()
+		pick_list.submit()
+		# Delivery note
+		delivery_note = create_delivery_note(pick_list.name)
+		delivery_note.save()
+		delivery_note.submit()
+
+		stock_check(self,delivery_note.name,-4)
+
+		# sales invoice
+		sales_invoice = make_sales_invoice(delivery_note.name)
+		sales_invoice.insert()
+		sales_invoice.submit()
+		validate_gl_entries(self, sales_invoice.name, 20000)
+
+	def test_sales_order_to_sales_invoice_with_pick_list_TC_S_086(self):
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+
+		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=5, rate=4000)
+
+		sales_order = make_sales_order(item_code="_Test Item Home Desktop 100", qty=4, rate=5000)
+		self.assertEqual(sales_order.status, "To Deliver and Bill")  
+
+		# Pick list
+		pick_list = create_pick_list(sales_order.name)
+		pick_list.save()
+		pick_list.submit()
+		# Delivery note
+		delivery_note = create_delivery_note(pick_list.name)
+		delivery_note.save()
+		delivery_note.submit()
+
+		stock_check(self,delivery_note.name,-4)
+
+		# sales invoice
+		sales_invoice = make_sales_invoice(delivery_note.name)
+		sales_invoice.insert()
+		sales_invoice.submit()
+		validate_gl_entries(self, sales_invoice.name, 20000)
+
+	def test_sales_order_to_sales_invoice_with_double_entries_TC_S_087(self):
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+
+		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=5, rate=4000)
+
+		sales_order = make_sales_order(item_code="_Test Item Home Desktop 100", qty=4, rate=5000)
+		self.assertEqual(sales_order.status, "To Deliver and Bill")  
+
+		# Pick list
+		pick_list_1 = create_pick_list(sales_order.name)
+		pick_list_1.save()
+		for i in pick_list_1.locations:
+			i.qty = 2
+			i.stock_qty = 2
+		pick_list_1.submit()
+		# Delivery note
+		delivery_note_1 = create_delivery_note(pick_list_1.name)
+		delivery_note_1.save()
+		delivery_note_1.submit()
+
+		stock_check(self,delivery_note_1.name,-2)
+
+		# sales invoice
+		sales_invoice_1 = make_sales_invoice(delivery_note_1.name)
+		sales_invoice_1.insert()
+		sales_invoice_1.submit()
+		validate_gl_entries(self, sales_invoice_1.name, 10000)
+
+		delivery_note_1.reload()
+		self.assertEqual(sales_invoice_1.status, "Unpaid")  
+		self.assertEqual(delivery_note_1.status, "Completed") 
+
+		# Pick list
+		pick_list_2 = create_pick_list(sales_order.name)
+		pick_list_2.save()
+		for i in pick_list_2.locations:
+			i.qty = 2
+			i.stock_qty = 2
+		pick_list_2.submit()
+		# Delivery note
+		delivery_note_2 = create_delivery_note(pick_list_2.name)
+		delivery_note_2.save()
+		delivery_note_2.submit()
+
+		stock_check(self,delivery_note_2.name,-2)
+
+		# sales invoice
+		sales_invoice_2 = make_sales_invoice(delivery_note_2.name)
+		sales_invoice_2.insert()
+		sales_invoice_2.submit()
+		validate_gl_entries(self, sales_invoice_2.name, 10000)
+		
+		sales_order.reload()
+		delivery_note_2.reload()
+		self.assertEqual(sales_invoice_2.status, "Unpaid")  
+		self.assertEqual(sales_order.status, "Completed")  
+		self.assertEqual(delivery_note_2.status, "Completed")  
+
+
+	def test_sales_order_to_sales_invoice_with_2_SI_TC_S_088(self):
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+
+		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=5, rate=4000)
+
+		sales_order = make_sales_order(item_code="_Test Item Home Desktop 100", qty=4, rate=5000)
+		self.assertEqual(sales_order.status, "To Deliver and Bill")  
+
+		# Pick list
+		pick_list = create_pick_list(sales_order.name)
+		pick_list.save()
+		pick_list.submit()
+		# Delivery note
+		delivery_note = create_delivery_note(pick_list.name)
+		delivery_note.save()
+		delivery_note.submit()
+
+		stock_check(self,delivery_note.name,-4)
+		self.assertEqual(delivery_note.status, "To Bill")  
+
+
+		# sales invoice
+		sales_invoice_1 = make_sales_invoice(delivery_note.name)
+		for i in sales_invoice_1.items:
+			i.qty=2
+		sales_invoice_1.insert()
+		sales_invoice_1.submit()
+		validate_gl_entries(self, sales_invoice_1.name, 10000)
+		self.assertEqual(sales_invoice_1.status, "Unpaid")  
+
+
+		sales_invoice_2 = make_sales_invoice(delivery_note.name)
+		for i in sales_invoice_2.items:
+			i.qty=2
+		sales_invoice_2.insert()
+		sales_invoice_2.submit()
+		validate_gl_entries(self, sales_invoice_2.name, 10000)
+		self.assertEqual(sales_invoice_2.status, "Unpaid")  
+
+		sales_order.reload()
+		delivery_note.reload()
+		self.assertEqual(sales_order.status, "Completed")  
+		self.assertEqual(delivery_note.status, "Completed") 
+
+def stock_check(self,voucher,qty):
+	stock_entries = frappe.get_all(
+		"Stock Ledger Entry",
+		filters={"voucher_no":voucher, "warehouse": "Stores - _TC"},
+		fields=["actual_qty"]
+	)
+	self.assertEqual(sum([entry.actual_qty for entry in stock_entries]), qty)
+
+def validate_gl_entries(self, voucher_no, amount):
+	debtor_account = frappe.db.get_value("Company", "_Test Company", "default_receivable_account")
+	sales_account = frappe.db.get_value("Company", "_Test Company", "default_income_account")
+	gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": voucher_no}, fields=["account", "debit", "credit"])
+
+	gl_debits = {entry.account: entry.debit for entry in gl_entries}
+	gl_credits = {entry.account: entry.credit for entry in gl_entries}
+
+	self.assertAlmostEqual(gl_debits[debtor_account], amount)
+	self.assertAlmostEqual(gl_credits[sales_account], amount)

@@ -21,10 +21,8 @@
   "to_date",
   "finance_book",
   "currency",
-  "project",
   "payment_terms_template",
-  "sales_partner",
-  "sales_person",
+  "show_remarks",
   "based_on_payment_terms",
   "section_break_3",
   "customer_collection",
@@ -97,13 +95,6 @@
    "options": "PSOA Cost Center"
   },
   {
-   "depends_on": "eval: (doc.report == 'General Ledger');",
-   "fieldname": "project",
-   "fieldtype": "Table MultiSelect",
-   "label": "Project",
-   "options": "PSOA Project"
-  },
-  {
    "fieldname": "section_break_3",
    "fieldtype": "Section Break",
    "label": "Customers"
@@ -130,7 +121,7 @@
    "fieldname": "customer_collection",
    "fieldtype": "Select",
    "label": "Select Customers By",
-   "options": "\nCustomer Group\nTerritory\nSales Partner\nSales Person"
+   "options": "\nCustomer Group\nTerritory"
   },
   {
    "depends_on": "eval: doc.customer_collection !== ''",
@@ -243,9 +234,9 @@
   },
   {
    "fieldname": "cc_to",
-   "fieldtype": "Link",
+   "fieldtype": "Table MultiSelect",
    "label": "CC To",
-   "options": "User"
+   "options": "Process Statement Of Accounts CC"
   },
   {
    "default": "1",
@@ -348,20 +339,6 @@
   },
   {
    "depends_on": "eval: (doc.report == 'Accounts Receivable');",
-   "fieldname": "sales_partner",
-   "fieldtype": "Link",
-   "label": "Sales Partner",
-   "options": "Sales Partner"
-  },
-  {
-   "depends_on": "eval: (doc.report == 'Accounts Receivable');",
-   "fieldname": "sales_person",
-   "fieldtype": "Link",
-   "label": "Sales Person",
-   "options": "Sales Person"
-  },
-  {
-   "depends_on": "eval: (doc.report == 'Accounts Receivable');",
    "fieldname": "territory",
    "fieldtype": "Link",
    "label": "Territory",
@@ -390,10 +367,16 @@
    "fieldname": "ignore_cr_dr_notes",
    "fieldtype": "Check",
    "label": "Ignore System Generated Credit / Debit Notes"
+  },
+  {
+   "default": "0",
+   "fieldname": "show_remarks",
+   "fieldtype": "Check",
+   "label": "Show Remarks"
   }
  ],
  "links": [],
- "modified": "2024-08-13 10:41:18.381165",
+ "modified": "2025-02-07 16:29:21.597239",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Process Statement Of Accounts",

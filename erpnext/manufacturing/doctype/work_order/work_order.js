@@ -84,12 +84,6 @@ frappe.ui.form.on("Work Order", {
 			};
 		});
 
-		// Set query for FG Item
-		frm.set_query("project", function () {
-			return {
-				filters: [["Project", "status", "not in", "Completed, Cancelled"]],
-			};
-		});
 
 		frm.set_query("operation", "required_items", function () {
 			return {
@@ -110,8 +104,6 @@ frappe.ui.form.on("Work Order", {
 	onload: function (frm) {
 		if (!frm.doc.status) frm.doc.status = "Draft";
 
-		frm.add_fetch("sales_order", "project", "project");
-
 		if (frm.doc.__islocal) {
 			frm.set_value({
 				actual_start_date: "",
@@ -128,6 +120,31 @@ frappe.ui.form.on("Work Order", {
 			"source_warehouse",
 			frm.doc.source_warehouse
 		);
+	},
+
+	allow_alternative_item: function (frm) {
+		let has_alternative = false;
+		if (frm.doc.required_items) {
+			has_alternative = frm.doc.required_items.find((i) => i.allow_alternative_item === 1);
+		}
+		if (frm.doc.allow_alternative_item && frm.doc.docstatus === 0 && has_alternative) {
+			frm.add_custom_button(__("Alternate Item"), () => {
+				erpnext.utils.select_alternate_items({
+					frm: frm,
+					child_docname: "required_items",
+					warehouse_field: "source_warehouse",
+					child_doctype: "Work Order Item",
+					original_item_field: "original_item",
+					condition: (d) => {
+						if (d.allow_alternative_item) {
+							return true;
+						}
+					},
+				});
+			});
+		} else {
+			frm.remove_custom_button(__("Alternate Item"));
+		}
 	},
 
 	refresh: function (frm) {
@@ -163,25 +180,6 @@ frappe.ui.form.on("Work Order", {
 			}
 		}
 
-		if (frm.doc.required_items && frm.doc.allow_alternative_item) {
-			const has_alternative = frm.doc.required_items.find((i) => i.allow_alternative_item === 1);
-			if (frm.doc.docstatus == 0 && has_alternative) {
-				frm.add_custom_button(__("Alternate Item"), () => {
-					erpnext.utils.select_alternate_items({
-						frm: frm,
-						child_docname: "required_items",
-						warehouse_field: "source_warehouse",
-						child_doctype: "Work Order Item",
-						original_item_field: "original_item",
-						condition: (d) => {
-							if (d.allow_alternative_item) {
-								return true;
-							}
-						},
-					});
-				});
-			}
-		}
 
 		if (frm.doc.status == "Completed") {
 			if (frm.doc.__onload.backflush_raw_materials_based_on == "Material Transferred for Manufacture") {
@@ -201,7 +199,7 @@ frappe.ui.form.on("Work Order", {
 			frm.doc.produced_qty > 0
 		) {
 			frm.add_custom_button(
-				__("Disassembly Order"),
+				__("Disassemble Order"),
 				() => {
 					frm.trigger("make_disassembly_order");
 				},
@@ -209,7 +207,7 @@ frappe.ui.form.on("Work Order", {
 			);
 		}
 
-		frm.trigger("add_custom_button_to_return_components");
+		frm.trigger("allow_alternative_item");
 	},
 
 	add_custom_button_to_return_components: function (frm) {
@@ -448,7 +446,7 @@ frappe.ui.form.on("Work Order", {
 				method: "erpnext.manufacturing.doctype.work_order.work_order.get_item_details",
 				args: {
 					item: frm.doc.production_item,
-					project: frm.doc.project,
+					// project: frm.doc.project,
 				},
 				freeze: true,
 				callback: function (r) {
@@ -461,7 +459,7 @@ frappe.ui.form.on("Work Order", {
 							[
 								"description",
 								"stock_uom",
-								"project",
+								// "project",
 								"bom_no",
 								"allow_alternative_item",
 								"transfer_material_against",
@@ -479,12 +477,6 @@ frappe.ui.form.on("Work Order", {
 					}
 				},
 			});
-		}
-	},
-
-	project: function (frm) {
-		if (!erpnext.in_production_item_onchange && !frm.doc.bom_no) {
-			frm.trigger("production_item");
 		}
 	},
 
@@ -537,9 +529,13 @@ frappe.ui.form.on("Work Order", {
 		erpnext.work_order.calculate_cost(frm.doc);
 		erpnext.work_order.calculate_total_cost(frm);
 	},
+
 });
 
 frappe.ui.form.on("Work Order Item", {
+	allow_alternative_item(frm) {
+		frm.trigger("allow_alternative_item");
+	},
 	source_warehouse: function (frm, cdt, cdn) {
 		var row = locals[cdt][cdn];
 		if (!row.item_code) {
@@ -618,7 +614,7 @@ erpnext.work_order = {
 	set_custom_buttons: function (frm) {
 		var doc = frm.doc;
 
-		if (doc.status !== "Closed") {
+		if (doc.docstatus === 1 && doc.status !== "Closed") {
 			frm.add_custom_button(
 				__("Close"),
 				function () {

@@ -146,9 +146,8 @@ frappe.ui.form.on("Request for Quotation", {
 								return;
 							}
 						},
-						"Download PDF for Supplier",
-						"Download"
-					);
+						__("Download PDF for Supplier"),
+						__("Download"))
 				},
 				__("Tools")
 			);
@@ -272,9 +271,10 @@ frappe.ui.form.on("Request for Quotation", {
 			});
 		};
 
-		dialog.fields_dict.note.$wrapper
-			.append(`<p class="small text-muted">This is a preview of the email to be sent. A PDF of the document will
-			automatically be attached with the email.</p>`);
+		const msg = __(
+			"This is a preview of the email to be sent. A PDF of the document will automatically be attached with the email."
+		);
+		dialog.fields_dict.note.$wrapper.append(`<p class="small text-muted">${msg}</p>`);
 
 		dialog.show();
 	},
@@ -340,7 +340,7 @@ erpnext.buying.RequestforQuotationController = class RequestforQuotationControll
 				__("Opportunity"),
 				function () {
 					erpnext.utils.map_current_doc({
-						method: "erpnext.crm.doctype.opportunity.opportunity.make_request_for_quotation",
+						method: "crm.crm.doctype.opportunity.opportunity.make_request_for_quotation",
 						source_doctype: "Opportunity",
 						target: me.frm,
 						setters: {

@@ -29,24 +29,21 @@ class ProcessStatementOfAccounts(Document):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
-		from erpnext.accounts.doctype.process_statement_of_accounts_customer.process_statement_of_accounts_customer import (
-			ProcessStatementOfAccountsCustomer,
-		)
+		from erpnext.accounts.doctype.process_statement_of_accounts_cc.process_statement_of_accounts_cc import ProcessStatementOfAccountsCC
+		from erpnext.accounts.doctype.process_statement_of_accounts_customer.process_statement_of_accounts_customer import ProcessStatementOfAccountsCustomer
 		from erpnext.accounts.doctype.psoa_cost_center.psoa_cost_center import PSOACostCenter
-		from erpnext.accounts.doctype.psoa_project.psoa_project import PSOAProject
+		from frappe.types import DF
 
 		account: DF.Link | None
 		ageing_based_on: DF.Literal["Due Date", "Posting Date"]
 		based_on_payment_terms: DF.Check
 		body: DF.TextEditor | None
-		cc_to: DF.Link | None
+		cc_to: DF.TableMultiSelect[ProcessStatementOfAccountsCC]
 		collection_name: DF.DynamicLink | None
 		company: DF.Link
 		cost_center: DF.TableMultiSelect[PSOACostCenter]
 		currency: DF.Link | None
-		customer_collection: DF.Literal["", "Customer Group", "Territory", "Sales Partner", "Sales Person"]
+		customer_collection: DF.Literal["", "Customer Group", "Territory"]
 		customers: DF.Table[ProcessStatementOfAccountsCustomer]
 		enable_auto_email: DF.Check
 		filter_duration: DF.Int
@@ -64,12 +61,10 @@ class ProcessStatementOfAccounts(Document):
 		pdf_name: DF.Data | None
 		posting_date: DF.Date | None
 		primary_mandatory: DF.Check
-		project: DF.TableMultiSelect[PSOAProject]
 		report: DF.Literal["General Ledger", "Accounts Receivable"]
-		sales_partner: DF.Link | None
-		sales_person: DF.Link | None
 		sender: DF.Link | None
 		show_net_values_in_party_account: DF.Check
+		show_remarks: DF.Check
 		start_date: DF.Date | None
 		subject: DF.Data | None
 		terms_and_conditions: DF.Link | None
@@ -187,6 +182,7 @@ def get_common_filters(doc):
 			"finance_book": doc.finance_book if doc.finance_book else None,
 			"account": [doc.account] if doc.account else None,
 			"cost_center": [cc.cost_center_name for cc in doc.cost_center],
+			"show_remarks": doc.show_remarks,
 		}
 	)
 
@@ -322,7 +318,7 @@ def get_recipients_and_cc(customer, doc):
 	cc = []
 	if doc.cc_to != "":
 		try:
-			cc = [frappe.get_value("User", doc.cc_to, "email")]
+			cc = [frappe.get_value("User", user.cc, "email") for user in doc.cc_to]
 		except Exception:
 			pass
 
@@ -472,6 +468,7 @@ def send_emails(document_name, from_scheduler=False, posting_date=None):
 				reference_doctype="Process Statement Of Accounts",
 				reference_name=document_name,
 				attachments=attachments,
+				expose_recipients="header",
 			)
 
 		if doc.enable_auto_email and from_scheduler:
@@ -497,7 +494,7 @@ def send_auto_email():
 	selected = frappe.get_list(
 		"Process Statement Of Accounts",
 		filters={"enable_auto_email": 1},
-		or_filters={"to_date": format_date(today()), "posting_date": format_date(today())},
+		or_filters={"to_date": today(), "posting_date": today()},
 	)
 	for entry in selected:
 		send_emails(entry.name, from_scheduler=True)

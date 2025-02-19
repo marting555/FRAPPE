@@ -1,6 +1,7 @@
 # Copyright (c) 2013, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from datetime import timedelta
 
 import frappe
 from frappe import _
@@ -48,28 +49,51 @@ def get_data(report_filters):
 
 
 def get_stock_ledger_data(report_filters, filters):
+	filters.update({"posting_date": report_filters.as_on_date})
+	condition = ""
 	if report_filters.account:
 		warehouses = get_warehouses_based_on_account(report_filters.account, report_filters.company)
+		condition += " and TSLE.warehouse in ({})".format(", ".join([frappe.db.escape(d) for d in warehouses]))
 
-		filters["warehouse"] = ("in", warehouses)
+	get_sle_data = frappe.db.sql(
+		"""
+			SELECT
+				TSLE.voucher_type,
+				TSLE.voucher_no,
+				MAX(TSLE.name) AS name,
+				SUM(TSLE.stock_value_difference) AS stock_value,
+				MAX(TSLE.posting_date) AS posting_date,
+				MAX(TSLE.posting_time) AS posting_time
+			FROM "tabStock Ledger Entry" AS TSLE
+			WHERE
+				TSLE.is_cancelled = %(is_cancelled)s
+				AND TSLE.company = %(company)s
+				AND COALESCE(TSLE.posting_date, '0001-01-01') <= %(posting_date)s
+				{condition}
+			GROUP BY
+				TSLE.voucher_type,
+				TSLE.voucher_no
+			ORDER BY
+				TSLE.voucher_type,
+				TSLE.voucher_no
 
-	return frappe.get_all(
-		"Stock Ledger Entry",
-		filters=filters,
-		fields=[
-			"name",
-			"voucher_type",
-			"voucher_no",
-			"sum(stock_value_difference) as stock_value",
-			"posting_date",
-			"posting_time",
-		],
-		group_by="voucher_type, voucher_no",
-		order_by="posting_date ASC, posting_time ASC",
+		""".format(
+				condition = condition
+			),
+			filters,
+			as_dict = 1,
 	)
+
+	for row in get_sle_data:
+		if 'posting_time' in row and row['posting_time'] is not None:
+			posting_time = row['posting_time']
+			row['posting_time'] = timedelta(hours=posting_time.hour, minutes=posting_time.minute, seconds=posting_time.second)
+
+	return get_sle_data
 
 
 def get_gl_data(report_filters, filters):
+	filters.update({"posting_date": ("<=", report_filters.as_on_date)})
 	if report_filters.account:
 		stock_accounts = [report_filters.account]
 	else:
@@ -89,7 +113,7 @@ def get_gl_data(report_filters, filters):
 			"voucher_no",
 			"sum(debit_in_account_currency) - sum(credit_in_account_currency) as account_value",
 		],
-		group_by="voucher_type, voucher_no",
+		group_by="name, voucher_type, voucher_no",
 	)
 
 	voucher_wise_gl_data = {}

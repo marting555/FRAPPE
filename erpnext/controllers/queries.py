@@ -9,10 +9,9 @@ import frappe
 from frappe import qb, scrub
 from frappe.desk.reportview import get_filters_cond, get_match_cond
 from frappe.query_builder import Criterion, CustomFunction
-from frappe.query_builder.functions import Concat, Locate, Sum
+from frappe.query_builder.functions import Concat, Locate, Sum, Cast
 from frappe.utils import nowdate, today, unique
-from pypika import Order
-
+from pypika import Case, Order
 import erpnext
 from erpnext.stock.get_item_details import _get_item_tax_template
 
@@ -96,7 +95,10 @@ def tax_account_query(doctype, txt, searchfield, start, page_len, filters):
 		account_type_condition = ""
 		if with_account_type_filter:
 			account_type_condition = "AND account_type in %(account_types)s"
-
+		if frappe.db.db_type == "postgres":
+			like_operator = "ILIKE"
+		else:
+			like_operator = "LIKE"
 		accounts = frappe.db.sql(
 			f"""
 			SELECT name, parent_account
@@ -107,7 +109,7 @@ def tax_account_query(doctype, txt, searchfield, start, page_len, filters):
 				AND company = %(company)s
 				AND disabled = %(disabled)s
 				AND (account_currency = %(currency)s or ifnull(account_currency, '') = '')
-				AND `{searchfield}` LIKE %(txt)s
+				AND `{searchfield}` {like_operator} %(txt)s
 				{get_match_cond(doctype)}
 			ORDER BY idx DESC, name
 			LIMIT %(limit)s offset %(offset)s
@@ -161,7 +163,7 @@ def item_query(doctype, txt, searchfield, start, page_len, filters, as_dict=Fals
 		for field in [searchfield or "name", "item_code", "item_group", "item_name"]
 		if field not in searchfields
 	]
-	searchfields = " or ".join([field + " like %(txt)s" for field in searchfields])
+	searchfields = " or ".join([f"LOWER({field}) LIKE LOWER(%(txt)s)" for field in searchfields])
 
 	if filters and isinstance(filters, dict):
 		if filters.get("customer") or filters.get("supplier"):
@@ -195,7 +197,7 @@ def item_query(doctype, txt, searchfield, start, page_len, filters, as_dict=Fals
 	description_cond = ""
 	if frappe.db.count(doctype, cache=True) < 50000:
 		# scan description only if items are less than 50000
-		description_cond = "or `tabItem`.description LIKE %(txt)s"
+		description_cond = "or LOWER(`tabItem`.description) LIKE LOWER(%(txt)s)"
 	return frappe.db.sql(
 		"""select
 			`tabItem`.name {columns}
@@ -204,13 +206,13 @@ def item_query(doctype, txt, searchfield, start, page_len, filters, as_dict=Fals
 			and `tabItem`.disabled=0
 			and `tabItem`.has_variants=0
 			and (`tabItem`.end_of_life > %(today)s or `tabItem`.end_of_life is null)
-			and ({scond} or `tabItem`.item_code IN (select parent from `tabItem Barcode` where barcode LIKE %(txt)s)
+			and ({scond} or `tabItem`.item_code IN (select parent from `tabItem Barcode` where barcode ILIKE %(txt)s)
 				{description_cond})
 			{fcond} {mcond}
 		order by
-			(case when locate(%(_txt)s, name) > 0 then locate(%(_txt)s, name) else 99999 end),
-			(case when locate(%(_txt)s, item_name) > 0 then locate(%(_txt)s, item_name) else 99999 end),
-			idx desc,
+            (case when locate(LOWER(%(_txt)s), LOWER(name)) > 0 then locate(LOWER(%(_txt)s), LOWER(name)) else 99999 end),
+            (case when locate(LOWER(%(_txt)s), LOWER(item_name)) > 0 then locate(LOWER(%(_txt)s), LOWER(item_name)) else 99999 end),
+            idx desc,
 			name, item_name
 		limit %(page_len)s offset %(start)s""".format(
 			columns=columns,
@@ -270,10 +272,14 @@ def get_project_name(doctype, txt, searchfield, start, page_len, filters):
 	qb_filter_or_conditions = []
 	ifelse = CustomFunction("IF", ["condition", "then", "else"])
 
-	if filters and filters.get("customer"):
-		qb_filter_and_conditions.append(
-			(proj.customer == filters.get("customer")) | proj.customer.isnull() | proj.customer == ""
-		)
+	if filters:
+		if filters.get("customer"):
+			qb_filter_and_conditions.append(
+				(proj.customer == filters.get("customer")) | proj.customer.isnull() | proj.customer == ""
+			)
+
+		if filters.get("company"):
+			qb_filter_and_conditions.append(proj.company == filters.get("company"))
 
 	qb_filter_and_conditions.append(proj.status.notin(["Completed", "Cancelled"]))
 
@@ -284,30 +290,36 @@ def get_project_name(doctype, txt, searchfield, start, page_len, filters):
 		q = q.select(proj[x])
 
 	# don't consider 'customer' and 'status' fields for pattern search, as they must be exactly matched
-	searchfields = [
-		x for x in frappe.get_meta(doctype).get_search_fields() if x not in ["customer", "status"]
-	]
+	searchfields = [x for x in frappe.get_meta(doctype).get_search_fields() if x not in ["customer", "status"]]
 
 	# pattern search
 	if txt:
 		for x in searchfields:
 			qb_filter_or_conditions.append(proj[x].like(f"%{txt}%"))
 
-	q = q.where(Criterion.all(qb_filter_and_conditions)).where(Criterion.any(qb_filter_or_conditions))
+		q = q.where(Criterion.any(qb_filter_or_conditions))
 
-	# ordering
+	# Apply filter conditions and ordering
+	q = q.where(Criterion.all(qb_filter_and_conditions))
+
+	# Use PostgreSQL compatible CASE WHEN for ordering instead of IF
 	if txt:
-		# project_name containing search string 'txt' will be given higher precedence
-		q = q.orderby(ifelse(Locate(txt, proj.project_name) > 0, Locate(txt, proj.project_name), 99999))
+		q = q.orderby(
+			Case()
+			.when(Locate(txt, proj.project_name) > 0, Locate(txt, proj.project_name))
+			.else_(99999)
+		)
+
 	q = q.orderby(proj.idx, order=Order.desc).orderby(proj.name)
 
+	# Apply pagination
 	if page_len:
 		q = q.limit(page_len)
 
 	if start:
 		q = q.offset(start)
-	return q.run()
 
+	return q.run()
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
@@ -365,7 +377,7 @@ def get_batch_no(doctype, txt, searchfield, start, page_len, filters):
 
 
 def get_empty_batches(filters, start, page_len, filtered_batches=None, txt=None):
-	query_filter = {"item": filters.get("item_code")}
+	query_filter = {"item": filters.get("item_code"), "disabled": 0}
 	if txt:
 		query_filter["name"] = ("like", f"%{txt}%")
 
@@ -414,18 +426,26 @@ def get_batches_from_stock_ledger_entries(searchfields, txt, filters, start=0, p
 			stock_ledger_entry.batch_no,
 			Sum(stock_ledger_entry.actual_qty).as_("qty"),
 		)
-		.where((batch_table.expiry_date >= expiry_date) | (batch_table.expiry_date.isnull()))
 		.where(stock_ledger_entry.is_cancelled == 0)
 		.where(
 			(stock_ledger_entry.item_code == filters.get("item_code"))
 			& (batch_table.disabled == 0)
 			& (stock_ledger_entry.batch_no.isnotnull())
 		)
-		.groupby(stock_ledger_entry.batch_no, stock_ledger_entry.warehouse)
+		.groupby(
+			stock_ledger_entry.batch_no,
+			stock_ledger_entry.warehouse,
+			batch_table.manufacturing_date,
+			batch_table.expiry_date,
+			batch_table.name
+		)
 		.having(Sum(stock_ledger_entry.actual_qty) != 0)
 		.offset(start)
 		.limit(page_len)
 	)
+
+	if not filters.get("include_expired_batches"):
+		query = query.where((batch_table.expiry_date >= expiry_date) | (batch_table.expiry_date.isnull()))
 
 	query = query.select(
 		Concat("MFG-", batch_table.manufacturing_date).as_("manufacturing_date"),
@@ -465,18 +485,28 @@ def get_batches_from_serial_and_batch_bundle(searchfields, txt, filters, start=0
 			bundle.batch_no,
 			Sum(bundle.qty).as_("qty"),
 		)
-		.where((batch_table.expiry_date >= expiry_date) | (batch_table.expiry_date.isnull()))
 		.where(stock_ledger_entry.is_cancelled == 0)
 		.where(
 			(stock_ledger_entry.item_code == filters.get("item_code"))
 			& (batch_table.disabled == 0)
 			& (stock_ledger_entry.serial_and_batch_bundle.isnotnull())
 		)
-		.groupby(bundle.batch_no, bundle.warehouse)
+		.groupby(
+			bundle.batch_no,
+			bundle.warehouse,
+			batch_table.manufacturing_date,
+			batch_table.expiry_date,
+			batch_table.name
+		)
 		.having(Sum(bundle.qty) != 0)
 		.offset(start)
 		.limit(page_len)
 	)
+
+	if not filters.get("include_expired_batches"):
+		bundle_query = bundle_query.where(
+			(batch_table.expiry_date >= expiry_date) | (batch_table.expiry_date.isnull())
+		)
 
 	bundle_query = bundle_query.select(
 		Concat("MFG-", batch_table.manufacturing_date),
@@ -553,7 +583,7 @@ def get_blanket_orders(doctype, txt, searchfield, start, page_len, filters):
 @frappe.validate_and_sanitize_search_inputs
 def get_income_account(doctype, txt, searchfield, start, page_len, filters):
 	from erpnext.controllers.queries import get_match_cond
-
+	
 	# income account can be any Credit account,
 	# but can also be a Asset account with account_type='Income Account' in special circumstances.
 	# Hence the first condition is an "OR"
@@ -563,19 +593,32 @@ def get_income_account(doctype, txt, searchfield, start, page_len, filters):
 	doctype = "Account"
 	condition = ""
 	if filters.get("company"):
-		condition += "and tabAccount.company = %(company)s"
+		condition += " AND account.company = %(company)s"
 
-	condition += f"and tabAccount.disabled = {filters.get('disabled', 0)}"
+	condition += f" AND account.disabled = %(disabled)s"
+	match_condition_str = get_match_cond(doctype)
+	if match_condition_str and frappe.db.db_type == "postgres":
+		if "ifnull" in match_condition_str:
+			match_condition_str = match_condition_str.replace('ifnull', 'COALESCE')
+
+		# Adjust match condition string to replace 'tabAccount' with alias 'account'
+		match_condition_str = match_condition_str.replace('tabAccount', 'account')
+		match_condition_str = match_condition_str.replace("`", "")
 
 	return frappe.db.sql(
-		f"""select tabAccount.name from `tabAccount`
-			where (tabAccount.report_type = "Profit and Loss"
-					or tabAccount.account_type in ("Income Account", "Temporary"))
-				and tabAccount.is_group=0
-				and tabAccount.`{searchfield}` LIKE %(txt)s
-				{condition} {get_match_cond(doctype)}
-			order by idx desc, name""",
-		{"txt": "%" + txt + "%", "company": filters.get("company", "")},
+		f"""SELECT account.name 
+			FROM "tabAccount" AS account
+			WHERE (account.report_type = 'Profit and Loss'
+					OR account.account_type IN ('Income Account', 'Temporary'))
+				AND account.is_group = 0
+				AND account.{searchfield} LIKE %(txt)s
+				{condition} {match_condition_str}
+			ORDER BY account.idx DESC, account.name""",
+		{
+			"txt": f"%{txt}%",
+			"company": filters.get("company", ""),
+			"disabled": filters.get("disabled", 0),
+		},
 	)
 
 
@@ -585,7 +628,6 @@ def get_filtered_dimensions(doctype, txt, searchfield, start, page_len, filters,
 	from erpnext.accounts.doctype.accounting_dimension_filter.accounting_dimension_filter import (
 		get_dimension_filter_map,
 	)
-
 	dimension_filters = get_dimension_filter_map()
 	dimension_filters = dimension_filters.get((filters.get("dimension"), filters.get("account")))
 	query_filters = []
@@ -605,9 +647,10 @@ def get_filtered_dimensions(doctype, txt, searchfield, start, page_len, filters,
 		query_filters.append(["company", "=", filters.get("company")])
 
 	for field in searchfields:
-		or_filters.append([field, "LIKE", "%%%s%%" % txt])
-		fields.append(field)
-
+		field_meta = meta.get_field(field)
+		if field_meta and field_meta.fieldtype in ["Data", "Text", "Small Text", "Long Text"]:
+			or_filters.append([field, "like", f"%{txt}%"])
+			fields.append(field)
 	if dimension_filters:
 		if dimension_filters["allow_or_restrict"] == "Allow":
 			query_selector = "in"
@@ -636,24 +679,32 @@ def get_filtered_dimensions(doctype, txt, searchfield, start, page_len, filters,
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
 def get_expense_account(doctype, txt, searchfield, start, page_len, filters):
-	from erpnext.controllers.queries import get_match_cond
+    from erpnext.controllers.queries import get_match_cond
 
-	if not filters:
-		filters = {}
+    if not filters:
+        filters = {}
 
-	doctype = "Account"
-	condition = ""
-	if filters.get("company"):
-		condition += "and tabAccount.company = %(company)s"
+    condition = ""
+    if filters.get("company"):
+        condition += " AND account.company = %(company)s"
+	
+    match_condition_str = get_match_cond("Account")
+    if match_condition_str and frappe.db.db_type == "postgres":
+        if "ifnull" in match_condition_str:
+            match_condition_str = match_condition_str.replace('ifnull', 'COALESCE')
 
-	return frappe.db.sql(
-		f"""select tabAccount.name from `tabAccount`
-		where (tabAccount.report_type = "Profit and Loss"
-				or tabAccount.account_type in ("Expense Account", "Fixed Asset", "Temporary", "Asset Received But Not Billed", "Capital Work in Progress"))
-			and tabAccount.is_group=0
-			and tabAccount.docstatus!=2
-			and tabAccount.{searchfield} LIKE %(txt)s
-			{condition} {get_match_cond(doctype)}""",
+        match_condition_str = match_condition_str.replace('tabAccount', 'account')
+        match_condition_str = match_condition_str.replace("`", "")
+		
+    return frappe.db.sql(
+		f"""SELECT account.name 
+			FROM tabAccount AS account
+			WHERE (account.report_type = 'Profit and Loss'
+					OR account.account_type IN ('Expense Account', 'Fixed Asset', 'Temporary', 'Asset Received But Not Billed', 'Capital Work in Progress'))
+				AND account.is_group = 0
+				AND account.docstatus != 2
+				AND account.{searchfield} LIKE %(txt)s
+				{condition} {match_condition_str}""",
 		{"company": filters.get("company", ""), "txt": "%" + txt + "%"},
 	)
 
@@ -751,6 +802,11 @@ def get_purchase_receipts(doctype, txt, searchfield, start, page_len, filters):
 	if filters and filters.get("item_code"):
 		query += " and pritem.item_code = {item_code}".format(
 			item_code=frappe.db.escape(filters.get("item_code"))
+		)
+
+	if filters and filters.get("company"):
+		query += " and pr.company = {company}".format(
+			company=frappe.db.escape(filters.get("company"))
 		)
 
 	return frappe.db.sql(query, filters)
@@ -861,7 +917,7 @@ def get_filtered_child_rows(doctype, txt, searchfield, start, page_len, filters)
 	if txt:
 		txt += "%"
 		query = query.where(
-			((table.idx.like(txt.replace("#", ""))) | (table.item_code.like(txt))) | (table.name.like(txt))
+			((Cast(table.idx, "text").like(txt.replace("#", ""))) | (table.item_code.like(txt))) | (table.name.like(txt))
 		)
 
 	return query.run(as_dict=False)

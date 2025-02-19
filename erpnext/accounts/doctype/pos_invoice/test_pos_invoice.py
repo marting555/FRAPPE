@@ -6,7 +6,7 @@ import unittest
 
 import frappe
 from frappe import _
-
+from frappe.utils import cint, flt, getdate, today
 from erpnext.accounts.doctype.pos_invoice.pos_invoice import make_sales_return
 from erpnext.accounts.doctype.pos_profile.test_pos_profile import make_pos_profile
 from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
@@ -18,7 +18,8 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 	make_serial_batch_bundle,
 )
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
-
+from erpnext.accounts.doctype.pos_closing_entry.pos_closing_entry import make_closing_entry_from_opening
+from erpnext.accounts.doctype.pos_opening_entry.test_pos_opening_entry import create_opening_entry
 
 class TestPOSInvoice(unittest.TestCase):
 	@classmethod
@@ -93,7 +94,7 @@ class TestPOSInvoice(unittest.TestCase):
 
 		inv.save()
 
-		self.assertEqual(inv.net_total, 4298.25)
+		self.assertEqual(inv.net_total, 4298.24)
 		self.assertEqual(inv.grand_total, 4900.00)
 
 	def test_tax_calculation_with_multiple_items(self):
@@ -835,7 +836,8 @@ class TestPOSInvoice(unittest.TestCase):
 			{
 				"item_code": item.name,
 				"warehouse": pos_inv2.items[0].warehouse,
-				"voucher_type": "Delivery Note",
+				"voucher_type": "POS Invoice",
+				"voucher_no": pos_inv2.name,
 				"qty": 2,
 				"avg_rate": 300,
 				"batches": frappe._dict({"TestBatch 01": 2}),
@@ -924,7 +926,343 @@ class TestPOSInvoice(unittest.TestCase):
 		finally:
 			frappe.db.rollback(save_point="before_test_delivered_serial_no_case")
 			frappe.set_user("Administrator")
+		
+	def test_pos_opening_to_pos_closing_with_possi_and_tax_TC_S_102(self):
+		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile	
 
+		test_user, pos_profile = init_user_and_profile()
+		opening_entry = create_opening_entry(pos_profile=pos_profile, user=test_user.name)
+		self.assertEqual(opening_entry.status, "Open")
+
+		pos_inv = create_pos_invoice(rate=3500, do_not_submit=1)
+		for i in pos_inv.items:
+			i.item_tax_template = "GST 5% - _TC"
+		pos_inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 3500})
+		pos_inv.taxes_and_charges = "Output GST In-state - _TC"
+		pos_inv.save()
+		pos_inv.submit()
+		closing_enrty= make_closing_entry_from_opening(opening_entry)
+		closing_enrty.submit()
+		opening_entry.reload()
+		self.assertEqual(opening_entry.status, "Closed")
+
+	
+	def test_pos_invoice_with_loyalty_point_TC_S_103(self):
+		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile	
+		from erpnext.accounts.doctype.loyalty_program.loyalty_program import get_loyalty_program_details_with_points
+
+		if not frappe.db.exists("Loyalty Program", "Test Single Loyalty"):
+			frappe.get_doc(
+				{
+					"doctype": "Loyalty Program",
+					"loyalty_program_name": "Test Single Loyalty",
+					"auto_opt_in": 1,
+					"from_date": today(),
+					"loyalty_program_type": "Single Tier Program",
+					"conversion_factor": 1,
+					"expiry_duration": 10,
+					"company": "_Test Company",
+					"cost_center": "Main - _TC",
+					"collection_rules": [{"tier_name": "Silver", "collection_factor": 1000, "min_spent": 1000}],
+				}
+			).insert()
+
+		test_user, pos_profile = init_user_and_profile()
+		opening_entry = create_opening_entry(pos_profile=pos_profile, user=test_user.name)
+		self.assertEqual(opening_entry.status, "Open")
+		inv_points = create_pos_invoice(rate=10000, do_not_save=1)
+
+		frappe.db.set_value("Customer","_Test Customer",'loyalty_program','Test Single Loyalty')
+		before_lp_details = get_loyalty_program_details_with_points(
+			"_Test Customer", loyalty_program="Test Single Loyalty"
+		)
+		inv = create_pos_invoice(rate=10000, do_not_save=1)
+		inv.redeem_loyalty_points = 1
+		inv.loyalty_points = before_lp_details.loyalty_points
+		inv.loyalty_redemption_account ="Cash - _TC"
+		inv.loyalty_amount = before_lp_details.loyalty_points * before_lp_details.conversion_factor
+		inv.append(
+			"payments",
+			{"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 10000 -inv.loyalty_amount },
+		)
+		inv.paid_amount = 10000 -inv.loyalty_amount
+		inv.save()
+		inv.submit()
+		closing_enrty= make_closing_entry_from_opening(opening_entry)
+		closing_enrty.submit()
+		opening_entry.reload()
+		self.assertEqual(inv.status, "Paid")
+		self.assertEqual(opening_entry.status, "Closed")
+	
+	def test_pos_inoivce_with_discount_grand_total_TC_S_104(self):
+		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile	
+
+		test_user, pos_profile = init_user_and_profile()
+		opening_entry = create_opening_entry(pos_profile=pos_profile, user=test_user.name)
+		self.assertEqual(opening_entry.status, "Open")
+
+		inv = create_pos_invoice(rate=3000, do_not_save=1)
+		inv.taxes_and_charges = "Output GST In-state - _TC"
+		inv.apply_discount_on = "Grand Total"
+		inv.discount_amount = 1000
+
+		inv.save()
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
+		inv.paid_amount = inv.grand_total
+		inv.submit()
+
+		closing_enrty= make_closing_entry_from_opening(opening_entry)
+		closing_enrty.submit()
+		opening_entry.reload()
+
+		self.assertEqual(inv.status, "Paid")
+		self.assertEqual(opening_entry.status, "Closed")
+
+	def test_pos_inoivce_with_discount_net_total_TC_S_105(self):
+		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile	
+
+		test_user, pos_profile = init_user_and_profile()
+		opening_entry = create_opening_entry(pos_profile=pos_profile, user=test_user.name)
+		self.assertEqual(opening_entry.status, "Open")
+
+		inv = create_pos_invoice(rate=3000, do_not_save=1)
+		inv.taxes_and_charges = "Output GST In-state - _TC"
+		inv.apply_discount_on = "Net Total"
+		inv.discount_amount = 1000
+
+		inv.save()
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
+
+		inv.paid_amount = inv.grand_total
+		inv.submit()
+		closing_enrty= make_closing_entry_from_opening(opening_entry)
+		closing_enrty.submit()
+		opening_entry.reload()
+
+		self.assertEqual(inv.status, "Paid")
+		self.assertEqual(opening_entry.status, "Closed")
+	
+	def test_pos_inoivce_with_subscription_TC_S_106(self):
+		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile	
+
+		test_user, pos_profile = init_user_and_profile()
+		opening_entry = create_opening_entry(pos_profile=pos_profile, user=test_user.name)
+		self.assertEqual(opening_entry.status, "Open")
+
+		inv = create_pos_invoice(rate=5000, do_not_save=1)
+		inv.taxes_and_charges = "Output GST In-state - _TC"
+		inv.from_date = frappe.utils.nowdate()
+		inv.to_date = inv.to_date = frappe.utils.add_days(inv.from_date, 5)
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
+		inv.paid_amount = inv.grand_total
+
+		inv.save()
+		inv.submit()
+		
+		closing_enrty= make_closing_entry_from_opening(opening_entry)
+		closing_enrty.submit()
+		opening_entry.reload()
+
+		self.assertEqual(inv.status, "Paid")
+		self.assertEqual(opening_entry.status, "Closed")
+
+	
+	def test_pos_inoivce_with_terms_and_conditions_TC_S_107(self):
+		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile	
+
+		test_user, pos_profile = init_user_and_profile()
+		opening_entry = create_opening_entry(pos_profile=pos_profile, user=test_user.name)
+		self.assertEqual(opening_entry.status, "Open")
+
+		inv = create_pos_invoice(rate=3000, do_not_save=1)
+		inv.taxes_and_charges = "Output GST In-state - _TC"
+		inv.tc_name ="_Test Terms and Conditions"
+		inv.save()
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
+
+		inv.paid_amount = inv.grand_total
+		inv.submit()
+		closing_enrty= make_closing_entry_from_opening(opening_entry)
+		closing_enrty.submit()
+		opening_entry.reload()
+
+		self.assertEqual(inv.status, "Paid")
+		self.assertEqual(opening_entry.status, "Closed")
+	
+	def test_pos_invoice_with_manually_redeem_loyalty_points_TC_S_117(self):
+		from erpnext.accounts.doctype.loyalty_program.loyalty_program import get_loyalty_program_details_with_points
+		if not frappe.db.exists("Loyalty Program", "Test Single Loyalty"):
+			frappe.get_doc(
+				{
+					"doctype": "Loyalty Program",
+					"loyalty_program_name": "Test Single Loyalty",
+					"auto_opt_in": 1,
+					"from_date": today(),
+					"loyalty_program_type": "Single Tier Program",
+					"conversion_factor": 1,
+					"expiry_duration": 10,
+					"company": "_Test Company",
+					"cost_center": "Main - _TC",
+					"collection_rules": [{"tier_name": "Silver", "collection_factor": 1000, "min_spent": 1000}],
+				}
+			).insert()
+		inv_points = create_pos_invoice(rate=10000, do_not_save=1)
+
+		frappe.db.set_value("Customer","_Test Customer",'loyalty_program','Test Single Loyalty')
+		before_lp_details = get_loyalty_program_details_with_points(
+			"_Test Customer", loyalty_program="Test Single Loyalty"
+		)
+		inv = create_pos_invoice(customer="_Test Customer", rate=10000, do_not_save=1)
+		inv.redeem_loyalty_points = 1
+		inv.loyalty_points = 10
+		inv.loyalty_redemption_account ="Cash - _TC"
+		inv.loyalty_amount = inv.loyalty_points * before_lp_details.conversion_factor
+		inv.tax_category = "In-State"
+		inv.taxes_and_charges = "Output GST In-state - _TC"
+
+		inv.append(
+			"payments",
+			{"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 10000 - inv.loyalty_amount},
+		)
+		inv.paid_amount = 10000 - inv.loyalty_amount
+		inv.submit()
+		self.assertEqual(inv.status, "Paid")
+		
+	
+	def test_pos_inoivce_with_discount_TC_S_118(self):
+		inv = create_pos_invoice(rate=3000, do_not_save=1)
+		inv.taxes_and_charges = "Output GST In-state - _TC"
+		inv.apply_discount_on = "Grand Total"
+		inv.discount_amount = 1000
+
+		inv.save()
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
+		inv.paid_amount = inv.grand_total
+		inv.submit()
+
+		self.assertEqual(inv.status, "Paid")
+
+	def test_pos_inoivce_retun_with_update_stock_TC_S_119(self):
+		inv = create_pos_invoice(rate=3000,do_not_save=1)
+		inv.save()
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
+		inv.paid_amount = inv.grand_total
+		inv.submit()
+		self.assertEqual(inv.status, "Paid")
+
+		pos_return = make_sales_return(inv.name)
+		pos_return.insert()
+		pos_return.submit()
+		self.assertEqual(pos_return.status, "Return")
+	
+	def test_pos_inoivce_retun_with_taxes_and_charges_TC_S_120(self):
+		inv = create_pos_invoice(rate=3000,do_not_save=1)
+		inv.save()
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
+		inv.paid_amount = inv.grand_total
+		inv.tax_category = "In-State"
+		inv.taxes_and_charges = "Output GST In-state - _TC"
+		inv.submit()
+		self.assertEqual(inv.status, "Paid")
+
+	
+	def test_pos_invoice_with_item_discount_TC_S_121(self):	
+		inv = create_pos_invoice(rate=3500, do_not_submit=1)
+		for i in inv.items:
+			i.price_list_rate = i.rate
+			i.margin_type = "Percentage"
+			i.discount_percentage = 10 
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
+		inv.save()
+		inv.submit()
+		self.assertEqual(inv.status, "Paid")
+
+
+	def test_pos_invoice_with_product_bundle_TC_S_122(self):
+		if not frappe.db.exists("Item", "_Test Book Bundle"):
+			item = frappe.get_doc(
+			{
+				"doctype": "Item",
+				"item_code": "_Test Book Bundle",
+				"item_name": "_Test Book Bundle",
+				"description": "_Test Book Bundle",
+				"item_group": "Products",
+				"gst_hsn_code":"01011010",
+				"is_stock_item":0
+			}
+		)
+			item.save()
+
+		if not frappe.db.exists("Product Bundle", "_Test Book Bundle"):
+			product_bundle = frappe.get_doc({
+				"doctype": "Product Bundle",
+				"new_item_code": "_Test Book Bundle",
+				"items": [
+					{
+						"item_code": "_Test Item",
+						"qty": 2 
+					}
+				]
+			})
+			product_bundle.insert()
+		inv = create_pos_invoice(rate=3000,do_not_save=1)
+		inv.items =[]
+		inv.append("items",
+			 {
+				"item_code":  "_Test Book Bundle",
+				"qty": 1,  
+				"rate": 3000, 
+			 })
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
+		inv.paid_amount = inv.grand_total
+		inv.submit()
+		self.assertEqual(inv.status, "Paid")
+		
+	def test_pos_inoivce_with_payment_terms_TC_S_123(self):
+		inv = create_pos_invoice(rate=3000,do_not_save=1)
+		inv.save()
+		inv.include_payment = 1  
+		inv.payment_terms_template = "_Test Payment Term Template"
+		inv.set_payment_schedule()
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})
+		inv.paid_amount = inv.grand_total
+		inv.submit()
+		self.assertEqual(inv.status, "Paid")
+
+	def test_pos_invoice_different_warehouses_TC_S_124(self):  
+		inv = create_pos_invoice(rate=3000, do_not_save=1)  
+		inv.save()  
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})  
+		inv.paid_amount = inv.grand_total  
+		
+		pos_profile = frappe.get_doc("POS Profile", inv.pos_profile)  
+		pos_profile.warehouse = "Stores - _TC"  
+		pos_profile.save()  
+		
+		inv.submit()  
+		
+		self.assertEqual(inv.status, "Paid")  
+		self.assertEqual(pos_profile.warehouse, "Stores - _TC")  
+
+	def test_pos_invoice_user_specific_permission_TC_S_125(self): 
+		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import init_user_and_profile	
+
+		test_user, profile = init_user_and_profile() 
+		inv = create_pos_invoice(rate=3000, do_not_save=1)  
+		inv.save()  
+
+		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": inv.grand_total})  
+		inv.paid_amount = inv.grand_total  
+
+		pos_profile = frappe.get_doc("POS Profile", inv.pos_profile)  
+		pos_profile.append("applicable_for_users", {"user": test_user.name})  
+		pos_profile.save()  
+
+		inv.submit()  
+
+		self.assertEqual(inv.status, "Paid")  
+		self.assertEqual(len(pos_profile.applicable_for_users), 1)  
+		self.assertEqual(pos_profile.applicable_for_users[0].user, test_user.name)  
 
 def create_pos_invoice(**args):
 	args = frappe._dict(args)

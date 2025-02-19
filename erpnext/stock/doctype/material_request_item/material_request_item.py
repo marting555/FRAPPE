@@ -44,6 +44,7 @@ class MaterialRequestItem(Document):
 		price_list_rate: DF.Currency
 		production_plan: DF.Link | None
 		project: DF.Link | None
+		project_name: DF.Data | None
 		projected_qty: DF.Float
 		qty: DF.Float
 		rate: DF.Currency
@@ -55,7 +56,8 @@ class MaterialRequestItem(Document):
 		stock_uom: DF.Link
 		uom: DF.Link
 		warehouse: DF.Link | None
-		wip_composite_asset: DF.Link | None
+		wbs_name: DF.Data | None
+		work_breakdown_structure: DF.Link | None
 	# end: auto-generated types
 
 	pass

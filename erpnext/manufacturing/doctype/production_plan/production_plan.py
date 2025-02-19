@@ -651,7 +651,7 @@ class ProductionPlan(Document):
 				"production_plan_item": d.name,
 				"product_bundle_item": d.product_bundle_item,
 				"planned_start_date": d.planned_start_date,
-				"project": self.project,
+				"project": self.get("project") if "projects" in frappe.get_installed_apps() else "",
 			}
 
 			key = (d.item_code, d.sales_order, d.sales_order_item, d.warehouse)
@@ -1135,7 +1135,7 @@ def get_exploded_items(item_details, company, bom_no, include_non_stock_items, p
 			& (bom.name == bom_no)
 			& (item.is_stock_item.isin([0, 1]) if include_non_stock_items else item.is_stock_item == 1)
 		)
-		.groupby(bei.item_code, bei.stock_uom)
+		.groupby(item.item_name,item.name,bei.description,bei.stock_uom,bei.source_warehouse,item_default.default_warehouse,item_uom.conversion_factor)
 	).run(as_dict=True)
 
 	for d in data:
@@ -1202,7 +1202,21 @@ def get_subitems(
 			& (bom_item.docstatus < 2)
 			& (item.is_stock_item.isin([0, 1]) if include_non_stock_items else item.is_stock_item == 1)
 		)
-		.groupby(bom_item.item_code)
+		.groupby(
+			bom_item.item_code,
+			item.default_material_request_type,
+			item.item_name,
+			bom_item.source_warehouse,
+			item.default_bom,
+			item.is_sub_contracted_item,
+			bom_item.description,
+			bom_item.stock_uom,
+			item.min_order_qty,
+			item.safety_stock,
+			item_default.default_warehouse,
+			item.purchase_uom,
+			item_uom.conversion_factor
+		)
 	).run(as_dict=True)
 
 	for d in items:

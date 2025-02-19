@@ -1,7 +1,7 @@
 {
  "actions": [],
  "autoname": "field:distribution_id",
- "creation": "2013-01-10 16:34:05",
+ "creation": "2024-11-27 11:34:05",
  "description": "Helps you distribute the Budget/Target across months if you have seasonality in your business.",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -46,7 +46,7 @@
  "icon": "fa fa-bar-chart",
  "idx": 1,
  "links": [],
- "modified": "2024-01-30 13:57:55.802744",
+ "modified": "2024-11-27 12:57:55.802744",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Monthly Distribution",

@@ -43,6 +43,7 @@
   "section_break_jpd0",
   "auto_reconcile_payments",
   "stale_days",
+  "exchange_gain_loss_posting_date",
   "invoicing_settings_tab",
   "accounts_transactions_settings_section",
   "over_billing_allowance",
@@ -53,11 +54,6 @@
   "pos_tab",
   "pos_setting_section",
   "post_change_gl_entries",
-  "assets_tab",
-  "asset_settings_section",
-  "calculate_depr_using_total_days",
-  "column_break_gjcc",
-  "book_asset_depreciation_entry_automatically",
   "closing_settings_tab",
   "period_closing_settings_section",
   "acc_frozen_upto",
@@ -72,6 +68,7 @@
   "reports_tab",
   "remarks_section",
   "general_ledger_remarks_length",
+  "ignore_is_opening_check_for_reporting",
   "column_break_lvjk",
   "receivable_payable_remarks_length",
   "payment_request_settings",
@@ -133,12 +130,6 @@
    "fieldname": "unlink_advance_payment_on_cancelation_of_order",
    "fieldtype": "Check",
    "label": "Unlink Advance Payment on Cancellation of Order"
-  },
-  {
-   "default": "1",
-   "fieldname": "book_asset_depreciation_entry_automatically",
-   "fieldtype": "Check",
-   "label": "Book Asset Depreciation Entry Automatically"
   },
   {
    "default": "1",
@@ -301,20 +292,11 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "asset_settings_section",
-   "fieldtype": "Section Break",
-   "label": "Asset Settings"
-  },
-  {
    "fieldname": "invoicing_settings_tab",
    "fieldtype": "Tab Break",
    "label": "Credit Limits"
   },
-  {
-   "fieldname": "assets_tab",
-   "fieldtype": "Tab Break",
-   "label": "Assets"
-  },
+
   {
    "fieldname": "closing_settings_tab",
    "fieldtype": "Tab Break",
@@ -384,7 +366,7 @@
   {
    "fieldname": "section_break_jpd0",
    "fieldtype": "Section Break",
-   "label": "Payment Reconciliations"
+   "label": "Payment Reconciliation Settings"
   },
   {
    "default": "0",
@@ -468,21 +450,25 @@
    "label": "Enable Immutable Ledger"
   },
   {
-   "fieldname": "column_break_gjcc",
-   "fieldtype": "Column Break"
-  },
-  {
-   "default": "0",
-   "description": "Enable this option to calculate daily depreciation by considering the total number of days in the entire depreciation period, (including leap years) while using daily pro-rata based depreciation",
-   "fieldname": "calculate_depr_using_total_days",
-   "fieldtype": "Check",
-   "label": "Calculate daily depreciation using total days in depreciation period"
-  },
-  {
    "description": "Payment Request created from Sales Order or Purchase Order will be in Draft status. When disabled document will be in unsaved state.",
    "fieldname": "payment_request_settings",
    "fieldtype": "Tab Break",
    "label": "Payment Request"
+  },
+  {
+   "default": "0",
+   "description": "Ignores legacy Is Opening field in GL Entry that allows adding opening balance post the system is in use while generating reports",
+   "fieldname": "ignore_is_opening_check_for_reporting",
+   "fieldtype": "Check",
+   "label": "Ignore Is Opening check for reporting"
+  },
+  {
+   "default": "Payment",
+   "description": "Only applies for Normal Payments",
+   "fieldname": "exchange_gain_loss_posting_date",
+   "fieldtype": "Select",
+   "label": "Posting Date Inheritance for Exchange Gain / Loss",
+   "options": "Invoice\nPayment\nReconciliation Date"
   },
   {
    "default": "1",

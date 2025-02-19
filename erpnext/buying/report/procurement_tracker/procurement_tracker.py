@@ -131,10 +131,11 @@ def apply_filters_on_query(filters, parent, child, query):
 	if filters.get("company"):
 		query = query.where(parent.company == filters.get("company"))
 
-	if filters.get("cost_center") or filters.get("project"):
-		query = query.where(
-			(child.cost_center == filters.get("cost_center")) | (child.project == filters.get("project"))
-		)
+	if filters.get("cost_center"):
+		query = query.where(child.cost_center == filters.get("cost_center"))
+
+	if filters.get("project"):
+		query = query.where(child.project == filters.get("project"))
 
 	if filters.get("from_date"):
 		query = query.where(parent.transaction_date >= filters.get("from_date"))
@@ -175,7 +176,7 @@ def get_data(filters):
 				"purchase_order": po.parent,
 				"supplier": po.supplier,
 				"estimated_cost": flt(mr_record.get("amount")),
-				"actual_cost": flt(pi_records.get(po.name)),
+				"actual_cost": flt(pi_records.get(po.name)) or flt(po.amount),
 				"purchase_order_amt": flt(po.amount),
 				"purchase_order_amt_in_company_currency": flt(po.base_amount),
 				"expected_delivery_date": po.schedule_date,
@@ -305,7 +306,25 @@ def get_po_entries(filters):
 			& (parent.name == child.parent)
 			& (parent.status.notin(("Closed", "Completed", "Cancelled")))
 		)
-		.groupby(parent.name, child.material_request_item)
+		.groupby(
+			child.name,
+			child.parent,
+			child.cost_center,
+			child.project,
+			child.warehouse,
+			child.material_request,
+			child.material_request_item,
+			child.item_code,
+			child.stock_uom,
+			child.qty,
+			child.amount,
+			child.base_amount,
+			child.schedule_date,
+			parent.transaction_date,
+			parent.supplier,
+			parent.status,
+			parent.owner,
+		)
 	)
 	query = apply_filters_on_query(filters, parent, child, query)
 

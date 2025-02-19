@@ -80,7 +80,7 @@ def get_balance_qty_from_sle(item_code, warehouse):
 	balance_qty = frappe.db.sql(
 		"""select qty_after_transaction from `tabStock Ledger Entry`
 		where item_code=%s and warehouse=%s and is_cancelled=0
-		order by posting_date desc, posting_time desc, creation desc
+		order by posting_datetime desc, creation desc
 		limit 1""",
 		(item_code, warehouse),
 	)
@@ -95,7 +95,7 @@ def get_reserved_qty(item_code, warehouse):
 	reserved_qty = frappe.db.sql(
 		f"""
 		select
-			sum(dnpi_qty * ((so_item_qty - so_item_delivered_qty - if(dont_reserve_qty_on_return, so_item_returned_qty, 0)) / so_item_qty))
+			sum(dnpi_qty * ((so_item_qty - so_item_delivered_qty - case when dont_reserve_qty_on_return = 1 then so_item_returned_qty else 0 end) / so_item_qty))
 		from
 			(
 				(select

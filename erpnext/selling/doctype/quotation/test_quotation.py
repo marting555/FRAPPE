@@ -5,6 +5,11 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import add_days, add_months, flt, getdate, nowdate
 
+
+from erpnext.selling.doctype.quotation.quotation import make_sales_order
+from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
+from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
+from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
 test_dependencies = ["Product Bundle"]
 
 
@@ -29,6 +34,34 @@ class TestQuotation(FrappeTestCase):
 		sales_order = make_sales_order(quotation.name)
 
 		self.assertTrue(sales_order.get("payment_schedule"))
+
+	def test_do_not_add_ordered_items_in_new_sales_order(self):
+		from erpnext.selling.doctype.quotation.quotation import make_sales_order
+		from erpnext.stock.doctype.item.test_item import make_item
+		item = make_item("_Test Item for Quotation for SO", {"is_stock_item": 1})
+		quotation = make_quotation(qty=5, do_not_submit=True)
+		quotation.append(
+			"items",
+			{
+				"item_code": item.name,
+				"qty": 5,
+				"rate": 100,
+				"conversion_factor": 1,
+				"uom": item.stock_uom,
+				"warehouse": "_Test Warehouse - _TC",
+				"stock_uom": item.stock_uom,
+			},
+		)
+		quotation.submit()
+		sales_order = make_sales_order(quotation.name)
+		sales_order.delivery_date = nowdate()
+		self.assertEqual(len(sales_order.items), 2)
+		sales_order.remove(sales_order.items[1])
+		sales_order.submit()
+		sales_order = make_sales_order(quotation.name)
+		self.assertEqual(len(sales_order.items), 1)
+		self.assertEqual(sales_order.items[0].item_code, item.name)
+		self.assertEqual(sales_order.items[0].qty, 5.0)
 
 	def test_gross_profit(self):
 		from erpnext.stock.doctype.item.test_item import make_item
@@ -561,12 +594,41 @@ class TestQuotation(FrappeTestCase):
 				"description": "VAT",
 				"doctype": "Sales Taxes and Charges",
 				"rate": 10,
+				"included_in_print_rate": 1,
 			},
 		)
 		quotation.submit()
 
-		self.assertEqual(quotation.net_total, 290)
-		self.assertEqual(quotation.grand_total, 319)
+		self.assertEqual(round(quotation.items[1].net_rate, 2), 136.36)
+		self.assertEqual(round(quotation.items[1].amount, 2), 150)
+		self.assertEqual(round(quotation.items[2].net_rate, 2), 163.64)
+		self.assertEqual(round(quotation.items[2].amount, 2), 180)
+		self.assertEqual(round(quotation.net_total, 2), 263.64)
+		self.assertEqual(round(quotation.total_taxes_and_charges, 2), 26.36)
+		self.assertEqual(quotation.grand_total, 290)
+	def test_amount_calculation_for_alternative_items(self):
+		"""Make sure that the amount is calculated correctly for alternative items when the qty is changed."""
+		from erpnext.stock.doctype.item.test_item import make_item
+		item_list = []
+		stock_items = {
+			"_Test Simple Item 1": 100,
+			"_Test Alt 1": 120,
+		}
+		for item, rate in stock_items.items():
+			make_item(item, {"is_stock_item": 0})
+			item_list.append(
+				{
+					"item_code": item,
+					"qty": 1,
+					"rate": rate,
+					"is_alternative": "Alt" in item,
+				}
+			)
+		quotation = make_quotation(item_list=item_list, do_not_submit=1)
+		self.assertEqual(quotation.items[1].amount, 120)
+		quotation.items[1].qty = 2
+		quotation.save()
+		self.assertEqual(quotation.items[1].amount, 240)
 
 	def test_alternative_items_sales_order_mapping_with_stock_items(self):
 		from erpnext.selling.doctype.quotation.quotation import make_sales_order
@@ -677,6 +739,667 @@ class TestQuotation(FrappeTestCase):
 		item_doc.taxes = []
 		item_doc.save()
 
+	def test_grand_total_and_rounded_total_values(self):
+		quotation = make_quotation(qty=6, rate=12.3, do_not_submit=1)
+		self.assertEqual(quotation.grand_total, 73.8)
+		self.assertEqual(quotation.rounding_adjustment, 0.2)
+		self.assertEqual(quotation.rounded_total, 74)
+		quotation.disable_rounded_total = 1
+		quotation.save()
+		self.assertEqual(quotation.grand_total, 73.8)
+		self.assertEqual(quotation.rounding_adjustment, 0)
+		self.assertEqual(quotation.rounded_total, 0)
+
+	def test_quotation_to_sales_invoice_with_sr_TC_S_030(self):
+		from erpnext.selling.doctype.quotation.quotation import make_sales_order
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
+		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+
+		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=10, rate=4000)
+		quotation = make_quotation(
+			party_name="_Test Customer",
+			company="_Test Company",
+			cost_center="Main - _TC",
+			item="_Test Item Home Desktop 100",
+			qty=4,
+			rate=5000,
+			warehouse="Stores - _TC",
+			currency="INR",
+			selling_price_list="Standard Selling",
+			shipping_rule="_Test Shipping Rule",
+			update_stock=1,
+			do_not_submit=True
+		)
+		quotation.append(
+			"taxes",
+			{
+				"charge_type": "Actual",
+				"account_head": "_Test Account Shipping Charges - _TC",
+				"cost_center": "Main - _TC",
+				"rate": 0,
+				"tax_amount": 200,
+				"description": "Shipping Charges",
+			}
+		)
+		quotation.save()
+		quotation.submit()
+		self.assertEqual(quotation.status, "Open")
+		self.assertEqual(quotation.grand_total, 20200)
+
+		sales_order = make_sales_order(quotation.name)
+		sales_order.update_stock = 1
+		sales_order.delivery_date = add_days(nowdate(), 5)
+
+		sales_order.insert()
+		sales_order.submit()
+
+		self.assertEqual(sales_order.status, "To Deliver and Bill")  
+		quotation.reload()
+		self.assertEqual(quotation.status, "Ordered")
+
+		delivery_note = make_delivery_note(sales_order.name)
+		delivery_note.insert()
+		delivery_note.submit()
+
+		self.assertEqual(delivery_note.status, "To Bill")
+		for item in delivery_note.items:
+				actual_qty = frappe.db.get_value("Bin", {"item_code": item.item_code, "warehouse": item.warehouse}, "actual_qty")
+				expected_qty = item.actual_qty - item.qty
+				self.assertEqual(actual_qty, expected_qty)
+		
+		sales_invoice = make_sales_invoice(delivery_note.name)
+		sales_invoice.insert()
+		sales_invoice.submit()
+
+		sales_order.reload()
+		delivery_note.reload()
+		sales_order.reload()
+		self.assertEqual(sales_invoice.status, "Unpaid") 
+		self.assertEqual(delivery_note.status, "Completed")  
+		self.assertEqual(sales_order.status, "Completed")  
+
+		debtor_account = frappe.db.get_value("Company", "_Test Company", "default_receivable_account")
+		sales_account = frappe.db.get_value("Company", "_Test Company", "default_income_account")
+		shipping_account = frappe.db.get_value("Shipping Rule", "_Test Shipping Rule", "account")
+
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": sales_invoice.name}, fields=["account", "debit", "credit"])
+		gl_debits = {entry.account: entry.debit for entry in gl_entries}
+		gl_credits = {entry.account: entry.credit for entry in gl_entries}
+
+		self.assertAlmostEqual(gl_debits[debtor_account], 20200)  
+		self.assertAlmostEqual(gl_credits[sales_account], 20000)  
+		self.assertAlmostEqual(gl_credits[shipping_account], 200)  
+		shipping_rule_amount = frappe.db.get_value("Sales Taxes and Charges", {"parent": sales_invoice.name, "account_head": shipping_account}, "tax_amount")
+		self.assertAlmostEqual(shipping_rule_amount, 200)
+
+	def test_quotation_to_sales_invoice_TC_S_075(self):
+		quotation = self.create_and_submit_quotation("_Test Item Home Desktop 100", 4, 5000, "Stores - _TC")
+		sales_order = self.create_and_submit_sales_order(quotation.name, add_days(nowdate(), 5))
+		quotation.reload()
+		self.assertEqual(quotation.status, "Ordered")
+
+		delivery_note = self.create_and_submit_delivery_note(sales_order.name)
+		self.stock_check(voucher=delivery_note.name,qty=-4)
+
+		self.assertEqual(delivery_note.status, "To Bill")
+
+		sales_invoice = self.create_and_submit_sales_invoice(delivery_note.name, expected_amount=20000)
+		self.assertEqual(sales_invoice.status, "Unpaid")
+
+		delivery_note.reload()
+		sales_order.reload()
+		self.assertEqual(delivery_note.status, "Completed")
+		self.assertEqual(sales_order.status, "Completed")
+
+
+	def test_quotation_to_sales_invoice_with_double_entries_TC_S_076(self):
+		quotation = self.create_and_submit_quotation("_Test Item Home Desktop 100", 4, 5000, "Stores - _TC")
+
+		# First Sales Order
+		sales_order_1 = self.create_and_submit_sales_order(quotation.name, add_days(nowdate(), 5), qty=2)
+		quotation.reload()
+		self.assertEqual(quotation.status, "Partially Ordered")
+
+		delivery_note_1 = self.create_and_submit_delivery_note(sales_order_1.name)
+		self.stock_check(voucher=delivery_note_1.name,qty=-2)
+
+		self.assertEqual(delivery_note_1.status, "To Bill")
+
+		self.create_and_submit_sales_invoice(delivery_note_1.name, expected_amount=10000)
+
+		# Second Sales Order
+		sales_order_2 = self.create_and_submit_sales_order(quotation.name, add_days(nowdate(), 5), qty=2)
+		quotation.reload()
+		self.assertEqual(quotation.status, "Ordered")
+
+		delivery_note_2 = self.create_and_submit_delivery_note(sales_order_2.name)
+		self.stock_check(voucher=delivery_note_2.name,qty=-2)
+
+		self.assertEqual(delivery_note_2.status, "To Bill")
+
+		self.create_and_submit_sales_invoice(delivery_note_2.name, expected_amount=10000)
+
+	def test_quotation_to_sales_invoice_with_double_entries_DN_SI_TC_S_077(self):
+		quotation = self.create_and_submit_quotation("_Test Item Home Desktop 100", 4, 5000, "Stores - _TC")
+		sales_order = self.create_and_submit_sales_order(quotation.name, add_days(nowdate(), 5))
+		quotation.reload()
+		self.assertEqual(quotation.status, "Ordered")
+
+		# First Delivery Note and Sales Invoice
+		delivery_note_1 = self.create_and_submit_delivery_note(sales_order.name, qty=2)
+		self.stock_check(voucher=delivery_note_1.name,qty=-2)
+
+		self.create_and_submit_sales_invoice(delivery_note_1.name, expected_amount=10000)
+
+		# Second Delivery Note and Sales Invoice
+		delivery_note_2 = self.create_and_submit_delivery_note(sales_order.name, qty=2)
+		self.stock_check(voucher=delivery_note_2.name,qty=-2)
+
+		self.create_and_submit_sales_invoice(delivery_note_2.name, expected_amount=10000)
+
+		sales_order.reload()
+		self.assertEqual(sales_order.status, "Completed")
+
+	def test_quotation_to_sales_invoice_with_double_entries_SI_TC_S_078(self):
+		quotation = self.create_and_submit_quotation("_Test Item Home Desktop 100", 4, 5000, "Stores - _TC")
+		sales_order = self.create_and_submit_sales_order(quotation.name, add_days(nowdate(), 5))
+		quotation.reload()
+		self.assertEqual(quotation.status, "Ordered")
+
+		# Delivery Note
+		delivery_note = self.create_and_submit_delivery_note(sales_order.name)
+		self.stock_check(voucher=delivery_note.name,qty=-4)
+
+
+		# First Sales Invoice
+		self.create_and_submit_sales_invoice(delivery_note.name, qty=2, expected_amount=10000)
+
+		# Second Sales Invoice
+		self.create_and_submit_sales_invoice(delivery_note.name, qty=2, expected_amount=10000)
+
+		delivery_note.reload()
+		sales_order.reload()
+		self.assertEqual(delivery_note.status, "Completed")
+		self.assertEqual(sales_order.status, "Completed")
+	
+	def test_quotation_to_sales_invoice_with_payment_entry_TC_S_079(self):
+		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+
+		quotation = self.create_and_submit_quotation("_Test Item Home Desktop 100", 1, 5000, "Stores - _TC")
+		sales_order = self.create_and_submit_sales_order(quotation.name, add_days(nowdate(), 5))
+		quotation.reload()
+		self.assertEqual(quotation.status, "Ordered")
+
+		pe=get_payment_entry(dt="Sales Order",dn=sales_order.name)
+		pe.save()
+		pe.submit()
+
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pe.name}, fields=["account", "debit", "credit"])
+		gl_debits = {entry.account: entry.debit for entry in gl_entries}
+		gl_credits = {entry.account: entry.credit for entry in gl_entries}
+
+		self.assertAlmostEqual(gl_debits["Cash - _TC"], 5000)
+		self.assertAlmostEqual(gl_credits["Debtors - _TC"], 5000)
+
+		delivery_note = self.create_and_submit_delivery_note(sales_order.name)
+		self.stock_check(voucher=delivery_note.name,qty=-1)
+		sales_invoice = self.create_and_submit_sales_invoice(delivery_note.name,advances_automatically= 1,expected_amount=5000)
+		sales_invoice.reload()
+		self.assertEqual(sales_invoice.status, "Paid")
+	
+
+	def test_quotation_to_sales_invoice_with_partially_payment_entry_TC_S_080(self):
+		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+
+		quotation = self.create_and_submit_quotation("_Test Item Home Desktop 100", 1, 5000, "Stores - _TC")
+		sales_order = self.create_and_submit_sales_order(quotation.name, add_days(nowdate(), 5))
+		quotation.reload()
+		self.assertEqual(quotation.status, "Ordered")
+
+		pe=get_payment_entry(dt="Sales Order",dn=sales_order.name)
+		pe.paid_amount= 2000
+		for i in pe.references:
+			i.allocated_amount = 2000
+		pe.save()
+		pe.submit()
+
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pe.name}, fields=["account", "debit", "credit"])
+		gl_debits = {entry.account: entry.debit for entry in gl_entries}
+		gl_credits = {entry.account: entry.credit for entry in gl_entries}
+
+		self.assertAlmostEqual(gl_debits["Cash - _TC"], 2000)
+		self.assertAlmostEqual(gl_credits["Debtors - _TC"], 2000)
+
+		delivery_note = self.create_and_submit_delivery_note(sales_order.name)
+		self.stock_check(voucher=delivery_note.name,qty=-1)
+		sales_invoice = self.create_and_submit_sales_invoice(delivery_note.name,advances_automatically= 1,expected_amount=5000)
+		sales_invoice.reload()
+		self.assertEqual(sales_invoice.status, "Partly Paid")
+
+		pe=get_payment_entry(dt="Sales Invoice",dn=sales_invoice.name)
+		pe.save()
+		pe.submit()
+
+		sales_invoice.reload()
+		self.assertEqual(sales_invoice.status, "Paid")
+
+	def test_quotation_to_sales_invoice_with_update_stock_TC_S_081(self):
+		from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+
+		quotation = self.create_and_submit_quotation("_Test Item Home Desktop 100", 4, 5000, "Stores - _TC")
+		sales_order = self.create_and_submit_sales_order(quotation.name, add_days(nowdate(), 5))
+		quotation.reload()
+		self.assertEqual(quotation.status, "Ordered")
+
+		sales_invoice=make_sales_invoice(sales_order.name)
+		sales_invoice.update_stock =1
+		sales_invoice.save()
+		sales_invoice.submit()
+
+		sales_invoice.reload()
+		self.assertEqual(sales_invoice.status, "Unpaid")
+
+		self.stock_check(voucher=sales_invoice.name,qty=-4)
+		self.validate_gl_entries( voucher_no= sales_invoice.name, amount= 20000)
+		sales_order.reload()
+		self.assertEqual(sales_order.status, "Completed")
+
+	def test_quotation_to_sales_invoice_to_delivery_note_TC_S_082(self):
+		from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
+
+
+		quotation = self.create_and_submit_quotation("_Test Item Home Desktop 100", 4, 5000, "Stores - _TC")
+		sales_order = self.create_and_submit_sales_order(quotation.name, add_days(nowdate(), 5))
+		quotation.reload()
+		self.assertEqual(quotation.status, "Ordered")
+
+		sales_invoice=make_sales_invoice(sales_order.name)
+		sales_invoice.save()
+		sales_invoice.submit()
+
+		sales_invoice.reload()
+		self.assertEqual(sales_invoice.status, "Unpaid")
+	
+		self.validate_gl_entries( voucher_no= sales_invoice.name, amount= 20000)
+
+		dn =  make_delivery_note(sales_invoice.name)
+		dn.insert()
+		dn.submit()
+		self.assertEqual(dn.status, "Completed")
+
+		self.stock_check(voucher=dn.name,qty=-4)
+
+	def test_quotation_to_sales_invoice_to_with_2_delivery_note_TC_S_083(self):
+		from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
+
+
+		quotation = self.create_and_submit_quotation("_Test Item Home Desktop 100", 4, 5000, "Stores - _TC")
+		sales_order = self.create_and_submit_sales_order(quotation.name, add_days(nowdate(), 5))
+		quotation.reload()
+		self.assertEqual(quotation.status, "Ordered")
+
+		sales_invoice=make_sales_invoice(sales_order.name)
+		sales_invoice.save()
+		sales_invoice.submit()
+
+		sales_invoice.reload()
+		self.assertEqual(sales_invoice.status, "Unpaid")
+	
+		self.validate_gl_entries( voucher_no= sales_invoice.name, amount= 20000)
+
+		dn_1 =  make_delivery_note(sales_invoice.name)
+		dn_1.insert()
+		for i in dn_1.items:
+			i.qty =2
+		dn_1.save()
+		dn_1.submit()
+		self.stock_check(voucher=dn_1.name,qty=-2)
+		self.assertEqual(dn_1.status, "Completed")
+
+		dn_2 =  make_delivery_note(sales_invoice.name)
+		dn_2.insert()
+		for i in dn_2.items:
+			i.qty =2
+		dn_2.save()
+		dn_2.submit()
+		self.stock_check(voucher=dn_2.name,qty=-2)
+		self.assertEqual(dn_2.status, "Completed")
+		
+	def test_quotation_to_material_request_TC_S_084(self):
+		from erpnext.selling.doctype.sales_order.sales_order import make_material_request
+		quotation = self.create_and_submit_quotation("_Test Item Home Desktop 100", 4, 5000, "Stores - _TC")
+		sales_order = self.create_and_submit_sales_order(quotation.name, add_days(nowdate(), 5))
+		quotation.reload()
+		self.assertEqual(quotation.status, "Ordered")
+		mr = make_material_request(sales_order.name)
+		mr.save()
+		mr.submit()
+		mr.reload()
+		self.assertEqual(mr.status, "Pending")
+	
+	def test_quotation_to_po_with_drop_ship_TC_S_111(self):
+		from erpnext.stock.doctype.item.test_item import make_item
+		from erpnext.selling.doctype.sales_order.sales_order import make_purchase_order_for_default_supplier
+		from erpnext.buying.doctype.purchase_order.purchase_order import update_status
+
+		make_item("_Test Item for Drop Shipping", {"is_stock_item": 1, "delivered_by_supplier": 1})
+		so_items = [
+			{
+				"item_code": "_Test Item for Drop Shipping",
+				"warehouse": "",
+				"qty": 2,
+				"rate": 5000,
+				"delivered_by_supplier": 1,
+				"supplier": "_Test Supplier",
+			}]
+
+		quotation = self.create_and_submit_quotation("_Test Item for Drop Shipping", 1, 5000, "Stores - _TC")
+
+		sales_order = make_sales_order(quotation.name)
+		sales_order.delivery_date = add_days(nowdate(), 5)
+		for i in sales_order.items:
+			i.delivered_by_supplier =1
+			i.supplier = "_Test Supplier"
+		sales_order.save()
+		sales_order.submit()
+
+		quotation.reload()
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+		self.assertEqual(quotation.status, "Ordered")
+
+		purchase_orders = make_purchase_order_for_default_supplier(sales_order.name, selected_items=so_items)
+		for i in purchase_orders[0].items:
+			i.rate = 3000
+		purchase_orders[0].submit()
+
+		update_status("Delivered", purchase_orders[0].name)
+		sales_order.reload()
+		purchase_orders[0].reload()
+		self.assertEqual(sales_order.status, "To Bill")
+		self.assertEqual(purchase_orders[0].status, "Delivered")
+
+	def test_quotation_to_po_with_drop_ship_with_GST_TC_S_112(self):
+		from erpnext.stock.doctype.item.test_item import make_item
+		from erpnext.selling.doctype.sales_order.sales_order import make_purchase_order_for_default_supplier
+		from erpnext.buying.doctype.purchase_order.purchase_order import update_status
+
+		make_item("_Test Item for Drop Shipping", {"is_stock_item": 1, "delivered_by_supplier": 1})
+		so_items = [
+			{
+				"item_code": "_Test Item for Drop Shipping",
+				"warehouse": "",
+				"qty": 2,
+				"rate": 5000,
+				"delivered_by_supplier": 1,
+				"supplier": "_Test Supplier",
+			}]
+
+		quotation = make_quotation(item="_Test Item for Drop Shipping", qty=1, rate=5000, warehouse="Stores - _TC",do_not_save =1)
+		for i in quotation.items:
+			i.item_tax_template = "GST 18% - _TC"
+		quotation.tax_category = "In-State"
+		quotation.taxes_and_charges = "Output GST In-state - _TC"
+		quotation.save()
+		quotation.submit()
+
+		sales_order = make_sales_order(quotation.name)
+		sales_order.delivery_date = add_days(nowdate(), 5)
+		for i in sales_order.items:
+			i.delivered_by_supplier =1
+			i.item_tax_template = "GST 18% - _TC"
+			i.supplier = "_Test Supplier"
+		sales_order.tax_category = "In-State"
+		sales_order.taxes_and_charges = "Output GST In-state - _TC"
+		sales_order.save()
+		sales_order.submit()
+
+		quotation.reload()
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+		self.assertEqual(quotation.status, "Ordered")
+
+		purchase_orders = make_purchase_order_for_default_supplier(sales_order.name, selected_items=so_items)
+		for i in purchase_orders[0].items:
+			i.rate = 3000
+			i.item_tax_template = "GST 18% - _TC"
+		purchase_orders[0].tax_category = "In-State"
+		purchase_orders[0].taxes_and_charges = "Input GST In-state - _TC"
+		purchase_orders[0].save()
+		purchase_orders[0].submit()
+		self.assertAlmostEqual(	purchase_orders[0].grand_total, 3540)
+		update_status("Delivered", purchase_orders[0].name)
+		sales_order.reload()
+		purchase_orders[0].reload()
+		self.assertEqual(sales_order.status, "To Bill")
+		self.assertEqual(purchase_orders[0].status, "Delivered")
+	
+
+	def test_quotation_to_si_with_pi_and_drop_ship_TC_S_114(self):
+		from erpnext.stock.doctype.item.test_item import make_item
+		from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+		from erpnext.selling.doctype.sales_order.sales_order import make_purchase_order_for_default_supplier
+		from erpnext.buying.doctype.purchase_order.purchase_order import update_status
+		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_invoice as make_pi_from_po
+		make_item("_Test Item for Drop Shipping", {"is_stock_item": 1, "delivered_by_supplier": 1})
+		so_items = [
+			{
+				"item_code": "_Test Item for Drop Shipping",
+				"warehouse": "",
+				"qty": 2,
+				"rate": 5000,
+				"delivered_by_supplier": 1,
+				"supplier": "_Test Supplier",
+			}]
+
+		quotation = self.create_and_submit_quotation("_Test Item for Drop Shipping", 1, 5000, "Stores - _TC")
+
+		sales_order = make_sales_order(quotation.name)
+		sales_order.delivery_date = add_days(nowdate(), 5)
+		for i in sales_order.items:
+			i.delivered_by_supplier =1
+			i.supplier = "_Test Supplier"
+		sales_order.save()
+		sales_order.submit()
+
+		quotation.reload()
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+		self.assertEqual(quotation.status, "Ordered")
+
+		purchase_orders = make_purchase_order_for_default_supplier(sales_order.name, selected_items=so_items)
+		for i in purchase_orders[0].items:
+			i.rate = 3000
+		purchase_orders[0].submit()
+
+		update_status("Delivered", purchase_orders[0].name)
+		sales_order.reload()
+		purchase_orders[0].reload()
+		self.assertEqual(sales_order.status, "To Bill")
+		self.assertEqual(purchase_orders[0].status, "Delivered")
+
+		pi = make_pi_from_po(purchase_orders[0].name)
+		pi.save()
+		pi.submit()
+
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
+		gl_debits = {entry.account: entry.debit for entry in gl_entries}
+		gl_credits = {entry.account: entry.credit for entry in gl_entries}
+		self.assertAlmostEqual(gl_debits["Cost of Goods Sold - _TC"], 3000)
+		self.assertAlmostEqual(gl_credits["Creditors - _TC"], 3000)
+		self.assertEqual(pi.status, "Unpaid")
+
+		si = make_sales_invoice(sales_order.name)
+		si.save()
+		si.submit()
+
+		self.assertEqual(si.status, "Unpaid")
+		self.validate_gl_entries(voucher_no= si.name,amount= 5000)
+
+
+	def test_quotation_to_si_with_pi_and_drop_ship_with_GST_TC_S_116(self):
+		from erpnext.stock.doctype.item.test_item import make_item
+		from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+		from erpnext.selling.doctype.sales_order.sales_order import make_purchase_order_for_default_supplier
+		from erpnext.buying.doctype.purchase_order.purchase_order import update_status
+		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_invoice as make_pi_from_po
+		make_item("_Test Item for Drop Shipping", {"is_stock_item": 1, "delivered_by_supplier": 1})
+		so_items = [
+			{
+				"item_code": "_Test Item for Drop Shipping",
+				"warehouse": "",
+				"qty": 2,
+				"rate": 5000,
+				"delivered_by_supplier": 1,
+				"supplier": "_Test Supplier",
+			}]
+
+		quotation = make_quotation(item="_Test Item for Drop Shipping", qty=1, rate=5000, warehouse="Stores - _TC",do_not_save =1)
+		for i in quotation.items:
+			i.item_tax_template = "GST 18% - _TC"
+		quotation.tax_category = "In-State"
+		quotation.taxes_and_charges = "Output GST In-state - _TC"
+		quotation.save()
+		quotation.submit()
+
+		sales_order = make_sales_order(quotation.name)
+		sales_order.delivery_date = add_days(nowdate(), 5)
+		for i in sales_order.items:
+			i.delivered_by_supplier =1
+			i.item_tax_template = "GST 18% - _TC"
+			i.supplier = "_Test Supplier"
+		sales_order.tax_category = "In-State"
+		sales_order.taxes_and_charges = "Output GST In-state - _TC"
+		sales_order.save()
+		sales_order.submit()
+
+		quotation.reload()
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+		self.assertEqual(quotation.status, "Ordered")
+
+		purchase_orders = make_purchase_order_for_default_supplier(sales_order.name, selected_items=so_items)
+		for i in purchase_orders[0].items:
+			i.rate = 3000
+			i.item_tax_template = "GST 18% - _TC"
+		purchase_orders[0].tax_category = "In-State"
+		purchase_orders[0].taxes_and_charges = "Input GST In-state - _TC"
+		purchase_orders[0].save()
+		purchase_orders[0].submit()
+
+		update_status("Delivered", purchase_orders[0].name)
+		sales_order.reload()
+		purchase_orders[0].reload()
+		self.assertEqual(sales_order.status, "To Bill")
+		self.assertEqual(purchase_orders[0].status, "Delivered")
+
+		pi = make_pi_from_po(purchase_orders[0].name)
+		pi.save()
+		pi.submit()
+
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
+		gl_debits = {entry.account: entry.debit for entry in gl_entries}
+		gl_credits = {entry.account: entry.credit for entry in gl_entries}
+		self.assertAlmostEqual(gl_debits["Cost of Goods Sold - _TC"], 3000)
+		self.assertAlmostEqual(gl_debits["Input Tax SGST - _TC"], 270)
+		self.assertAlmostEqual(gl_debits["Input Tax CGST - _TC"], 270)
+		self.assertAlmostEqual(gl_credits["Creditors - _TC"], 3540)
+		self.assertEqual(pi.status, "Unpaid")
+
+		si = make_sales_invoice(sales_order.name)
+		si.save()
+		si.submit()
+
+		self.assertEqual(si.status, "Unpaid")
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": si.name}, fields=["account", "debit", "credit"])
+		gl_debits = {entry.account: entry.debit for entry in gl_entries}
+		gl_credits = {entry.account: entry.credit for entry in gl_entries}
+		self.assertAlmostEqual(gl_debits["Debtors - _TC"], 5900)
+		self.assertAlmostEqual(gl_credits["Output Tax SGST - _TC"], 450)
+		self.assertAlmostEqual(gl_credits["Output Tax CGST - _TC"], 450)
+		self.assertAlmostEqual(gl_credits["Sales - _TC"], 5000)
+  
+	def test_quotation_expired_to_create_sales_order_TC_S_153(self):
+		selling_setting = frappe.get_doc('Stock Settings')
+		selling_setting.allow_sales_order_creation_for_expired_quotation = 1
+		selling_setting.save()
+  
+		quotation = make_quotation(qty=1, rate=100, transaction_date=add_days(nowdate(), -1), do_not_submit=1)
+		quotation.submit()
+  
+		self.assertEqual(quotation.grand_total, 100)
+		self.assertEqual(quotation.status, "Open")
+  
+		sales_order = make_sales_order(quotation.name)
+		sales_order.delivery_date = nowdate()
+		sales_order.set("payment_schedule", [])
+		sales_order.save()
+		sales_order.submit()
+  
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+
+	def stock_check(self,voucher,qty):
+		stock_entries = frappe.get_all(
+			"Stock Ledger Entry",
+			filters={"voucher_no":voucher, "warehouse": "Stores - _TC"},
+			fields=["actual_qty"]
+		)
+		self.assertEqual(sum([entry.actual_qty for entry in stock_entries]), qty)
+	
+
+	def create_and_submit_quotation(self, item, qty, rate, warehouse):
+		make_stock_entry(item=item, target=warehouse, qty=10, rate=4000)
+		quotation = make_quotation(item=item, qty=qty, rate=rate, warehouse=warehouse)
+		self.assertEqual(quotation.status, "Open")
+		return quotation
+
+	def create_and_submit_sales_order(self, quotation_name, delivery_date, qty=None):
+		sales_order = make_sales_order(quotation_name)
+		sales_order.delivery_date = delivery_date
+		sales_order.insert()
+		if qty:
+			for item in sales_order.items:
+				item.qty = qty
+			sales_order.save()
+		sales_order.submit()
+		self.assertEqual(sales_order.status, "To Deliver and Bill")
+		return sales_order
+
+	def create_and_submit_delivery_note(self, sales_order_name, qty=None):
+		delivery_note = make_delivery_note(sales_order_name)
+		delivery_note.insert()
+		if qty:
+			for item in delivery_note.items:
+				item.qty = qty
+			delivery_note.save()
+		delivery_note.submit()
+		return delivery_note
+
+	def create_and_submit_sales_invoice(self, delivery_note_name, qty=None, expected_amount=None,advances_automatically=None):
+		sales_invoice = make_sales_invoice(delivery_note_name)
+		sales_invoice.insert()
+		if qty:
+			for item in sales_invoice.items:
+				item.qty = qty
+
+		if advances_automatically:
+			sales_invoice.allocate_advances_automatically= 1
+			sales_invoice.only_include_allocated_payments = 1
+		sales_invoice.save()
+		sales_invoice.submit()
+		if expected_amount:
+			self.validate_gl_entries(sales_invoice.name, expected_amount)
+		return sales_invoice
+
+	def validate_gl_entries(self, voucher_no, amount):
+		debtor_account = frappe.db.get_value("Company", "_Test Company", "default_receivable_account")
+		sales_account = frappe.db.get_value("Company", "_Test Company", "default_income_account")
+		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": voucher_no}, fields=["account", "debit", "credit"])
+
+		gl_debits = {entry.account: entry.debit for entry in gl_entries}
+		gl_credits = {entry.account: entry.credit for entry in gl_entries}
+
+		self.assertAlmostEqual(gl_debits[debtor_account], amount)
+		self.assertAlmostEqual(gl_credits[sales_account], amount)
 
 test_records = frappe.get_test_records("Quotation")
 
@@ -708,6 +1431,7 @@ def make_quotation(**args):
 
 	qo.company = args.company or "_Test Company"
 	qo.party_name = args.party_name or "_Test Customer"
+	qo.shiping_rule = args.shiping_rule
 	qo.currency = args.currency or "INR"
 	if args.selling_price_list:
 		qo.selling_price_list = args.selling_price_list

@@ -1,10 +1,12 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
-
+import os
+import json
 import click
 import frappe
 from frappe import _
+from frappe.custom.doctype.custom_field.custom_field import create_custom_fields as make_custom_fields
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 from frappe.desk.page.setup_wizard.setup_wizard import add_all_roles_to
 from frappe.utils import cint
@@ -36,7 +38,6 @@ def after_install():
 	hide_workspaces()
 	update_roles()
 	frappe.db.commit()
-
 
 def check_setup_wizard_not_completed():
 	if cint(frappe.db.get_single_value("System Settings", "setup_complete") or 0):
@@ -98,7 +99,7 @@ def setup_currency_exchange():
 		ces.set("result_key", [])
 		ces.set("req_params", [])
 
-		ces.api_endpoint = "https://frankfurter.app/{transaction_date}"
+		ces.api_endpoint = "https://api.frankfurter.app/{transaction_date}"
 		ces.append("result_key", {"key": "rates"})
 		ces.append("result_key", {"key": "{to_currency}"})
 		ces.append("req_params", {"key": "base", "value": "{from_currency}"})
@@ -148,6 +149,12 @@ def create_default_success_action():
 def create_default_energy_point_rules():
 	for rule in get_default_energy_point_rules():
 		# check if any rule for ref. doctype exists
+		if not frappe.db.exists("DocType", rule.get("reference_doctype")):
+			frappe.log_error(
+                title="Missing Reference Doctype",
+                message=f"Reference Doctype '{rule.get('reference_doctype')}' not found. Skipping rule creation."
+            )
+			continue
 		rule_exists = frappe.db.exists(
 			"Energy Point Rule", {"reference_doctype": rule.get("reference_doctype")}
 		)
@@ -240,6 +247,16 @@ def create_default_role_profiles():
 			role_profile.append("roles", {"role": role})
 
 		role_profile.insert(ignore_permissions=True)
+
+
+# def generate_custom_fields():
+# 	CUSTOM_FIELDS = {}
+# 	print("Creating/Updating Custom Fields For Erpnext....")
+# 	path = os.path.join(os.path.dirname(__file__), "../buying/custom_fields")
+# 	for file in os.listdir(path):
+# 		with open(os.path.join(path, file), "r") as f:
+# 			CUSTOM_FIELDS.update(json.load(f))
+# 	make_custom_fields(CUSTOM_FIELDS)
 
 
 DEFAULT_ROLE_PROFILES = {

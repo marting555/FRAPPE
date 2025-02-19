@@ -191,7 +191,7 @@
    "fieldname": "type_of_transaction",
    "fieldtype": "Select",
    "label": "Type of Transaction",
-   "options": "\nInward\nOutward\nMaintenance\nAsset Repair",
+   "options": "\nInward\nOutward\nMaintenance",
    "reqd": 1,
    "search_index": 1
   },

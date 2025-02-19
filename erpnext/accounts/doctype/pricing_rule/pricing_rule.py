@@ -24,24 +24,12 @@ class PricingRule(Document):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
 		from erpnext.accounts.doctype.pricing_rule_brand.pricing_rule_brand import PricingRuleBrand
 		from erpnext.accounts.doctype.pricing_rule_item_code.pricing_rule_item_code import PricingRuleItemCode
-		from erpnext.accounts.doctype.pricing_rule_item_group.pricing_rule_item_group import (
-			PricingRuleItemGroup,
-		)
+		from erpnext.accounts.doctype.pricing_rule_item_group.pricing_rule_item_group import PricingRuleItemGroup
+		from frappe.types import DF
 
-		applicable_for: DF.Literal[
-			"",
-			"Customer",
-			"Customer Group",
-			"Territory",
-			"Sales Partner",
-			"Campaign",
-			"Supplier",
-			"Supplier Group",
-		]
+		applicable_for: DF.Literal["", "Customer", "Customer Group", "Territory", "Supplier", "Supplier Group"]
 		apply_discount_on: DF.Literal["Grand Total", "Net Total"]
 		apply_discount_on_rate: DF.Check
 		apply_multiple_pricing_rules: DF.Check
@@ -50,7 +38,6 @@ class PricingRule(Document):
 		apply_rule_on_other: DF.Literal["", "Item Code", "Item Group", "Brand"]
 		brands: DF.Table[PricingRuleBrand]
 		buying: DF.Check
-		campaign: DF.Link | None
 		company: DF.Link | None
 		condition: DF.Code | None
 		coupon_code_based: DF.Check
@@ -82,29 +69,7 @@ class PricingRule(Document):
 		other_item_code: DF.Link | None
 		other_item_group: DF.Link | None
 		price_or_product_discount: DF.Literal["Price", "Product"]
-		priority: DF.Literal[
-			"",
-			"1",
-			"2",
-			"3",
-			"4",
-			"5",
-			"6",
-			"7",
-			"8",
-			"9",
-			"10",
-			"11",
-			"12",
-			"13",
-			"14",
-			"15",
-			"16",
-			"17",
-			"18",
-			"19",
-			"20",
-		]
+		priority: DF.Literal["", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"]
 		promotional_scheme: DF.Link | None
 		promotional_scheme_id: DF.Data | None
 		rate: DF.Currency
@@ -112,7 +77,6 @@ class PricingRule(Document):
 		recurse_for: DF.Float
 		round_free_qty: DF.Check
 		rule_description: DF.SmallText | None
-		sales_partner: DF.Link | None
 		same_item: DF.Check
 		selling: DF.Check
 		supplier: DF.Link | None
@@ -446,7 +410,19 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 			if isinstance(pricing_rule, str):
 				pricing_rule = frappe.get_cached_doc("Pricing Rule", pricing_rule)
 				update_pricing_rule_uom(pricing_rule, args)
-				pricing_rule.apply_rule_on_other_items = get_pricing_rule_items(pricing_rule) or []
+				fetch_other_item = True if pricing_rule.apply_rule_on_other else False
+				pricing_rule.apply_rule_on_other_items = (
+					get_pricing_rule_items(pricing_rule, other_items=fetch_other_item) or []
+				)
+
+			if pricing_rule.coupon_code_based == 1:
+				if not args.coupon_code:
+					return item_details
+				coupon_code = frappe.db.get_value(
+					doctype="Coupon Code", filters={"pricing_rule": pricing_rule.name}, fieldname="name"
+				)
+				if args.coupon_code != coupon_code:
+					continue
 
 			if pricing_rule.get("suggestion"):
 				continue
@@ -472,9 +448,6 @@ def get_pricing_rule_for_item(args, doc=None, for_validate=False):
 					item_details["apply_rule_on_other_items"] = json.dumps(
 						pricing_rule.apply_rule_on_other_items
 					)
-
-			if pricing_rule.coupon_code_based == 1 and args.coupon_code is None:
-				return item_details
 
 			if not pricing_rule.validate_applied_rule:
 				if pricing_rule.price_or_product_discount == "Price":
@@ -714,6 +687,6 @@ def get_item_uoms(doctype, txt, searchfield, start, page_len, filters):
 	return frappe.get_all(
 		"UOM Conversion Detail",
 		filters={"parent": ("in", items), "uom": ("like", f"{txt}%")},
-		fields=["distinct uom"],
+		fields=["distinct uom", "modified"],
 		as_list=1,
 	)

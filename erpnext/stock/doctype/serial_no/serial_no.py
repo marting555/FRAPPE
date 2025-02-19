@@ -35,8 +35,6 @@ class SerialNo(StockController):
 		from frappe.types import DF
 
 		amc_expiry_date: DF.Date | None
-		asset: DF.Link | None
-		asset_status: DF.Literal["", "Issue", "Receipt", "Transfer"]
 		batch_no: DF.Link | None
 		brand: DF.Link | None
 		company: DF.Link
@@ -167,21 +165,6 @@ def update_maintenance_status():
 		doc = frappe.get_doc("Serial No", serial_no[0])
 		doc.set_maintenance_status()
 		frappe.db.set_value("Serial No", doc.name, "maintenance_status", doc.maintenance_status)
-
-
-def get_delivery_note_serial_no(item_code, qty, delivery_note):
-	serial_nos = ""
-	dn_serial_nos = frappe.db.sql_list(
-		f""" select name from `tabSerial No`
-		where item_code = %(item_code)s and delivery_document_no = %(delivery_note)s
-		and sales_invoice is null limit {cint(qty)}""",
-		{"item_code": item_code, "delivery_note": delivery_note},
-	)
-
-	if dn_serial_nos and len(dn_serial_nos) > 0:
-		serial_nos = "\n".join(dn_serial_nos)
-
-	return serial_nos
 
 
 @frappe.whitelist()

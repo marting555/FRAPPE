@@ -34,45 +34,14 @@ class Account(NestedSet):
 		account_currency: DF.Link | None
 		account_name: DF.Data
 		account_number: DF.Data | None
-		account_type: DF.Literal[
-			"",
-			"Accumulated Depreciation",
-			"Asset Received But Not Billed",
-			"Bank",
-			"Cash",
-			"Chargeable",
-			"Capital Work in Progress",
-			"Cost of Goods Sold",
-			"Current Asset",
-			"Current Liability",
-			"Depreciation",
-			"Direct Expense",
-			"Direct Income",
-			"Equity",
-			"Expense Account",
-			"Expenses Included In Asset Valuation",
-			"Expenses Included In Valuation",
-			"Fixed Asset",
-			"Income Account",
-			"Indirect Expense",
-			"Indirect Income",
-			"Liability",
-			"Payable",
-			"Receivable",
-			"Round Off",
-			"Stock",
-			"Stock Adjustment",
-			"Stock Received But Not Billed",
-			"Service Received But Not Billed",
-			"Tax",
-			"Temporary",
-		]
+		account_type: DF.Literal["", "Accumulated Depreciation", "Asset Received But Not Billed", "Bank", "Cash", "Chargeable", "Capital Work in Progress", "Cost of Goods Sold", "Current Asset", "Current Liability", "Depreciation", "Direct Expense", "Direct Income", "Equity", "Expense Account", "Expenses Included In Asset Valuation", "Expenses Included In Valuation", "Fixed Asset", "Income Account", "Indirect Expense", "Indirect Income", "Liability", "Payable", "Receivable", "Round Off", "Stock", "Stock Adjustment", "Stock Received But Not Billed", "Service Received But Not Billed", "Tax", "Temporary"]
 		balance_must_be: DF.Literal["", "Debit", "Credit"]
 		company: DF.Link
 		disabled: DF.Check
 		freeze_account: DF.Literal["No", "Yes"]
 		include_in_gross: DF.Check
 		is_group: DF.Check
+		is_open_item: DF.Check
 		lft: DF.Int
 		old_parent: DF.Data | None
 		parent_account: DF.Link
@@ -103,14 +72,13 @@ class Account(NestedSet):
 		self.name = get_autoname_with_number(self.account_number, self.account_name, self.company)
 
 	def validate(self):
-		from erpnext.accounts.utils import validate_field_number
 
 		if frappe.local.flags.allow_unverified_charts:
 			return
 		self.validate_parent()
 		self.validate_parent_child_account_type()
 		self.validate_root_details()
-		validate_field_number("Account", self.name, self.account_number, self.company, "account_number")
+		self.validate_account_number()
 		self.validate_group_or_ledger()
 		self.set_root_and_report_type()
 		self.validate_mandatory()
@@ -311,6 +279,21 @@ class Account(NestedSet):
 			if frappe.db.get_value("GL Entry", {"account": self.name}):
 				frappe.throw(_("Currency can not be changed after making entries using some other currency"))
 
+	def validate_account_number(self, account_number=None):
+		if not account_number:
+			account_number = self.account_number
+		if account_number:
+			account_with_same_number = frappe.db.get_value(
+				"Account",
+				{"account_number": account_number, "company": self.company, "name": ["!=", self.name]},
+			)
+			if account_with_same_number:
+				frappe.throw(
+					_("Account Number {0} already used in account {1}").format(
+						account_number, account_with_same_number
+					)
+				)
+
 	def create_account_for_child_company(self, parent_acc_name_map, descendants, parent_acc_name):
 		for company in descendants:
 			company_bold = frappe.bold(company)
@@ -437,8 +420,11 @@ def get_account_currency(account):
 		return
 
 	def generator():
-		account_currency, company = frappe.get_cached_value(
-			"Account", account, ["account_currency", "company"]
+		account_currency = frappe.get_cached_value(
+			"Account", account, "account_currency"
+		)
+		company = frappe.get_cached_value(
+			"Account", account, "company"
 		)
 		if not account_currency:
 			account_currency = frappe.get_cached_value("Company", company, "default_currency")
@@ -462,19 +448,6 @@ def get_account_autoname(account_number, account_name, company):
 	if cstr(account_number).strip():
 		parts.insert(0, cstr(account_number).strip())
 	return " - ".join(parts)
-
-
-def validate_account_number(name, account_number, company):
-	if account_number:
-		account_with_same_number = frappe.db.get_value(
-			"Account", {"account_number": account_number, "company": company, "name": ["!=", name]}
-		)
-		if account_with_same_number:
-			frappe.throw(
-				_("Account Number {0} already used in account {1}").format(
-					account_number, account_with_same_number
-				)
-			)
 
 
 @frappe.whitelist()
@@ -517,7 +490,7 @@ def update_account_number(name, account_name, account_number=None, from_descenda
 
 				frappe.throw(message, title=_("Rename Not Allowed"))
 
-	validate_account_number(name, account_number, account.company)
+	account.validate_account_number(account_number)
 	if account_number:
 		frappe.db.set_value("Account", name, "account_number", account_number.strip())
 	else:

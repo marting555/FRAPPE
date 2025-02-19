@@ -9,7 +9,6 @@ from frappe.utils import add_days, add_to_date, flt, now, nowtime, today
 from erpnext.accounts.doctype.account.test_account import create_account, get_inventory_account
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
 from erpnext.accounts.utils import update_gl_entries_after
-from erpnext.assets.doctype.asset.test_asset import create_asset_category, create_fixed_asset_item
 from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
 	get_gl_entries,
@@ -559,42 +558,6 @@ class TestLandedCostVoucher(FrappeTestCase):
 			amounts = expected_gl_entries.get(entry.account)
 			self.assertEqual(entry.credit, amounts[0])
 			self.assertEqual(entry.credit_in_account_currency, amounts[1])
-
-	def test_asset_lcv(self):
-		"Check if LCV for an Asset updates the Assets Gross Purchase Amount correctly."
-		frappe.db.set_value(
-			"Company", "_Test Company", "capital_work_in_progress_account", "CWIP Account - _TC"
-		)
-
-		if not frappe.db.exists("Asset Category", "Computers"):
-			create_asset_category()
-
-		if not frappe.db.exists("Item", "Macbook Pro"):
-			create_fixed_asset_item()
-
-		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=50000)
-
-		# check if draft asset was created
-		assets = frappe.db.get_all("Asset", filters={"purchase_receipt": pr.name})
-		self.assertEqual(len(assets), 1)
-
-		lcv = make_landed_cost_voucher(
-			company=pr.company,
-			receipt_document_type="Purchase Receipt",
-			receipt_document=pr.name,
-			charges=80,
-			expense_account="Expenses Included In Valuation - _TC",
-		)
-
-		lcv.save()
-		lcv.submit()
-
-		# lcv updates amount in draft asset
-		self.assertEqual(frappe.db.get_value("Asset", assets[0].name, "gross_purchase_amount"), 50080)
-
-		# tear down
-		lcv.cancel()
-		pr.cancel()
 
 	def test_landed_cost_voucher_with_serial_batch_for_legacy_pr(self):
 		from erpnext.stock.doctype.item.test_item import make_item

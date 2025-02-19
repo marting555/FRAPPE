@@ -14,7 +14,6 @@ from frappe.model.mapper import get_mapped_doc
 from frappe.model.utils import get_fetch_values
 from frappe.query_builder.functions import Sum
 from frappe.utils import add_days, cint, cstr, flt, get_link_to_form, getdate, nowdate, strip_html
-
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import (
 	unlink_inter_company_doc,
 	update_linked_doc,
@@ -35,7 +34,7 @@ from erpnext.stock.doctype.stock_reservation_entry.stock_reservation_entry impor
 	get_sre_reserved_qty_details_for_voucher,
 	has_reserved_stock,
 )
-from erpnext.stock.get_item_details import get_default_bom, get_price_list_rate
+from erpnext.stock.get_item_details import get_bin_details, get_default_bom, get_price_list_rate
 from erpnext.stock.stock_balance import get_reserved_qty, update_bin_qty
 
 form_grid_templates = {"items": "templates/form_grid/item_grid.html"}
@@ -52,23 +51,17 @@ class SalesOrder(SellingController):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
 		from erpnext.accounts.doctype.payment_schedule.payment_schedule import PaymentSchedule
 		from erpnext.accounts.doctype.pricing_rule_detail.pricing_rule_detail import PricingRuleDetail
-		from erpnext.accounts.doctype.sales_taxes_and_charges.sales_taxes_and_charges import (
-			SalesTaxesandCharges,
-		)
+		from erpnext.accounts.doctype.sales_taxes_and_charges.sales_taxes_and_charges import SalesTaxesandCharges
 		from erpnext.selling.doctype.sales_order_item.sales_order_item import SalesOrderItem
-		from erpnext.selling.doctype.sales_team.sales_team import SalesTeam
 		from erpnext.stock.doctype.packed_item.packed_item import PackedItem
+		from frappe.types import DF
 
 		additional_discount_percentage: DF.Float
 		address_display: DF.SmallText | None
 		advance_paid: DF.Currency
-		advance_payment_status: DF.Literal["Not Requested", "Requested", "Partially Paid", "Fully Paid"]
 		amended_from: DF.Link | None
-		amount_eligible_for_commission: DF.Currency
 		apply_discount_on: DF.Literal["", "Grand Total", "Net Total"]
 		auto_repeat: DF.Link | None
 		base_discount_amount: DF.Currency
@@ -80,11 +73,10 @@ class SalesOrder(SellingController):
 		base_total: DF.Currency
 		base_total_taxes_and_charges: DF.Currency
 		billing_status: DF.Literal["Not Billed", "Fully Billed", "Partly Billed", "Closed"]
-		campaign: DF.Link | None
-		commission_rate: DF.Float
 		company: DF.Link
 		company_address: DF.Link | None
 		company_address_display: DF.SmallText | None
+		company_contact_person: DF.Link | None
 		contact_display: DF.SmallText | None
 		contact_email: DF.Data | None
 		contact_mobile: DF.SmallText | None
@@ -99,9 +91,7 @@ class SalesOrder(SellingController):
 		customer_group: DF.Link | None
 		customer_name: DF.Data | None
 		delivery_date: DF.Date | None
-		delivery_status: DF.Literal[
-			"Not Delivered", "Fully Delivered", "Partly Delivered", "Closed", "Not Applicable"
-		]
+		delivery_status: DF.Literal["Not Delivered", "Fully Delivered", "Partly Delivered", "Closed", "Not Applicable"]
 		disable_rounded_total: DF.Check
 		discount_amount: DF.Currency
 		dispatch_address: DF.SmallText | None
@@ -141,8 +131,6 @@ class SalesOrder(SellingController):
 		reserve_stock: DF.Check
 		rounded_total: DF.Currency
 		rounding_adjustment: DF.Currency
-		sales_partner: DF.Link | None
-		sales_team: DF.Table[SalesTeam]
 		scan_barcode: DF.Data | None
 		select_print_heading: DF.Link | None
 		selling_price_list: DF.Link
@@ -151,19 +139,7 @@ class SalesOrder(SellingController):
 		shipping_address_name: DF.Link | None
 		shipping_rule: DF.Link | None
 		skip_delivery_note: DF.Check
-		source: DF.Link | None
-		status: DF.Literal[
-			"",
-			"Draft",
-			"On Hold",
-			"To Pay",
-			"To Deliver and Bill",
-			"To Bill",
-			"To Deliver",
-			"Completed",
-			"Cancelled",
-			"Closed",
-		]
+		status: DF.Literal["", "Draft", "On Hold", "To Deliver and Bill", "To Bill", "To Deliver", "Completed", "Cancelled", "Closed"]
 		tax_category: DF.Link | None
 		tax_id: DF.Data | None
 		taxes: DF.Table[SalesTaxesandCharges]
@@ -174,7 +150,6 @@ class SalesOrder(SellingController):
 		title: DF.Data | None
 		to_date: DF.Date | None
 		total: DF.Currency
-		total_commission: DF.Currency
 		total_net_weight: DF.Float
 		total_qty: DF.Float
 		total_taxes_and_charges: DF.Currency
@@ -185,6 +160,8 @@ class SalesOrder(SellingController):
 		super().__init__(*args, **kwargs)
 
 	def onload(self) -> None:
+		super().onload()
+		
 		if frappe.db.get_single_value("Stock Settings", "enable_stock_reservation"):
 			if self.has_unreserved_stock():
 				self.set_onload("has_unreserved_stock", True)
@@ -195,7 +172,6 @@ class SalesOrder(SellingController):
 	def validate(self):
 		super().validate()
 		self.validate_delivery_date()
-		self.validate_proj_cust()
 		self.validate_po()
 		self.validate_uom_is_integer("stock_uom", "stock_qty")
 		self.validate_uom_is_integer("uom", "qty")
@@ -329,18 +305,6 @@ class SalesOrder(SellingController):
 
 		self.validate_sales_mntc_quotation()
 
-	def validate_proj_cust(self):
-		if self.project and self.customer_name:
-			res = frappe.db.sql(
-				"""select name from `tabProject` where name = %s
-				and (customer = %s or ifnull(customer,'')='')""",
-				(self.project, self.customer),
-			)
-			if not res:
-				frappe.throw(
-					_("Customer {0} does not belong to project {1}").format(self.customer, self.project)
-				)
-
 	def validate_warehouse(self):
 		super().validate_warehouse()
 
@@ -406,7 +370,6 @@ class SalesOrder(SellingController):
 		frappe.get_doc("Authorization Control").validate_approving_authority(
 			self.doctype, self.company, self.base_grand_total, self
 		)
-		self.update_project()
 		self.update_prevdoc_status("submit")
 
 		self.update_blanket_order()
@@ -436,7 +399,6 @@ class SalesOrder(SellingController):
 
 		self.check_nextdoc_docstatus()
 		self.update_reserved_qty()
-		self.update_project()
 		self.update_prevdoc_status("cancel")
 
 		self.db_set("status", "Cancelled")
@@ -449,15 +411,6 @@ class SalesOrder(SellingController):
 			from erpnext.accounts.doctype.pricing_rule.utils import update_coupon_code_count
 
 			update_coupon_code_count(self.coupon_code, "cancelled")
-
-	def update_project(self):
-		if frappe.db.get_single_value("Selling Settings", "sales_update_frequency") != "Each Transaction":
-			return
-
-		if self.project:
-			project = frappe.get_doc("Project", self.project)
-			project.update_sales_amount()
-			project.db_update()
 
 	def check_credit_limit(self):
 		# if bypass credit limit check is set to true (1) at sales order level,
@@ -489,7 +442,7 @@ class SalesOrder(SellingController):
 
 	def check_modified_date(self):
 		mod_db = frappe.db.get_value("Sales Order", self.name, "modified")
-		date_diff = frappe.db.sql(f"select TIMEDIFF('{mod_db}', '{cstr(self.modified)}')")
+		date_diff = frappe.db.sql(f"select AGE('{mod_db}', '{cstr(self.modified)}')")
 		if date_diff and date_diff[0][0]:
 			frappe.throw(_("{0} {1} has been modified. Please refresh.").format(self.doctype, self.name))
 
@@ -582,7 +535,7 @@ class SalesOrder(SellingController):
 				item_delivered_qty = item_delivered_qty[0][0] if item_delivered_qty else 0
 				item.db_set("delivered_qty", flt(item_delivered_qty), update_modified=False)
 
-			delivered_qty += item.delivered_qty
+			delivered_qty += min(item.delivered_qty, item.qty)
 			tot_qty += item.qty
 
 		if tot_qty != 0:
@@ -836,6 +789,9 @@ def make_material_request(source_name, target_doc=None):
 		target.project = source_parent.project
 		target.qty = get_remaining_qty(source)
 		target.stock_qty = flt(target.qty) * flt(target.conversion_factor)
+		target.actual_qty = get_bin_details(
+			target.item_code, target.warehouse, source_parent.company, True
+		).get("actual_qty", 0)
 
 		args = target.as_dict().copy()
 		args.update(
@@ -866,7 +822,11 @@ def make_material_request(source_name, target_doc=None):
 			},
 			"Sales Order Item": {
 				"doctype": "Material Request Item",
-				"field_map": {"name": "sales_order_item", "parent": "sales_order"},
+				"field_map": {
+					"name": "sales_order_item",
+					"parent": "sales_order",
+					"delivery_date": "required_by",
+				},
 				"condition": lambda item: not frappe.db.exists(
 					"Product Bundle", {"name": item.item_code, "disabled": 0}
 				)
@@ -931,7 +891,7 @@ def make_delivery_note(source_name, target_doc=None, kwargs=None):
 
 	mapper = {
 		"Sales Order": {"doctype": "Delivery Note", "validation": {"docstatus": ["=", 1]}},
-		"Sales Taxes and Charges": {"doctype": "Sales Taxes and Charges", "add_if_empty": True},
+		"Sales Taxes and Charges": {"doctype": "Sales Taxes and Charges", "reset_value": True},
 		"Sales Team": {"doctype": "Sales Team", "add_if_empty": True},
 	}
 
@@ -983,7 +943,8 @@ def make_delivery_note(source_name, target_doc=None, kwargs=None):
 
 		if item:
 			target.cost_center = (
-				frappe.db.get_value("Project", source_parent.project, "cost_center")
+				frappe.db.exists("DocType", "Project")
+				and frappe.db.get_value("Project", source_parent.project, "cost_center")
 				or item.get("buying_cost_center")
 				or item_group.get("buying_cost_center")
 			)
@@ -1090,7 +1051,7 @@ def make_sales_invoice(source_name, target_doc=None, ignore_permissions=False):
 			else source.qty - source.returned_qty
 		)
 
-		if source_parent.project:
+		if frappe.db.exists("DocType", "Project") and source_parent.project:
 			target.cost_center = frappe.db.get_value("Project", source_parent.project, "cost_center")
 		if target.item_code:
 			item = get_item_defaults(target.item_code, source_parent.company)
@@ -1123,7 +1084,7 @@ def make_sales_invoice(source_name, target_doc=None, ignore_permissions=False):
 				"condition": lambda doc: doc.qty
 				and (doc.base_amount == 0 or abs(doc.billed_amt) < abs(doc.amount)),
 			},
-			"Sales Taxes and Charges": {"doctype": "Sales Taxes and Charges", "add_if_empty": True},
+			"Sales Taxes and Charges": {"doctype": "Sales Taxes and Charges", "reset_value": True},
 			"Sales Team": {"doctype": "Sales Team", "add_if_empty": True},
 		},
 		target_doc,
@@ -1222,7 +1183,10 @@ def get_events(start, end, filters=None):
 		""",
 		{"start": start, "end": end},
 		as_dict=True,
-		update={"allDay": 0},
+		update={
+			"allDay": 0,
+			"convertToUserTz": 0,
+		},
 	)
 	return data
 
@@ -1339,6 +1303,8 @@ def make_purchase_order_for_default_supplier(source_name, selected_items=None, t
 						"discount_percentage",
 						"discount_amount",
 						"pricing_rules",
+						"margin_type",
+						"margin_rate_or_amount",
 					],
 					"postprocess": update_item,
 					"condition": lambda doc: doc.ordered_qty < doc.stock_qty
@@ -1392,9 +1358,16 @@ def make_purchase_order(source_name, selected_items=None, target_doc=None):
 		target.payment_schedule = []
 
 		if is_drop_ship_order(target):
-			target.customer = source.customer
-			target.customer_name = source.customer_name
-			target.shipping_address = source.shipping_address_name
+			if source.shipping_address_name:
+				target.shipping_address = source.shipping_address_name
+				target.shipping_address_display = source.shipping_address
+			else:
+				target.shipping_address = source.customer_address
+				target.shipping_address_display = source.address_display
+			target.customer_contact_person = source.contact_person
+			target.customer_contact_display = source.contact_display
+			target.customer_contact_mobile = source.contact_mobile
+			target.customer_contact_email = source.contact_email
 		else:
 			target.customer = target.customer_name = target.shipping_address = None
 
@@ -1479,6 +1452,7 @@ def make_purchase_order(source_name, selected_items=None, target_doc=None):
 	)
 
 	set_delivery_date(doc.items, source_name)
+	doc.set_onload("load_after_mapping", False)
 
 	return doc
 

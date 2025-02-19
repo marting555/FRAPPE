@@ -107,6 +107,7 @@ class InventoryDimension(Document):
 					self.source_fieldname,
 					f"to_{self.source_fieldname}",
 					f"from_{self.source_fieldname}",
+					f"rejected_{self.source_fieldname}",
 				],
 			)
 		}
@@ -171,12 +172,12 @@ class InventoryDimension(Document):
 		if label_start_with:
 			label = f"{label_start_with} {self.dimension_name}"
 
-		return [
+		dimension_fields = [
 			dict(
 				fieldname="inventory_dimension",
 				fieldtype="Section Break",
 				insert_after=self.get_insert_after_fieldname(doctype),
-				label="Inventory Dimension",
+				label=_("Inventory Dimension"),
 				collapsible=1,
 			),
 			dict(
@@ -184,12 +185,27 @@ class InventoryDimension(Document):
 				fieldtype="Link",
 				insert_after="inventory_dimension",
 				options=self.reference_document,
-				label=label,
+				label=_(label),
 				search_index=1,
 				reqd=self.reqd,
 				mandatory_depends_on=self.mandatory_depends_on,
 			),
 		]
+
+		if doctype in ["Purchase Invoice Item", "Purchase Receipt Item"]:
+			dimension_fields.append(
+				dict(
+					fieldname="rejected_" + self.source_fieldname,
+					fieldtype="Link",
+					insert_after=self.source_fieldname,
+					options=self.reference_document,
+					label=_("Rejected " + self.dimension_name),
+					search_index=1,
+					reqd=self.reqd,
+					mandatory_depends_on=self.mandatory_depends_on,
+				)
+			)
+		return dimension_fields
 
 	def add_custom_fields(self):
 		custom_fields = {}
@@ -292,10 +308,11 @@ def get_inventory_documents(
 
 	return frappe.get_all(
 		"DocField",
-		fields=["distinct parent"],
+		fields=["distinct parent", "modified"],
 		filters=and_filters,
 		or_filters=or_filters,
 		start=start,
+		order_by="modified asc",
 		page_length=page_len,
 		as_list=1,
 	)
@@ -364,11 +381,12 @@ def get_inventory_dimensions():
 		dimensions = frappe.get_all(
 			"Inventory Dimension",
 			fields=[
-				"distinct target_fieldname as fieldname",
+				"target_fieldname as fieldname",
 				"reference_document as doctype",
 				"validate_negative_stock",
 			],
 			filters={"disabled": 0},
+			distinct=1,
 		)
 
 		frappe.local.inventory_dimensions = dimensions

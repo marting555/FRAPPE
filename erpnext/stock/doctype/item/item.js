@@ -50,9 +50,6 @@ frappe.ui.form.on("Item", {
 			frm.fields_dict["attributes"].grid.set_column_disp("attribute_value", true);
 		}
 
-		if (frm.doc.is_fixed_asset) {
-			frm.trigger("set_asset_naming_series");
-		}
 	},
 
 	refresh: function (frm) {
@@ -87,11 +84,6 @@ frappe.ui.form.on("Item", {
 				},
 				__("View")
 			);
-		}
-
-		if (frm.doc.is_fixed_asset) {
-			frm.trigger("is_fixed_asset");
-			frm.trigger("auto_create_assets");
 		}
 
 		// clear intro
@@ -174,10 +166,6 @@ frappe.ui.form.on("Item", {
 		erpnext.item.edit_prices_button(frm);
 		erpnext.item.toggle_attributes(frm);
 
-		if (!frm.doc.is_fixed_asset) {
-			erpnext.item.make_dashboard(frm);
-		}
-
 		frm.add_custom_button(__("Duplicate"), function () {
 			var new_item = frappe.model.copy_doc(frm.doc);
 			// Duplicate item could have different name, causing "copy paste" error.
@@ -209,36 +197,6 @@ frappe.ui.form.on("Item", {
 
 	is_customer_provided_item: function (frm) {
 		frm.toggle_reqd("customer", frm.doc.is_customer_provided_item ? 1 : 0);
-	},
-
-	is_fixed_asset: function (frm) {
-		// set serial no to false & toggles its visibility
-		frm.set_value("has_serial_no", 0);
-		frm.set_value("has_batch_no", 0);
-		frm.toggle_enable(["has_serial_no", "serial_no_series"], !frm.doc.is_fixed_asset);
-
-		frappe.call({
-			method: "erpnext.stock.doctype.item.item.get_asset_naming_series",
-			callback: function (r) {
-				frm.set_value("is_stock_item", frm.doc.is_fixed_asset ? 0 : 1);
-				frm.events.set_asset_naming_series(frm, r.message);
-			},
-		});
-
-		frm.trigger("auto_create_assets");
-	},
-
-	set_asset_naming_series: function (frm, asset_naming_series) {
-		if ((frm.doc.__onload && frm.doc.__onload.asset_naming_series) || asset_naming_series) {
-			let naming_series =
-				(frm.doc.__onload && frm.doc.__onload.asset_naming_series) || asset_naming_series;
-			frm.set_df_property("asset_naming_series", "options", naming_series);
-		}
-	},
-
-	auto_create_assets: function (frm) {
-		frm.toggle_reqd(["asset_naming_series"], frm.doc.auto_create_assets);
-		frm.toggle_display(["asset_naming_series"], frm.doc.auto_create_assets);
 	},
 
 	page_name: frappe.utils.warn_page_name_change,
@@ -663,39 +621,41 @@ $.extend(erpnext.item, {
 		}
 
 		frm.doc.attributes.forEach(function (d) {
-			let p = new Promise((resolve) => {
-				if (!d.numeric_values) {
-					frappe
-						.call({
-							method: "frappe.client.get_list",
-							args: {
-								doctype: "Item Attribute Value",
-								filters: [["parent", "=", d.attribute]],
-								fields: ["attribute_value"],
-								limit_page_length: 0,
-								parent: "Item Attribute",
-								order_by: "idx",
-							},
-						})
-						.then((r) => {
-							if (r.message) {
-								attr_val_fields[d.attribute] = r.message.map(function (d) {
-									return d.attribute_value;
-								});
-								resolve();
-							}
-						});
-				} else {
-					let values = [];
-					for (var i = d.from_range; i <= d.to_range; i = flt(i + d.increment, 6)) {
-						values.push(i);
+			if (!d.disabled) {
+				let p = new Promise((resolve) => {
+					if (!d.numeric_values) {
+						frappe
+							.call({
+								method: "frappe.client.get_list",
+								args: {
+									doctype: "Item Attribute Value",
+									filters: [["parent", "=", d.attribute]],
+									fields: ["attribute_value"],
+									limit_page_length: 0,
+									parent: "Item Attribute",
+									order_by: "idx",
+								},
+							})
+							.then((r) => {
+								if (r.message) {
+									attr_val_fields[d.attribute] = r.message.map(function (d) {
+										return d.attribute_value;
+									});
+									resolve();
+								}
+							});
+					} else {
+						let values = [];
+						for (var i = d.from_range; i <= d.to_range; i = flt(i + d.increment, 6)) {
+							values.push(i);
+						}
+						attr_val_fields[d.attribute] = values;
+						resolve();
 					}
-					attr_val_fields[d.attribute] = values;
-					resolve();
-				}
-			});
+				});
 
-			promises.push(p);
+				promises.push(p);
+			}
 		}, this);
 
 		Promise.all(promises).then(() => {
@@ -710,26 +670,28 @@ $.extend(erpnext.item, {
 		for (var i = 0; i < frm.doc.attributes.length; i++) {
 			var fieldtype, desc;
 			var row = frm.doc.attributes[i];
-			if (row.numeric_values) {
-				fieldtype = "Float";
-				desc =
-					"Min Value: " +
-					row.from_range +
-					" , Max Value: " +
-					row.to_range +
-					", in Increments of: " +
-					row.increment;
-			} else {
-				fieldtype = "Data";
-				desc = "";
+			if (!row.disabled) {
+				if (row.numeric_values) {
+					fieldtype = "Float";
+					desc =
+						"Min Value: " +
+						row.from_range +
+						" , Max Value: " +
+						row.to_range +
+						", in Increments of: " +
+						row.increment;
+				} else {
+					fieldtype = "Data";
+					desc = "";
+				}
+				fields = fields.concat({
+					label: row.attribute,
+					fieldname: row.attribute,
+					fieldtype: fieldtype,
+					reqd: 0,
+					description: desc,
+				});
 			}
-			fields = fields.concat({
-				label: row.attribute,
-				fieldname: row.attribute,
-				fieldtype: fieldtype,
-				reqd: 0,
-				description: desc,
-			});
 		}
 
 		if (frm.doc.image) {

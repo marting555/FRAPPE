@@ -31,6 +31,12 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 				},
 			};
 		});
+		this.frm.set_query("expense_account", "items", function () {
+			return {
+				query: "erpnext.controllers.queries.get_expense_account",
+				filters: { company: doc.company },
+			};
+		});
 	}
 
 	onload() {
@@ -335,7 +341,9 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 				party_type: "Supplier",
 				account: this.frm.doc.credit_to,
 				price_list: this.frm.doc.buying_price_list,
-				fetch_payment_terms_template: cint(!this.frm.doc.ignore_default_payment_terms_template),
+				fetch_payment_terms_template: cint(
+					(this.frm.doc.is_return == 0) & !this.frm.doc.ignore_default_payment_terms_template
+				),
 			},
 			function () {
 				me.apply_pricing_rule();
@@ -390,6 +398,8 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 		hide_fields(this.frm.doc);
 		if (cint(this.frm.doc.is_paid)) {
 			this.frm.set_value("allocate_advances_automatically", 0);
+			this.frm.set_value("payment_terms_template", "");
+			this.frm.set_value("payment_schedule", []);
 			if (!this.frm.doc.company) {
 				this.frm.set_value("is_paid", 0);
 				frappe.msgprint(__("Please specify Company to proceed"));
@@ -440,6 +450,7 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 			frm: cur_frm,
 		});
 	}
+
 };
 
 cur_frm.script_manager.make(erpnext.accounts.PurchaseInvoice);
@@ -506,19 +517,6 @@ cur_frm.fields_dict["select_print_heading"].get_query = function (doc, cdt, cdn)
 	};
 };
 
-cur_frm.set_query("expense_account", "items", function (doc) {
-	return {
-		query: "erpnext.controllers.queries.get_expense_account",
-		filters: { company: doc.company },
-	};
-});
-
-cur_frm.set_query("wip_composite_asset", "items", function () {
-	return {
-		filters: { is_composite_asset: 1, docstatus: 0 },
-	};
-});
-
 cur_frm.cscript.expense_account = function (doc, cdt, cdn) {
 	var d = locals[cdt][cdn];
 	if (d.idx == 1 && d.expense_account) {
@@ -564,6 +562,15 @@ frappe.ui.form.on("Purchase Invoice", {
 			"Landed Cost Voucher": function () {
 				frm.trigger("create_landed_cost_voucher");
 			},
+		};
+		var list = frm.fields_dict['items'].grid.get_field('work_breakdown_structure').get_query = function (doc, cdt, cdn) {
+			var child = locals[cdt][cdn];
+			return {
+				filters: {
+					project : child.project,
+					is_group: 0
+				}
+			};
 		};
 
 		frm.set_query("additional_discount_account", function () {
@@ -648,11 +655,12 @@ frappe.ui.form.on("Purchase Invoice", {
 	},
 
 	onload: function (frm) {
-		if (frm.doc.__onload && frm.is_new()) {
-			if (frm.doc.supplier) {
+		frm.savecancel = function(btn, callback, on_error){ return frm._cancel(btn, callback, on_error, false);}
+		if (frm.doc.__onload && frm.doc.supplier) {
+			if (frm.is_new()) {
 				frm.doc.apply_tds = frm.doc.__onload.supplier_tds ? 1 : 0;
 			}
-			if (!frm.doc.__onload.enable_apply_tds) {
+			if (!frm.doc.__onload.supplier_tds) {
 				frm.set_df_property("apply_tds", "read_only", 1);
 			}
 		}
@@ -705,3 +713,48 @@ frappe.ui.form.on("Purchase Invoice", {
 		}
 	},
 });
+
+frappe.ui.form.on("Purchase Invoice Item", {
+    work_breakdown_structure: function(frm,cdt,cdn) {
+		let child = locals[cdt][cdn];
+		frappe.db.get_value("Work Breakdown Structure", child.work_breakdown_structure, ["wbs_name", 'locked', 'gl_account'])
+		.then(response => {
+			if (response.message && response.message.wbs_name) {
+				let wbs_name = response.message.wbs_name;
+				if (response.message.locked == 1) {
+					frappe.msgprint(__(`WBS "${child.work_breakdown_structure}" is locked`));
+					child.work_breakdown_structure = null;
+				} else {
+					child.wbs_name = wbs_name;
+				}
+				if (response.message.gl_account) {
+					child.expense_account = response.message.gl_account;
+				}
+			} else {
+				child.wbs_name = null;
+			}
+			let row = frm.fields_dict['items'].grid.get_row(cdn);
+			row.refresh_field('work_breakdown_structure')
+            row.refresh_field('wbs_name');
+			row.refresh_field('expense_account');
+		})
+	},
+	expense_account: function(frm,cdt,cdn) {
+		var child = locals[cdt][cdn];
+		if (child.work_breakdown_structure && child.expense_account) {
+			frappe.db.get_value("Work Breakdown Structure",child.work_breakdown_structure,'gl_account')
+			.then(response => {
+				if (response.message && response.message.gl_account) {
+					if (child.expense_account != response.message.gl_account) {
+						frappe.msgprint(__(`${child.expense_account} is not a GL Account of WBS ${child.work_breakdown_structure}`));
+						child.expense_account = null;
+						let row = frm.fields_dict['items'].grid.get_row(cdn);
+						row.refresh_field('expense_account');
+						row.refresh_field('work_breakdown_structure');
+					}
+				}
+			});
+		}
+	}
+});
+

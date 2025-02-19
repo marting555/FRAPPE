@@ -20,7 +20,6 @@ frappe.ui.form.on("Company", {
 	},
 	setup: function (frm) {
 		frm.__rename_queue = "long";
-		erpnext.company.setup_queries(frm);
 
 		frm.set_query("parent_company", function () {
 			return {
@@ -81,6 +80,7 @@ frappe.ui.form.on("Company", {
 	},
 
 	refresh: function (frm) {
+		erpnext.company.setup_queries(frm);
 		frm.toggle_display("address_html", !frm.is_new());
 
 		if (!frm.is_new()) {
@@ -251,6 +251,7 @@ erpnext.company.setup_queries = function (frm) {
 			["default_expense_account", { root_type: "Expense" }],
 			["default_income_account", { root_type: "Income" }],
 			["round_off_account", { root_type: "Expense" }],
+			["round_off_for_opening", { root_type: "Liability", account_type: "Round Off for Opening" }],
 			["write_off_account", { root_type: "Expense" }],
 			["default_deferred_expense_account", {}],
 			["default_deferred_revenue_account", {}],
@@ -262,22 +263,9 @@ erpnext.company.setup_queries = function (frm) {
 				"unrealized_exchange_gain_loss_account",
 				{ root_type: ["in", ["Expense", "Income", "Equity", "Liability"]] },
 			],
-			[
-				"accumulated_depreciation_account",
-				{ root_type: "Asset", account_type: "Accumulated Depreciation" },
-			],
-			["depreciation_expense_account", { root_type: "Expense", account_type: "Depreciation" }],
-			["disposal_account", { report_type: "Profit and Loss" }],
 			["default_inventory_account", { account_type: "Stock" }],
 			["cost_center", {}],
 			["round_off_cost_center", {}],
-			["depreciation_cost_center", {}],
-			[
-				"expenses_included_in_asset_valuation",
-				{ account_type: "Expenses Included In Asset Valuation" },
-			],
-			["capital_work_in_progress_account", { account_type: "Capital Work in Progress" }],
-			["asset_received_but_not_billed", { account_type: "Asset Received But Not Billed" }],
 			["unrealized_profit_loss_account", { root_type: ["in", ["Liability", "Asset"]] }],
 			["default_provisional_account", { root_type: ["in", ["Liability", "Asset"]] }],
 			["default_advance_received_account", { root_type: "Liability", account_type: "Receivable" }],

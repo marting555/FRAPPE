@@ -18,7 +18,6 @@ class JournalEntryAccount(Document):
 		account_currency: DF.Link | None
 		account_type: DF.Data | None
 		against_account: DF.Text | None
-		balance: DF.Currency
 		bank_account: DF.Link | None
 		cost_center: DF.Link | None
 		credit: DF.Currency
@@ -45,7 +44,6 @@ class JournalEntryAccount(Document):
 			"Sales Order",
 			"Purchase Order",
 			"Expense Claim",
-			"Asset",
 			"Loan",
 			"Payroll Entry",
 			"Employee Advance",

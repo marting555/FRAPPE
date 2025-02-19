@@ -29,11 +29,9 @@ class AccountsSettings(Document):
 		auto_reconcile_payments: DF.Check
 		automatically_fetch_payment_terms: DF.Check
 		automatically_process_deferred_accounting_entry: DF.Check
-		book_asset_depreciation_entry_automatically: DF.Check
 		book_deferred_entries_based_on: DF.Literal["Days", "Months"]
 		book_deferred_entries_via_journal_entry: DF.Check
 		book_tax_discount_loss: DF.Check
-		calculate_depr_using_total_days: DF.Check
 		check_supplier_invoice_uniqueness: DF.Check
 		create_pr_in_draft_status: DF.Check
 		credit_controller: DF.Link | None
@@ -43,9 +41,11 @@ class AccountsSettings(Document):
 		enable_fuzzy_matching: DF.Check
 		enable_immutable_ledger: DF.Check
 		enable_party_matching: DF.Check
+		exchange_gain_loss_posting_date: DF.Literal["Invoice", "Payment", "Reconciliation Date"]
 		frozen_accounts_modifier: DF.Link | None
 		general_ledger_remarks_length: DF.Int
 		ignore_account_closing_balance: DF.Check
+		ignore_is_opening_check_for_reporting: DF.Check
 		make_payment_via_journal_entry: DF.Check
 		merge_similar_account_heads: DF.Check
 		over_billing_allowance: DF.Currency

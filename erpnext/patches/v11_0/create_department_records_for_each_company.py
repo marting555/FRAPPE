@@ -36,7 +36,7 @@ def execute():
 			comp_dict[company.name][department.name] = copy_doc.name
 
 	rebuild_tree("Department", "parent_department")
-	doctypes = ["Asset", "Employee", "Payroll Entry", "Staffing Plan", "Job Opening"]
+	doctypes = ["Employee", "Payroll Entry", "Staffing Plan", "Job Opening"]
 
 	for d in doctypes:
 		update_records(d, comp_dict)

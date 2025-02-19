@@ -28,13 +28,10 @@ class Company(NestedSet):
 		from frappe.types import DF
 
 		abbr: DF.Data
-		accumulated_depreciation_account: DF.Link | None
 		allow_account_creation_against_child_company: DF.Check
-		asset_received_but_not_billed: DF.Link | None
 		auto_err_frequency: DF.Literal["Daily", "Weekly", "Monthly"]
 		auto_exchange_rate_revaluation: DF.Check
 		book_advance_payments_in_separate_party_account: DF.Check
-		capital_work_in_progress_account: DF.Link | None
 		chart_of_accounts: DF.Literal[None]
 		company_description: DF.TextEditor | None
 		company_logo: DF.AttachImage | None
@@ -68,9 +65,6 @@ class Company(NestedSet):
 		default_receivable_account: DF.Link | None
 		default_selling_terms: DF.Link | None
 		default_warehouse_for_sales_return: DF.Link | None
-		depreciation_cost_center: DF.Link | None
-		depreciation_expense_account: DF.Link | None
-		disposal_account: DF.Link | None
 		domain: DF.Data | None
 		email: DF.Data | None
 		enable_perpetual_inventory: DF.Check
@@ -87,12 +81,15 @@ class Company(NestedSet):
 		payment_terms: DF.Link | None
 		phone_no: DF.Data | None
 		reconcile_on_advance_payment_date: DF.Check
+		reconciliation_takes_effect_on: DF.Literal[
+			"Advance Payment Date", "Oldest Of Invoice Or Advance", "Reconciliation Date"
+		]
 		registration_details: DF.Code | None
 		rgt: DF.Int
 		round_off_account: DF.Link | None
 		round_off_cost_center: DF.Link | None
+		round_off_for_opening: DF.Link | None
 		sales_monthly_history: DF.SmallText | None
-		series_for_depreciation_entry: DF.Data | None
 		stock_adjustment_account: DF.Link | None
 		stock_received_but_not_billed: DF.Link | None
 		submit_err_jv: DF.Check
@@ -484,11 +481,6 @@ class Company(NestedSet):
 			"default_cash_account": "Cash",
 			"default_bank_account": "Bank",
 			"round_off_account": "Round Off",
-			"accumulated_depreciation_account": "Accumulated Depreciation",
-			"depreciation_expense_account": "Depreciation",
-			"capital_work_in_progress_account": "Capital Work in Progress",
-			"asset_received_but_not_billed": "Asset Received But Not Billed",
-			"expenses_included_in_asset_valuation": "Expenses Included In Asset Valuation",
 			"default_expense_account": "Cost of Goods Sold",
 		}
 
@@ -541,14 +533,6 @@ class Company(NestedSet):
 
 			self.db_set("exchange_gain_loss_account", exchange_gain_loss_acct)
 
-		if not self.disposal_account:
-			disposal_acct = frappe.db.get_value(
-				"Account",
-				{"account_name": _("Gain/Loss on Asset Disposal"), "company": self.name, "is_group": 0},
-			)
-
-			self.db_set("disposal_account", disposal_acct)
-
 	def _set_default_account(self, fieldname, account_type):
 		if self.get(fieldname):
 			return
@@ -599,7 +583,6 @@ class Company(NestedSet):
 
 		self.db_set("cost_center", _("Main") + " - " + self.abbr)
 		self.db_set("round_off_cost_center", _("Main") + " - " + self.abbr)
-		self.db_set("depreciation_cost_center", _("Main") + " - " + self.abbr)
 
 	def after_rename(self, olddn, newdn, merge=False):
 		self.db_set("company_name", newdn)
@@ -731,11 +714,11 @@ def update_company_current_month_sales(company):
 		f"""
 		SELECT
 			SUM(base_grand_total) AS total,
-			DATE_FORMAT(`posting_date`, '%m-%Y') AS month_year
+			TO_CHAR(`posting_date`, 'MM-YYYY') AS month_year
 		FROM
 			`tabSales Invoice`
 		WHERE
-			DATE_FORMAT(`posting_date`, '%m-%Y') = '{current_month_year}'
+			TO_CHAR(`posting_date`, 'MM-YYYY') = '{current_month_year}'
 			AND docstatus = 1
 			AND company = {frappe.db.escape(company)}
 		GROUP BY
@@ -792,7 +775,7 @@ def get_children(doctype, parent=None, company=None, is_root=False):
 		from
 			`tabCompany` comp
 		where
-			ifnull(parent_company, "")={frappe.db.escape(parent)}
+			 coalesce(parent_company, '') = {frappe.db.escape(parent)}
 		""",
 		as_dict=1,
 	)
@@ -851,7 +834,7 @@ def get_all_transactions_annual_history(company):
 		where
 			company=%s
 			and
-			transaction_date > date_sub(curdate(), interval 1 year)
+			transaction_date > CURRENT_DATE - INTERVAL '1 year'
 
 		group by
 			transaction_date
@@ -879,9 +862,9 @@ def get_timeline_data(doctype, name):
 		date_to_value_dict = None
 
 	if date_to_value_dict is None:
-		update_transactions_annual_history(name, True)
-		history = frappe.get_cached_value("Company", name, "transactions_annual_history")
-		return json.loads(history) if history and "{" in history else {}
+		frappe.enqueue(update_transactions_annual_history, company = name, commit = True)
+		history = get_all_transactions_annual_history(name)
+		return history if isinstance(history, dict) else {}
 
 	return date_to_value_dict
 
@@ -911,6 +894,12 @@ def get_default_company_address(name, sort_key="is_primary_address", existing_ad
 		return max(out, key=lambda x: x[1])[0]  # find max by sort_key
 	else:
 		return None
+
+@frappe.whitelist()
+def get_billing_shipping_address(name, billing_address=None, shipping_address=None):
+	primary_address = get_default_company_address(name, "is_primary_address", billing_address)
+	shipping_address = get_default_company_address(name, "is_shipping_address", shipping_address)
+	return {"primary_address": primary_address, "shipping_address": shipping_address}
 
 
 @frappe.whitelist()

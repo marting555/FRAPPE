@@ -48,8 +48,8 @@ frappe.ui.form.on("Payment Request", "refresh", function (frm) {
 	}
 
 	if (
-		(!frm.doc.payment_gateway_account || frm.doc.payment_request_type == "Outward") &&
-		frm.doc.status == "Initiated"
+		frm.doc.payment_request_type == "Outward" &&
+		["Initiated", "Partially Paid"].includes(frm.doc.status)
 	) {
 		frm.add_custom_button(__("Create Payment Entry"), function () {
 			frappe.call({
@@ -93,3 +93,7 @@ frappe.ui.form.on("Payment Request", "is_a_subscription", function (frm) {
 		});
 	}
 });
+
+frappe.ui.form.on("Payment Request", "is_payment_order_required", function (frm) {
+    frm.toggle_reqd("bank_account", frm.doc.is_payment_order_required);
+})

@@ -30,17 +30,11 @@ class Customer(TransactionBase):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
-		from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import (
-			AllowedToTransactWith,
-		)
+		from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import AllowedToTransactWith
 		from erpnext.accounts.doctype.party_account.party_account import PartyAccount
-		from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import (
-			CustomerCreditLimit,
-		)
-		from erpnext.selling.doctype.sales_team.sales_team import SalesTeam
+		from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import CustomerCreditLimit
 		from erpnext.utilities.doctype.portal_user.portal_user import PortalUser
+		from frappe.types import DF
 
 		account_manager: DF.Link | None
 		accounts: DF.Table[PartyAccount]
@@ -54,10 +48,8 @@ class Customer(TransactionBase):
 		customer_primary_contact: DF.Link | None
 		customer_type: DF.Literal["Company", "Individual", "Partnership"]
 		default_bank_account: DF.Link | None
-		default_commission_rate: DF.Float
 		default_currency: DF.Link | None
 		default_price_list: DF.Link | None
-		default_sales_partner: DF.Link | None
 		disabled: DF.Check
 		dn_required: DF.Check
 		email_id: DF.ReadOnly | None
@@ -67,19 +59,14 @@ class Customer(TransactionBase):
 		is_frozen: DF.Check
 		is_internal_customer: DF.Check
 		language: DF.Link | None
-		lead_name: DF.Link | None
 		loyalty_program: DF.Link | None
 		loyalty_program_tier: DF.Data | None
-		market_segment: DF.Link | None
 		mobile_no: DF.ReadOnly | None
 		naming_series: DF.Literal["CUST-.YYYY.-"]
-		opportunity_name: DF.Link | None
 		payment_terms: DF.Link | None
 		portal_users: DF.Table[PortalUser]
 		primary_address: DF.Text | None
-		prospect_name: DF.Link | None
 		represents_company: DF.Link | None
-		sales_team: DF.Table[SalesTeam]
 		salutation: DF.Link | None
 		so_required: DF.Check
 		tax_category: DF.Link | None
@@ -110,9 +97,12 @@ class Customer(TransactionBase):
 	def get_customer_name(self):
 		if frappe.db.get_value("Customer", self.customer_name) and not frappe.flags.in_import:
 			count = frappe.db.sql(
-				"""select ifnull(MAX(CAST(SUBSTRING_INDEX(name, ' ', -1) AS UNSIGNED)), 0) from tabCustomer
-				 where name like %s""",
-				f"%{self.customer_name} - %",
+				"""
+				SELECT COALESCE(MAX(CAST(SPLIT_PART(name, ' - ', 2) AS INTEGER)), 0)
+				FROM tabCustomer
+				WHERE name LIKE %s
+				""",
+				(f"%{self.customer_name} - %",),
 				as_list=1,
 			)[0][0]
 			count = cint(count) + 1
@@ -131,13 +121,10 @@ class Customer(TransactionBase):
 
 		return self.customer_name
 
-	def after_insert(self):
-		"""If customer created from Lead, update customer id in quotations, opportunities"""
-		self.update_lead_status()
+	
 
 	def validate(self):
 		self.flags.is_new_doc = self.is_new()
-		self.flags.old_lead = self.lead_name
 		validate_party_accounts(self)
 		self.validate_credit_limit_on_change()
 		self.set_loyalty_program()
@@ -153,6 +140,10 @@ class Customer(TransactionBase):
 			if self.loyalty_program == customer.loyalty_program and not self.loyalty_program_tier:
 				self.loyalty_program_tier = customer.loyalty_program_tier
 
+		# Ensure sales_team is initialized as an empty list if it’s None
+		if not hasattr(self, 'sales_team') or self.sales_team is None:
+			self.sales_team = []
+			
 		if self.sales_team:
 			if sum(member.allocated_percentage or 0 for member in self.sales_team) != 100:
 				frappe.throw(_("Total contribution percentage should be equal to 100"))
@@ -226,18 +217,22 @@ class Customer(TransactionBase):
 		self.create_primary_contact()
 		self.create_primary_address()
 
-		if self.flags.old_lead != self.lead_name:
-			self.update_lead_status()
-
-		if self.flags.is_new_doc:
-			self.link_lead_address_and_contact()
-			self.copy_communication()
 
 		self.update_customer_groups()
+	
+
 
 	def add_role_for_user(self):
 		for portal_user in self.portal_users:
 			add_role_for_portal_user(portal_user, "Customer")
+	
+	def create_primary_contact(self):
+		if not self.customer_primary_contact:
+			if self.mobile_no or self.email_id:
+				contact = make_contact(self)
+				self.db_set("customer_primary_contact", contact.name)
+				self.db_set("mobile_no", self.mobile_no)
+				self.db_set("email_id", self.email_id)
 
 	def update_customer_groups(self):
 		ignore_doctypes = ["Lead", "Opportunity", "POS Profile", "Tax Rule", "Pricing Rule"]
@@ -246,13 +241,9 @@ class Customer(TransactionBase):
 				"Customer", self.name, "Customer Group", self.customer_group, ignore_doctypes
 			)
 
-	def create_primary_contact(self):
-		if not self.customer_primary_contact and not self.lead_name:
-			if self.mobile_no or self.email_id:
-				contact = make_contact(self)
-				self.db_set("customer_primary_contact", contact.name)
-				self.db_set("mobile_no", self.mobile_no)
-				self.db_set("email_id", self.email_id)
+	
+
+	
 
 	def create_primary_address(self):
 		from frappe.contacts.doctype.address.address import get_address_display
@@ -264,41 +255,7 @@ class Customer(TransactionBase):
 			self.db_set("customer_primary_address", address.name)
 			self.db_set("primary_address", address_display)
 
-	def update_lead_status(self):
-		"""If Customer created from Lead, update lead status to "Converted"
-		update Customer link in Quotation, Opportunity"""
-		if self.lead_name:
-			frappe.db.set_value("Lead", self.lead_name, "status", "Converted")
 
-	def link_lead_address_and_contact(self):
-		if self.lead_name:
-			# assign lead address and contact to customer (if already not set)
-			linked_contacts_and_addresses = frappe.get_all(
-				"Dynamic Link",
-				filters=[
-					["parenttype", "in", ["Contact", "Address"]],
-					["link_doctype", "=", "Lead"],
-					["link_name", "=", self.lead_name],
-				],
-				fields=["parent as name", "parenttype as doctype"],
-			)
-
-			for row in linked_contacts_and_addresses:
-				linked_doc = frappe.get_doc(row.doctype, row.name)
-				if not linked_doc.has_link("Customer", self.name):
-					linked_doc.append("links", dict(link_doctype="Customer", link_name=self.name))
-					linked_doc.save(ignore_permissions=self.flags.ignore_permissions)
-
-	def copy_communication(self):
-		if not self.lead_name or not frappe.db.get_single_value(
-			"CRM Settings", "carry_forward_communication_and_comments"
-		):
-			return
-
-		from erpnext.crm.utils import copy_comments, link_communications
-
-		copy_comments("Lead", self.lead_name, self)
-		link_communications("Lead", self.lead_name, self)
 
 	def validate_name_with_customer_group(self):
 		if frappe.db.exists("Customer Group", self.name):
@@ -308,6 +265,13 @@ class Customer(TransactionBase):
 				),
 				frappe.NameError,
 			)
+
+	def on_trash(self):
+		if self.customer_primary_contact:
+			self.db_set("customer_primary_contact", None)
+		if self.customer_primary_address:
+			self.db_set("customer_primary_address", None)
+		delete_contact_and_address("Customer", self.name)
 
 	def validate_credit_limit_on_change(self):
 		if self.get("__islocal") or not self.credit_limits:
@@ -346,16 +310,6 @@ class Customer(TransactionBase):
 						"""New credit limit is less than current outstanding amount for the customer. Credit limit has to be atleast {0}"""
 					).format(outstanding_amt)
 				)
-
-	def on_trash(self):
-		if self.customer_primary_contact:
-			self.db_set("customer_primary_contact", None)
-		if self.customer_primary_address:
-			self.db_set("customer_primary_address", None)
-
-		delete_contact_and_address("Customer", self.name)
-		if self.lead_name:
-			frappe.db.sql("update `tabLead` set status='Interested' where name=%s", self.lead_name)
 
 	def after_rename(self, olddn, newdn, merge=False):
 		if frappe.defaults.get_global_default("cust_master_name") == "Customer Name":
@@ -703,16 +657,15 @@ def get_credit_limit(customer, company):
 
 	return flt(credit_limit)
 
-
 def make_contact(args, is_primary_contact=1):
 	values = {
 		"doctype": "Contact",
 		"is_primary_contact": is_primary_contact,
 		"links": [{"link_doctype": args.get("doctype"), "link_name": args.get("name")}],
 	}
-
 	party_type = args.customer_type if args.doctype == "Customer" else args.supplier_type
 	party_name_key = "customer_name" if args.doctype == "Customer" else "supplier_name"
+
 
 	if party_type == "Individual":
 		first, middle, last = parse_full_name(args.get(party_name_key))

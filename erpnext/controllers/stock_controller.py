@@ -64,6 +64,15 @@ class StockController(AccountsController):
 		self.validate_internal_transfer()
 		self.validate_putaway_capacity()
 
+	def validate_items_exist(self):
+		if not self.get("items"):
+			return
+		items = [d.item_code for d in self.get("items")]
+		exists_items = frappe.get_all("Item", filters={"name": ("in", items)}, pluck="name")
+		non_exists_items = set(items) - set(exists_items)
+		if non_exists_items:
+			frappe.throw(_("Items {0} do not exist in the Item master.").format(", ".join(non_exists_items)))
+
 	def validate_duplicate_serial_and_batch_bundle(self, table_name):
 		if not self.get(table_name):
 			return
@@ -129,7 +138,7 @@ class StockController(AccountsController):
 		from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 
 		is_material_issue = False
-		if self.doctype == "Stock Entry" and self.purpose == "Material Issue":
+		if self.doctype == "Stock Entry" and self.purpose in ["Material Issue", "Material Transfer"]:
 			is_material_issue = True
 
 		for d in self.get("items"):
@@ -306,6 +315,10 @@ class StockController(AccountsController):
 						"serial_no": "",
 					}
 				)
+				if self.doctype in ["Sales Invoice", "Delivery Note"]:
+					row.db_set(
+						"incoming_rate", frappe.db.get_value("Serial and Batch Bundle", bundle, "avg_rate")
+					)
 
 	def get_reference_ids(self, table_name, qty_field=None, bundle_field=None) -> tuple[str, list[str]]:
 		field = {
@@ -495,7 +508,7 @@ class StockController(AccountsController):
 									"account": warehouse_account[sle.warehouse]["account"],
 									"against": expense_account,
 									"cost_center": item_row.cost_center,
-									"project": item_row.project or self.get("project"),
+									"project": sle.get("project") or item_row.project or self.get("project") if "projects" in frappe.get_installed_apps() else "",
 									"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
 									"debit": flt(sle.stock_value_difference, precision),
 									"is_opening": item_row.get("is_opening")
@@ -515,7 +528,9 @@ class StockController(AccountsController):
 									"cost_center": item_row.cost_center,
 									"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
 									"debit": -1 * flt(sle.stock_value_difference, precision),
-									"project": item_row.get("project") or self.get("project"),
+									"project": sle.get("project")
+									or item_row.get("project")
+									or self.get("project") if "projects" in frappe.get_installed_apps() else "",
 									"is_opening": item_row.get("is_opening")
 									or self.get("is_opening")
 									or "No",
@@ -547,7 +562,7 @@ class StockController(AccountsController):
 							"account": expense_account,
 							"against": warehouse_asset_account,
 							"cost_center": item_row.cost_center,
-							"project": item_row.project or self.get("project"),
+							"project": item_row.project or self.get("project") if "projects" in frappe.get_installed_apps() else "",
 							"remarks": _("Rounding gain/loss Entry for Stock Transfer"),
 							"debit": sle_rounding_diff,
 							"is_opening": item_row.get("is_opening") or self.get("is_opening") or "No",
@@ -565,7 +580,7 @@ class StockController(AccountsController):
 							"cost_center": item_row.cost_center,
 							"remarks": _("Rounding gain/loss Entry for Stock Transfer"),
 							"credit": sle_rounding_diff,
-							"project": item_row.get("project") or self.get("project"),
+							"project": item_row.get("project") or self.get("project") if "projects" in frappe.get_installed_apps() else "",
 							"is_opening": item_row.get("is_opening") or self.get("is_opening") or "No",
 						},
 						item=item_row,
@@ -643,23 +658,38 @@ class StockController(AccountsController):
 
 	def get_stock_ledger_details(self):
 		stock_ledger = {}
-		stock_ledger_entries = frappe.db.sql(
-			"""
-			select
-				name, warehouse, stock_value_difference, valuation_rate,
-				voucher_detail_no, item_code, posting_date, posting_time,
-				actual_qty, qty_after_transaction
-			from
-				`tabStock Ledger Entry`
-			where
-				voucher_type=%s and voucher_no=%s and is_cancelled = 0
-		""",
-			(self.doctype, self.name),
-			as_dict=True,
-		)
+
+		table = frappe.qb.DocType("Stock Ledger Entry")
+		fields = [
+			table.name,
+			table.warehouse,
+			table.stock_value_difference,
+			table.valuation_rate,
+			table.voucher_detail_no,
+			table.item_code,
+			table.posting_date,
+			table.posting_time,
+			table.actual_qty,
+			table.qty_after_transaction,
+		]
+
+		# Conditionally add the project field if the Projects module is installed
+		if "projects" in frappe.get_installed_apps():
+			fields.insert(fields.index(table.posting_date), table.project)
+
+		stock_ledger_entries = (
+			frappe.qb.from_(table)
+			.select(*fields)
+			.where(
+				(table.voucher_type == self.doctype)
+				& (table.voucher_no == self.name)
+				& (table.is_cancelled == 0)
+			)
+		).run(as_dict=True)
 
 		for sle in stock_ledger_entries:
 			stock_ledger.setdefault(sle.voucher_detail_no, []).append(sle)
+			
 		return stock_ledger
 
 	def check_expense_account(self, item):
@@ -778,7 +808,7 @@ class StockController(AccountsController):
 				),
 				"incoming_rate": 0,
 				"company": self.company,
-				"project": d.get("project") or self.get("project"),
+				"project": d.get("project") or self.get("project") if "projects" in frappe.get_installed_apps() else "",
 				"is_cancelled": 1 if self.docstatus == 2 else 0,
 			}
 		)
@@ -802,6 +832,15 @@ class StockController(AccountsController):
 		dimensions = get_evaluated_inventory_dimension(row, sl_dict, parent_doc=self)
 		for dimension in dimensions:
 			if not dimension:
+				continue
+			
+			if (
+				self.doctype in ["Purchase Invoice", "Purchase Receipt"]
+				and row.get("rejected_warehouse")
+				and sl_dict.get("warehouse") == row.get("rejected_warehouse")
+			):
+				fieldname = f"rejected_{dimension.source_fieldname}"
+				sl_dict[dimension.target_fieldname] = row.get(fieldname)
 				continue
 
 			if self.doctype in [
@@ -954,6 +993,9 @@ class StockController(AccountsController):
 				qi_required = True
 			elif self.doctype == "Stock Entry" and row.t_warehouse:
 				qi_required = True  # inward stock needs inspection
+			
+			if row.get("is_scrap_item"):
+				continue
 
 			if qi_required:  # validate row only if inspection is required on item level
 				self.validate_qi_presence(row)
@@ -964,11 +1006,13 @@ class StockController(AccountsController):
 	def validate_qi_presence(self, row):
 		"""Check if QI is present on row level. Warn on save and stop on submit if missing."""
 		if not row.quality_inspection:
-			msg = f"Row #{row.idx}: Quality Inspection is required for Item {frappe.bold(row.item_code)}"
+			msg = _("Row #{0}: Quality Inspection is required for Item {1}").format(
+				row.idx, frappe.bold(row.item_code)
+			)
 			if self.docstatus == 1:
-				frappe.throw(_(msg), title=_("Inspection Required"), exc=QualityInspectionRequiredError)
+				frappe.throw(msg, title=_("Inspection Required"), exc=QualityInspectionRequiredError)
 			else:
-				frappe.msgprint(_(msg), title=_("Inspection Required"), indicator="blue")
+				frappe.msgprint(msg, title=_("Inspection Required"), indicator="blue")
 
 	def validate_qi_submission(self, row):
 		"""Check if QI is submitted on row level, during submission"""
@@ -977,11 +1021,13 @@ class StockController(AccountsController):
 
 		if not qa_docstatus == 1:
 			link = frappe.utils.get_link_to_form("Quality Inspection", row.quality_inspection)
-			msg = f"Row #{row.idx}: Quality Inspection {link} is not submitted for the item: {row.item_code}"
+			msg = _("Row #{0}: Quality Inspection {1} is not submitted for the item: {2}").format(
+				row.idx, link, row.item_code
+			)
 			if action == "Stop":
-				frappe.throw(_(msg), title=_("Inspection Submission"), exc=QualityInspectionNotSubmittedError)
+				frappe.throw(msg, title=_("Inspection Submission"), exc=QualityInspectionNotSubmittedError)
 			else:
-				frappe.msgprint(_(msg), alert=True, indicator="orange")
+				frappe.msgprint(msg, alert=True, indicator="orange")
 
 	def validate_qi_rejection(self, row):
 		"""Check if QI is rejected on row level, during submission"""
@@ -990,11 +1036,13 @@ class StockController(AccountsController):
 
 		if qa_status == "Rejected":
 			link = frappe.utils.get_link_to_form("Quality Inspection", row.quality_inspection)
-			msg = f"Row #{row.idx}: Quality Inspection {link} was rejected for item {row.item_code}"
+			msg = _("Row #{0}: Quality Inspection {1} was rejected for item {2}").format(
+				row.idx, link, row.item_code
+			)
 			if action == "Stop":
-				frappe.throw(_(msg), title=_("Inspection Rejected"), exc=QualityInspectionRejectedError)
+				frappe.throw(msg, title=_("Inspection Rejected"), exc=QualityInspectionRejectedError)
 			else:
-				frappe.msgprint(_(msg), alert=True, indicator="orange")
+				frappe.msgprint(msg, alert=True, indicator="orange")
 
 	def update_blanket_order(self):
 		blanket_orders = list(set([d.blanket_order for d in self.items if d.blanket_order]))
@@ -1549,11 +1597,10 @@ def future_sle_exists(args, sl_entries=None, allow_force_reposting=True):
 	data = frappe.db.sql(
 		"""
 		select item_code, warehouse, count(name) as total_row
-		from `tabStock Ledger Entry` force index (item_warehouse)
+		from "tabStock Ledger Entry"
 		where
 			({})
-			and timestamp(posting_date, posting_time)
-				>= timestamp(%(posting_date)s, %(posting_time)s)
+			and (posting_date + posting_time::time) >= %(posting_date)s::date + %(posting_time)s::time
 			and voucher_no != %(voucher_no)s
 			and is_cancelled = 0
 		GROUP BY
@@ -1708,6 +1755,9 @@ def make_bundle_for_material_transfer(**kwargs):
 	bundle_doc.calculate_qty_and_amount()
 	bundle_doc.flags.ignore_permissions = True
 	bundle_doc.flags.ignore_validate = True
-	bundle_doc.save(ignore_permissions=True)
+	if kwargs.do_not_submit:
+		bundle_doc.save(ignore_permissions=True)
+	else:
+		bundle_doc.submit()
 
 	return bundle_doc.name

@@ -6,13 +6,11 @@ import frappe
 
 
 def execute():
-	frappe.reload_doc("assets", "doctype", "Location")
 	for dt in (
 		"Account",
 		"Cost Center",
 		"File",
 		"Employee",
-		"Location",
 		"Task",
 		"Customer Group",
 		"Sales Person",

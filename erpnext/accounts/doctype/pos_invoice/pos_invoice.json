@@ -28,7 +28,6 @@
   "amended_from",
   "return_against",
   "accounting_dimensions_section",
-  "project",
   "dimension_col_break",
   "cost_center",
   "customer_po_details",
@@ -48,6 +47,7 @@
   "shipping_address",
   "company_address",
   "company_address_display",
+  "company_contact_person",
   "currency_and_price_list",
   "currency",
   "conversion_rate",
@@ -156,11 +156,9 @@
   "more_information",
   "inter_company_invoice_reference",
   "customer_group",
-  "campaign",
   "is_discounted",
   "col_break23",
   "status",
-  "source",
   "more_info",
   "debit_to",
   "party_account_currency",
@@ -168,7 +166,6 @@
   "column_break8",
   "remarks",
   "sales_team_section_break",
-  "sales_partner",
   "column_break10",
   "amount_eligible_for_commission",
   "commission_rate",
@@ -359,16 +356,6 @@
    "fieldname": "accounting_dimensions_section",
    "fieldtype": "Section Break",
    "label": "Accounting Dimensions"
-  },
-  {
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "in_global_search": 1,
-   "label": "Project",
-   "oldfieldname": "project_name",
-   "oldfieldtype": "Link",
-   "options": "Project",
-   "print_hide": 1
   },
   {
    "fieldname": "dimension_col_break",
@@ -1319,15 +1306,6 @@
    "print_hide": 1
   },
   {
-   "fieldname": "campaign",
-   "fieldtype": "Link",
-   "label": "Campaign",
-   "oldfieldname": "campaign",
-   "oldfieldtype": "Link",
-   "options": "Campaign",
-   "print_hide": 1
-  },
-  {
    "default": "0",
    "fieldname": "is_discounted",
    "fieldtype": "Check",
@@ -1350,15 +1328,6 @@
    "options": "\nDraft\nReturn\nCredit Note Issued\nConsolidated\nSubmitted\nPaid\nUnpaid\nUnpaid and Discounted\nOverdue and Discounted\nOverdue\nCancelled",
    "print_hide": 1,
    "read_only": 1
-  },
-  {
-   "fieldname": "source",
-   "fieldtype": "Link",
-   "label": "Source",
-   "oldfieldname": "source",
-   "oldfieldtype": "Select",
-   "options": "Lead Source",
-   "print_hide": 1
   },
   {
    "collapsible": 1,
@@ -1423,15 +1392,6 @@
    "label": "Commission",
    "oldfieldtype": "Section Break",
    "options": "fa fa-group",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "sales_partner",
-   "fieldtype": "Link",
-   "label": "Sales Partner",
-   "oldfieldname": "sales_partner",
-   "oldfieldtype": "Link",
-   "options": "Sales Partner",
    "print_hide": 1
   },
   {
@@ -1558,12 +1518,19 @@
    "fieldname": "update_billed_amount_in_delivery_note",
    "fieldtype": "Check",
    "label": "Update Billed Amount in Delivery Note"
+  },
+  {
+   "fieldname": "company_contact_person",
+   "fieldtype": "Link",
+   "label": "Company Contact Person",
+   "options": "Contact",
+   "print_hide": 1
   }
  ],
  "icon": "fa fa-file-text",
  "is_submittable": 1,
  "links": [],
- "modified": "2024-03-20 16:00:34.268756",
+ "modified": "2024-11-26 13:10:50.309570",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "POS Invoice",

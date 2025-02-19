@@ -44,7 +44,7 @@ def get_stock_ledger_entries(filters):
 		"Stock Ledger Entry",
 		fields=SLE_FIELDS,
 		filters={"item_code": filters.item_code, "warehouse": filters.warehouse, "is_cancelled": 0},
-		order_by="timestamp(posting_date, posting_time), creation",
+		order_by="posting_date, posting_time, creation",
 	)
 
 
@@ -52,7 +52,7 @@ def add_invariant_check_fields(sles):
 	balance_qty = 0.0
 	balance_stock_value = 0.0
 	for idx, sle in enumerate(sles):
-		queue = json.loads(sle.stock_queue)
+		queue = json.loads(sle.stock_queue) if sle.stock_queue else []
 
 		fifo_qty = 0.0
 		fifo_value = 0.0

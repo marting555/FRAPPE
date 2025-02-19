@@ -2,7 +2,7 @@
 # License: GNU General Public License v3. See license.txt
 
 
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 
 import frappe
 from frappe import _
@@ -121,16 +121,15 @@ class Batch(Document):
 			self.name = self.batch_id
 			return
 
-		create_new_batch, batch_number_series = frappe.db.get_value(
-			"Item", self.item, ["create_new_batch", "batch_number_series"]
-		)
+		item_doc = frappe.get_doc("Item", self.item)
 
-		if not create_new_batch:
+		if not item_doc.create_new_batch:
 			frappe.throw(_("Batch ID is mandatory"), frappe.MandatoryError)
 
 		while not self.batch_id:
-			if batch_number_series:
-				self.batch_id = make_autoname(batch_number_series, doc=self)
+			if item_doc.batch_number_series:
+				item_doc.validate_naming_series()
+				self.batch_id = make_autoname(item_doc.batch_number_series, doc=self)
 			elif batch_uses_naming_series():
 				self.batch_id = self.get_name_from_naming_series()
 			else:
@@ -218,6 +217,7 @@ def get_batch_qty(
 	posting_time=None,
 	ignore_voucher_nos=None,
 	for_stock_levels=False,
+	consider_negative_batches=False,
 ):
 	"""Returns batch actual qty if warehouse is passed,
 	        or returns dict of qty by warehouse if warehouse is None
@@ -243,7 +243,9 @@ def get_batch_qty(
 			"batch_no": batch_no,
 			"ignore_voucher_nos": ignore_voucher_nos,
 			"for_stock_levels": for_stock_levels,
+			"consider_negative_batches": consider_negative_batches,
 		}
+
 	)
 
 	batches = get_auto_batch_nos(kwargs)
@@ -449,11 +451,14 @@ def get_available_batches(kwargs):
 		get_auto_batch_nos,
 	)
 
-	batchwise_qty = defaultdict(float)
+	batchwise_qty = OrderedDict()
 
 	batches = get_auto_batch_nos(kwargs)
 	for batch in batches:
-		batchwise_qty[batch.get("batch_no")] += batch.get("qty")
+		if batch.get("batch_no") not in batchwise_qty:
+			batchwise_qty[batch.get("batch_no")] = batch.get("qty")
+		else:
+			batchwise_qty[batch.get("batch_no")] += batch.get("qty")
 
 	return batchwise_qty
 

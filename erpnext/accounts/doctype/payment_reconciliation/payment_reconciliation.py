@@ -153,10 +153,7 @@ class PaymentReconciliation(Document):
 		self.add_payment_entries(non_reconciled_payments)
 
 	def get_payment_entries(self):
-		if self.default_advance_account:
-			party_account = [self.receivable_payable_account, self.default_advance_account]
-		else:
-			party_account = [self.receivable_payable_account]
+		party_account = [self.receivable_payable_account]
 
 		order_doctype = "Sales Order" if self.party_type == "Customer" else "Purchase Order"
 		condition = frappe._dict(
@@ -187,6 +184,7 @@ class PaymentReconciliation(Document):
 			self.party,
 			party_account,
 			order_doctype,
+			default_advance_account=self.default_advance_account,
 			against_all_orders=True,
 			limit=self.payment_limit,
 			condition=condition,
@@ -211,12 +209,13 @@ class PaymentReconciliation(Document):
 		if self.get("cost_center"):
 			conditions.append(jea.cost_center == self.cost_center)
 
-		dr_or_cr = (
-			"credit_in_account_currency"
-			if erpnext.get_party_account_type(self.party_type) == "Receivable"
-			else "debit_in_account_currency"
-		)
-		conditions.append(jea[dr_or_cr].gt(0))
+		account_type = erpnext.get_party_account_type(self.party_type)
+
+		if account_type == "Receivable":
+			dr_or_cr = jea.credit_in_account_currency - jea.debit_in_account_currency
+		elif account_type == "Payable":
+			dr_or_cr = jea.debit_in_account_currency - jea.credit_in_account_currency
+		conditions.append(dr_or_cr.gt(0))
 
 		if self.bank_cash_account:
 			conditions.append(jea.against_account.like(f"%%{self.bank_cash_account}%%"))
@@ -231,7 +230,7 @@ class PaymentReconciliation(Document):
 				je.posting_date,
 				je.remark.as_("remarks"),
 				jea.name.as_("reference_row"),
-				jea[dr_or_cr].as_("amount"),
+				dr_or_cr.as_("amount"),
 				jea.is_advance,
 				jea.exchange_rate,
 				jea.account_currency.as_("currency"),
@@ -323,6 +322,7 @@ class PaymentReconciliation(Document):
 								"posting_date": inv.posting_date,
 								"currency": inv.currency,
 								"cost_center": inv.cost_center,
+								"remarks": inv.remarks,
 							}
 						)
 					)
@@ -334,6 +334,7 @@ class PaymentReconciliation(Document):
 		for payment in non_reconciled_payments:
 			row = self.append("payments", {})
 			row.update(payment)
+			row.is_advance = payment.book_advance_payments_in_separate_party_account
 
 	def get_invoice_entries(self):
 		# Fetch JVs, Sales and Purchase Invoices for 'invoices' to reconcile against
@@ -369,6 +370,11 @@ class PaymentReconciliation(Document):
 
 		if self.invoice_limit:
 			non_reconciled_invoices = non_reconciled_invoices[: self.invoice_limit]
+
+		non_reconciled_invoices = sorted(
+			non_reconciled_invoices, key=lambda k: k["posting_date"] or getdate(nowdate())
+		)
+		
 
 		self.add_invoice_entries(non_reconciled_invoices)
 
@@ -419,6 +425,10 @@ class PaymentReconciliation(Document):
 	def allocate_entries(self, args):
 		self.validate_entries()
 
+		exc_gain_loss_posting_date = frappe.db.get_single_value(
+			"Accounts Settings", "exchange_gain_loss_posting_date", cache=True
+		)
+
 		invoice_exchange_map = self.get_invoice_exchange_map(args.get("invoices"), args.get("payments"))
 		default_exchange_gain_loss_account = frappe.get_cached_value(
 			"Company", self.company, "exchange_gain_loss_account"
@@ -445,6 +455,11 @@ class PaymentReconciliation(Document):
 				res.difference_account = default_exchange_gain_loss_account
 				res.exchange_rate = inv.get("exchange_rate")
 				res.update({"gain_loss_posting_date": pay.get("posting_date")})
+				if not pay.get("is_advance"):
+					if exc_gain_loss_posting_date == "Invoice":
+						res.update({"gain_loss_posting_date": inv.get("invoice_date")})
+					elif exc_gain_loss_posting_date == "Reconciliation Date":
+						res.update({"gain_loss_posting_date": nowdate()})
 
 				if pay.get("amount") == 0:
 					entries.append(res)
@@ -511,7 +526,7 @@ class PaymentReconciliation(Document):
 				reconciled_entry.append(payment_details)
 
 		if entry_list:
-			reconcile_against_document(entry_list, skip_ref_details_update_for_pe, self.dimensions)
+			reconcile_against_document(entry_list, skip_ref_details_update_for_pe, self.dimensions, self.clearing_date)
 
 		if dr_or_cr_notes:
 			reconcile_dr_cr_note(dr_or_cr_notes, self.company, self.dimensions)
@@ -539,7 +554,7 @@ class PaymentReconciliation(Document):
 		self.validate_allocation()
 		self.reconcile_allocations()
 		msgprint(_("Successfully Reconciled"))
-
+		self.create_pay_rec_records()
 		self.get_unreconciled_entries()
 
 	def get_payment_details(self, row, dr_or_cr):
@@ -733,6 +748,37 @@ class PaymentReconciliation(Document):
 			conditions.append(je.total_debit.lte(self.maximum_payment_amount))
 
 		return conditions
+
+	def create_pay_rec_records(self):
+		"""
+		if reconciliation is succesfull then creating Payment Reconciliation Record
+		for storing the transactions which are created from payment reconciliation
+		"""
+
+		fields_to_include = [
+			"reference_type", "reference_name", "reference_row", "invoice_type",
+			"invoice_number", "allocated_amount", "unreconciled_amount", "amount",
+			"is_advance", "difference_amount", "gain_loss_posting_date",
+			"difference_account", "exchange_rate", "currency", "cost_center"
+		]
+
+		pay_rec = frappe.new_doc("Payment Reconciliation Record")
+		pay_rec.company = self.company
+		pay_rec.party_type = self.party_type
+		pay_rec.clearing_date = self.clearing_date
+		pay_rec.party = self.party
+		pay_rec.receivable_payable_account = self.receivable_payable_account
+		pay_rec.default_advance_account = self.default_advance_account
+
+		if self.allocation:
+			for allocation in self.allocation:
+				allocation_data = {field: allocation.get(field) for field in fields_to_include}
+				pay_rec.append("allocation", allocation_data)
+
+		# Save and submit the document
+		pay_rec.flags.ignore_permissions = True
+		pay_rec.save()
+		pay_rec.submit()
 
 
 def reconcile_dr_cr_note(dr_cr_notes, company, active_dimensions=None):

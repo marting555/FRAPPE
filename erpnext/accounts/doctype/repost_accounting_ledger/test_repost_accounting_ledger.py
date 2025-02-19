@@ -73,6 +73,7 @@ class TestRepostAccountingLedger(AccountsTestMixin, FrappeTestCase):
 			qb.from_(gl)
 			.select(gl.voucher_no, Sum(gl.debit).as_("debit"), Sum(gl.credit).as_("credit"))
 			.where((gl.voucher_no == si.name) & (gl.is_cancelled == 0))
+			.groupby(gl.voucher_no)
 			.run()
 		)
 
@@ -86,6 +87,7 @@ class TestRepostAccountingLedger(AccountsTestMixin, FrappeTestCase):
 			qb.from_(gl)
 			.select(gl.voucher_no, Sum(gl.debit).as_("debit"), Sum(gl.credit).as_("credit"))
 			.where((gl.voucher_no == si.name) & (gl.is_cancelled == 0))
+			.groupby(gl.voucher_no)
 			.run()
 		)
 
@@ -129,13 +131,14 @@ class TestRepostAccountingLedger(AccountsTestMixin, FrappeTestCase):
 			cost_center=self.cost_center,
 			rate=100,
 		)
+		fy = get_fiscal_year(today(), company=self.company)
 		pcv = frappe.get_doc(
 			{
 				"doctype": "Period Closing Voucher",
 				"transaction_date": today(),
 				"posting_date": today(),
 				"company": self.company,
-				"fiscal_year": get_fiscal_year(today(), company=self.company)[0],
+				"fiscal_year": fy[0],
 				"cost_center": self.cost_center,
 				"closing_account_head": self.retained_earnings,
 				"remarks": "test",

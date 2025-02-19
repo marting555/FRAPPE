@@ -16,7 +16,6 @@
   "is_default",
   "allow_alternative_item",
   "set_rate_of_sub_assembly_item_based_on_bom",
-  "project",
   "image",
   "currency_detail",
   "rm_cost_as_per",
@@ -373,14 +372,6 @@
    "options": "Company:company:default_currency",
    "print_hide": 1,
    "read_only": 1
-  },
-  {
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "oldfieldname": "project",
-   "oldfieldtype": "Link",
-   "options": "Project"
   },
   {
    "fieldname": "amended_from",

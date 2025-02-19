@@ -8,7 +8,6 @@ from frappe.custom.doctype.property_setter.property_setter import make_property_
 doctype_series_map = {
 	"Additional Salary": "HR-ADS-.YY.-.MM.-",
 	"Appraisal": "HR-APR-.YY.-.MM.",
-	"Asset": "ACC-ASS-.YYYY.-",
 	"Attendance": "HR-ATT-.YYYY.-",
 	"Auto Repeat": "SYS-ARP-.YYYY.-",
 	"Blanket Order": "MFG-BLR-.YYYY.-",

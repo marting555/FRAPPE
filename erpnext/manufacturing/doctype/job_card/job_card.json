@@ -54,7 +54,6 @@
   "hour_rate",
   "for_operation",
   "more_information",
-  "project",
   "item_name",
   "transferred_qty",
   "requested_qty",
@@ -210,12 +209,6 @@
    "fieldtype": "Float",
    "label": "Requested Qty",
    "read_only": 1
-  },
-  {
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "options": "Project"
   },
   {
    "fieldname": "remarks",

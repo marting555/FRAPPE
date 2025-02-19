@@ -5,7 +5,7 @@ import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_field
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import nowdate, nowtime
-
+from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import InventoryDimensionNegativeStockError
 from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 from erpnext.stock.doctype.inventory_dimension.inventory_dimension import (
 	CanNotBeChildDoc,
@@ -265,23 +265,44 @@ class TestInventoryDimension(FrappeTestCase):
 			apply_to_all_doctypes=1,
 		)
 
-		item_code = "Test Inventory Dimension Item"
-		create_item(item_code)
-		warehouse = create_warehouse("Store Warehouse")
+		rj_warehouse = create_warehouse("RJ Warehouse")
+		if not frappe.db.exists("Store", "Rejected Store"):
+			frappe.get_doc({"doctype": "Store", "store_name": "Rejected Store"}).insert(
+				ignore_permissions=True
+			)
 
 		# Purchase Receipt -> Inward in Store 1
 		pr_doc = make_purchase_receipt(
-			item_code=item_code, warehouse=warehouse, qty=10, rate=100, do_not_submit=True
+			item_code=item_code,
+			warehouse=warehouse,
+			qty=10,
+			rejected_qty=5,
+			rate=100,
+			rejected_warehouse=rj_warehouse,
+			do_not_submit=True,
 		)
 
 		pr_doc.items[0].store = "Store 1"
+		pr_doc.items[0].rejected_store = "Rejected Store"
 		pr_doc.save()
 		pr_doc.submit()
 
-		entries = get_voucher_sl_entries(pr_doc.name, ["warehouse", "store", "incoming_rate"])
+		entries = frappe.get_all(
+			"Stock Ledger Entry",
+			filters={"voucher_no": pr_doc.name, "warehouse": warehouse},
+			fields=["store"],
+			order_by="creation",
+		)
 
-		self.assertEqual(entries[0].warehouse, warehouse)
 		self.assertEqual(entries[0].store, "Store 1")
+
+		entries = frappe.get_all(
+			"Stock Ledger Entry",
+			filters={"voucher_no": pr_doc.name, "warehouse": rj_warehouse},
+			fields=["store"],
+			order_by="creation",
+		)
+		self.assertEqual(entries[0].store, "Rejected Store")
 
 		# Stock Entry -> Transfer from Store 1 to Store 2
 		se_doc = make_stock_entry(
@@ -428,7 +449,7 @@ class TestInventoryDimension(FrappeTestCase):
 
 		doc = make_stock_entry(item_code=item_code, source=warehouse, qty=10, do_not_submit=True)
 		doc.items[0].inv_site = "Site 1"
-		self.assertRaises(frappe.ValidationError, doc.submit)
+		self.assertRaises(InventoryDimensionNegativeStockError, doc.submit)
 		doc.reload()
 		if doc.docstatus == 1:
 			doc.cancel()
@@ -444,10 +465,15 @@ class TestInventoryDimension(FrappeTestCase):
 
 		self.assertEqual(site_name, "Site 1")
 
+		# Receive another 100 qty without inventory dimension
+		doc = make_stock_entry(item_code=item_code, target=warehouse, qty=100)
+
+		# Try issuing 100 qty, more than available stock against inventory dimension
+		# Note: total available qty for the item is 110, but against inventory dimension, only 10 qty is available
 		doc = make_stock_entry(item_code=item_code, source=warehouse, qty=100, do_not_submit=True)
 
 		doc.items[0].inv_site = "Site 1"
-		self.assertRaises(frappe.ValidationError, doc.submit)
+		self.assertRaises(InventoryDimensionNegativeStockError, doc.submit)
 
 		inv_dimension.reload()
 		inv_dimension.db_set("validate_negative_stock", 0)

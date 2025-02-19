@@ -138,8 +138,8 @@ class StockReconciliation(StockController):
 						"voucher_type": self.doctype,
 						"voucher_no": self.name,
 						"voucher_detail_no": row.name,
-						"qty": row.current_qty,
-						"type_of_transaction": "Outward",
+						"qty": row.current_qty * -1,
+						"type_of_transaction": "Outward" if row.current_qty > 0 else "Inward",
 						"company": self.company,
 						"is_rejected": 0,
 						"serial_nos": get_serial_nos(row.current_serial_no)
@@ -320,6 +320,7 @@ class StockReconciliation(StockController):
 				row.item_code,
 				posting_date=self.posting_date,
 				posting_time=self.posting_time,
+				for_stock_levels=True,
 			)
 
 			total_current_qty += current_qty
@@ -425,6 +426,7 @@ class StockReconciliation(StockController):
 				batch_no=item.batch_no,
 				inventory_dimensions_dict=inventory_dimensions_dict,
 				row=item,
+				company=self.company,
 			)
 
 			if (
@@ -684,7 +686,7 @@ class StockReconciliation(StockController):
 		from erpnext.stock.stock_ledger import get_stock_value_difference
 
 		difference_amount = get_stock_value_difference(
-			row.item_code, row.warehouse, self.posting_date, self.posting_time
+			row.item_code, row.warehouse, self.posting_date, self.posting_time, self.name
 		)
 
 		if not difference_amount:
@@ -933,6 +935,7 @@ class StockReconciliation(StockController):
 					self.posting_date,
 					self.posting_time,
 					row=row,
+					company=self.company,
 				)
 
 				current_qty = item_dict.get("qty")
@@ -1050,6 +1053,7 @@ class StockReconciliation(StockController):
 					posting_date=doc.posting_date,
 					posting_time=doc.posting_time,
 					ignore_voucher_nos=[doc.voucher_no],
+					for_stock_levels=True,
 				)
 				or 0
 			) * -1
@@ -1177,21 +1181,32 @@ def get_items_for_stock_reco(warehouse, company):
 
 	items += frappe.db.sql(
 		"""
-		select
-			i.name as item_code, i.item_name, id.default_warehouse as warehouse, i.has_serial_no, i.has_batch_no
-		from
-			`tabItem` i, `tabItem Default` id
-		where
-			i.name = id.parent
-			and exists(
-				select name from `tabWarehouse` where lft >= %s and rgt <= %s and name=id.default_warehouse and is_group = 0
-			)
-			and i.is_stock_item = 1
-			and i.has_variants = 0
-			and IFNULL(i.disabled, 0) = 0
-			and id.company = %s
-		group by i.name
-	""",
+    select
+        i.name as item_code,
+        i.item_name,
+        id.default_warehouse as warehouse,
+        i.has_serial_no,
+        i.has_batch_no
+    from
+        `tabItem` i
+    inner join
+        `tabItem Default` id on i.name = id.parent
+    where
+        exists (
+            select name from `tabWarehouse`
+            where lft >= %s and rgt <= %s and name=id.default_warehouse and is_group = 0
+        )
+        and i.is_stock_item = 1
+        and i.has_variants = 0
+        and IFNULL(i.disabled, 0) = 0
+        and id.company = %s
+    group by
+        i.name,
+        i.item_name,
+        id.default_warehouse,
+        i.has_serial_no,
+        i.has_batch_no
+    """,
 		(lft, rgt, company),
 		as_dict=1,
 	)
@@ -1267,6 +1282,7 @@ def get_stock_balance_for(
 	with_valuation_rate: bool = True,
 	inventory_dimensions_dict=None,
 	row=None,
+	company=None,
 ):
 	frappe.has_permission("Stock Reconciliation", "write", throw=True)
 
@@ -1315,7 +1331,32 @@ def get_stock_balance_for(
 		qty, rate = data
 
 	if item_dict.get("has_batch_no"):
-		qty = get_batch_qty(batch_no, warehouse, posting_date=posting_date, posting_time=posting_time) or 0
+		qty = (
+			get_batch_qty(
+				batch_no,
+				warehouse,
+				posting_date=posting_date,
+				posting_time=posting_time,
+				for_stock_levels=True,
+				consider_negative_batches=True,
+			)
+			or 0
+		)
+
+		if row.use_serial_batch_fields and row.batch_no:
+			rate = get_incoming_rate(
+				frappe._dict(
+					{
+						"item_code": row.item_code,
+						"warehouse": row.warehouse,
+						"qty": row.qty * -1,
+						"batch_no": row.batch_no,
+						"company": company,
+						"posting_date": posting_date,
+						"posting_time": posting_time,
+					}
+				)
+			)
 
 	return {
 		"qty": qty,

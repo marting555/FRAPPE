@@ -533,8 +533,64 @@ class TestSubscription(FrappeTestCase):
 		subscription.reload()
 		self.assertEqual(len(subscription.invoices), 0)
 
+	def test_subscription_plan_with_subscription_TC_ACC_085(self):
+			create_plan(plan_name="_Test Plan For PI", cost=900, currency="INR")
+
+			subscription = create_subscription(
+				start_date=nowdate(),
+				party_type="Supplier",
+				party="_Test Supplier",
+				plans=[{"plan": "_Test Plan For PI", "qty": 1}],
+				generate_invoice_at="Beginning of the current subscription period",
+				generate_new_invoices_past_due_date=1,
+				submit_invoice=1,
+			)
+			self.assertEqual(subscription.plans[0].plan, "_Test Plan For PI")
+    
+	def test_subscription_plan_with_template_for_pi_TC_ACC_086(self):
+		create_plan(plan_name="_Test Plan For PI", cost=900, currency="INR")
+
+		subscription = create_subscription(
+			start_date=nowdate(),
+			party_type="Supplier",
+			party="_Test Supplier",
+			plans=[{"plan": "_Test Plan For PI", "qty": 1}],
+			generate_invoice_at="Beginning of the current subscription period",
+			generate_new_invoices_past_due_date=1,
+			submit_invoice=1,
+		)
+		self.assertEqual(subscription.plans[0].plan, "_Test Plan For PI")
+		subscription.process(posting_date=nowdate())
+		self.assertEqual(len(subscription.invoices), 1)
+		invoice = frappe.get_doc("Purchase Invoice", subscription.invoices[0].name)
+		self.assertEqual(invoice.status, "Unpaid")
+		self.assertEqual(invoice.supplier, "_Test Supplier")
+
+		
+	def test_subscription_plan_with_template_for_si_TC_ACC_087(self):
+		create_plan(plan_name="_Test Plan For SI", cost=900, currency="INR")
+
+		subscription = create_subscription(
+			start_date=nowdate(),
+			party_type="Customer",
+			party="_Test Customer",
+			plans=[{"plan": "_Test Plan For SI", "qty": 1}],
+			generate_invoice_at="Beginning of the current subscription period",
+			generate_new_invoices_past_due_date=1,
+			submit_invoice=1,
+		)
+		self.assertEqual(subscription.plans[0].plan, "_Test Plan For SI")
+		subscription.process(posting_date=nowdate())
+		self.assertEqual(len(subscription.invoices), 1)
+		invoice = frappe.get_doc("Sales Invoice", subscription.invoices[0].name)
+		self.assertEqual(invoice.status, "Unpaid")
+		self.assertEqual(invoice.customer, "_Test Customer")
+		
+
+  
 
 def make_plans():
+	
 	create_plan(plan_name="_Test Plan Name", cost=900, currency="INR")
 	create_plan(plan_name="_Test Plan Name 2", cost=1999, currency="INR")
 	create_plan(
@@ -572,20 +628,20 @@ def create_parties():
 		supplier = frappe.new_doc("Supplier")
 		supplier.supplier_name = "_Test Supplier"
 		supplier.supplier_group = "All Supplier Groups"
-		supplier.insert()
+		supplier.insert(ignore_permissions=True)
 
 	if not frappe.db.exists("Customer", "_Test Subscription Customer"):
 		customer = frappe.new_doc("Customer")
 		customer.customer_name = "_Test Subscription Customer"
 		customer.default_currency = "USD"
 		customer.append("accounts", {"company": "_Test Company", "account": "_Test Receivable USD - _TC"})
-		customer.insert()
+		customer.insert(ignore_permissions=True)
 
 	if not frappe.db.exists("Customer", "_Test Subscription Customer John Doe"):
 		customer = frappe.new_doc("Customer")
 		customer.customer_name = "_Test Subscription Customer John Doe"
 		customer.append("accounts", {"company": "_Test Company", "account": "_Test Receivable - _TC"})
-		customer.insert()
+		customer.insert(ignore_permissions=True)
 
 
 def reset_settings():

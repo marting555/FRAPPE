@@ -58,7 +58,10 @@ def get_stock_value_from_bin(warehouse=None, item_code=None):
 
 
 def get_stock_value_on(
-	warehouses: list | str | None = None, posting_date: str | None = None, item_code: str | None = None
+	warehouses: list | str | None = None,
+	posting_date: str | None = None,
+	item_code: str | None = None,
+	company: str | None = None,
 ) -> float:
 	if not posting_date:
 		posting_date = nowdate()
@@ -83,6 +86,9 @@ def get_stock_value_on(
 
 	if item_code:
 		query = query.where(sle.item_code == item_code)
+	
+	if company:
+		query = query.where(sle.company == company)
 
 	return query.run(as_list=True)[0][0]
 
@@ -167,7 +173,8 @@ def get_latest_stock_qty(item_code, warehouse=None):
 		if is_group:
 			values.extend([lft, rgt])
 			condition += "and exists (\
-				select name from `tabWarehouse` wh where wh.name = tabBin.warehouse\
+				select wh.name from `tabWarehouse` wh \
+				INNER JOIN `tabBin` bin ON bin.warehouse = wh.name \
 				and wh.lft >= %s and wh.rgt <= %s)"
 
 		else:
@@ -175,8 +182,8 @@ def get_latest_stock_qty(item_code, warehouse=None):
 			condition += " AND warehouse = %s"
 
 	actual_qty = frappe.db.sql(
-		f"""select sum(actual_qty) from tabBin
-		where item_code=%s {condition}""",
+		f"""select sum(bin.actual_qty) from `tabBin` bin
+		where bin.item_code=%s {condition}""",
 		values,
 	)[0][0]
 

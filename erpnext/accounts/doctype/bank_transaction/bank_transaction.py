@@ -120,8 +120,17 @@ class BankTransaction(Document):
 	def on_cancel(self):
 		for payment_entry in self.payment_entries:
 			self.clear_linked_payment_entry(payment_entry, for_cancel=True)
-
 		self.set_status()
+
+	def before_save(self):
+		if self.deposit > 0 and self.withdrawal == 0:
+			if frappe.db.exists("Bank Transaction", {'date':self.date, 'deposit':self.deposit, 'reference_number': self.reference_number, 'description': self.description, 'docstatus':1}) :
+				frappe.throw("Entry already exists")
+		elif self.deposit == 0 and self.withdrawal > 0:
+			if frappe.db.exists("Bank Transaction", {'date':self.date, 'withdrawal':self.withdrawal, 'reference_number': self.reference_number, 'description': self.description, 'docstatus':1}) :
+				frappe.throw("Entry already exists")
+			
+
 
 	def add_payment_entries(self, vouchers):
 		"Add the vouchers with zero allocation. Save() will perform the allocations and clearance"
@@ -171,8 +180,8 @@ class BankTransaction(Document):
 				elif 0.0 < unallocated_amount <= remaining_amount:
 					payment_entry.allocated_amount = unallocated_amount
 					remaining_amount -= unallocated_amount
-					if should_clear:
-						latest_transaction.clear_linked_payment_entry(payment_entry)
+					# if should_clear:
+					latest_transaction.clear_linked_payment_entry(payment_entry)
 
 				elif 0.0 < unallocated_amount:
 					payment_entry.allocated_amount = remaining_amount
@@ -355,6 +364,7 @@ def get_paid_amount(payment_entry, currency, gl_bank_account):
 				"Journal Entry Account",
 				{"parent": payment_entry.payment_entry, "account": gl_bank_account},
 				"sum(debit_in_account_currency-credit_in_account_currency)",
+				order_by=None
 			)
 			or 0
 		)
@@ -386,12 +396,6 @@ def get_paid_amount(payment_entry, currency, gl_bank_account):
 
 def set_voucher_clearance(doctype, docname, clearance_date, self):
 	if doctype in get_doctypes_for_bank_reconciliation():
-		if (
-			doctype == "Payment Entry"
-			and frappe.db.get_value("Payment Entry", docname, "payment_type") == "Internal Transfer"
-			and len(get_reconciled_bank_transactions(doctype, docname)) < 2
-		):
-			return
 
 		if doctype == "Sales Invoice":
 			frappe.db.set_value(

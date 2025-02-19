@@ -21,6 +21,7 @@
   "party_name",
   "book_advance_payments_in_separate_party_account",
   "reconcile_on_advance_payment_date",
+  "advance_reconciliation_takes_effect_on",
   "column_break_11",
   "bank_account",
   "party_bank_account",
@@ -56,7 +57,6 @@
   "section_break_34",
   "total_allocated_amount",
   "base_total_allocated_amount",
-  "set_exchange_gain_loss",
   "column_break_36",
   "unallocated_amount",
   "difference_amount",
@@ -81,7 +81,6 @@
   "reference_date",
   "clearance_date",
   "accounting_dimensions_section",
-  "project",
   "dimension_col_break",
   "cost_center",
   "section_break_12",
@@ -391,11 +390,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "set_exchange_gain_loss",
-   "fieldtype": "Button",
-   "label": "Set Exchange Gain / Loss"
-  },
-  {
    "fieldname": "column_break_36",
    "fieldtype": "Column Break"
   },
@@ -477,14 +471,6 @@
    "fieldname": "section_break_12",
    "fieldtype": "Section Break",
    "label": "More Information"
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "options": "Project",
-   "print_hide": 1
   },
   {
    "fieldname": "remarks",
@@ -788,6 +774,16 @@
    "options": "No\nYes",
    "print_hide": 1,
    "search_index": 1
+  },
+  {
+   "default": "Oldest Of Invoice Or Advance",
+   "fetch_from": "company.reconciliation_takes_effect_on",
+   "fieldname": "advance_reconciliation_takes_effect_on",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Advance Reconciliation Takes Effect On",
+   "no_copy": 1,
+   "options": "Advance Payment Date\nOldest Of Invoice Or Advance\nReconciliation Date"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -801,7 +797,7 @@
    "table_fieldname": "payment_entries"
   }
  ],
- "modified": "2024-05-31 17:07:06.197249",
+ "modified": "2025-01-13 16:03:47.169699",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payment Entry",

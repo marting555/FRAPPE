@@ -114,7 +114,7 @@ class Budget(Document):
 
 	def set_null_value(self):
 		if self.budget_against == "Cost Center":
-			self.project = None
+			return
 		else:
 			self.cost_center = None
 
@@ -398,7 +398,7 @@ def get_requested_amount(args):
 	condition = get_other_condition(args, "Material Request")
 
 	data = frappe.db.sql(
-		""" select ifnull((sum(child.stock_qty - child.ordered_qty) * rate), 0) as amount
+		""" select ifnull(sum((child.stock_qty - child.ordered_qty) * child.rate), 0) as amount
 		from `tabMaterial Request Item` child, `tabMaterial Request` parent where parent.name = child.parent and
 		child.item_code = %s and parent.docstatus = 1 and child.stock_qty > child.ordered_qty and {} and
 		parent.material_request_type = 'Purchase' and parent.status != 'Stopped'""".format(condition),
@@ -451,6 +451,12 @@ def get_actual_expense(args):
 	budget_against_field = args.get("budget_against_field")
 	condition1 = " and gle.posting_date <= %(month_end_date)s" if args.get("month_end_date") else ""
 
+	# Check if the doctype is a tree and set args.is_tree accordingly
+	if frappe.get_meta(args.budget_against_doctype).is_tree:
+		args.is_tree = True
+	else:
+		args.is_tree = False
+
 	if args.is_tree:
 		lft_rgt = frappe.db.get_value(
 			args.budget_against_doctype, args.get(budget_against_field), ["lft", "rgt"], as_dict=1
@@ -490,13 +496,18 @@ def get_actual_expense(args):
 def get_accumulated_monthly_budget(monthly_distribution, posting_date, fiscal_year, annual_budget):
 	distribution = {}
 	if monthly_distribution:
-		for d in frappe.db.sql(
-			"""select mdp.month, mdp.percentage_allocation
-			from `tabMonthly Distribution Percentage` mdp, `tabMonthly Distribution` md
-			where mdp.parent=md.name and md.fiscal_year=%s""",
-			fiscal_year,
-			as_dict=1,
-		):
+		mdp = frappe.qb.DocType("Monthly Distribution Percentage")
+		md = frappe.qb.DocType("Monthly Distribution")
+		res = (
+			frappe.qb.from_(mdp)
+			.join(md)
+			.on(mdp.parent == md.name)
+			.select(mdp.month, mdp.percentage_allocation)
+			.where(md.fiscal_year == fiscal_year)
+			.where(md.name == monthly_distribution)
+			.run(as_dict=True)
+		)
+		for d in res:
 			distribution.setdefault(d.month, d.percentage_allocation)
 
 	dt = frappe.get_cached_value("Fiscal Year", fiscal_year, "year_start_date")

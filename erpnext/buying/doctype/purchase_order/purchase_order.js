@@ -25,6 +25,18 @@ frappe.ui.form.on("Purchase Order", {
 			});
 		}
 
+		var list = frm.fields_dict['items'].grid.get_field('work_breakdown_structure').get_query = function (doc, cdt, cdn) {
+			var child = locals[cdt][cdn];
+			return {
+				filters: {
+					project : child.project,
+					is_group: 0
+				}
+			};
+		};
+		
+
+
 		frm.set_indicator_formatter("item_code", function (doc) {
 			return doc.qty <= doc.received_qty ? "green" : "orange";
 		});
@@ -65,10 +77,33 @@ frappe.ui.form.on("Purchase Order", {
 		}
 	},
 
+	supplier: function (frm) {
+		// Do not update if inter company reference is there as the details will already be updated
+		if (frm.updating_party_details || frm.doc.inter_company_invoice_reference) return;
+		if (frm.doc.__onload && frm.doc.__onload.load_after_mapping) return;
+		erpnext.utils.get_party_details(
+			frm,
+			"erpnext.accounts.party.get_party_details",
+			{
+				posting_date: frm.doc.transaction_date,
+				bill_date: frm.doc.bill_date,
+				party: frm.doc.supplier,
+				party_type: "Supplier",
+				account: frm.doc.credit_to,
+				price_list: frm.doc.buying_price_list,
+				fetch_payment_terms_template: cint(!frm.doc.ignore_default_payment_terms_template),
+			},
+			function () {
+				frm.set_df_property("apply_tds", "read_only", frm.supplier_tds ? 0 : 1);
+				frm.set_df_property("tax_withholding_category", "hidden", frm.supplier_tds ? 0 : 1);
+			}
+		);
+	},
+
 	get_materials_from_supplier: function (frm) {
 		let po_details = [];
 
-		if (frm.doc.supplied_items && (flt(frm.doc.per_received, 2) == 100 || frm.doc.status === "Closed")) {
+		if (frm.doc.supplied_items && (flt(frm.doc.per_received) == 100 || frm.doc.status === "Closed")) {
 			frm.doc.supplied_items.forEach((d) => {
 				if (d.total_supplied_qty && d.total_supplied_qty != d.consumed_qty) {
 					po_details.push(d.name);
@@ -104,12 +139,26 @@ frappe.ui.form.on("Purchase Order", {
 
 	onload: function (frm) {
 		set_schedule_date(frm);
+		frm.savecancel = function(btn, callback, on_error){ console.log("jiiri");return frm._cancel(btn, callback, on_error, false);}
 		if (!frm.doc.transaction_date) {
 			frm.set_value("transaction_date", frappe.datetime.get_today());
 		}
 
+		if (frm.doc.__onload && frm.doc.supplier) {
+			if (frm.is_new()) {
+				frm.doc.apply_tds = frm.doc.__onload.supplier_tds ? 1 : 0;
+			}
+			if (!frm.doc.__onload.supplier_tds) {
+				frm.set_df_property("apply_tds", "read_only", 1);
+			}
+		}
+
 		erpnext.queries.setup_queries(frm, "Warehouse", function () {
-			return erpnext.queries.warehouse(frm.doc);
+			return  {
+				filters: {
+					company:frm.doc.company,
+				},
+			};
 		});
 
 		// On cancel and amending a purchase order with advance payment, reset advance paid amount
@@ -248,6 +297,61 @@ frappe.ui.form.on("Purchase Order Item", {
 			}
 		}
 	},
+	project: function(frm,cdt,cdn) {
+		let child = locals[cdt][cdn];
+		frappe.db.get_value("Project", child.project, "project_name")
+		.then(response => {
+			if (response.message && response.message.project_name) {
+				let project_name = response.message.project_name;
+				child.project_name = project_name;
+			} else {
+				child.project_name = null;
+			}
+			let row = frm.fields_dict['items'].grid.get_row(cdn);
+            row.refresh_field('project_name');
+		})
+	},
+	work_breakdown_structure: function(frm,cdt,cdn) {
+		let child = locals[cdt][cdn];
+		frappe.db.get_value("Work Breakdown Structure", child.work_breakdown_structure, ["wbs_name", 'locked', 'gl_account'])
+		.then(response => {
+			if (response.message && response.message.wbs_name) {
+				let wbs_name = response.message.wbs_name;
+				if (response.message.locked == 1) {
+					frappe.msgprint(__(`WBS "${child.work_breakdown_structure}" is locked`));
+					child.work_breakdown_structure = null;
+				} else {
+					child.wbs_name = wbs_name;
+				}
+				if (response.message.gl_account) {
+					child.expense_account = response.message.gl_account;
+				}
+			} else {
+				child.wbs_name = null;
+			}
+			let row = frm.fields_dict['items'].grid.get_row(cdn);
+			row.refresh_field('work_breakdown_structure')
+            row.refresh_field('wbs_name');
+			row.refresh_field('expense_account');
+		})
+	},
+	expense_account: function(frm,cdt,cdn) {
+		var child = locals[cdt][cdn];
+		if (child.work_breakdown_structure && child.expense_account) {
+			frappe.db.get_value("Work Breakdown Structure",child.work_breakdown_structure,'gl_account')
+			.then(response => {
+				if (response.message && response.message.gl_account) {
+					if (child.expense_account != response.message.gl_account) {
+						frappe.msgprint(__(`${child.expense_account} is not a GL Account of WBS ${child.work_breakdown_structure}`));
+						child.expense_account = null;
+						let row = frm.fields_dict['items'].grid.get_row(cdn);
+						row.refresh_field('expense_account');
+						row.refresh_field('work_breakdown_structure');
+					}
+				}
+			});
+		}
+	}
 });
 
 erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
@@ -295,8 +399,8 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 			if (!["Closed", "Delivered"].includes(doc.status)) {
 				if (
 					this.frm.doc.status !== "Closed" &&
-					flt(this.frm.doc.per_received, 2) < 100 &&
-					flt(this.frm.doc.per_billed, 2) < 100
+					flt(this.frm.doc.per_received) < 100 &&
+					flt(this.frm.doc.per_billed) < 100
 				) {
 					if (!this.frm.doc.__onload || this.frm.doc.__onload.can_update_items) {
 						this.frm.add_custom_button(__("Update Items"), () => {
@@ -310,7 +414,7 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 					}
 				}
 				if (this.frm.has_perm("submit")) {
-					if (flt(doc.per_billed, 2) < 100 || flt(doc.per_received, 2) < 100) {
+					if (flt(doc.per_billed) < 100 || flt(doc.per_received) < 100) {
 						if (doc.status != "On Hold") {
 							this.frm.add_custom_button(
 								__("Hold"),
@@ -348,8 +452,9 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 			}
 			if (doc.status != "Closed") {
 				if (doc.status != "On Hold") {
-					if (flt(doc.per_received, 2) < 100 && allow_receipt) {
+					if (flt(doc.per_received) < 100 && allow_receipt) {
 						cur_frm.add_custom_button(
+							
 							__("Purchase Receipt"),
 							this.make_purchase_receipt,
 							__("Create")
@@ -366,22 +471,26 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 									);
 								}
 							} else {
-								cur_frm.add_custom_button(
-									__("Subcontracting Order"),
-									this.make_subcontracting_order,
-									__("Create")
-								);
+								if (!doc.items.every((item) => item.qty == item.sco_qty)) {
+									this.frm.add_custom_button(
+										__("Subcontracting Order"),
+										() => {
+											me.make_subcontracting_order();
+										},
+										__("Create")
+									);
+								}
 							}
 						}
 					}
-					if (flt(doc.per_billed, 2) < 100)
+					if (flt(doc.per_billed) < 100)
 						cur_frm.add_custom_button(
 							__("Purchase Invoice"),
 							this.make_purchase_invoice,
 							__("Create")
 						);
 
-					if (flt(doc.per_billed, 2) < 100 && doc.status != "Delivered") {
+						if (flt(doc.per_billed) < 100 && doc.status != "Delivered") {
 						this.frm.add_custom_button(
 							__("Payment"),
 							() => this.make_payment_entry(),
@@ -389,7 +498,7 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 						);
 					}
 
-					if (flt(doc.per_billed, 2) < 100) {
+					if (flt(doc.per_billed) < 100) {
 						this.frm.add_custom_button(
 							__("Payment Request"),
 							function () {

@@ -404,3 +404,23 @@ frappe.ui.form.on("Payment Reconciliation Allocation", {
 });
 
 extend_cscript(cur_frm.cscript, new erpnext.accounts.PaymentReconciliationController({ frm: cur_frm }));
+
+
+frappe.ui.form.on('Payment Reconciliation', {
+	clearing_date: function (frm) {
+        if (frm.doc.clearing_date) {
+            const clearingDate = frappe.datetime.str_to_obj(frm.doc.clearing_date);
+            const today = frappe.datetime.get_today();
+
+            if (clearingDate > frappe.datetime.str_to_obj(today)) {
+                frappe.msgprint({
+                    title: __('Check Clearing Date'),
+                    message: __('Clearing Date cannot be in the future.'),
+                    indicator: 'red',
+                });
+                frm.set_value('clearing_date', null); // Clear the invalid date
+            }
+        }
+    }
+    
+});

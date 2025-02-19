@@ -24,12 +24,6 @@ doctype_rule_map = {
 		"rule_name": _("On Purchase Order Submission"),
 		"user_field": "modified_by",
 	},
-	"Task": {
-		"points": 5,
-		"condition": 'doc.status == "Completed"',
-		"rule_name": _("On Task Completion"),
-		"user_field": "completed_by",
-	},
 }
 
 

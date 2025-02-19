@@ -152,22 +152,35 @@ class WorkOrder(Document):
 		self.validate_sales_order()
 		self.set_default_warehouse()
 		self.validate_warehouse_belongs_to_company()
+		self.check_wip_warehouse_skip()
 		self.calculate_operating_cost()
 		self.validate_qty()
 		self.validate_transfer_against()
 		self.validate_operation_time()
 		self.status = self.get_status()
 		self.validate_workstation_type()
+		if self.source_warehouse:
+			self.set_warehouses()
 
 		validate_uom_is_integer(self, "stock_uom", ["qty", "produced_qty"])
 
 		self.set_required_items(reset_only_qty=len(self.get("required_items")))
 
+	def set_warehouses(self):
+		for row in self.required_items:
+			if not row.source_warehouse:
+				row.source_warehouse = self.source_warehouse
+
 	def validate_workstation_type(self):
+		if not self.docstatus.is_submitted():
+			return
 		for row in self.operations:
 			if not row.workstation and not row.workstation_type:
-				msg = f"Row {row.idx}: Workstation or Workstation Type is mandatory for an operation {row.operation}"
-				frappe.throw(_(msg))
+				frappe.throw(
+					_("Row {0}: Workstation or Workstation Type is mandatory for an operation {1}").format(
+						row.idx, row.operation
+					)
+				)
 
 	def validate_sales_order(self):
 		if self.sales_order:
@@ -209,8 +222,9 @@ class WorkOrder(Document):
 				if not self.expected_delivery_date:
 					self.expected_delivery_date = so[0].delivery_date
 
-				if so[0].project:
-					self.project = so[0].project
+				if "projects" in frappe.get_installed_apps():
+					if so[0].project:
+						self.project = so[0].project
 
 				if not self.material_request:
 					self.validate_work_order_against_so()
@@ -227,6 +241,10 @@ class WorkOrder(Document):
 			self.wip_warehouse = frappe.db.get_single_value("Manufacturing Settings", "default_wip_warehouse")
 		if not self.fg_warehouse:
 			self.fg_warehouse = frappe.db.get_single_value("Manufacturing Settings", "default_fg_warehouse")
+
+	def check_wip_warehouse_skip(self):
+		if self.skip_transfer and not self.from_wip_warehouse:
+			self.wip_warehouse = None
 
 	def validate_warehouse_belongs_to_company(self):
 		warehouses = [self.fg_warehouse, self.wip_warehouse]
@@ -320,7 +338,7 @@ class WorkOrder(Document):
 				if flt(self.material_transferred_for_manufacturing) > 0:
 					status = "In Process"
 
-				total_qty = flt(self.produced_qty) + flt(self.process_loss_qty)
+				total_qty = flt(flt(self.produced_qty) + flt(self.process_loss_qty), self.precision("qty"))
 				if flt(total_qty) >= flt(self.qty):
 					status = "Completed"
 		else:
@@ -913,19 +931,34 @@ class WorkOrder(Document):
 		else:
 			data = frappe.get_all(
 				"Stock Entry",
-				fields=["timestamp(posting_date, posting_time) as posting_datetime"],
+				# fields=["timestamp(posting_date, posting_time) as posting_datetime"],
+				fields=["posting_date", "posting_time"],
 				filters={
 					"work_order": self.name,
 					"purpose": ("in", ["Material Transfer for Manufacture", "Manufacture"]),
 				},
 			)
 
-			if data and len(data):
-				dates = [d.posting_datetime for d in data]
-				self.db_set("actual_start_date", min(dates))
+			# if data and len(data):
+			# 	dates = [d.posting_datetime for d in data]
+			# 	self.db_set("actual_start_date", min(dates))
 
-				if self.status == "Completed":
-					self.db_set("actual_end_date", max(dates))
+			# 	if self.status == "Completed":
+			# 		self.db_set("actual_end_date", max(dates))
+
+			if data:
+				dates = [
+					f"{d.posting_date} {d.posting_time}"
+					for d in data
+					if d.posting_date and d.posting_time
+				]
+				dates = [frappe.utils.get_datetime(date) for date in dates]
+
+				if dates:
+					self.db_set("actual_start_date", min(dates))
+
+					if self.status == "Completed":
+						self.db_set("actual_end_date", max(dates))
 
 		self.set_lead_time()
 
@@ -1087,8 +1120,9 @@ class WorkOrder(Document):
 						},
 					)
 
-					if not self.project:
-						self.project = item.get("project")
+					if "projects" in frappe.get_installed_apps():
+						if not self.project:
+							self.project = item.get("project")
 
 			self.set_available_qty()
 
@@ -1108,10 +1142,10 @@ class WorkOrder(Document):
 			.where(
 				(ste.docstatus == 1)
 				& (ste.work_order == self.name)
-				& (ste.purpose == "Material Transfer for Manufacture")
+				& (ste.purpose == 'Material Transfer for Manufacture')
 				& (ste.is_return == 0)
 			)
-			.groupby(ste_child.item_code)
+			.groupby(ste_child.item_code, ste_child.original_item)
 		)
 
 		data = query.run(as_dict=1) or []
@@ -1138,10 +1172,10 @@ class WorkOrder(Document):
 			.where(
 				(ste.docstatus == 1)
 				& (ste.work_order == self.name)
-				& (ste.purpose == "Material Transfer for Manufacture")
+				& (ste.purpose == 'Material Transfer for Manufacture')
 				& (ste.is_return == 1)
 			)
-			.groupby(ste_child.item_code)
+			.groupby(ste_child.item_code, ste_child.original_item)
 		)
 
 		data = query.run(as_dict=1) or []
@@ -1166,11 +1200,11 @@ class WorkOrder(Document):
 					`tabStock Entry Detail` detail
 				WHERE
 					entry.work_order = %(name)s
-						AND (entry.purpose = "Material Consumption for Manufacture"
-							OR entry.purpose = "Manufacture")
+						AND (entry.purpose = 'Material Consumption for Manufacture'
+							OR entry.purpose = 'Manufacture')
 						AND entry.docstatus = 1
 						AND detail.parent = entry.name
-						AND detail.s_warehouse IS NOT null
+						AND detail.s_warehouse IS NOT NULL
 						AND (detail.item_code = %(item)s
 							OR detail.original_item = %(item)s)
 				""",
@@ -1223,7 +1257,7 @@ def get_item_details(item, project=None, skip_bom_info=False, throw=True):
 			include_item_in_manufacturing
 		from `tabItem`
 		where disabled=0
-			and (end_of_life is null or end_of_life='0000-00-00' or end_of_life > %s)
+			and (end_of_life is null or to_char(end_of_life, 'YYYY-MM-DD') = '0000-00-00' or end_of_life > %s)
 			and name=%s
 	""",
 		(nowdate(), item),
@@ -1277,7 +1311,7 @@ def get_item_details(item, project=None, skip_bom_info=False, throw=True):
 
 
 @frappe.whitelist()
-def make_work_order(bom_no, item, qty=0, project=None, variant_items=None):
+def make_work_order(bom_no, item, qty=0, project=None, variant_items=None, use_multi_level_bom=None):
 	if not frappe.has_permission("Work Order", "write"):
 		frappe.throw(_("Not permitted"), frappe.PermissionError)
 
@@ -1287,12 +1321,13 @@ def make_work_order(bom_no, item, qty=0, project=None, variant_items=None):
 	wo_doc.production_item = item
 	wo_doc.update(item_details)
 	wo_doc.bom_no = bom_no
+	wo_doc.use_multi_level_bom = cint(use_multi_level_bom)
 
 	if flt(qty) > 0:
 		wo_doc.qty = flt(qty)
 		wo_doc.get_items_and_operations_from_bom()
 
-	if variant_items:
+	if variant_items and not wo_doc.use_multi_level_bom:
 		add_variant_item(variant_items, wo_doc, bom_no, "required_items")
 
 	return wo_doc
@@ -1336,7 +1371,17 @@ def add_variant_item(variant_items, wo_doc, bom_no, table_name="items"):
 
 		args["amount"] = flt(args.get("required_qty")) * flt(args.get("rate"))
 		args["uom"] = item_data.stock_uom
-		wo_doc.append(table_name, args)
+		existing_row = (
+			get_template_rm_item(wo_doc, item.get("item_code")) if table_name == "required_items" else None
+		)
+		if existing_row:
+			existing_row.update(args)
+		else:
+			wo_doc.append(table_name, args)
+def get_template_rm_item(wo_doc, item_code):
+	for row in wo_doc.required_items:
+		if row.item_code == item_code:
+			return row
 
 
 @frappe.whitelist()
@@ -1385,7 +1430,11 @@ def make_stock_entry(work_order_id, purpose, qty=None, target_warehouse=None):
 		stock_entry.to_warehouse = wip_warehouse
 		stock_entry.project = work_order.project
 	else:
-		stock_entry.from_warehouse = wip_warehouse
+		stock_entry.from_warehouse = (
+			work_order.source_warehouse
+			if work_order.skip_transfer and not work_order.from_wip_warehouse
+			else wip_warehouse
+		)
 		stock_entry.to_warehouse = work_order.fg_warehouse
 		stock_entry.project = work_order.project
 
@@ -1569,7 +1618,7 @@ def create_job_card(work_order, row, enable_capacity_planning=False, auto_create
 			"for_quantity": row.job_card_qty or work_order.get("qty", 0),
 			"operation_id": row.get("name"),
 			"bom_no": work_order.bom_no,
-			"project": work_order.project,
+			"project": work_order.project if "projects" in frappe.get_installed_apps() else "",
 			"company": work_order.company,
 			"sequence_id": row.get("sequence_id"),
 			"wip_warehouse": work_order.wip_warehouse,

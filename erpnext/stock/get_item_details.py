@@ -10,7 +10,7 @@ from frappe.model import child_table_fields, default_fields
 from frappe.model.meta import get_field_precision
 from frappe.model.utils import get_fetch_values
 from frappe.query_builder.functions import IfNull, Sum
-from frappe.utils import add_days, add_months, cint, cstr, flt, getdate
+from frappe.utils import add_days, add_months, cint, cstr, flt, getdate, parse_json
 
 from erpnext import get_company_currency
 from erpnext.accounts.doctype.pricing_rule.pricing_rule import (
@@ -115,6 +115,13 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 
 	out.update(data)
 
+	if (
+		frappe.db.get_single_value("Stock Settings", "auto_create_serial_and_batch_bundle_for_outward")
+		and not args.get("serial_and_batch_bundle")
+		and (args.get("use_serial_batch_fields") or args.get("doctype") == "POS Invoice")
+	):
+		update_stock(args, out, doc)
+	
 	if args.transaction_date and item.lead_time_days:
 		out.schedule_date = out.lead_time_date = add_days(args.transaction_date, item.lead_time_days)
 
@@ -166,6 +173,92 @@ def update_bin_details(args, out, doc):
 		bin_details = get_bin_details(args.item_code, out.warehouse, company, include_child_warehouses=True)
 
 		out.update(bin_details)
+
+
+def update_stock(ctx, out, doc=None):
+	from erpnext.stock.doctype.batch.batch import get_available_batches
+	from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos_for_outward
+
+	if (
+		(
+			ctx.get("doctype") in ["Delivery Note", "POS Invoice"]
+			or (ctx.get("doctype") == "Sales Invoice" and ctx.get("update_stock"))
+		)
+		and out.warehouse
+		and out.stock_qty > 0
+	):
+		kwargs = frappe._dict(
+			{
+				"item_code": ctx.item_code,
+				"warehouse": ctx.warehouse,
+				"based_on": frappe.db.get_single_value("Stock Settings", "pick_serial_and_batch_based_on"),
+			}
+		)
+
+		if ctx.get("ignore_serial_nos"):
+			kwargs["ignore_serial_nos"] = ctx.get("ignore_serial_nos")
+
+		qty = out.stock_qty
+		batches = []
+		if out.has_batch_no and not ctx.get("batch_no"):
+			batches = get_available_batches(kwargs)
+			if doc:
+				filter_batches(batches, doc)
+
+			for batch_no, batch_qty in batches.items():
+				if batch_qty >= qty:
+					out.update({"batch_no": batch_no, "actual_batch_qty": qty})
+					break
+				else:
+					qty -= batch_qty
+
+				out.update({"batch_no": batch_no, "actual_batch_qty": batch_qty})
+
+		if out.has_serial_no and out.has_batch_no and has_incorrect_serial_nos(ctx, out):
+			kwargs["batches"] = [ctx.get("batch_no")] if ctx.get("batch_no") else [out.get("batch_no")]
+			serial_nos = get_serial_nos_for_outward(kwargs)
+			serial_nos = get_filtered_serial_nos(serial_nos, doc)
+
+			out["serial_no"] = "\n".join(serial_nos[: cint(out.stock_qty)])
+
+		elif out.has_serial_no and not ctx.get("serial_no"):
+			serial_nos = get_serial_nos_for_outward(kwargs)
+			serial_nos = get_filtered_serial_nos(serial_nos, doc)
+
+			out["serial_no"] = "\n".join(serial_nos[: cint(out.stock_qty)])
+
+
+def has_incorrect_serial_nos(ctx, out):
+	from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
+
+	if not ctx.get("serial_no"):
+		return True
+
+	serial_nos = get_serial_nos(ctx.get("serial_no"))
+	if len(serial_nos) != out.get("stock_qty"):
+		return True
+
+	return False
+
+
+def filter_batches(batches, doc):
+	for row in doc.get("items"):
+		if row.get("batch_no") in batches:
+			batches[row.get("batch_no")] -= row.get("qty")
+			if batches[row.get("batch_no")] <= 0:
+				del batches[row.get("batch_no")]
+
+
+def get_filtered_serial_nos(serial_nos, doc):
+	from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
+
+	for row in doc.get("items"):
+		if row.get("serial_no"):
+			for serial_no in get_serial_nos(row.get("serial_no")):
+				if serial_no in serial_nos:
+					serial_nos.remove(serial_no)
+
+	return serial_nos
 
 
 def process_args(args):
@@ -293,8 +386,8 @@ def get_basic_details(args, item, overwrite_warehouse=True):
 
 	expense_account = None
 
-	if args.get("doctype") == "Purchase Invoice" and item.is_fixed_asset:
-		from erpnext.assets.doctype.asset_category.asset_category import get_asset_category_account
+	if args.get("doctype") == "Purchase Invoice" and item.get("is_fixed_asset"):
+		from assets.assets.doctype.asset_category.asset_category import get_asset_category_account
 
 		expense_account = get_asset_category_account(
 			fieldname="fixed_asset_account", item=args.item_code, company=args.company
@@ -360,7 +453,7 @@ def get_basic_details(args, item, overwrite_warehouse=True):
 			"delivered_by_supplier": item.delivered_by_supplier
 			if args.get("doctype") in ["Sales Order", "Sales Invoice"]
 			else 0,
-			"is_fixed_asset": item.is_fixed_asset,
+			"is_fixed_asset": item.get("is_fixed_asset"),
 			"last_purchase_rate": item.last_purchase_rate if args.get("doctype") in ["Purchase Order"] else 0,
 			"transaction_date": args.get("transaction_date"),
 			"against_blanket_order": args.get("against_blanket_order"),
@@ -592,7 +685,10 @@ def _get_item_tax_template(args, taxes, out=None, for_validate=False):
 			if tax.valid_from or tax.maximum_net_rate:
 				# In purchase Invoice first preference will be given to supplier invoice date
 				# if supplier date is not present then posting date
-				validation_date = args.get("bill_date") or args.get("transaction_date")
+
+				validation_date = (
+					args.get("bill_date") or args.get("posting_date") or args.get("transaction_date")
+				)
 
 				if getdate(tax.valid_from) <= getdate(validation_date) and is_within_valid_range(args, tax):
 					taxes_with_validity.append(tax)
@@ -807,14 +903,10 @@ def get_price_list_rate(args, item_doc, out=None):
 		if price_list_rate is None or frappe.db.get_single_value(
 			"Stock Settings", "update_existing_price_list_rate"
 		):
-			if args.get("is_internal_supplier") or args.get("is_internal_customer"):
-				return out
+			insert_item_price(args)
 
-			if args.price_list and args.rate:
-				insert_item_price(args)
-
-			if not price_list_rate:
-				return out
+		if price_list_rate is None:
+			return out
 
 		out.price_list_rate = flt(price_list_rate) * flt(args.plc_conversion_rate) / flt(args.conversion_rate)
 
@@ -835,6 +927,14 @@ def get_price_list_rate(args, item_doc, out=None):
 
 def insert_item_price(args):
 	"""Insert Item Price if Price List and Price List Rate are specified and currency is the same"""
+	if (
+		not args.price_list
+		or not args.rate
+		or args.get("is_internal_supplier")
+		or args.get("is_internal_customer")
+	):
+		return
+
 	if frappe.db.get_value("Price List", args.price_list, "currency", cache=True) == args.currency and cint(
 		frappe.db.get_single_value("Stock Settings", "auto_insert_price_list_rate_if_missing")
 	):
@@ -885,7 +985,7 @@ def insert_item_price(args):
 				)
 
 
-def get_item_price(args, item_code, ignore_party=False):
+def get_item_price(args, item_code, ignore_party=False, force_batch_no=False) -> list[dict]:
 	"""
 	Get name, price_list_rate from Item Price based on conditions
 	        Check if the desired qty is within the increment of the packing list.
@@ -902,12 +1002,16 @@ def get_item_price(args, item_code, ignore_party=False):
 			(ip.item_code == item_code)
 			& (ip.price_list == args.get("price_list"))
 			& (IfNull(ip.uom, "").isin(["", args.get("uom")]))
-			& (IfNull(ip.batch_no, "").isin(["", args.get("batch_no")]))
 		)
 		.orderby(ip.valid_from, order=frappe.qb.desc)
 		.orderby(IfNull(ip.batch_no, ""), order=frappe.qb.desc)
 		.orderby(ip.uom, order=frappe.qb.desc)
 	)
+
+	if force_batch_no:
+		query = query.where(ip.batch_no == args.get("batch_no"))
+	else:
+		query = query.where(IfNull(ip.batch_no, "").isin(["", args.get("batch_no")]))
 
 	if not ignore_party:
 		if args.get("customer"):
@@ -924,6 +1028,22 @@ def get_item_price(args, item_code, ignore_party=False):
 		)
 
 	return query.run()
+
+
+@frappe.whitelist()
+def get_batch_based_item_price(params, item_code) -> float:
+	if isinstance(params, str):
+		params = parse_json(params)
+
+	item_price = get_item_price(params, item_code, force_batch_no=True)
+
+	if not item_price:
+		item_price = get_item_price(params, item_code, ignore_party=True, force_batch_no=True)
+
+	if item_price and item_price[0][2] == params.get("uom"):
+		return item_price[0][1]
+
+	return 0.0
 
 
 def get_price_list_rate_for(args, item_code):

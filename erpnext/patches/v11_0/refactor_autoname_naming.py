@@ -10,7 +10,6 @@ doctype_series_map = {
 	"Agriculture Task": "AG-TASK-.#####",
 	"Assessment Plan": "EDU-ASP-.YYYY.-.#####",
 	"Assessment Result": "EDU-RES-.YYYY.-.#####",
-	"Asset Movement": "ACC-ASM-.YYYY.-.#####",
 	"Attendance Request": "HR-ARQ-.YY.-.MM.-.#####",
 	"Authorization Rule": "HR-ARU-.#####",
 	"Bank Guarantee": "ACC-BG-.YYYY.-.#####",

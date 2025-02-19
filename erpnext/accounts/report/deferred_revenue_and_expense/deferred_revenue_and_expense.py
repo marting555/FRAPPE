@@ -122,21 +122,23 @@ class Deferred_Item:
 		"""
 		simulate future posting by creating dummy gl entries. starts from the last posting date.
 		"""
-		if self.service_start_date != self.service_end_date:
-			if add_days(self.last_entry_date, 1) < self.period_list[-1].to_date:
-				self.estimate_for_period_list = get_period_list(
-					self.filters.from_fiscal_year,
-					self.filters.to_fiscal_year,
-					add_days(self.last_entry_date, 1),
-					self.period_list[-1].to_date,
-					"Date Range",
-					"Monthly",
-					company=self.filters.company,
-				)
-				for period in self.estimate_for_period_list:
-					amount = self.calculate_amount(period.from_date, period.to_date)
-					gle = self.make_dummy_gle(period.key, period.to_date, amount)
-					self.gle_entries.append(gle)
+		if (
+			self.service_start_date != self.service_end_date
+			and add_days(self.last_entry_date, 1) < self.service_end_date
+		):
+			self.estimate_for_period_list = get_period_list(
+				self.filters.from_fiscal_year,
+				self.filters.to_fiscal_year,
+				add_days(self.last_entry_date, 1),
+				self.service_end_date,
+				"Date Range",
+				"Monthly",
+				company=self.filters.company,
+			)
+			for period in self.estimate_for_period_list:
+				amount = self.calculate_amount(period.from_date, period.to_date)
+				gle = self.make_dummy_gle(period.key, period.to_date, amount)
+				self.gle_entries.append(gle)
 
 	def calculate_item_revenue_expense_for_period(self):
 		"""
@@ -263,62 +265,68 @@ class Deferred_Revenue_and_Expense_Report:
 
 	def get_invoices(self):
 		"""
-		Get all sales and purchase invoices which has deferred revenue/expense items
+		Get all sales and purchase invoices which have deferred revenue/expense items.
 		"""
 		gle = qb.DocType("GL Entry")
 		# column doesn't have an alias option
 		posted = Column("posted")
 
 		if self.filters.type == "Revenue":
-			inv = qb.DocType("Sales Invoice")
-			inv_item = qb.DocType("Sales Invoice Item")
-			deferred_flag_field = inv_item["enable_deferred_revenue"]
-			deferred_account_field = inv_item["deferred_revenue_account"]
-
+			invoice_table = "tabSales Invoice"
+			invoice_item_table = "tabSales Invoice Item"
+			deferred_flag_field = "enable_deferred_revenue"
+			deferred_account_field = "deferred_revenue_account"
 		elif self.filters.type == "Expense":
-			inv = qb.DocType("Purchase Invoice")
-			inv_item = qb.DocType("Purchase Invoice Item")
-			deferred_flag_field = inv_item["enable_deferred_expense"]
-			deferred_account_field = inv_item["deferred_expense_account"]
+			invoice_table = "tabPurchase Invoice"
+			invoice_item_table = "tabPurchase Invoice Item"
+			deferred_flag_field = "enable_deferred_expense"
+			deferred_account_field = "deferred_expense_account"
+		else:
+			return []
 
-		query = (
-			qb.from_(inv_item)
-			.join(inv)
-			.on(inv.name == inv_item.parent)
-			.left_join(gle)
-			.on((inv_item.name == gle.voucher_detail_no) & (deferred_account_field == gle.account))
-			.select(
-				inv.name.as_("doc"),
+		# Extract date values from self.period_list
+		from_date = self.period_list[0].from_date
+		to_date = self.period_list[-1].to_date
+
+		# Construct the SQL query
+		sql_query = f"""
+			SELECT 
+				inv.name AS doc,
 				inv.posting_date,
-				inv_item.name.as_("item"),
+				inv_item.name AS item,
 				inv_item.item_name,
 				inv_item.service_start_date,
 				inv_item.service_end_date,
 				inv_item.base_net_amount,
-				deferred_account_field,
-				gle.posting_date.as_("gle_posting_date"),
-				functions.Sum(gle.debit).as_("debit"),
-				functions.Sum(gle.credit).as_("credit"),
-				posted,
-			)
-			.where(
-				(inv.docstatus == 1)
-				& (deferred_flag_field == 1)
-				& (
-					(
-						(self.period_list[0].from_date >= inv_item.service_start_date)
-						& (inv_item.service_end_date >= self.period_list[0].from_date)
-					)
-					| (
-						(inv_item.service_start_date >= self.period_list[0].from_date)
-						& (inv_item.service_start_date <= self.period_list[-1].to_date)
-					)
+				inv_item.{deferred_account_field},
+				gle.posting_date AS gle_posting_date,
+				SUM(gle.debit) AS debit,
+				SUM(gle.credit) AS credit
+			FROM 
+				`{invoice_item_table}` inv_item
+			JOIN 
+				`{invoice_table}` inv ON inv.name = inv_item.parent
+			LEFT JOIN 
+				"tabGL Entry" gle ON inv_item.name = gle.voucher_detail_no 
+					AND inv_item.{deferred_account_field} = gle.account
+			WHERE 
+				inv.docstatus = 1
+				AND inv_item.{deferred_flag_field} = 1
+				AND (
+					(inv_item.service_start_date <= '{from_date}' 
+					AND inv_item.service_end_date >= '{from_date}')
+					OR 
+					(inv_item.service_start_date >= '{from_date}' 
+					AND inv_item.service_start_date <= '{to_date}')
 				)
-			)
-			.groupby(inv.name, inv_item.name, gle.posting_date)
-			.orderby(gle.posting_date)
-		)
-		self.invoices = query.run(as_dict=True)
+			GROUP BY 
+				inv.name, inv_item.name, gle.posting_date
+			ORDER BY 
+				gle.posting_date;
+			"""
+
+		# Execute the SQL query
+		self.invoices = frappe.db.sql(sql_query, as_dict=True)
 
 		uniq_invoice = set([x.doc for x in self.invoices])
 		for inv in uniq_invoice:

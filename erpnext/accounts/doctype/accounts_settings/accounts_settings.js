@@ -12,7 +12,7 @@ frappe.ui.form.on("Accounts Settings", {
 		msg += " ";
 		msg += __("Please enable only if the understand the effects of enabling this.");
 		msg += "<br>";
-		msg += "Do you still want to enable immutable ledger?";
+		msg += __("Do you still want to enable immutable ledger?");
 
 		frappe.confirm(
 			msg,
@@ -22,4 +22,15 @@ frappe.ui.form.on("Accounts Settings", {
 			}
 		);
 	},
+});
+
+
+frappe.ui.form.on('Accounts Settings', {
+    onload: function(frm) {
+        frm.set_df_property('acc_frozen_upto', 'hidden', true);
+        frm.set_df_property('frozen_accounts_modifier', 'hidden', true);
+		// frm.set_df_property('ignore_account_closing_balance', 'hidden', true);
+
+		
+    }
 });

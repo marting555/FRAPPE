@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 import frappe
 from frappe import _, qb, query_builder, scrub
-from frappe.query_builder import Criterion
+from frappe.query_builder import Criterion, Case
 from frappe.query_builder.functions import Date, Substring, Sum
 from frappe.utils import cint, cstr, flt, getdate, nowdate
 
@@ -20,7 +20,7 @@ from erpnext.accounts.utils import get_currency_precision, get_party_types_from_
 
 #  1. Invoice can be booked via Sales/Purchase Invoice or Journal Entry
 #  2. Report handles both receivable and payable
-#  3. Key balances for each row are "Invoiced Amount", "Paid Amount", "Credit/Debit Note Amount", "Oustanding Amount"
+#  3. Key balances for each row 
 #  4. For explicit payment terms in invoice (example: 30% advance, 30% on delivery, 40% post delivery),
 #     the invoice will be broken up into multiple rows, one for each payment term
 #  5. If there are payments after the report date (post dated), these will be updated in additional columns
@@ -49,6 +49,11 @@ class ReceivablePayableReport:
 		self.age_as_on = (
 			getdate(nowdate()) if self.filters.report_date > getdate(nowdate()) else self.filters.report_date
 		)
+
+		if not self.filters.range:
+			self.filters.range = "30, 60, 90, 120"
+		self.ranges = [num.strip() for num in self.filters.range.split(",") if num.strip().isdigit()]
+		self.range_numbers = [num for num in range(1, len(self.ranges) + 2)]
 
 	def run(self, args):
 		self.filters.update(args)
@@ -112,6 +117,25 @@ class ReceivablePayableReport:
 
 		self.build_data()
 
+	def build_voucher_dict(self, ple):
+		return frappe._dict(
+			voucher_type=ple.voucher_type,
+			voucher_no=ple.voucher_no,
+			party=ple.party,
+			party_account=ple.account,
+			posting_date=ple.posting_date,
+			account_currency=ple.account_currency,
+			remarks=ple.remarks,
+			invoiced=0.0,
+			paid=0.0,
+			credit_note=0.0,
+			outstanding=0.0,
+			invoiced_in_account_currency=0.0,
+			paid_in_account_currency=0.0,
+			credit_note_in_account_currency=0.0,
+			outstanding_in_account_currency=0.0,
+		)
+
 	def init_voucher_balance(self):
 		# build all keys, since we want to exclude vouchers beyond the report date
 		for ple in self.ple_entries:
@@ -123,24 +147,11 @@ class ReceivablePayableReport:
 				key = (ple.account, ple.voucher_type, ple.voucher_no, ple.party)
 
 			if key not in self.voucher_balance:
-				self.voucher_balance[key] = frappe._dict(
-					voucher_type=ple.voucher_type,
-					voucher_no=ple.voucher_no,
-					party=ple.party,
-					party_account=ple.account,
-					posting_date=ple.posting_date,
-					account_currency=ple.account_currency,
-					remarks=ple.remarks,
-					invoiced=0.0,
-					paid=0.0,
-					credit_note=0.0,
-					outstanding=0.0,
-					invoiced_in_account_currency=0.0,
-					paid_in_account_currency=0.0,
-					credit_note_in_account_currency=0.0,
-					outstanding_in_account_currency=0.0,
-					cost_center=ple.cost_center,
-				)
+				self.voucher_balance[key] = self.build_voucher_dict(ple)
+			
+			if ple.voucher_type == ple.against_voucher_type and ple.voucher_no == ple.against_voucher_no:
+				self.voucher_balance[key].cost_center = ple.cost_center
+
 			self.get_invoices(ple)
 
 			if self.filters.get("group_by_party"):
@@ -208,6 +219,18 @@ class ReceivablePayableReport:
 
 		row = self.voucher_balance.get(key)
 
+		# Build and use a separate row for Employee Advances.
+		# This allows Payments or Journals made against Emp Advance to be processed.
+		if (
+			not row
+			and ple.against_voucher_type == "Employee Advance"
+			and self.filters.handle_employee_advances
+		):
+			_d = self.build_voucher_dict(ple)
+			_d.voucher_type = ple.against_voucher_type
+			_d.voucher_no = ple.against_voucher_no
+			row = self.voucher_balance[key] = _d
+
 		if not row:
 			# no invoice, this is an invoice / stand-alone payment / credit note
 			if self.filters.get("ignore_accounts"):
@@ -254,9 +277,6 @@ class ReceivablePayableReport:
 				row.paid -= amount
 				row.paid_in_account_currency -= amount_in_account_currency
 
-		if not row.cost_center and ple.cost_center:
-			row.cost_center = str(ple.cost_center)
-
 	def update_sub_total_row(self, row, party):
 		total_row = self.total_row_map.get(party)
 
@@ -289,8 +309,8 @@ class ReceivablePayableReport:
 
 			must_consider = False
 			if self.filters.get("for_revaluation_journals"):
-				if (abs(row.outstanding) >= 0.0 / 10**self.currency_precision) or (
-					abs(row.outstanding_in_account_currency) >= 0.0 / 10**self.currency_precision
+				if (abs(row.outstanding) >= 1.0 / 10**self.currency_precision) or (
+					abs(row.outstanding_in_account_currency) >= 1.0 / 10**self.currency_precision
 				):
 					must_consider = True
 			else:
@@ -401,8 +421,10 @@ class ReceivablePayableReport:
 				select name, due_date, po_no
 				from `tabSales Invoice`
 				where posting_date <= %s
+				and company = %s
+				and docstatus = 1
 			""",
-				self.filters.report_date,
+				(self.filters.report_date, self.filters.company),
 				as_dict=1,
 			)
 			for d in si_list:
@@ -428,9 +450,9 @@ class ReceivablePayableReport:
 				"""
 				select name, due_date, bill_no, bill_date
 				from `tabPurchase Invoice`
-				where posting_date <= %s
+				where posting_date <= %s AND company = %s
 			""",
-				self.filters.report_date,
+				(self.filters.report_date, self.filters.company),
 				as_dict=1,
 			):
 				self.invoice_details.setdefault(pi.name, pi)
@@ -440,9 +462,12 @@ class ReceivablePayableReport:
 			"""
 			select name, due_date, bill_no, bill_date
 			from `tabJournal Entry`
-			where posting_date <= %s
+			where
+				posting_date <= %s
+				and company = %s
+				and docstatus = 1
 		""",
-			self.filters.report_date,
+			(self.filters.report_date, self.filters.company),
 			as_dict=1,
 		)
 
@@ -451,6 +476,8 @@ class ReceivablePayableReport:
 				self.invoice_details.setdefault(je.name, je)
 
 	def set_party_details(self, row):
+		if not row.party:
+			return
 		# customer / supplier name
 		party_details = self.get_party_details(row.party) or {}
 		row.update(party_details)
@@ -484,7 +511,8 @@ class ReceivablePayableReport:
 			from `tab{row.voucher_type}` si, `tabPayment Schedule` ps
 			where
 				si.name = ps.parent and
-				si.name = %s
+				si.name = %s and
+				si.is_return = 0
 			order by ps.paid_amount desc, due_date
 		""",
 			row.voucher_no,
@@ -512,9 +540,7 @@ class ReceivablePayableReport:
 			self.append_payment_term(row, d, term)
 
 	def append_payment_term(self, row, d, term):
-		if (
-			self.filters.get("customer") or self.filters.get("supplier")
-		) and d.currency == d.party_account_currency:
+		if d.currency == d.party_account_currency:
 			invoiced = d.payment_amount
 		else:
 			invoiced = d.base_payment_amount
@@ -588,11 +614,9 @@ class ReceivablePayableReport:
 				(pe.posting_date).as_("future_date"),
 				(pe_ref.allocated_amount).as_("future_amount"),
 				(pe.reference_no).as_("future_ref"),
-				ifelse(
-					pe.payment_type == "Receive",
-					pe.source_exchange_rate * pe_ref.allocated_amount,
-					pe.target_exchange_rate * pe_ref.allocated_amount,
-				).as_("future_amount_in_base_currency"),
+				Case()
+				.when(pe.payment_type == "Receive", pe.source_exchange_rate * pe_ref.allocated_amount)
+				.else_(pe.target_exchange_rate * pe_ref.allocated_amount).as_("future_amount_in_base_currency"),
 			)
 			.where(
 				(pe.docstatus < 2)
@@ -622,6 +646,7 @@ class ReceivablePayableReport:
 				& (jea.reference_name.isnotnull())
 				& (jea.reference_name != "")
 			)
+			.groupby(jea.reference_name, jea.party, jea.party_type, je.posting_date, je.cheque_no)
 		)
 
 		if self.filters.get("party"):
@@ -632,7 +657,7 @@ class ReceivablePayableReport:
 				query = query.select(Sum(jea.debit - jea.credit).as_("future_amount_in_base_currency"))
 			else:
 				query = query.select(
-					Sum(jea.credit_in_account_currency - jea.debit_in_account_currency).as_("future_amount")
+					Sum(jea.credit_in_account_currency - jea.debit_in_account_currency).as_("future_amount"),
 				)
 				query = query.select(Sum(jea.credit - jea.debit).as_("future_amount_in_base_currency"))
 		else:
@@ -649,7 +674,12 @@ class ReceivablePayableReport:
 				).as_("future_amount")
 			)
 
-		query = query.having(qb.Field("future_amount") > 0)
+		if self.account_type == "Payable":
+			query = query.having(Sum(jea.debit_in_account_currency - jea.credit_in_account_currency) > 0)
+		else:
+			query = query.having(Sum(jea.credit_in_account_currency - jea.debit_in_account_currency) > 0)
+
+
 		return query.run(as_dict=True)
 
 	def allocate_future_payments(self, row):
@@ -687,6 +717,7 @@ class ReceivablePayableReport:
 	def get_return_entries(self):
 		doctype = "Sales Invoice" if self.account_type == "Receivable" else "Purchase Invoice"
 		filters = {
+			"posting_date": ("<=", self.filters.report_date),
 			"is_return": 1,
 			"docstatus": 1,
 			"company": self.filters.company,
@@ -717,37 +748,21 @@ class ReceivablePayableReport:
 
 		# ageing buckets should not have amounts if due date is not reached
 		if getdate(entry_date) > getdate(self.filters.report_date):
-			row.range1 = row.range2 = row.range3 = row.range4 = row.range5 = 0.0
+			[setattr(row, f"range{i}", 0.0) for i in self.range_numbers]
 
-		row.total_due = row.range1 + row.range2 + row.range3 + row.range4 + row.range5
+		row.total_due = sum(row[f"range{i}"] for i in self.range_numbers)
 
 	def get_ageing_data(self, entry_date, row):
 		# [0-30, 30-60, 60-90, 90-120, 120-above]
-		row.range1 = row.range2 = row.range3 = row.range4 = row.range5 = 0.0
+		[setattr(row, f"range{i}", 0.0) for i in self.range_numbers]
 
 		if not (self.age_as_on and entry_date):
 			return
 
 		row.age = (getdate(self.age_as_on) - getdate(entry_date)).days or 0
-		index = None
-
-		if not (self.filters.range1 and self.filters.range2 and self.filters.range3 and self.filters.range4):
-			self.filters.range1, self.filters.range2, self.filters.range3, self.filters.range4 = (
-				30,
-				60,
-				90,
-				120,
-			)
-
-		for i, days in enumerate(
-			[self.filters.range1, self.filters.range2, self.filters.range3, self.filters.range4]
-		):
-			if cint(row.age) <= cint(days):
-				index = i
-				break
-
-		if index is None:
-			index = 4
+		index = next(
+			(i for i, days in enumerate(self.ranges) if cint(row.age) <= cint(days)), len(self.ranges)
+		)
 		row["range" + str(index + 1)] = row.outstanding
 
 	def get_ple_entries(self):
@@ -987,22 +1002,30 @@ class ReceivablePayableReport:
 
 	def get_columns(self):
 		self.columns = []
-		self.add_column("Posting Date", fieldtype="Date")
+		self.add_column(_("Posting Date"), fieldname="posting_date", fieldtype="Date")
 		self.add_column(
-			label="Party Type",
+			label=_("Party Type"),
 			fieldname="party_type",
 			fieldtype="Data",
 			width=100,
 		)
 		self.add_column(
-			label="Party",
+			label=_("Party"),
 			fieldname="party",
 			fieldtype="Dynamic Link",
 			options="party_type",
 			width=180,
 		)
+
+		if self.account_type == "Receivable":
+			label = _("Receivable Account")
+		elif self.account_type == "Payable":
+			label = _("Payable Account")
+		else:
+			label = _("Party Account")
+
 		self.add_column(
-			label=self.account_type + " Account",
+			label=label,
 			fieldname="party_account",
 			fieldtype="Link",
 			options="Account",
@@ -1011,10 +1034,10 @@ class ReceivablePayableReport:
 
 		if self.party_naming_by == "Naming Series":
 			if self.account_type == "Payable":
-				label = "Supplier Name"
+				label = _("Supplier Name")
 				fieldname = "supplier_name"
 			else:
-				label = "Customer Name"
+				label = _("Customer Name")
 				fieldname = "customer_name"
 			self.add_column(
 				label=label,
@@ -1040,7 +1063,7 @@ class ReceivablePayableReport:
 			width=180,
 		)
 
-		self.add_column(label="Due Date", fieldtype="Date")
+		self.add_column(label=_("Due Date"), fieldname="due_date", fieldtype="Date")
 
 		if self.account_type == "Payable":
 			self.add_column(label=_("Bill No"), fieldname="bill_no", fieldtype="Data")
@@ -1058,6 +1081,7 @@ class ReceivablePayableReport:
 			# note: fieldname is still `credit_note`
 			self.add_column(_("Debit Note"), fieldname="credit_note")
 		self.add_column(_("Outstanding Amount"), fieldname="outstanding")
+		self.add_column(label=_("Age (Days)"), fieldname="age", fieldtype="Int", width=80)
 
 		self.setup_ageing_columns()
 
@@ -1117,34 +1141,24 @@ class ReceivablePayableReport:
 	def setup_ageing_columns(self):
 		# for charts
 		self.ageing_column_labels = []
-		self.add_column(label=_("Age (Days)"), fieldname="age", fieldtype="Int", width=80)
+		ranges = [*self.ranges, "Above"]
+		prev_range_value = 0
+		for idx, curr_range_value in enumerate(ranges):
+			label = f"{prev_range_value}-{curr_range_value}"
+			self.add_column(label=label, fieldname="range" + str(idx + 1))
 
-		for i, label in enumerate(
-			[
-				"0-{range1}".format(range1=self.filters["range1"]),
-				"{range1}-{range2}".format(
-					range1=cint(self.filters["range1"]) + 1, range2=self.filters["range2"]
-				),
-				"{range2}-{range3}".format(
-					range2=cint(self.filters["range2"]) + 1, range3=self.filters["range3"]
-				),
-				"{range3}-{range4}".format(
-					range3=cint(self.filters["range3"]) + 1, range4=self.filters["range4"]
-				),
-				_("{range4}-Above").format(range4=cint(self.filters["range4"]) + 1),
-			]
-		):
-			self.add_column(label=label, fieldname="range" + str(i + 1))
 			self.ageing_column_labels.append(label)
+			if curr_range_value.isdigit():
+				prev_range_value = cint(curr_range_value) + 1
 
 	def get_chart_data(self):
+		precision = cint(frappe.db.get_default("float_precision")) or 2
 		rows = []
 		for row in self.data:
 			row = frappe._dict(row)
 			if not cint(row.bold):
-				values = [row.range1, row.range2, row.range3, row.range4, row.range5]
-				precision = cint(frappe.db.get_default("float_precision")) or 2
-				rows.append({"values": [flt(val, precision) for val in values]})
+				values = [flt(row.get(f"range{i}", None), precision) for i in self.range_numbers]
+				rows.append({"values": values})
 
 		self.chart = {
 			"data": {"labels": self.ageing_column_labels, "datasets": rows},

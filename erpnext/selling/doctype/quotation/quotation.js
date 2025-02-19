@@ -28,6 +28,19 @@ frappe.ui.form.on("Quotation", {
 			if (!doc.company) {
 				frappe.throw(__("Please set Company"));
 			}
+			return {
+				query: "frappe.contacts.doctype.address.address.address_query",
+				filters: {
+					link_doctype: "Company",
+					link_name: doc.company,
+				},
+			};
+		});
+
+		frm.set_query("company_address", function (doc) {
+			if (!doc.company) {
+				frappe.throw(__("Please set Company"));
+			}
 
 			return {
 				query: "frappe.contacts.doctype.address.address.address_query",
@@ -71,7 +84,7 @@ frappe.ui.form.on("Quotation", {
 		frm.trigger("set_label");
 		frm.trigger("toggle_reqd_lead_customer");
 		frm.trigger("set_dynamic_field_label");
-		frm.set_value("party_name", "");
+		// frm.set_value("party_name", ""); // removed to set party_name from url for crm integration
 		frm.set_value("customer_name", "");
 	},
 
@@ -141,7 +154,7 @@ erpnext.selling.QuotationController = class QuotationController extends erpnext.
 				__("Opportunity"),
 				function () {
 					erpnext.utils.map_current_doc({
-						method: "erpnext.crm.doctype.opportunity.opportunity.make_quotation",
+						method: "crm.crm.doctype.opportunity.opportunity.make_quotation",
 						source_doctype: "Opportunity",
 						target: me.frm,
 						setters: [
@@ -249,7 +262,7 @@ erpnext.selling.QuotationController = class QuotationController extends erpnext.
 		}
 
 		frappe.call({
-			method: "erpnext.crm.doctype.lead.lead.get_lead_details",
+			method: "crm.crm.doctype.lead.lead.get_lead_details",
 			args: {
 				lead: this.frm.doc.party_name,
 				posting_date: this.frm.doc.transaction_date,

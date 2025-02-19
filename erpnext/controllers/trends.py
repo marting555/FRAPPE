@@ -29,7 +29,6 @@ def get_columns(filters, trans):
 			+ period_cols
 			+ [_("Total(Qty)") + ":Float:120", _("Total(Amt)") + ":Currency:120"]
 		)
-
 	conditions = {
 		"based_on_select": based_on_details["based_on_select"],
 		"period_wise_select": period_select,
@@ -69,7 +68,7 @@ def get_data(filters, conditions):
 		"Delivery Note",
 	]:
 		posting_date = "t1.posting_date"
-		if filters.period_based_on:
+		if filters.period_based_on and conditions.get("trans") in ["Sales Invoice","Purchase Invoice"]:
 			posting_date = "t1." + filters.period_based_on
 
 	if conditions["based_on_select"] in ["t1.project,", "t2.project,"]:
@@ -129,10 +128,19 @@ def get_data(filters, conditions):
 
 			# to get distinct value of col specified by group_by in filter
 			row = frappe.db.sql(
-				"""select DISTINCT({}) from `tab{}` t1, `tab{} Item` t2 {}
-						where t2.parent = t1.name and t1.company = {} and {} between {} and {}
-						and t1.docstatus = 1 and {} = {} {} {}
-					""".format(
+				"""
+				SELECT
+					DISTINCT({})
+				FROM `tab{}` t1, `tab{} Item` t2 {}
+				WHERE
+					t2.parent = t1.name
+					AND t1.company = {}
+					AND {} BETWEEN {} AND {}
+					AND t1.docstatus = 1
+					AND {} = {}
+					{} {}
+				"""
+				.format(
 					sel_col,
 					conditions["trans"],
 					conditions["trans"],
@@ -141,7 +149,8 @@ def get_data(filters, conditions):
 					posting_date,
 					"%s",
 					"%s",
-					conditions["group_by"],
+					# previously in conditions["group_by"] only one value is coming but now two values are coming, so we need first value
+					conditions["group_by"].split(",")[0].strip(),
 					"%s",
 					conditions.get("addl_tables_relational_cond"),
 					cond,
@@ -155,10 +164,24 @@ def get_data(filters, conditions):
 
 				# get data for group_by filter
 				row1 = frappe.db.sql(
-					""" select {} , {} from `tab{}` t1, `tab{} Item` t2 {}
-							where t2.parent = t1.name and t1.company = {} and {} between {} and {}
-							and t1.docstatus = 1 and {} = {} and {} = {} {} {}
-						""".format(
+					"""
+					SELECT
+						{} , {}
+					FROM
+						`tab{}` t1,
+						`tab{} Item` t2
+						{}
+					WHERE
+						t2.parent = t1.name
+						AND t1.company = {}
+						AND {} BETWEEN {} AND {}
+						AND t1.docstatus = 1
+						AND {} = {}
+						AND {} = {}
+						{} {}
+					GROUP BY {}
+					"""
+					.format(
 						sel_col,
 						conditions["period_wise_select"],
 						conditions["trans"],
@@ -170,28 +193,41 @@ def get_data(filters, conditions):
 						"%s",
 						sel_col,
 						"%s",
-						conditions["group_by"],
+						# previously in conditions["group_by"] only one value is coming but now two values are coming, so we need first value
+						conditions["group_by"].split(",")[0].strip(),
 						"%s",
 						conditions.get("addl_tables_relational_cond"),
 						cond,
+						sel_col,
 					),
 					(filters.get("company"), year_start_date, year_end_date, row[i][0], data1[d][0]),
 					as_list=1,
 				)
+				if row1:
+					des[ind] = row[i][0]
 
-				des[ind] = row[i][0]
+					for j in range(1, len(conditions["columns"]) - inc):
+						des[j + inc] = row1[0][j]
 
-				for j in range(1, len(conditions["columns"]) - inc):
-					des[j + inc] = row1[0][j]
-
-				data.append(des)
+					data.append(des)
 	else:
 		data = frappe.db.sql(
-			""" select {} from `tab{}` t1, `tab{} Item` t2 {}
-					where t2.parent = t1.name and t1.company = {} and {} between {} and {} and
-					t1.docstatus = 1 {} {}
-					group by {}
-				""".format(
+			"""
+			SELECT
+				{}
+			FROM
+				`tab{}` t1,
+				`tab{} Item` t2
+				{}
+			WHERE
+				t2.parent = t1.name
+				AND t1.company = {}
+				AND {} BETWEEN {} AND {}
+				AND t1.docstatus = 1
+				{} {}
+				group by {}
+			"""
+			.format(
 				query_details,
 				conditions["trans"],
 				conditions["trans"],
@@ -222,7 +258,7 @@ def period_wise_columns_query(filters, trans):
 
 	if trans in ["Purchase Receipt", "Delivery Note", "Purchase Invoice", "Sales Invoice"]:
 		trans_date = "posting_date"
-		if filters.period_based_on:
+		if filters.period_based_on and trans in ["Purchase Invoice", "Sales Invoice"]:
 			trans_date = filters.period_based_on
 	else:
 		trans_date = "transaction_date"
@@ -256,8 +292,7 @@ def get_period_wise_columns(bet_dates, period, pwc):
 
 
 def get_period_wise_query(bet_dates, trans_date, query_details):
-	query_details += """SUM(IF(t1.{trans_date} BETWEEN '{sd}' AND '{ed}', t2.stock_qty, NULL)),
-					SUM(IF(t1.{trans_date} BETWEEN '{sd}' AND '{ed}', t2.base_net_amount, NULL)),
+	query_details += """SUM(CASE WHEN t1.{trans_date} BETWEEN '{sd}' AND '{ed}' THEN t2.stock_qty ELSE NULL END),SUM(CASE WHEN t1.{trans_date} BETWEEN '{sd}' AND '{ed}' THEN t2.base_net_amount ELSE NULL END),
 				""".format(
 		trans_date=trans_date,
 		sd=bet_dates[0],
@@ -312,7 +347,7 @@ def based_wise_columns_query(based_on, trans):
 	if based_on == "Item":
 		based_on_details["based_on_cols"] = ["Item:Link/Item:120", "Item Name:Data:120"]
 		based_on_details["based_on_select"] = "t2.item_code, t2.item_name,"
-		based_on_details["based_on_group_by"] = "t2.item_code"
+		based_on_details["based_on_group_by"] = "t2.item_code, t2.item_name"
 		based_on_details["addl_tables"] = ""
 
 	elif based_on == "Item Group":
@@ -327,7 +362,7 @@ def based_wise_columns_query(based_on, trans):
 			"Territory:Link/Territory:120",
 		]
 		based_on_details["based_on_select"] = "t1.customer_name, t1.territory, "
-		based_on_details["based_on_group_by"] = "t1.party_name" if trans == "Quotation" else "t1.customer"
+		based_on_details["based_on_group_by"] = "t1.party_name, t1.customer_name , t1.territory" if trans == "Quotation" else "t1.customer_name , t1.territory"
 		based_on_details["addl_tables"] = ""
 
 	elif based_on == "Customer Group":
@@ -342,7 +377,7 @@ def based_wise_columns_query(based_on, trans):
 			"Supplier Group:Link/Supplier Group:140",
 		]
 		based_on_details["based_on_select"] = "t1.supplier, t3.supplier_group,"
-		based_on_details["based_on_group_by"] = "t1.supplier"
+		based_on_details["based_on_group_by"] = "t1.supplier, t3.supplier_group"
 		based_on_details["addl_tables"] = ",`tabSupplier` t3"
 		based_on_details["addl_tables_relational_cond"] = " and t1.supplier = t3.name"
 

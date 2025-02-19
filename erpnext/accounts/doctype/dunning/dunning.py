@@ -89,7 +89,7 @@ class Dunning(AccountsController):
 				)
 
 	def validate_overdue_payments(self):
-		daily_interest = self.rate_of_interest / 100 / 365
+		daily_interest = (self.rate_of_interest or 0) / 100 / 365
 
 		for row in self.overdue_payments:
 			row.overdue_days = (getdate(self.posting_date) - getdate(row.due_date)).days or 0
@@ -98,7 +98,7 @@ class Dunning(AccountsController):
 	def validate_totals(self):
 		self.total_outstanding = sum(row.outstanding for row in self.overdue_payments)
 		self.total_interest = sum(row.interest for row in self.overdue_payments)
-		self.dunning_amount = self.total_interest + self.dunning_fee
+		self.dunning_amount = self.total_interest + (self.dunning_fee or 0)
 		self.base_dunning_amount = self.dunning_amount * self.conversion_rate
 		self.grand_total = self.total_outstanding + self.dunning_amount
 
@@ -133,7 +133,7 @@ class Dunning(AccountsController):
 				"Overdue Payment",
 				filters={
 					"payment_schedule": row.payment_schedule,
-					"parent": ("!=", row.parent),
+					"parent": ("!=", str(row.parent)),
 					"docstatus": 1,
 				},
 			)
@@ -210,19 +210,22 @@ def get_linked_dunnings_as_per_state(sales_invoice, state):
 
 
 @frappe.whitelist()
-def get_dunning_letter_text(dunning_type, doc, language=None):
+def get_dunning_letter_text(dunning_type: str, doc: str | dict, language: str | None = None) -> dict:
+	DOCTYPE = "Dunning Letter Text"
+	FIELDS = ["body_text", "closing_text", "language"]
 	if isinstance(doc, str):
 		doc = json.loads(doc)
-	if language:
-		filters = {"parent": dunning_type, "language": language}
-	else:
-		filters = {"parent": dunning_type, "is_default_language": 1}
 	letter_text = frappe.db.get_value(
-		"Dunning Letter Text", filters, ["body_text", "closing_text", "language"], as_dict=1
-	)
-	if letter_text:
-		return {
-			"body_text": frappe.render_template(letter_text.body_text, doc),
-			"closing_text": frappe.render_template(letter_text.closing_text, doc),
-			"language": letter_text.language,
-		}
+			DOCTYPE, {"parent": dunning_type, "language": language}, FIELDS, as_dict=1
+		)
+	if not letter_text:
+		letter_text = frappe.db.get_value(
+			DOCTYPE, {"parent": dunning_type, "is_default_language": 1}, FIELDS, as_dict=1
+		)
+	if not letter_text:
+		return {}
+	return {
+		"body_text": frappe.render_template(letter_text.body_text, doc),
+		"closing_text": frappe.render_template(letter_text.closing_text, doc),
+		"language": letter_text.language,
+	}

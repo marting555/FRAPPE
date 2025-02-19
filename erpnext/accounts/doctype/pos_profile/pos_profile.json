@@ -12,7 +12,6 @@
   "disabled",
   "column_break_9",
   "warehouse",
-  "campaign",
   "company_address",
   "section_break_15",
   "applicable_for_users",
@@ -87,12 +86,6 @@
    "fieldname": "country",
    "fieldtype": "Read Only",
    "label": "Country"
-  },
-  {
-   "fieldname": "campaign",
-   "fieldtype": "Link",
-   "label": "Campaign",
-   "options": "Campaign"
   },
   {
    "fieldname": "company_address",
@@ -402,7 +395,7 @@
    "link_fieldname": "pos_profile"
   }
  ],
- "modified": "2022-08-10 12:57:06.241439",
+ "modified": "2024-11-07 17:14:09.561895",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "POS Profile",

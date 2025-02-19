@@ -16,7 +16,6 @@
   "accounting_dimensions_section",
   "cost_center",
   "dimension_col_break",
-  "project",
   "currency_section",
   "account_currency",
   "column_break_10",
@@ -35,7 +34,8 @@
   "col_break3",
   "is_advance",
   "user_remark",
-  "against_account"
+  "against_account",
+  "remaining_amount"
  ],
  "fields": [
   {
@@ -183,7 +183,7 @@
    "fieldtype": "Select",
    "label": "Reference Type",
    "no_copy": 1,
-   "options": "\nSales Invoice\nPurchase Invoice\nJournal Entry\nSales Order\nPurchase Order\nExpense Claim\nAsset\nLoan\nPayroll Entry\nEmployee Advance\nExchange Rate Revaluation\nInvoice Discounting\nFees\nFull and Final Statement\nPayment Entry",
+   "options": "\nSales Invoice\nPurchase Invoice\nJournal Entry\nSales Order\nPurchase Order\nExpense Claim\nLoan\nPayroll Entry\nEmployee Advance\nExchange Rate Revaluation\nInvoice Discounting\nFees\nFull and Final Statement\nPayment Entry",
    "search_index": 1
   },
   {
@@ -196,18 +196,11 @@
    "search_index": 1
   },
   {
-   "depends_on": "eval:doc.reference_type&&!in_list(doc.reference_type, ['Expense Claim', 'Asset', 'Employee Loan', 'Employee Advance'])",
+   "depends_on": "eval:doc.reference_type&&!in_list(doc.reference_type, ['Expense Claim', 'Employee Loan', 'Employee Advance'])",
    "fieldname": "reference_due_date",
    "fieldtype": "Date",
    "label": "Reference Due Date",
    "no_copy": 1
-  },
-  {
-   "allow_on_submit": 1,
-   "fieldname": "project",
-   "fieldtype": "Link",
-   "label": "Project",
-   "options": "Project"
   },
   {
    "fieldname": "col_break3",
@@ -263,12 +256,19 @@
    "label": "Reference Detail No",
    "no_copy": 1,
    "search_index": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "remaining_amount",
+   "fieldtype": "Currency",
+   "label": "Remaining Amount",
+   "read_only": 1
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-02-05 01:10:50.224840",
+ "modified": "2025-01-17 11:24:12.286002",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Journal Entry Account",

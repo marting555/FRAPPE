@@ -133,7 +133,7 @@ def get_entries_for_bank_reconciliation_statement(filters):
 def get_journal_entries(filters):
 	return frappe.db.sql(
 		"""
-		select "Journal Entry" as payment_document, jv.posting_date,
+		select 'Journal Entry' as payment_document, jv.posting_date,
 			jv.name as payment_entry, jvd.debit_in_account_currency as debit,
 			jvd.credit_in_account_currency as credit, jvd.against_account,
 			jv.cheque_no as reference_no, jv.cheque_date as ref_date, jv.clearance_date, jvd.account_currency
@@ -142,7 +142,8 @@ def get_journal_entries(filters):
 		where jvd.parent = jv.name and jv.docstatus=1
 			and jvd.account = %(account)s and jv.posting_date <= %(report_date)s
 			and ifnull(jv.clearance_date, '4000-01-01') > %(report_date)s
-			and ifnull(jv.is_opening, 'No') = 'No'""",
+			and ifnull(jv.is_opening, 'No') = 'No'
+			and jv.company = %(company)s """,
 		filters,
 		as_dict=1,
 	)
@@ -151,18 +152,24 @@ def get_journal_entries(filters):
 def get_payment_entries(filters):
 	return frappe.db.sql(
 		"""
-		select
-			"Payment Entry" as payment_document, name as payment_entry,
-			reference_no, reference_date as ref_date,
-			if(paid_to=%(account)s, received_amount_after_tax, 0) as debit,
-			if(paid_from=%(account)s, paid_amount_after_tax, 0) as credit,
-			posting_date, ifnull(party,if(paid_from=%(account)s,paid_to,paid_from)) as against_account, clearance_date,
-			if(paid_to=%(account)s, paid_to_account_currency, paid_from_account_currency) as account_currency
-		from `tabPayment Entry`
-		where
-			(paid_from=%(account)s or paid_to=%(account)s) and docstatus=1
-			and posting_date <= %(report_date)s
-			and ifnull(clearance_date, '4000-01-01') > %(report_date)s
+		SELECT
+			'Payment Entry' AS payment_document,
+			name AS payment_entry,
+			reference_no,
+			reference_date AS ref_date,
+			CASE WHEN paid_to = %(account)s THEN received_amount_after_tax ELSE 0 END AS debit,
+			CASE WHEN paid_from = %(account)s THEN paid_amount_after_tax ELSE 0 END AS credit,
+			posting_date,
+			COALESCE(party, CASE WHEN paid_from = %(account)s THEN paid_to ELSE paid_from END) AS against_account,
+			clearance_date,
+			CASE WHEN paid_to = %(account)s THEN paid_to_account_currency ELSE paid_from_account_currency END AS account_currency
+		FROM `tabPayment Entry`
+		WHERE
+			(paid_from = %(account)s OR paid_to = %(account)s)
+			AND docstatus = 1
+			AND posting_date <= %(report_date)s
+			AND COALESCE(clearance_date, '4000-01-01') > %(report_date)s
+			and company = %(company)s
 	""",
 		filters,
 		as_dict=1,
@@ -173,7 +180,7 @@ def get_pos_entries(filters):
 	return frappe.db.sql(
 		"""
 			select
-				"Sales Invoice Payment" as payment_document, sip.name as payment_entry, sip.amount as debit,
+				'Sales Invoice Payment' as payment_document, sip.name as payment_entry, sip.amount as debit,
 				si.posting_date, si.debit_to as against_account, sip.clearance_date,
 				account.account_currency, 0 as credit
 			from `tabSales Invoice Payment` sip, `tabSales Invoice` si, `tabAccount` account
@@ -181,6 +188,7 @@ def get_pos_entries(filters):
 				sip.account=%(account)s and si.docstatus=1 and sip.parent = si.name
 				and account.name = sip.account and si.posting_date <= %(report_date)s and
 				ifnull(sip.clearance_date, '4000-01-01') > %(report_date)s
+				and si.company = %(company)s
 			order by
 				si.posting_date ASC, si.name DESC
 		""",
@@ -216,10 +224,16 @@ def get_amounts_not_reflected_in_system_for_bank_reconciliation_statement(filter
 
 	pe_amount = frappe.db.sql(
 		"""
-		select sum(if(paid_from=%(account)s, paid_amount, received_amount))
-		from `tabPayment Entry`
-		where (paid_from=%(account)s or paid_to=%(account)s) and docstatus=1
-		and posting_date > %(report_date)s and clearance_date <= %(report_date)s""",
+		SELECT
+			SUM(CASE WHEN paid_from = %(account)s THEN paid_amount ELSE received_amount END)
+		FROM
+			"tabPayment Entry"
+		WHERE
+			(paid_from = %(account)s OR paid_to = %(account)s)
+			AND docstatus = 1
+			AND posting_date > %(report_date)s
+			AND clearance_date <= %(report_date)s
+		""",
 		filters,
 	)
 

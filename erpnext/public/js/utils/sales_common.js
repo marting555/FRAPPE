@@ -15,10 +15,11 @@ erpnext.sales_common = {
 			onload() {
 				super.onload();
 				this.setup_queries();
-				this.frm.set_query("shipping_rule", function () {
+				this.frm.set_query("shipping_rule", function (doc) {
 					return {
 						filters: {
 							shipping_rule_type: "Selling",
+							company: doc.company
 						},
 					};
 				});
@@ -28,6 +29,7 @@ erpnext.sales_common = {
 						query: "erpnext.controllers.queries.get_project_name",
 						filters: {
 							customer: doc.customer,
+							company: doc.company
 						},
 					};
 				});
@@ -47,9 +49,11 @@ erpnext.sales_common = {
 				);
 
 				me.frm.set_query("contact_person", erpnext.queries.contact_query);
+				me.frm.set_query("company_contact_person", erpnext.queries.company_contact_query);
 				me.frm.set_query("customer_address", erpnext.queries.address_query);
 				me.frm.set_query("shipping_address_name", erpnext.queries.address_query);
 				me.frm.set_query("dispatch_address_name", erpnext.queries.dispatch_address_query);
+				me.frm.set_query("company_address", erpnext.queries.company_address_query);
 
 				erpnext.accounts.dimensions.setup_dimension_filters(me.frm, me.frm.doctype);
 
@@ -434,38 +438,6 @@ erpnext.sales_common = {
 				}
 			}
 
-			project() {
-				let me = this;
-				if (["Delivery Note", "Sales Invoice", "Sales Order"].includes(this.frm.doc.doctype)) {
-					if (this.frm.doc.project) {
-						frappe.call({
-							method: "erpnext.projects.doctype.project.project.get_cost_center_name",
-							args: { project: this.frm.doc.project },
-							callback: function (r, rt) {
-								if (!r.exc) {
-									$.each(me.frm.doc["items"] || [], function (i, row) {
-										if (r.message) {
-											frappe.model.set_value(
-												row.doctype,
-												row.name,
-												"cost_center",
-												r.message
-											);
-											frappe.msgprint(
-												__(
-													"Cost Center For Item with Item Code {0} has been Changed to {1}",
-													[row.item_name, r.message]
-												)
-											);
-										}
-									});
-								}
-							},
-						});
-					}
-				}
-			}
-
 			coupon_code() {
 				this.frm.set_value("discount_amount", 0);
 				this.frm.set_value("additional_discount_percentage", 0);
@@ -475,55 +447,52 @@ erpnext.sales_common = {
 };
 
 erpnext.pre_sales = {
+
 	set_as_lost: function (doctype) {
 		frappe.ui.form.on(doctype, {
+			
 			set_as_lost_dialog: function (frm) {
-				var dialog = new frappe.ui.Dialog({
-					title: __("Set as Lost"),
-					fields: [
-						{
-							fieldtype: "Table MultiSelect",
-							label: __("Lost Reasons"),
-							fieldname: "lost_reason",
-							options:
-								frm.doctype === "Opportunity"
-									? "Opportunity Lost Reason Detail"
-									: "Quotation Lost Reason Detail",
-							reqd: 1,
-						},
-						{
-							fieldtype: "Table MultiSelect",
-							label: __("Competitors"),
-							fieldname: "competitors",
-							options: "Competitor Detail",
-						},
-						{
-							fieldtype: "Small Text",
-							label: __("Detailed Reason"),
-							fieldname: "detailed_reason",
-						},
-					],
-					primary_action: function () {
-						let values = dialog.get_values();
-
-						frm.call({
-							doc: frm.doc,
-							method: "declare_enquiry_lost",
-							args: {
-								lost_reasons_list: values.lost_reason,
-								competitors: values.competitors ? values.competitors : [],
-								detailed_reason: values.detailed_reason,
-							},
-							callback: function (r) {
-								dialog.hide();
-								frm.reload_doc();
-							},
-						});
+				let field_list = [] 
+				frappe.call({
+					method: "erpnext.selling.doctype.quotation.quotation.get_field_for_lost",
+					freeze : true,
+					args: {
+						doctype:frm.doctype
 					},
-					primary_action_label: __("Declare Lost"),
-				});
+					callback(r) {
+						if (r.message) {
+							field_list = r.message
+							var dialog = new frappe.ui.Dialog({
+								title: __("Set as Lost"),
+								fields: field_list,
+								primary_action: function () {
+									let values = dialog.get_values();
+			
+									frm.call({
+										doc: frm.doc,
+										method: "declare_enquiry_lost",
+										args: {
+											lost_reasons_list: values.lost_reason,
+											competitors: values.competitors ? values.competitors : [],
+											detailed_reason: values.detailed_reason,
+										},
+										callback: function (r) {
+											dialog.hide();
+											frm.reload_doc();
+										},
+									});
+								},
+								primary_action_label: __("Declare Lost"),
+							});
+			
+							dialog.show();
+							
+							
+						}
 
-				dialog.show();
+					},
+				});				
+				
 			},
 		});
 	},

@@ -35,15 +35,12 @@ frappe.ui.form.on("Budget", {
 	},
 
 	set_null_value: function (frm) {
-		if (frm.doc.budget_against == "Cost Center") {
-			frm.set_value("project", null);
-		} else {
+		if (frm.doc.budget_against != "Cost Center") {
 			frm.set_value("cost_center", null);
 		}
 	},
 
 	toggle_reqd_fields: function (frm) {
 		frm.toggle_reqd("cost_center", frm.doc.budget_against == "Cost Center");
-		frm.toggle_reqd("project", frm.doc.budget_against == "Project");
 	},
 });

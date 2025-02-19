@@ -17,11 +17,20 @@ erpnext.buying = {
 				this.setup_queries(doc, cdt, cdn);
 				super.onload();
 
-				this.frm.set_query('shipping_rule', function() {
+				this.frm.set_query('shipping_rule', function(doc) {
 					return {
 						filters: {
-							"shipping_rule_type": "Buying"
+							"shipping_rule_type": "Buying",
+							company: doc.company
 						}
+					};
+				});
+
+				this.frm.set_query("project", function (doc) {
+					return {
+						filters: {
+							company: doc.company,
+						},
 					};
 				});
 
@@ -142,6 +151,23 @@ erpnext.buying = {
 				var me = this;
 				erpnext.utils.get_party_details(this.frm, null, null, function(){
 					me.apply_price_list();
+				});
+			}
+
+			company(){
+				if(!frappe.meta.has_field(this.frm.doc.doctype, "billing_address")) return;
+				frappe.call({
+					method: "erpnext.setup.doctype.company.company.get_billing_shipping_address",
+					args: {
+						name: this.frm.doc.company,
+						billing_address:this.frm.doc.billing_address,
+						shipping_address: this.frm.doc.shipping_address
+					},
+					callback: (r) => {
+						this.frm.set_value("billing_address", r.message.primary_address || "");
+						if(!frappe.meta.has_field(this.frm.doc.doctype, "shipping_address")) return;
+						this.frm.set_value("shipping_address", r.message.shipping_address || "");
+					},
 				});
 			}
 
@@ -386,7 +412,7 @@ erpnext.buying = {
 						if (r.message && (r.message.has_batch_no || r.message.has_serial_no)) {
 							item.has_serial_no = r.message.has_serial_no;
 							item.has_batch_no = r.message.has_batch_no;
-							item.type_of_transaction = item.rejected_qty > 0 ? "Inward" : "Outward";
+							item.type_of_transaction = !doc.is_return > 0 ? "Inward" : "Outward";
 							item.is_rejected = true;
 
 							new erpnext.SerialBatchPackageSelector(
@@ -398,7 +424,7 @@ erpnext.buying = {
 										}
 
 										let update_values = {
-											"serial_and_batch_bundle": r.name,
+											"rejected_serial_and_batch_bundle": r.name,
 											"use_serial_batch_fields": 0,
 											"rejected_qty": qty / flt(item.conversion_factor || 1, precision("conversion_factor", item))
 										}

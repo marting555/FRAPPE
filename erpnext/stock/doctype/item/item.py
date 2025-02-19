@@ -3,8 +3,9 @@
 
 import copy
 import json
-
+from datetime import datetime, timedelta
 import frappe
+from pypika import Order
 from frappe import _, bold
 from frappe.model.document import Document
 from frappe.query_builder import Interval
@@ -70,10 +71,7 @@ class Item(Document):
 
 		allow_alternative_item: DF.Check
 		allow_negative_stock: DF.Check
-		asset_category: DF.Link | None
-		asset_naming_series: DF.Literal[None]
 		attributes: DF.Table[ItemVariantAttribute]
-		auto_create_assets: DF.Check
 		barcodes: DF.Table[ItemBarcode]
 		batch_number_series: DF.Data | None
 		brand: DF.Link | None
@@ -105,8 +103,6 @@ class Item(Document):
 		inspection_required_before_delivery: DF.Check
 		inspection_required_before_purchase: DF.Check
 		is_customer_provided_item: DF.Check
-		is_fixed_asset: DF.Check
-		is_grouped_asset: DF.Check
 		is_purchase_item: DF.Check
 		is_sales_item: DF.Check
 		is_stock_item: DF.Check
@@ -151,7 +147,6 @@ class Item(Document):
 
 	def onload(self):
 		self.set_onload("stock_exists", self.stock_ledger_created())
-		self.set_onload("asset_naming_series", get_asset_naming_series())
 
 	def autoname(self):
 		if frappe.db.get_default("item_naming_by") == "Naming Series":
@@ -203,7 +198,6 @@ class Item(Document):
 		self.validate_attributes()
 		self.validate_variant_attributes()
 		self.validate_variant_based_on_change()
-		self.validate_fixed_asset()
 		self.clear_retain_sample()
 		self.validate_retain_sample()
 		self.validate_uom_conversion_factor()
@@ -292,24 +286,6 @@ class Item(Document):
 
 				stock_entry.add_comment("Comment", _("Opening Stock"))
 
-	def validate_fixed_asset(self):
-		if self.is_fixed_asset:
-			if self.is_stock_item:
-				frappe.throw(_("Fixed Asset Item must be a non-stock item."))
-
-			if not self.asset_category:
-				frappe.throw(_("Asset Category is mandatory for Fixed Asset item"))
-
-			if self.stock_ledger_created():
-				frappe.throw(_("Cannot be a fixed asset item as Stock Ledger is created."))
-
-		if not self.is_fixed_asset:
-			asset = frappe.db.get_all("Asset", filters={"item_code": self.name, "docstatus": 1}, limit=1)
-			if asset:
-				frappe.throw(
-					_('"Is Fixed Asset" cannot be unchecked, as Asset record exists against the item')
-				)
-
 	def validate_retain_sample(self):
 		if self.retain_sample and not frappe.db.get_single_value(
 			"Stock Settings", "sample_retention_warehouse"
@@ -345,7 +321,13 @@ class Item(Document):
 	def validate_item_tax_net_rate_range(self):
 		for tax in self.get("taxes"):
 			if flt(tax.maximum_net_rate) < flt(tax.minimum_net_rate):
-				frappe.throw(_("Row #{0}: Maximum Net Rate cannot be greater than Minimum Net Rate"))
+				frappe.throw(
+					_("Taxes row #{0}: {1} cannot be smaller than {2}").format(
+						tax.idx,
+						bold(_(tax.meta.get_label("maximum_net_rate"))),
+						bold(_(tax.meta.get_label("minimum_net_rate"))),
+					)
+				)
 
 	def update_template_tables(self):
 		template = frappe.get_cached_doc("Item", self.variant_of)
@@ -385,22 +367,29 @@ class Item(Document):
 				)
 
 	def validate_item_type(self):
-		if self.has_serial_no == 1 and self.is_stock_item == 0 and not self.is_fixed_asset:
-			frappe.throw(_("'Has Serial No' can not be 'Yes' for non-stock item"))
+		if not "assets" in frappe.get_installed_apps():
+			if self.has_serial_no == 1 and self.is_stock_item == 0:
+				frappe.throw(_("'Has Serial No' can not be 'Yes' for non-stock item"))
 
-		if self.has_serial_no == 0 and self.serial_no_series:
-			self.serial_no_series = None
+			if self.has_serial_no == 0 and self.serial_no_series:
+				self.serial_no_series = None
 
 	def validate_naming_series(self):
 		for field in ["serial_no_series", "batch_number_series"]:
 			series = self.get(field)
-			if series and "#" in series and "." not in series:
-				frappe.throw(
-					_("Invalid naming series (. missing) for {0}").format(
-						frappe.bold(self.meta.get_field(field).label)
+			if series and "#" in series:
+				if "." not in series:
+					frappe.throw(
+						_("Invalid naming series (. missing) for {0}").format(
+							frappe.bold(self.meta.get_field(field).label)
+						)
 					)
-				)
-
+				if ". #" in series:
+					frappe.throw(
+						_("Invalid naming series (avoid spaces between '.' and '#') for {0}.").format(
+							frappe.bold(self.meta.get_field(field).label)
+						)
+					)
 	def check_for_active_boms(self):
 		if self.default_bom:
 			bom_item = frappe.db.get_value("BOM", self.default_bom, "item")
@@ -588,12 +577,13 @@ class Item(Document):
 
 	def validate_duplicate_item_in_stock_reconciliation(self, old_name, new_name):
 		records = frappe.db.sql(
-			""" SELECT parent, COUNT(*) as records
+			"""
+			SELECT parent, COUNT(*) as records
 			FROM `tabStock Reconciliation Item`
-			WHERE item_code = %s and docstatus = 1
-			GROUP By item_code, warehouse, parent
-			HAVING records > 1
-		""",
+			WHERE item_code = %s AND docstatus = 1
+			GROUP BY item_code, warehouse, parent
+			HAVING COUNT(*) > 1
+			""",
 			new_name,
 			as_dict=1,
 		)
@@ -1085,19 +1075,28 @@ def make_item_price(item, price_list_name, item_price):
 
 
 def get_timeline_data(doctype: str, name: str) -> dict[int, int]:
-	"""get timeline data based on Stock Ledger Entry. This is displayed as heatmap on the item page."""
-
-	sle = frappe.qb.DocType("Stock Ledger Entry")
-
-	return dict(
-		frappe.qb.from_(sle)
-		.select(UnixTimestamp(sle.posting_date), Count("*"))
-		.where(sle.item_code == name)
-		.where(sle.posting_date > CurDate() - Interval(years=1))
-		.groupby(sle.posting_date)
-		.run()
+    """Get timeline data based on Stock Ledger Entry. This is displayed as a heatmap on the item page."""
+    
+    # Calculate the date one year ago from today
+    one_year_ago = datetime.now() - timedelta(days=365)
+    
+    sle = frappe.qb.DocType("Stock Ledger Entry")
+    result = frappe.db.sql(
+		"""
+		SELECT EXTRACT(EPOCH FROM posting_date) AS posting_date_unix,
+			COUNT(*) AS item_count
+		FROM `tabStock Ledger Entry`
+		WHERE item_code = %s
+		AND posting_date > %s
+		GROUP BY posting_date
+		""",
+    (name, one_year_ago),
+    as_dict=True
 	)
 
+    result_dict = {int(row['posting_date_unix']): row['item_count'] for row in result}
+
+    return result_dict
 
 def validate_end_of_life(item_code, end_of_life=None, disabled=None):
 	if (not end_of_life) or (disabled is None):
@@ -1133,34 +1132,10 @@ def get_last_purchase_details(item_code, doc_name=None, conversion_rate=1.0):
 	"""returns last purchase details in stock uom"""
 	# get last purchase order item details
 
-	last_purchase_order = frappe.db.sql(
-		"""\
-		select po.name, po.transaction_date, po.conversion_rate,
-			po_item.conversion_factor, po_item.base_price_list_rate,
-			po_item.discount_percentage, po_item.base_rate, po_item.base_net_rate
-		from `tabPurchase Order` po, `tabPurchase Order Item` po_item
-		where po.docstatus = 1 and po_item.item_code = %s and po.name != %s and
-			po.name = po_item.parent
-		order by po.transaction_date desc, po.name desc
-		limit 1""",
-		(item_code, cstr(doc_name)),
-		as_dict=1,
-	)
+	last_purchase_order = get_purchase_voucher_details("Purchase Order", item_code, doc_name)
 
 	# get last purchase receipt item details
-	last_purchase_receipt = frappe.db.sql(
-		"""\
-		select pr.name, pr.posting_date, pr.posting_time, pr.conversion_rate,
-			pr_item.conversion_factor, pr_item.base_price_list_rate, pr_item.discount_percentage,
-			pr_item.base_rate, pr_item.base_net_rate
-		from `tabPurchase Receipt` pr, `tabPurchase Receipt Item` pr_item
-		where pr.docstatus = 1 and pr_item.item_code = %s and pr.name != %s and
-			pr.name = pr_item.parent
-		order by pr.posting_date desc, pr.posting_time desc, pr.name desc
-		limit 1""",
-		(item_code, cstr(doc_name)),
-		as_dict=1,
-	)
+	last_purchase_receipt = get_purchase_voucher_details("Purchase Receipt", item_code, doc_name)
 
 	purchase_order_date = getdate(
 		last_purchase_order and last_purchase_order[0].transaction_date or "1900-01-01"
@@ -1181,7 +1156,12 @@ def get_last_purchase_details(item_code, doc_name=None, conversion_rate=1.0):
 		purchase_date = purchase_receipt_date
 
 	else:
-		return frappe._dict()
+		last_purchase_invoice = get_purchase_voucher_details("Purchase Invoice", item_code, doc_name)
+		if last_purchase_invoice:
+			last_purchase = last_purchase_invoice[0]
+			purchase_date = getdate(last_purchase.posting_date)
+		else:
+			return frappe._dict()
 
 	conversion_factor = flt(last_purchase.conversion_factor)
 	out = frappe._dict(
@@ -1206,6 +1186,35 @@ def get_last_purchase_details(item_code, doc_name=None, conversion_rate=1.0):
 
 	return out
 
+def get_purchase_voucher_details(doctype, item_code, document_name):
+	parent_doc = frappe.qb.DocType(doctype)
+	child_doc = frappe.qb.DocType(doctype + " Item")
+	query = (
+		frappe.qb.from_(parent_doc)
+		.inner_join(child_doc)
+		.on(parent_doc.name == child_doc.parent)
+		.select(
+			parent_doc.name,
+			parent_doc.conversion_rate,
+			child_doc.conversion_factor,
+			child_doc.base_price_list_rate,
+			child_doc.discount_percentage,
+			child_doc.base_rate,
+			child_doc.base_net_rate,
+		)
+		.where(parent_doc.docstatus == 1)
+		.where(child_doc.item_code == item_code)
+		.where(parent_doc.name != document_name)
+	)
+	if doctype in ("Purchase Receipt", "Purchase Invoice"):
+		query = query.select(parent_doc.posting_date, parent_doc.posting_time)
+		query = query.orderby(
+			parent_doc.posting_date, parent_doc.posting_time, parent_doc.name, order=Order.desc
+		)
+	else:
+		query = query.select(parent_doc.transaction_date)
+		query = query.orderby(parent_doc.transaction_date, parent_doc.name, order=Order.desc)
+	return query.run(as_dict=1)
 
 def check_stock_uom_with_bin(item, stock_uom):
 	if stock_uom == frappe.db.get_value("Item", item, "stock_uom"):
@@ -1373,14 +1382,6 @@ def validate_item_default_company_links(item_defaults: list[ItemDefault]) -> Non
 						),
 						title=_("Invalid Item Defaults"),
 					)
-
-
-@frappe.whitelist()
-def get_asset_naming_series():
-	from erpnext.assets.doctype.asset.asset import get_asset_naming_series
-
-	return get_asset_naming_series()
-
 
 @frappe.request_cache
 def get_child_warehouses(warehouse):

@@ -326,9 +326,11 @@ class SubcontractingReceipt(SubcontractingController):
 				supplied_items_details[item.name] = {}
 
 				for supplied_item in supplied_items:
+					if supplied_item.rm_item_code not in supplied_items_details[item.name]:
+						supplied_items_details[item.name][supplied_item.rm_item_code] = 0.0
 					supplied_items_details[item.name][
 						supplied_item.rm_item_code
-					] = supplied_item.available_qty
+					] += supplied_item.available_qty
 		else:
 			for item in self.get("supplied_items"):
 				item.available_qty_for_consumption = supplied_items_details.get(item.reference_name, {}).get(
@@ -542,7 +544,7 @@ class SubcontractingReceipt(SubcontractingController):
 						remarks=remarks,
 						against_account=item.expense_account,
 						account_currency=get_account_currency(accepted_warehouse_account),
-						project=item.project,
+						project=item.project if "projects" in frappe.get_installed_apps() else "",
 						item=item,
 					)
 					# Expense Account (Credit)
@@ -555,7 +557,7 @@ class SubcontractingReceipt(SubcontractingController):
 						remarks=remarks,
 						against_account=accepted_warehouse_account,
 						account_currency=get_account_currency(item.expense_account),
-						project=item.project,
+						project=item.project if "projects" in frappe.get_installed_apps() else "",
 						item=item,
 					)
 
@@ -570,7 +572,7 @@ class SubcontractingReceipt(SubcontractingController):
 							remarks=remarks,
 							against_account=item.expense_account,
 							account_currency=get_account_currency(supplier_warehouse_account),
-							project=item.project,
+							project=item.project if "projects" in frappe.get_installed_apps() else "",
 							item=item,
 						)
 						# Expense Account (Debit)
@@ -583,7 +585,7 @@ class SubcontractingReceipt(SubcontractingController):
 							remarks=remarks,
 							against_account=supplier_warehouse_account,
 							account_currency=get_account_currency(item.expense_account),
-							project=item.project,
+							project=item.project if "projects" in frappe.get_installed_apps() else "",
 							item=item,
 						)
 
@@ -615,7 +617,7 @@ class SubcontractingReceipt(SubcontractingController):
 							remarks=remarks,
 							against_account=item.expense_account,
 							account_currency=get_account_currency(loss_account),
-							project=item.project,
+							project=item.project if "projects" in frappe.get_installed_apps() else "",
 							item=item,
 						)
 						# Expense Account (Debit)
@@ -628,7 +630,7 @@ class SubcontractingReceipt(SubcontractingController):
 							remarks=remarks,
 							against_account=loss_account,
 							account_currency=get_account_currency(item.expense_account),
-							project=item.project,
+							project=item.project if "projects" in frappe.get_installed_apps() else "",
 							item=item,
 						)
 				elif (
@@ -733,7 +735,7 @@ def make_purchase_receipt(source_name, target_doc=None, save=False, submit=False
 						"purchase_order": item.purchase_order,
 						"purchase_order_item": item.purchase_order_item,
 						"subcontracting_receipt_item": item.name,
-						"project": po_item.project,
+						"project": po_item.project if "projects" in frappe.get_installed_apps() else "",
 					}
 					target_doc.append("items", item_row)
 
@@ -765,3 +767,27 @@ def make_purchase_receipt(source_name, target_doc=None, save=False, submit=False
 				)
 
 		return target_doc
+
+
+def add_po_items_to_pr(scr_doc, target_doc):
+	fg_items = {(item.item_code, item.purchase_order): item.qty for item in scr_doc.items}
+	for (item_code, po_name), fg_qty in fg_items.items():
+		po_doc = frappe.get_doc("Purchase Order", po_name)
+		for item in po_doc.items:
+			if item.fg_item != item_code:
+				continue
+			qty = (item.stock_qty - item.received_qty) * fg_qty / item.fg_item_qty
+			if qty:
+				target_doc.append(
+					"items",
+					{
+						"item_code": item.item_code,
+						"item_name": item.item_name,
+						"description": item.description,
+						"qty": qty,
+						"rate": item.rate,
+						"warehouse": item.warehouse,
+						"purchase_order": item.parent,
+						"purchase_order_item": item.name,
+					},
+				)

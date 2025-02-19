@@ -1,0 +1,40 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-10-21 14:15:53.832707",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "frozen_accounts_modifier"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "frozen_accounts_modifier",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Role Allowed to Set Frozen Accounts and Edit Frozen Entries",
+   "options": "Role"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-10-21 14:19:04.474034",
+ "modified_by": "Administrator",
+ "module": "Accounts",
+ "name": "Accounts Closing Table",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

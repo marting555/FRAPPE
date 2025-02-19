@@ -138,7 +138,7 @@ def _execute(filters=None, additional_table_columns=None, additional_conditions=
 		data.append(row)
 
 	if filters.get("group_by") and item_list:
-		total_row = total_row_map.get(prev_group_by_value or d.get("item_name"))
+		total_row = total_row_map.get(prev_group_by_value) or total_row_map.get(d.get("item_name"))
 		total_row["percent_gt"] = flt(total_row["total"] / grand_total * 100)
 		data.append(total_row)
 		data.append({})
@@ -356,7 +356,11 @@ def apply_conditions(query, si, sii, filters, additional_conditions=None):
 		sales_invoice = frappe.db.get_all(
 			"Sales Invoice Payment", {"mode_of_payment": filters.get("mode_of_payment")}, pluck="parent"
 		)
-		query = query.where(si.name.isin(sales_invoice))
+		
+		if sales_invoice:
+			query = query.where(si.name.isin(sales_invoice))
+		else:
+			query = query.where(si.name == '')
 
 	if filters.get("warehouse"):
 		if frappe.db.get_value("Warehouse", filters.get("warehouse"), "is_group"):
@@ -504,17 +508,32 @@ def get_delivery_notes_against_sales_order(item_list):
 
 
 def get_grand_total(filters, doctype):
-	return flt(
-		frappe.db.get_value(
-			doctype,
-			{
-				"docstatus": 1,
-				"posting_date": ("between", [filters.get("from_date"), filters.get("to_date")]),
-			},
-			"sum(base_grand_total)",
-		)
-	)
+	# return flt(
+	# 	frappe.db.get_value(
+	# 		doctype,
+	# 		{
+	# 			"docstatus": 1,
+	# 			"posting_date": ("between", [filters.get("from_date"), filters.get("to_date")]),
+	# 		},
+	# 		"sum(base_grand_total)",
+	# 	)
+	# )
 
+	grand_total = frappe.db.sql(
+		"""
+		SELECT SUM(base_grand_total)
+		FROM `tab{0}`
+		WHERE docstatus = 1
+			AND posting_date BETWEEN '{1}' AND '{2}'
+		"""
+		.format(
+			doctype,
+			filters.get("from_date"),
+			filters.get("to_date")
+		),as_list = 1
+	)
+	if grand_total:
+		return flt(grand_total[0][0])
 
 def get_tax_accounts(
 	item_list,
@@ -716,7 +735,6 @@ def add_total_row(
 			add_sub_total_row(total_row, total_row_map, "total_row", tax_columns)
 
 		prev_group_by_value = item.get(group_by_field, "")
-
 		total_row_map.setdefault(
 			item.get(group_by_field, ""),
 			{
@@ -801,3 +819,4 @@ def add_sub_total_row(item, total_row_map, group_by_value, tax_columns):
 	for tax in tax_columns:
 		total_row.setdefault(frappe.scrub(tax + " Amount"), 0.0)
 		total_row[frappe.scrub(tax + " Amount")] += flt(item[frappe.scrub(tax + " Amount")])
+
