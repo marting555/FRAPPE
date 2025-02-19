@@ -234,7 +234,8 @@ frappe.ui.form.on("Project", {
 			const quotations = await frappe.db.get_list("Quotation", {
 				filters: [
 					['project_name', '=', frm.docname],
-					['status', "!=", "Approved"]
+					['status', "!=", "Approved"],
+					['status', "!=", "Ordered"]
 				],
 				fields: ["name", "status"]
 			})
