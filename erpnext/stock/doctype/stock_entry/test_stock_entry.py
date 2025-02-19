@@ -1950,6 +1950,7 @@ class TestStockEntry(FrappeTestCase):
 
 	def test_create_partial_material_request_stock_entry_for_serial_item_TC_SCK_190(self):
 		from erpnext.stock.doctype.material_request.material_request import make_stock_entry as _make_stock_entry
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		company = "_Test Company"
 		if not frappe.db.exists("Company", company):
 			company_doc = frappe.new_doc("Company")
@@ -2996,6 +2997,7 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(sle_records[item_2], [-10])
 
 	def test_single_mr_with_multiple_se_tc_sck_123(self):
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		mr = make_material_request(material_request_type="Material Transfer")
 		
 		self.assertEqual(mr.status, "Pending")
@@ -3037,7 +3039,7 @@ class TestStockEntry(FrappeTestCase):
 	def test_mr_to_se_with_in_transit_tc_sck_124(self):
 		from erpnext.stock.doctype.material_request.material_request import make_in_transit_stock_entry
 		from erpnext.stock.doctype.material_request.test_material_request import  get_in_transit_warehouse
-
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		mr = make_material_request(material_request_type="Material Transfer")
 		self.assertEqual(mr.status, "Pending")
 
@@ -3623,6 +3625,7 @@ class TestStockEntry(FrappeTestCase):
 	@change_settings("Stock Settings", {"allow_negative_stock": 1})
 	def test_create_mr_se_TC_SCK_063(self):
 		from erpnext.stock.doctype.material_request.material_request import make_stock_entry as _make_stock_entry
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		item = make_item("_Test Item")
 		target_warehouse = create_warehouse("_Test Warehouse", company="_Test Company")
 		source_warehouse = create_warehouse("_Test Source Warehouse", company="_Test Company")
