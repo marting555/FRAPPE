@@ -5924,7 +5924,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			make_test_item,
 			get_payment_entry
 		)
-		
+		sales_oreder_name = None
 		account_setting = frappe.get_doc("Accounts Settings")
 		account_setting.unlink_advance_payment_on_cancelation_of_order = 0
 		account_setting.save()
@@ -5938,14 +5938,14 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 				qty=1,
 				rate=1000,
 			)
-
+			sales_oreder_name = so.name
 			pe = get_payment_entry("Sales Order", so.name, bank_account="Cash - _TC")
 			pe.submit()
 			so.load_from_db()
 			so.cancel()
 		except Exception as e:
 			error_message = str(e)
-			self.assertEqual(error_message, f"Cannot delete or cancel because Sales Order {so.name} is linked with Payment Entry {pe.name} at Row: 1")
+			self.assertEqual(error_message, f"Cannot delete or cancel because Sales Order {sales_oreder_name} is linked with Payment Entry {pe.name} at Row: 1")
 		
 	def test_customer_credit_limit_bypass_TC_ACC_139(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
