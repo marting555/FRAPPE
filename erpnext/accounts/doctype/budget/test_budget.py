@@ -24,7 +24,7 @@ class TestBudget(IntegrationTestCase):
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
 			40000,
-			"_Test Cost Center - _TC",
+			cost_center="_Test Cost Center - _TC",
 			posting_date=nowdate(),
 			submit=True,
 		)
@@ -47,7 +47,7 @@ class TestBudget(IntegrationTestCase):
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
 			40000,
-			"_Test Cost Center - _TC",
+			cost_center="_Test Cost Center - _TC",
 			posting_date=nowdate(),
 		)
 
@@ -67,7 +67,7 @@ class TestBudget(IntegrationTestCase):
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
 			40000,
-			"_Test Cost Center - _TC",
+			cost_center="_Test Cost Center - _TC",
 			posting_date=nowdate(),
 		)
 
@@ -158,7 +158,7 @@ class TestBudget(IntegrationTestCase):
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
 			40000,
-			"_Test Cost Center - _TC",
+			cost_center="_Test Cost Center - _TC",
 			project=project,
 			posting_date=nowdate(),
 		)
@@ -177,7 +177,7 @@ class TestBudget(IntegrationTestCase):
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
 			250000,
-			"_Test Cost Center - _TC",
+			cost_center="_Test Cost Center - _TC",
 			posting_date=nowdate(),
 		)
 
@@ -196,7 +196,7 @@ class TestBudget(IntegrationTestCase):
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
 			250000,
-			"_Test Cost Center - _TC",
+			cost_center="_Test Cost Center - _TC",
 			project=project,
 			posting_date=nowdate(),
 		)
@@ -218,7 +218,7 @@ class TestBudget(IntegrationTestCase):
 				"_Test Account Cost for Goods Sold - _TC",
 				"_Test Bank - _TC",
 				20000,
-				"_Test Cost Center - _TC",
+				cost_center="_Test Cost Center - _TC",
 				posting_date=nowdate(),
 				submit=True,
 			)
@@ -248,7 +248,7 @@ class TestBudget(IntegrationTestCase):
 				"_Test Account Cost for Goods Sold - _TC",
 				"_Test Bank - _TC",
 				20000,
-				"_Test Cost Center - _TC",
+				cost_center="_Test Cost Center - _TC",
 				posting_date=nowdate(),
 				submit=True,
 				project=project,
@@ -276,7 +276,7 @@ class TestBudget(IntegrationTestCase):
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
 			40000,
-			"_Test Cost Center 2 - _TC",
+			cost_center="_Test Cost Center 2 - _TC",
 			posting_date=nowdate(),
 		)
 
@@ -306,7 +306,7 @@ class TestBudget(IntegrationTestCase):
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
 			40000,
-			cost_center,
+			cost_center=cost_center,
 			posting_date=nowdate(),
 		)
 
@@ -343,7 +343,7 @@ class TestBudget(IntegrationTestCase):
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
 			400000,
-			"Main Budget Cost Center 1 - _TC",
+			cost_center="Main Budget Cost Center 1 - _TC",
 			posting_date=nowdate(),
 		)
 
@@ -380,7 +380,7 @@ def set_total_expense_zero(posting_date, budget_against_field=None, budget_again
 				"_Test Account Cost for Goods Sold - _TC",
 				"_Test Bank - _TC",
 				-existing_expense,
-				"_Test Cost Center - _TC",
+				cost_center="_Test Cost Center - _TC",
 				posting_date=nowdate(),
 				submit=True,
 			)
@@ -389,7 +389,7 @@ def set_total_expense_zero(posting_date, budget_against_field=None, budget_again
 				"_Test Account Cost for Goods Sold - _TC",
 				"_Test Bank - _TC",
 				-existing_expense,
-				"_Test Cost Center - _TC",
+				cost_center="_Test Cost Center - _TC",
 				submit=True,
 				project=budget_against,
 				posting_date=nowdate(),
