@@ -428,7 +428,8 @@ class TestQualityInspection(FrappeTestCase):
 		qa.cancel()
 
 	def test_qa_for_pr_proc_TC_SCK_166(self):
-		pr = make_purchase_receipt(item_code="_Test Item with QA")
+		item_code = create_item("_Test Item with QA", valuation_rate=200).name
+		pr = make_purchase_receipt(item_code)
 		frappe.db.set_value("Item", "_Test Item with QA", "inspection_required_before_purchase", 1)
 
 		qa = create_quality_inspection(
