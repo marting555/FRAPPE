@@ -3942,10 +3942,10 @@ class TestPurchaseReceipt(FrappeTestCase):
 			purchase_order=po.name,
 			company=company,
 			supplier=po.supplier,
+			currency=po.currency,
 			posting_date=posting_date,
 			items=item_list
 		)
-		
 		self.assertEqual(pr.items[0].item_code, item1.name)
 		self.assertEqual(pr.items[0].qty, 150)
 		self.assertEqual(pr.items[0].warehouse, warehouse1)
