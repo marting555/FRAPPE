@@ -3193,10 +3193,21 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_po_pi_cancel_TC_SCK_086(self):
 		# MR =>  PO => PI => PI Cancel
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+		item_fields = {
+			"item_name" : "Testing-31",
+			"is_stock_item": 1,
+			"valuation_rate": 500
+		}
+		item = make_item("Testing-31", item_fields).name
 		mr_dict_list = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
-				"warehouse" : "Stores - _TC",
+				"item_code" : item,
+				"warehouse" : create_warehouse("Stores", company="_Test Company"),
 				"qty" : 10,
 				"rate" : 100,
 			},
@@ -3930,10 +3941,21 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_po_pi_partial_return_TC_SCK_104(self):
 		# MR =>  PO => PI => Return
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+		item_fields = {
+			"item_name" : "Testing-31",
+			"is_stock_item": 1,
+			"valuation_rate": 500
+		}
+		item = make_item("Testing-31", item_fields).name
 		mr_dict_list = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
-				"warehouse" : "Stores - _TC",
+				"item_code" : item,
+				"warehouse" : create_warehouse("Stores", company="_Test Company"),
 				"qty" : 10,
 				"rate" : 100,
 			},

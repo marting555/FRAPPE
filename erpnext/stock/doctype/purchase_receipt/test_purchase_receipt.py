@@ -4207,6 +4207,14 @@ class TestPurchaseReceipt(FrappeTestCase):
 		sr.cancel()
 		self.check_cancel_stock_gl_sle(sr, 20, -3000.0)
 	def test_purchase_receipt_with_serialized_item_TC_SCK_145(self):
+		parent_itm_grp = frappe.new_doc("Item Group")
+		parent_itm_grp.item_group_name = "Test Parent Item Group"
+		parent_itm_grp.is_group = 1
+		parent_itm_grp.insert()
+		itm_grp = frappe.new_doc("Item Group")
+		itm_grp.item_group_name = "Test Item Group"
+		itm_grp.parent_item_group = "Test Parent Item Group"
+		itm_grp.insert()
 		item_code = "ADI-SH-W09"
 		warehouse = "Stores - _TC"
 		supplier = "Test Supplier 1"
@@ -4218,6 +4226,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
+				"item_group": "Test Item Group",
 				"is_stock_item": 1,
 				"is_purchase_item": 1,
 				"has_serial_no": 1,
