@@ -21,6 +21,7 @@ class TestPeriodClosingVoucher(IntegrationTestCase):
 		cost_center = create_cost_center("Test Cost Center 1")
 
 		jv1 = make_journal_entry(
+			company=company,
 			posting_date="2021-03-15",
 			amount=400,
 			account1="Cash - TPC",
@@ -28,11 +29,13 @@ class TestPeriodClosingVoucher(IntegrationTestCase):
 			cost_center=cost_center,
 			save=False,
 		)
+
 		jv1.company = company
 		jv1.save()
 		jv1.submit()
 
 		jv2 = make_journal_entry(
+			company=company,
 			posting_date="2021-03-15",
 			amount=600,
 			account1="Cost of Goods Sold - TPC",
@@ -150,6 +153,7 @@ class TestPeriodClosingVoucher(IntegrationTestCase):
 		)
 
 		jv = make_journal_entry(
+			company=company,
 			account1="Cash - TPC",
 			account2="Sales - TPC",
 			amount=400,
@@ -192,6 +196,7 @@ class TestPeriodClosingVoucher(IntegrationTestCase):
 		self.make_period_closing_voucher(posting_date="2021-03-31")
 
 		jv1 = make_journal_entry(
+			company=company,
 			posting_date="2021-03-15",
 			amount=400,
 			account1="Cash - TPC",
@@ -214,6 +219,7 @@ class TestPeriodClosingVoucher(IntegrationTestCase):
 		cost_center2 = create_cost_center("Test Cost Center 2")
 
 		jv1 = make_journal_entry(
+			company=company,
 			posting_date="2021-03-15",
 			amount=400,
 			account1="Cash - TPC",
@@ -226,6 +232,7 @@ class TestPeriodClosingVoucher(IntegrationTestCase):
 		jv1.submit()
 
 		jv2 = make_journal_entry(
+			company=company,
 			posting_date="2021-03-15",
 			amount=200,
 			account1="Cash - TPC",
@@ -255,6 +262,7 @@ class TestPeriodClosingVoucher(IntegrationTestCase):
 		self.assertEqual(closing_balance.credit_in_account_currency, 400)
 
 		jv3 = make_journal_entry(
+			company=company,
 			posting_date="2022-03-15",
 			amount=300,
 			account1="Cash - TPC",

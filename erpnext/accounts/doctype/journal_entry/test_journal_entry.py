@@ -593,6 +593,7 @@ def make_journal_entry(
 	account1,
 	account2,
 	amount,
+	company=None,
 	cost_center=None,
 	posting_date=None,
 	exchange_rate=1,
@@ -605,7 +606,7 @@ def make_journal_entry(
 
 	jv = frappe.new_doc("Journal Entry")
 	jv.posting_date = posting_date or nowdate()
-	jv.company = "_Test Company"
+	jv.company = company or "_Test Company"
 	jv.user_remark = "test"
 	jv.multi_currency = 1
 	jv.set(
