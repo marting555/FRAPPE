@@ -2558,6 +2558,30 @@ class TestPurchaseInvoice(IntegrationTestCase, StockTestMixin):
 		item.reload()
 		self.assertEqual(item.last_purchase_rate, 0)
 
+	def test_return_qty_above_against_voucher_qty(self):
+		from erpnext.controllers.sales_and_purchase_return import make_return_doc
+
+		invoice = make_purchase_invoice(qty=10)
+		return_doc = make_return_doc(invoice.doctype, invoice.name)
+		return_doc.items[0].qty = -11
+
+		self.assertRaises(frappe.ValidationError, return_doc.save)
+
+	def test_return_qty_above_against_voucher_qty_with_multiple_return_invoices(self):
+		from erpnext.controllers.sales_and_purchase_return import make_return_doc
+
+		invoice = make_purchase_invoice(qty=10)
+
+		return_doc = make_return_doc(invoice.doctype, invoice.name)
+		return_doc.items[0].qty = -5
+		return_doc.save()
+		return_doc.submit()
+
+		return_doc = make_return_doc(invoice.doctype, invoice.name)
+		return_doc.items[0].qty = -6
+
+		self.assertRaises(frappe.ValidationError, return_doc.save)
+
 	def test_invoice_against_returned_pr(self):
 		from erpnext.stock.doctype.item.test_item import make_item
 		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
