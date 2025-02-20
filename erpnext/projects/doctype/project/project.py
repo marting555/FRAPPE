@@ -324,7 +324,7 @@ class Project(Document):
 	def update_billed_amount(self):
 		# nosemgrep
 		self.total_billed_amount = (
-			self.get_total_billed_amount_from_parent + self.get_total_billed_amount_from_child
+			self.get_total_billed_amount_from_parent() + self.get_total_billed_amount_from_child()
 		)
 
 	def get_total_billed_amount_from_parent(self):
