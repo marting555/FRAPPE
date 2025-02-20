@@ -4035,6 +4035,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 
 	def test_purchase_order_and_receipt_TC_SCK_074(self):
 		company = "_Test Indian Registered Company"
+		create_company(company)
 		item1 = make_item("ST-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011010"})
 		item2 = make_item("W-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011020"})
 		warehouse1 = create_warehouse("Raw Material - Iron Building - _TIRC", company=company)
