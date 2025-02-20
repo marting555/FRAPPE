@@ -341,9 +341,18 @@ class Project(Document):
 				and si_item.project is not null""",
 			self.name,
 		)
-		total_billed_amount = total_billed_amount_parent + total_billed_amount_child
+		parent_amount = (
+			total_billed_amount_parent[0][0]
+			if total_billed_amount_parent and total_billed_amount_parent[0][0] is not None
+			else 0
+		)
+		child_amount = (
+			total_billed_amount_child[0][0]
+			if total_billed_amount_child and total_billed_amount_child[0][0] is not None
+			else 0
+		)
 
-		self.total_billed_amount = total_billed_amount and total_billed_amount[0][0] or 0
+		self.total_billed_amount = parent_amount + child_amount
 
 	def after_rename(self, old_name, new_name, merge=False):
 		if old_name == self.copied_from:
