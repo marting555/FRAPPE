@@ -327,18 +327,18 @@ class Project(Document):
 			"""select sum(base_net_amount)
 			from `tabSales Invoice Item` si_item, `tabSales Invoice` si
 			where si_item.parent = si.name
-			and (si.project = %s)
-			and si.docstatus=1
-			and si.project is not null""",
+				and (si.project = %s)
+				and si.docstatus=1
+				and si.project is not null""",
 			self.name,
 		)
 		total_billed_amount_child = frappe.db.sql(
 			"""select sum(base_net_amount)
 			from `tabSales Invoice Item` si_item, `tabSales Invoice` si
 			where si_item.parent = si.name
-			and (si_item.project = %s)
-			and si.docstatus=1
-			and si_item.project is not null""",
+				and (si_item.project = %s)
+				and si.docstatus=1
+				and si_item.project is not null""",
 			self.name,
 		)
 		total_billed_amount = total_billed_amount_parent + total_billed_amount_child
