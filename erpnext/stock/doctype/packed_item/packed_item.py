@@ -113,10 +113,14 @@ def is_product_bundle(item_code="", *, product_bundle_name="") -> bool:
 	return bool(frappe.db.exists("Product Bundle", {"new_item_code": item_code, "disabled": 0}))
 
 
-def get_product_bundle(item_code="", *, product_bundle_name="") -> "ProductBundle":
-	if product_bundle_name:
-		return frappe.get_doc("Product Bundle", product_bundle_name)  # type: ignore
-	return frappe.get_last_doc("Product Bundle", {"new_item_code": item_code, "disabled": 0})  # type: ignore
+def get_product_bundle(item_code="", *, product_bundle_name="") -> "ProductBundle | None":
+	try:
+		if product_bundle_name:
+			return frappe.get_doc("Product Bundle", {"name": product_bundle_name, "disabled": 0})  # type: ignore
+		return frappe.get_last_doc("Product Bundle", {"new_item_code": item_code, "disabled": 0})  # type: ignore
+	except frappe.exceptions.DoesNotExistError:
+		frappe.clear_last_message()
+		return None
 
 
 def get_indexed_packed_items_table(doc):

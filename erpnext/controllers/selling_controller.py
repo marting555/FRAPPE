@@ -794,7 +794,7 @@ class SellingController(StockController):
 			bundle = None
 			if self.has_product_bundle(item.item_code):
 				bundle = get_product_bundle(item.item_code, product_bundle_name=item.product_bundle_name)
-				if bundle.new_item_code != item.item_code:
+				if not bundle or bundle.new_item_code != item.item_code:
 					# The row item and the bundle's item are mismatched, override the product_bundle_name
 					bundle = get_product_bundle(item.item_code)  # Fetch any bundle of the correct item
 
