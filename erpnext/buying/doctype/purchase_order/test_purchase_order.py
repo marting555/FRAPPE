@@ -3639,7 +3639,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 	def test_create_po_pr_return_pr_TC_SCK_178(self):
 		create_company()
-		create_fiscal_year()
+
 		supplier = create_supplier(supplier_name="_Test Supplier PO")
 		item = create_item("_Test PO")
 		warehouse = create_warehouse("_Test warehouse - _PO", company="_Test Company PO")

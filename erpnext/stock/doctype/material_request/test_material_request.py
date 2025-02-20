@@ -4879,29 +4879,21 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(serial_cnt, 1)
 		serial_cnt = frappe.db.count('Serial No',{'purchase_document_no':pr1.name})
 		self.assertEqual(serial_cnt, 1)
+
 	def test_create_material_req_to_2po_to_pi_TC_SCK_095(self):
-		create_company()
-		create_fiscal_year()
-		supplier = create_supplier(supplier_name="_Test Supplier MR")
-		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
-		item = item_create("_Test MR")
-		cost_center = frappe.db.get_value("Company","_Test Company MR","cost_center")
 		qty = 10
 		rate = 100
 		mr = make_material_request(
-			company="_Test Company MR",
 			qty=qty,
-			supplier=supplier,
-			warehouse=warehouse,
-			item_code=item.item_code,
 			material_request_type="Purchase",
-			cost_center=cost_center)
+   		)
 		self.assertEqual(mr.docstatus, 1)
 
 		po1 = make_purchase_order(mr.name)
 		po1.supplier = "_Test Supplier"
 		po1.items[0].qty = 5
 		po1.items[0].rate = rate
+		po1.currency ="INR"
 		po1.insert()
 		po1.submit()
 		self.assertEqual(po1.docstatus, 1)
@@ -4910,18 +4902,15 @@ class TestMaterialRequest(FrappeTestCase):
 		po2.supplier = "_Test Supplier"
 		po2.items[0].qty = 5
 		po2.items[0].rate = rate
+		po2.currency ="INR"
 		po2.insert()
 		po2.submit()
 		self.assertEqual(po2.docstatus, 1)
 
 		pi = create_purchase_invoice(po1.name)
 		pi = create_purchase_invoice(po2.name, target_doc=pi)
-		pi.set_warehouse = warehouse
+		pi.currency ="INR"
 		pi.update_stock = 1
-		serial_numbers1 = ["SN001", "SN002","SN003", "SN004","SN005"]
-		serial_numbers2 = ["SN006", "SN007","SN008", "SN009","SN010"]
-		pi.items[0].serial_no = "\n".join(serial_numbers1)
-		pi.items[1].serial_no = "\n".join(serial_numbers2)
 		pi.insert()
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
@@ -7515,8 +7504,7 @@ def create_company():
 	if not frappe.db.exists("Company", company_name):
 		company = frappe.new_doc("Company")
 		company.company_name = company_name
-		company.country="India",
-		company.default_currency= "INR",
+		company.default_currency= "USD",
 		company.create_chart_of_accounts_based_on= "Standard Template",
 		company.chart_of_accounts= "Standard",
 		company = company.save()
