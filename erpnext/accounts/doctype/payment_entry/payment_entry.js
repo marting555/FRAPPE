@@ -331,15 +331,15 @@ frappe.ui.form.on("Payment Entry", {
 		);
 
 		var party_amount = frm.doc.payment_type == "Receive" ? frm.doc.paid_amount : frm.doc.received_amount;
-+		var base_party_amount =
-+			frm.doc.payment_type == "Receive" ? frm.doc.base_paid_amount : frm.doc.base_received_amount;
+		var base_party_amount =
+			frm.doc.payment_type == "Receive" ? frm.doc.base_paid_amount : frm.doc.base_received_amount;
 
 		frm.toggle_display(
 			"write_off_difference_amount",
-+			frm.doc.difference_amount &&
-+				frm.doc.party &&
-+				(frm.doc.total_allocated_amount > party_amount ||
-+					frm.doc.base_total_allocated_amount > base_party_amount)
+			frm.doc.difference_amount &&
+				frm.doc.party &&
+				(frm.doc.total_allocated_amount > party_amount ||
+					frm.doc.base_total_allocated_amount > base_party_amount)
 		);
 	},
 
