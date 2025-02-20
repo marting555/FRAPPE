@@ -179,6 +179,7 @@ frappe.ui.form.on("Project", {
 			insertResendPaymentLink(frm);
 			insertDiagnoseResultTranslation(frm);
 			insertUpdateQueuePositionButton(frm);
+			insertLoanCarButton(frm)
 			frm.trigger("set_custom_buttons");
 		} else {
 			const sidebar = $(".layout-side-section");
@@ -245,10 +246,10 @@ frappe.ui.form.on("Project", {
 			showConfirmationDialog(frm, quotations, incomplete_requirements)
 		}
 
-		if(new_value === "Completed"){
-			const loan_car = await frappe.db.get_list('Loan car', { fields: ["name", "status"], filters: [["project", "=", frm.docname],["status", "!=", "Paid"], ["status", "!=", "Done"], ["status", "!=", "Cancelled"]] })
+		if (new_value === "Completed") {
+			const loan_car = await frappe.db.get_list('Loan car', { fields: ["name", "status"], filters: [["project", "=", frm.docname], ["status", "!=", "Paid"], ["status", "!=", "Done"], ["status", "!=", "Cancelled"]] })
 
-			if(!loan_car.length) return 
+			if (!loan_car.length) return
 
 			frm.undo_manager.undo();
 
@@ -941,5 +942,16 @@ async function insertUpdateQueuePositionButton(frm) {
 	getSelect(doc.name).then((data) => {
 		frm.set_df_property('queue_position', 'options', data.options)
 		frm.set_value('queue_position', data.current)
+	})
+}
+
+async function insertLoanCarButton(frm) {
+	const loan_car = await frappe.db.get_list('Loan car', { filters: [['project', '=', frm.docname]], fields: ["name", "creation"], order_by: 'creation DESC' })
+
+	if (!loan_car?.length) return
+
+	frm.add_custom_button('Loan Car', async () => {
+		frappe.open_in_new_tab = true
+		frappe.set_route('Form', 'Loan car', loan_car[0].name)
 	})
 }
