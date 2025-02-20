@@ -7553,13 +7553,19 @@ def create_fiscal_year():
 	else:
 		start_date = date(today.year - 1, 4, 1)
 		end_date = date(today.year, 3, 31)
-
+	create_company()
 	company="_Test Company MR", 
+	fy_list = frappe.db.get_all("Fiscal Year", {"year_start_date":start_date, "year_end_date": end_date}, pluck='name')
+	for i in fy_list:
+		if frappe.db.get_value("Fiscal Year Company", {'parent': i}, 'company') == "_Test Company MR":
+			frappe.msgprint(f"Fiscal Year already exists for {company}", alert=True)
+			return
 	fy_doc = frappe.new_doc("Fiscal Year")
 	fy_doc.year = "2025 PO"
 	fy_doc.year_start_date = start_date
 	fy_doc.year_end_date = end_date
 	fy_doc.append("companies", {"company": company})
+	fy_doc.insert()
 	fy_doc.submit()
 	
 def item_create(
