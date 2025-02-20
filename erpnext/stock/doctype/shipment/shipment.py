@@ -96,7 +96,9 @@ class Shipment(Document):
 				frappe.throw(_("Parcel weight cannot be 0"))
 
 	def calculate_total_weight(self):
-		weight_of_goods = sum(flt(parcel.weight) for parcel in self.shipment_parcel)
+		weight_of_goods = sum(
+			flt(parcel.weight) * parcel.count for parcel in self.shipment_parcel if parcel.count > 0
+		)
 		self.total_weight = weight_of_goods
 
 	def validate_pickup_time(self):
