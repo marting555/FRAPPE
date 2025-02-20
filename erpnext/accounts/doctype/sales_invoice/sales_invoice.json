@@ -83,6 +83,11 @@
   "base_rounding_adjustment",
   "base_rounded_total",
   "base_in_words",
+  "taxed_amount_15",
+  "taxed_amount_18",
+  "exempt_amount",
+  "isv_15",
+  "isv_18",
   "column_break5",
   "grand_total",
   "rounding_adjustment",
@@ -2207,6 +2212,31 @@
    "fieldtype": "Data",
    "label": "Cashier",
    "read_only": 1
+  },
+  {
+   "fieldname": "taxed_amount_15",
+   "fieldtype": "Currency",
+   "label": "Taxed Amount 15%"
+  },
+  {
+   "fieldname": "taxed_amount_18",
+   "fieldtype": "Currency",
+   "label": "Taxed Amount 18%"
+  },
+  {
+   "fieldname": "exempt_amount",
+   "fieldtype": "Currency",
+   "label": "Exempt Amount"
+  },
+  {
+   "fieldname": "isv_15",
+   "fieldtype": "Currency",
+   "label": "ISV 15%"
+  },
+  {
+   "fieldname": "isv_18",
+   "fieldtype": "Currency",
+   "label": "ISV 18%"
   }
  ],
  "icon": "fa fa-file-text",
@@ -2219,7 +2249,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2024-11-14 18:52:05.553201",
+ "modified": "2025-02-20 16:25:03.089963",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",
