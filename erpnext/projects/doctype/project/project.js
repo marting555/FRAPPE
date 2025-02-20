@@ -691,7 +691,6 @@ async function insertVinSearchButton(frm) {
 		data.parts?.forEach(part => {
 			partsObject[part.name] = part.partNumber;
 		});
-
 		frm.set_value({
 			vin: data.vehicle_identification_no,
 			model: data.model,
@@ -699,16 +698,28 @@ async function insertVinSearchButton(frm) {
 			brand: data.make,
 			engine_liters: data.engine_liters,
 			engine_code: data.engine_code,
-			dsg_model: data.dsg_family || data.dsg ? data.dsg[0] : '',
+			dsg_model: data.dsg_family || (data.dsg ? data.dsg[0] : ''),
 			dsg_code: data.dsg_code,
 			ecu_number: data.ecu_code,
+			sales_type: data.sales_type,
+			date_of_production: data.date_of_production,
+			axle_drive: data.axle_drive,
+			equipment: data.equipment,
+			roof_color: data.roof_color,
+			exterior_color_paint_code: data.exterior_color_paint_code,
+			model_description: data.model_description,
+			gearbox_code: data.gearbox_code,
+			dsg_family: data.dsg_family,
+			transmission_code: data.transmission_code ?? "",
+
 			dsg_gearbox: partsObject["gearbox"] ?? partsObject["speed dual clutch gearbox"] ?? "",
 			mechatronic: partsObject["mechatronic"] ?? partsObject["mechatronic with software"] ?? "",
 			flywheel: partsObject["flywheel"] ?? "",
 			clutch: partsObject["clutch"] ?? partsObject["repair set for multi-coupling"] ?? "",
 		}).then(() => {
 			frm.save();
-		})
+		});
+		
 	});
 
 	button.appendChild(iconSpan);
