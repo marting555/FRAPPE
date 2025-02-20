@@ -3964,6 +3964,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 
 	def test_purchase_order_and_receipt_TC_SCK_073(self):
 		company = "_Test Indian Registered Company"
+		create_company(company)
 		item1 = make_item("ST-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011010"})
 		item2 = make_item("W-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011020"})
 		warehouse1 = create_warehouse("Raw Material - Iron Building - _TIRC", company=company)
@@ -5393,3 +5394,12 @@ def make_purchase_receipt_with_multiple_items(**args):
 
 test_dependencies = ["BOM", "Item Price", "Location"]
 test_records = frappe.get_test_records("Purchase Receipt")
+
+
+def create_company(company):
+	if not frappe.db.exists("Company", company):
+		company_doc = frappe.new_doc("Company")
+		company_doc.company_doc_name = company
+		company_doc.country="India",
+		company_doc.default_currency= "INR",
+		company_doc.insert()
