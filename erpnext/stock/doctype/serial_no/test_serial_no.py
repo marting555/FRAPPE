@@ -9,6 +9,7 @@ import frappe
 from frappe import _dict
 from frappe.tests import IntegrationTestCase, UnitTestCase
 
+from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
 from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 from erpnext.stock.doctype.item.test_item import make_item
 from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
@@ -34,6 +35,16 @@ class UnitTestSerialNo(UnitTestCase):
 
 
 class TestSerialNo(IntegrationTestCase):
+	def setUp(self):
+		self.create_currency_exchange()
+
+	def create_currency_exchange(self):
+		c_doc = frappe.new_doc("Currency Exchange")
+		c_doc.from_currency = "INR"
+		c_doc.to_currency = "USD"
+		c_doc.exchange_rate = 87.33
+		c_doc.insert()
+
 	def tearDown(self):
 		frappe.db.rollback()
 
@@ -146,13 +157,18 @@ class TestSerialNo(IntegrationTestCase):
 		If Receipt is cancelled, it should be Inactive in the same company.
 		"""
 		# Receipt in **first** company
-		se = make_serialized_item(self, target_warehouse="_Test Warehouse - _TC")
+		se = make_serialized_item(self, target_warehouse="_Test Warehouse - _TC", company="_Test Company")
 		serial_nos = get_serial_nos_from_bundle(se.get("items")[0].serial_and_batch_bundle)
 		sn_doc = frappe.get_doc("Serial No", serial_nos[0])
 
+		create_cost_center(cost_center_name="_Test Cost Center", company="_Test Company")
 		# Delivery from first company
 		dn = create_delivery_note(
-			item_code="_Test Serialized Item With Series", qty=1, serial_no=[serial_nos[0]]
+			item_code="_Test Serialized Item With Series",
+			qty=1,
+			serial_no=[serial_nos[0]],
+			company="_Test Company",
+			cost_center="_Test Cost Center - _TC",
 		)
 
 		# Receipt in **second** company
@@ -166,12 +182,14 @@ class TestSerialNo(IntegrationTestCase):
 		)
 
 		# Delivery from second company
+		create_cost_center(cost_center_name="_Test Cost Center", company="_Test Company 1")
 		dn_2 = create_delivery_note(
 			item_code="_Test Serialized Item With Series",
 			qty=1,
 			serial_no=[serial_nos[0]],
 			company="_Test Company 1",
 			warehouse=wh,
+			cost_center="_Test Cost Center - _TC1",
 		)
 		sn_doc.reload()
 

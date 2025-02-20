@@ -6,11 +6,23 @@ import frappe
 from frappe.model.naming import parse_naming_series
 from frappe.tests import IntegrationTestCase
 
+from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
 from erpnext.accounts.doctype.gl_entry.gl_entry import rename_gle_sle_docs
 from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
 
 
 class TestGLEntry(IntegrationTestCase):
+	def setUp(self):
+		self.create_company()
+		create_cost_center(cost_center_name="_Test Cost Center", company="_Test Company")
+
+	def create_company(self, company_name="_Test Company", currency="INR"):
+		if not frappe.db.exists("Company", company_name):
+			doc = frappe.new_doc("Company")
+			doc.company_name = company_name
+			doc.default_currency = currency
+			doc.insert()
+
 	def test_round_off_entry(self):
 		frappe.db.set_value("Company", "_Test Company", "round_off_account", "_Test Write Off - _TC")
 		frappe.db.set_value("Company", "_Test Company", "round_off_cost_center", "_Test Cost Center - _TC")
@@ -19,7 +31,7 @@ class TestGLEntry(IntegrationTestCase):
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
 			100,
-			"_Test Cost Center - _TC",
+			cost_center="_Test Cost Center - _TC",
 			submit=False,
 		)
 
@@ -84,7 +96,7 @@ class TestGLEntry(IntegrationTestCase):
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
 			100,
-			"_Test Cost Center - _TC",
+			cost_center="_Test Cost Center - _TC",
 			save=False,
 			submit=False,
 		)
@@ -106,7 +118,7 @@ class TestGLEntry(IntegrationTestCase):
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
 			100,
-			"_Test Cost Center - _TC",
+			cost_center="_Test Cost Center - _TC",
 			save=False,
 			submit=False,
 		)
@@ -129,7 +141,7 @@ class TestGLEntry(IntegrationTestCase):
 			"Opening Balance Equity - _TC",
 			"Cash - _TC",
 			100,
-			"_Test Cost Center - _TC",
+			cost_center="_Test Cost Center - _TC",
 			save=False,
 			submit=False,
 		)
