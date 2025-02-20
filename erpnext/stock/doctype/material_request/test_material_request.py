@@ -7504,6 +7504,7 @@ def create_company():
 	if not frappe.db.exists("Company", company_name):
 		company = frappe.new_doc("Company")
 		company.company_name = company_name
+		company.country="India",
 		company.default_currency= "INR",
 		company.create_chart_of_accounts_based_on= "Standard Template",
 		company.chart_of_accounts= "Standard",
