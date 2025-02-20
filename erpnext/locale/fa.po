@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-02-16 09:34+0000\n"
-"PO-Revision-Date: 2025-02-19 00:43\n"
+"PO-Revision-Date: 2025-02-20 00:55\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Persian\n"
 "MIME-Version: 1.0\n"
@@ -18881,7 +18881,7 @@ msgstr "مخارج تفریحات"
 #. Agreement'
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.json
 msgid "Entity"
-msgstr "وجود، موجودیت"
+msgstr "موجودیت"
 
 #. Label of the entity_type (Select) field in DocType 'Service Level Agreement'
 #: erpnext/accounts/report/tax_withholding_details/tax_withholding_details.py:203
