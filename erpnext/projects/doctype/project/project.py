@@ -323,14 +323,25 @@ class Project(Document):
 
 	def update_billed_amount(self):
 		# nosemgrep
-		total_billed_amount = frappe.db.sql(
+		total_billed_amount_parent = frappe.db.sql(
 			"""select sum(base_net_amount)
 			from `tabSales Invoice Item` si_item, `tabSales Invoice` si
 			where si_item.parent = si.name
-				and if(si_item.project, si_item.project, si.project) = %s
-				and si.docstatus=1""",
+			and (si.project = %s)
+			and si.docstatus=1
+			and si.project is not null""",
 			self.name,
 		)
+		total_billed_amount_child = frappe.db.sql(
+			"""select sum(base_net_amount)
+			from `tabSales Invoice Item` si_item, `tabSales Invoice` si
+			where si_item.parent = si.name
+			and (si_item.project = %s)
+			and si.docstatus=1
+			and si_item.project is not null""",
+			self.name,
+		)
+		total_billed_amount = total_billed_amount_parent + total_billed_amount_child
 
 		self.total_billed_amount = total_billed_amount and total_billed_amount[0][0] or 0
 
