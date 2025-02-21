@@ -1010,11 +1010,30 @@ class TestJournalEntry(unittest.TestCase):
 	def test_reversal_of_itc_TC_ACC_059(self):
 		# Set up input parameters
 		entry_type = "Reversal of ITC"
-		debit_account_sgst = "Input Tax SGST - _TC"
-		debit_account_cgst = "Input Tax CGST - _TC"
 		credit_account = "Creditors - _TC"
 		amount_sgst = 5000.0
 		amount_cgst = 5000.0
+
+		# Fetch Tax Accounts dynamically
+		tax_accounts = frappe.get_all(
+			"Account",
+			filters={"company":"_Test Company","account_type": "Tax", "parent_account": ["like", "%Assets%"]},
+			fields=["name"]
+		)
+
+		# Identify SGST and CGST accounts based on their name
+		debit_account_sgst = None
+		debit_account_cgst = None
+
+		for account in tax_accounts:
+			if "SGST" in account["name"]:
+				debit_account_sgst = account["name"]
+			elif "CGST" in account["name"]:
+				debit_account_cgst = account["name"]
+
+		# Ensure both SGST and CGST accounts are found
+		if not debit_account_sgst or not debit_account_cgst:
+			self.fail(f"Could not find SGST or CGST accounts. Found: {tax_accounts}")
 
 		# Create the Journal Entry
 		jv = frappe.new_doc("Journal Entry")
