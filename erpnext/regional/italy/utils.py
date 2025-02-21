@@ -262,12 +262,17 @@ def sales_invoice_validate(doc):
 
 	doc.company_tax_id = frappe.get_cached_value("Company", doc.company, "tax_id")
 	doc.company_fiscal_code = frappe.get_cached_value("Company", doc.company, "fiscal_code")
-	if not doc.company_tax_id and not doc.company_fiscal_code:
+	if not doc.company_tax_id or not doc.company_fiscal_code:
+		msg = "Please set the Tax ID and Fiscal Code on Company '%s'" % doc.company
+		if doc.company_tax_id and not doc.company_fiscal_code:
+			msg = "Please set Fiscal Code on Company '%s'" % doc.company
+		elif doc.company_fiscal_code and not doc.company_tax_id:
+			msg = "Please set Tax ID on Company '%s'" % doc.company
+
 		frappe.throw(
-			_("Please set either the Tax ID or Fiscal Code on Company '%s'" % doc.company),
+			_(msg),
 			title=_("E-Invoicing Information Missing"),
 		)
-
 	# Validate customer details
 	customer = frappe.get_doc("Customer", doc.customer)
 
