@@ -14,6 +14,7 @@ from erpnext.stock.doctype.item.test_item import (
 	make_item_variant,
 	set_item_variant_settings,
 )
+from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
 	get_batch_from_bundle,
 	get_serial_nos_from_bundle,
@@ -1919,16 +1920,11 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(current_s_bin_qty, s_bin_qty)
 
 	def test_create_partial_material_request_stock_entry_for_batch_item_TC_SCK_189(self):
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		from erpnext.stock.doctype.material_request.material_request import make_stock_entry as _make_stock_entry
 		company = "_Test Company"
-		if not frappe.db.exists("Company", company):
-			company_doc = frappe.new_doc("Company")
-			company_doc.company_doc_name = company
-			company_doc.country="India"
-			company_doc.default_currency= "INR"
-			company_doc.save()
-		else:
-			company_doc = frappe.get_doc("Company", company) 
+		create_company(company)
+		company_doc = frappe.get_doc("Company", company)  
 		warehouse = create_warehouse("_Test Warehouse",  company=company_doc.name)
 		properties = {
 			"has_batch_no":1,
@@ -1963,17 +1959,29 @@ class TestStockEntry(FrappeTestCase):
 		actual_qty = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':se.name, 'voucher_type':'Stock Entry','warehouse':'Stores - TCP1'},['qty_after_transaction'])
 		self.assertEqual(actual_qty, 10)
 	
+	def test_create_partial_material_request_stock_entry_for_serial_item_TC_SCK_190(self):
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
+		from erpnext.stock.doctype.material_request.material_request import make_stock_entry as _make_stock_entry
+		company = "_Test Company"
+		create_company(company)
+		company_doc = frappe.get_doc("Company", company) 
+		warehouse = create_warehouse("_Test Warehouse",  company=company_doc.name)
+		item = make_item("_Test Item MR", properties={"has_serial_no":1})
+		item.serial_no_series = f"{item.item_code}.-SL-.####."
+		item.save()
+		mr = make_material_request(material_request_type="Material Issue", qty=10, warehouse=warehouse, item=item.name)
+		se = _make_stock_entry(mr.name)
+		se.get("items")[0].qty = 5
+		se.save()
+		se.submit()
+		mr.reload()
+		self.assertEqual(mr.status, "Partially Ordered")
+
 	def test_create_partial_material_request_stock_entry_for_serial_batch_item_TC_SCK_191(self):
 		from erpnext.stock.doctype.material_request.material_request import make_stock_entry as _make_stock_entry
 		company = "_Test Company"
-		if not frappe.db.exists("Company", company):
-			company_doc = frappe.new_doc("Company")
-			company_doc.company_doc_name = company
-			company_doc.country="India"
-			company_doc.default_currency= "INR"
-			company_doc.save()
-		else:
-			company_doc = frappe.get_doc("Company", company) 
+		create_company(company)
+		company_doc = frappe.get_doc("Company", company)  
 		warehouse = create_warehouse("_Test Warehouse",  company=company_doc.name)
 		properties = {
 			"has_serial_no": 1,
@@ -2051,11 +2059,8 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(warehouse_qty["_Test Warehouse - _TC"], 0)
 
 	def test_create_stock_entry_TC_SCK_231(self):
-		if not frappe.db.exists("Company", "_Test Company"):
-			company = frappe.new_doc("Company")
-			company.company_name = "_Test Company"
-			company.default_currency = "INR"
-			company.insert()
+		company = "_Test Company"
+		create_company(company)
 		# Create test item
 		item_fields = {
 			"item_name": "Test Pen",
@@ -2114,11 +2119,8 @@ class TestStockEntry(FrappeTestCase):
 		# frappe.delete_doc("Item", item.name)
 
 	def test_stock_reco_TC_SCK_232(self):
-		if not frappe.db.exists("Company", "_Test Company"):
-			company = frappe.new_doc("Company")
-			company.company_name = "_Test Company"
-			company.default_currency = "INR"
-			company.insert()
+		company = "_Test Company"
+		create_company(company)
 		item_fields = {
 			"item_name": "Test CPU",
 			"is_stock_item": 1,
@@ -2138,11 +2140,8 @@ class TestStockEntry(FrappeTestCase):
 	def test_stock_ent_TC_SCK_233(self):
 		from erpnext.stock.utils import get_bin
 		warehouse = create_warehouse("Stores-test", properties=None, company="_Test Company")
-		if not frappe.db.exists("Company", "_Test Company"):
-			company = frappe.new_doc("Company")
-			company.company_name = "_Test Company"
-			company.default_currency = "INR"
-			company.insert()
+		company = "_Test Company"
+		create_company(company)
 		item_fields = {
 			"item_name": "Test 1231",
 			"is_stock_item": 1,
@@ -2158,11 +2157,8 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(bin.actual_qty, item_fields["opening_stock"])
 
 	def test_stock_reco_TC_SCK_127(self):
-		if not frappe.db.exists("Company", "_Test Company"):
-			company = frappe.new_doc("Company")
-			company.company_name = "_Test Company"
-			company.default_currency = "INR"
-			company.insert()
+		company = "_Test Company"
+		create_company(company)
 		self.source_warehouse = create_warehouse("Stores-test", properties=None, company="_Test Company")
 		self.target_warehouse = create_warehouse("Department Stores-test", properties=None, company="_Test Company")
 		item_fields1 = {
@@ -3305,14 +3301,8 @@ class TestStockEntry(FrappeTestCase):
 
 	def test_stock_manufacture_with_batch_serial_TC_SCK_142(self):
 		company = "_Test Company"
-		if not frappe.db.exists("Company", company):
-			company_doc = frappe.new_doc("Company")
-			company_doc.company_doc_name = company
-			company_doc.country="India"
-			company_doc.default_currency= "INR"
-			company_doc.save()
-		else:
-			company_doc = frappe.get_doc("Company", company) 
+		create_company(company)
+		company_doc = frappe.get_doc("Company", company) 
 		item_1 = make_item("ADI-SH-W09", {'has_batch_no':1, "create_new_batch":1,"valuation_rate":100})
 		item_2 = make_item("LET-SC-002", {"valuation_rate":100})
 		se = make_stock_entry(purpose="Manufacture", company=company_doc.name, do_not_save=True)
@@ -3350,14 +3340,8 @@ class TestStockEntry(FrappeTestCase):
 	
 	def test_stock_manufacture_with_batch_serieal_TC_SCK_140(self):
 		company = "_Test Company"
-		if not frappe.db.exists("Company", company):
-			company_doc = frappe.new_doc("Company")
-			company_doc.company_doc_name = company
-			company_doc.country="India"
-			company_doc.default_currency= "INR"
-			company_doc.save()
-		else:
-			company_doc = frappe.get_doc("Company", company) 
+		create_company(company)
+		company_doc = frappe.get_doc("Company", company) 
 		item = make_item("ADI-SH-W11", {'has_batch_no':1, "create_new_batch":1, "has_serial_no":1, "valuation_rate":100})
 		se = make_stock_entry(item_code=item.name,purpose="Manufacture", company=company_doc.name,target=create_warehouse("Test Warehouse"), qty=150, basic_rate=100,do_not_save=True)
 		se.items[0].is_finished_item = 1
@@ -3381,14 +3365,8 @@ class TestStockEntry(FrappeTestCase):
 	@change_settings("Stock Settings", {"allow_negative_stock": 1})
 	def test_stock_entry_manufacture_TC_SCK_138(self):
 		company = "_Test Company"
-		if not frappe.db.exists("Company", company):
-			company_doc = frappe.new_doc("Company")
-			company_doc.company_doc_name = company
-			company_doc.country="India",
-			company_doc.default_currency= "INR",
-			company_doc.save()
-		else:
-			company_doc = frappe.get_doc("Company", company) 
+		create_company(company)
+		company_doc = frappe.get_doc("Company", company) 
 		se = make_stock_entry(
 			company=company_doc.name, 
 			purpose="Manufacture", 
@@ -3471,14 +3449,8 @@ class TestStockEntry(FrappeTestCase):
 
 	def test_stock_manufacture_with_batch_serial_TC_SCK_141(self):
 		company = "_Test Company"
-		if not frappe.db.exists("Company", company):
-			company_doc = frappe.new_doc("Company")
-			company_doc.company_name = company
-			company_doc.country="India"
-			company_doc.default_currency= "INR"
-			company_doc.save()
-		else:
-			company_doc = frappe.get_doc("Company", company) 
+		create_company(company)
+		company_doc = frappe.get_doc("Company", company) 
 		item_1 = make_item("ADI-SH-W08", {'has_batch_no':1, "create_new_batch":1,"valuation_rate":100})
 		item_2 = make_item("LET-SC-002", {"valuation_rate":100})
 		se = make_stock_entry(purpose="Manufacture", company=company_doc.name, do_not_save=True)
@@ -3530,14 +3502,8 @@ class TestStockEntry(FrappeTestCase):
 
 	def test_stock_manufacture_with_batch_TC_SCK_139(self):
 		company = "_Test Company"
-		if not frappe.db.exists("Company", company):
-			company_doc = frappe.new_doc("Company")
-			company_doc.company_doc_name = company
-			company_doc.country="India",
-			company_doc.default_currency= "INR",
-			company_doc.save()
-		else:
-			company_doc = frappe.get_doc("Company", company) 
+		create_company(company)
+		company_doc = frappe.get_doc("Company", company) 
 		item = make_item("ADI-SH-W07", {'has_batch_no':1, "create_new_batch":1, "valuation_rate":100})
 		se = make_stock_entry(item_code=item.name,purpose="Manufacture", company=company_doc.name,target=create_warehouse("Test Warehouse"), qty=150, basic_rate=100,do_not_save=True)
 		se.items[0].is_finished_item = 1
@@ -3593,6 +3559,50 @@ class TestStockEntry(FrappeTestCase):
 		self.assertTrue(range2[0] == 10)
 		self.assertTrue(q[0] == avail_qty)
 
+	def test_inactive_sales_items_TC_SCK_228(self):
+		from erpnext.accounts.report.inactive_sales_items.inactive_sales_items import execute
+		company = "_Test Company"
+		
+		create_company(company)
+
+		item_fields1 = {
+			"item_name": "_Test Item2271",
+			"valuation_rate": 500,
+			"is_stock_item": 1
+		}
+		item_fields2 = {
+			"item_name": "_Test Item2281",
+			"valuation_rate": 500,
+			"is_stock_item": 1
+		}
+
+		item1 = make_item("_Test Item2271", item_fields1)
+		item2 = make_item("_Test Item2281", item_fields2)
+		se = make_stock_entry(item_code=item1.name,purpose="Material Receipt", posting_date="01-12-2024",company=company,target=create_warehouse("Test Warehouse", company=company), qty=15)
+		se1 = make_stock_entry(item_code=item1.name,purpose="Material Receipt", posting_date="01-01-2025",company=company,target=create_warehouse("Test Warehouse", company=company), qty=25)
+		se2 = make_stock_entry(item_code=item1.name,set_posting_time=1,purpose="Material Issue", posting_date="01-01-2025",company=company,source=create_warehouse("Test Warehouse", company=company), qty=10)
+		se3 = make_stock_entry(item_code=item1.name,purpose="Material Issue", posting_date="02-07-2025",company=company,source=create_warehouse("Test Warehouse", company=company), qty=20)
+
+		filters = frappe._dict({  # Convert to allow dot notation
+		"territory": "India",
+        "item": item1.name,
+		"based_on": "Sales Invoice",
+		"days": "30"
+    	})
+
+		columns, data = execute(filters)
+		self.assertEqual(data[0]['territory'], "India")
+		self.assertEqual(data[0]['item'], item1.name)
+		filters1 = frappe._dict({  # Convert to allow dot notation
+		"territory": "India",
+        "item": item2.name,
+		"based_on": "Sales Invoice",
+		"days": "30"
+		})
+		columns1, data1 = execute(filters1)
+		self.assertEqual(data1[0]['territory'], "India")
+		self.assertEqual(data1[0]['item'], item1.name)
+
 	@change_settings("Stock Settings", {"allow_negative_stock": 1})
 	def test_create_stock_entry_with_manufacture_purpose_TC_SCK_137(self):
 		company = create_company()
@@ -3636,6 +3646,156 @@ class TestStockEntry(FrappeTestCase):
 				self.assertEqual(sle['actual_qty'], -50)
 			elif sle['item_code'] == item_3.name:
 				self.assertEqual(sle['actual_qty'], 10)
+
+	@change_settings("Stock Settings", {"use_serial_batch_fields": 0,"disable_serial_no_and_batch_selector":0,"auto_create_serial_and_batch_bundle_for_outward":0})
+	def test_mi_with_disable_batch_selector_TC_SCK_120(self):
+		fields = {
+			"is_stock_item": 1, 
+			"has_batch_no":1,
+			"create_new_batch":1,
+			"batch_number_series":"ABC.##",
+			"has_serial_no":1,
+			"serial_no_series":"AAB.##"
+
+		}
+
+		if frappe.db.has_column("Item", "gst_hsn_code"):
+			fields["gst_hsn_code"] = "01011010"
+
+		item_1 = make_item("_Test Batch Item 1", properties=fields).name
+
+		semr = make_stock_entry(
+			item_code=item_1, qty=15, rate=100, target="_Test Warehouse - _TC",
+			purpose="Material Receipt"
+		)
+
+		semt = make_stock_entry(
+			item_code=item_1, qty=10, rate=100, source="_Test Warehouse - _TC", target = "Stores - _TC",
+			purpose="Material Issue"
+		)
+
+		sle = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": semt.name}, fields=["actual_qty", "item_code"])
+		sle_records = {entry["item_code"]: [] for entry in sle}
+		for entry in sle:
+			sle_records[entry["item_code"]].append(entry["actual_qty"])
+
+		self.assertEqual(sle_records[item_1], [-10])
+
+	@change_settings("Stock Settings", {"use_serial_batch_fields": 0,"disable_serial_no_and_batch_selector":0,"auto_create_serial_and_batch_bundle_for_outward":0,"pick_serial_and_batch_based_on":"FIFO"})
+	def test_mi_with_multiple_item_disable_batch_selector_TC_SCK_121(self):
+		fields = {
+			"is_stock_item": 1, 
+			"has_batch_no":1,
+			"create_new_batch":1,
+			"batch_number_series":"ABC.##",
+			"has_serial_no":1,
+			"serial_no_series":"AAB.##"
+
+		}
+
+		if frappe.db.has_column("Item", "gst_hsn_code"):
+			fields["gst_hsn_code"] = "01011010"
+
+		item_1 = make_item("_Test Batch Item 1", properties=fields).name
+		item_2 = make_item("_Test Batch Item 2", properties=fields).name
+
+		semr = make_stock_entry(
+			item_code=item_1, qty=15, rate=100, target="_Test Warehouse - _TC",
+			purpose="Material Receipt", do_not_save=True
+		)
+
+		semr.append("items", {
+			"item_code": item_2,
+			"qty": 15,
+			"basic_rate": 150,
+			"t_warehouse": "Stores - _TC"
+		})
+
+		semr.save()
+		semr.submit()
+
+		semt = make_stock_entry(
+			item_code=item_1, qty=10, rate=100, source="_Test Warehouse - _TC", target = "Stores - _TC",
+			purpose="Material Issue", do_not_save=True
+		)
+
+		semt.append("items", {
+			"item_code": item_2,
+			"qty": 10,
+			"basic_rate": 150,
+			"t_warehouse": "_Test Warehouse - _TC",
+			"s_warehouse": "Stores - _TC"
+		})
+
+		semt.save()
+		semt.submit()
+
+		sle = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": semt.name}, fields=["actual_qty", "item_code"])
+		sle_records = {entry["item_code"]: [] for entry in sle}
+
+		for entry in sle:
+			sle_records[entry["item_code"]].append(entry["actual_qty"])
+
+		self.assertEqual(sle_records[item_1], [-10])
+		self.assertEqual(sle_records[item_2], [-10])
+
+	def test_single_mr_with_multiple_se_tc_sck_123(self):
+		mr = make_material_request(material_request_type="Material Transfer")
+
+		self.assertEqual(mr.status, "Pending")
+
+		se1 = make_mr_se(mr.name)
+		se1.items[0].qty = 5
+		se1.from_warehouse = "_Test Warehouse - _TC"
+		se1.items[0].t_warehouse = "Stores - _TC"
+		se1.insert()
+		se1.submit()
+
+		self.assertEqual(se1.stock_entry_type, "Material Transfer")
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Partially Received")
+		self.check_stock_ledger_entries(
+			"Stock Entry",
+			se1.name,
+			[
+				["_Test Item", "_Test Warehouse - _TC", -5],
+				["_Test Item", "Stores - _TC", 5],
+			],
+		)
+		se2 = make_mr_se(mr.name)
+		se2.from_warehouse = "_Test Warehouse - _TC"
+		se2.items[0].t_warehouse = "Stores - _TC"
+		se2.insert()
+		se2.submit()
+		self.check_stock_ledger_entries(
+			"Stock Entry",
+			se2.name,
+			[
+				["_Test Item", "_Test Warehouse - _TC", -5],
+				["_Test Item", "Stores - _TC", 5],
+			],
+		)
+		mr.load_from_db()
+		self.assertEqual(mr.status, "Transferred")
+
+	def test_mr_to_se_with_in_transit_tc_sck_124(self):
+		from erpnext.stock.doctype.material_request.material_request import make_in_transit_stock_entry
+		from erpnext.stock.doctype.material_request.test_material_request import  get_in_transit_warehouse
+
+		mr = make_material_request(material_request_type="Material Transfer")
+		self.assertEqual(mr.status, "Pending")
+
+		in_transit_warehouse = get_in_transit_warehouse(mr.company)
+		transit_entry = make_in_transit_stock_entry(mr.name, in_transit_warehouse)
+		transit_entry.items[0].s_warehouse = "_Test Warehouse - _TC"
+		transit_entry.insert()
+		transit_entry.submit()
+
+		end_transit_entry = make_stock_in_entry(transit_entry.name)
+		end_transit_entry.submit()
+
+		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':end_transit_entry.name})
+		self.assertEqual(sle.actual_qty, 10)
 
 
 
