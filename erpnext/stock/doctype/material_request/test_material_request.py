@@ -4951,7 +4951,7 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_create_material_req_to_2po_to_pi_serial_TC_SCK_096(self):
 		create_company()
-		create_fiscal_year()
+
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
 		cost_center = frappe.db.get_value("Company","_Test Company MR","cost_center")
@@ -4973,6 +4973,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po1.supplier = "_Test Supplier"
 		po1.items[0].qty = 1
 		po1.items[0].rate = rate
+		po1.currency ="INR"
 		po1.insert()
 		po1.submit()
 		self.assertEqual(po1.docstatus, 1)
@@ -4981,6 +4982,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po2.supplier = "_Test Supplier"
 		po2.items[0].qty = 1
 		po2.items[0].rate = rate
+		po2.currency ="INR"
 		po2.insert()
 		po2.submit()
 		self.assertEqual(po2.docstatus, 1)
@@ -4991,6 +4993,7 @@ class TestMaterialRequest(FrappeTestCase):
 		pi.update_stock = 1
 		pi.items[0].serial_no = "SN-001"
 		pi.items[1].serial_no = "SN-002"
+		pi.currency ="INR"
 		pi.insert()
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
