@@ -4567,6 +4567,11 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 	
 	@change_settings("Stock Settings", {"enable_stock_reservation": 1})
 	def test_sales_order_for_stock_reservation_with_gst_TC_S_065(self):
+		if not frappe.db.exists("Company", "_Test Indian Registered Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Indian Registered Company"
+			company.default_currency = "INR"
+			company.insert()
 		make_stock_entry(company= "_Test Indian Registered Company", item_code="_Test Item", qty=20, rate=20, target="Stores - _TIRC")
   
 		stock_setting = frappe.get_doc('Stock Settings')
