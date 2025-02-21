@@ -11,6 +11,7 @@ from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, today
 import re
 import random
+from erpnext.stock.doctype.warehouse.warehouse import convert_to_group_or_ledger
 
 from erpnext.controllers.item_variant import (
 	InvalidItemAttributeValueError,
@@ -79,7 +80,7 @@ def make_item(item_code=None, properties=None, uoms=None, barcode=None):
 			if len(code) in valid_hsn_length[1]:
 				item.gst_hsn_code = code
 				break
-	item.insert()
+	item.insert(ignore_permissions=True)
 
 	return item
 
@@ -940,6 +941,31 @@ class TestItem(FrappeTestCase):
 		self.assertEqual(item.has_variants, 1)
 		self.assertEqual(item.attributes[0].attribute, "Test Size")
 
+	def test_auto_reorder_item_TC_SCK_126(self):
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		group_warehouse = frappe.get_doc("Warehouse", create_warehouse("TestGroup"))
+		convert_to_group_or_ledger(group_warehouse.name)
+		group_warehouse.reload()
+		self.assertEqual(group_warehouse.is_group, 1)
+		item = make_item(
+			"Test Auto Reorder Item",
+			{
+				"reorder_levels": [
+					{
+						"warehouse_group":group_warehouse.name,
+						"warehouse":create_warehouse("Test Store", {"parent_warehouse":group_warehouse.name}),
+						"warehouse_reorder_level":100,
+						"warehouse_reorder_qty":200,
+						"material_request_type":"Purchase"
+					}
+				]
+			}
+		)
+		self.assertEqual(item.reorder_levels[0].warehouse_group, group_warehouse.name)
+		self.assertEqual(item.reorder_levels[0].warehouse_reorder_level, 100)
+		self.assertEqual(item.reorder_levels[0].warehouse_reorder_qty, 200)
+		self.assertEqual(item.reorder_levels[0].material_request_type, "Purchase")
+
 	def test_cr_item_TC_SCK_129(self):
 		from frappe.utils import random_string
 		item_fields1 = {
@@ -965,6 +991,27 @@ class TestItem(FrappeTestCase):
 		item = make_item(item_fields1["item_name"], item_fields1)
 		self.assertEqual(item.is_stock_item, 0)
 		self.assertEqual(item.shelf_life_in_days, 30)
+
+	def test_create_item_with_opening_stock_TC_SCK_229(self):
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		from frappe.utils import random_string
+		item_fields1 = {
+			"item_name": f"_Test-{random_string(5)}",
+			"is_stock_item": 1,
+			"item_group":"Raw Material",
+			"opening_stock":100,
+			"valuation_rate": 200,
+			"standard_rate":300,
+			"item_defaults": [{'company': "_Test Company", 'default_warehouse': create_warehouse("Stores-test", properties=None, company="_Test Company")}],
+		}
+		item = make_item(item_fields1["item_name"], item_fields1)
+		self.assertEqual(item.standard_rate, 300)		
+		self.assertTrue(
+			frappe.db.get_value("Stock Entry Detail", {"item_code": item.name}, "parent")
+		)
+		se = frappe.db.get_value("Stock Entry Detail", {"item_code": item.name}, "parent")
+		self.assertEqual(frappe.db.get_value("Stock Ledger Entry", {"item_code": item.name, "voucher_no": se}, "actual_qty"), 100)
+		self.assertEqual(frappe.db.get_value("Item Price", {"item_code": item.name}, "price_list_rate"), 300)
 
 	def test_item_cr_TC_SCK_153(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
@@ -998,6 +1045,109 @@ class TestItem(FrappeTestCase):
         # Cleanup created price lists
 		if frappe.db.exists("Item Group", 'Software'):
 			frappe.delete_doc("Item Group", 'Software')
+	
+	def test_cr_item_alternative_TC_SCK_150(self):
+		from erpnext.manufacturing.doctype.production_plan.test_production_plan import make_bom
+		from erpnext.manufacturing.doctype.work_order.test_work_order import make_wo_order_test_record
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+		company = "_Test Company"
+		item_fields = {
+			"item_name": "_Test Item150",
+			"is_stock_item": 1,
+			"valuation_rate": 500,
+			"allow_alternative_item": 1
+		}
+		alt_item_fields = {
+			"item_name": "_Test Alt Item",
+			"is_stock_item": 1,
+			"valuation_rate": 500,
+			"allow_alternative_item": 1
+		}
+		bot_item_fields = {
+			"item_name": "_Test Bom Item",
+			"is_stock_item": 1,
+			"valuation_rate": 500,
+		}
+		item = make_item("_Test Item150", item_fields)
+		alt_item = make_item("_Test Alt Item", alt_item_fields)
+		bom_item = make_item("_Test Bom Item", bot_item_fields)
+
+		if not frappe.db.exists("Item Alternative", {"item_code": item.name, "alternative_item_code": alt_item.name}):
+			alt_1 = frappe.get_doc({
+				"doctype": "Item Alternative",
+				"item_code": item.name,
+				"alternative_item_code": alt_item.name,
+				"is_two_way": 1
+			})
+			alt_1.insert()
+
+		if not frappe.db.exists("Item Alternative", {"item_code": alt_item.name, "alternative_item_code": item.name}):
+			alt_2 = frappe.get_doc({
+				"doctype": "Item Alternative",
+				"item_code": alt_item.name,
+				"alternative_item_code": item.name,
+				"is_two_way": 1
+			})
+			alt_2.insert()
+
+		if not frappe.db.exists("BOM", {"item": item.name}):
+			bom = make_bom(
+			item=item.name,
+			company= company,
+			raw_materials=[bom_item.name, alt_item.name],
+			is_active=1,
+			is_default=1,
+			do_not_submit=True,
+		)
+		self.assertTrue(frappe.db.exists("BOM", bom.name))
+
+		wo = make_wo_order_test_record(company= company,production_item=item.name,bom_no=frappe.get_value("BOM", {"item": bom_item.name}, "name") ,qty=10)
+
+		wo.reload()
+		wo.alternate_item = alt_item.name
+		wo.save()
+
+		self.assertEqual(wo.alternate_item, alt_item.name, "Alternative item not found in Work Order")
+	
+	@change_settings("Stock Settings", {"valuation_method": "FIFO"})
+	def test_default_valuation_method_TC_SCK_180(self):
+		expected_valuation_method = "FIFO"
+		updated_stock_settings = frappe.get_doc("Stock Settings")
+		self.assertEqual(updated_stock_settings.valuation_method, expected_valuation_method, "Valuation method not set correctly in Stock Settings")
+
+	def test_create_stock_entry_with_batch_TC_SCK_155(self):
+		from datetime import datetime, timedelta
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+		company = "_Test Company"
+		item_fields = {
+			"item_name": "_Test Item155",
+			"is_stock_item": 1,
+			"valuation_rate": 500,
+			"has_batch_no": 1,
+			"batch_number_series": "BATCH-Item-.####",
+			"create_new_batch": 1,
+			"has_expiry_date": 1,
+			"shelf_life_in_days": 365
+		}
+		item = make_item("_Test Item155", item_fields)
+		se = make_stock_entry(
+			item_code=item.name, target=create_warehouse("_Test Stores", company="_Test Company"), qty=10, purpose="Material Receipt"
+		)
+		expiry = se.posting_date + timedelta(days=365)
+		self.assertEqual(se.docstatus, 1, "Stock Entry not submitted successfully")
+        # Fetch batch details
+		batch = frappe.get_last_doc("Batch", filters={"item": item.name})
+		self.assertIsNotNone(batch, "Batch not created")
+		self.assertEqual(str(batch.expiry_date), str(expiry), "Expiry date mismatch in batch")
 
 
 def set_item_variant_settings(fields):

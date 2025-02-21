@@ -619,6 +619,40 @@ class TestTaxWithholdingCategory(FrappeTestCase):
 		pi2.cancel()
 		pi3.cancel()
 
+	def test_lower_deduction_certificate_TC_ACC_090_and_TC_ACC_091(self):
+		frappe.db.set_value(
+			"Supplier",
+			"Test LDC Supplier",
+			{
+				"tax_withholding_category": "Test Service Category",
+				"pan": "ABCTY1234D",
+			},
+		)
+
+		create_lower_deduction_certificate(
+			supplier="Test LDC Supplier",
+			certificate_no="1AE0423AAJ",
+			tax_withholding_category="Test Service Category",
+			tax_rate=2,
+			limit=50000,
+		)
+
+		pi1 = create_purchase_invoice(supplier="Test LDC Supplier", rate=35000)
+		pi1.submit()
+		self.assertEqual(pi1.taxes[0].tax_amount, 700)
+
+		pi2 = create_purchase_invoice(supplier="Test LDC Supplier", rate=35000)
+		pi2.submit()
+		self.assertEqual(pi2.taxes[0].tax_amount, 2300)
+
+		pi3 = create_purchase_invoice(supplier="Test LDC Supplier", rate=35000)
+		pi3.submit()
+		self.assertEqual(pi3.taxes[0].tax_amount, 3500)
+
+		pi1.cancel()
+		pi2.cancel()
+		pi3.cancel()
+
 	def set_previous_fy_and_tax_category(self):
 		test_company = "_Test Company"
 		category = "Cumulative Threshold TDS"
@@ -1101,7 +1135,7 @@ def create_tax_withholding_category(
 				],
 				"accounts": [{"company": "_Test Company", "account": account}],
 			}
-		).insert()
+		).insert(ignore_permissions=True)
 	elif frappe.db.exists("Tax Withholding Category", category_name):
 		doc = frappe.get_doc("Tax Withholding Category",category_name)
 		if doc.accounts:
