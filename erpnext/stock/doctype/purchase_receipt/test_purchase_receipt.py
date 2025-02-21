@@ -10,6 +10,9 @@ from erpnext.stock.utils import get_stock_balance
 from erpnext.stock.utils import get_incoming_rate, get_stock_balance
 
 import erpnext
+from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
+from erpnext.stock.utils import get_stock_balance
+from datetime import datetime
 from erpnext.accounts.doctype.account.test_account import get_inventory_account
 from erpnext.buying.doctype.supplier.test_supplier import create_supplier
 from erpnext.controllers.buying_controller import QtyMismatchError
@@ -20,6 +23,7 @@ from erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle impor
 	SerialNoDuplicateError,
 	SerialNoExistsInFutureTransactionError,
 )
+from erpnext.controllers.stock_controller import get_stock_ledger_preview
 from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
 	get_batch_from_bundle,
 	get_serial_nos_from_bundle,
@@ -3938,10 +3942,10 @@ class TestPurchaseReceipt(FrappeTestCase):
 			purchase_order=po.name,
 			company=company,
 			supplier=po.supplier,
+			currency=po.currency,
 			posting_date=posting_date,
 			items=item_list
 		)
-		
 		self.assertEqual(pr.items[0].item_code, item1.name)
 		self.assertEqual(pr.items[0].qty, 150)
 		self.assertEqual(pr.items[0].warehouse, warehouse1)
@@ -3960,6 +3964,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 
 	def test_purchase_order_and_receipt_TC_SCK_073(self):
 		company = "_Test Indian Registered Company"
+		create_company(company)
 		item1 = make_item("ST-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011010"})
 		item2 = make_item("W-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011020"})
 		warehouse1 = create_warehouse("Raw Material - Iron Building - _TIRC", company=company)
@@ -4031,6 +4036,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 
 	def test_purchase_order_and_receipt_TC_SCK_074(self):
 		company = "_Test Indian Registered Company"
+		create_company(company)
 		item1 = make_item("ST-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011010"})
 		item2 = make_item("W-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011020"})
 		warehouse1 = create_warehouse("Raw Material - Iron Building - _TIRC", company=company)
@@ -4203,6 +4209,14 @@ class TestPurchaseReceipt(FrappeTestCase):
 		sr.cancel()
 		self.check_cancel_stock_gl_sle(sr, 20, -3000.0)
 	def test_purchase_receipt_with_serialized_item_TC_SCK_145(self):
+		parent_itm_grp = frappe.new_doc("Item Group")
+		parent_itm_grp.item_group_name = "Test Parent Item Group"
+		parent_itm_grp.is_group = 1
+		parent_itm_grp.insert()
+		itm_grp = frappe.new_doc("Item Group")
+		itm_grp.item_group_name = "Test Item Group"
+		itm_grp.parent_item_group = "Test Parent Item Group"
+		itm_grp.insert()
 		item_code = "ADI-SH-W09"
 		warehouse = "Stores - _TC"
 		supplier = "Test Supplier 1"
@@ -4214,6 +4228,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
+				"item_group": "Test Item Group",
 				"is_stock_item": 1,
 				"is_purchase_item": 1,
 				"has_serial_no": 1,
@@ -4582,6 +4597,45 @@ class TestPurchaseReceipt(FrappeTestCase):
 		pi.insert()
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
+
+	def test_pr_zero_valuation_TC_B_104(self):
+		item = create_item("Testing-31")
+		supplier = create_supplier(supplier_name="_Test Supplier")
+		company = "_Test Company"
+		if not frappe.db.exists("Company", company):
+			company = frappe.new_doc("Company")
+			company.company_name = company
+			company.country="India",
+			company.default_currency= "INR",
+			company.save()
+		else:
+			company = frappe.get_doc("Company", company) 
+		item_price = 0
+		if not frappe.db.exists("Item Price", {"item_code": item.item_code, "price_list": "Standard Buying"}):
+			frappe.get_doc({
+				"doctype": "Item Price",
+				"price_list": "Standard Buying",
+				"item_code": item.item_code,
+				"price_list_rate": item_price
+			}).insert()
+		pr_data = {
+			"company" : company.name,
+			"item_code" : item.item_code,
+			"warehouse" : create_warehouse("Stores - _TC", company=company.name),
+			"supplier": supplier.name,
+			"received_qty":1,
+			"qty" : 1,
+			"rate" : 0,
+			"do_not_save":1
+		}
+		pr = make_purchase_receipt(**pr_data)
+		pr.items[0].allow_zero_valuation_rate = 1
+		pr.save()
+		pr.submit()
+		gl_entries = get_gl_entries(pr.doctype, pr.name)
+		self.assertEqual(len(gl_entries), 0)
+		sle_entries = get_sl_entries(pr.doctype, pr.name)
+		self.assertEqual(len(sle_entries), 1)
 
 	def test_putaway_rule_with_pr_TC_B_154(self):
 		company = "_Test Company"
@@ -4955,6 +5009,98 @@ class TestPurchaseReceipt(FrappeTestCase):
 		frappe.db.rollback()  # Rollback changes to maintain a clean test environment
 
 
+	def test_stock_reconciliation_TC_SCK_224(self):
+		# self.item_code = "Book"
+		self.warehouse = create_warehouse("Stores", properties=None, company="_Test Company")
+		self.qty_received = 10
+		self.qty_issued = 5
+		self.qty_reserved = 3
+		self.qty_reconciled = 8
+		self.item_code = make_item("Book", {'item_name':"Book", "valuation_rate":500, "is_stock_item":1}).name
+		from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import (
+			create_stock_reconciliation,
+		)
+		sr = create_stock_reconciliation(item_code=self.item_code, warehouse=self.warehouse, qty=self.qty_reconciled, rate=500)
+		sr.submit()
+		stock_qty = get_stock_balance(self.item_code, self.warehouse)
+		self.assertEqual(stock_qty, self.qty_reconciled)
+
+	def test_stock_ledger_report_TC_SCK_225(self):
+		item = []
+		warehouse = []
+		date = []
+		warehouse_new = create_warehouse("Stores", properties=None, company="_Test Company")
+		item_code = make_item("_Test Item225", {'item_name':"_Test Item225", "valuation_rate":500, "is_stock_item":1}).name
+		se1 = make_stock_entry(item_code=item_code, qty=10, to_warehouse=warehouse_new, purpose="Material Receipt")
+
+		from erpnext.stock.report.stock_ledger.stock_ledger import execute
+		
+		filters = frappe._dict({  # Convert to allow dot notation
+        "from_date": "2024-01-13",
+        "to_date": "2025-12-12",
+        "item_code": item_code,
+        "warehouse": warehouse_new,
+    	})
+
+		columns, data = execute(filters)  # Unpacking the returned tuple
+
+		# print(data)  # Debugging: Check report structure
+
+		for i in range(1,len(data)):
+			item.append(data[i]['item_code'])
+			warehouse.append(data[i]['warehouse'])
+			date.append(data[i]['posting_date'])
+		item = set(item)
+		item = list(item)
+		warehouse = set(warehouse)
+		warehouse = list(warehouse)
+
+		self.assertTrue(filters["item_code"] == item[0], "Item tc failed")
+		self.assertTrue(filters["warehouse"] == warehouse[0], "Warehouse tc failed")
+		from_date = datetime.strptime(filters["from_date"], "%Y-%m-%d").date()
+		to_date = datetime.strptime(filters["to_date"], "%Y-%m-%d").date()
+		for i in date:
+			self.assertTrue(from_date <= i <= to_date)
+
+	def test_stock_ledger_report_TC_SCK_226(self):
+		item = []
+		warehouse = []
+		date = []
+		if not frappe.db.exists("Item Group", {"item_group_name":"_Test Group"}):
+			item_group = frappe.new_doc("Item Group")
+			item_group.item_group_name =  "_Test Group"
+			item_group.insert()
+		warehouse_new = create_warehouse("Stores", properties=None, company="_Test Company")
+		item_code = make_item("_Test Item225", {'item_name':"_Test Item225", "valuation_rate":500, "is_stock_item":1, "item_group": "_Test Group"}).name
+		se1 = make_stock_entry(item_code=item_code, qty=10, to_warehouse=warehouse_new, purpose="Material Receipt")
+		from erpnext.stock.report.stock_ledger.stock_ledger import execute
+		filters = frappe._dict({  # Convert to allow dot notation
+        "from_date": "2024-01-13",
+        "to_date": "2025-12-12",
+        "item_group": "_Test Group",
+        "warehouse": warehouse_new,
+    	})
+
+		columns, data = execute(filters)  # Unpacking the returned tuple
+		
+		# print(data)  # Debugging: Check report structure
+
+		for i in range(len(data)):
+			item.append(data[i]['item_group'])
+			warehouse.append(data[i]['warehouse'])
+			date.append(data[i]['posting_date'])
+		item = set(item)
+		item = list(item)
+		warehouse = set(warehouse)
+		warehouse = list(warehouse)
+
+		self.assertTrue(filters["item_group"] == item[0], "Item tc failed")
+		self.assertTrue(filters["warehouse"] == warehouse[0], "Warehouse tc failed")
+		from_date = datetime.strptime(filters["from_date"], "%Y-%m-%d").date()
+		to_date = datetime.strptime(filters["to_date"], "%Y-%m-%d").date()
+		for i in date:
+			self.assertTrue(from_date <= i <= to_date)
+
 def prepare_data_for_internal_transfer():
 	from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_internal_supplier
 	from erpnext.selling.doctype.customer.test_customer import create_internal_customer
@@ -5249,3 +5395,12 @@ def make_purchase_receipt_with_multiple_items(**args):
 
 test_dependencies = ["BOM", "Item Price", "Location"]
 test_records = frappe.get_test_records("Purchase Receipt")
+
+
+def create_company(company):
+	if not frappe.db.exists("Company", company):
+		company_doc = frappe.new_doc("Company")
+		company_doc.company_doc_name = company
+		company_doc.country="India",
+		company_doc.default_currency= "INR",
+		company_doc.insert()

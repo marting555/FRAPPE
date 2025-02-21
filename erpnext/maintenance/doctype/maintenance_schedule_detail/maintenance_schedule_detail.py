@@ -22,7 +22,6 @@ class MaintenanceScheduleDetail(Document):
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data
-		sales_person: DF.Link | None
 		scheduled_date: DF.Date
 		serial_no: DF.SmallText | None
 	# end: auto-generated types

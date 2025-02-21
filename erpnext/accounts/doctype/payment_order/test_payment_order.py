@@ -56,30 +56,40 @@ class TestPaymentOrder(FrappeTestCase):
 		from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import check_gl_entries
 		from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
 		from erpnext.accounts.doctype.payment_order.payment_order import make_payment_records
-		if not frappe.db.exists("Bank", "_Test Bank"):
+
+		if not frappe.db.exists("Account", "_Test Bank1 - _TC"):
+			frappe.get_doc(
+				{
+					"doctype": "Account",
+					"account_type": "Bank",
+					"account_name": "_Test Bank1",
+					"company": "_Test Company",
+					"parent_account": "Bank Accounts - _TC",
+				}
+			).insert(ignore_permissions=True)
+		if not frappe.db.exists("Bank", "_Test Bank ICIC"):
 			bank=frappe.get_doc({
 				"doctype": "Bank",
-				"bank_name": "_Test Bank",
-				"swift_number": "SWIFT123",
-			}).insert()
+				"bank_name": "_Test Bank ICIC",
+				"swift_number": "SWIFT12356",
+			}).insert(ignore_permissions=True)
 		
-		if not frappe.db.exists("Bank Account", "_Test Account - _Test Bank"):
-			bank = frappe.get_doc("Bank", "_Test Bank")
+		if not frappe.db.exists("Bank Account", "_Test Account - _Test Bank ICIC"):
+			bank = frappe.get_doc("Bank", "_Test Bank ICIC")
 			bank_account=frappe.get_doc({
 				"doctype": "Bank Account",
 				"bank": bank.name,
 				"account_name": "_Test Account",
 				"is_company_account":1,
 				"company": "_Test Company"
-			}).insert()
-		bank_account=frappe.get_doc("Bank Account", "_Test Account - _Test Bank")
-		
+			}).insert(ignore_permissions=True)
+		bank_account=frappe.get_doc("Bank Account", "_Test Account - _Test Bank ICIC")
 		if not bank_account.is_company_account and bank_account.company != "_Test Company":
 			bank_account.is_company_account=1
 			bank_account.company="_Test Company"
 			bank_account.save()
 		if not bank_account.account:
-			bank_account.account = "_Test Bank - _TC"
+			bank_account.account = "_Test Bank1 - _TC"
 			bank_account.save()
 		item = make_test_item("_Test Item")
 
@@ -131,7 +141,7 @@ class TestPaymentOrder(FrappeTestCase):
 			jv_doc.submit()
 		expected_accounts = [
 				['Creditors - _TC', jv_doc.total_debit, 0.0,jv_doc.posting_date],
-				['_Test Bank - _TC', 0.0, jv_doc.total_credit,jv_doc.posting_date],
+				['_Test Bank1 - _TC', 0.0, jv_doc.total_credit,jv_doc.posting_date],
 			]
 		check_gl_entries(self,jv_doc.name,expected_accounts,jv_doc.posting_date,"Journal Entry")
 

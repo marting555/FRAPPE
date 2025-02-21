@@ -22,7 +22,6 @@
   "finance_book",
   "currency",
   "payment_terms_template",
-  "sales_person",
   "show_remarks",
   "based_on_payment_terms",
   "section_break_3",
@@ -122,7 +121,7 @@
    "fieldname": "customer_collection",
    "fieldtype": "Select",
    "label": "Select Customers By",
-   "options": "\nCustomer Group\nTerritory\nSales Partner\nSales Person"
+   "options": "\nCustomer Group\nTerritory"
   },
   {
    "depends_on": "eval: doc.customer_collection !== ''",
@@ -340,13 +339,6 @@
   },
   {
    "depends_on": "eval: (doc.report == 'Accounts Receivable');",
-   "fieldname": "sales_person",
-   "fieldtype": "Link",
-   "label": "Sales Person",
-   "options": "Sales Person"
-  },
-  {
-   "depends_on": "eval: (doc.report == 'Accounts Receivable');",
    "fieldname": "territory",
    "fieldtype": "Link",
    "label": "Territory",
@@ -384,7 +376,7 @@
   }
  ],
  "links": [],
- "modified": "2024-12-11 12:11:13.543134",
+ "modified": "2025-02-07 16:29:21.597239",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Process Statement Of Accounts",
