@@ -436,20 +436,22 @@ def get_invoice_vouchers(parties, tax_details, company, party_type="Supplier"):
 			tax_details.get("tax_withholding_category"),
 			company,
 		),
+		as_dict=1,
 	)
 
-	for d in journal_entries_details:
-		vouchers.append(d.name)
-		voucher_wise_amount.append(
-			frappe._dict(
-				{
-					"voucher_name": d.name,
-					"voucher_type": "Journal Entry",
-					"taxable_amount": d.amount,
-					"reference_type": d.reference_type,
-				}
+	if journal_entries_details:
+		for d in journal_entries_details:
+			vouchers.append(d.name)
+			voucher_wise_amount.append(
+				frappe._dict(
+					{
+						"voucher_name": d.name,
+						"voucher_type": "Journal Entry",
+						"taxable_amount": d.amount,
+						"reference_type": d.reference_type,
+					}
+				)
 			)
-		)
 
 	return vouchers, voucher_wise_amount
 
