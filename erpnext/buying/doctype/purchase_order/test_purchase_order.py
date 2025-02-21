@@ -2908,7 +2908,6 @@ class TestPurchaseOrder(FrappeTestCase):
 					"calculate_based_on" : "Fixed",
 					"shipping_amount" : 200
 				}
-		doc_shipping_rule = create_shipping_rule("Buying", "_Test Shipping Rule _TC", args)
 		item = create_item("_Test Item")
 		supplier = create_supplier(supplier_name="_Test Supplier PO")
 		company = "_Test Company"
@@ -2920,11 +2919,14 @@ class TestPurchaseOrder(FrappeTestCase):
 			company.save()
 		else:
 			company = frappe.get_doc("Company", company)
+		validate_fiscal_year(company.name)
+		create_warehouse("_Test Warehouse", company=company.name)
+		doc_shipping_rule = create_shipping_rule("Buying", "_Test Shipping Rule _TC", args)
 		po_data = {
 			"company" : company.name,
 			"supplier":supplier.name,
 			"item_code" : item.item_code,
-			"warehouse" : create_warehouse("Stores - _TC", company=company.name),
+			"warehouse" : create_warehouse("Stores", company=company.name),
 			"qty" : 1,
 			"rate" : 3000,
 			"shipping_rule" :doc_shipping_rule.name
@@ -3155,12 +3157,12 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.items[0].rate, 130)
 
 	def test_po_pr_pi_multiple_flow_TC_B_065(self):
+		
 		# Scenario : PO=>2PR=>2PI 
 		args = {
 					"calculate_based_on" : "Fixed",
 					"shipping_amount" : 200
 				}
-		doc_shipping_rule = create_shipping_rule("Buying", "_Test Shipping Rule _TC", args)
 		item = create_item("_Test Item")
 		supplier = create_supplier(supplier_name="_Test Supplier PO")
 		company = "_Test Company"
@@ -3172,11 +3174,14 @@ class TestPurchaseOrder(FrappeTestCase):
 			company.save()
 		else:
 			company = frappe.get_doc("Company", company)
+		validate_fiscal_year(company.name)
+		create_warehouse("_Test Warehouse", company=company.name)
+		doc_shipping_rule = create_shipping_rule("Buying", "_Test Shipping Rule _TC", args)
 		po_data = {
 			"company" : company.name,
 			"supplier":supplier.name,
 			"item_code" : item.item_code,
-			"warehouse" : create_warehouse("Stores - _TC", company=company.name),
+			"warehouse" : create_warehouse("Stores", company=company.name),
 			"qty" : 4,
 			"rate" : 3000,
 			"shipping_rule" :doc_shipping_rule.name
@@ -3639,7 +3644,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 	def test_create_po_pr_return_pr_TC_SCK_178(self):
 		create_company()
-		create_fiscal_year()
+
 		supplier = create_supplier(supplier_name="_Test Supplier PO")
 		item = create_item("_Test PO")
 		warehouse = create_warehouse("_Test warehouse - _PO", company="_Test Company PO")
@@ -8126,3 +8131,15 @@ def get_gl_entries(voucher_no):
 
 def get_sle(voucher_no):
 	return frappe.get_all("Stock Ledger Entry", filters={"voucher_no": voucher_no}, fields=['actual_qty', 'item_code'])
+
+def validate_fiscal_year(company):
+	from erpnext.accounts.utils import get_fiscal_year
+	year = get_fiscal_year(today())
+	if len(year) >1:
+		fiscal_year = frappe.get_doc("Fiscal Year", year[0])
+		company_list = {d.company for d in fiscal_year.companies}
+
+		if company not in company_list:
+			fiscal_year.append("companies", {"company": company})
+			fiscal_year.save()
+		
