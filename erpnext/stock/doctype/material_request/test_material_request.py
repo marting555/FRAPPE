@@ -3035,11 +3035,8 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_po_pi_TC_SCK_082(self):
 		# MR =>  PO => PI
-		if not frappe.db.exists("Company", "_Test Company"):
-			company = frappe.new_doc("Company")
-			company.company_name = "_Test Company"
-			company.default_currency = "INR"
-			company.insert()
+		company = "_Test Company"
+		make_company(company)
 		item_fields = {
 			"item_name" : "Testing-31",
 			"is_stock_item": 1,
@@ -3204,11 +3201,8 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_po_pi_cancel_TC_SCK_086(self):
 		# MR =>  PO => PI => PI Cancel
-		if not frappe.db.exists("Company", "_Test Company"):
-			company = frappe.new_doc("Company")
-			company.company_name = "_Test Company"
-			company.default_currency = "INR"
-			company.insert()
+		company = "_Test Company"
+		make_company(company)
 		item_fields = {
 			"item_name" : "Testing-31",
 			"is_stock_item": 1,
@@ -3952,11 +3946,8 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_po_pi_partial_return_TC_SCK_104(self):
 		# MR =>  PO => PI => Return
-		if not frappe.db.exists("Company", "_Test Company"):
-			company = frappe.new_doc("Company")
-			company.company_name = "_Test Company"
-			company.default_currency = "INR"
-			company.insert()
+		company = "_Test Company"
+		make_company(company)
 		item_fields = {
 			"item_name" : "Testing-31",
 			"is_stock_item": 1,
@@ -4420,14 +4411,8 @@ class TestMaterialRequest(FrappeTestCase):
 		item = create_item("_Test Item")
 		supplier = create_supplier(supplier_name="_Test Supplier")
 		company = "_Test Company"
-		if not frappe.db.exists("Company", company):
-			company = frappe.new_doc("Company")
-			company.company_name = company
-			company.country="India",
-			company.default_currency= "INR",
-			company.save()
-		else:
-			company = frappe.get_doc("Company", company) 
+		make_company(company)
+		company = frappe.get_doc("Company", company) 
 		frappe.db.set_value("Item Default", {"parent": item.item_code, "company": company.name}, "default_supplier", supplier.name)
 		mr_dict_list = {
 				"company" : company.name,
@@ -4458,14 +4443,8 @@ class TestMaterialRequest(FrappeTestCase):
 		supplier = create_supplier(supplier_name="_Test Supplier")
 		company = "_Test Company"
 		item = create_item("_Test Item")
-		if not frappe.db.exists("Company", company):
-			company = frappe.new_doc("Company")
-			company.company_name = company
-			company.country="India",
-			company.default_currency= "INR",
-			company.save()
-		else:
-			company = frappe.get_doc("Company", company)
+		make_company(company)
+		company = frappe.get_doc("Company", company)
 		mr_dict_list = {
 				"company" : company.name,
 				"purpose":"Purchase",
@@ -4537,14 +4516,8 @@ class TestMaterialRequest(FrappeTestCase):
 		supplier = create_supplier(supplier_name="_Test Supplier")
 		company = "_Test Company"
 		item = create_item("_Test Item")
-		if not frappe.db.exists("Company", company):
-			company = frappe.new_doc("Company")
-			company.company_name = company
-			company.country="India",
-			company.default_currency= "INR",
-			company.save()
-		else:
-			company = frappe.get_doc("Company", company)
+		make_company(company)
+		company = frappe.get_doc("Company", company)
 		mr_dict_list = {
 				"company" : company.name,
 				"purpose":"Purchase",
@@ -6956,11 +6929,8 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_make_mr_TC_SCK_185(self):
 			from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry as _make_stock_entry
-			if not frappe.db.exists("Company", "_Test Company"):
-				company = frappe.new_doc("Company")
-				company.company_name = "_Test Company"
-				company.default_currency = "INR"
-				company.insert()
+			company = "_Test Company"
+			make_company(company)
 
 			fields = {
 				"has_serial_no": 1,
@@ -7057,11 +7027,8 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_make_mr_TC_SCK_186(self):
 		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 
-		if not frappe.db.exists("Company", "_Test Company"):
-			company = frappe.new_doc("Company")
-			company.company_name = "_Test Company"
-			company.default_currency = "INR"
-			company.insert()
+		company = "_Test Company"
+		make_company(company)
 
 		fields = {
 			"has_batch_no": 1,
@@ -7153,11 +7120,8 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_make_mr_TC_SCK_187(self):
 		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 
-		if not frappe.db.exists("Company", "_Test Company"):
-			company = frappe.new_doc("Company")
-			company.company_name = "_Test Company"
-			company.default_currency = "INR"
-			company.insert()
+		company = "_Test Company"
+		make_company(company)
 
 		fields = {
 			"has_serial_no": 1,
@@ -7246,11 +7210,8 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_make_mr_TC_SCK_188(self):
 			from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry as _make_stock_entry
 
-			if not frappe.db.exists("Company", "_Test Company"):
-				company = frappe.new_doc("Company")
-				company.company_name = "_Test Company"
-				company.default_currency = "INR"
-				company.insert()
+			company = "_Test Company"
+			make_company(company)
 
 			fields = {
 				"has_serial_no": 1,
@@ -7642,3 +7603,10 @@ def get_shipping_rule_name(args = None):
 	from erpnext.accounts.doctype.shipping_rule.test_shipping_rule import create_shipping_rule
 	doc_shipping_rule = create_shipping_rule("Buying", "_Test Shipping Rule -TC", args)
 	return doc_shipping_rule.name
+
+def make_company(company):
+	if not frappe.db.exists("Company", company):
+		company = frappe.new_doc("Company")
+		company.company_name = company
+		company.default_currency = "INR"
+		company.insert()
