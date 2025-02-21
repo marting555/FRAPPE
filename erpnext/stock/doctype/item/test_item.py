@@ -1046,6 +1046,73 @@ class TestItem(FrappeTestCase):
 		if frappe.db.exists("Item Group", 'Software'):
 			frappe.delete_doc("Item Group", 'Software')
 	
+	def test_cr_item_alternative_TC_SCK_150(self):
+		from erpnext.manufacturing.doctype.production_plan.test_production_plan import make_bom
+		from erpnext.manufacturing.doctype.work_order.test_work_order import make_wo_order_test_record
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+		company = "_Test Company"
+		item_fields = {
+			"item_name": "_Test Item150",
+			"is_stock_item": 1,
+			"valuation_rate": 500,
+			"allow_alternative_item": 1
+		}
+		alt_item_fields = {
+			"item_name": "_Test Alt Item",
+			"is_stock_item": 1,
+			"valuation_rate": 500,
+			"allow_alternative_item": 1
+		}
+		bot_item_fields = {
+			"item_name": "_Test Bom Item",
+			"is_stock_item": 1,
+			"valuation_rate": 500,
+		}
+		item = make_item("_Test Item150", item_fields)
+		alt_item = make_item("_Test Alt Item", alt_item_fields)
+		bom_item = make_item("_Test Bom Item", bot_item_fields)
+
+		if not frappe.db.exists("Item Alternative", {"item_code": item.name, "alternative_item_code": alt_item.name}):
+			alt_1 = frappe.get_doc({
+				"doctype": "Item Alternative",
+				"item_code": item.name,
+				"alternative_item_code": alt_item.name,
+				"is_two_way": 1
+			})
+			alt_1.insert()
+
+		if not frappe.db.exists("Item Alternative", {"item_code": alt_item.name, "alternative_item_code": item.name}):
+			alt_2 = frappe.get_doc({
+				"doctype": "Item Alternative",
+				"item_code": alt_item.name,
+				"alternative_item_code": item.name,
+				"is_two_way": 1
+			})
+			alt_2.insert()
+
+		if not frappe.db.exists("BOM", {"item": item.name}):
+			bom = make_bom(
+			item=item.name,
+			company= company,
+			raw_materials=[bom_item.name, alt_item.name],
+			is_active=1,
+			is_default=1,
+			do_not_submit=True,
+		)
+		self.assertTrue(frappe.db.exists("BOM", bom.name))
+
+		wo = make_wo_order_test_record(company= company,production_item=item.name,bom_no=frappe.get_value("BOM", {"item": bom_item.name}, "name") ,qty=10)
+
+		wo.reload()
+		wo.alternate_item = alt_item.name
+		wo.save()
+
+		self.assertEqual(wo.alternate_item, alt_item.name, "Alternative item not found in Work Order")
+	
 	@change_settings("Stock Settings", {"valuation_method": "FIFO"})
 	def test_default_valuation_method_TC_SCK_180(self):
 		expected_valuation_method = "FIFO"
