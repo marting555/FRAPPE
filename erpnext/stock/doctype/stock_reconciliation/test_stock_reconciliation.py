@@ -1586,11 +1586,9 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 
 	def test_stock_reco_for_serial_item_TC_SCK_146(self):
 		from erpnext.stock.doctype.item.test_item import make_item
-		if not frappe.db.exists("Company", "_Test Company"):
-			company = frappe.new_doc("Company")
-			company.company_name = "_Test Company"
-			company.default_currency = "INR"
-			company.insert()
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import create_company
+		company = "_Test Company"
+		create_company(company)
 		
 		app_name = "india_compliance"
 		item_fields = {

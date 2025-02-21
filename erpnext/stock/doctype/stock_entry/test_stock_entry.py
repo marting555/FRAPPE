@@ -3829,12 +3829,8 @@ class TestStockEntry(FrappeTestCase):
 	@change_settings("Stock Settings", {"auto_create_serial_and_batch_bundle_for_outward": 1, "disable_serial_no_and_batch_selector": 1, "use_serial_batch_fields": 1})
 	def test_material_issue_with_auto_batch_serial_TC_SCK_134(self):
 		from erpnext.stock.utils import get_bin
-		if not frappe.db.exists("Company", "_Test Company"):
-			company = frappe.new_doc("Company")
-			company.company_name = "_Test Company"
-			company.default_currency = "INR"
-			company.insert()
-		
+		company = "_Test Company"
+		create_company(company)
 		item_fields = {
 			"item_name" : "_Test Item134",
 			"valuation_rate" : 500,
@@ -3871,11 +3867,8 @@ class TestStockEntry(FrappeTestCase):
 	@change_settings("Stock Settings", {"auto_create_serial_and_batch_bundle_for_outward": 1, "disable_serial_no_and_batch_selector": 1, "use_serial_batch_fields": 1})
 	def test_material_issue_with_auto_batch_serial_TC_SCK_135(self):
 		from erpnext.stock.utils import get_bin
-		if not frappe.db.exists("Company", "_Test Company"):
-			company = frappe.new_doc("Company")
-			company.company_name = "_Test Company"
-			company.default_currency = "INR"
-			company.insert()
+		company = "_Test Company"
+		create_company(company)
 		
 		item_fields1 = {
 			"item_name" : "_Test Item1351",
@@ -4102,3 +4095,10 @@ def initialize_records_for_future_negative_sle_test(
 def create_stock_entries(sequence_of_entries):
 	for entry_detail in sequence_of_entries:
 		make_stock_entry(**entry_detail)
+
+def create_company(company):
+	if not frappe.db.exists("Company", company):
+		company = frappe.new_doc("Company")
+		company.company_name = company
+		company.default_currency = "INR"
+		company.insert()
