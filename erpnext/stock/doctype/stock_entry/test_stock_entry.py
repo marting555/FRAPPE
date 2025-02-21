@@ -3558,13 +3558,7 @@ class TestStockEntry(FrappeTestCase):
 		q = []
 		range1 = []
 		range2 = []
-		if not frappe.db.exists("Company", company):
-			company_doc = frappe.new_doc("Company")
-			company_doc.company_doc_name = company
-			company_doc.country="India",
-			company_doc.default_currency= "INR",
-			company_doc.save()
-
+		create_company(company)
 		item_fields = {
 			"item_name": "_Test Item227",
 			"valuation_rate": 500,
