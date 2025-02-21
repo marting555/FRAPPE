@@ -6067,37 +6067,44 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
   
       
 def get_transport_details(customer):
-	# create a driver
-	driver = frappe.new_doc("Driver")
-	driver.full_name = "Test Driver"
-	driver.status = "Active"
-	driver.save()
+    driver = frappe.get_all("Driver", filters={"full_name": "Test Driver"}, fields=["name"])
+    if not driver:
+        driver = frappe.new_doc("Driver")
+        driver.full_name = "Test Driver"
+        driver.status = "Active"
+        driver.save()
+    else:
+        driver = frappe.get_doc("Driver", driver[0].name)
 
-	# create a vehicle
-	vehicle = frappe.new_doc("Vehicle")
-	vehicle.license_plate = "Test1234"
-	vehicle.model = "Test Model"
-	vehicle.make = "Test Make"
-	vehicle.last_odometer = 1000
-	vehicle.fuel_type = "Petrol"
-	vehicle.uom = "Litre"
-	vehicle.save()
+    vehicle = frappe.get_all("Vehicle", filters={"license_plate": "Test1234"}, fields=["name"])
+    if not vehicle:
+        vehicle = frappe.new_doc("Vehicle")
+        vehicle.license_plate = "Test1234"
+        vehicle.model = "Test Model"
+        vehicle.make = "Test Make"
+        vehicle.last_odometer = 1000
+        vehicle.fuel_type = "Petrol"
+        vehicle.uom = "Litre"
+        vehicle.save()
+    else:
+        vehicle = frappe.get_doc("Vehicle", vehicle[0].name)
 
-	# create an address
-	add = frappe.new_doc("Address")
-	add.address_title = "Test Address"
-	add.address_type= "Billing"
-	add.address_line1 = "TEST"
-	add.city = "Mumbai"
-	add.state = "Maharashtra"
-	add.country = "India"
-	add.pincode = "400080"
-	for link in add.links:
-		link.link_doctype = "Customer"
-		link.linkname = customer
-	add.save()
-  
-	return driver, vehicle, add
+    address = frappe.get_all("Address", filters={"address_title": "Test Address"}, fields=["name"])
+    if not address:
+        address = frappe.new_doc("Address")
+        address.address_title = "Test Address"
+        address.address_type = "Billing"
+        address.address_line1 = "TEST"
+        address.city = "Mumbai"
+        address.state = "Maharashtra"
+        address.country = "India"
+        address.pincode = "400080"
+        address.append("links", {"link_doctype": "Customer", "link_name": customer})
+        address.save()
+    else:
+        address = frappe.get_doc("Address", address[0].name)
+
+    return driver, vehicle, address
 
 def get_gst_details(doctype, filters):
 	return frappe.get_all(doctype, filters, ["gstin", "gst_category", "name"])
@@ -6186,7 +6193,7 @@ def make_service_item():
 		si_doc = frappe.new_doc("Item")
 		item_price_data = {
 			"item_code": 'Consultancy',
-			"stock_uom": 'Hrs',
+			"stock_uom": '_Test UOM',
 			"in_stock_item": 0,
 			"item_group": "Services",
 			"gst_hsn_code": "01011020",
