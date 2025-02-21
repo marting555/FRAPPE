@@ -6193,7 +6193,7 @@ def make_service_item():
 		si_doc = frappe.new_doc("Item")
 		item_price_data = {
 			"item_code": 'Consultancy',
-			"stock_uom": 'Hrs',
+			"stock_uom": '_Test UOM',
 			"in_stock_item": 0,
 			"item_group": "Services",
 			"gst_hsn_code": "01011020",
