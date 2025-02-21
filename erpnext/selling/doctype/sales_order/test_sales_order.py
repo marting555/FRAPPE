@@ -4488,7 +4488,8 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Debtors - _TIRC'}, 'debit'), 118)
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Output Tax SGST - _TIRC'}, 'credit'), 9)
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Output Tax CGST - _TIRC'}, 'credit'), 9)
-  
+	
+	@change_settings("Stock Settings", {"enable_stock_reservation": 1})
 	def test_sales_order_for_stock_reservation_TC_S_063(self, reuse=None, get_so_with_stock_reserved=None):
 		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="_Test Warehouse - _TC")
   
@@ -4563,7 +4564,8 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Debtors - _TC'}, 'debit'), 5000)
   
 		return si
-  
+	
+	@change_settings("Stock Settings", {"enable_stock_reservation": 1})
 	def test_sales_order_for_stock_reservation_with_gst_TC_S_065(self):
 		make_stock_entry(company= "_Test Indian Registered Company", item_code="_Test Item", qty=20, rate=20, target="Stores - _TIRC")
   
@@ -4765,7 +4767,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
   
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': payable_account}, 'credit'), 5000)
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name, 'account': excise_account}, 'debit'), 5000)
-  
+
 	def test_sales_order_for_stock_unreserve_TC_S_071(self):
 		so = self.test_sales_order_for_stock_reservation_TC_S_063(get_so_with_stock_reserved=1)
 		
@@ -6037,7 +6039,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		self.assertTrue(any(entry["actual_qty"] == -10 and entry["warehouse"] == "_Test Stores - _TC" for entry in stock_ledger_entries), "Stock Ledger did not update correctly")
 
-	
+	@change_settings("Stock Settings", {"enable_stock_reservation": 1})
 	def test_stock_reservation_from_so_to_dn_TC_SCK_143(self):
 		so = make_sales_order(item_code="_Test Item", qty=5, do_not_save=True)
 		so.reserve_stock = 1
