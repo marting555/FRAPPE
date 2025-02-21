@@ -774,10 +774,25 @@ class TestJournalEntry(unittest.TestCase):
 	def test_payment_of_gst_tds_TC_ACC_054(self):
 		# Set up input parameters
 		entry_type = "Journal Entry"
-		debit_account = "Input Tax IGST - _TC"
 		credit_account = "_Test Bank - _TC"
 		amount = 20000.0
+		tax_accounts = frappe.get_all(
+			"Account",
+			filters={"company":"_Test Company","account_type": "Tax", "parent_account": ["like", "%Assets%"]},
+			fields=["name"]
+		)
 
+		# Identify SGST and CGST accounts based on their name
+		debit_account = None
+		debit_account_cgst = None
+
+		for account in tax_accounts:
+			if "IGST" in account["name"]:
+				debit_account = account["name"]
+
+		# Ensure both SGST and CGST accounts are found
+		if not debit_account:
+			self.fail(f"Could not find IGST account: {tax_accounts}")
 		# Create the Journal Entry using the existing function
 		jv = make_journal_entry(
 			account1=debit_account,

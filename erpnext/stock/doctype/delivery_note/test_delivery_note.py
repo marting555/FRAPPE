@@ -2738,6 +2738,9 @@ class TestDeliveryNote(FrappeTestCase):
 		}
 		
 		target_warehouse = create_warehouse("_Test Warehouse", properties=None, company=pr_fields['company'])
+		uom = frappe.get_doc("UOM", "Box")
+		uom.must_be_whole_number = 0
+		uom.save()
 		item = make_item("Ball point Pen", item_fields).name
 		supplier = create_supplier(
 			supplier_name="Test Supplier 1",

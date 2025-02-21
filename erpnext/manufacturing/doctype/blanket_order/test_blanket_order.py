@@ -115,6 +115,7 @@ class TestBlanketOrder(FrappeTestCase):
 		self.assertEqual(bo.items[0].party_item_code, "SUPP-PART-1")
 
 	def test_blanket_order_to_invoice_TC_B_102(self):
+		frappe.set_user("Administrator")
 		#Scenario : BO=>PO=>PR=PI
 		item_doc = make_item("_Test Item 1 for Blanket Order")
 		item_code = item_doc.name
@@ -204,6 +205,7 @@ class TestBlanketOrder(FrappeTestCase):
 		self.assertTrue(any(entry["account"] == "SGST" and entry["debit"] == 9000 for entry in pi_gl_entries))
 		self.assertTrue(any(entry["account"] == "Creditors" and entry["credit"] == 118000 for entry in pi_gl_entries))
 	def test_blanket_order_to_po_TC_B_093(self):
+		frappe.set_user("Administrator")
 		company = "_Test Company"
 		item_code = "Testing-31"
 		target_warehouse = "Stores - _TC"
