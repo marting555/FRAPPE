@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-02-16 09:34+0000\n"
-"PO-Revision-Date: 2025-02-19 00:43\n"
+"PO-Revision-Date: 2025-02-21 01:45\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Bosnian\n"
 "MIME-Version: 1.0\n"
@@ -17458,7 +17458,7 @@ msgstr "Želiš li podnijeti Materijalni Zahtjev"
 #. Record Details'
 #: erpnext/accounts/doctype/transaction_deletion_record_details/transaction_deletion_record_details.json
 msgid "DocField"
-msgstr "DocField"
+msgstr "Dokument Polje"
 
 #. Label of the doctype_name (Link) field in DocType 'Transaction Deletion
 #. Record Details'
@@ -23555,7 +23555,7 @@ msgstr "Partner Implementacije"
 #: erpnext/edi/doctype/code_list/code_list_import.js:43
 #: erpnext/edi/doctype/code_list/code_list_import.js:111
 msgid "Import"
-msgstr "Import"
+msgstr ""
 
 #. Description of a DocType
 #: erpnext/accounts/doctype/chart_of_accounts_importer/chart_of_accounts_importer.json
