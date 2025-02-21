@@ -10,7 +10,7 @@ from frappe.tests.utils import FrappeTestCase, change_settings, if_app_installed
 from frappe.utils import add_days, flt, getdate, nowdate, add_years, today, get_year_start, get_year_ending
 from frappe.utils.data import today
 from datetime import date
-
+from frappe.query_builder import DocType
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 from erpnext.accounts.party import get_due_date_from_template
 from erpnext.buying.doctype.purchase_order.purchase_order import (
@@ -7631,9 +7631,12 @@ class TestPurchaseOrder(FrappeTestCase):
 		purchase_receipt.submit()
 
 		# Check Stock Ledger
-		stock_ledger_entries = frappe.get_all("Stock Ledger Entry", 
-												filters={"voucher_no": purchase_receipt.name}, 
-												fields=["actual_qty", "warehouse"])
+		StockLedgerEntry = DocType("Stock Ledger Entry")
+		stock_ledger_entries = (
+		frappe.qb.from_(StockLedgerEntry)
+		.select(StockLedgerEntry.actual_qty, StockLedgerEntry.warehouse)
+		.where(StockLedgerEntry.voucher_no == purchase_receipt.name)
+		).run(as_dict=True)
 
 		self.assertTrue(any(entry["actual_qty"] == 10 and entry["warehouse"] == "_Test Stores - _TC" for entry in stock_ledger_entries), "Stock Ledger did not update correctly")
 
