@@ -173,8 +173,8 @@ def get_data(
 	gl_entries_by_account = {}
 	for root in frappe.db.sql(
 		"""select lft, rgt from tabAccount
-			where root_type=%s and ifnull(parent_account, '') = ''""",
-		root_type,
+			where root_type=%s and company=%s ifnull(parent_account, '') = ''""",
+		(root_type, company),
 		as_dict=1,
 	):
 		set_gl_entries_by_account(
