@@ -57,6 +57,7 @@
   "engine_liters",
   "type_of_job",
   "clutch",
+  "transmission_code",
   "column_break_15",
   "engine_code",
   "dsg_model",
@@ -218,11 +219,11 @@
    "label": "Flywheel"
   },
   {
-   "fieldname": "loan_car",
-   "fieldtype": "Text Editor",
-   "in_list_view": 1,
-   "label": "Loan car"
-  },
+    "fieldname": "loan_car",
+    "fieldtype": "Text Editor",
+    "in_list_view": 1,
+    "label": "Loan car"
+   },
   {
    "fieldname": "queue_position",
    "fieldtype": "Select",
@@ -959,6 +960,11 @@
    "fieldname": "model_year",
    "fieldtype": "Data",
    "label": "Model year"
+  },
+  {
+   "fieldname": "transmission_code",
+   "fieldtype": "Data",
+   "label": "Transmission Code"
   }
  ],
  "icon": "fa fa-puzzle-piece",
@@ -966,7 +972,7 @@
  "index_web_pages_for_search": 1,
  "links": [],
  "max_attachments": 4,
- "modified": "2025-01-28 22:30:05.655939",
+ "modified": "2025-02-20 18:14:13.202854",
  "modified_by": "Administrator",
  "module": "Projects",
  "name": "Project",
