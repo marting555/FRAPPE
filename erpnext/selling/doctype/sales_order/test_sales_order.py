@@ -4146,23 +4146,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_return
 
 		so = self.create_and_submit_sales_order(qty=5, rate=3000)
-		pe = create_payment_entry(
-			company="_Test Indian Registered Company",
-			payment_type="Receive",
-			party_type="Customer",
-			party="_Test Registered Customer",
-			paid_from="Debtors - _TIRC",
-			paid_to="Cash - _TIRC",
-			paid_amount=so.grand_total,
-		)
-		pe.append("references", {
-			"reference_doctype": "Sales Order",
-			"reference_name": so.name,
-			"total_amount": so.grand_total,
-			"account": "Debtors - _TIRC"
-		})
-		pe.save()
-		pe.submit()
+		self.create_and_submit_payment_entry(dt="Sales Order", dn=so.name)
 
 		dn = make_delivery_note(so.name)
 		dn.save()
@@ -5413,6 +5397,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="_Test Warehouse - _TC")
 
 		so = make_sales_order(qty=1,rate=5000,do_not_save=True)
+		so.ignore_pricing_rule = 0
 		for i in so.items:
 			i.delivered_by_supplier =1
 			i.supplier = "_Test Supplier"
@@ -5605,6 +5590,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		
 		item=make_test_item("_Test Item 1")
 		item.enable_deferred_revenue =1
+		item.is_stock_item = 1
 		item.no_of_months =5
 		item.save()
 	
