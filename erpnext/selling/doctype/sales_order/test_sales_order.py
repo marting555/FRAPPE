@@ -4801,6 +4801,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		so = self.create_and_submit_sales_order(qty=1, rate=5000)
   
 		mr = make_material_request(so.name)
+		mr.schedule_date = nowdate()
 		for i in mr.items:
 			i.cost_center =  "_Test Cost Center - _TC"
 			i.rate = 5000
@@ -4862,9 +4863,9 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		from erpnext.buying.doctype.request_for_quotation.request_for_quotation import make_supplier_quotation_from_rfq
 		sq = make_supplier_quotation_from_rfq(rfq.name, for_supplier = "_Test Supplier")
+		sq.items[0].rate = 2500
 		sq.save()
 		sq.submit()
-		sq.items[0].rate = 2500
 		self.assertEqual(sq.status, "Submitted")
 		self.assertEqual(sq.items[0].get("material_request"), mr.name)
 		self.assertEqual(sq.items[0].get("request_for_quotation"), rfq.name)
@@ -4884,6 +4885,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
   
 		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
 		pr = make_purchase_receipt(po.name)
+		pr.items[0].rate = 2500
 		pr.save()
 		pr.submit()
   
@@ -4893,7 +4895,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(pr.items[0].get("purchase_order"), po.name)	
 		qty_change = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': pr.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
 		self.assertEqual(qty_change, 1)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pr.name, 'account': 'Stock In Hand - _TC'}, 'debit'), 2500)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pr.name, 'account': '_Test Account Excise Duty - _TC'}, 'credit'), 2500)
   
 		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
 		pi = make_purchase_invoice(pr.name)
