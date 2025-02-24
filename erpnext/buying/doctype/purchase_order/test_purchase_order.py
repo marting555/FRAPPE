@@ -7503,6 +7503,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			self.assertEqual(entry["debit"], expected_pi_entries.get(entry["account"], {}).get("debit", 0))
 			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
 
+
 	def test_single_po_pi_multi_pr_TC_SCK_122(self):
 		# Scenario : 1PO => 2PR => 1PI
 		
@@ -7539,7 +7540,6 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(doc_pi.docstatus, 1)
 		self.assertEqual(doc_po.total_qty, doc_pi.total_qty)
 		self.assertEqual(doc_po.grand_total, doc_pi.grand_total)
-
 
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
