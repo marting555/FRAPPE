@@ -1357,6 +1357,8 @@ class TestJournalEntry(unittest.TestCase):
 		self.check_gl_entries()
   
 	def test_opening_entry_TC_ACC_116(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_records
+		create_records("_Test Supplier")
 		jv = frappe.get_doc({
 			"doctype": "Journal Entry",
 			"voucher_type": "Opening Entry",
