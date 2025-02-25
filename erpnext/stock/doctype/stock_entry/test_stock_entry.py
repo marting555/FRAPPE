@@ -3913,20 +3913,9 @@ class TestStockEntry(FrappeTestCase):
 		self.assertTrue(batch_exists, "Batch should exist in the system.")
 
 	def test_stock1_ageing_TC_SCK_227(self):
-		print("227")
 		from erpnext.stock.report.stock_ageing.stock_ageing import FIFOSlots, format_report_data
-		# from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
-		# from erpnext.stock.doctype.item.test_item import (
-		# 	make_item,
-		# )
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
-		from erpnext.stock.report.stock_ageing.stock_ageing import execute
-		avail_qty = 30
 		company = "_Test Company"
-		item_c = []
-		q = []
-		range1 = []
-		range2 = []
 		if not frappe.db.exists("Company", company):
 			company_doc = frappe.new_doc("Company")
 			company_doc.company_doc_name = company
@@ -3978,11 +3967,10 @@ class TestStockEntry(FrappeTestCase):
 		]
 		slots = FIFOSlots(filters, sle).generate()
 		report_data = format_report_data(filters, slots, filters["to_date"])
-		row = report_data[0]  # first row in report
+		row = report_data[0]
 		bal_qty = row[5]
-		range_qty_sum = sum([i for i in row[7:11]])  # get sum of range balance
+		range_qty_sum = sum([i for i in row[7:11]]) 
 
-		# check if value of Available Qty column matches with range bucket post format
 		self.assertEqual(bal_qty, 30)
 		self.assertEqual(bal_qty, range_qty_sum)
             
