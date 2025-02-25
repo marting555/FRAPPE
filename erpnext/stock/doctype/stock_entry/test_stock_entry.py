@@ -3911,6 +3911,80 @@ class TestStockEntry(FrappeTestCase):
 		self.assertTrue(batch_exists1, "Batch should exist in the system.")
 		batch_exists = frappe.db.exists("Batch", {"batch_id": batch_no2})
 		self.assertTrue(batch_exists, "Batch should exist in the system.")
+
+	def test_stock1_ageing_TC_SCK_227(self):
+		print("227")
+		from erpnext.stock.report.stock_ageing.stock_ageing import FIFOSlots, format_report_data
+		# from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
+		# from erpnext.stock.doctype.item.test_item import (
+		# 	make_item,
+		# )
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		from erpnext.stock.report.stock_ageing.stock_ageing import execute
+		avail_qty = 30
+		company = "_Test Company"
+		item_c = []
+		q = []
+		range1 = []
+		range2 = []
+		if not frappe.db.exists("Company", company):
+			company_doc = frappe.new_doc("Company")
+			company_doc.company_doc_name = company
+			company_doc.country="India",
+			company_doc.default_currency= "INR",
+			company_doc.save()
+		item_fields = {
+			"item_name": "_Test Item227",
+			"valuation_rate": 500,
+			"is_stock_item": 1
+		}
+		item = make_item("_Test Item227", item_fields)
+		se = make_stock_entry(item_code=item.name,purpose="Material Receipt", posting_date="01-12-2024",company=company,target=create_warehouse("Test Warehouse", company=company), qty=10)
+		se1 = make_stock_entry(item_code=item.name,purpose="Material Receipt", posting_date="01-01-2025",company=company,target=create_warehouse("Test Warehouse", company=company), qty=20)
+
+		filters = frappe._dict({  # Convert to allow dot notation
+		"company": "_Test Company",
+        "to_date": "2025-01-12",
+        "item_code": item.name,
+        "warehouse": create_warehouse("Test Warehouse", company=company),
+		"ranges": ["30, 60, 90"],
+		"range": "30, 60, 90"
+    	})
+		sle = [
+			frappe._dict(  # stock up item
+				name=item.name,
+				actual_qty=10,
+				qty_after_transaction=10,
+				stock_value_difference=0,
+				warehouse=create_warehouse("Test Warehouse", company=company),
+				posting_date="2024-12-01",
+				voucher_type="Stock Entry",
+				voucher_no=se.name,
+				has_serial_no=False,
+				serial_no=None,
+			),
+			frappe._dict(  # stock up item
+				name=item.name,
+				actual_qty=20,
+				qty_after_transaction=30,
+				stock_value_difference=0,
+				warehouse=create_warehouse("Test Warehouse", company=company),
+				posting_date="2025-01-01",
+				voucher_type="Stock Entry",
+				voucher_no=se1.name,
+				has_serial_no=False,
+				serial_no=None,
+			),
+		]
+		slots = FIFOSlots(filters, sle).generate()
+		report_data = format_report_data(filters, slots, filters["to_date"])
+		row = report_data[0]  # first row in report
+		bal_qty = row[5]
+		range_qty_sum = sum([i for i in row[7:11]])  # get sum of range balance
+
+		# check if value of Available Qty column matches with range bucket post format
+		self.assertEqual(bal_qty, 30)
+		self.assertEqual(bal_qty, range_qty_sum)
             
 
 def create_bom(bom_item, rm_items, company=None, qty=None, properties=None):
