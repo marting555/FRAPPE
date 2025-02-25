@@ -3249,9 +3249,15 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_po_2pi_cancel_TC_SCK_087(self):
 		# MR =>  PO => 2PI => 2PI cancel
+		item_fields = {
+			"item_name" : "Testing-31",
+			"is_stock_item": 1,
+			"valuation_rate": 500
+		}
+		item = make_item("Testing-31", item_fields).name
 		mr_dict_list = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item,
 				"warehouse" : "Stores - _TC",
 				"qty" : 10,
 				"rate" : 100,
@@ -3751,9 +3757,15 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_po_2pi_return_TC_SCK_101(self):
 		# MR =>  PO => 2PI => 2PI return
+		item_fields = {
+			"item_name" : "Testing-31",
+			"is_stock_item": 1,
+			"valuation_rate": 500
+		}
+		item = make_item("Testing-31", item_fields).name
 		mr_dict_list = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item,
 				"warehouse" : "Stores - _TC",
 				"qty" : 10,
 				"rate" : 100,
@@ -4000,9 +4012,15 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_po_2pi_partial_return_TC_SCK_105(self):
 		# MR =>  PO => 2PI => 2PI return
+		item_fields = {
+			"item_name" : "Testing-31",
+			"is_stock_item": 1,
+			"valuation_rate": 500
+		}
+		item = make_item("Testing-31", item_fields).name
 		mr_dict_list = [{
 				"company" : "_Test Company",
-				"item_code" : "Testing-31",
+				"item_code" : item,
 				"warehouse" : "Stores - _TC",
 				"qty" : 10,
 				"rate" : 100,

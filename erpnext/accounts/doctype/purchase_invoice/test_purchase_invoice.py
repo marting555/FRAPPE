@@ -3329,6 +3329,27 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		self.assertEqual(pi_status, "Paid")
 	
 	def test_pi_ignore_pricing_rule_TC_B_051(self):
+		from erpnext.accounts.doctype.pricing_rule.test_pricing_rule import make_pricing_rule
+
+		frappe.delete_doc_if_exists("Pricing Rule", "Boat Earpods - Monica Discount")
+		self.pricing_rule =make_pricing_rule(
+			apply_on="Item Code",
+			title="Boat Earpods - Monica Discount",
+			items=[{"item_code": "Boat Earpods"}],
+			supplier="Monica",
+			min_qty= 10,
+			company= "_Test Company",
+			rate_or_discount="Discount Percentage",
+			discount_percentage=10,
+			valid_from="2024-12-01",
+			selling = 0,
+			buying = 1,
+			apply_discount_on = "Rate",
+			price_or_product_discount= "Price",
+			apply_rule_on = "Transaction",
+			apply_on_transaction = "Purchase Invoice"
+		)
+
 		frappe.set_user("Administrator")
 		company = "_Test Company"
 		item_code = "Testing-31"
@@ -4046,11 +4067,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			error_msg = str(e)
 			self.assertEqual(error_msg, f'Supplier Invoice No exists in Purchase Invoice {pi.name}')
 
-	def setUp(self):
-		from erpnext.accounts.doctype.pricing_rule.test_pricing_rule import make_pricing_rule
+	def setUp(self):	
 		from erpnext.stock.doctype.item.test_item import make_item
-
-		import random
         # Ensure supplier exists
 		if not frappe.db.exists("Company", "_Test Company"):
 			company = frappe.new_doc("Company")
@@ -4076,26 +4094,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		}
 		
 		item = make_item("Boat Earpods", it_fields).name
-		
-		self.pricing_rule =make_pricing_rule(
-			apply_on="Item Code",
-			title="Boat Earpods - Monica Discount",
-			items=[{"item_code": "Boat Earpods"}],
-			supplier="Monica",
-			min_qty= 10,
-			company= "_Test Company",
-			rate_or_discount="Discount Percentage",
-			discount_percentage=10,
-			valid_from="2024-12-01",
-			selling = 0,
-			buying = 1,
-			apply_discount_on = "Rate",
-			price_or_product_discount= "Price",
-			apply_rule_on = "Transaction",
-			apply_on_transaction = "Purchase Invoice"
-		)
-		frappe.db.commit()
-		
+
+
 	def test_purchase_invoice_discount(self):
         # Create Purchase Invoice
 		pi = make_purchase_invoice(
@@ -4115,7 +4115,6 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		sle = frappe.get_all("Stock Ledger Entry", 
                              filters={"voucher_no": pi.name},
                              fields=["actual_qty", "valuation_rate", "incoming_rate", "stock_value", "stock_value_difference"])
-		print(sle[0]["actual_qty"], sle[0]["valuation_rate"], sle[0]["incoming_rate"], sle[0]["stock_value"], sle[0]["stock_value_difference"])
 		self.assertEqual(sle[0]["actual_qty"], 20)
 		self.assertEqual(sle[0]["valuation_rate"], 4500)
 

@@ -1149,6 +1149,57 @@ class TestItem(FrappeTestCase):
 		self.assertIsNotNone(batch, "Batch not created")
 		self.assertEqual(str(batch.expiry_date), str(expiry), "Expiry date mismatch in batch")
 
+	def test_cr_item_alternative_TC_SCK_149(self):
+		from erpnext.manufacturing.doctype.production_plan.test_production_plan import make_bom
+		from erpnext.manufacturing.doctype.work_order.test_work_order import make_wo_order_test_record
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+		company = "_Test Company"
+		item_fields = {
+			"item_name": "_Test Item",
+			"is_stock_item": 1,
+			"valuation_rate": 500,
+		}
+		alt_item_fields = {
+			"item_name": "_Test Alt Item",
+			"is_stock_item": 1,
+			"valuation_rate": 500,
+			"allow_alternative_item": 1
+		}
+		bot_item_fields = {
+			"item_name": "_Test Bom Item",
+			"is_stock_item": 1,
+			"valuation_rate": 500,
+		}
+		item = make_item("_Test Item", item_fields)
+		alt_item = make_item("_Test Alt Item", alt_item_fields)
+		bom_item = make_item("_Test Bom Item", bot_item_fields)
+
+		if not frappe.db.exists("BOM", {"item": item.name}):
+			bom = make_bom(
+			item=item.name,
+			company= company,
+			raw_materials=[bom_item.name, alt_item.name],
+			is_active=1,
+			is_default=1,
+			do_not_submit=True,
+		)
+		self.assertTrue(frappe.db.exists("BOM", bom.name))
+		bom = frappe.get_list("BOM", filters={"item": item.name, "is_active": 1}, limit_page_length=1)
+		self.assertGreater(len(bom), 0, "BOM not found for the item")
+
+		wo = make_wo_order_test_record(company= company,production_item=item.name,bom_no=bom[0].name ,qty=10)
+
+		wo_items = frappe.get_doc("Work Order", wo.name).required_items
+		alt_item_found = any(item.item_code == alt_item.name for item in wo_items)
+		self.assertTrue(alt_item_found, "Alternative item not found in Work Order")
+
+		wo.submit()
+		self.assertTrue(frappe.db.exists("Work Order", wo.name))
+
 
 def set_item_variant_settings(fields):
 	doc = frappe.get_doc("Item Variant Settings")
