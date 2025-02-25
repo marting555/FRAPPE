@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-02-16 09:34+0000\n"
-"PO-Revision-Date: 2025-02-24 02:42\n"
+"PO-Revision-Date: 2025-02-25 02:52\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Bosnian\n"
 "MIME-Version: 1.0\n"
@@ -985,7 +985,7 @@ msgstr "Vozač mora biti naveden da bi se podnijelo."
 #. Description of a DocType
 #: erpnext/stock/doctype/warehouse/warehouse.json
 msgid "A logical Warehouse against which stock entries are made."
-msgstr "Logičko skladište prema kojemu se vrše knjiženja zaliha."
+msgstr "Logičko skladište naspram kojeg se vrše knjiženja zaliha."
 
 #: erpnext/templates/emails/confirm_appointment.html:2
 msgid "A new appointment has been created for you with {0}"
@@ -2462,7 +2462,7 @@ msgstr "Trošak Aktivnosti"
 
 #: erpnext/projects/doctype/activity_cost/activity_cost.py:51
 msgid "Activity Cost exists for Employee {0} against Activity Type - {1}"
-msgstr "Trošak aktivnosti postoji za {0} u odnosu na vrstu aktivnosti - {1}"
+msgstr "Trošak Aktivnosti postoji za {0} u odnosu na vrstu aktivnosti - {1}"
 
 #: erpnext/projects/doctype/activity_type/activity_type.js:10
 msgid "Activity Cost per Employee"
@@ -2654,7 +2654,7 @@ msgstr "Stvarna Količina na Zalihama"
 #: erpnext/accounts/doctype/payment_entry/payment_entry.js:1511
 #: erpnext/public/js/controllers/accounts.js:176
 msgid "Actual type tax cannot be included in Item rate in row {0}"
-msgstr "Stvarni tip poreza ne može se uključiti u cijenu artikla u redu {0}"
+msgstr "Stvarni tip PDV-a ne može se uključiti u cijenu Artikla u redu {0}"
 
 #. Option for the 'Add Or Deduct' (Select) field in DocType 'Advance Taxes and
 #. Charges'
@@ -3347,7 +3347,7 @@ msgstr "Uskladi vrijednost imovine"
 
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.js:1051
 msgid "Adjustment Against"
-msgstr "Usklađivanje prema"
+msgstr "Usaglašavanje Naspram"
 
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.py:618
 msgid "Adjustment based on Purchase Invoice rate"
@@ -3475,7 +3475,7 @@ msgstr "Iznos Predujma ne može biti veći od {0} {1}"
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:816
 msgid "Advance paid against {0} {1} cannot be greater than Grand Total {2}"
-msgstr "Predujam plaćen prema {0} {1} ne može biti veći od ukupnog iznosa {2}"
+msgstr "Predujam plaćen naspram {0} {1} ne može biti veći od ukupnog iznosa {2}"
 
 #. Description of the 'Only Include Allocated Payments' (Check) field in
 #. DocType 'Purchase Invoice'
@@ -3522,7 +3522,7 @@ msgstr "Zahvaćene Transakcije"
 #: erpnext/accounts/doctype/gl_entry/gl_entry.json
 #: erpnext/accounts/report/bank_reconciliation_statement/bank_reconciliation_statement.html:23
 msgid "Against"
-msgstr "Protiv"
+msgstr "Naspram"
 
 #. Label of the against_account (Data) field in DocType 'Bank Clearance Detail'
 #. Label of the against_account (Text) field in DocType 'Journal Entry Account'
@@ -3543,37 +3543,37 @@ msgstr "Naspram Računa"
 #: erpnext/selling/doctype/quotation_item/quotation_item.json
 #: erpnext/selling/doctype/sales_order_item/sales_order_item.json
 msgid "Against Blanket Order"
-msgstr "Protiv Ugovornog Naloga"
+msgstr "Naspram Ugovornog Naloga"
 
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.py:969
 msgid "Against Customer Order {0}"
-msgstr "Protiv Naloga Klijenta {0}"
+msgstr "Naspram Naloga Klijenta {0}"
 
 #: erpnext/selling/doctype/sales_order/sales_order.js:1187
 msgid "Against Default Supplier"
-msgstr "Protiv Standard Dobavljača"
+msgstr "Naspram Standard Dobavljača"
 
 #. Label of the dn_detail (Data) field in DocType 'Delivery Note Item'
 #: erpnext/stock/doctype/delivery_note_item/delivery_note_item.json
 msgid "Against Delivery Note Item"
-msgstr "Protiv Artikla na Dostavnici"
+msgstr "Naspram Artikla Dostavnice"
 
 #. Label of the prevdoc_docname (Dynamic Link) field in DocType 'Quotation
 #. Item'
 #: erpnext/selling/doctype/quotation_item/quotation_item.json
 msgid "Against Docname"
-msgstr "Protiv Docname"
+msgstr "Naspram Dokumenta"
 
 #. Label of the prevdoc_doctype (Link) field in DocType 'Quotation Item'
 #: erpnext/selling/doctype/quotation_item/quotation_item.json
 msgid "Against Doctype"
-msgstr "Protiv Doctype"
+msgstr "Naspram Tipa Dokumenta"
 
 #. Label of the prevdoc_detail_docname (Data) field in DocType 'Installation
 #. Note Item'
 #: erpnext/selling/doctype/installation_note_item/installation_note_item.json
 msgid "Against Document Detail No"
-msgstr "Protiv Detalja u Dokumentu broj"
+msgstr "Naspram Detalja Dokumenta Broj"
 
 #. Label of the prevdoc_docname (Dynamic Link) field in DocType 'Maintenance
 #. Visit Purpose'
@@ -3582,13 +3582,13 @@ msgstr "Protiv Detalja u Dokumentu broj"
 #: erpnext/maintenance/doctype/maintenance_visit_purpose/maintenance_visit_purpose.json
 #: erpnext/selling/doctype/installation_note_item/installation_note_item.json
 msgid "Against Document No"
-msgstr "Protiv Dokumenta broj"
+msgstr "Naspram Dokumenta Broj"
 
 #. Label of the against_expense_account (Small Text) field in DocType 'Purchase
 #. Invoice'
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.json
 msgid "Against Expense Account"
-msgstr "Protiv Računa Troškova"
+msgstr "Naspram Računa Troškova"
 
 #. Label of the against_income_account (Small Text) field in DocType 'POS
 #. Invoice'
@@ -3597,54 +3597,54 @@ msgstr "Protiv Računa Troškova"
 #: erpnext/accounts/doctype/pos_invoice/pos_invoice.json
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.json
 msgid "Against Income Account"
-msgstr "Protiv Računa Prihoda"
+msgstr "Naspram Računa Prihoda"
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:678
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:785
 msgid "Against Journal Entry {0} does not have any unmatched {1} entry"
-msgstr "Naspram Naloga Knjiženja {0} nema neusklađen unos {1}"
+msgstr "Naspram Naloga Knjiženja {0} nema neusaglašen unos {1}"
 
 #: erpnext/accounts/doctype/gl_entry/gl_entry.py:371
 msgid "Against Journal Entry {0} is already adjusted against some other voucher"
-msgstr "Naspram Naloga Knjiženja {0} je već usklađen s nekim drugim verifikatom"
+msgstr "Naspram Naloga Knjiženja {0} jer je već usaglašen s nekim drugim verifikatom"
 
 #. Label of the against_sales_invoice (Link) field in DocType 'Delivery Note
 #. Item'
 #: erpnext/stock/doctype/delivery_note_item/delivery_note_item.json
 msgid "Against Sales Invoice"
-msgstr "Protiv Fakture Prodaje"
+msgstr "Naspram Fakture Prodaje"
 
 #. Label of the si_detail (Data) field in DocType 'Delivery Note Item'
 #: erpnext/stock/doctype/delivery_note_item/delivery_note_item.json
 msgid "Against Sales Invoice Item"
-msgstr "Protiv Artikla Fakture Prodaje"
+msgstr "Naspram Artikla Fakture Prodaje"
 
 #. Label of the against_sales_order (Link) field in DocType 'Delivery Note
 #. Item'
 #: erpnext/stock/doctype/delivery_note_item/delivery_note_item.json
 msgid "Against Sales Order"
-msgstr "Protiv Prodajnog Naloga"
+msgstr "Naspram Prodajnog Naloga"
 
 #. Label of the so_detail (Data) field in DocType 'Delivery Note Item'
 #: erpnext/stock/doctype/delivery_note_item/delivery_note_item.json
 msgid "Against Sales Order Item"
-msgstr "Protiv Artikla Prodajnog Naloga"
+msgstr "Naspram Artikla Prodajnog Naloga"
 
 #. Label of the against_stock_entry (Link) field in DocType 'Stock Entry
 #. Detail'
 #: erpnext/stock/doctype/stock_entry_detail/stock_entry_detail.json
 msgid "Against Stock Entry"
-msgstr "Protiv Zapisa Zaliha"
+msgstr "Naspram Zapisa Zaliha"
 
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.py:326
 msgid "Against Supplier Invoice {0}"
-msgstr "Protiv Fakture Dobavljača {0}"
+msgstr "Naspram Fakture Dobavljača {0}"
 
 #. Label of the against_voucher (Dynamic Link) field in DocType 'GL Entry'
 #: erpnext/accounts/doctype/gl_entry/gl_entry.json
 #: erpnext/accounts/report/general_ledger/general_ledger.py:701
 msgid "Against Voucher"
-msgstr "Protiv Verifikata"
+msgstr "Naspram Verifikata"
 
 #. Label of the against_voucher_no (Dynamic Link) field in DocType 'Advance
 #. Payment Ledger Entry'
@@ -3656,7 +3656,7 @@ msgstr "Protiv Verifikata"
 #: erpnext/accounts/report/payment_ledger/payment_ledger.js:71
 #: erpnext/accounts/report/payment_ledger/payment_ledger.py:186
 msgid "Against Voucher No"
-msgstr "Protiv Verifikata Broj"
+msgstr "Naspram Verifikata Broj"
 
 #. Label of the against_voucher_type (Link) field in DocType 'Advance Payment
 #. Ledger Entry'
@@ -3669,7 +3669,7 @@ msgstr "Protiv Verifikata Broj"
 #: erpnext/accounts/report/general_ledger/general_ledger.py:699
 #: erpnext/accounts/report/payment_ledger/payment_ledger.py:177
 msgid "Against Voucher Type"
-msgstr "Protiv Verifikata Tipa"
+msgstr "Naspram Verifikata Tipa"
 
 #: erpnext/accounts/report/payment_period_based_on_invoice_date/payment_period_based_on_invoice_date.py:113
 #: erpnext/manufacturing/report/work_order_summary/work_order_summary.js:60
@@ -3919,7 +3919,7 @@ msgstr "Sav Prodajni Personal"
 #. Description of a DocType
 #: erpnext/setup/doctype/sales_person/sales_person.json
 msgid "All Sales Transactions can be tagged against multiple Sales Persons so that you can set and monitor targets."
-msgstr "Sve prodajne transakcije mogu se označiti prema više prodajnih osoba kako biste mogli postaviti i nadzirati ciljeve."
+msgstr "Sve prodajne transakcije mogu se označiti naspram više prodajnih osoba kako biste mogli postaviti i nadzirati ciljeve."
 
 #. Option for the 'Send To' (Select) field in DocType 'SMS Center'
 #: erpnext/selling/doctype/sms_center/sms_center.json
@@ -4006,7 +4006,7 @@ msgstr "Svi ovi Artikli su već Fakturisani/Vraćeni"
 #: erpnext/accounts/doctype/payment_reconciliation/payment_reconciliation.js:85
 #: erpnext/accounts/doctype/payment_reconciliation/payment_reconciliation.js:92
 msgid "Allocate"
-msgstr "Alociraj"
+msgstr "Dodijeli"
 
 #. Label of the allocate_advances_automatically (Check) field in DocType 'POS
 #. Invoice'
@@ -4096,7 +4096,7 @@ msgstr "Alocirani iznos ne može biti negativan"
 #: erpnext/accounts/doctype/payment_reconciliation/payment_reconciliation.js:266
 #: erpnext/accounts/doctype/payment_reconciliation/payment_reconciliation.json
 msgid "Allocation"
-msgstr "Alokacija"
+msgstr "Dodjela"
 
 #. Label of the allocations (Table) field in DocType 'Process Payment
 #. Reconciliation Log'
@@ -4125,7 +4125,7 @@ msgstr "Dozvoli"
 #: erpnext/accounts/doctype/chart_of_accounts_importer/chart_of_accounts_importer.py:68
 #: erpnext/setup/doctype/company/company.json
 msgid "Allow Account Creation Against Child Company"
-msgstr "Dopusti stvaranje računa protiv podređene kompanije"
+msgstr "Dozvoli stvaranje računa naspram podređene kompanije"
 
 #. Label of the allow_alternative_item (Check) field in DocType 'BOM'
 #. Label of the allow_alternative_item (Check) field in DocType 'BOM Item'
@@ -4212,7 +4212,7 @@ msgstr "Dozvoli višestruku potrošnju materijala"
 #. 'Selling Settings'
 #: erpnext/selling/doctype/selling_settings/selling_settings.json
 msgid "Allow Multiple Sales Orders Against a Customer's Purchase Order"
-msgstr "Dozvoli višestruke Prodajne Naloge na osnovu Kupovnog Naloga Klijenta"
+msgstr "Dozvoli višestruke Prodajne Naloge naspram Kupovnog Naloga Klijenta"
 
 #. Label of the allow_negative_stock (Check) field in DocType 'Item'
 #. Label of the allow_negative_stock (Check) field in DocType 'Repost Item
@@ -4372,7 +4372,7 @@ msgstr "Dozvoli da se postojeći serijski broj ponovo Proizvede/Primi"
 #. DocType 'Manufacturing Settings'
 #: erpnext/manufacturing/doctype/manufacturing_settings/manufacturing_settings.json
 msgid "Allow material consumptions without immediately manufacturing finished goods against a Work Order"
-msgstr "Dozvolite potrošnju materijala bez trenutne proizvodnje gotovog proizvoda prema Radnom Nalogu"
+msgstr "Dozvoli potrošnju materijala bez trenutne proizvodnje gotovog proizvoda naspram Radnom Nalogu"
 
 #. Label of the allow_multi_currency_invoices_against_single_party_account
 #. (Check) field in DocType 'Accounts Settings'
@@ -4936,11 +4936,11 @@ msgstr "Iznos za Fakturisanje"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:1306
 msgid "Amount {0} {1} against {2} {3}"
-msgstr "Iznos {0} {1} prema {2} {3}"
+msgstr "Iznos {0} {1} naspram {2} {3}"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:1317
 msgid "Amount {0} {1} deducted against {2}"
-msgstr "Iznos {0} {1} odbijen od {2}"
+msgstr "Iznos {0} {1} odbijen naspram {2}"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:1281
 msgid "Amount {0} {1} transferred from {2} to {3}"
@@ -4992,7 +4992,7 @@ msgstr "Pojavila se greška prilikom ponovnog knjiženja vrijednosti artikla pre
 #: erpnext/public/js/controllers/buying.js:319
 #: erpnext/public/js/utils/sales_common.js:432
 msgid "An error occurred during the update process"
-msgstr "Došlo je do greške tokom procesa ažuriranja"
+msgstr "Došlo je do greške tokom obrade ažuriranja"
 
 #: erpnext/stock/reorder_item.py:378
 msgid "An error occurred for certain Items while creating Material Requests based on Re-order level. Please rectify these issues :"
@@ -5039,7 +5039,7 @@ msgstr "Godišnji Promet"
 
 #: erpnext/accounts/doctype/budget/budget.py:83
 msgid "Another Budget record '{0}' already exists against {1} '{2}' and account '{3}' for fiscal year {4}"
-msgstr "Još jedan Budžetski zapis '{0}' već postoji u odnosu na {1} '{2}' i račun '{3}' za fiskalnu godinu {4}"
+msgstr "Još jedan Budžetski zapis '{0}' već postoji naspram {1} '{2}' i računa '{3}' za fiskalnu godinu {4}"
 
 #: erpnext/accounts/doctype/cost_center_allocation/cost_center_allocation.py:107
 msgid "Another Cost Center Allocation record {0} applicable from {1}, hence this allocation will be applicable upto {2}"
@@ -5340,7 +5340,7 @@ msgstr "Primijeni ograničenje na vrijednosti dimenzije"
 #. Dimension'
 #: erpnext/stock/doctype/inventory_dimension/inventory_dimension.json
 msgid "Apply to All Inventory Documents"
-msgstr "Primijeniti na sve Dokumente Inventara"
+msgstr "Primijeniti na sve Dokumente Zaliha"
 
 #. Label of the document_type (Link) field in DocType 'Inventory Dimension'
 #: erpnext/stock/doctype/inventory_dimension/inventory_dimension.json
@@ -5423,7 +5423,7 @@ msgstr "Odobravajući Korisnik ne može biti isti kao korisnik na koji je pravil
 #. 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Approximately match the description/party name against parties"
-msgstr "Približno odgovara opisu/nazivu stranke u odnosu na stranku"
+msgstr "Približno podudaranje opisu/nazivu stranke aspram stranki"
 
 #. Name of a UOM
 #: erpnext/setup/setup_wizard/data/uom_data.json
@@ -5493,7 +5493,7 @@ msgstr "Pošto je polje {0} omogućeno, vrijednost polja {1} bi trebala biti ve�
 
 #: erpnext/stock/doctype/item/item.py:978
 msgid "As there are existing submitted transactions against item {0}, you can not change the value of {1}."
-msgstr "Pošto postoje postojeće poodnešene transakcije prema artiklu {0}, ne možete promijeniti vrijednost {1}."
+msgstr "Pošto postoje postojeće podnešene transakcije naspram artikla {0}, ne možete promijeniti vrijednost {1}."
 
 #: erpnext/stock/doctype/stock_settings/stock_settings.py:214
 msgid "As there are negative stock, you can not enable {0}."
@@ -6386,18 +6386,18 @@ msgstr "Automatski Usaglasi Plaćanja"
 
 #: erpnext/accounts/doctype/bank_reconciliation_tool/bank_reconciliation_tool.py:414
 msgid "Auto Reconciliation"
-msgstr "Automatsko Usklađivanje"
+msgstr "Automatsko Usaglašavanje"
 
 #. Label of the auto_reconciliation_job_trigger (Int) field in DocType
 #. 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Auto Reconciliation Job Trigger"
-msgstr "Automatsko Usklađivanje Okidač Posla"
+msgstr "Okidač Posla Automatskog Usaglašavanja"
 
 #: erpnext/accounts/doctype/process_payment_reconciliation/process_payment_reconciliation.py:147
 #: erpnext/accounts/doctype/process_payment_reconciliation/process_payment_reconciliation.py:195
 msgid "Auto Reconciliation of Payments has been disabled. Enable it through {0}"
-msgstr "Automatsko Usklađivanje Plaćanja je onemogućeno. Omogućite ga preko {0}"
+msgstr "Automatsko Usglašavanje Plaćanja je onemogućeno. Omogući preko {0}"
 
 #. Label of the auto_repeat (Link) field in DocType 'Journal Entry'
 #. Label of the auto_repeat (Link) field in DocType 'Payment Entry'
@@ -7377,23 +7377,23 @@ msgstr "Bankovni Račun Prekoračenja"
 #: erpnext/accounts/report/bank_reconciliation_statement/bank_reconciliation_statement.json
 #: erpnext/accounts/workspace/accounting/accounting.json
 msgid "Bank Reconciliation Statement"
-msgstr "Bankovni Izvod Poravnaja"
+msgstr "Bankovni Izvod Usaglašavanja"
 
 #. Name of a DocType
 #. Label of a Link in the Accounting Workspace
 #: erpnext/accounts/doctype/bank_reconciliation_tool/bank_reconciliation_tool.json
 #: erpnext/accounts/workspace/accounting/accounting.json
 msgid "Bank Reconciliation Tool"
-msgstr "Bankovni Alat Poravnanja"
+msgstr "Bankovni Alat Usaglašavanja"
 
 #. Name of a DocType
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.json
 msgid "Bank Statement Import"
-msgstr "Import Bankovnog Izvoda"
+msgstr "Uvoz Bankovnog Izvoda"
 
 #: erpnext/accounts/report/bank_reconciliation_statement/bank_reconciliation_statement.py:40
 msgid "Bank Statement balance as per General Ledger"
-msgstr "Stanje Bankovnog Izvoda prema Registru"
+msgstr "Stanje Bankovnog Izvoda prema Knjigovodstvenom Registru"
 
 #. Name of a DocType
 #: erpnext/accounts/doctype/bank_transaction/bank_transaction.json
@@ -7415,15 +7415,15 @@ msgstr "Bankovne Transakcije Plaćanja"
 
 #: erpnext/public/js/bank_reconciliation_tool/dialog_manager.js:493
 msgid "Bank Transaction {0} Matched"
-msgstr "Bankovna Transakcija {0} Usklađena"
+msgstr "Bankovna Transakcija {0} Usaglašena"
 
 #: erpnext/public/js/bank_reconciliation_tool/dialog_manager.js:541
 msgid "Bank Transaction {0} added as Journal Entry"
-msgstr "Bankovna Transakcija {0} dodana je kao unos u Dnevnik"
+msgstr "Bankovna Transakcija {0} dodana je kao Nalog Knjiženja"
 
 #: erpnext/public/js/bank_reconciliation_tool/dialog_manager.js:516
 msgid "Bank Transaction {0} added as Payment Entry"
-msgstr "Bankovna Transakcija {0} dodana je kao unos plaćanja"
+msgstr "Bankovna Transakcija {0} dodana je kao Unos Plaćanja"
 
 #: erpnext/accounts/doctype/bank_transaction/bank_transaction.py:129
 msgid "Bank Transaction {0} is already fully reconciled"
@@ -7796,7 +7796,7 @@ msgstr "Broj Šarže {0} je povezan sa artiklom {1} koji ima serijski broj. Umje
 
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py:324
 msgid "Batch No {0} is not present in the original {1} {2}, hence you can't return it against the {1} {2}"
-msgstr "Broj Šarže {0} nije prisutan u originalnom {1} {2}, stoga ga ne možete vratiti na osnovu {1} {2}"
+msgstr "Broj Šarže {0} nije prisutan u originalnom {1} {2}, stoga ga ne možete vratiti naspram {1} {2}"
 
 #. Label of the batch_no (Int) field in DocType 'BOM Update Batch'
 #: erpnext/manufacturing/doctype/bom_update_batch/bom_update_batch.json
@@ -7892,7 +7892,7 @@ msgstr "Vrijednovanje na osnovu Šarže"
 #. Reconciliation Item'
 #: erpnext/stock/doctype/stock_reconciliation_item/stock_reconciliation_item.json
 msgid "Before reconciliation"
-msgstr "Prije poravnanja"
+msgstr "Prije Usaglašavanja"
 
 #. Label of the start (Int) field in DocType 'Task'
 #: erpnext/projects/doctype/task/task.json
@@ -8574,7 +8574,7 @@ msgstr "Budžetski Računi"
 #: erpnext/accounts/doctype/budget/budget.json
 #: erpnext/accounts/report/budget_variance_report/budget_variance_report.js:80
 msgid "Budget Against"
-msgstr "Budžet Protiv"
+msgstr "Budžet Naspram"
 
 #. Label of the budget_amount (Currency) field in DocType 'Budget Account'
 #: erpnext/accounts/doctype/budget_account/budget_account.json
@@ -8605,11 +8605,11 @@ msgstr "Izvještaj Odstupanju od Budžeta"
 
 #: erpnext/accounts/doctype/budget/budget.py:98
 msgid "Budget cannot be assigned against Group Account {0}"
-msgstr "Budžet se ne može dodijeliti grupnom računu {0}"
+msgstr "Budžet se ne može dodijeliti naspram Grupnog Računu {0}"
 
 #: erpnext/accounts/doctype/budget/budget.py:105
 msgid "Budget cannot be assigned against {0}, as it's not an Income or Expense account"
-msgstr "Budžet se ne može dodijeliti {0} jer to nije račun Prihoda ili Rashoda"
+msgstr "Budžet se ne može dodijeliti naspram {0} jer to nije račun Prihoda ili Rashoda"
 
 #: erpnext/accounts/doctype/fiscal_year/fiscal_year_dashboard.py:8
 msgid "Budgets"
@@ -8864,7 +8864,7 @@ msgstr "Izračunaj dnevnu amortizaciju koristeći sve dane u periodu amortizacij
 
 #: erpnext/accounts/report/bank_reconciliation_statement/bank_reconciliation_statement.py:53
 msgid "Calculated Bank Statement balance"
-msgstr "Izračunato stanje u izvodu banke"
+msgstr "Obračunato Stanje Bankovnog Izvoda"
 
 #. Label of the section_break_11 (Section Break) field in DocType 'Supplier
 #. Scorecard Period'
@@ -9103,7 +9103,7 @@ msgstr "Ne može se filtrirati na osnovu broja verifikata, ako je grupiran prema
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:1294
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:2910
 msgid "Can only make payment against unbilled {0}"
-msgstr "Plaćanje se može izvršiti samo protiv nefakturisanog {0}"
+msgstr "Plaćanje se može izvršiti samo protiv nefakturisanog(e) {0}"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.js:1479
 #: erpnext/controllers/accounts_controller.py:2840
@@ -9113,7 +9113,7 @@ msgstr "Može upućivati na red samo ako je tip naplate \"Na iznos prethodnog re
 
 #: erpnext/stock/doctype/stock_settings/stock_settings.py:149
 msgid "Can't change the valuation method, as there are transactions against some items which do not have its own valuation method"
-msgstr "Ne može se promijeniti način vrijednovanja, jer postoje transakcije sa nekim artiklima koje nemaju svoj metod vrijednovanja"
+msgstr "Ne može se promijeniti način vrijednovanja, jer postoje transakcije naspram nekih artikala koji nemaju svoj metod vrijednovanja"
 
 #: erpnext/stock/doctype/stock_settings/stock_settings.py:121
 msgid "Can't disable batch wise valuation for active batches."
@@ -9296,7 +9296,7 @@ msgstr "Nije moguće izmijeniti {0} {1}, umjesto toga kreirajte novi."
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:292
 msgid "Cannot apply TDS against multiple parties in one entry"
-msgstr "Ne može se primijeniti TDS protiv više strana u jednom unosu"
+msgstr "Ne može se primijeniti TDS naspram više strana u jednom unosu"
 
 #: erpnext/stock/doctype/item/item.py:305
 msgid "Cannot be a fixed asset item as Stock Ledger is created."
@@ -9373,11 +9373,11 @@ msgstr "Nije moguće kreirati Unose Rezervisanja Zaliha za buduće datume Kupovn
 #: erpnext/selling/doctype/sales_order/sales_order.py:1669
 #: erpnext/stock/doctype/pick_list/pick_list.py:181
 msgid "Cannot create a pick list for Sales Order {0} because it has reserved stock. Please unreserve the stock in order to create a pick list."
-msgstr "Nije moguće kreirati Odabirnu Listu za Prodajni Nalog {0} jer ima rezervisane zalihe. Molimo vas da poništite rezervacije zaliha kako biste kreirali Odabirnu Listu odabir."
+msgstr "Nije moguće kreirati Listu Odabira za Prodajni Nalog {0} jer ima rezervisane zalihe. Poništi rezervacije zaliha kako biste kreirali Listu Odabira."
 
 #: erpnext/accounts/general_ledger.py:132
 msgid "Cannot create accounting entries against disabled accounts: {0}"
-msgstr "Nije moguće kreirati knjigovodstvene unose za onemogućene račune: {0}"
+msgstr "Nije moguće kreirati knjigovodstvene unose naspram onemogućenih računa: {0}"
 
 #: erpnext/manufacturing/doctype/bom/bom.py:1026
 msgid "Cannot deactivate or cancel BOM as it is linked with other BOMs"
@@ -9443,7 +9443,7 @@ msgstr "Ne može se proizvesti više od {0} artikla za {1}"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:355
 msgid "Cannot receive from customer against negative outstanding"
-msgstr "Ne može se primiti od klijenta protiv negativne nepodmirene"
+msgstr "Ne može se primiti od klijenta naspram negativnog nepodmirenog"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.js:1496
 #: erpnext/controllers/accounts_controller.py:2855
@@ -9878,7 +9878,7 @@ msgstr "Nastali troškovi"
 
 #: erpnext/stock/doctype/landed_cost_voucher/landed_cost_voucher.js:38
 msgid "Charges are updated in Purchase Receipt against each item"
-msgstr "Naknade se ažuriraju na Kupovnoj Priznanici za svaki artikal"
+msgstr "Naknade se ažuriraju na Kupovnom Računu naspram svakog artikla"
 
 #: erpnext/stock/doctype/landed_cost_voucher/landed_cost_voucher.js:38
 msgid "Charges will be distributed proportionately based on item qty or amount, as per your selection"
@@ -9931,7 +9931,7 @@ msgstr "Kontni Plan"
 #: erpnext/accounts/workspace/accounting/accounting.json
 #: erpnext/setup/workspace/home/home.json
 msgid "Chart of Accounts Importer"
-msgstr "Kontni Plan Import"
+msgstr "Kontni Plan Uvoz"
 
 #. Label of a Link in the Accounting Workspace
 #: erpnext/accounts/doctype/account/account_tree.js:182
@@ -10067,7 +10067,7 @@ msgstr "Čekovi i Depoziti neispravno poravnati"
 #: erpnext/accounts/report/bank_reconciliation_statement/bank_reconciliation_statement.js:50
 #: erpnext/accounts/report/bank_reconciliation_statement/bank_reconciliation_statement.py:50
 msgid "Cheques and Deposits incorrectly cleared"
-msgstr "Čekovi i Depoziti su pogrešno poravnati"
+msgstr "Čekovi i Depoziti su pogrešno usaglašeni"
 
 #: erpnext/setup/setup_wizard/data/designation.txt:9
 msgid "Chief Executive Officer"
@@ -10133,7 +10133,7 @@ msgstr "Grad"
 #. Label of the class_per (Data) field in DocType 'Employee Education'
 #: erpnext/setup/doctype/employee_education/employee_education.json
 msgid "Class / Percentage"
-msgstr "Klasa / Postotak"
+msgstr "Klasa / Precent"
 
 #. Description of a DocType
 #: erpnext/setup/doctype/territory/territory.json
@@ -10210,7 +10210,7 @@ msgstr "Kliknite na Preuzmi Prodajne Naloge da preuzmete prodajne naloge na osno
 #. Supplier Invoice'
 #: erpnext/regional/doctype/import_supplier_invoice/import_supplier_invoice.json
 msgid "Click on Import Invoices button once the zip file has been attached to the document. Any errors related to processing will be shown in the Error Log."
-msgstr "Kliknite na dugme Importiraj Fakture nakon što je zip datoteka priložena dokumentu. Sve greške vezane za obradu bit će prikazane u dnevniku grešaka."
+msgstr "Kliknite naUvezi Fakture nakon što je zip datoteka priložena dokumentu. Sve greške vezane za obradu bit će prikazane u Zapisniku Grešaka."
 
 #: erpnext/templates/emails/confirm_appointment.html:3
 msgid "Click on the link below to verify your email and confirm the appointment"
@@ -12611,7 +12611,7 @@ msgstr "Nije moguće automatsko ažuriranje smjena. Smjena sa faktorom smjene {0
 
 #: erpnext/stock/doctype/delivery_note/delivery_note.py:659
 msgid "Could not create Credit Note automatically, please uncheck 'Issue Credit Note' and submit again"
-msgstr "Nije moguće automatski kreirati Kreditu Fakturu, molimo poništite oznaku \"Izdatj Kreditnu Fakturu\" i pošalji ponovo"
+msgstr "Nije moguće automatski kreirati Kreditnu Fakturu, poništi oznaku \"Izdaj Kreditnu Fakturu\" i pošalji ponovo"
 
 #: erpnext/erpnext_integrations/doctype/plaid_settings/plaid_settings.py:353
 msgid "Could not detect the Company for updating Bank Accounts"
@@ -13368,7 +13368,7 @@ msgstr "Kreditna Faktura Izdata"
 #. 'Sales Invoice'
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.json
 msgid "Credit Note will update it's own outstanding amount, even if 'Return Against' is specified."
-msgstr "Kreditna Faktura će ažurirati svoj nepodmireni iznos, čak i ako je navedeno 'Povrat Protiv'."
+msgstr "Kreditna Faktura će ažurirati svoj nepodmireni iznos, čak i ako je navedeno 'Povrat Naspram'."
 
 #: erpnext/stock/doctype/delivery_note/delivery_note.py:656
 msgid "Credit Note {0} has been created automatically"
@@ -14615,12 +14615,12 @@ msgstr "Podatci na osnovu"
 #. DocType 'Bank'
 #: erpnext/accounts/doctype/bank/bank.json
 msgid "Data Import Configuration"
-msgstr "Konfiguracija Importa Podataka"
+msgstr "Konfiguracija Uvoza Podataka"
 
 #. Label of a Card Break in the Home Workspace
 #: erpnext/setup/workspace/home/home.json
 msgid "Data Import and Settings"
-msgstr "Import Podataka i Postavke"
+msgstr "Uvoz Podataka i Postavke"
 
 #. Label of the date (Date) field in DocType 'Bank Transaction'
 #. Label of the date (Date) field in DocType 'Cashier Closing'
@@ -14967,7 +14967,7 @@ msgstr "Debit Faktura Izdata"
 #. 'Purchase Invoice'
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.json
 msgid "Debit Note will update it's own outstanding amount, even if 'Return Against' is specified."
-msgstr "Debit Faktura će ažurirati svoj nepodmireni iznos, čak i ako je navedeno 'Povrat protiv'."
+msgstr "Debit Faktura će ažurirati svoj nepodmireni iznos, čak i ako je navedeno 'Povrat Naspram'."
 
 #. Label of the debit_to (Link) field in DocType 'POS Invoice'
 #. Label of the debit_to (Link) field in DocType 'Sales Invoice'
@@ -15412,7 +15412,7 @@ msgstr "Standard Prodajna Jedinica"
 #. Settings'
 #: erpnext/manufacturing/doctype/manufacturing_settings/manufacturing_settings.json
 msgid "Default Scrap Warehouse"
-msgstr "Standard Otpad Skladište"
+msgstr "Standard Skladište Otpada"
 
 #. Label of the selling_cost_center (Link) field in DocType 'Item Default'
 #: erpnext/stock/doctype/item_default/item_default.json
@@ -15943,7 +15943,7 @@ msgstr "Dostavnica {0} nije podnešena"
 
 #: erpnext/stock/doctype/pick_list/pick_list.py:1132
 msgid "Delivery Note(s) created for the Pick List"
-msgstr "Dostavnica kreirane za Listu Odabira"
+msgstr "Dostavnica(e) kreirane za Listu Odabira"
 
 #: erpnext/accounts/report/accounts_receivable/accounts_receivable.py:1109
 #: erpnext/stock/doctype/delivery_trip/delivery_trip.js:73
@@ -16665,7 +16665,7 @@ msgstr "Račun Razlike mora biti račun tipa Imovina/Obaveze, budući da je ovaj
 
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.py:901
 msgid "Difference Account must be a Asset/Liability type account, since this Stock Reconciliation is an Opening Entry"
-msgstr "Račun razlike mora biti račun tipa Imovina/Obaveze, budući da je ovo usklađivanje Zaliha Početni Unos"
+msgstr "Račun razlike mora biti račun tipa Imovina/Obaveze, budući da je ovo usaglašavanje Zaliha Početni Unos"
 
 #. Label of the difference_amount (Currency) field in DocType 'Payment
 #. Reconciliation Allocation'
@@ -16949,7 +16949,7 @@ msgstr "Onemogućeni šablon ne smije biti standard šablon"
 #. Reconciliation'
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.json
 msgid "Disables auto-fetching of existing quantity"
-msgstr "Onemogućuje automatsko preuzimnje postojeće količine"
+msgstr "Onemogućuje automatsko preuzimanje postojeće količine"
 
 #. Option for the 'Purpose' (Select) field in DocType 'Stock Entry'
 #. Option for the 'Purpose' (Select) field in DocType 'Stock Entry Type'
@@ -17063,7 +17063,7 @@ msgstr "Datum Popusta"
 #: erpnext/accounts/doctype/pricing_rule/pricing_rule.json
 #: erpnext/accounts/doctype/promotional_scheme_price_discount/promotional_scheme_price_discount.json
 msgid "Discount Percentage"
-msgstr "Postotak Popusta"
+msgstr "Popust Precentualno"
 
 #. Label of the section_break_8 (Section Break) field in DocType 'Payment Term'
 #. Label of the section_break_8 (Section Break) field in DocType 'Payment Terms
@@ -17440,7 +17440,7 @@ msgstr "Želite li i dalje omogućiti nepromjenjivo knjigovodstvo?"
 
 #: erpnext/stock/doctype/stock_settings/stock_settings.js:44
 msgid "Do you still want to enable negative inventory?"
-msgstr "Želite li i dalje omogućiti negativan inventar?"
+msgstr "Želite li i dalje omogućiti negativne zalihe?"
 
 #: erpnext/public/js/controllers/transaction.js:1076
 msgid "Do you want to clear the selected {0}?"
@@ -17968,7 +17968,7 @@ msgstr "Kopija Grupa Klijenta pronađena je u tabeli Grupa Klijenta"
 
 #: erpnext/stock/doctype/item_manufacturer/item_manufacturer.py:44
 msgid "Duplicate entry against the item code {0} and manufacturer {1}"
-msgstr "Dupli unos protiv koda artikla {0} i proizvođača {1}"
+msgstr "Dupli unos naspram koda artikla {0} i proizvođača {1}"
 
 #: erpnext/accounts/doctype/pos_profile/pos_profile.py:138
 msgid "Duplicate item group found in the item group table"
@@ -18730,7 +18730,7 @@ msgstr "Omogućavanje ove opcije omogućit će vam zapisivanje - <br><br> 1. Pre
 #. account ' (Check) field in DocType 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Enabling this will allow creation of multi-currency invoices against single party account in company currency"
-msgstr "Omogućavanje će omogućiti kreiranje viševalutnih faktura na račun jedne stranke u valuti kompanije"
+msgstr "Omogućavanje će omogućiti kreiranje viševalutnih faktura naspram računa jedne stranke u valuti kompanije"
 
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.js:11
 msgid "Enabling this will change the way how cancelled transactions are handled."
@@ -18909,7 +18909,7 @@ msgstr "Unesi broj telefona Klijenta"
 
 #: erpnext/assets/doctype/asset/asset.js:806
 msgid "Enter date to scrap asset"
-msgstr "Unesi datum za odbacivanje Imovine"
+msgstr "Unesi datum za rashodovanje Imovine"
 
 #: erpnext/assets/doctype/asset/asset.py:358
 msgid "Enter depreciation details"
@@ -18917,7 +18917,7 @@ msgstr "Unesi podatke Amortizacije"
 
 #: erpnext/selling/page/point_of_sale/pos_item_cart.js:389
 msgid "Enter discount percentage."
-msgstr "Unesi postotak popusta."
+msgstr "Unesi Procenat Popusta."
 
 #: erpnext/public/js/utils/serial_no_batch_selector.js:282
 msgid "Enter each serial no in a new line"
@@ -19668,7 +19668,7 @@ msgstr "Izvezi podatke"
 
 #: erpnext/regional/report/electronic_invoice_register/electronic_invoice_register.js:34
 msgid "Export E-Invoices"
-msgstr "Eksport E-Fakture"
+msgstr "Izvezi e-Fakture"
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:93
 msgid "Export Errored Rows"
@@ -19676,7 +19676,7 @@ msgstr "Izvezi redove s greškom"
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:550
 msgid "Export Import Log"
-msgstr "Zapisnik Importa i Eksporta"
+msgstr "Zapisnik Uvoza i Izvoza"
 
 #: erpnext/setup/setup_wizard/operations/install_fixtures.py:286
 msgid "External"
@@ -20622,7 +20622,7 @@ msgstr "Za Artikal"
 
 #: erpnext/controllers/stock_controller.py:1184
 msgid "For Item {0} cannot be received more than {1} qty against the {2} {3}"
-msgstr "Za artikal {0} ne može se primiti više od {1} količine u odnosu na {2} {3}"
+msgstr "Za Artikal {0} ne može se primiti više od {1} količine naspram {2} {3}"
 
 #. Label of the for_job_card (Link) field in DocType 'Job Card'
 #: erpnext/manufacturing/doctype/job_card/job_card.json
@@ -21460,11 +21460,11 @@ msgstr "Namještaj i Oprema"
 
 #: erpnext/accounts/doctype/account/account_tree.js:139
 msgid "Further accounts can be made under Groups, but entries can be made against non-Groups"
-msgstr "Daljnji računi se mogu napraviti pod Grupama, ali unosi se mogu izvršiti protiv ne-Grupa"
+msgstr "Daljnji računi se mogu napraviti pod Grupama, ali unosi se mogu izvršiti naspram podređenih računa"
 
 #: erpnext/accounts/doctype/cost_center/cost_center_tree.js:31
 msgid "Further cost centers can be made under Groups but entries can be made against non-Groups"
-msgstr "Dalja centri troškova mogu se kreirati pod Grupama, ali se unosi mogu izvršiti za ne Grupe"
+msgstr "Dalja centri troškova mogu se kreirati pod Grupama, ali se unosi mogu izvršiti za podređene"
 
 #: erpnext/setup/doctype/sales_person/sales_person_tree.js:15
 msgid "Further nodes can be only created under 'Group' type nodes"
@@ -21534,36 +21534,36 @@ msgstr "GTIN"
 #. Revaluation Account'
 #: erpnext/accounts/doctype/exchange_rate_revaluation_account/exchange_rate_revaluation_account.json
 msgid "Gain/Loss"
-msgstr "Dobitak / Gubitak"
+msgstr "Rezultat"
 
 #. Label of the disposal_account (Link) field in DocType 'Company'
 #: erpnext/setup/doctype/company/company.json
 msgid "Gain/Loss Account on Asset Disposal"
-msgstr " Račun Rezultata pri Otuđivanju Imovine"
+msgstr "Račun Rezultata pri Odlaganja Imovine"
 
 #. Description of the 'Gain/Loss already booked' (Currency) field in DocType
 #. 'Exchange Rate Revaluation'
 #: erpnext/accounts/doctype/exchange_rate_revaluation/exchange_rate_revaluation.json
 msgid "Gain/Loss accumulated in foreign currency account. Accounts with '0' balance in either Base or Account currency"
-msgstr "Dobitak / Gubitak akumuliran na deviznom računu. Računi sa stanjem '0' u osnovnoj ili valuti računa"
+msgstr "Rezultat akumuliran na deviznom računu. Računi sa stanjem '0' u osnovnoj ili valuti računa"
 
 #. Label of the gain_loss_booked (Currency) field in DocType 'Exchange Rate
 #. Revaluation'
 #: erpnext/accounts/doctype/exchange_rate_revaluation/exchange_rate_revaluation.json
 msgid "Gain/Loss already booked"
-msgstr "Dobitak / Gubitak je već uknjižen"
+msgstr "Rezultat je već uknjižen"
 
 #. Label of the gain_loss_unbooked (Currency) field in DocType 'Exchange Rate
 #. Revaluation'
 #: erpnext/accounts/doctype/exchange_rate_revaluation/exchange_rate_revaluation.json
 msgid "Gain/Loss from Revaluation"
-msgstr "Dobitak / Gubitak od Revalorizacije"
+msgstr "Rezultat od Revalorizacije"
 
 #: erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts.py:74
 #: erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts_with_account_number.py:98
 #: erpnext/setup/doctype/company/company.py:546
 msgid "Gain/Loss on Asset Disposal"
-msgstr "Rezultat pri Otuđivanju Imovine"
+msgstr "Rezultat pri Odlaganju Imovine"
 
 #. Name of a UOM
 #: erpnext/setup/setup_wizard/data/uom_data.json
@@ -21814,7 +21814,7 @@ msgstr "Preuzmi Artikle iz Sastavnice"
 
 #: erpnext/buying/doctype/request_for_quotation/request_for_quotation.js:375
 msgid "Get Items from Material Requests against this Supplier"
-msgstr "Preuzmi Artikle iz Materijalnog Naloga od ovog Dobavljača"
+msgstr "Preuzmi Artikle iz Materijalnog Naloga naspram ovog Dobavljača"
 
 #. Label of the get_items_from_open_material_requests (Button) field in DocType
 #. 'Purchase Order'
@@ -21941,7 +21941,7 @@ msgstr "Preuzmi Stanice iz"
 
 #: erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.js:151
 msgid "Getting Scrap Items"
-msgstr "Preuzmi Otpadne Artikle"
+msgstr "Preuzimaju se Otpadni Artikli"
 
 #. Option for the 'Coupon Type' (Select) field in DocType 'Coupon Code'
 #: erpnext/accounts/doctype/coupon_code/coupon_code.json
@@ -22008,7 +22008,7 @@ msgstr "Proizvod je Prenesen"
 
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:1745
 msgid "Goods are already received against the outward entry {0}"
-msgstr "Proizvod je već primljen protiv unosa izlaza {0}"
+msgstr "Proizvod je već primljen naspram unosa izlaza {0}"
 
 #: erpnext/setup/setup_wizard/operations/install_fixtures.py:173
 msgid "Government"
@@ -22583,7 +22583,7 @@ msgstr "Direktor Marketinga i Prodaje"
 #. Description of a DocType
 #: erpnext/accounts/doctype/account/account.json
 msgid "Heads (or groups) against which Accounting Entries are made and balances are maintained."
-msgstr "Računi (ili grupe) prema kojima se vrše knjigovodstvena knjiženja i održava stanje."
+msgstr "Računi (ili grupe) naspram kojih se vrše knjigovodstvena knjiženja i održava stanje."
 
 #: erpnext/setup/setup_wizard/data/industry_type.txt:27
 msgid "Health Care"
@@ -23200,7 +23200,7 @@ msgstr "Ako nema kolone naslova, koristite kolonu koda za naslov."
 #. in DocType 'Payment Terms Template'
 #: erpnext/accounts/doctype/payment_terms_template/payment_terms_template.json
 msgid "If this checkbox is checked, paid amount will be splitted and allocated as per the amounts in payment schedule against each payment term"
-msgstr "Ako je ovo polje označeno, plaćeni iznos će se podijeliti i dodijeliti prema iznosima u rasporedu plaćanja za svaki rok plaćanja"
+msgstr "Ako je ovo polje označeno, plaćeni iznos će se podijeliti i dodijeliti naspram iznosa u rasporedu plaćanja za svaki rok plaćanja"
 
 #. Description of the 'Skip Available Sub Assembly Items' (Check) field in
 #. DocType 'Production Plan'
@@ -23263,7 +23263,7 @@ msgstr "Ako da, onda će se ovo skladište koristiti za skladištenje odbijenog 
 
 #: erpnext/stock/doctype/item/item.js:947
 msgid "If you are maintaining stock of this Item in your Inventory, ERPNext will make a stock ledger entry for each transaction of this item."
-msgstr "Ako održavate zalihe ovog artikla u svom Inventaru, Sistem će napraviti unos u registar zaliha za svaku transakciju ovog artikla."
+msgstr "Ako održavate zalihe ovog artikla u svojim zalihama, Sistem će napraviti unos u registar zaliha za svaku transakciju ovog artikla."
 
 #. Description of the 'Unreconciled Entries' (Section Break) field in DocType
 #. 'Payment Reconciliation'
@@ -23349,7 +23349,7 @@ msgstr "Zanemari Prazne Zalihe"
 #: erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts.json
 #: erpnext/accounts/report/general_ledger/general_ledger.js:212
 msgid "Ignore Exchange Rate Revaluation Journals"
-msgstr "Zanemari Dnevnike Revalorizacije Deviznog Kursa"
+msgstr "Zanemari Žurnale Revalorizacije Deviznog Kursa"
 
 #: erpnext/selling/doctype/sales_order/sales_order.js:976
 msgid "Ignore Existing Ordered Qty"
@@ -23560,37 +23560,37 @@ msgstr "Uvoz"
 #. Description of a DocType
 #: erpnext/accounts/doctype/chart_of_accounts_importer/chart_of_accounts_importer.json
 msgid "Import Chart of Accounts from a csv file"
-msgstr "Importiraj Kontni Plan iz csv datoteke"
+msgstr "Uvezi Kontni Plan iz csv datoteke"
 
 #. Label of a Link in the Home Workspace
 #. Label of a Link in the Settings Workspace
 #: erpnext/setup/workspace/home/home.json
 #: erpnext/setup/workspace/settings/settings.json
 msgid "Import Data"
-msgstr "Import Podataka"
+msgstr "Uvoz Podataka"
 
 #. Label of the import_file (Attach) field in DocType 'Bank Statement Import'
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.json
 msgid "Import File"
-msgstr "Importiraj Datoteku"
+msgstr "Uvezi Datoteku"
 
 #. Label of the import_warnings_section (Section Break) field in DocType 'Bank
 #. Statement Import'
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.json
 msgid "Import File Errors and Warnings"
-msgstr "Greške i upozorenja pri importu datoteka"
+msgstr "Greške i Upozorenja pri Uvozu Datoteka"
 
 #: erpnext/edi/doctype/code_list/code_list.js:7
 #: erpnext/edi/doctype/code_list/code_list_list.js:3
 #: erpnext/edi/doctype/common_code/common_code_list.js:3
 msgid "Import Genericode File"
-msgstr "Importiraj Genericode datoteku"
+msgstr "Uvezi Genericode Datoteku"
 
 #. Label of the import_invoices (Button) field in DocType 'Import Supplier
 #. Invoice'
 #: erpnext/regional/doctype/import_supplier_invoice/import_supplier_invoice.json
 msgid "Import Invoices"
-msgstr "Importiraj Fakture"
+msgstr "Uvezi Fakture"
 
 #. Label of the import_log_section (Section Break) field in DocType 'Bank
 #. Statement Import'
@@ -23602,12 +23602,12 @@ msgstr "Zapisnik Uvoza"
 #. Import'
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.json
 msgid "Import Log Preview"
-msgstr "Pregled Import Zapisnika"
+msgstr "Pregled Zapisnika Uvoza"
 
 #. Label of the import_preview (HTML) field in DocType 'Bank Statement Import'
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.json
 msgid "Import Preview"
-msgstr "Pregled Importa"
+msgstr "Pregled Uvoza"
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:51
 msgid "Import Progress"
@@ -23615,24 +23615,24 @@ msgstr "Napredak Uvoza"
 
 #: erpnext/accounts/doctype/chart_of_accounts_importer/chart_of_accounts_importer.js:144
 msgid "Import Successful"
-msgstr "Import je uspješan"
+msgstr "Uvoz Uspješan"
 
 #. Label of a Link in the Buying Workspace
 #. Name of a DocType
 #: erpnext/buying/workspace/buying/buying.json
 #: erpnext/regional/doctype/import_supplier_invoice/import_supplier_invoice.json
 msgid "Import Supplier Invoice"
-msgstr "Importiraj Fakturu Dobavljača"
+msgstr "Uvezi Fakturu Dobavljača"
 
 #. Label of the import_type (Select) field in DocType 'Bank Statement Import'
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.json
 msgid "Import Type"
-msgstr "Import Tip"
+msgstr "Tip Uvoza"
 
 #: erpnext/public/js/utils/serial_no_batch_selector.js:217
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.js:84
 msgid "Import Using CSV file"
-msgstr "Importiraj koristeći CSV datoteku"
+msgstr "Uvezi Koristeći CSV datoteku"
 
 #. Label of the import_warnings (HTML) field in DocType 'Bank Statement Import'
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.json
@@ -23641,7 +23641,7 @@ msgstr "Import Upozorenja"
 
 #: erpnext/edi/doctype/code_list/code_list_import.js:130
 msgid "Import completed. {0} common codes created."
-msgstr "Import je završen. {0} kreirano zajedničkih kodova."
+msgstr "Uvoz završen. Kreirano {0} zajedničkih kodova."
 
 #. Label of the google_sheets_url (Data) field in DocType 'Bank Statement
 #. Import'
@@ -23651,15 +23651,15 @@ msgstr "Importiraj iz Google Sheets"
 
 #: erpnext/stock/doctype/item_price/item_price.js:29
 msgid "Import in Bulk"
-msgstr "Import na Veliko"
+msgstr "Masovni Uvoz"
 
 #: erpnext/edi/doctype/common_code/common_code.py:108
 msgid "Importing Common Codes"
-msgstr "Import zajedničkih kodova u toku"
+msgstr "Uvoz Zajedničkih Kodova u toku"
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:45
 msgid "Importing {0} of {1}, {2}"
-msgstr "Uvoz {0} od {1}, {2}"
+msgstr "Uvozi se {0} od {1}, {2}"
 
 #. Option for the 'Manufacturing Type' (Select) field in DocType 'Production
 #. Plan Sub Assembly Item'
@@ -23706,7 +23706,7 @@ msgstr "U Procentima"
 #: erpnext/manufacturing/doctype/work_order/work_order.json
 #: erpnext/stock/doctype/quality_inspection/quality_inspection.json
 msgid "In Process"
-msgstr "U Obradi"
+msgstr "U Procesu"
 
 #: erpnext/stock/report/item_variant_details/item_variant_details.py:107
 msgid "In Production"
@@ -23824,7 +23824,7 @@ msgstr "U Riječima (Valuta Kompanije)"
 #. Description of the 'In Words' (Data) field in DocType 'Delivery Note'
 #: erpnext/stock/doctype/delivery_note/delivery_note.json
 msgid "In Words (Export) will be visible once you save the Delivery Note."
-msgstr "U Riječima (Eksport) će biti vidljivo nakon što spremite Dostavnicu."
+msgstr "U Riječima (Izvoz) će biti vidljivo nakon što spremite Dostavnicu."
 
 #. Description of the 'In Words (Company Currency)' (Data) field in DocType
 #. 'Delivery Note'
@@ -24908,7 +24908,7 @@ msgstr "Nevažeći ključ rezultata. Odgovor:"
 #: erpnext/accounts/general_ledger.py:776
 #: erpnext/accounts/general_ledger.py:786
 msgid "Invalid value {0} for {1} against account {2}"
-msgstr "Nevažeća vrijednost {0} za {1} za račun {2}"
+msgstr "Nevažeća vrijednost {0} za {1} naspram računa {2}"
 
 #: erpnext/accounts/doctype/pricing_rule/utils.py:197
 #: erpnext/assets/doctype/asset/asset.js:657
@@ -24927,18 +24927,18 @@ msgstr "Nevažeći {0}: {1}"
 #. Label of the inventory_section (Tab Break) field in DocType 'Item'
 #: erpnext/stock/doctype/item/item.json
 msgid "Inventory"
-msgstr "Inventar"
+msgstr "Zalihe"
 
 #. Name of a DocType
 #: erpnext/patches/v15_0/refactor_closing_stock_balance.py:40
 #: erpnext/stock/doctype/inventory_dimension/inventory_dimension.json
 #: erpnext/stock/doctype/inventory_dimension/inventory_dimension.py:180
 msgid "Inventory Dimension"
-msgstr "Dimenzija Inventara"
+msgstr "Dimenzija Zaliha"
 
 #: erpnext/stock/doctype/stock_ledger_entry/stock_ledger_entry.py:156
 msgid "Inventory Dimension Negative Stock"
-msgstr "Dimenzija Inventara Negativna Zaliha"
+msgstr "Negativne Zalihe Dimenzije Zaliha"
 
 #. Label of the inventory_dimension_key (Small Text) field in DocType 'Stock
 #. Closing Balance'
@@ -25723,7 +25723,7 @@ msgstr "Tip Slučaja"
 #. DocType 'Sales Invoice'
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.json
 msgid "Issue a debit note with 0 qty against an existing Sales Invoice"
-msgstr "Izdaj Fakturu Zaduge sa 0 količinom na postojeću Prodajnu Fakturu"
+msgstr "Izdaj Zadužnicu sa 0 količinom na postojeću Prodajnu Fakturu"
 
 #. Option for the 'Current State' (Select) field in DocType 'Share Balance'
 #. Option for the 'Status' (Select) field in DocType 'Material Request'
@@ -25952,7 +25952,7 @@ msgstr "Artikal Barkod"
 
 #: erpnext/selling/page/point_of_sale/pos_item_cart.js:46
 msgid "Item Cart"
-msgstr "Artikal Kolica"
+msgstr "Artikal Korpe"
 
 #. Option for the 'Apply On' (Select) field in DocType 'Pricing Rule'
 #. Option for the 'Apply Rule On Other' (Select) field in DocType 'Pricing
@@ -27466,7 +27466,7 @@ msgstr "Tip Naloga Knjiženja treba postaviti kao Unos Amortizacije za amortizac
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:666
 msgid "Journal Entry {0} does not have account {1} or already matched against other voucher"
-msgstr "Naloga Knjiženja {0} nema račun {1} ili se podudara sa drugim verifikatom"
+msgstr "Naloga Knjiženja {0} nema račun {1} ili se podudara naspram drugog verifikata"
 
 #: erpnext/accounts/doctype/exchange_rate_revaluation/exchange_rate_revaluation.js:97
 msgid "Journal entries have been created"
@@ -27476,7 +27476,7 @@ msgstr "Nalozi Knjiženja su kreirani"
 #. Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Journals"
-msgstr "Dnevnici"
+msgstr "Žurnali"
 
 #: erpnext/projects/doctype/project/project.js:113
 msgid "Kanban Board"
@@ -27596,7 +27596,7 @@ msgstr "Kilovat-Sat"
 
 #: erpnext/manufacturing/doctype/job_card/job_card.py:857
 msgid "Kindly cancel the Manufacturing Entries first against the work order {0}."
-msgstr "Molimo Vas da prvo otkažite unose proizvodnje protiv Radnog Naloga {0}."
+msgstr "Otkaži Unose Proizvodnje naspram Radnog Naloga {0}."
 
 #: erpnext/public/js/utils/party.js:264
 msgid "Kindly select the company first"
@@ -27940,7 +27940,7 @@ msgstr "Naučite Upravljanje Prodajom"
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 #, python-format
 msgid "Learn about <a href=\"https://docs.erpnext.com/docs/v13/user/manual/en/accounts/articles/common_party_accounting#:~:text=Common%20Party%20Accounting%20in%20ERPNext,Invoice%20against%20a%20primary%20Supplier.\">Common Party</a>"
-msgstr "Saznajte više o <a href=\"https://docs.erpnext.com/docs/v13/user/manual/en/accounts/articles/common_party_accounting#:~:text=Common%20Party%20Accounting%20in%20ERPNext,Invoice%20against%20a%20primary%20Supplier.\">Zajedničkoj Stranci</a>"
+msgstr "Saznaj više o <a href=\"https://docs.erpnext.com/docs/v13/user/manual/en/accounts/articles/common_party_accounting#:~:text=Common%20Party%20Accounting%20in%20ERPNext,Invoice%20against%20a%20primary%20Supplier.\">Zajedniča Stranka</a>"
 
 #. Label of the leave_encashed (Select) field in DocType 'Employee'
 #: erpnext/setup/doctype/employee/employee.json
@@ -28299,7 +28299,7 @@ msgstr "Učitavanje Faktura u toku! Molimo pričekajte..."
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:290
 msgid "Loading import file..."
-msgstr "Učitavanje datoteke za import..."
+msgstr "Učitavanje datoteke uvoza..."
 
 #. Option for the 'Reference Type' (Select) field in DocType 'Journal Entry
 #. Account'
@@ -28749,7 +28749,7 @@ msgstr "Raspored održavanja nije generiran za sve artikle. Molimo kliknite na '
 
 #: erpnext/maintenance/doctype/maintenance_schedule/maintenance_schedule.py:247
 msgid "Maintenance Schedule {0} exists against {1}"
-msgstr "Raspored Održavanja {0} postoji protiv {1}"
+msgstr "Raspored Održavanja {0} postoji naspram {1}"
 
 #. Name of a report
 #: erpnext/maintenance/report/maintenance_schedules/maintenance_schedules.json
@@ -28942,7 +28942,7 @@ msgstr "Napravi {0} Varijante"
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:161
 msgid "Making Journal Entries against advance accounts: {0} is not recommended. These Journals won't be available for Reconciliation."
-msgstr "Kreiranje Naloga Knjiženja na račun predujma: {0} se ne preporučuje. Ovi Nalozi Knjiženja neće biti dostupni za Usaglašavanje."
+msgstr "Kreiranje Naloga Knjiženja naspram računa predujma: {0} se ne preporučuje. Ovi Nalozi Knjiženja neće biti dostupni za Usaglašavanje."
 
 #: erpnext/assets/doctype/asset/asset.js:88
 #: erpnext/assets/doctype/asset/asset.js:96
@@ -29120,7 +29120,7 @@ msgstr "Proizvodnja"
 #. Description of the 'Material Request' (Link) field in DocType 'Work Order'
 #: erpnext/manufacturing/doctype/work_order/work_order.json
 msgid "Manufacture against Material Request"
-msgstr "Proizvodnja prema Materijalnom Nalogu"
+msgstr "Proizvodnja naspram Materijalnog Naloga"
 
 #: erpnext/stock/doctype/material_request/material_request_list.js:43
 msgid "Manufactured"
@@ -30649,12 +30649,12 @@ msgstr "Mjesečna Raspodjela"
 #. Name of a DocType
 #: erpnext/accounts/doctype/monthly_distribution_percentage/monthly_distribution_percentage.json
 msgid "Monthly Distribution Percentage"
-msgstr "Mjesečna Raspodjela u Postotcima"
+msgstr "Mjesečna Raspodjela u Procentima"
 
 #. Label of the percentages (Table) field in DocType 'Monthly Distribution'
 #: erpnext/accounts/doctype/monthly_distribution/monthly_distribution.json
 msgid "Monthly Distribution Percentages"
-msgstr "Mjesečna Raspodjela u Postotcima"
+msgstr "Procentalna Mjesečna Raspodjela"
 
 #: erpnext/manufacturing/dashboard_fixtures.py:244
 msgid "Monthly Quality Inspections"
@@ -31734,7 +31734,7 @@ msgstr "Nema podataka. Čini se da ste otpremili praznu datoteku"
 
 #: erpnext/regional/report/electronic_invoice_register/electronic_invoice_register.js:37
 msgid "No data to export"
-msgstr "Nema podataka za eksport"
+msgstr "Nema podataka za izvoz"
 
 #: erpnext/templates/generators/bom.html:85
 msgid "No description given"
@@ -31775,7 +31775,7 @@ msgstr "Nijedan od artikala za primiti ne kasni"
 
 #: erpnext/accounts/doctype/bank_reconciliation_tool/bank_reconciliation_tool.py:424
 msgid "No matches occurred via auto reconciliation"
-msgstr "Nije došlo do podudaranja putem automatskog poravnanja"
+msgstr "Nije došlo do podudaranja putem automatskog usaglašavanja"
 
 #: erpnext/manufacturing/doctype/production_plan/production_plan.py:957
 msgid "No material request created"
@@ -32114,11 +32114,11 @@ msgstr "Napomena: Unos plaćanja neće biti kreiran jer 'Gotovina ili Bankovni R
 
 #: erpnext/accounts/doctype/cost_center/cost_center.js:30
 msgid "Note: This Cost Center is a Group. Cannot make accounting entries against groups."
-msgstr "Napomena: Ovaj Centar Troškova je Grupa. Ne mogu se izvršiti knjigovodstveni unosi prema grupama."
+msgstr "Napomena: Ovaj Centar Troškova je Grupa. Ne mogu se izvršiti knjigovodstveni unosi naspram grupa."
 
 #: erpnext/stock/doctype/item/item.py:619
 msgid "Note: To merge the items, create a separate Stock Reconciliation for the old item {0}"
-msgstr "Napomena: Da biste spojili artikle, kreirajte zasebno usklađivanje zaliha za stari artikal {0}"
+msgstr "Napomena: Da biste spojili artikle, kreirajte zasebno Usaglašavanje Zaliha za stari artikal {0}"
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:971
 msgid "Note: {0}"
@@ -32548,7 +32548,7 @@ msgstr "Podržani su samo 'Unosi Plaćanja' naspram ovog predujam računa."
 
 #: erpnext/accounts/doctype/chart_of_accounts_importer/chart_of_accounts_importer.py:105
 msgid "Only CSV and Excel files can be used to for importing data. Please check the file format you are trying to upload"
-msgstr "Za import podataka mogu se koristiti samo CSV i Excel datoteke. Molimo provjerite format datoteke koji pokušavate učitati"
+msgstr "Za uvoz podataka mogu se koristiti samo CSV i Excel datoteke. Provjeri format datoteke koji pokušavate učitati"
 
 #. Label of the tax_on_excess_amount (Check) field in DocType 'Tax Withholding
 #. Category'
@@ -32592,7 +32592,7 @@ msgstr "U transakciji su dozvoljeni samo podređeni članovi"
 
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:939
 msgid "Only one {0} entry can be created against the Work Order {1}"
-msgstr "Samo jedan {0} unos se može kreirati uz Radni Nalog {1}"
+msgstr "Samo jedan {0} unos se može kreirati naspram Radnog Naloga {1}"
 
 #. Description of the 'Customer Groups' (Table) field in DocType 'POS Profile'
 #: erpnext/accounts/doctype/pos_profile/pos_profile.json
@@ -33759,13 +33759,13 @@ msgstr "Uvjeti koji se preklapaju pronađeni između:"
 #. DocType 'Manufacturing Settings'
 #: erpnext/manufacturing/doctype/manufacturing_settings/manufacturing_settings.json
 msgid "Overproduction Percentage For Sales Order"
-msgstr "Postotak prekomjerne proizvodnje za Prodajni Nalog"
+msgstr "Procentualna Prekomjerna Proizvodnja za Prodajni Nalog"
 
 #. Label of the overproduction_percentage_for_work_order (Percent) field in
 #. DocType 'Manufacturing Settings'
 #: erpnext/manufacturing/doctype/manufacturing_settings/manufacturing_settings.json
 msgid "Overproduction Percentage For Work Order"
-msgstr "Postotak prekomjerne proizvodnje za Radni Nalog"
+msgstr "Procentualna Prekomjerna Proizvodnja za Radni Nalog"
 
 #. Label of the over_production_for_sales_and_work_order_section (Section
 #. Break) field in DocType 'Manufacturing Settings'
@@ -35093,7 +35093,7 @@ msgstr "Unos plaćanja je već kreiran"
 
 #: erpnext/controllers/accounts_controller.py:1359
 msgid "Payment Entry {0} is linked against Order {1}, check if it should be pulled as advance in this invoice."
-msgstr "Unos plaćanja {0} je povezan sa Nalogom {1}, provjerite da li treba biti povučen kao predujam u ovoj fakturi."
+msgstr "Unos plaćanja {0} je povezan naspram Naloga {1}, provjerite da li treba biti povučen kao predujam u ovoj fakturi."
 
 #: erpnext/selling/page/point_of_sale/pos_payment.js:279
 msgid "Payment Failed"
@@ -35336,7 +35336,7 @@ msgstr "Odgovor na Platni Zahtjev trajao je predugo. Pokušajte ponovo zatražit
 
 #: erpnext/accounts/doctype/payment_request/payment_request.py:540
 msgid "Payment Requests cannot be created against: {0}"
-msgstr "Platni Zahtjevi ne mogu se kreirati prema: {0}"
+msgstr "Platni Zahtjevi ne mogu se kreirati naspram: {0}"
 
 #. Label of the payment_schedule (Data) field in DocType 'Overdue Payment'
 #. Name of a DocType
@@ -35717,13 +35717,13 @@ msgstr "Procenat"
 #: erpnext/stock/doctype/delivery_note_item/delivery_note_item.json
 #: erpnext/stock/doctype/purchase_receipt_item/purchase_receipt_item.json
 msgid "Percentage"
-msgstr "Procenat"
+msgstr "Procentualno"
 
 #. Label of the percentage (Percent) field in DocType 'Cost Center Allocation
 #. Percentage'
 #: erpnext/accounts/doctype/cost_center_allocation_percentage/cost_center_allocation_percentage.json
 msgid "Percentage (%)"
-msgstr "Postotak (%)"
+msgstr "Procentualno (%)"
 
 #. Label of the percentage_allocation (Float) field in DocType 'Monthly
 #. Distribution Percentage'
@@ -35739,19 +35739,19 @@ msgstr "Procentualna Dodjela bi trebala biti jednaka 100%"
 #. 'Buying Settings'
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 msgid "Percentage you are allowed to order beyond the Blanket Order quantity."
-msgstr "Postotak koji vam je dozvoljeno da naručite iznad količine Ugovornog Naloga."
+msgstr "Procenat s kojim vam je dozvoljeno da naručite iznad količine Ugovornog Naloga."
 
 #. Description of the 'Blanket Order Allowance (%)' (Float) field in DocType
 #. 'Selling Settings'
 #: erpnext/selling/doctype/selling_settings/selling_settings.json
 msgid "Percentage you are allowed to sell beyond the Blanket Order quantity."
-msgstr "Postotak koji vam je dozvoljeno da prodate iznad količine Ugovornog Naloga."
+msgstr "Procenat s kojim vam je dozvoljeno da prodate iznad količine Ugovornog Naloga."
 
 #. Description of the 'Over Transfer Allowance (%)' (Float) field in DocType
 #. 'Buying Settings'
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 msgid "Percentage you are allowed to transfer more against the quantity ordered. For example: If you have ordered 100 units. and your Allowance is 10% then you are allowed to transfer 110 units."
-msgstr "Postotak koji vam je dozvoljeno prenijeti više u odnosu na naručenu količinu. Na primjer: Ako ste naručili 100 jedinica. a vaš dodatak je 10% onda vam je dozvoljeno da prenesete 110 jedinica."
+msgstr "Procenat s kojim vam je dozvoljeno prenijeti više naspram naručene količine. Na primjer: Ako ste naručili 100 jedinica. a vaš dodatak je 10% onda vam je dozvoljeno da prenesete 110 jedinica."
 
 #: erpnext/setup/setup_wizard/data/sales_stage.txt:6
 #: erpnext/setup/setup_wizard/operations/install_fixtures.py:418
@@ -36452,7 +36452,7 @@ msgstr "Molimo izbrišite Artikal Paket {0}, prije spajanja {1} u {2}"
 
 #: erpnext/assets/doctype/asset/asset.py:377
 msgid "Please do not book expense of multiple assets against one single Asset."
-msgstr "Molimo vas da ne knjižite trošak više imovine na pojedinačnu imovinu."
+msgstr "Molimo vas da ne knjižite trošak više imovine naspram pojedinačne imovine."
 
 #: erpnext/controllers/item_variant.py:235
 msgid "Please do not create more than 500 items at a time"
@@ -36685,7 +36685,7 @@ msgstr "Popravi preklapanje vremenskih termina za {0}."
 
 #: erpnext/accounts/doctype/chart_of_accounts_importer/chart_of_accounts_importer.py:67
 msgid "Please import accounts against parent company or enable {} in company master."
-msgstr "Importiraj račune prema matičnoj kompaniji ili omogućite {} u Postavkama Kompanije."
+msgstr "Uvezi račune naspram matične kompanije ili omogućite {} u Postavkama Kompanije."
 
 #: erpnext/stock/doctype/landed_cost_voucher/landed_cost_voucher.py:176
 msgid "Please keep one Applicable Charges, when 'Distribute Charges Based On' is 'Distribute Manually'. For more charges, please create another Landed Cost Voucher."
@@ -36752,7 +36752,7 @@ msgstr "Odaberi Primijeni Popust na"
 
 #: erpnext/selling/doctype/sales_order/sales_order.py:1566
 msgid "Please select BOM against item {0}"
-msgstr "Odaberi Listu Materijala uz artikal {0}"
+msgstr "Odaberi Sastavnicu naspram Artikla {0}"
 
 #: erpnext/manufacturing/doctype/production_plan/production_plan.py:171
 msgid "Please select BOM for Item in Row {0}"
@@ -37040,7 +37040,7 @@ msgstr "Molimo postavite 'Centar Troškova Amortizacije Imovine' u kompaniji {0}
 
 #: erpnext/assets/doctype/asset/depreciation.py:804
 msgid "Please set 'Gain/Loss Account on Asset Disposal' in Company {0}"
-msgstr "Postavi 'Račun Dobitka/Gubitka Prilikom Odlaganja Imovine' u Kompaniji {0}"
+msgstr "Postavi 'Račun Rezultata Prilikom Odlaganja Imovine' u Kompaniji {0}"
 
 #: erpnext/accounts/general_ledger.py:504
 msgid "Please set '{0}' in Company: {1}"
@@ -37115,7 +37115,7 @@ msgstr "Postavi Fiskalni Broj za Klijenta '%s'"
 
 #: erpnext/accounts/doctype/exchange_rate_revaluation/exchange_rate_revaluation.py:338
 msgid "Please set Unrealized Exchange Gain/Loss Account in Company {0}"
-msgstr "Postavi Nerealizovani Račun Dobitka/Gubitka u Kompaniji {0}"
+msgstr "Postavi Nerealizovani Račun Rezultata u Kompaniji {0}"
 
 #: erpnext/regional/report/vat_audit_report/vat_audit_report.py:56
 msgid "Please set VAT Accounts in {0}"
@@ -37184,7 +37184,7 @@ msgstr "Postavi Standard Gotovinski ili Bankovni Račun za Načine Plaćanja {}"
 
 #: erpnext/accounts/utils.py:2198
 msgid "Please set default Exchange Gain/Loss Account in Company {}"
-msgstr "Postavi Standard Račun za Dobit/Gubitak u Kompaniji {}"
+msgstr "Postavi Standard Račun Rezultata u Kompaniji {}"
 
 #: erpnext/assets/doctype/asset_repair/asset_repair.py:359
 msgid "Please set default Expense Account in Company {0}"
@@ -38529,7 +38529,7 @@ msgstr "Procesni Gubitak"
 
 #: erpnext/manufacturing/doctype/bom/bom.py:1071
 msgid "Process Loss Percentage cannot be greater than 100"
-msgstr "Postotak Gubitka Procesa ne može biti veći od 100"
+msgstr "Procentualni Gubitka Procesa ne može biti veći od 100"
 
 #. Label of the process_loss_qty (Float) field in DocType 'BOM'
 #. Label of the process_loss_qty (Float) field in DocType 'Job Card'
@@ -38576,12 +38576,12 @@ msgstr "Obradi Usaglašavanja Plaćanja"
 #. Name of a DocType
 #: erpnext/accounts/doctype/process_payment_reconciliation_log/process_payment_reconciliation_log.json
 msgid "Process Payment Reconciliation Log"
-msgstr "Denevnik Obrade Usaglašavanja Plaćanja"
+msgstr "Zapisnik Obrade Usaglašavanja Plaćanja"
 
 #. Name of a DocType
 #: erpnext/accounts/doctype/process_payment_reconciliation_log_allocations/process_payment_reconciliation_log_allocations.json
 msgid "Process Payment Reconciliation Log Allocations"
-msgstr "Dodjele Denevnika Obrade Usaglašavanja Plaćanja"
+msgstr "Dodjele Zapisnika Obrade Usaglašavanja Plaćanja"
 
 #. Name of a DocType
 #: erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts.json
@@ -39576,7 +39576,7 @@ msgstr "Trendovi Kupovne Fakture"
 
 #: erpnext/assets/doctype/asset/asset.py:216
 msgid "Purchase Invoice cannot be made against an existing asset {0}"
-msgstr "Kupovna Faktura ne može biti napravljena za postojeću imovinu {0}"
+msgstr "Kupovna Faktura ne može biti napravljena naspram postojeće imovine {0}"
 
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.py:428
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.py:442
@@ -41682,7 +41682,7 @@ msgstr "Preračunaj Kupovnu/Prodajnu Cijenu"
 
 #: erpnext/projects/doctype/project/project.js:137
 msgid "Recalculating Purchase Cost against this Project..."
-msgstr "Preračunavanje Troškova Kupovine u odnosu na ovaj Projekt..."
+msgstr "Preračunavanje Troškova Kupovine naspram ovog Projekta..."
 
 #. Option for the 'Status' (Select) field in DocType 'Asset'
 #. Option for the 'Purpose' (Select) field in DocType 'Asset Movement'
@@ -41980,7 +41980,7 @@ msgstr "Usaglašeni Unosi"
 #: erpnext/accounts/doctype/payment_entry/payment_entry.json
 #: erpnext/setup/doctype/company/company.json
 msgid "Reconciliation Date"
-msgstr "Datum Usklađenja"
+msgstr "Datum Usaglašavanja"
 
 #. Label of the error_log (Long Text) field in DocType 'Process Payment
 #. Reconciliation Log'
@@ -41990,7 +41990,7 @@ msgstr "Zapisnik Grešaka Usaglašavanja"
 
 #: erpnext/accounts/doctype/process_payment_reconciliation/process_payment_reconciliation_dashboard.py:9
 msgid "Reconciliation Logs"
-msgstr "Zapisnik Usklađivanja"
+msgstr "Zapisnik Usaglašavanja"
 
 #: erpnext/accounts/doctype/process_payment_reconciliation_log/process_payment_reconciliation_log.js:13
 msgid "Reconciliation Progress"
@@ -42006,7 +42006,7 @@ msgstr "Veličina reda Usaglašavanja"
 #. 'Company'
 #: erpnext/setup/doctype/company/company.json
 msgid "Reconciliation Takes Effect On"
-msgstr "Usaglašavanje stupa na snagu"
+msgstr "Usaglašavanje Stupa na Snagu"
 
 #. Label of the recording_html (HTML) field in DocType 'Call Log'
 #: erpnext/telephony/doctype/call_log/call_log.json
@@ -42057,7 +42057,7 @@ msgstr "Crvena"
 #. Label of the redeem_against (Link) field in DocType 'Loyalty Point Entry'
 #: erpnext/accounts/doctype/loyalty_point_entry/loyalty_point_entry.json
 msgid "Redeem Against"
-msgstr "Iskoristi naspram"
+msgstr "Iskoristi Naspram"
 
 #. Label of the redeem_loyalty_points (Check) field in DocType 'POS Invoice'
 #. Label of the redeem_loyalty_points (Check) field in DocType 'Sales Invoice'
@@ -43061,7 +43061,7 @@ msgstr "Interna Kompanija"
 #. Description of a DocType
 #: erpnext/accounts/doctype/fiscal_year/fiscal_year.json
 msgid "Represents a Financial Year. All accounting entries and other major transactions are tracked against the Fiscal Year."
-msgstr "Predstavlja Finansijsku Godinu. Svi knjigovodstveni unosi i druge velike transakcije prate se u odnosu na Fiskalnu Godinu."
+msgstr "Predstavlja Finansijsku Godinu. Svi knjigovodstveni unosi i druge velike transakcije prate se naspram Fiskalne Godine."
 
 #: erpnext/templates/form_grid/material_request_grid.html:25
 msgid "Reqd By Date"
@@ -43316,7 +43316,7 @@ msgstr "Ponovo pošaljite e-poštu za plaćanje"
 #: erpnext/stock/doctype/stock_reservation_entry/stock_reservation_entry.json
 #: erpnext/stock/report/reserved_stock/reserved_stock.js:118
 msgid "Reservation Based On"
-msgstr "Rezervacija na osnovu"
+msgstr "Rezervacija Na Osnovu"
 
 #: erpnext/manufacturing/doctype/work_order/work_order.js:813
 #: erpnext/selling/doctype/sales_order/sales_order.js:67
@@ -43761,12 +43761,12 @@ msgstr "Povrat / Debit Faktura"
 #: erpnext/accounts/doctype/pos_invoice_reference/pos_invoice_reference.json
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.json
 msgid "Return Against"
-msgstr "Povrat naspram"
+msgstr "Povrat Naspram"
 
 #. Label of the return_against (Link) field in DocType 'Delivery Note'
 #: erpnext/stock/doctype/delivery_note/delivery_note.json
 msgid "Return Against Delivery Note"
-msgstr "Povratak naspram Dostavnice"
+msgstr "Povrat naspram Dostavnice"
 
 #. Label of the return_against (Link) field in DocType 'Purchase Invoice'
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.json
@@ -43823,7 +43823,7 @@ msgstr "Vraćeno"
 #. Bundle'
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.json
 msgid "Returned Against"
-msgstr "Povrat na osnovu"
+msgstr "Povrat naspram"
 
 #: erpnext/accounts/report/delivered_items_to_be_billed/delivered_items_to_be_billed.py:57
 #: erpnext/accounts/report/received_items_to_be_billed/received_items_to_be_billed.py:57
@@ -43882,7 +43882,7 @@ msgstr "Povrati"
 #: erpnext/accounts/report/accounts_receivable/accounts_receivable.js:168
 #: erpnext/accounts/report/accounts_receivable_summary/accounts_receivable_summary.js:126
 msgid "Revaluation Journals"
-msgstr "Revaloracijski Dnevnici"
+msgstr "Revaloracijski Žurnali"
 
 #: erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts.py:108
 msgid "Revaluation Surplus"
@@ -44204,7 +44204,7 @@ msgstr "Dozvola Zaokruživanje Gubitka treba da bude između 0 i 1"
 #: erpnext/controllers/stock_controller.py:604
 #: erpnext/controllers/stock_controller.py:619
 msgid "Rounding gain/loss Entry for Stock Transfer"
-msgstr "Unos Zaokruživanja Dobitka/Gubitka za Prijenos Zaliha"
+msgstr "Unos Zaokruživanja Rezultat za Prijenos Zaliha"
 
 #. Label of the route (Small Text) field in DocType 'BOM'
 #. Label of the route (Data) field in DocType 'Sales Partner'
@@ -44324,7 +44324,7 @@ msgstr "Red #{0}: Broj Šarže {1} je već odabran."
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:852
 msgid "Row #{0}: Cannot allocate more than {1} against payment term {2}"
-msgstr "Red #{0}: Ne može se dodijeliti više od {1} uz rok plaćanja {2}"
+msgstr "Red #{0}: Ne može se dodijeliti više od {1} naspram uslova plaćanja {2}"
 
 #: erpnext/controllers/accounts_controller.py:3417
 msgid "Row #{0}: Cannot delete item {1} which has already been billed."
@@ -44356,7 +44356,7 @@ msgstr "Red #{0}: Nije moguće postaviti cijenu ako je iznos veći od naplaćeno
 
 #: erpnext/manufacturing/doctype/job_card/job_card.py:951
 msgid "Row #{0}: Cannot transfer more than Required Qty {1} for Item {2} against Job Card {3}"
-msgstr "Red #{0}: Ne može se prenijeti više od potrebne količine {1} za artikal {2} na osnovu Radne Kartice {3}"
+msgstr "Red #{0}: Ne može se prenijeti više od potrebne količine {1} za artikal {2} naspram Radne Kartice {3}"
 
 #: erpnext/selling/doctype/product_bundle/product_bundle.py:86
 msgid "Row #{0}: Child Item should not be a Product Bundle. Please remove Item {1} and Save"
@@ -44428,7 +44428,7 @@ msgstr "Red #{0}: Gotov Proizvod mora biti {1}"
 
 #: erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.py:434
 msgid "Row #{0}: Finished Good reference is mandatory for Scrap Item {1}."
-msgstr "Red #{0}: Gotov proizvod referenca je obavezna za Otpadni Artikal {1}."
+msgstr "Red #{0}: Gotov Proizvod referenca je obavezna za Otpadni Artikal {1}."
 
 #: erpnext/accounts/doctype/bank_clearance/bank_clearance.py:100
 msgid "Row #{0}: For {1} Clearance date {2} cannot be before Cheque Date {3}"
@@ -44456,11 +44456,11 @@ msgstr "Red #{0}: Artikel {1} ne postoji"
 
 #: erpnext/stock/doctype/stock_reservation_entry/stock_reservation_entry.py:1199
 msgid "Row #{0}: Item {1} has been picked, please reserve stock from the Pick List."
-msgstr "Red #{0}: Artikal {1} je odabran, molimo rezervišite zalihe sa Liste Odabira."
+msgstr "Red #{0}: Artikal {1} je odabran, rezerviši zalihe sa Liste Odabira."
 
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.py:686
 msgid "Row #{0}: Item {1} is not a Serialized/Batched Item. It cannot have a Serial No/Batch No against it."
-msgstr "Red #{0}: Artikal {1} nije Serijalizirani/Šaržirani Artikal. Ne može imati Serijski Broj / Broj Šarže protiv sebe."
+msgstr "Red #{0}: Artikal {1} nije Serijalizirani/Šaržirani Artikal. Ne može imati Serijski Broj / Broj Šarže naspram sebe."
 
 #: erpnext/assets/doctype/asset_capitalization/asset_capitalization.py:287
 msgid "Row #{0}: Item {1} is not a service item"
@@ -44472,7 +44472,7 @@ msgstr "Red #{0}: Artikal {1} nije artikal na zalihama"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:773
 msgid "Row #{0}: Journal Entry {1} does not have account {2} or already matched against another voucher"
-msgstr "Red #{0}: Nalog Knjiženja {1} nema račun {2} ili se već podudara s drugim verifikatom"
+msgstr "Red #{0}: Nalog Knjiženja {1} nema račun {2} ili se već podudara naspram drugog verifikata"
 
 #: erpnext/selling/doctype/sales_order/sales_order.py:571
 msgid "Row #{0}: Not allowed to change Supplier as Purchase Order already exists"
@@ -44567,7 +44567,7 @@ msgstr "Red #{0}: Odbijena Količina se ne može unijeti u Povrat Kupovine"
 
 #: erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.py:427
 msgid "Row #{0}: Rejected Qty cannot be set for Scrap Item {1}."
-msgstr "Red #{0}: Odbijena količina se ne može postaviti za Artikal Otpada {1}."
+msgstr "Red #{0}: Odbijena Količina ne može se postaviti za Artikal Otpada {1}."
 
 #: erpnext/controllers/subcontracting_controller.py:65
 msgid "Row #{0}: Rejected Warehouse is mandatory for the rejected Item {1}"
@@ -44579,7 +44579,7 @@ msgstr "Red #{0}: Obavezno do Datuma ne može biti prije Datuma Transakcije"
 
 #: erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.py:422
 msgid "Row #{0}: Scrap Item Qty cannot be zero"
-msgstr "Red #{0}: Količina Otpadnog Atikla ne može biti nula"
+msgstr "Red #{0}: Količina Otpadnih Artikala ne može biti nula"
 
 #: erpnext/controllers/selling_controller.py:230
 msgid "Row #{0}: Selling rate for item {1} is lower than its {2}.\n"
@@ -44637,7 +44637,7 @@ msgstr "Red #{0}: Status mora biti {1} za popust na fakturi {2}"
 
 #: erpnext/stock/doctype/stock_reservation_entry/stock_reservation_entry.py:275
 msgid "Row #{0}: Stock cannot be reserved for Item {1} against a disabled Batch {2}."
-msgstr "Red #{0}: Zaliha se ne može rezervisati za artikal {1} u odnosu na onemogućenu Šarže {2}."
+msgstr "Red #{0}: Zaliha se ne može rezervisati za artikal {1} naspram onemogućene Šarže {2}."
 
 #: erpnext/stock/doctype/stock_reservation_entry/stock_reservation_entry.py:1212
 msgid "Row #{0}: Stock cannot be reserved for a non-stock Item {1}"
@@ -44657,7 +44657,7 @@ msgstr "Red #{0}: Zalihe su rezervisane za artikal {1} u skladištu {2}."
 
 #: erpnext/stock/doctype/stock_reservation_entry/stock_reservation_entry.py:285
 msgid "Row #{0}: Stock not available to reserve for Item {1} against Batch {2} in Warehouse {3}."
-msgstr "Red #{0}: Zaliha nije dostupna za rezervisanje za artikal {1} u odnosu na Šaržu {2} u Skladištu {3}."
+msgstr "Red #{0}: Zaliha nije dostupna za rezervisanje za artikal {1} naspram Šarže {2} u Skladištu {3}."
 
 #: erpnext/stock/doctype/stock_reservation_entry/stock_reservation_entry.py:1109
 #: erpnext/stock/doctype/stock_reservation_entry/stock_reservation_entry.py:1253
@@ -44678,7 +44678,7 @@ msgstr "Red #{0}: Vrijeme je u sukobu sa redom {1}"
 
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.py:97
 msgid "Row #{0}: You cannot use the inventory dimension '{1}' in Stock Reconciliation to modify the quantity or valuation rate. Stock reconciliation with inventory dimensions is intended solely for performing opening entries."
-msgstr "Red #{0}: Ne možete koristiti dimenziju zaliha '{1}' u usklađivanju zaliha za izmjenu količine ili stope vrednovanja. Usklađivanje zaliha sa dimenzijama zaliha namijenjeno je isključivo za obavljanje početnih unosa."
+msgstr "Red #{0}: Ne možete koristiti dimenziju zaliha '{1}' u usaglašavanju zaliha za izmjenu količine ili stope vrednovanja. Usaglašavanje zaliha sa dimenzijama zaliha namijenjeno je isključivo za obavljanje početnih unosa."
 
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.py:1436
 msgid "Row #{0}: You must select an Asset for Item {1}."
@@ -44783,7 +44783,7 @@ msgstr "Red {0}"
 
 #: erpnext/manufacturing/doctype/job_card/job_card.py:668
 msgid "Row {0} : Operation is required against the raw material item {1}"
-msgstr "Red {0} : Operacija je obavezna na osnovu artikla sirovine {1}"
+msgstr "Red {0} : Operacija je obavezna naspram artikla sirovine {1}"
 
 #: erpnext/stock/doctype/pick_list/pick_list.py:190
 msgid "Row {0} picked quantity is less than the required quantity, additional {1} {2} required."
@@ -44791,7 +44791,7 @@ msgstr "Red {0} odabrana količina je manja od potrebne količine, potrebno je d
 
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:1191
 msgid "Row {0}# Item {1} cannot be transferred more than {2} against {3} {4}"
-msgstr "Red {0}# Artikal {1} se ne može prenijeti više od {2} prema {3} {4}"
+msgstr "Red {0}# Artikal {1} se ne može prenijeti više od {2} naspram {3} {4}"
 
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:1215
 msgid "Row {0}# Item {1} not found in 'Raw Materials Supplied' table in {2} {3}"
@@ -44811,11 +44811,11 @@ msgstr "Red {0}: Tip Aktivnosti je obavezan."
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:617
 msgid "Row {0}: Advance against Customer must be credit"
-msgstr "Red {0}: Predujam prema klijentu mora biti kredit"
+msgstr "Red {0}: Predujam naspram Klijenta mora biti kredit"
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:619
 msgid "Row {0}: Advance against Supplier must be debit"
-msgstr "Red {0}: Predujam prema Dobavljaču mora biti debit"
+msgstr "Red {0}: Predujam naspram Dobavljača mora biti debit"
 
 #: erpnext/accounts/doctype/payment_reconciliation/payment_reconciliation.py:691
 msgid "Row {0}: Allocated amount {1} must be less than or equal to invoice outstanding amount {2}"
@@ -44901,7 +44901,7 @@ msgstr "Red {0}: Račun Troškova je promijenjen u {1} jer račun {2} nije povez
 
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.py:504
 msgid "Row {0}: Expense Head changed to {1} because expense is booked against this account in Purchase Receipt {2}"
-msgstr "Red {0}: Račun Troškova je promijenjen u {1} jer je trošak knjižen na ovaj račun u Kupovnom Računu {2}"
+msgstr "Red {0}: Račun Troškova je promijenjen u {1} jer je trošak knjižen naspram ovaog računa u Kupovnom Računu {2}"
 
 #: erpnext/buying/doctype/request_for_quotation/request_for_quotation.py:110
 msgid "Row {0}: For Supplier {1}, Email Address is Required to send an email"
@@ -44934,7 +44934,7 @@ msgstr "Red {0}: Nevažeća referenca {1}"
 
 #: erpnext/controllers/taxes_and_totals.py:144
 msgid "Row {0}: Item Tax template updated as per validity and rate applied"
-msgstr "Red {0}: Šablon PDV-a ya Artikal ažuriran je prema valjanosti i primijenjenoj cijeni"
+msgstr "Red {0}: Šablon PDV-a za Artikal ažuriran je prema valjanosti i primijenjenoj cijeni"
 
 #: erpnext/controllers/buying_controller.py:378
 #: erpnext/controllers/selling_controller.py:541
@@ -44975,7 +44975,7 @@ msgstr "Red {0}: Uslov Plaćanja je obavezan"
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:610
 msgid "Row {0}: Payment against Sales/Purchase Order should always be marked as advance"
-msgstr "Red {0}: Plaćanje na osnovu Prodajnog/Kupovnog Naloga uvijek treba navesti kao predujam"
+msgstr "Red {0}: Plaćanje naspram Prodajnog/Kupovnog Naloga uvijek treba navesti kao predujam"
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:603
 msgid "Row {0}: Please check 'Is Advance' against Account {1} if this is an advance entry."
@@ -45688,7 +45688,7 @@ msgstr "Prodajni Nalog je obavezan za Artikal {0}"
 
 #: erpnext/selling/doctype/sales_order/sales_order.py:277
 msgid "Sales Order {0} already exists against Customer's Purchase Order {1}. To allow multiple Sales Orders, Enable {2} in {3}"
-msgstr "Prodajni Nalog {0} već postoji naspram na Kupovnog Naloga {1}. Da dozvolite višestruke Prodajne Naloge, omogućite {2} u {3}"
+msgstr "Prodajni Nalog {0} već postoji naspram Kupovnog Naloga {1}. Da dozvolite višestruke Prodajne Naloge, omogućite {2} u {3}"
 
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.py:1165
 msgid "Sales Order {0} is not submitted"
@@ -46107,7 +46107,7 @@ msgstr "Reciklirana Vrijednost"
 #. Finance Book'
 #: erpnext/assets/doctype/asset_finance_book/asset_finance_book.json
 msgid "Salvage Value Percentage"
-msgstr "Postotak Reciklirane Vrijednosti"
+msgstr "Procentualna Vrijednosti Recikliže"
 
 #: erpnext/accounts/doctype/mode_of_payment/mode_of_payment.py:41
 msgid "Same Company is entered more than once"
@@ -46417,7 +46417,7 @@ msgstr "Otpad & Gubitak u Procesu"
 
 #: erpnext/assets/doctype/asset/asset.js:92
 msgid "Scrap Asset"
-msgstr "Otpadna Imovina"
+msgstr "Rashodovana Imovina"
 
 #. Label of the scrap_cost_per_qty (Float) field in DocType 'Subcontracting
 #. Receipt Item'
@@ -46461,13 +46461,13 @@ msgstr "Otpadno Skladište"
 
 #: erpnext/assets/doctype/asset/depreciation.py:484
 msgid "Scrap date cannot be before purchase date"
-msgstr "Datum Otpada ne može biti prije Datuma Kupovine"
+msgstr "Datum Rashodovanja ne može biti prije Datuma Kupovine"
 
 #. Option for the 'Status' (Select) field in DocType 'Asset'
 #: erpnext/assets/doctype/asset/asset.json
 #: erpnext/assets/doctype/asset/asset_list.js:16
 msgid "Scrapped"
-msgstr "Otpad"
+msgstr "Rashodovana"
 
 #: erpnext/selling/page/point_of_sale/pos_item_selector.js:147
 #: erpnext/selling/page/point_of_sale/pos_past_order_list.js:51
@@ -46787,7 +46787,7 @@ msgstr "Odaberi Dobavljača"
 
 #: erpnext/stock/doctype/material_request/material_request.js:382
 msgid "Select a Supplier from the Default Suppliers of the items below. On selection, a Purchase Order will be made against items belonging to the selected Supplier only."
-msgstr "Odaberi Dobavljača od standard Dobavljača za Artikle ispod. Prilikom odabira, Kupovni Nalog će biti napravljen samo za artikle koje pripadaju odabranom dobavljaču."
+msgstr "Odaberi Dobavljača od Standard Dobavljača za Artikle ispod. Prilikom odabira, Kupovni Nalog će biti napravljen naspram artikala koje pripadaju odabranom dobavljaču."
 
 #: erpnext/erpnext_integrations/doctype/plaid_settings/plaid_settings.js:161
 msgid "Select a company"
@@ -47329,7 +47329,7 @@ msgstr "Serijski Broj {0} je već dodan"
 
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py:317
 msgid "Serial No {0} is not present in the {1} {2}, hence you can't return it against the {1} {2}"
-msgstr "Serijski broj {0} nije u {1} {2}, stoga se ne može vratiti na osnovu {1} {2}"
+msgstr "Serijski broj {0} nije u {1} {2}, i ne može se vratiti naspram {1} {2}"
 
 #: erpnext/maintenance/doctype/maintenance_schedule/maintenance_schedule.py:338
 msgid "Serial No {0} is under maintenance contract upto {1}"
@@ -47988,7 +47988,7 @@ msgstr "Postavljeno prema Šablonu PDV-a za Artikal"
 
 #: erpnext/setup/doctype/company/company.py:440
 msgid "Set default inventory account for perpetual inventory"
-msgstr "Postavi Standard Račun Inventara za Trajni Inventar"
+msgstr "Postavi Standard Račun Zaliha za Stalno Upravljanje Zalihama"
 
 #: erpnext/setup/doctype/company/company.py:450
 msgid "Set default {0} account for non stock items"
@@ -48099,7 +48099,7 @@ msgstr "Standard Postavke"
 #. Account'
 #: erpnext/accounts/doctype/bank_account/bank_account.json
 msgid "Setting the account as a Company Account is necessary for Bank Reconciliation"
-msgstr "Postavljanje računa kao Računa Kompanije je neophodno za Bankovno izmirenje"
+msgstr "Postavljanje računa kao Računa Kompanije je neophodno za Bankovno Usaglašavanje"
 
 #: erpnext/setup/setup_wizard/setup_wizard.py:29
 msgid "Setting up company"
@@ -48483,7 +48483,7 @@ msgstr "Pravilo Pošiljke važi samo za Prodaju"
 #: erpnext/selling/doctype/sales_order/sales_order.json
 #: erpnext/selling/doctype/sales_order_item/sales_order_item.json
 msgid "Shopping Cart"
-msgstr "Korpa"
+msgstr "Kupovna Korpa"
 
 #. Label of the short_name (Data) field in DocType 'Manufacturer'
 #: erpnext/stock/doctype/manufacturer/manufacturer.json
@@ -49311,7 +49311,7 @@ msgstr "Pokreni Brisanje"
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:115
 msgid "Start Import"
-msgstr "Pokreni import"
+msgstr "Pokreni Uvoz"
 
 #: erpnext/manufacturing/doctype/job_card/job_card.js:133
 #: erpnext/manufacturing/doctype/workstation/workstation.js:124
@@ -49858,7 +49858,7 @@ msgstr "Tip Unosa Zaliha"
 
 #: erpnext/stock/doctype/pick_list/pick_list.py:1264
 msgid "Stock Entry has been already created against this Pick List"
-msgstr "Unos Zaliha je već kreiran na ovoj Listi Odabira"
+msgstr "Unos Zaliha je već kreiran naspram ove Liste Odabira"
 
 #: erpnext/stock/doctype/batch/batch.js:125
 msgid "Stock Entry {0} created"
@@ -50047,16 +50047,16 @@ msgstr "Zaliha Primljena, ali nije Fakturisana"
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.json
 #: erpnext/stock/workspace/stock/stock.json
 msgid "Stock Reconciliation"
-msgstr "Usaglašavanje Zaliha"
+msgstr "Popis Zaliha"
 
 #. Name of a DocType
 #: erpnext/stock/doctype/stock_reconciliation_item/stock_reconciliation_item.json
 msgid "Stock Reconciliation Item"
-msgstr "Artikal Usaglašavanja Zaliha"
+msgstr "Artikal Popisa Zaliha"
 
 #: erpnext/stock/doctype/item/item.py:610
 msgid "Stock Reconciliations"
-msgstr "Usaglašavanja Zaliha"
+msgstr "Popisi Zaliha"
 
 #. Label of a Card Break in the Stock Workspace
 #: erpnext/stock/workspace/stock/stock.json
@@ -50121,11 +50121,11 @@ msgstr "Unos Rezervacije Zaliha"
 
 #: erpnext/stock/doctype/stock_reservation_entry/stock_reservation_entry.py:430
 msgid "Stock Reservation Entry cannot be updated as it has been delivered."
-msgstr "Unos Rezervacije Zaliha ne može se ažurirati pošto je dostavljen."
+msgstr "Unos Rezervacije Zaliha ne može se ažurirati pošto je već dostavljeno."
 
 #: erpnext/stock/doctype/stock_reservation_entry/stock_reservation_entry.py:424
 msgid "Stock Reservation Entry created against a Pick List cannot be updated. If you need to make changes, we recommend canceling the existing entry and creating a new one."
-msgstr "Unos Rezervacije Zaliha kreiran na Listi Odabira ne može se ažurirati. Ako trebate napraviti promjene, preporučujemo da poništite postojeći unos i kreirate novi."
+msgstr "Unos Rezervacije Zaliha kreiran naspram Liste Odabira ne može se ažurirati. Ako trebate napraviti promjene, preporučujemo da poništite postojeći unos i kreirate novi."
 
 #: erpnext/stock/doctype/delivery_note/delivery_note.py:536
 msgid "Stock Reservation Warehouse Mismatch"
@@ -50133,7 +50133,7 @@ msgstr " Neusklađeno Skladišta Rezervacije Zaliha"
 
 #: erpnext/stock/doctype/stock_reservation_entry/stock_reservation_entry.py:574
 msgid "Stock Reservation can only be created against {0}."
-msgstr "Rezervacija Zaliha može se kreirati samo naspram {0}."
+msgstr "Rezervacija Zaliha može se kreirati naspram {0}."
 
 #. Option for the 'Status' (Select) field in DocType 'Work Order'
 #: erpnext/manufacturing/doctype/work_order/work_order.json
@@ -50370,11 +50370,11 @@ msgstr "Zalihe se ne mogu rezervisati u grupnom skladištu {0}."
 
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.py:724
 msgid "Stock cannot be updated against Purchase Receipt {0}"
-msgstr "Zaliha se ne može ažurirati naspram Kupovnog Računa {0}"
+msgstr "Zalihe se ne mogu ažurirati naspram Kupovnog Računa {0}"
 
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.py:1041
 msgid "Stock cannot be updated against the following Delivery Notes: {0}"
-msgstr "Zalihe se ne mogu ažurirati prema sljedećim Dostavnicama: {0}"
+msgstr "Zalihe se ne mogu ažurirati naspram sljedećih Dostavnica: {0}"
 
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.py:1068
 msgid "Stock cannot be updated because the invoice contains a drop shipping item. Please disable 'Update Stock' or remove the drop shipping item."
@@ -50406,7 +50406,7 @@ msgstr "Transakcije Zaliha koje su starije od navedenih dana ne mogu se mijenjat
 #. field in DocType 'Stock Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "Stock will be reserved on submission of <b>Purchase Receipt</b> created against Material Request for Sales Order."
-msgstr "Zalihe će biti rezervisane po podnošenju <b>Kupovnog Računa</b> kreirane prema Materijalnom Nalogu za Prodajni Nalog."
+msgstr "Zalihe će biti rezervisane po podnošenju <b>Kupovnog Računa</b> kreirane naspram Materijalnog Naloga za Prodajni Nalog."
 
 #: erpnext/stock/utils.py:566
 msgid "Stock/Accounts can not be frozen as processing of backdated entries is going on. Please try again later."
@@ -50764,12 +50764,12 @@ msgstr "Akcija Podnošenja Neuspješna"
 #. Import'
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.json
 msgid "Submit After Import"
-msgstr "Podnesi Nakon Importa"
+msgstr "Podnesi Nakon Uvoza"
 
 #. Label of the submit_err_jv (Check) field in DocType 'Company'
 #: erpnext/setup/doctype/company/company.json
 msgid "Submit ERR Journals?"
-msgstr "Podnesi ERR Dnevnike?"
+msgstr "Podnesi ERR Žurnale?"
 
 #. Label of the submit_invoice (Check) field in DocType 'Subscription'
 #: erpnext/accounts/doctype/subscription/subscription.json
@@ -50996,23 +50996,23 @@ msgstr "Uspješno promijenjena Jedinica Zaliha, redefinirajte faktore konverzije
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:455
 msgid "Successfully imported {0}"
-msgstr "Uspješno importirano {0}"
+msgstr "Uspješno uveženo {0}"
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:172
 msgid "Successfully imported {0} record out of {1}. Click on Export Errored Rows, fix the errors and import again."
-msgstr "Uspješno importiran {0} zapis iz {1}. Kliknite na eksportiraj redove s greškom, popravite greške i ponovo importiraj."
+msgstr "Uspješno uvežen {0} zapis iz {1}. Kliknite na Izvezi redove s greškom, popravite greške i ponovo izvezi."
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:156
 msgid "Successfully imported {0} record."
-msgstr "Uspješno importiran {0} zapis."
+msgstr "Uspješno uvežen {0} zapis."
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:168
 msgid "Successfully imported {0} records out of {1}. Click on Export Errored Rows, fix the errors and import again."
-msgstr "Uspješno importirani {0} zapisa iz {1}. Kliknite na eksportiraj redove s greškom, popravite greške i ponovo importiraj."
+msgstr "Uspješno uveženo {0} zapisa iz {1}. Klikni na izvezi redove s greškom, popravite greške i ponovo uvezi."
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:155
 msgid "Successfully imported {0} records."
-msgstr "Uspješno importirano {0} zapisa."
+msgstr "Uspješno uveženo {0} zapisa."
 
 #: erpnext/buying/doctype/supplier/supplier.js:210
 msgid "Successfully linked to Customer"
@@ -51032,7 +51032,7 @@ msgstr "Uspješno ažuriran {0}"
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:183
 msgid "Successfully updated {0} record out of {1}. Click on Export Errored Rows, fix the errors and import again."
-msgstr "Uspješno ažuriran zapis {0} od {1}. Kliknite na eksportiraj redove s greškom, popravite greške i ponovo importiraj."
+msgstr "Uspješno ažuriran zapis {0} od {1}. Klikni na Izvezi Redove s Greškom, popravi greške i ponovo uvezi."
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:161
 msgid "Successfully updated {0} record."
@@ -51040,7 +51040,7 @@ msgstr "Zapis {0} je uspješno ažuriran."
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:179
 msgid "Successfully updated {0} records out of {1}. Click on Export Errored Rows, fix the errors and import again."
-msgstr "Uspješno ažurirano {0} zapisa od {1}. Kliknite na eksportiraj redove s greškom, popravite greške i ponovo importiraj."
+msgstr "Uspješno ažurirano {0} zapisa od {1}. Klikni na Izvezi Redove s Greškom, popravi greške i ponovo uvezi."
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:160
 msgid "Successfully updated {0} records."
@@ -52502,7 +52502,7 @@ msgstr "Kategorija Odbitka PDV-a"
 
 #: erpnext/accounts/doctype/tax_withholding_category/tax_withholding_category.py:138
 msgid "Tax Withholding Category {} against Company {} for Customer {} should have Cumulative Threshold value."
-msgstr "Kategorija Odbitka PDV {} prema kompaniji {} za klijenta {} treba imati Kumulativnu Vrijednost Praga."
+msgstr "Kategorija Odbitka Pdv {} naspram kompanije {} za klijenta {} treba imati Kumulativnu Vrijednost Praga."
 
 #. Name of a report
 #: erpnext/accounts/report/tax_withholding_details/tax_withholding_details.json
@@ -52526,7 +52526,7 @@ msgstr "Neto Ukupno PDV Odbitka"
 #. Rate'
 #: erpnext/accounts/doctype/tax_withholding_rate/tax_withholding_rate.json
 msgid "Tax Withholding Rate"
-msgstr "Stopa PDV Odbitka"
+msgstr "PDV Stopa Odbitka"
 
 #. Label of the section_break_8 (Section Break) field in DocType 'Tax
 #. Withholding Category'
@@ -53142,7 +53142,7 @@ msgstr "Serijski Broj u redu #{0}: {1} nije dostupan u skladištu {2}."
 
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py:1845
 msgid "The Serial No {0} is reserved against the {1} {2} and cannot be used for any other transaction."
-msgstr "Serijski Broj {0} je rezervisan za {1} {2} i ne može se koristiti za bilo koju drugu transakciju."
+msgstr "Serijski Broj {0} je rezervisan naspram {1} {2} i ne može se koristiti za bilo koju drugu transakciju."
 
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:1396
 msgid "The Serial and Batch Bundle {0} is not valid for this transaction. The 'Type of Transaction' should be 'Outward' instead of 'Inward' in Serial and Batch Bundle {0}"
@@ -53150,7 +53150,7 @@ msgstr "Serijski i Šaržni Paket {0} ne važi za ovu transakciju. 'Tip transakc
 
 #: erpnext/manufacturing/doctype/manufacturing_settings/manufacturing_settings.js:17
 msgid "The Stock Entry of type 'Manufacture' is known as backflush. Raw materials being consumed to manufacture finished goods is known as backflushing. <br><br> When creating Manufacture Entry, raw-material items are backflushed based on BOM of production item. If you want raw-material items to be backflushed based on Material Transfer entry made against that Work Order instead, then you can set it under this field."
-msgstr "Unos Zaliha tipa 'Proizvodnja' poznat je kao povrat. Sirovine koje se troše za proizvodnju gotovih proizvoda poznato je kao povrat. <br><br> Prilikom kreiranja unosa proizvodnje, artikli sirovina se vraćaju nazad na osnovu Sastavnice proizvodne jedinice. Ako želite da se artikli sirovog materijala vraćaju natrag na osnovu unosa prijenosa materijala napravljenog prema tom radnom nalogu umjesto toga, možete ga postaviti ispod ovog polja."
+msgstr "Unos Zaliha tipa 'Proizvodnja' poznat je kao povrat. Sirovine koje se troše za proizvodnju gotovih proizvoda poznato je kao povrat. <br><br> Prilikom kreiranja unosa proizvodnje, artikli sirovina se vraćaju nazad na osnovu Sastavnice proizvodne jedinice. Ako želite da se artikli sirovog materijala vraćaju natrag na osnovu unosa prijenosa materijala napravljenog naspram tog radnog naloga umjesto toga, možete ga postaviti ispod ovog polja."
 
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:1766
 msgid "The Work Order is mandatory for Disassembly Order"
@@ -53298,25 +53298,25 @@ msgstr "Račun pristupa plaćanja u planu {0} razlikuje se od računa pristupa p
 #. 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "The percentage you are allowed to bill more against the amount ordered. For example, if the order value is $100 for an item and tolerance is set as 10%, then you are allowed to bill up to $110 "
-msgstr "Procenat koji vam je dozvoljeno da naplatite više u odnosu na naručeni iznos. Na primjer, ako je vrijednost narudžbe 100 USD za artikal i tolerancija je postavljena na 10%, tada vam je dozvoljeno da naplatite do 110 USD "
+msgstr "Procenat kojim vam je dozvoljeno da naplatite više naspram naručenog iznosa. Na primjer, ako je vrijednost narudžbe 100 Usd za artikal i tolerancija je postavljena na 10%, tada vam je dozvoljeno da naplatite do 110 Usd "
 
 #. Description of the 'Over Picking Allowance' (Percent) field in DocType
 #. 'Stock Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "The percentage you are allowed to pick more items in the pick list than the ordered quantity."
-msgstr "Procenat kojem je dozvoljeno da odaberete više artikala na listi za odabir od naručene količine."
+msgstr "Procenat kojim je dozvoljeno da odaberete više artikala na listi odabira od naručene količine."
 
 #. Description of the 'Over Delivery/Receipt Allowance (%)' (Float) field in
 #. DocType 'Stock Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "The percentage you are allowed to receive or deliver more against the quantity ordered. For example, if you have ordered 100 units, and your Allowance is 10%, then you are allowed to receive 110 units."
-msgstr "Procenat koji vam je dozvoljeno da primite ili dostavite više u odnosu na naručenu količinu. Na primjer, ako ste naručili 100 jedinica, a vaš dodatak iznosi 10%, tada vam je dozvoljeno da primite 110 jedinica."
+msgstr "Procenat kojim vam je dozvoljeno da primite ili dostavite više naspram naručene količine. Na primjer, ako ste naručili 100 jedinica, a vaš dodatak iznosi 10%, tada vam je dozvoljeno da primite 110 jedinica."
 
 #. Description of the 'Over Transfer Allowance' (Float) field in DocType 'Stock
 #. Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "The percentage you are allowed to transfer more against the quantity ordered. For example, if you have ordered 100 units, and your Allowance is 10%, then you are allowed transfer 110 units."
-msgstr "Procenat koji vam je dozvoljeno prenijeti više u odnosu na naručenu količinu. Na primjer, ako ste naručili 100 jedinica, a vaš dodatak iznosi 10%, onda vam je dozvoljen prijenos 110 jedinica."
+msgstr "Procenat kojim vam je dozvoljeno prenijeti više naspram naručene količine. Na primjer, ako ste naručili 100 jedinica, a vaš dodatak iznosi 10%, onda vam je dozvoljen prijenos 110 jedinica."
 
 #: erpnext/public/js/utils.js:868
 msgid "The reserved stock will be released when you update items. Are you certain you wish to proceed?"
@@ -53377,7 +53377,7 @@ msgstr "Zaliha za artikal {0} u {1} skladištu je bila negativna na {2}. Trebali
 
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.py:657
 msgid "The stock has been reserved for the following Items and Warehouses, un-reserve the same to {0} the Stock Reconciliation: <br /><br /> {1}"
-msgstr "Zalihe su rezervirane za sljedeće artikle i skladišta, poništite ih za {0} Usklađivanje Zaliha: <br /><br /> {1}"
+msgstr "Zalihe su rezervirane za sljedeće artikle i skladišta, poništite ih za {0} Usglašavanje Zaliha: <br /><br /> {1}"
 
 #: erpnext/erpnext_integrations/doctype/plaid_settings/plaid_settings.js:37
 msgid "The sync has started in the background, please check the {0} list for new records."
@@ -53390,7 +53390,7 @@ msgstr "Zadatak je stavljen u red kao pozadinski posao."
 
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.py:941
 msgid "The task has been enqueued as a background job. In case there is any issue on processing in background, the system will add a comment about the error on this Stock Reconciliation and revert to the Draft stage"
-msgstr "Zadatak je stavljen u red kao pozadinski posao. U slučaju da postoji bilo kakav problem u obradi u pozadini, sistem će dodati komentar o grešci na ovom usklađivanju zaliha i vratiti se u fazu nacrta"
+msgstr "Zadatak je stavljen u red kao pozadinski posao. U slučaju da postoji bilo kakav problem u obradi u pozadini, sistem će dodati komentar o grešci na ovom usaglašavanja zaliha i vratiti se u stanje nacrta"
 
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.py:952
 msgid "The task has been enqueued as a background job. In case there is any issue on processing in background, the system will add a comment about the error on this Stock Reconciliation and revert to the Submitted stage"
@@ -53452,7 +53452,7 @@ msgstr "{0} {1} se koristi za izračunavanje troška vrednovanja za gotov proizv
 
 #: erpnext/assets/doctype/asset/asset.py:527
 msgid "There are active maintenance or repairs against the asset. You must complete all of them before cancelling the asset."
-msgstr "Postoji aktivno održavanje ili popravke imovine. Morate ih ispuniti sve prije nego što otkažete imovinu."
+msgstr "Postoji aktivno održavanje ili popravke imovine naspram imovine. Morate ih ispuniti sve prije nego što otkažete imovinu."
 
 #: erpnext/accounts/doctype/share_transfer/share_transfer.py:201
 msgid "There are inconsistencies between the rate, no of shares and the amount calculated"
@@ -53591,7 +53591,7 @@ msgstr "Ovo pokriva sve bodovne kartice vezane za ovu postavku"
 
 #: erpnext/controllers/status_updater.py:384
 msgid "This document is over limit by {0} {1} for item {4}. Are you making another {3} against the same {2}?"
-msgstr "Ovaj dokument je preko ograniöenja za {0} {1} za artikal {4}. Da li pravite još jedan {3} naspram istog {2}?"
+msgstr "Ovaj dokument je preko ograničenja za {0} {1} za artikal {4}. Da li pravite još jedan {3} naspram istog {2}?"
 
 #: erpnext/stock/doctype/delivery_note/delivery_note.js:434
 msgid "This field is used to set the 'Customer'."
@@ -53666,7 +53666,7 @@ msgstr "Ovo se zasniva na kretanju zaliha. Pogledaj {0} za detalje"
 
 #: erpnext/projects/doctype/project/project_dashboard.py:7
 msgid "This is based on the Time Sheets created against this project"
-msgstr "Ovo se zasniva na Radnim Listovima kreiranim za ovaj projekat"
+msgstr "Ovo se zasniva na Radnim Listovima kreiranim naspram ovog projekata"
 
 #: erpnext/setup/doctype/sales_person/sales_person_dashboard.py:7
 msgid "This is based on transactions against this Sales Person. See timeline below for details"
@@ -53722,7 +53722,7 @@ msgstr "Ovaj raspored je kreiran kada je imovina {0} vraćena putem Prodajne Fak
 
 #: erpnext/assets/doctype/asset/depreciation.py:448
 msgid "This schedule was created when Asset {0} was scrapped."
-msgstr "Ovaj raspored je kreiran kada je imovina {0} odbačena."
+msgstr "Ovaj raspored je kreiran kada je imovina {0} rashodovana."
 
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.py:1372
 msgid "This schedule was created when Asset {0} was sold through Sales Invoice {1}."
@@ -53796,7 +53796,7 @@ msgstr "Prag za Prijedlog"
 #. Label of the threshold_percentage (Percent) field in DocType 'Pricing Rule'
 #: erpnext/accounts/doctype/pricing_rule/pricing_rule.json
 msgid "Threshold for Suggestion (In Percentage)"
-msgstr "Prag za Prijedlog (u procentima)"
+msgstr "Prag za Prijedlog (u Procentima)"
 
 #. Label of the thumbnail (Data) field in DocType 'BOM'
 #. Label of the thumbnail (Data) field in DocType 'BOM Website Operation'
@@ -54487,7 +54487,7 @@ msgstr "Uključivanje artikala bez zaliha u planiranje Materijalnog Naloga. tj. 
 #. (Check) field in DocType 'Manufacturing Settings'
 #: erpnext/manufacturing/doctype/manufacturing_settings/manufacturing_settings.json
 msgid "To include sub-assembly costs and scrap items in Finished Goods on a work order without using a job card, when the 'Use Multi-Level BOM' option is enabled."
-msgstr "Za uključivanje troškova podmontaže i otpadnih artikala u gotov proizvod na radnom nalogu bez upotrebe radne kartice, kada je omogućena opcija 'Koristi Višeslojnu Sastavnicu'."
+msgstr "Za uključivanje troškova podmontaže i otpadnih artikala u Gotov Proizvod na radnom nalogu bez upotrebe radne kartice, kada je omogućena opcija 'Koristi Višeslojnu Sastavnicu'."
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:2269
 #: erpnext/controllers/accounts_controller.py:2899
@@ -54561,7 +54561,7 @@ msgstr "Tonne-Force(Metric)"
 
 #: erpnext/accounts/report/financial_statements.html:6
 msgid "Too many columns. Export the report and print it using a spreadsheet application."
-msgstr "Previše kolona. Eksportiraj izvještaj i ispiši ga pomoću aplikacije za proračunske tablice."
+msgstr "Previše kolona. Izvezi izvještaj i ispiši ga pomoću aplikacije za proračunske tablice."
 
 #. Label of a Card Break in the Manufacturing Workspace
 #. Label of the tools (Column Break) field in DocType 'Email Digest'
@@ -54948,7 +54948,7 @@ msgstr "Ukupna Prognoza (Prethodni Podaci)"
 #. Revaluation'
 #: erpnext/accounts/doctype/exchange_rate_revaluation/exchange_rate_revaluation.json
 msgid "Total Gain/Loss"
-msgstr "Totalni Dobitak/Gubitak"
+msgstr "Totalni Rezultat"
 
 #. Label of the total_hold_time (Duration) field in DocType 'Issue'
 #: erpnext/support/doctype/issue/issue.json
@@ -55402,7 +55402,7 @@ msgstr "Ukupni predujam ({0}) naspram Naloga {1} ne može biti veći od Ukupnog 
 
 #: erpnext/controllers/selling_controller.py:190
 msgid "Total allocated percentage for sales team should be 100"
-msgstr "Ukupan dodijeljeni postotak za prodajni tim trebao bi biti 100"
+msgstr "Ukupna procentualna dodjela za prodajni tim treba biti 100"
 
 #: erpnext/selling/doctype/customer/customer.py:158
 msgid "Total contribution percentage should be equal to 100"
@@ -55419,7 +55419,7 @@ msgstr "Ukupni iznos plaćanja ne može biti veći od {}"
 
 #: erpnext/accounts/doctype/cost_center_allocation/cost_center_allocation.py:66
 msgid "Total percentage against cost centers should be 100"
-msgstr "Ukupan zbir postotaka prema centrima troškova treba da bude 100"
+msgstr "Ukupna procentulna suma naspram Centara Troškova treba da bude 100"
 
 #: erpnext/accounts/report/consolidated_financial_statement/consolidated_financial_statement.py:745
 #: erpnext/accounts/report/consolidated_financial_statement/consolidated_financial_statement.py:746
@@ -55623,7 +55623,7 @@ msgstr "Valuta Transakcije: {0} mora biti ista kao valuta Bankovnog Računa ({1}
 
 #: erpnext/manufacturing/doctype/job_card/job_card.py:725
 msgid "Transaction not allowed against stopped Work Order {0}"
-msgstr "Transakcija nije dozvoljena prema zaustavljenom Radnom Nalogu {0}"
+msgstr "Transakcija nije dozvoljena naspram zaustavljenog Radnog Naloga {0}"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:1299
 msgid "Transaction reference no {0} dated {1}"
@@ -55678,7 +55678,7 @@ msgstr "Prijenos iz Skladišta"
 #: erpnext/manufacturing/doctype/bom/bom.json
 #: erpnext/manufacturing/doctype/work_order/work_order.json
 msgid "Transfer Material Against"
-msgstr "Prenesi Materijal naspram"
+msgstr "Prenesi Materijal Naspram"
 
 #: erpnext/manufacturing/doctype/workstation/workstation_job_card.html:92
 msgid "Transfer Materials"
@@ -56346,7 +56346,7 @@ msgstr "Nekvalificiran"
 #. 'Company'
 #: erpnext/setup/doctype/company/company.json
 msgid "Unrealized Exchange Gain/Loss Account"
-msgstr "Nerealizovani Račun Dobitka/Gubitka"
+msgstr "Nerealizovani Račun Rezultata"
 
 #. Label of the unrealized_profit_loss_account (Link) field in DocType
 #. 'Purchase Invoice'
@@ -56866,7 +56866,7 @@ msgstr "Koristite naziv koji se razlikuje od naziva prethodnog projekta"
 #. Label of the use_for_shopping_cart (Check) field in DocType 'Tax Rule'
 #: erpnext/accounts/doctype/tax_rule/tax_rule.json
 msgid "Use for Shopping Cart"
-msgstr "Koristi za Korpa"
+msgstr "Koristi za Kupovnu Korpu"
 
 #. Label of the used (Int) field in DocType 'Coupon Code'
 #: erpnext/accounts/doctype/coupon_code/coupon_code.json
@@ -56983,7 +56983,7 @@ msgstr "Korisnici"
 #. 'BOM'
 #: erpnext/manufacturing/doctype/bom/bom.json
 msgid "Users can consume raw materials and add semi-finished goods or final finished goods against the operation using job cards."
-msgstr "Korisnici mogu da troše sirovinu i dodaju poluproizvode ili finalne gotove proizvode uz rad pomoću radnih kartica."
+msgstr "Korisnici mogu da troše sirovinu i dodaju poluproizvode ili finalne gotove proizvode naspram operacije pomoću radnih kartica."
 
 #. Description of the 'Set Landed Cost Based on Purchase Invoice Rate' (Check)
 #. field in DocType 'Buying Settings'
@@ -56995,19 +56995,19 @@ msgstr "Korisnici mogu omogućiti potvrdni okvir Ako žele prilagoditi ulaznu ci
 #. 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Users with this role are allowed to over bill above the allowance percentage"
-msgstr "Korisnicima sa ovom ulogom je dozvoljeno da fakturišu iznad procenta odobrenja"
+msgstr "Korisnicima sa ovom ulogom je dozvoljeno da fakturišu iznad procentualnog odobrenja"
 
 #. Description of the 'Role Allowed to Over Deliver/Receive' (Link) field in
 #. DocType 'Stock Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "Users with this role are allowed to over deliver/receive against orders above the allowance percentage"
-msgstr "Korisnicima sa ovom ulogom je dozvoljena prekomjerna Dostava/Primanje Naloga iznad procenta odobrenja"
+msgstr "Korisnicima sa ovom ulogom je dozvoljena prekomjerna Dostava/Primanje naspram narudžbi iznad procentualnog odobrenja"
 
 #. Description of the 'Role Allowed to Set Frozen Accounts and Edit Frozen
 #. Entries' (Link) field in DocType 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Users with this role are allowed to set frozen accounts and create / modify accounting entries against frozen accounts"
-msgstr "Korisnicima sa ovom ulogom je dozvoljeno da postavljaju zamrznute račune i kreiraju / modificiraju knjigovodstvene unose prema zamrznutim računima"
+msgstr "Korisnicima sa ovom ulogom je dozvoljeno da postavljaju zamrznute račune i kreiraju / modificiraju knjigovodstvene unose naspram zamrznutih računa"
 
 #: erpnext/stock/doctype/stock_settings/stock_settings.js:38
 msgid "Using negative stock disables FIFO/Moving average valuation when inventory is negative."
@@ -57070,7 +57070,7 @@ msgstr "Važi Od datuma nije u Fiskalnoj Godini {0}"
 
 #: erpnext/accounts/doctype/cost_center_allocation/cost_center_allocation.py:82
 msgid "Valid From must be after {0} as last GL Entry against the cost center {1} posted on this date"
-msgstr "Važi Od mora biti nakon {0} kao posljednji Knigovodstveni unos prema Centru Troškova {1} objavljen na ovaj datum"
+msgstr "Važi Od mora biti nakon {0} kao posljednji Knigovodstveni unos naspram Centru Troškova {1} knjiženog na ovaj datum"
 
 #. Label of the valid_till (Date) field in DocType 'Supplier Quotation'
 #. Label of the valid_till (Date) field in DocType 'Quotation'
@@ -57152,7 +57152,7 @@ msgstr "Potvrdi Pravilo Cijena"
 #. Settings'
 #: erpnext/selling/doctype/selling_settings/selling_settings.json
 msgid "Validate Selling Price for Item Against Purchase Rate or Valuation Rate"
-msgstr "Potvrdi Prodajnu Cijenu Artikla u odnosu na Kupovnu Cijenu ili Stopu Vrednovanja"
+msgstr "Potvrdi Prodajnu Cijenu Artikla naspram Kupovne Cijene ili Stope Vrednovanja"
 
 #. Label of the validate_stock_on_save (Check) field in DocType 'POS Profile'
 #: erpnext/accounts/doctype/pos_profile/pos_profile.json
@@ -57636,7 +57636,7 @@ msgstr "Pregled Kontnog Plana"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.js:247
 msgid "View Exchange Gain/Loss Journals"
-msgstr "Pregledaj Dnevnike Dobitaka/Gubitaka"
+msgstr "Prikaži Žurnale Rezultata Deviznog Kursa"
 
 #: erpnext/assets/doctype/asset/asset.js:164
 #: erpnext/assets/doctype/asset_repair/asset_repair.js:76
@@ -58239,7 +58239,7 @@ msgstr "Skladište {0} nije dozvoljeno za Prodajni Nalog {1}, trebalo bi da bude
 
 #: erpnext/controllers/stock_controller.py:632
 msgid "Warehouse {0} is not linked to any account, please mention the account in the warehouse record or set default inventory account in company {1}."
-msgstr "Skladište {0} nije povezano ni sa jednim računom, molimo navedite račun u evidenciji skladišta ili postavite standard račun zaliha u kompaniji {1}."
+msgstr "Skladište {0} nije povezano ni sa jednim računom, molimo navedite račun u zapisu skladišta ili postavi standard račun zaliha u kompaniji {1}."
 
 #: erpnext/stock/doctype/warehouse/warehouse.py:140
 msgid "Warehouse's Stock Value has already been booked in the following accounts:"
@@ -58358,7 +58358,7 @@ msgstr "Upozorenje: Količina Materijalnog Zahtjeva je manja od Minimalne Količ
 
 #: erpnext/selling/doctype/sales_order/sales_order.py:270
 msgid "Warning: Sales Order {0} already exists against Customer's Purchase Order {1}"
-msgstr "Upozorenje: Prodajni Nalog {0} već postoji u odnosu na Kupovni Nalog {1}"
+msgstr "Upozorenje: Prodajni Nalog {0} već postoji naspram Kupovnog Naloga {1}"
 
 #. Label of a Card Break in the Support Workspace
 #: erpnext/support/workspace/support/support.json
@@ -58702,7 +58702,7 @@ msgstr "Točkovi"
 #. 'Production Plan'
 #: erpnext/manufacturing/doctype/production_plan/production_plan.json
 msgid "When a parent warehouse is chosen, the system conducts stock checks against the associated child warehouses"
-msgstr "Kada se izabere Nadređeno skladište, sistem provodi provjere zaliha u odnosu na pridružena podređena skladišta"
+msgstr "Kada se izabere Nadređeno skladište, sistem provodi provjere zaliha naspram pridruženih podređenih skladišta"
 
 #: erpnext/stock/doctype/item/item.js:973
 msgid "When creating an Item, entering a value for this field will automatically create an Item Price at the backend."
@@ -58891,7 +58891,7 @@ msgstr "Radni Nalog se ne može kreirati iz sljedećeg razloga: <br> {0}"
 
 #: erpnext/manufacturing/doctype/work_order/work_order.py:1064
 msgid "Work Order cannot be raised against a Item Template"
-msgstr "Radni Nalog se nemože pokrenuti Šablona Artikla"
+msgstr "Radni Nalog se nemože pokrenuti naspram Šablona Artikla"
 
 #: erpnext/manufacturing/doctype/work_order/work_order.py:1846
 #: erpnext/manufacturing/doctype/work_order/work_order.py:1924
@@ -59304,7 +59304,7 @@ msgstr "Da"
 
 #: erpnext/edi/doctype/code_list/code_list_import.js:29
 msgid "You are importing data for the code list:"
-msgstr "Importuješ podatke za Listu Koda:"
+msgstr "Uvoziš podatke za Listu Koda:"
 
 #: erpnext/controllers/accounts_controller.py:3504
 msgid "You are not allowed to update as per the conditions set in {} Workflow."
@@ -59381,7 +59381,7 @@ msgstr "Ne možete iskoristiti bodove lojalnosti koji imaju veću vrijednost od 
 
 #: erpnext/manufacturing/doctype/bom/bom.js:647
 msgid "You cannot change the rate if BOM is mentioned against any Item."
-msgstr "Ne možete promijeniti cijenu ako je Sastavnica navedena uz bilo koji artikal."
+msgstr "Ne možete promijeniti cijenu ako je Sastavnica navedena naspram bilo kojeg artikla."
 
 #: erpnext/accounts/doctype/accounting_period/accounting_period.py:128
 msgid "You cannot create a {0} within the closed Accounting Period {1}"
@@ -59551,7 +59551,7 @@ msgstr "Zip Datoteka"
 
 #: erpnext/stock/reorder_item.py:374
 msgid "[Important] [ERPNext] Auto Reorder Errors"
-msgstr "[Važno] [ERPNext] Greške automatskog preuređenja"
+msgstr "[Važno] [ERPNext] Greške Automatskog Preuređenja"
 
 #: erpnext/controllers/status_updater.py:274
 msgid "`Allow Negative rates for Items`"
@@ -59579,7 +59579,7 @@ msgstr "kao Naslov"
 
 #: erpnext/manufacturing/doctype/bom/bom.js:890
 msgid "as a percentage of finished item quantity"
-msgstr "kao procenat količine gotovog proizvoda"
+msgstr "kao procentualna količine gotovog proizvoda"
 
 #: erpnext/www/book_appointment/index.html:43
 msgid "at"
@@ -59963,7 +59963,7 @@ msgstr "{0} naspram Fakture {1} od {2}"
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:1015
 msgid "{0} against Purchase Order {1}"
-msgstr "{0} protiv Kupovnog Naloga {1}"
+msgstr "{0} naspram Kupovnog Naloga {1}"
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:982
 msgid "{0} against Sales Invoice {1}"
@@ -60180,7 +60180,7 @@ msgstr "{0} količina artikla {1} se prima u Skladište {2} kapaciteta {3}."
 
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.py:647
 msgid "{0} units are reserved for Item {1} in Warehouse {2}, please un-reserve the same to {3} the Stock Reconciliation."
-msgstr "{0} jedinica je rezervisano za artikal {1} u Skladištu {2}, poništite rezervaciju iste za {3} usaglašavanje zaliha."
+msgstr "{0} jedinica je rezervisano za artikal {1} u Skladištu {2}, poništi rezervaciju iste za {3} Popis Zaliha."
 
 #: erpnext/stock/doctype/pick_list/pick_list.py:912
 msgid "{0} units of Item {1} is not available in any of the warehouses."
@@ -60188,11 +60188,11 @@ msgstr "{0} jedinica artikla {1} nije dostupan ni u jednom od skladišta."
 
 #: erpnext/stock/doctype/pick_list/pick_list.py:904
 msgid "{0} units of Item {1} is picked in another Pick List."
-msgstr "{0} jedinica artikal {1} je odabrano na drugoj Listi Odabira."
+msgstr "{0} jedinica artikla {1} je odabrano na drugoj Listi Odabira."
 
 #: erpnext/stock/doctype/stock_ledger_entry/stock_ledger_entry.py:142
 msgid "{0} units of {1} are required in {2} with the inventory dimension: {3} ({4}) on {5} {6} for {7} to complete the transaction."
-msgstr "{0} jedinice {1} su obavezne u {2} sa dimenzijom inventara: {3} ({4}) na {5} {6} za {7} za dovršetak transakcije."
+msgstr "{0} jedinice {1} su obavezne u {2} sa dimenzijom zaliha: {3} ({4}) na {5} {6} za {7} za dovršetak transakcije."
 
 #: erpnext/stock/stock_ledger.py:1503 erpnext/stock/stock_ledger.py:1994
 #: erpnext/stock/stock_ledger.py:2008
@@ -60395,7 +60395,7 @@ msgstr "{0} {1}: Centar Troškova {2} je grupni centar troškova a grupni centri
 
 #: erpnext/accounts/doctype/gl_entry/gl_entry.py:136
 msgid "{0} {1}: Customer is required against Receivable account {2}"
-msgstr "{0} {1}: Klijent je obavezan ya Račun Potraživanja {2}"
+msgstr "{0} {1}: Klijent je obavezan naspram Računa Potraživanja {2}"
 
 #: erpnext/accounts/doctype/gl_entry/gl_entry.py:158
 msgid "{0} {1}: Either debit or credit amount is required for {2}"
@@ -60403,7 +60403,7 @@ msgstr "{0} {1}: Za {2}je potreban ili Debitni ili Kreditni iznos"
 
 #: erpnext/accounts/doctype/gl_entry/gl_entry.py:142
 msgid "{0} {1}: Supplier is required against Payable account {2}"
-msgstr "{0} {1}: Dobavljač je obavezan za Račun Troška {2}"
+msgstr "{0} {1}: Dobavljač je obavezan naspram Računa Troška {2}"
 
 #: erpnext/projects/doctype/project/project_list.js:6
 msgid "{0}%"
