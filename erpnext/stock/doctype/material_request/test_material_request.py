@@ -1669,15 +1669,24 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_to_partial_pi_TC_B_020(self):
 		# MR => 2RFQ => 1SQ => 2PO => 2PR => 2PI
-		frappe.set_user("Administrator")
-		item = make_test_item("Testing-31")
+		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
+		get_company_supplier = create_data()
+		company = get_company_supplier.get("child_company")
+		customer = get_company_supplier.get("customer")
+		supplier = get_company_supplier.get("supplier")
+		target_warehouse = "Stores - TC-3"
+		item = make_test_item("_test_item")
+
 		args = frappe._dict()
 		args['mr'] = [{
-				"company" : "_Test Company",
+				"company" : company,
 				"item_code" : item.item_code,
-				"warehouse" : "Stores - _TC",
+				"warehouse" : target_warehouse,
 				"qty" : 20,
 				"rate" : 100,
+				"customer": customer,
+				"uom": "Nos",
+				"cost_center": "Main - TC-3"
 			},
 		]
 
@@ -1688,16 +1697,17 @@ class TestMaterialRequest(FrappeTestCase):
 
 		doc_mr = make_material_request(**args['mr'][0])
 		for sq_received_qty in args['rfq']:
-			doc_rfq = make_test_rfq(doc_mr.name, received_qty=sq_received_qty)
+			doc_rfq = make_test_rfq(doc_mr.name, received_qty=sq_received_qty, supplier = supplier)
 			rfq_name_list.append(doc_rfq.name)
 
 		item_dict_sq = {
 			"item_code" : item.item_code,
 			"qty" : 20,
 			"rate" : 200,
-			"request_for_quotation" : rfq_name_list[1]
+			"request_for_quotation" : rfq_name_list[1],
+			"warehouse": target_warehouse
 		}
-		doc_sq= make_test_sq(rfq_name_list[0], 100, item_dict = item_dict_sq)
+		doc_sq= make_test_sq(rfq_name_list[0], 100, item_dict = item_dict_sq, supplier=supplier)
 
 		for received_qty in po_received_qty:
 			doc_po = make_test_po(doc_sq.name, type='Supplier Quotation', received_qty=received_qty)
@@ -7520,12 +7530,12 @@ test_records = frappe.get_test_records("Material Request")
 
 
 
-def make_test_rfq(source_name, received_qty=0):
+def make_test_rfq(source_name, received_qty=0, supplier = None):
 	doc_rfq = make_request_for_quotation(source_name)
 
 	supplier_data=[
 				{
-					"supplier": "_Test Supplier",
+					"supplier": supplier or "_Test Supplier",
 					"email_id": "123_testrfquser@example.com",
 				}
 			]
@@ -7540,9 +7550,9 @@ def make_test_rfq(source_name, received_qty=0):
 	return doc_rfq
 
 
-def make_test_sq(source_name, rate = 0, received_qty=0, item_dict = None, type = "RFQ", args = None):
+def make_test_sq(source_name, rate = 0, received_qty=0, item_dict = None, type = "RFQ", supplier = None, args = None):
 	if type == "RFQ" : 
-		doc_sq = make_supplier_quotation_from_rfq(source_name, for_supplier = "_Test Supplier")
+		doc_sq = make_supplier_quotation_from_rfq(source_name, for_supplier = supplier or "_Test Supplier")
 	
 	elif type == "Material Request" :
 		from erpnext.stock.doctype.material_request.material_request import  make_supplier_quotation
@@ -7618,7 +7628,7 @@ def make_test_pi(source_name, received_qty = None, item_dict = None, args = None
 	if args is not None:
 		args = frappe._dict(args)
 		doc_pi.update(args)
-
+	doc_pi.bill_no = "test_bill_1122"
 	doc_pi.insert()
 	doc_pi.submit()
 	return doc_pi
