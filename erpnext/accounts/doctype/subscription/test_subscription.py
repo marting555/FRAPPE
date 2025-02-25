@@ -628,20 +628,20 @@ def create_parties():
 		supplier = frappe.new_doc("Supplier")
 		supplier.supplier_name = "_Test Supplier"
 		supplier.supplier_group = "All Supplier Groups"
-		supplier.insert()
+		supplier.insert(ignore_permissions=True)
 
 	if not frappe.db.exists("Customer", "_Test Subscription Customer"):
 		customer = frappe.new_doc("Customer")
 		customer.customer_name = "_Test Subscription Customer"
 		customer.default_currency = "USD"
 		customer.append("accounts", {"company": "_Test Company", "account": "_Test Receivable USD - _TC"})
-		customer.insert()
+		customer.insert(ignore_permissions=True)
 
 	if not frappe.db.exists("Customer", "_Test Subscription Customer John Doe"):
 		customer = frappe.new_doc("Customer")
 		customer.customer_name = "_Test Subscription Customer John Doe"
 		customer.append("accounts", {"company": "_Test Company", "account": "_Test Receivable - _TC"})
-		customer.insert()
+		customer.insert(ignore_permissions=True)
 
 
 def reset_settings():

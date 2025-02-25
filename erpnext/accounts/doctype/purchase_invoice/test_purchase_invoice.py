@@ -3,7 +3,7 @@
 
 
 import frappe
-from frappe.tests.utils import FrappeTestCase, change_settings
+from frappe.tests.utils import FrappeTestCase, change_settings, if_app_installed
 from frappe.utils import add_days, cint, flt, getdate, nowdate, today, get_year_start, get_year_ending
 from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 import erpnext
@@ -17,7 +17,6 @@ from erpnext.controllers.buying_controller import QtyMismatchError
 from erpnext.exceptions import InvalidCurrency
 from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.stock.doctype.material_request.material_request import make_purchase_order
-from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 	make_purchase_invoice as create_purchase_invoice_from_receipt,
 )
@@ -30,7 +29,6 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 	get_serial_nos_from_bundle,
 	make_serial_batch_bundle,
 )
-from erpnext.stock.doctype.stock_entry.test_stock_entry import get_qty_after_transaction
 from erpnext.stock.tests.test_utils import StockTestMixin
 import frappe.utils
 
@@ -75,6 +73,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi.delete()
 
 	def test_update_received_qty_in_material_request(self):
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_invoice
 
 		"""
@@ -852,6 +851,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		self.assertTrue(frappe.db.get_value("Batch", {"item": item_code, "reference_name": pi.name}))
 
 	def test_update_stock_and_purchase_return(self):
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import get_qty_after_transaction
 		actual_qty_0 = get_qty_after_transaction()
 
 		pi = make_purchase_invoice(
@@ -2693,7 +2693,10 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		records_for_pi('_Test Supplier USD')
 		supplier = frappe.get_doc('Supplier', '_Test Supplier USD')
-
+		tds_account = frappe.get_doc("Account", "Test TDS Payable - _TC")
+		if tds_account.account_currency != "INR":
+			tds_account.account_currency = "INR"
+			tds_account.save()
 		if supplier:
 			pe = create_payment_entry(
 				party_type="Supplier",
@@ -2940,7 +2943,82 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				voucher_type="Payment Entry",
 				posting_date=_pe.posting_date
 			)
-	
+
+	def test_tds_computation_summary_report_TC_ACC_094(self):
+		"""Test the TDS Computation Summary report for Purchase Invoice data."""
+		from frappe.desk.query_report import get_report_result
+
+		company = "_Test Company"
+		tds_account_args = {
+			"doctype": "Account",
+			"account_name": "TDS Payable",
+			"account_type": "Tax",
+			"parent_account": frappe.db.get_value(
+				"Account", {"account_name": "Duties and Taxes", "company": company}
+			),
+			"company": company,
+		}
+		tds_account = create_account(**tds_account_args)
+		tax_withholding_category = "Test TDS - 194 - Dividends - Individual"
+		create_tax_witholding_category(tax_withholding_category, company, tds_account)
+
+		# create a new supplier to test
+		supplier = create_supplier(
+			supplier_name="_Test TDS Advance Supplier",
+			tax_withholding_category=tax_withholding_category,
+		)
+
+		# Create Purchase Order with TDS applied
+		po = create_purchase_order(
+			do_not_save=1,
+			supplier=supplier.name,
+			rate=3000,
+			item="_Test Non Stock Item",
+			posting_date=nowdate(),
+		)
+		po.save().submit()
+		# Create Purchase Invoice against Purchase Order
+		purchase_invoice = get_mapped_purchase_invoice(po.name)
+		purchase_invoice.posting_date = nowdate()
+		purchase_invoice.allocate_advances_automatically = 1
+		purchase_invoice.items[0].item_code = "_Test Non Stock Item"
+		purchase_invoice.items[0].expense_account = "_Test Account Cost for Goods Sold - _TC"
+		purchase_invoice.save()
+		purchase_invoice.submit()
+
+		report_name = "TDS Computation Summary"
+
+		filters = {
+			"company": company,
+			"party_type": "Supplier",
+			"from_date": add_days(nowdate(), -30),
+			"to_date": nowdate(),
+		}
+		report = frappe.get_doc("Report", report_name)
+		report_data = get_report_result(report, filters) or []
+		# Extract expected data from the report result
+		rows = report_data[1]
+		# Assuming `rows` contains the data from the report
+		expected_data = {
+			"party": supplier.name,
+			"section_code": tax_withholding_category,
+			"entity_type": "Company",
+			"rate": 10.0,  # TDS rate
+			"total_amount": 30000.0,  # Total amount for the invoice
+			"tax_amount": 3000.0,  # TDS amount deducted
+		}
+
+		# Find the row corresponding to the purchase invoice
+		matching_row = None
+		for row in rows:
+			if row["party"] == expected_data["party"] and row["section_code"] == expected_data["section_code"]:
+				matching_row = row
+				break
+
+		# Assert the matching row exists
+		self.assertIsNotNone(matching_row, "The expected row for the supplier and section code was not found.")
+		purchase_invoice.cancel()
+
 	def test_invoice_status_on_payment_entry_submit_TC_B_035_and_TC_B_037(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
 		from erpnext.accounts.doctype.unreconcile_payment.unreconcile_payment import payment_reconciliation_record_on_unreconcile,create_unreconcile_doc_for_selection
@@ -3129,6 +3207,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		self.assertEqual(pi_status, "Paid")
 
 	def test_partly_paid_of_pi_to_pr_to_pe_with_gst_TC_B_083(self):
+		frappe.set_user("Administrator")
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
 
 		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
@@ -3189,6 +3268,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		self.assertEqual(pi_status, "Partly Paid")
 
 	def test_fully_paid_of_pi_to_pr_to_pe_with_gst_TC_B_084(self):
+		frappe.set_user("Administrator")
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
 
 		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
@@ -3249,6 +3329,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		self.assertEqual(pi_status, "Paid")
 	
 	def test_pi_ignore_pricing_rule_TC_B_051(self):
+		frappe.set_user("Administrator")
 		company = "_Test Company"
 		item_code = "Testing-31"
 		target_warehouse = "Stores - _TC"
@@ -3318,6 +3399,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		self.assertEqual(pi.items[0].rate, 130)
 
 	def test_standalone_pi_is_fully_paid_TC_B_088(self):
+		frappe.set_user("Administrator")
 		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
 		purchase_tax.title = "TEST"
 		purchase_tax.company = "_Test Company"
@@ -3357,6 +3439,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		self.assertEqual(pi_status, "Paid")
 	
 	def test_standalone_pi_is_partly_paid_TC_B_090(self):
+		frappe.set_user("Administrator")
 		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
 		purchase_tax.title = "TEST"
 		purchase_tax.company = "_Test Company"
@@ -3475,6 +3558,37 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		# PI Ledger Validation
 		pi_total = sum(entry["debit"] for entry in pi_gl_entries)
 		self.assertEqual(pi_total, 10080) 
+
+	@if_app_installed("india_compliance")
+	def test_pi_standalone_pi_with_deferred_expense_TC_B_095(self):
+		gst_hsn_code = "11112222"
+	
+		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
+			gst_hsn_doc = frappe.new_doc("GST HSN Code")
+			gst_hsn_doc.hsn_code = gst_hsn_code
+			gst_hsn_doc.insert()
+
+		if not frappe.db.exists("Item", "_Test Item"):
+			item = frappe.new_doc("Item")
+			item.item_code = "_Test Item"
+			item.gst_hsn_code = gst_hsn_code
+			item.item_group = "All Item Groups"
+			item.enable_deferred_expense = 1
+			item.no_of_months_exp = 12
+			item.insert()
+		else:
+			item = frappe.get_doc("Item", "_Test Item")
+			item.gst_hsn_code = gst_hsn_code
+			item.enable_deferred_expense = 1
+			item.no_of_months_exp = 12
+			item.save()
+		pi = make_purchase_invoice(item_code=item.item_code, qty=1, rate=100, do_not_submit=True)
+		if pi.items:
+			setattr(pi.items[0], 'enable_deferred_expense', 1)
+			setattr(pi.items[0], 'deferred_expense_account', 'Deferred Expense - _TC')
+			setattr(pi.items[0], 'service_start_date', today())
+			setattr(pi.items[0], 'service_end_date', add_days(today(), 1))
+		pi.submit()
 
 	def test_pi_with_uploader_TC_B_092(self):
 		# Test Data

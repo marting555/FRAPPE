@@ -103,6 +103,47 @@ class TestWarehouse(FrappeTestCase):
 		children = get_children("Warehouse", parent=company, company=company, is_root=True)
 		self.assertTrue(any(wh["value"] == "_Test Warehouse - _TC" for wh in children))
 
+	def test_create_warehouse_TC_SCK_157(self):
+		"""Test warehouse creation with valid inputs."""
+		if not frappe.db.exists("Company", "_Test Company"):
+				company = frappe.new_doc("Company")
+				company.company_name = "_Test Company"
+				company.default_currency = "INR"
+				company.insert()
+		warehouse = create_warehouse("_Test Warehouse", properties=None, company="_Test Company")
+
+		# Fetch created warehouse
+		created_warehouse = frappe.get_doc("Warehouse", warehouse)
+
+		# Assertions
+		self.assertEqual(created_warehouse.warehouse_name, "_Test Warehouse")
+		self.assertEqual(created_warehouse.company, "_Test Company")
+		self.assertFalse(created_warehouse.is_rejected_warehouse)
+
+		warehouse_rej = create_warehouse("_Test Warehouse - Rejected", properties={"is_rejected_warehouse":1}, company="_Test Company")
+		
+		# Fetch created warehouse
+		created_warehouse = frappe.get_doc("Warehouse", warehouse_rej)
+
+		# Assertions
+		self.assertTrue(created_warehouse.is_rejected_warehouse)
+
+		# Attempt to use this warehouse in a Stock Entry (should fail)
+		stock_entry = frappe.get_doc({
+			"doctype": "Stock Entry",
+			"stock_entry_type": "Material Receipt",
+			"items": [
+				{
+					"item_code": "Test Item",
+					"qty": 1,
+					"t_warehouse": created_warehouse.name
+				}
+			]
+		})
+
+		with self.assertRaises(frappe.ValidationError):
+			stock_entry.insert()
+
 
 def create_warehouse(warehouse_name, properties=None, company=None):
 	if not company:
