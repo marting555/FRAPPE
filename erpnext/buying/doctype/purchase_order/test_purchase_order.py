@@ -7055,7 +7055,9 @@ class TestPurchaseOrder(FrappeTestCase):
 				"account":"Administrative Expenses - _TC",
 				"budget_amount":10000
 			}]
-		}).insert().submit()
+		}).insert(ignore_permissions=1)
+		budget.load_from_db()
+		budget.submit()
   
 		item = make_test_item("_Test Item")
 		try:
@@ -7072,16 +7074,15 @@ class TestPurchaseOrder(FrappeTestCase):
 			po.items[0].expense_account = "Administrative Expenses - _TC"
 			po.items[0].cost_center = "_Test Write Off Cost Center - _TC"
 	
-			po.save().submit()
+			po.save()
+			po.load_from_db()
+			po.submit()
 		except Exception as e:
 			self.assertEqual(str(e),"""Annual Budget for Account Administrative Expenses - _TC against Cost Center _Test Write Off Cost Center - _TC is ₹ 10,000.00. It will be exceed by ₹ 1,000.00Total Expenses booked through - Actual Expenses - ₹ 0.00Material Requests - ₹ 0.00Unbilled Orders - ₹ 11,000.00""")
 
-			budget.cancel()
-			budget.load_from_db()
-			po.cancel()
-			po.load_from_db()
-			frappe.delete_doc("Budget", budget.name,force=1)
-			frappe.delete_doc("Purchase Order", po.name,force=1)
+			# frappe.delete_doc("Budget", budget.name,force=1)
+			# frappe.delete_doc("Purchase Order", po.name,force=1)
+		
 			
 	def test_warn_po_creation_when_value_exceeds_budget_TC_ACC_144(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
@@ -7105,8 +7106,9 @@ class TestPurchaseOrder(FrappeTestCase):
 				"account":"Administrative Expenses - _TC",
 				"budget_amount":10000
 			}]
-		}).insert().submit()
-  
+		}).insert(ignore_permissions=1)
+		budget.load_from_db()
+		budget.submit()
 		item = make_test_item("_Test Item")
 		
 		po = create_purchase_order(
@@ -7122,7 +7124,9 @@ class TestPurchaseOrder(FrappeTestCase):
 		po.items[0].expense_account = "Administrative Expenses - _TC"
 		po.items[0].cost_center = "_Test Write Off Cost Center - _TC"
 
-		po.save().submit()
+		po.save()
+		po.load_from_db()
+		po.submit()
 		budget_exceeded_found = False
 
 		for msg in frappe.get_message_log():
@@ -7132,12 +7136,9 @@ class TestPurchaseOrder(FrappeTestCase):
 					break  
 
 		self.assertTrue(budget_exceeded_found, "Budget exceeded message not found")
-		budget.cancel()
-		budget.load_from_db()
-		po.cancel()
-		po.load_from_db()
-		frappe.delete_doc("Budget", budget.name,force=1)
-		frappe.delete_doc("Purchase Order", po.name,force=1)
+		
+		# frappe.delete_doc("Budget", budget.name,force=1)
+		# frappe.delete_doc("Purchase Order", po.name,force=1)
 		
 	
 	def test_po_with_damage_claims_pr_pi_TC_B_140(self):
