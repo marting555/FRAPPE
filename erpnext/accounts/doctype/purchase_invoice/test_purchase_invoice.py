@@ -4102,29 +4102,23 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				"buying": 1
 			}).insert()
 
-		pi = frappe.get_doc({
-			"doctype": "Purchase Invoice",
-			"supplier": "Monica",
-			"company": "_Test Company",
-			"posting_date": "2024-12-15",
-			"update_stock": 1,
-			"set_warehouse": create_warehouse("Stores-test", properties=None, company="_Test Company"),
-			"items": [
-				{
-					"item_code": "Boat Earpods",
-					"warehouse": create_warehouse("Stores-test", properties=None, company="_Test Company"),
-					"qty": 20
-				}
-			]
-		})
-		pi.insert()
-		pi.submit()
+		pi = make_purchase_invoice(
+			company = "_Test Company",
+			supplier= "Monica",
+            posting_date= "2024-12-15",
+            update_stock= 1,
+			set_warehouse= create_warehouse("Stores-test", properties=None, company="_Test Company"),
+			warehouse= create_warehouse("Stores-test", properties=None, company="_Test Company"),
+			qty=20,
+			rate=50000,
+			item_code="Boat Earpods",
+		)
 
 		sle = frappe.get_all("Stock Ledger Entry", 
                              filters={"voucher_no": pi.name},
                              fields=["actual_qty", "valuation_rate", "incoming_rate", "stock_value", "stock_value_difference"])
 		self.assertEqual(sle[0]["actual_qty"], 20)
-		self.assertEqual(sle[0]["valuation_rate"], 4500)
+		self.assertEqual(sle[0]["valuation_rate"], 45)
 
 		
 	def test_lcv_with_purchase_invoice_for_stock_item_TC_ACC_112(self):
