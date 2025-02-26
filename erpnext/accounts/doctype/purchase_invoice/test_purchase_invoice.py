@@ -4085,7 +4085,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			}).insert()
 		
 	def test_purchase_invoice_discount(self):
-		if not frappe.db.exists("Pricing Rule", {"title": "10% Discount"}):
+		if not frappe.db.exists("Pricing Rule", {"title": "Boat Earpods - Monica Discount", "disable": 0}):
 			frappe.get_doc({
 				"doctype": "Pricing Rule",
 				"title": "Boat Earpods - Monica Discount",
