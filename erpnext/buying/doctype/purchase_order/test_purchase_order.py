@@ -7038,7 +7038,8 @@ class TestPurchaseOrder(FrappeTestCase):
 		from erpnext.accounts.utils import get_fiscal_year
 		
 		year = get_fiscal_year(date=nowdate(), company="_Test Company")[0]
-		
+		validate_fiscal_year("_Test Company")
+
 		budget = frappe.get_doc({
 			"doctype":"Budget",
 			"budget_against":"Cost Center",
