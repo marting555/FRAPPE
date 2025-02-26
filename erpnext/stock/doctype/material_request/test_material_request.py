@@ -5198,7 +5198,7 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_create_mr_to_2po_to_1pi_serial_cancel_TC_SCK_099(self):
 		create_company()
-		create_fiscal_year()
+
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
 		item = item_create("_Test MR")
@@ -5212,6 +5212,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po.get("items")[0].item_code = item.item_code
 		po.get("items")[0].rate = 100
 		po.get("items")[0].qty = 1
+		po.currency ="INR"
 		po.insert()
 		po.submit()
 
@@ -5220,6 +5221,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po1.supplier = supplier
 		po1.get("items")[0].rate = 100
 		po1.get("items")[0].qty = 1
+		po1.currency ="INR"
 		po1.insert()
 		po1.submit()
 
@@ -5479,7 +5481,7 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_create_mr_to_2po_to_1pi_serial_return_TC_SCK_111(self):
 		create_company()
-		create_fiscal_year()
+
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
 		item = item_create("_Test MR")
@@ -5493,6 +5495,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po.get("items")[0].item_code = item.item_code
 		po.get("items")[0].rate = 100
 		po.get("items")[0].qty = 1
+		po.currency ="INR"
 		po.insert()
 		po.submit()
 
@@ -5501,6 +5504,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po1.supplier = supplier
 		po1.get("items")[0].rate = 100
 		po1.get("items")[0].qty = 1
+		po1.currency ="INR"
 		po1.insert()
 		po1.submit()
 
@@ -5740,7 +5744,7 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_create_mr_to_2po_to_1pi_sr_prtl_ret_TC_SCK_115(self):
 		create_company()
-		create_fiscal_year()
+
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
 		item = item_create("_Test MR")
@@ -5754,6 +5758,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po.get("items")[0].item_code = item.item_code
 		po.get("items")[0].rate = 100
 		po.get("items")[0].qty = 1
+		po.currency = "INR"
 		po.insert()
 		po.submit()
 
@@ -5762,6 +5767,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po1.supplier = supplier
 		po1.get("items")[0].rate = 100
 		po1.get("items")[0].qty = 1
+		po1.currency = "INR"
 		po1.insert()
 		po1.submit()
 
