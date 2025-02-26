@@ -4774,7 +4774,8 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		cancel_stock_reservation_entries(voucher_type="Sales Order", voucher_no=so.name, sre_list=None, notify=True)
   
 		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so.name}, "status"), "Cancelled")
-  
+	
+	@change_settings("Stock Settings", {"enable_stock_reservation": 1})
 	def test_stock_reservation_entry_on_cancel_TC_S_073(self):
 		so = self.test_sales_order_for_stock_reservation_TC_S_063(get_so_with_stock_reserved=1)
 		sre = frappe.get_doc("Stock Reservation Entry", {"voucher_no": so.name})
