@@ -2162,12 +2162,18 @@ class TestStockEntry(FrappeTestCase):
 
 	def test_stock_ent_TC_SCK_233(self):
 		from erpnext.stock.utils import get_bin
-		warehouse = create_warehouse("Stores-test", properties=None, company="_Test Company")
 		if not frappe.db.exists("Company", "_Test Company"):
 			company = frappe.new_doc("Company")
 			company.company_name = "_Test Company"
 			company.default_currency = "INR"
 			company.insert()
+		create_fiscal_with_company("_Test Company")
+		parent_warehouse = frappe.db.get_value("Warehouse", {"company": "_Test Company","is_group":1}, "name")
+		warehouse = create_warehouse(
+			warehouse_name="Department Store",
+			properties={"parent_warehouse": f"{parent_warehouse}"},
+			company='_Test Company',
+		)
 		item_fields = {
 			"item_name": "Test 1231",
 			"is_stock_item": 1,
@@ -2188,8 +2194,11 @@ class TestStockEntry(FrappeTestCase):
 			company.company_name = "_Test Company"
 			company.default_currency = "INR"
 			company.insert()
-		self.source_warehouse = create_warehouse("Stores-test", properties=None, company="_Test Company")
-		self.target_warehouse = create_warehouse("Department Stores-test", properties=None, company="_Test Company")
+		
+		create_fiscal_with_company("_Test Company")
+		self.source_warehouse = "Stores - _C" 
+		self.target_warehouse = "Finished Goods - _C"
+
 		item_fields1 = {
 			"item_name": "Test Brown Rice",
 			"is_stock_item": 1,
@@ -2219,6 +2228,7 @@ class TestStockEntry(FrappeTestCase):
 			do_not_submit=True,
 			do_not_save=True
 		)
+	
 		se1.items[0].t_warehouse = self.source_warehouse
 		se1.save()
 		se1.submit()
@@ -2368,8 +2378,13 @@ class TestStockEntry(FrappeTestCase):
 	
 	def test_partial_material_issue_TC_SCK_204(self):
 		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
-		company="_Test Company"
-		# item_code = "_Test Item"
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
+		create_company()
+		company = "_Test Company"
+		create_fiscal_with_company(company)
+		create_customer(name = '_Test Customer')
+
 		fields = {
 			"shelf_life_in_days": 365,
 			"end_of_life":"2099-12-31",
@@ -2402,6 +2417,7 @@ class TestStockEntry(FrappeTestCase):
 			# purpose="Material Receipt",
 			company=company,
 		)
+		cost_center = frappe.db.get_all('Cost Center',{'company':company,'is_group':0},"name")
 		# Create Material Request
 		mr = make_material_request(
 			material_request_type="Material Issue",
@@ -2409,6 +2425,8 @@ class TestStockEntry(FrappeTestCase):
 			warehouse=target_warehouse,
 			item_code=item_code,
 			company=company,
+			cost_center = cost_center[0].name,
+			uom = "Unit"
 		)
 		self.assertEqual(mr.status, "Pending")
 
@@ -3064,7 +3082,12 @@ class TestStockEntry(FrappeTestCase):
 		
 	def test_partial_material_issue_TC_SCK_205(self):
 		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
-		company="_Test Company"
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
+		create_company()
+		company = "_Test Company"
+		create_fiscal_with_company(company)
+		create_customer(name = '_Test Customer')
 		fields = {
 			"shelf_life_in_days": 365,
 			"end_of_life": "2099-12-31",
@@ -3095,6 +3118,7 @@ class TestStockEntry(FrappeTestCase):
 			to_warehouse=target_warehouse,
 			company=company,
 		)
+		cost_center = frappe.db.get_all('Cost Center',{'company':company,'is_group':0},"name")
 		# Create Material Request
 		mr = make_material_request(
 			material_request_type="Material Issue",
@@ -3102,6 +3126,8 @@ class TestStockEntry(FrappeTestCase):
 			warehouse=target_warehouse,
 			item_code=item_code,
 			company=company,
+			cost_center = cost_center[0].name,
+			uom = "Unit"
 		)
 		self.assertEqual(mr.status, "Pending")
 
@@ -3143,7 +3169,12 @@ class TestStockEntry(FrappeTestCase):
 		)
 	def test_partial_material_issue_TC_SCK_206(self):
 		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
-		company="_Test Company"
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
+		create_company()
+		company = "_Test Company"
+		create_fiscal_with_company(company)
+		create_customer(name = '_Test Customer' )
 		fields = {
 			"shelf_life_in_days": 365,
 			"end_of_life": "2099-12-31",
@@ -3176,7 +3207,7 @@ class TestStockEntry(FrappeTestCase):
 			to_warehouse=target_warehouse,
 			company=company,
 		)
-
+		cost_center = frappe.db.get_all('Cost Center',{'company':company,'is_group':0},"name")
 		# Create Material Request
 		mr = make_material_request(
 			material_request_type="Material Issue",
@@ -3186,6 +3217,8 @@ class TestStockEntry(FrappeTestCase):
 			company=company,
 			posting_date="2024-12-19",
 			required_by_date="2024-12-20",
+			cost_center = cost_center[0].name,
+			uom = "Unit"
 		)
 		self.assertEqual(mr.status, "Pending")
 
@@ -3227,7 +3260,12 @@ class TestStockEntry(FrappeTestCase):
 		)
 	def test_partial_material_transfer_TC_SCK_207(self):
 		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
+		create_company()
 		company = "_Test Company"
+		create_fiscal_with_company(company)
+		create_customer(name = '_Test Customer' )
 		fields = {
 			"shelf_life_in_days": 365,
 			"end_of_life": "2099-12-31",
@@ -3261,6 +3299,7 @@ class TestStockEntry(FrappeTestCase):
 			company=company,
 		)
 
+		cost_center = frappe.db.get_all('Cost Center',{'company':company,'is_group':0},"name")
 		# Create Material Request
 		mr = make_material_request(
 			material_request_type="Material Transfer",
@@ -3270,6 +3309,8 @@ class TestStockEntry(FrappeTestCase):
 			company=company,
 			posting_date="2024-12-19",
 			required_by_date="2024-12-20",
+			cost_center = cost_center[0].name,
+			uom = "Unit"
 		)
 		self.assertEqual(mr.status, "Pending")
 
@@ -3311,7 +3352,12 @@ class TestStockEntry(FrappeTestCase):
 		)
 	def test_partial_material_transfer_TC_SCK_208(self):
 		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
+		create_company()
 		company = "_Test Company"
+		create_fiscal_with_company(company)
+		create_customer(name = '_Test Customer' )
 		fields = {
 			"shelf_life_in_days": 365,
 			"end_of_life": "2099-12-31",
@@ -3345,6 +3391,7 @@ class TestStockEntry(FrappeTestCase):
 			company=company,
 		)
 
+		cost_center = frappe.db.get_all('Cost Center',{'company':company,'is_group':0},"name")
 		# Create Material Request
 		mr = make_material_request(
 			material_request_type="Material Transfer",
@@ -3354,6 +3401,8 @@ class TestStockEntry(FrappeTestCase):
 			company=company,
 			posting_date="2024-12-19",
 			required_by_date="2024-12-20",
+			cost_center = cost_center[0].name,
+			uom = "Unit"
 		)
 		self.assertEqual(mr.status, "Pending")
 
@@ -3395,7 +3444,12 @@ class TestStockEntry(FrappeTestCase):
 		)
 	def test_partial_material_transfer_TC_SCK_209(self):
 		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
+		create_company()
 		company = "_Test Company"
+		create_fiscal_with_company(company)
+		create_customer(name = '_Test Customer' )
 		fields = {
 			"shelf_life_in_days": 365,
 			"end_of_life": "2099-12-31",
@@ -3414,6 +3468,7 @@ class TestStockEntry(FrappeTestCase):
 		item_code = make_item("COOKIES (BT-SL)", fields).name
 
 		source_warehouse = "Stores - _TC"
+		
 		target_warehouse = create_warehouse(
 			warehouse_name="Department Store",
 			properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
@@ -3422,13 +3477,15 @@ class TestStockEntry(FrappeTestCase):
 		qty = 10
 
 		# Stock Receipt
+		
 		se_receipt = make_stock_entry(
 			item_code=item_code,
 			qty=qty,
 			to_warehouse=target_warehouse,
 			company=company,
 		)
-
+		cost_center = frappe.db.get_all('Cost Center',{'company':company,'is_group':0},"name")
+		
 		# Create Material Request
 		mr = make_material_request(
 			material_request_type="Material Transfer",
@@ -3438,6 +3495,8 @@ class TestStockEntry(FrappeTestCase):
 			company=company,
 			posting_date="2024-12-19",
 			required_by_date="2024-12-20",
+			cost_center = cost_center[0].name,
+			uom = "Unit"
 		)
 		self.assertEqual(mr.status, "Pending")
 
@@ -4102,3 +4161,20 @@ def create_company(company):
 		company.company_name = company
 		company.default_currency = "INR"
 		company.insert()
+
+def create_fiscal_with_company(company):
+	from datetime import date
+	today = date.today()
+	if today.month >= 4:  # Fiscal year starts in April
+		start_date = date(today.year, 4, 1)
+		end_date = date(today.year + 1, 3, 31)
+	else:
+		start_date = date(today.year - 1, 4, 1)
+		end_date = date(today.year, 3, 31)
+
+	fy_doc = frappe.new_doc("Fiscal Year")
+	fy_doc.year = "2025 PO"
+	fy_doc.year_start_date = start_date
+	fy_doc.year_end_date = end_date
+	fy_doc.append("companies", {"company": company})
+	fy_doc.submit()
