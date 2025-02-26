@@ -27,7 +27,6 @@ class TestBin(FrappeTestCase):
 		self.assertEqual(bin.item_code, item_code)
 
 		frappe.db.rollback()
-
 	def test_index_exists(self):
 		indexes = frappe.db.sql("show index from tabBin where Non_unique = 0", as_dict=1)
 		if not any(index.get("Key_name") == "unique_item_warehouse" for index in indexes):
