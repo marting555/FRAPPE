@@ -6,7 +6,7 @@ cd ~ || exit
 
 sudo apt update
 sudo apt remove mysql-server mysql-client
-sudo apt install libcups2-dev redis-server mariadb-client
+sudo apt install libcups2-dev redis-server mariadb-client libmariadb-dev
 
 pip install frappe-bench
 
@@ -17,8 +17,8 @@ frappecommitish=${FRAPPE_BRANCH:-$githubbranch}
 mkdir frappe
 pushd frappe
 git init
-git remote add origin "https://github.com/${frappeuser}/frappe"
-git fetch origin "${frappecommitish}" --depth 1
+git remote add origin "https://github.com/ankush/frappe"
+git fetch origin "perf/mariadb_connector" --depth 1
 git checkout FETCH_HEAD
 popd
 
