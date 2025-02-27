@@ -35,6 +35,8 @@ from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import
 )
 from erpnext.stock.serial_batch_bundle import SerialBatchCreation
 from erpnext.stock.stock_ledger import NegativeStockError, get_previous_sle
+from datetime import date
+
 
 
 def get_sle(**args):
@@ -3479,79 +3481,119 @@ class TestStockEntry(FrappeTestCase):
 		)
 
 	def test_stock_manufacture_with_batch_serial_TC_SCK_142(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+
 		company = "_Test Company"
+		create_company()
+		create_fiscal_with_company("_Test Company")
+		create_warehouse("_Test Warehouse Group - _TC", company=company)
+
 		if not frappe.db.exists("Company", company):
 			company_doc = frappe.new_doc("Company")
-			company_doc.company_doc_name = company
-			company_doc.country="India"
-			company_doc.default_currency= "INR"
+			company_doc.company_name = company
+			company_doc.country = "India"
+			company_doc.default_currency = "INR"
 			company_doc.save()
 		else:
-			company_doc = frappe.get_doc("Company", company) 
-		item_1 = make_item("ADI-SH-W09", {'has_batch_no':1, "create_new_batch":1,"valuation_rate":100})
-		item_2 = make_item("LET-SC-002", {"valuation_rate":100})
+			company_doc = frappe.get_doc("Company", company)
+
+		item_1 = make_item("ADI-SH-W09", {'has_batch_no': 1, "create_new_batch": 1, "valuation_rate": 100})
+		item_2 = make_item("LET-SC-002", {"valuation_rate": 100})
+
 		se = make_stock_entry(purpose="Manufacture", company=company_doc.name, do_not_save=True)
+
 		items = [
 			{
 				"t_warehouse": create_warehouse("Test Store 1"),
 				"item_code": item_1.item_code,
 				"qty": 200,
-				"is_finished_item":1,
+				"is_finished_item": 1,
 				"conversion_factor": 1
 			},
 			{
 				"t_warehouse": create_warehouse("Test Store 2"),
 				"item_code": item_2.item_code,
 				"qty": 50,
-				"is_scrap_item":1,
+				"is_scrap_item": 1,
 				"conversion_factor": 1
 			}
 		]
+
 		se.items = []
 		for item in items:
 			se.append("items", item)
+
 		se.save()
 		se.submit()
+
 		self.assertEqual(se.purpose, "Manufacture")
 		self.assertEqual(se.items[0].is_finished_item, 1)
-		self.assertEqual(se.items[0].is_scrap_item, 1)
-		
+		self.assertEqual(se.items[1].is_scrap_item, 1) 
+
 		sle_entries = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": se.name}, fields=['item_code', 'actual_qty'])
+
 		for sle in sle_entries:
 			if sle['item_code'] == item_1.item_code:
 				self.assertEqual(sle['actual_qty'], 200)
 			elif sle['item_code'] == item_2.item_code:
 				self.assertEqual(sle['actual_qty'], 50)
+
 	
 	def test_stock_manufacture_with_batch_serieal_TC_SCK_140(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
 		company = "_Test Company"
+		create_company()
+		create_fiscal_with_company("_Test Company")
+		create_warehouse("_Test Warehouse Group - _TC", company=company)
+
 		if not frappe.db.exists("Company", company):
 			company_doc = frappe.new_doc("Company")
-			company_doc.company_doc_name = company
-			company_doc.country="India"
-			company_doc.default_currency= "INR"
+			company_doc.company_name = company
+			company_doc.country = "India"
+			company_doc.default_currency = "INR"
 			company_doc.save()
 		else:
-			company_doc = frappe.get_doc("Company", company) 
-		item = make_item("ADI-SH-W11", {'has_batch_no':1, "create_new_batch":1, "has_serial_no":1, "valuation_rate":100})
-		se = make_stock_entry(item_code=item.name,purpose="Manufacture", company=company_doc.name,target=create_warehouse("Test Warehouse"), qty=150, basic_rate=100,do_not_save=True)
+			company_doc = frappe.get_doc("Company", company)
+
+		item = make_item("ADI-SH-W11", {"valuation_rate": 100, "has_serial_no": 1, "serial_no_series": "SNO-.####"})
+
+		serial_nos = generate_serial_nos(item_code=item.name, qty=150)
+		se = make_stock_entry(
+			item_code=item.name,
+			purpose="Manufacture",
+			company=company_doc.name,
+			target=create_warehouse("Test Warehouse"),
+			qty=150,
+			basic_rate=100,
+			do_not_save=True
+		)
+
 		se.items[0].is_finished_item = 1
+		se.items[0].serial_no = "\n".join(serial_nos)  # Assign serial numbers
 		se.save()
 		se.submit()
 		self.assertEqual(se.purpose, "Manufacture")
 		self.assertEqual(se.items[0].is_finished_item, 1)
-		serial_and_batch = run("Serial and Batch Summary",
-						  filters={"company":company_doc.name,
-						  		"from_date":se.posting_date,
-								"to_date":se.posting_date,
-								"voucher_type":"Stock Entry",
-								"voucher_no":[se.name]})
+
+		serial_and_batch = run(
+			"Serial and Batch Summary",
+			filters={
+				"company": company_doc.name,
+				"from_date": se.posting_date,
+				"to_date": se.posting_date,
+				"voucher_type": "Stock Entry",
+				"voucher_no": [se.name]
+			}
+		)
+
 		result_list = serial_and_batch.get("result", [])
-		self.assertEqual(len(result_list), 150)
+		self.assertEqual(len(result_list), 150)  # Expect 150 serial numbers
+
 		sle_entries = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": se.name}, fields=['item_code', 'actual_qty'])
 		for sle in sle_entries:
 			if sle['item_code'] == item.item_code:
 				self.assertEqual(sle['actual_qty'], 150)
+
 
 	@change_settings("Stock Settings", {"allow_negative_stock": 1})
 	def test_stock_entry_manufacture_TC_SCK_138(self):
@@ -3645,7 +3687,11 @@ class TestStockEntry(FrappeTestCase):
 		self.check_stock_ledger_entries("Stock Entry", se_2.name, [[item.name, target_warehouse, 5], [item.name, source_warehouse, -5]])
 
 	def test_stock_manufacture_with_batch_serial_TC_SCK_141(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
 		company = "_Test Company"
+		create_company()
+		create_fiscal_with_company("_Test Company")
+		create_warehouse("_Test Warehouse Group - _TC", company=company)
 		if not frappe.db.exists("Company", company):
 			company_doc = frappe.new_doc("Company")
 			company_doc.company_name = company
@@ -4102,3 +4148,38 @@ def create_company(company):
 		company.company_name = company
 		company.default_currency = "INR"
 		company.insert()
+
+def create_fiscal_with_company(company):
+	today = date.today()
+	if today.month >= 4:  # Fiscal year starts in April
+		start_date = date(today.year, 4, 1)
+		end_date = date(today.year + 1, 3, 31)
+	else:
+		start_date = date(today.year - 1, 4, 1)
+		end_date = date(today.year, 3, 31)
+
+	fy_doc = frappe.new_doc("Fiscal Year")
+	fy_doc.year = "2025 PO"
+	fy_doc.year_start_date = start_date
+	fy_doc.year_end_date = end_date
+	fy_doc.append("companies", {"company": company})
+	fy_doc.submit()
+
+
+def generate_serial_nos(item_code, qty):
+    """Generate and insert serial numbers for an item."""
+    serial_nos = []
+    for i in range(qty):
+        serial_no = f"SNO-{frappe.generate_hash(length=8)}"
+        serial_nos.append(serial_no)
+
+        # Create Serial No record
+        frappe.get_doc({
+            "doctype": "Serial No",
+            "serial_no": serial_no,
+            "item_code": item_code,
+            "company": "_Test Company",
+            "status": "Active"
+        }).insert(ignore_permissions=True)
+
+    return serial_nos
