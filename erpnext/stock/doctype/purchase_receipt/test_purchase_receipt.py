@@ -4984,13 +4984,20 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(stock_qty, self.qty_reconciled)
 
 	def test_stock_ledger_report_TC_SCK_225(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
 		item = []
 		warehouse = []
 		date = []
+		
+		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
+		fiscal_year.append("companies", {"company": "_Test Company"})
+		fiscal_year.save()
 		warehouse_new = create_warehouse("Stores", properties=None, company="_Test Company")
 		item_code = make_item("_Test Item225", {'item_name':"_Test Item225", "valuation_rate":500, "is_stock_item":1}).name
 		se1 = make_stock_entry(item_code=item_code, qty=10, to_warehouse=warehouse_new, purpose="Material Receipt")
-
+	
+		
 		from erpnext.stock.report.stock_ledger.stock_ledger import execute
 		
 		filters = frappe._dict({  # Convert to allow dot notation
