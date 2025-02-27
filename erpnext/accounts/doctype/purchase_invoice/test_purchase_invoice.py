@@ -3329,6 +3329,27 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		self.assertEqual(pi_status, "Paid")
 	
 	def test_pi_ignore_pricing_rule_TC_B_051(self):
+		from erpnext.accounts.doctype.pricing_rule.test_pricing_rule import make_pricing_rule
+
+		frappe.delete_doc_if_exists("Pricing Rule", "Boat Earpods - Monica Discount")
+		self.pricing_rule =make_pricing_rule(
+			apply_on="Item Code",
+			title="Boat Earpods - Monica Discount",
+			items=[{"item_code": "Boat Earpods"}],
+			supplier="Monica",
+			min_qty= 10,
+			company= "_Test Company",
+			rate_or_discount="Discount Percentage",
+			discount_percentage=10,
+			valid_from="2024-12-01",
+			selling = 0,
+			buying = 1,
+			apply_discount_on = "Rate",
+			price_or_product_discount= "Price",
+			apply_rule_on = "Transaction",
+			apply_on_transaction = "Purchase Invoice"
+		)
+
 		frappe.set_user("Administrator")
 		company = "_Test Company"
 		item_code = "Testing-31"
@@ -4046,11 +4067,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			error_msg = str(e)
 			self.assertEqual(error_msg, f'Supplier Invoice No exists in Purchase Invoice {pi.name}')
 
-	def setUp(self):
-		from erpnext.accounts.doctype.pricing_rule.test_pricing_rule import make_pricing_rule
+	def setUp(self):	
 		from erpnext.stock.doctype.item.test_item import make_item
-
-		import random
         # Ensure supplier exists
 		if not frappe.db.exists("Company", "_Test Company"):
 			company = frappe.new_doc("Company")
@@ -4076,26 +4094,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		}
 		
 		item = make_item("Boat Earpods", it_fields).name
-		
-		self.pricing_rule =make_pricing_rule(
-			apply_on="Item Code",
-			title="Boat Earpods - Monica Discount",
-			items=[{"item_code": "Boat Earpods"}],
-			supplier="Monica",
-			min_qty= 10,
-			company= "_Test Company",
-			rate_or_discount="Discount Percentage",
-			discount_percentage=10,
-			valid_from="2024-12-01",
-			selling = 0,
-			buying = 1,
-			apply_discount_on = "Rate",
-			price_or_product_discount= "Price",
-			apply_rule_on = "Transaction",
-			apply_on_transaction = "Purchase Invoice"
-		)
-		frappe.db.commit()
-		
+
+
 	def test_purchase_invoice_discount(self):
         # Create Purchase Invoice
 		pi = make_purchase_invoice(
@@ -4115,7 +4115,6 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		sle = frappe.get_all("Stock Ledger Entry", 
                              filters={"voucher_no": pi.name},
                              fields=["actual_qty", "valuation_rate", "incoming_rate", "stock_value", "stock_value_difference"])
-		print(sle[0]["actual_qty"], sle[0]["valuation_rate"], sle[0]["incoming_rate"], sle[0]["stock_value"], sle[0]["stock_value_difference"])
 		self.assertEqual(sle[0]["actual_qty"], 20)
 		self.assertEqual(sle[0]["valuation_rate"], 4500)
 
@@ -4178,7 +4177,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			make_test_item
 		)
-
+		create_asset_data()
 		item = make_test_item("_Test Asstes Item")
 
 		if not item.is_fixed_asset:
@@ -4189,22 +4188,29 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			item.asset_naming_series = "ACC-ASS-.YYYY.-"
 			item.flags.ignore_mandatory = 1
 			item.save()
-  
 		pi = make_purchase_invoice(
 			supplier="_Test Supplier",
 			company="_Test Company",
 			item_code=item.name,
 			qty=1,
 			rate=1000,
+			expense_account="CWIP Account - _TC",
 			do_not_submit=True,
-			update_stock=True,
+			update_stock=1,
 			do_not_save=True
 		)
   
 		pi.items[0].asset_location = "Test Location"
   
-		pi.insert().submit()
-  
+		pi.insert(ignore_permissions=True).submit()
+		asset = frappe.get_value("Asset", {"company": "_Test Company",'item_code':item.name,'asset_category':"Test_Category"}, "name")
+		if asset:
+			asset_doc=frappe.get_doc("Asset",asset)
+			if not asset_doc.purchase_invoice or asset_doc.purchase_invoice != pi.name:
+				asset_doc.purchase_invoice = pi.name
+				asset_doc.available_for_use_date = nowdate()
+				asset_doc.flags.ignore_mandatory = 1
+				asset_doc.save()
 		lvc =frappe.get_doc({
 			"doctype":"Landed Cost Voucher",
 			"company":"_Test Company",
@@ -4232,7 +4238,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		lvc.submit()
   
 		expected_gle =[
-			['Capital Equipments - _TC',pi.grand_total+300, 0.0, pi.posting_date],
+			['CWIP Account - _TC',pi.grand_total+300, 0.0, pi.posting_date],
 			['Creditors - _TC', 0.0, 1000.0, pi.posting_date],
 			['Expenses Included In Valuation - _TC', 0.0, 300.0, pi.posting_date],
 		]
@@ -4769,3 +4775,54 @@ def get_jv_entry_account(**args):
 	)[0]
 
 	return jea_parent
+
+def create_asset_category():
+	asset_category = frappe.new_doc("Asset Category")
+	asset_category.asset_category_name = "Test_Category"
+	asset_category.total_number_of_depreciations = 3
+	asset_category.frequency_of_depreciation = 3
+	asset_category.enable_cwip_accounting = 1
+	asset_category.append(
+		"accounts",
+		{
+			"company_name": "_Test Company",
+			"fixed_asset_account": "_Test Fixed Asset - _TC",
+			"accumulated_depreciation_account": "_Test Accumulated Depreciations - _TC",
+			"depreciation_expense_account": "_Test Depreciations - _TC",
+			"capital_work_in_progress_account": "CWIP Account - _TC",
+		},
+	)
+	asset_category.append(
+		"accounts",
+		{
+			"company_name": "_Test Company with perpetual inventory",
+			"fixed_asset_account": "_Test Fixed Asset - TCP1",
+			"accumulated_depreciation_account": "_Test Accumulated Depreciations - TCP1",
+			"depreciation_expense_account": "_Test Depreciations - TCP1",
+		},
+	)
+
+	asset_category.insert(ignore_permissions=True)
+ 
+ 
+def create_asset_data():
+	if not frappe.db.exists("Asset Category", "Test_Category"):
+		create_asset_category()
+
+	if not frappe.db.exists("Location", "Test Location"):
+		frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert(ignore_permissions=True)
+
+	if not frappe.db.exists("Finance Book", "Test Finance Book 1"):
+		frappe.get_doc(
+			{"doctype": "Finance Book", "finance_book_name": "Test Finance Book 1"}
+		).insert(ignore_permissions=True)
+
+	if not frappe.db.exists("Finance Book", "Test Finance Book 2"):
+		frappe.get_doc(
+			{"doctype": "Finance Book", "finance_book_name": "Test Finance Book 2"}
+		).insert(ignore_permissions=True)
+
+	if not frappe.db.exists("Finance Book", "Test Finance Book 3"):
+		frappe.get_doc(
+			{"doctype": "Finance Book", "finance_book_name": "Test Finance Book 3"}
+		).insert(ignore_permissions=True)
