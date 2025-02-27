@@ -3764,11 +3764,21 @@ class TestPurchaseOrder(FrappeTestCase):
 				self.assertEqual(entries.credit,2875)
 
 	def test_create_po_pr_partial_TC_SCK_046(self):
-		po = create_purchase_order(rate=10000,qty=10)
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_item("_Test Item",warehouse="Stores - _TC")
+		create_supplier(supplier_name="_Test Supplier")
+
+		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
+		fiscal_year.append("companies", {"company": "_Test Company"})
+		fiscal_year.save()
+		po = create_purchase_order(rate=10000,qty=10,warehouse="Stores - _TC")
 		po.submit()
 
 		pr = create_pr_against_po(po.name, received_qty=5)
-		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "_Test Warehouse - _TC"}, "actual_qty")
+		
+		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "Stores - _TC"}, "actual_qty")
+	
 		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':pr.name})
 		self.assertEqual(sle.qty_after_transaction, bin_qty)
 		self.assertEqual(sle.warehouse, po.get("items")[0].warehouse)
@@ -3789,13 +3799,14 @@ class TestPurchaseOrder(FrappeTestCase):
 		return_pr.get("items")[0].received_qty = -5
 		return_pr.submit()
 
-		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "_Test Warehouse - _TC"}, "actual_qty")
+		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "Stores - _TC"}, "actual_qty")
 		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':return_pr.name})
 		self.assertEqual(sle.qty_after_transaction, bin_qty)
 
 		#if account setup in company
+
 		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
-			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'debit')
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':return_pr.name, 'account': 'Stock Received But Not Billed - _TC'},'debit')
 			self.assertEqual(gl_temp_credit, 50000)
 
 		#if account setup in company
