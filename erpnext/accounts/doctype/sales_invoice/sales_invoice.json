@@ -2216,27 +2216,32 @@
   {
    "fieldname": "taxed_amount_15",
    "fieldtype": "Currency",
-   "label": "Taxed Amount 15%"
+   "label": "Taxed Amount 15%",
+   "read_only": 1
   },
   {
    "fieldname": "taxed_amount_18",
    "fieldtype": "Currency",
-   "label": "Taxed Amount 18%"
+   "label": "Taxed Amount 18%",
+   "read_only": 1
   },
   {
    "fieldname": "exempt_amount",
    "fieldtype": "Currency",
-   "label": "Exempt Amount"
+   "label": "Exempt Amount",
+   "read_only": 1
   },
   {
    "fieldname": "isv_15",
    "fieldtype": "Currency",
-   "label": "ISV 15%"
+   "label": "ISV 15%",
+   "read_only": 1
   },
   {
    "fieldname": "isv_18",
    "fieldtype": "Currency",
-   "label": "ISV 18%"
+   "label": "ISV 18%",
+   "read_only": 1
   }
  ],
  "icon": "fa fa-file-text",
@@ -2249,7 +2254,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2025-02-20 16:25:03.089963",
+ "modified": "2025-02-27 14:53:40.440519",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

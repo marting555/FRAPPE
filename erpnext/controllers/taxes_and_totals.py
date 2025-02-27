@@ -960,7 +960,6 @@ class calculate_taxes_and_totals:
 					},
 				)
 
-
 def get_itemised_tax_breakup_html(self, doc):
 	if not doc.taxes:
 		return
@@ -978,25 +977,6 @@ def get_itemised_tax_breakup_html(self, doc):
 		itemised_tax_data = get_itemised_tax_breakup_data(doc)
 		get_rounded_tax_amount(itemised_tax_data, doc.precision("tax_amount", "taxes"))
 		update_itemised_tax_data(doc)
-
-		if(doc.doctype == 'Sales Invoice'):
-			self.doc.taxed_amount_15 = 0
-			self.doc.isv_15 = 0
-			self.doc.taxed_amount_18 = 0
-			self.doc.isv_18 = 0
-			self.doc.exempt_amount = 0
-			
-			for taxitem in itemised_tax_data:
-				if(taxitem.VAT.tax_rate == 15):
-					self.doc.taxed_amount_15 += taxitem.taxable_amount - taxitem.VAT.tax_amount
-					self.doc.isv_15 += taxitem.VAT.tax_amount
-
-				if(taxitem.VAT.tax_rate == 18):
-					self.doc.taxed_amount_18 += taxitem.taxable_amount - taxitem.VAT.tax_amount
-					self.doc.isv_18 += taxitem.VAT.tax_amount
-
-				if(taxitem.VAT.tax_rate == 0):
-					self.doc.exempt_amount += taxitem.taxable_amount
 
 	return frappe.render_template(
 		"templates/includes/itemised_tax_breakup.html",
