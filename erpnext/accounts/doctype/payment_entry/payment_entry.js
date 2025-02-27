@@ -214,6 +214,10 @@ frappe.ui.form.on('Payment Entry', {
 		frappe.flags.allocate_payment_amount = true;
 	},
 
+	validate: async function (frm) {
+		await frm.events.set_exchange_gain_loss_deduction(frm);
+	},
+
 	validate_company: (frm) => {
 		if (!frm.doc.company){
 			frappe.throw({message:__("Please select a Company first."), title: __("Mandatory")});
@@ -1551,3 +1555,54 @@ function set_default_party_type(frm) {
 
 	if (party_type) frm.set_value("party_type", party_type);
 }
+<<<<<<< HEAD
+=======
+
+function get_included_taxes(frm) {
+	let included_taxes = 0;
+	for (const tax of frm.doc.taxes) {
+		if (!tax.included_in_paid_amount) continue;
+
+		if (tax.add_deduct_tax == "Add") {
+			included_taxes += tax.base_tax_amount;
+		} else {
+			included_taxes -= tax.base_tax_amount;
+		}
+	}
+
+	return included_taxes;
+}
+
+function get_company_defaults(company) {
+	return frappe.call({
+		method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_company_defaults",
+		args: {
+			company: company,
+		},
+	});
+}
+
+function prompt_for_missing_account(frm, account) {
+	return new Promise((resolve) => {
+		const dialog = frappe.prompt(
+			{
+				label: __(frappe.unscrub(account)),
+				fieldname: account,
+				fieldtype: "Link",
+				options: "Account",
+				get_query: () => ({
+					filters: {
+						company: frm.doc.company,
+					},
+				}),
+			},
+			(values) => resolve(values?.[account]),
+			__("Please Specify Account")
+		);
+	});
+}
+
+function get_deduction_amount_precision() {
+	return frappe.meta.get_field_precision(frappe.meta.get_field("Payment Entry Deduction", "amount"));
+}
+>>>>>>> 2dbef23244 (fix: payment entry exchange gain loss issue)
