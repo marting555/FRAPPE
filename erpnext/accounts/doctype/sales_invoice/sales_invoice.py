@@ -175,6 +175,28 @@ class SalesInvoice(SellingController):
 		self.allow_write_off_only_on_pos()
 		self.reset_default_field_value("set_warehouse", "items", "warehouse")
 
+	def get_itemised_tax_info(self):
+		self.taxed_amount_15 = 0
+		self.isv_15 = 0
+		self.taxed_amount_18 = 0
+		self.isv_18 = 0
+		self.exempt_amount = 0
+
+		for item in self.items:
+			tax_template = frappe.get_doc("Item Tax Template", item.item_tax_template)
+				
+			for taxitem in tax_template.taxes:
+				if(taxitem.tax_rate == 15):
+					self.taxed_amount_15 += item.amount - (item.amount*(taxitem.tax_rate/100))
+					self.isv_15 += item.amount*(taxitem.tax_rate/100)
+
+				if(taxitem.tax_rate == 18):
+					self.taxed_amount_18 += item.amount - (item.amount*(taxitem.tax_rate/100))
+					self.isv_18 += item.amount*(taxitem.tax_rate/100)
+
+				if(taxitem.tax_rate == 0):
+					self.exempt_amount += item.amount
+
 	def validate_accounts(self):
 		self.validate_write_off_account()
 		self.validate_account_for_change_amount()
@@ -688,6 +710,9 @@ class SalesInvoice(SellingController):
 				or (not sales_invoice and data.sales_invoice == self.name)
 			):
 				data.sales_invoice = sales_invoice
+
+	def on_update(self):
+		self.get_itemised_tax_info()
 
 	def on_update_after_submit(self):
 		fields_to_check = [
