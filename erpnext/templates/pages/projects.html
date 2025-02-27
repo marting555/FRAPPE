@@ -56,25 +56,27 @@
     {{ empty_state(_("Task")) }}
   {% endif %}
 
-  <h4 class="my-account-header">{{ _("Timesheets") }}</h4>
   {% if doc.timesheets %}
-    <div class="website-list">
-      <div class="result">
-        <div class="web-list-item transaction-list-item">
-          <div class="row align-items-center">
-            <div class="col-xs-2"><b>{{ _("Timesheet") }}</b></div>
-            <div class="col-xs-2"><b>{{ _("Status") }}</b></div>
-            <div class="col-xs-2"><b>{{ _("From") }}</b></div>
-            <div class="col-xs-2"><b>{{ _("To") }}</b></div>
-            <div class="col-xs-2"><b>{{ _("Modified By") }}</b></div>
-            <div class="col-xs-2"><b>{{ _("Modified On") }}</b></div>
+    <h4 class="my-account-header">{{ _("Timesheets") }}</h4>
+    {% if doc.timesheets %}
+      <div class="website-list">
+        <div class="result">
+          <div class="web-list-item transaction-list-item">
+            <div class="row align-items-center">
+              <div class="col-xs-2"><b>{{ _("Timesheet") }}</b></div>
+              <div class="col-xs-2"><b>{{ _("Status") }}</b></div>
+              <div class="col-xs-2"><b>{{ _("From") }}</b></div>
+              <div class="col-xs-2"><b>{{ _("To") }}</b></div>
+              <div class="col-xs-2"><b>{{ _("Modified By") }}</b></div>
+              <div class="col-xs-2"><b>{{ _("Modified On") }}</b></div>
+            </div>
           </div>
+        {% include "erpnext/templates/includes/projects/project_timesheets.html" %}
         </div>
-      {% include "erpnext/templates/includes/projects/project_timesheets.html" %}
       </div>
-    </div>
-  {% else %}
-    {{ empty_state(_("Timesheet")) }}
+    {% else %}
+      {{ empty_state(_("Timesheet")) }}
+    {% endif %}
   {% endif %}
 
   {% if doc.attachments %}
