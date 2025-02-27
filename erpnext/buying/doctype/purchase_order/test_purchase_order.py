@@ -3112,16 +3112,47 @@ class TestPurchaseOrder(FrappeTestCase):
 	
 
 	def test_outer_state_IGST_TC_B_098(self):
-		po = create_purchase_order(supplier='_Test Registered Supplier',qty=1,rate = 100,do_not_save=True)
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		company = "_Test Company"
+		purchase_tax_and_template = frappe.new_doc("Purchase Taxes and Charges Template")
+		purchase_tax_and_template.title = 'Test'
+		purchase_tax_and_template.company = company
+		purchase_tax_and_template.tax_category = 'Out-State'
+		purchase_tax_and_template.append("taxes", {
+			'category': 'Total',
+			'add_deduct_tax':'Add',
+			'rate': 18,
+			'account_head': 'Stock In Hand - _TC',
+			'description':'test'
+
+		})
+		purchase_tax_and_template.save()
+		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
+		fiscal_year.append("companies", {"company": company})
+		fiscal_year.save()
+		
+		create_supplier(supplier_name="_Test Registered Supplier")
+		warehouse = create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
+			company=company,
+		)
+		create_item("_Test Item",warehouse=warehouse)
+		po = create_purchase_order(supplier='_Test Registered Supplier',qty=1,rate = 100, do_not_save=True)
 		po.save()
+		print(po.company,'company')
+		p =  frappe.db.get_all("Account",{'company':po.company},["name"])
+		print(p)
 		purchase_tax_and_value = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company,'tax_category':'Out-State'},'name')
+		print(purchase_tax_and_value,0000)
 		po.taxes_and_charges = purchase_tax_and_value
 		po.save()
 		po.submit()
 		po.reload()
 		self.assertEqual(po.grand_total, 118)
 		pr = make_purchase_receipt(po.name)
-		pr.taxes_and_charges = purchase_tax_and_value
+		pr.taxes_and_charges = purchase_tax_and_template.name
 		pr.save()
 
 		frappe.db.set_value('Company',pr.company,'enable_perpetual_inventory',1)
