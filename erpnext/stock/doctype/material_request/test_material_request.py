@@ -34,6 +34,8 @@ from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_i
 from erpnext.buying.doctype.supplier.test_supplier import create_supplier
 from erpnext.stock.doctype.material_request.material_request import make_purchase_order_based_on_supplier
 from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
+
 
 class TestMaterialRequest(FrappeTestCase):
 	def test_make_purchase_order(self):
@@ -2882,7 +2884,14 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(sle.qty_after_transaction, 0)
 
 	def test_create_material_req_to_2po_to_1pr_cancel_TC_SCK_058(self):
-		mr = make_material_request()
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_customer(name="_Test Customer")
+		create_supplier(supplier_name="_Test Supplier")
+		create_item("_Test Item",warehouse="Stores - _TC")
+		create_fiscal_with_company("_Test Company")
+		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
+		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 		
 		#partially qty
 		po = make_purchase_order(mr.name)
@@ -2904,7 +2913,7 @@ class TestMaterialRequest(FrappeTestCase):
 		pr = make_purchase_receipt(po1.name, target_doc=pr)
 		pr.submit()
 		
-		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "_Test Warehouse - _TC"}, "actual_qty")
+		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "Goods In Transit - _TC"}, "actual_qty")
 		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':pr.name})
 		self.assertEqual(sle.qty_after_transaction, bin_qty)
 		self.assertEqual(sle.warehouse, mr.get("items")[0].warehouse)
@@ -3165,7 +3174,14 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(gl_stock_debit, 500)
 
 	def test_create_material_req_to_2po_to_1pi_TC_SCK_085(self):
-		mr = make_material_request()
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_customer(name="_Test Customer")
+		create_supplier(supplier_name="_Test Supplier")
+		create_item("_Test Item",warehouse="Stores - _TC")
+		create_fiscal_with_company("_Test Company")
+		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
+		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 
 		#partially qty
 		po = make_purchase_order(mr.name)
@@ -3666,7 +3682,14 @@ class TestMaterialRequest(FrappeTestCase):
 		
 
 	def test_create_material_req_to_2po_to_1pi_cancel_TC_SCK_089(self):
-		mr = make_material_request()
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_customer(name="_Test Customer")
+		create_supplier(supplier_name="_Test Supplier")
+		create_item("_Test Item",warehouse="Stores - _TC")
+		create_fiscal_with_company("_Test Company")
+		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
+		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 		
 		#partially qty
 		po = make_purchase_order(mr.name)
@@ -3907,7 +3930,14 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(gl_stock_debit, 500)
 
 	def test_create_material_req_to_2po_to_1pi_return_TC_SCK_103(self):
-		mr = make_material_request()
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_customer(name="_Test Customer")
+		create_supplier(supplier_name="_Test Supplier")
+		create_item("_Test Item",warehouse="Stores - _TC")
+		create_fiscal_with_company("_Test Company")
+		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
+		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 		
 		#partially qty
 		po = make_purchase_order(mr.name)
@@ -7656,3 +7686,20 @@ def make_company(company):
 		company.company_name = company
 		company.default_currency = "INR"
 		company.insert()
+
+
+def create_fiscal_with_company(company):
+	today = date.today()
+	if today.month >= 4:  # Fiscal year starts in April
+		start_date = date(today.year, 4, 1)
+		end_date = date(today.year + 1, 3, 31)
+	else:
+		start_date = date(today.year - 1, 4, 1)
+		end_date = date(today.year, 3, 31)
+
+	fy_doc = frappe.new_doc("Fiscal Year")
+	fy_doc.year = "2025 PO"
+	fy_doc.year_start_date = start_date
+	fy_doc.year_end_date = end_date
+	fy_doc.append("companies", {"company": company})
+	fy_doc.submit()
