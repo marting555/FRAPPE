@@ -1,4 +1,13 @@
 frappe.ready(function () {
+	$(".view-toggle__button").on("click", function() {
+		const viewType = $(this).data("view");
+		
+		$(".view-toggle__button").removeClass("view-toggle__button--active");
+		$(this).addClass("view-toggle__button--active");
+		$(".view").removeClass("view--active");
+		$("#" + viewType + "-view").addClass("view--active");
+	});
+
 	$(".task-status-switch").on("click", function () {
 		var $btn = $(this);
 		if ($btn.attr("data-status") === "Open") {

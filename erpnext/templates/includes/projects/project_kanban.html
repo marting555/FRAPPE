@@ -1,0 +1,43 @@
+<div class="kanban">
+  {% set task_statuses = ["Backlog", "Open", "Working", "Pending Review", "Overdue", "Closed", "Cancelled"] %}
+  {% for status in task_statuses %}
+    <div class="kanban__column kanban__column--{{ status|lower|replace(' ', '-') }}">
+      <div class="kanban__column-header">
+        <span class="kanban__column-header-dot"></span>
+        <span>{{ _(status) }}</span>
+      </div>
+      <div class="kanban__column-items" id="{{ status|lower|replace(' ', '-') }}-tasks">
+        {% for task in doc.tasks %}
+          {% if task.status == status %}
+            <div class="kanban__item" onclick="window.location.href='/tasks/{{ task.name }}'">
+              <div class="kanban__item-id">{{ task.name }}</div>
+              <div class="kanban__item-title">{{ task.subject }}</div>
+              
+              {% if task.priority %}
+                <div class="kanban__item-priority kanban__item-priority--{{ task.priority|lower }}">
+                  {{ task.priority }}
+                </div>
+              {% endif %}
+              
+              <div class="kanban__item-meta">
+                {% if task.exp_end_date %}
+                  <span>{{ task.exp_end_date }}</span>
+                {% else %}
+                  <span></span>
+                {% endif %}
+                
+                {% if task._assign %}
+                  <div class="kanban__item-assignee">
+                    <div class="kanban__item-assignee-avatar">
+                      {{ task._assign|first|upper }}
+                    </div>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</div> 

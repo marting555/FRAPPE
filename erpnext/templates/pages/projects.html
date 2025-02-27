@@ -38,19 +38,30 @@
     </div>
   </div>
   {% if doc.tasks %}
-  <div class="website-list">
-    <div class="result">
-      <div class="web-list-item transaction-list-item">
-        <div class="row align-items-center">
-          <div class="col-sm-4"><b>{{ _("Tasks") }}</b></div>
-          <div class="col-sm-2"><b>{{ _("Status") }}</b></div>
-          <div class="col-sm-2"><b>{{ _("End Date") }}</b></div>
-          <div class="col-sm-2"><b>{{ _("Assignment") }}</b></div>
-          <div class="col-sm-2"><b>{{ _("Modified On") }}</b></div>
+  <div class="view-toggle">
+    <button class="view-toggle__button view-toggle__button--active" data-view="list">{{ _("List View") }}</button>
+    <button class="view-toggle__button" data-view="kanban">{{ _("Kanban View") }}</button>
+  </div>
+
+  <div id="list-view" class="view view--active">
+    <div class="website-list">
+      <div class="result">
+        <div class="web-list-item transaction-list-item">
+          <div class="row align-items-center">
+            <div class="col-sm-4"><b>{{ _("Tasks") }}</b></div>
+            <div class="col-sm-2"><b>{{ _("Status") }}</b></div>
+            <div class="col-sm-2"><b>{{ _("End Date") }}</b></div>
+            <div class="col-sm-2"><b>{{ _("Assignment") }}</b></div>
+            <div class="col-sm-2"><b>{{ _("Modified On") }}</b></div>
+          </div>
         </div>
+        {% include "erpnext/templates/includes/projects/project_tasks.html" %}
       </div>
-      {% include "erpnext/templates/includes/projects/project_tasks.html" %}
     </div>
+  </div>
+
+  <div id="kanban-view" class="view">
+    {% include "erpnext/templates/includes/projects/project_kanban.html" %}
   </div>
   {% else %}
     {{ empty_state(_("Task")) }}
