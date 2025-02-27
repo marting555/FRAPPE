@@ -4913,7 +4913,8 @@ class TestPurchaseReceipt(FrappeTestCase):
 		"""Test Purchase Receipt Creation, Submission, and Stock Ledger Update"""
 
 		# Create Purchase Receipt
-
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
 		if not frappe.db.exists("Company", "_Test Company"):
 			company = frappe.new_doc("Company")
 			company.company_name = "_Test Company"
@@ -4924,7 +4925,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 			"item_name": "Ball point Pen",
 			"is_stock_item": 1,
 			"stock_uom": "Box",
-			"uoms": [{'uom': "Pcs", 'conversion_factor': 20}],
+			"uoms": [{'uom': "Unit", 'conversion_factor': 20}],
 		}
 
 		pr_fields = {
@@ -4939,13 +4940,17 @@ class TestPurchaseReceipt(FrappeTestCase):
 		pr_data = {
 			"company" : "_Test Company",
 			"item_code" : "Ball point Pen",
-			"warehouse" : create_warehouse("_Test Warehouse", properties=None, company=pr_fields['company']),
+			"warehouse" : create_warehouse("_Test Warehouse 1 - _TC", properties={"parent_warehouse": "All Warehouses - _TC"}, company=pr_fields['company']),
 			"supplier": "Test Supplier 1",
             "schedule_date": "2025-02-03",
-			"qty" : 5,
+			"uom":"Unit",
+			"stock_uom":"Box",
+			"qty" : 5
 		}
-		
-		target_warehouse = create_warehouse("_Test Warehouse", properties=None, company=pr_fields['company'])
+		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
+		fiscal_year.append("companies", {"company": "_Test Company"})
+		fiscal_year.save()
+		# target_warehouse = create_warehouse("_Test Warehouse", properties=None, company=pr_fields['company'])
 		item = make_item("Ball point Pen", item_fields).name
 		# self.item_code = "Ball Point Pen"
 		supplier = create_supplier(
