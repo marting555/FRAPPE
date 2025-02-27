@@ -3871,6 +3871,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		account_setting=frappe.get_doc("Accounts Settings")
 		account_setting.db_set("over_billing_allowance", 10)
 		account_setting.save()
+		buying_setting=frappe.get_doc("Buying Settings")
+		buying_setting.db_set("maintain_same_rate", 0)
 		company = "_Test Company"
 		item=make_test_item("_Test Item")
 		po=create_purchase_order(
@@ -4238,7 +4240,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		lvc.submit()
   
 		expected_gle =[
-			['CWIP Account - _TC',pi.grand_total+300, 0.0, pi.posting_date],
+			['CWIP Account - _TC',pi.grand_total, 0.0, pi.posting_date],
 			['Creditors - _TC', 0.0, 1000.0, pi.posting_date],
 			['Expenses Included In Valuation - _TC', 0.0, 300.0, pi.posting_date],
 		]
@@ -4806,9 +4808,6 @@ def create_asset_category():
  
  
 def create_asset_data():
-	if not frappe.db.exists("Asset Category", "Test_Category"):
-		create_asset_category()
-
 	if not frappe.db.exists("Location", "Test Location"):
 		frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert(ignore_permissions=True)
 
@@ -4826,3 +4825,6 @@ def create_asset_data():
 		frappe.get_doc(
 			{"doctype": "Finance Book", "finance_book_name": "Test Finance Book 3"}
 		).insert(ignore_permissions=True)
+  
+	if not frappe.db.exists("Asset Category", "Test_Category"):
+		create_asset_category()

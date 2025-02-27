@@ -4543,14 +4543,14 @@ class TestMaterialRequest(FrappeTestCase):
 				self.assertEqual(gl_entries_pr['debit'], 3000)
 			elif gl_entries_pr['account'] == "Stock Received But Not Billed - _TC":
 				self.assertEqual(gl_entries_pr['credit'], 3000)
-		pi = make_test_pi(pr.name, args={"is_paid" : 1, "cash_bank_account" : pe.paid_from})
+		pi = make_test_pi(pr.name, args={"is_paid" : 1, "cash_bank_account" : pe.paid_from,"paid_amount" : 3540})
 		pi.reload()
 		self.assertEqual(pi.status, "Paid")
 		doc_po.reload()
 		pr.reload()
 		self.assertEqual(doc_po.status, "Completed")
 		self.assertEqual(pr.status, "Completed")
-
+		frappe.db.exists
 	def test_mr_to_pe_flow_TC_B_080(self):
 		# Scenario : MR=>PO=> Partial PE=>PR=>PI=>Rm PE (With GST)
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_gl_entries, get_sle
