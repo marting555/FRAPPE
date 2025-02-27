@@ -34,6 +34,8 @@ from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_i
 from erpnext.buying.doctype.supplier.test_supplier import create_supplier
 from erpnext.stock.doctype.material_request.material_request import make_purchase_order_based_on_supplier
 from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
+
 
 class TestMaterialRequest(FrappeTestCase):
 	def test_make_purchase_order(self):
@@ -3166,7 +3168,6 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_create_material_req_to_2po_to_1pi_TC_SCK_085(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
 		create_company()
 		create_customer(name="_Test Customer")
 		create_supplier(supplier_name="_Test Supplier")
@@ -3674,7 +3675,14 @@ class TestMaterialRequest(FrappeTestCase):
 		
 
 	def test_create_material_req_to_2po_to_1pi_cancel_TC_SCK_089(self):
-		mr = make_material_request()
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_customer(name="_Test Customer")
+		create_supplier(supplier_name="_Test Supplier")
+		create_item("_Test Item",warehouse="Stores - _TC")
+		create_fiscal_with_company("_Test Company")
+		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
+		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 		
 		#partially qty
 		po = make_purchase_order(mr.name)
@@ -3915,7 +3923,14 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(gl_stock_debit, 500)
 
 	def test_create_material_req_to_2po_to_1pi_return_TC_SCK_103(self):
-		mr = make_material_request()
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_customer(name="_Test Customer")
+		create_supplier(supplier_name="_Test Supplier")
+		create_item("_Test Item",warehouse="Stores - _TC")
+		create_fiscal_with_company("_Test Company")
+		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
+		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 		
 		#partially qty
 		po = make_purchase_order(mr.name)
