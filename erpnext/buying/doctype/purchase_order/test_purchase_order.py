@@ -2135,18 +2135,22 @@ class TestPurchaseOrder(FrappeTestCase):
 	
 	def test_po_to_pr_with_gst_fully_paid_TC_B_086(self):
 		# Scenario : PO => PR with GST Fully Paid
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_supplier(supplier_name="_Test Supplier")
+		create_warehouse("_Test Warehouse - _TC")
+		create_item("_Test Item")
+		create_fiscal_with_company("_Test Company")
 
 		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
 		purchase_tax.title = "TEST"
 		purchase_tax.company = "_Test Company"
-		purchase_tax.tax_category = "_Test Tax Category 1"
-
+		
 		purchase_tax.append("taxes",{
 			"category":"Total",
 			"add_deduct_tax":"Add",
 			"charge_type":"On Net Total",
-			"account_head":"_Test Account Excise Duty - _TC",
-			"_Test Account Excise Duty":"_Test Account Excise Duty",
+			"account_head":"Input Tax CGST - _TC",
 			"rate":100,
 			"description":"GST"
 		})
@@ -2174,18 +2178,23 @@ class TestPurchaseOrder(FrappeTestCase):
 	
 	def test_po_to_pr_to_pi_fully_paid_TC_B_087(self):
 		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_supplier(supplier_name="_Test Supplier")
+		create_warehouse("_Test Warehouse - _TC")
+		create_item("_Test Item")
+		create_fiscal_with_company("_Test Company")
 
+		accounts = frappe.get_all("Account", filters={"company": "_Test Company"}, fields=["name"])
 		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
 		purchase_tax.title = "TEST"
 		purchase_tax.company = "_Test Company"
-		purchase_tax.tax_category = "_Test Tax Category 1"
-
+		
 		purchase_tax.append("taxes",{
 			"category":"Total",
 			"add_deduct_tax":"Add",
 			"charge_type":"On Net Total",
-			"account_head":"_Test Account Excise Duty - _TC",
-			"_Test Account Excise Duty":"_Test Account Excise Duty",
+			"account_head":"Input Tax CGST - _TC",
 			"rate":100,
 			"description":"GST"
 		})
@@ -3291,6 +3300,12 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(pi.docstatus, 1)
 
 	def test_po_with_actual_account_type_TC_B_133(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_supplier(supplier_name="_Test Supplier")
+		create_warehouse("_Test Warehouse - _TC")
+		create_item("_Test Item")
+		create_fiscal_with_company("_Test Company")
 		po = create_purchase_order(qty=10,rate = 1000, do_not_save=True)
 		po.save()
 		purchase_tax_and_value = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company,'tax_category':'In-State'},'name')
@@ -5255,6 +5270,12 @@ class TestPurchaseOrder(FrappeTestCase):
 
 	def test_closed_po_further_pi_pr_not_created_TC_B_131(self):
 		from erpnext.buying.doctype.purchase_order.purchase_order import update_status
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_supplier(supplier_name="_Test Supplier")
+		create_warehouse("_Test Warehouse - _TC")
+		create_item("_Test Item")
+
 		po = create_purchase_order(qty=10,Rate=1000, do_not_save=True)
 		po.save()
 		tax_template = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company,'tax_category':'In-State'},'name')
@@ -5278,6 +5299,12 @@ class TestPurchaseOrder(FrappeTestCase):
 	
 	def test_closed_pr_further_pi_not_created_TC_B_132(self):
 		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import update_purchase_receipt_status
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_supplier(supplier_name="_Test Supplier")
+		create_warehouse("_Test Warehouse - _TC")
+		create_item("_Test Item")
+		create_fiscal_with_company("_Test Company")
 		po = create_purchase_order(qty=10,Rate=1000, do_not_save=True)
 		po.save()
 		tax_template = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company,'tax_category':'In-State'},'name')
@@ -8143,4 +8170,19 @@ def validate_fiscal_year(company):
 		if company not in company_list:
 			fiscal_year.append("companies", {"company": company})
 			fiscal_year.save()
-		
+
+def create_fiscal_with_company(company):
+	today = date.today()
+	if today.month >= 4:  # Fiscal year starts in April
+		start_date = date(today.year, 4, 1)
+		end_date = date(today.year + 1, 3, 31)
+	else:
+		start_date = date(today.year - 1, 4, 1)
+		end_date = date(today.year, 3, 31)
+
+	fy_doc = frappe.new_doc("Fiscal Year")
+	fy_doc.year = "2025 PO"
+	fy_doc.year_start_date = start_date
+	fy_doc.year_end_date = end_date
+	fy_doc.append("companies", {"company": company})
+	fy_doc.submit()
