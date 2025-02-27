@@ -5520,9 +5520,15 @@ class TestPurchaseOrder(FrappeTestCase):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
 		create_company()
 		create_supplier(supplier_name="_Test Supplier")
-		create_warehouse("_Test Warehouse - _TC")
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
+			company="_Test Company"
+		)
 		create_item("_Test Item")
-		create_fiscal_with_company("_Test Company")
+		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
+		fiscal_year.append("companies", {"company": "_Test Company"})
+		fiscal_year.save()
 		po = create_purchase_order(qty=10,Rate=1000, do_not_save=True)
 		po.save()
 		tax_template = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company,'tax_category':'In-State'},'name')
