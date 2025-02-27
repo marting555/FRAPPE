@@ -4989,7 +4989,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 		item = []
 		warehouse = []
 		date = []
-		
+
 		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
 		fiscal_year.append("companies", {"company": "_Test Company"})
 		fiscal_year.save()
@@ -5028,9 +5028,14 @@ class TestPurchaseReceipt(FrappeTestCase):
 			self.assertTrue(from_date <= i <= to_date)
 
 	def test_stock_ledger_report_TC_SCK_226(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
 		item = []
 		warehouse = []
 		date = []
+		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
+		fiscal_year.append("companies", {"company": "_Test Company"})
+		fiscal_year.save()
 		if not frappe.db.exists("Item Group", {"item_group_name":"_Test Group"}):
 			item_group = frappe.new_doc("Item Group")
 			item_group.item_group_name =  "_Test Group"
