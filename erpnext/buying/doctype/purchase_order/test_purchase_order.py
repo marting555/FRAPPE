@@ -2166,9 +2166,15 @@ class TestPurchaseOrder(FrappeTestCase):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
 		create_company()
 		create_supplier(supplier_name="_Test Supplier")
-		create_warehouse("_Test Warehouse - _TC")
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
+			company="_Test Company",
+		)
 		create_item("_Test Item")
-		create_fiscal_with_company("_Test Company")
+		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
+		fiscal_year.append("companies", {"company": "_Test Company"})
+		fiscal_year.save()
 
 		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
 		purchase_tax.title = "TEST"
@@ -2178,7 +2184,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"category":"Total",
 			"add_deduct_tax":"Add",
 			"charge_type":"On Net Total",
-			"account_head":"Input Tax CGST - _TC",
+			"account_head":"Stock In Hand - _TC",
 			"rate":100,
 			"description":"GST"
 		})
