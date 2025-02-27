@@ -3397,14 +3397,48 @@ class TestPurchaseOrder(FrappeTestCase):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
 		create_company()
 		create_supplier(supplier_name="_Test Supplier")
-		create_warehouse("_Test Warehouse - _TC")
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
+			company="_Test Company",
+		)
 		create_item("_Test Item")
-		create_fiscal_with_company("_Test Company")
+		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
+		fiscal_year.append("companies", {"company": "_Test Company"})
+		fiscal_year.save()
 		po = create_purchase_order(qty=10,rate = 1000, do_not_save=True)
 		po.save()
-		purchase_tax_and_value = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company,'tax_category':'In-State'},'name')
-		po.taxes_and_charges = purchase_tax_and_value
+		purchase_tax_template = frappe.new_doc("Purchase Taxes and Charges Template")
+		purchase_tax_template.title = 'Test'
+		purchase_tax_template.company = po.company
+		purchase_tax_template.tax_category = 'In-State'
+		value_list = [{
+			'category': 'Total',
+			'add_deduct_tax':'Add',
+			'charge_type':'On Net Total',
+			'account_head': 'Stock In Hand - _TC',
+			'description':'test',
+			"tax_amount":100,
+			"rate":9
+		},
+		{
+			'category': 'Total',
+			'add_deduct_tax':'Add',
+			'charge_type':'On Net Total',
+			'account_head': 'Stock In Hand - _TC',
+			'description':'test',
+			"tax_amount":100,
+			"rate":9
+		}]
+		for items in value_list:
+			purchase_tax_template.append("taxes", items)
+		purchase_tax_template.save()
+		purchase_tax_and_value = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company},'name')
+		print(purchase_tax_and_value,8888)
+		po.taxes_and_charges = purchase_tax_template.name
 		po.save()
+		account = frappe.db.get_all("Account",{'company':po.company},["name"])
+		print(account)
 		po.append('taxes',{
 			'charge_type':'Actual',
 			'account_head' : 'Freight and Forwarding Charges - _TC',
