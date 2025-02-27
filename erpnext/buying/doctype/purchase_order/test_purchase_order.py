@@ -2364,8 +2364,9 @@ class TestPurchaseOrder(FrappeTestCase):
 			"company" : "_Test Company",
 
 		}
-		rule = frappe.get_doc(pricing_rule_record)
-		rule.insert()
+		if not frappe.db.exists('Pricing Rule', {'title': 'Discount on _Test Item'}):
+			rule = frappe.get_doc(pricing_rule_record)
+			rule.insert()
 
 		frappe.get_doc(
 			{
@@ -2388,6 +2389,10 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi_item = doc_pi.items[0]
 		self.assertEqual(pi_item.rate, 117)
 		self.assertEqual(pi_item.amount, 117)
+		frappe.delete_doc_if_exists("Pricing Rule", "Discount on _Test Item")
+		
+	def setUp(self):
+		validate_fiscal_year('_Test Company')
 
 	def test_po_with_pricing_rule_TC_B_047(self):
 		# Scenario : PO => Pricing Rule => PR 
@@ -2425,8 +2430,9 @@ class TestPurchaseOrder(FrappeTestCase):
 			"company" : "_Test Company",
 
 		}
-		rule = frappe.get_doc(pricing_rule_record)
-		rule.insert()
+		if not frappe.db.exists('Pricing Rule', {'title': 'Discount on _Test Item'}):
+			rule = frappe.get_doc(pricing_rule_record)
+			rule.insert()
 
 		frappe.get_doc(
 			{
@@ -2448,6 +2454,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pr_item = doc_pr.items[0]
 		self.assertEqual(pr_item.rate, 117) 
 		self.assertEqual(pr_item.amount, 117)
+		frappe.delete_doc_if_exists("Pricing Rule", "Discount on _Test Item")
 
 	def test_po_additional_discount_TC_B_052(self):
 		# Scenario : PO => PR => PI [With Additional Discount]
