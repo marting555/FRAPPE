@@ -4869,6 +4869,14 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(stock_qty, self.qty_received - self.qty_issued)
 
 	def test_sales_order_reservation_TC_SCK_223(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
+		create_company()
+		create_item("_Test Item",warehouse="Stores - _TC")
+		create_supplier(supplier_name="_Test Supplier")
+		create_customer(name = 'Test Customer')
+
+		frappe.db.set_value("Stock Settings","Stock Settings",'enable_stock_reservation',1)
 		if not frappe.db.exists("Company", "_Test Company"):
 			company = frappe.new_doc("Company")
 			company.company_name = "_Test Company"
