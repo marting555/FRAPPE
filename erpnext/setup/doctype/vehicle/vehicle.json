@@ -30,9 +30,10 @@
  "fields": [
 
   {
+   "label": "Image ",
    "fieldtype": "Attach Image",
    "fieldname": "vehicle_image",
-   "label": "Image "
+   "options": "image"
   },
   {
    "fieldname": "license_plate",
@@ -218,6 +219,7 @@
 
  ],
  "links": [],
+ "image_field": "vehicle_image",
  "modified": "2025-01-24 06:22:33.129805",
  "modified_by": "Administrator",
  "module": "Setup",
