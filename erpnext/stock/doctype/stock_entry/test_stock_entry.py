@@ -3485,7 +3485,7 @@ class TestStockEntry(FrappeTestCase):
 
 		company = "_Test Company"
 		create_company()
-		create_fiscal_with_company("_Test Company")
+		get_fiscal_year(company)
 		create_warehouse("_Test Warehouse Group - _TC", company=company)
 
 		if not frappe.db.exists("Company", company):
@@ -3543,7 +3543,7 @@ class TestStockEntry(FrappeTestCase):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
 		company = "_Test Company"
 		create_company()
-		create_fiscal_with_company("_Test Company")
+		get_fiscal_year(company)
 		create_warehouse("_Test Warehouse Group - _TC", company=company)
 
 		if not frappe.db.exists("Company", company):
@@ -3690,7 +3690,7 @@ class TestStockEntry(FrappeTestCase):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
 		company = "_Test Company"
 		create_company()
-		create_fiscal_with_company("_Test Company")
+		get_fiscal_year(company)
 		create_warehouse("_Test Warehouse Group - _TC", company=company)
 		if not frappe.db.exists("Company", company):
 			company_doc = frappe.new_doc("Company")
@@ -4159,12 +4159,19 @@ def create_fiscal_with_company(company):
 		end_date = date(today.year, 3, 31)
 
 	fy_doc = frappe.new_doc("Fiscal Year")
-	fy_doc.year = "2025 PO"
+	fy_doc.year = "2024-2025"
 	fy_doc.year_start_date = start_date
 	fy_doc.year_end_date = end_date
 	fy_doc.append("companies", {"company": company})
 	fy_doc.submit()
 
+def get_fiscal_year(company):
+	if frappe.db.exists("Fiscal Year", "2024-2025"):
+		fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
+		fiscal_year.append("companies", {"company": company})
+		fiscal_year.save()
+	else:
+		create_fiscal_with_company(company)
 
 def generate_serial_nos(item_code, qty):
     """Generate and insert serial numbers for an item."""
