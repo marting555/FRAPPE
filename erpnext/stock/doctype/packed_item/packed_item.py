@@ -169,6 +169,9 @@ def reset_packing_list(doc):
 
 
 def get_product_bundle_items(item_code="", *, product_bundle_name=""):
+	if not product_bundle_name:
+		product_bundle_name = is_product_bundle(item_code, as_name=True)
+
 	product_bundle = frappe.qb.DocType("Product Bundle")
 	product_bundle_item = frappe.qb.DocType("Product Bundle Item")
 
@@ -182,13 +185,10 @@ def get_product_bundle_items(item_code="", *, product_bundle_name=""):
 			product_bundle_item.uom,
 			product_bundle_item.description,
 		)
+		.where((product_bundle.new_item_code == item_code) & (product_bundle.disabled == 0))
+		.where(product_bundle.name == product_bundle_name)
 		.orderby(product_bundle_item.idx)
 	)
-
-	if product_bundle_name:
-		query = query.where((product_bundle.name == product_bundle_name) & (product_bundle.disabled == 0))
-	else:
-		query = query.where((product_bundle.new_item_code == item_code) & (product_bundle.disabled == 0))
 
 	return query.run(as_dict=True)
 
