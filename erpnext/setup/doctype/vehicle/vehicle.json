@@ -14,24 +14,24 @@
   "company",  "employee",
   
   "vehicle_details",
-  "make","model", "last_odometer", "acquisition_date", "location",
+  "make","model", "year", "last_odometer",  
   "column_break_8",
-  "chassis_no","vin_number", "engine_no", "vehicle_value", 
+  "chassis_no", "vin_number", "engine_no",
   
+  "additional_details",
+  "fuel_type",  "uom",  "carbon_check_date", "location",
+  "column_break_21",
+  "color",  "wheels",  "doors", "vehicle_value", "acquisition_date",
+
   "insurance_details",
   "insurance_company",  "policy_no",
   "column_break_15",
   "start_date",  "end_date",
-  
-  "additional_details",
-  "fuel_type",  "uom",  "carbon_check_date",
-  "column_break_21",
-  "color",  "wheels",  "doors",
 
   "amended_from"
  ],
  "fields": [
-    
+
   {
    "fieldname": "license_plate",
    "fieldtype": "Data",
@@ -219,6 +219,7 @@
    "print_hide": 1,
    "read_only": 1
   }
+
  ],
  "links": [],
  "modified": "2025-01-24 06:22:33.129805",
