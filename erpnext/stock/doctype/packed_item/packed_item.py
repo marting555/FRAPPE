@@ -81,7 +81,7 @@ def make_packing_list(doc):
 
 	for item_row in doc.get("items"):
 		product_bundle_name = item_row.get("product_bundle_name")
-		if is_product_bundle(item_row.item_code, product_bundle_name=product_bundle_name):
+		if get_product_bundle_name(item_row.item_code, product_bundle_name=product_bundle_name):
 			for bundle_item in get_product_bundle_items(
 				item_row.item_code, product_bundle_name=product_bundle_name
 			):
@@ -105,25 +105,26 @@ def make_packing_list(doc):
 		set_product_bundle_rate_amount(doc, parent_items_price)  # set price in bundle item
 
 
-def is_product_bundle(item_code="", *, product_bundle_name="", as_name=False) -> bool | str:
-	if not item_code and not product_bundle_name:
-		return False
-
-	if product_bundle_name:
-		name = frappe.db.exists("Product Bundle", {"name": product_bundle_name, "disabled": 0})
-	else:
-		name = frappe.db.exists("Product Bundle", {"new_item_code": item_code, "disabled": 0})
-
-	if as_name:
-		return name  # type: ignore
-	return bool(name)
+def get_product_bundle_name(item_code="", *, product_bundle_name="") -> str:
+	if item_code and product_bundle_name:
+		if name := frappe.db.exists(
+			"Product Bundle", {"name": product_bundle_name, "new_item_code": item_code, "disabled": 0}
+		):
+			return name  # type: ignore
+	elif item_code:
+		if name := frappe.db.exists("Product Bundle", {"new_item_code": item_code, "disabled": 0}):
+			return name  # type: ignore
+	return ""
 
 
 def get_product_bundle(item_code="", *, product_bundle_name="") -> "ProductBundle | None":
 	try:
-		if product_bundle_name:
-			return frappe.get_doc("Product Bundle", {"name": product_bundle_name, "disabled": 0})  # type: ignore
-		return frappe.get_last_doc("Product Bundle", {"new_item_code": item_code, "disabled": 0})  # type: ignore
+		if item_code and product_bundle_name:
+			return frappe.get_last_doc(
+				"Product Bundle", {"name": product_bundle_name, "new_item_code": item_code, "disabled": 0}
+			)  # type: ignore
+		elif item_code:
+			return frappe.get_last_doc("Product Bundle", {"new_item_code": item_code, "disabled": 0})  # type: ignore
 	except frappe.exceptions.DoesNotExistError:
 		frappe.clear_last_message()
 		return None
@@ -175,7 +176,7 @@ def reset_packing_list(doc):
 
 def get_product_bundle_items(item_code="", *, product_bundle_name=""):
 	if not product_bundle_name:
-		product_bundle_name = is_product_bundle(item_code, as_name=True)
+		product_bundle_name = get_product_bundle_name(item_code)
 
 	product_bundle = frappe.qb.DocType("Product Bundle")
 	product_bundle_item = frappe.qb.DocType("Product Bundle Item")

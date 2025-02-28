@@ -163,9 +163,9 @@ def remove_standard_fields(out: ItemDetails):
 
 
 def set_valuation_rate(out: ItemDetails | dict, ctx: ItemDetailsCtx):
-	from erpnext.stock.doctype.packed_item.packed_item import get_product_bundle, is_product_bundle
+	from erpnext.stock.doctype.packed_item.packed_item import get_product_bundle, get_product_bundle_name
 
-	if is_product_bundle(ctx.item_code, product_bundle_name=ctx.product_bundle_name):
+	if get_product_bundle_name(ctx.item_code, product_bundle_name=ctx.product_bundle_name):
 		valuation_rate = 0.0
 		product_bundle = get_product_bundle(ctx.item_code, product_bundle_name=ctx.product_bundle_name)
 

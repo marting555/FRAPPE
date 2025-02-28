@@ -18,7 +18,7 @@ from frappe.utils.nestedset import get_descendants_of
 from erpnext.selling.doctype.sales_order.sales_order import (
 	make_delivery_note as create_delivery_note_from_sales_order,
 )
-from erpnext.stock.doctype.packed_item.packed_item import get_product_bundle, is_product_bundle
+from erpnext.stock.doctype.packed_item.packed_item import get_product_bundle, get_product_bundle_name
 from erpnext.stock.doctype.serial_and_batch_bundle.serial_and_batch_bundle import (
 	get_auto_batch_nos,
 	get_picked_serial_nos,
@@ -558,7 +558,7 @@ class PickList(Document):
 				frappe.throw(f"Row #{item.idx}: Item Code is Mandatory")
 			if not cint(
 				frappe.get_cached_value("Item", item.item_code, "is_stock_item")
-			) and not is_product_bundle(item.item_code):
+			) and not get_product_bundle_name(item.item_code):
 				continue
 			item_code = item.item_code
 			reference = item.sales_order_item or item.material_request_item

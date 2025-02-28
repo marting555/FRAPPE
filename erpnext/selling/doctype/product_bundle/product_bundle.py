@@ -8,7 +8,7 @@ from frappe.model.document import Document
 from frappe.query_builder import Criterion
 from frappe.utils import get_link_to_form
 
-from erpnext.stock.doctype.packed_item.packed_item import is_product_bundle
+from erpnext.stock.doctype.packed_item.packed_item import get_product_bundle_name
 
 
 class ProductBundle(Document):
@@ -85,7 +85,7 @@ class ProductBundle(Document):
 
 	def validate_child_items(self):
 		for item in self.items:
-			if is_product_bundle(item.item_code):
+			if get_product_bundle_name(item.item_code):
 				frappe.throw(
 					_(
 						"Row #{0}: Child Item should not be a Product Bundle. Please remove Item {1} and Save"

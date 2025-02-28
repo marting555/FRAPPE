@@ -1555,9 +1555,9 @@ def set_delivery_date(items, sales_order):
 
 
 def is_product_bundle(item_code="", *, product_bundle_name=""):
-	from erpnext.stock.doctype.packed_item.packed_item import is_product_bundle
+	from erpnext.stock.doctype.packed_item.packed_item import get_product_bundle_name
 
-	return is_product_bundle(item_code, product_bundle_name=product_bundle_name)
+	return get_product_bundle_name(item_code, product_bundle_name=product_bundle_name)
 
 
 @frappe.whitelist()
@@ -1664,7 +1664,7 @@ def make_inter_company_purchase_order(source_name, target_doc=None):
 
 @frappe.whitelist()
 def create_pick_list(source_name, target_doc=None):
-	from erpnext.stock.doctype.packed_item.packed_item import is_product_bundle
+	from erpnext.stock.doctype.packed_item.packed_item import get_product_bundle_name
 
 	def validate_sales_order():
 		so = frappe.get_doc("Sales Order", source_name)
@@ -1696,7 +1696,7 @@ def create_pick_list(source_name, target_doc=None):
 		return (
 			abs(item.delivered_qty) < abs(item.qty)
 			and item.delivered_by_supplier != 1
-			and not is_product_bundle(item.item_code, product_bundle_name=item.product_bundle_name)
+			and not get_product_bundle_name(item.item_code, product_bundle_name=item.product_bundle_name)
 		)
 
 	# Don't allow a Pick List to be created against a Sales Order that has reserved stock.
