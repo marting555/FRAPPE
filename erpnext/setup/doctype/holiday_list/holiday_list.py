@@ -31,12 +31,10 @@ class HolidayList(Document):
 		
 		if added_rows:
 			for row in added_rows:
-				frappe.msgprint(f"Row(s) added: {row}")
 				self.switch_holiday_status(row, aws_url)
 		
 		if deleted_rows:
-			for row in added_rows:
-				frappe.msgprint(f"Row(s) deleted: {row}")
+			for row in deleted_rows:
 				self.switch_holiday_status(row, aws_url)
 
 	def validate(self):
