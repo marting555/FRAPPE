@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-02-16 09:34+0000\n"
-"PO-Revision-Date: 2025-02-27 03:21\n"
+"PO-Revision-Date: 2025-02-28 03:28\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Persian\n"
 "MIME-Version: 1.0\n"
@@ -11271,7 +11271,7 @@ msgstr "تکمیل سفارش"
 #: erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.json
 #: erpnext/telephony/doctype/call_log/call_log.json
 msgid "Completed"
-msgstr "تکمیل شد"
+msgstr "تکمیل شده"
 
 #. Label of the completed_by (Link) field in DocType 'Task'
 #: erpnext/projects/doctype/task/task.json
@@ -23245,7 +23245,7 @@ msgstr "الگوی شرایط پرداخت پیش‌فرض را نادیده ب�
 #. Settings'
 #: erpnext/projects/doctype/projects_settings/projects_settings.json
 msgid "Ignore Employee Time Overlap"
-msgstr "همپوشانی زمان کارمند را نادیده بگیرید"
+msgstr "نادیده گرفتن همپوشانی زمان کارمند"
 
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.js:140
 msgid "Ignore Empty Stock"
@@ -26924,7 +26924,7 @@ msgstr "آیتم {0}: مقدار {1} تولید شده است. "
 
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.py:1328
 msgid "Item {} does not exist."
-msgstr "مورد {} وجود ندارد."
+msgstr "آیتم {} وجود ندارد."
 
 #. Name of a report
 #: erpnext/stock/report/item_wise_price_list_rate/item_wise_price_list_rate.json
@@ -42634,7 +42634,7 @@ msgstr ""
 
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.py:508
 msgid "Removed items with no change in quantity or value."
-msgstr "آیتم‌های حذف شده بدون تغییر در مقدار یا ارزش."
+msgstr "آیتم‌های بدون تغییر در مقدار یا ارزش حذف شدند."
 
 #: erpnext/accounts/doctype/exchange_rate_revaluation/exchange_rate_revaluation.py:87
 msgid "Removing rows without exchange gain or loss"
@@ -57164,7 +57164,7 @@ msgstr "در صورت ثبت موجودی افتتاحیه، نرخ ارزش گ�
 
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.py:709
 msgid "Valuation Rate required for Item {0} at row {1}"
-msgstr "نرخ ارزش گذاری مورد نیاز برای مورد {0} در ردیف {1}"
+msgstr "نرخ ارزش گذاری الزامی است برای آیتم {0} در ردیف {1}"
 
 #. Option for the 'Consider Tax or Charge for' (Select) field in DocType
 #. 'Purchase Taxes and Charges'
