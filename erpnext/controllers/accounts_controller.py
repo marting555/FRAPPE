@@ -60,7 +60,7 @@ from erpnext.controllers.sales_and_purchase_return import validate_return
 from erpnext.exceptions import InvalidCurrency
 from erpnext.setup.utils import get_exchange_rate
 from erpnext.stock.doctype.item.item import get_uom_conv_factor
-from erpnext.stock.doctype.packed_item.packed_item import make_packing_list
+from erpnext.stock.doctype.packed_item.packed_item import is_product_bundle, make_packing_list
 from erpnext.stock.get_item_details import (
 	ItemDetailsCtx,
 	_get_item_tax_template,
@@ -3690,6 +3690,14 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 
 			if new_child_flag:
 				child_item.fg_item = d["fg_item"]
+
+		if parent.doctype == "Sales Order":
+			if product_bundle_name := is_product_bundle(
+				child_item.item_code,
+				product_bundle_name=child_item.product_bundle_name,
+				as_name=True,
+			):
+				child_item.product_bundle_name = product_bundle_name
 
 		child_item.qty = flt(d.get("qty"))
 		rate_precision = child_item.precision("rate") or 2
