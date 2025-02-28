@@ -16,17 +16,15 @@
   "vehicle_details",
   "make","model", "year", "fuel_type",  "uom",
   "column_break_8",
-   "last_odometer",  "chassis_no", "vin_number", "engine_no",
+   "last_odometer", "vin_number", "chassis_no", "engine_no",
   
   "additional_details",
-  "vehicle_value", "acquisition_date", "carbon_check_date", "location",
+  "location", "acquisition_date", "vehicle_value",  "carbon_check_date", 
   "column_break_21",
   "color",  "wheels",  "doors", 
 
   "insurance_details",
-  "insurance_company",  "policy_no",
-  "column_break_15",
-  "start_date",  "end_date",
+  "insurance_company",  "policy_no",  "column_break_15", "start_date",  "end_date",
 
   "amended_from"
  ],
@@ -39,6 +37,10 @@
    "no_copy": 1,
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
   },
   {
    "fieldname": "company",
@@ -54,17 +56,64 @@
    "label": "Employee",
    "options": "Employee"
   },
-
+  
   {
+   "label": "Details",
+   "fieldname": "vehicle_details",
+   "fieldtype": "Section Break"
+  },
+  {
+   "label": "Make",
    "fieldname": "make",
    "fieldtype": "Data",
-   "label": "Make",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "reqd": 1
   },
   {
-   "fieldname": "year",
+   "fieldname": "model",
    "fieldtype": "Data",
-   "label": "Year"
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Model",
+   "reqd": 1
+  },
+  {
+   "label": "Year",
+   "fieldname": "year",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "fieldtype": "Data"
+  },
+  {
+   "fieldname": "fuel_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Fuel Type",
+   "options": "Petrol\nDiesel\nNatural Gas\nElectric",
+   "reqd": 1
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Fuel UOM",
+   "options": "UOM",
+   "default": "Litre",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_8",
+   "fieldtype": "Column Break"
+  },
+  {
+   "label": "Odometer (Last)",
+   "fieldname": "last_odometer",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "no_copy": 1,
+   "set_only_once": 1
   },
   {
    "fieldname": "vin_number",
@@ -77,35 +126,16 @@
    "label": "Engine Number"
   },
   {
-   "fieldname": "column_break_3",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "model",
+   "fieldname": "chassis_no",
    "fieldtype": "Data",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Model",
-   "reqd": 1
+   "label": "Chassis No"
   },
+
   {
-   "fieldname": "vehicle_details",
+    "collapsible": 1,
+   "fieldname": "additional_details",
    "fieldtype": "Section Break",
-   "label": "Details"
-  },
-  {
-   "fieldname": "last_odometer",
-   "fieldtype": "Int",
-   "in_list_view": 1,
-   "label": "Odometer Value (Last)",
-   "no_copy": 1,
-   "reqd": 1,
-   "set_only_once": 1
-  },
-  {
-   "fieldname": "acquisition_date",
-   "fieldtype": "Date",
-   "label": "Acquisition Date"
+   "label": "Additional Details"
   },
   {
    "fieldname": "location",
@@ -113,44 +143,15 @@
    "label": "Location"
   },
   {
-   "fieldname": "column_break_8",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "chassis_no",
-   "fieldtype": "Data",
-   "label": "Chassis No"
+   "fieldname": "acquisition_date",
+   "fieldtype": "Date",
+   "label": "Acquisition Date"
   },
   {
    "fieldname": "vehicle_value",
    "fieldtype": "Currency",
-   "in_list_view": 1,
    "label": "Vehicle Value",
    "print_hide_if_no_value": 1
-  },
-
-  {
-   "fieldname": "additional_details",
-   "fieldtype": "Section Break",
-   "label": "Additional Details"
-  },
-  {
-   "fieldname": "fuel_type",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Fuel Type",
-   "options": "\nPetrol\nDiesel\nNatural Gas\nElectric",
-   "reqd": 1
-  },
-  {
-   "fieldname": "uom",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Fuel UOM",
-   "options": "UOM",
-   "default": "Litre",
-   "reqd": 1
   },
   {
    "fieldname": "carbon_check_date",
