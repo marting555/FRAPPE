@@ -81,10 +81,12 @@ def make_packing_list(doc):
 
 	for item_row in doc.get("items"):
 		product_bundle_name = item_row.get("product_bundle_name")
-		if get_product_bundle_name(item_row.item_code, product_bundle_name=product_bundle_name):
-			for bundle_item in get_product_bundle_items(
-				item_row.item_code, product_bundle_name=product_bundle_name
-			):
+		product_bundle_name = get_product_bundle_name(
+			item_row.item_code, product_bundle_name=product_bundle_name
+		)
+		if product_bundle_name:
+			bundle: "ProductBundle" = frappe.get_cached_doc("Product Bundle", product_bundle_name)  # type: ignore
+			for bundle_item in bundle.items:
 				pi_row = add_packed_item_row(
 					doc=doc,
 					packing_item=bundle_item,
