@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-02-16 09:34+0000\n"
-"PO-Revision-Date: 2025-02-27 03:21\n"
+"PO-Revision-Date: 2025-02-28 03:28\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Bosnian\n"
 "MIME-Version: 1.0\n"
@@ -8645,7 +8645,7 @@ msgstr "Zapisnik Detalja Masovnih Transakcija"
 #. Label of a Link in the Settings Workspace
 #: erpnext/setup/workspace/settings/settings.json
 msgid "Bulk Update"
-msgstr "Grupno ažuriranje"
+msgstr "Masovno Ažuriranje"
 
 #. Label of the packed_items (Table) field in DocType 'Quotation'
 #. Label of the bundle_items_section (Section Break) field in DocType
@@ -8945,7 +8945,7 @@ msgstr "Usmjeravanje Poziva"
 #: erpnext/telephony/doctype/incoming_call_settings/incoming_call_settings.js:58
 #: erpnext/telephony/doctype/incoming_call_settings/incoming_call_settings.py:48
 msgid "Call Schedule Row {0}: To time slot should always be ahead of From time slot."
-msgstr "Rasporeda Poziva Red{0}: Vremenski Do termin uvek treba da bude ispred vremenskog Od termina."
+msgstr "Raspored Poziva Red{0}: Vremenski Do termin uvek treba da bude ispred vremenskog Od termina."
 
 #. Label of the section_break_11 (Section Break) field in DocType 'Call Log'
 #: erpnext/public/js/call_popup/call_popup.js:164
@@ -13198,13 +13198,13 @@ msgstr "Kreiranje <b><a href='/app/{0}'>{1}(s)</a></b> uspješno"
 msgid "Creation of {0} failed.\n"
 "\t\t\t\tCheck <b><a href=\"/app/bulk-transaction-log\">Bulk Transaction Log</a></b>"
 msgstr "Kreiranje {0} nije uspjelo.\n"
-"\t\t\t\tProvjerite <b><a href=\"/app/bulk-transaction-log\">Dnevnik Masovnih Transakcija</a></b>"
+"\t\t\t\tProvjerite <b><a href=\"/app/bulk-transaction-log\">Zapisnik Masovnih Transakcija</a></b>"
 
 #: erpnext/utilities/bulk_transaction.py:197
 msgid "Creation of {0} partially successful.\n"
 "\t\t\t\tCheck <b><a href=\"/app/bulk-transaction-log\">Bulk Transaction Log</a></b>"
-msgstr "Kreiranje {0} djelomično uspješno.\n"
-"\t\t\t\tProvjerite <b><a href=\"/app/bulk-transaction-log\">Dnevnik Masovnih Transakcija</a></b>"
+msgstr "Kreiranje {0} nije uspjelo.\n"
+"\t\t\t\tProvjerite <b><a href=\"/app/bulk-transaction-log\">Zapisnik Masovnih Transakcija</a></b>"
 
 #. Option for the 'Balance must be' (Select) field in DocType 'Account'
 #. Label of the credit_in_account_currency (Currency) field in DocType 'Journal
@@ -18600,7 +18600,7 @@ msgstr "Omogući Zajedničko Knjigovodstvo Stranki"
 #. in DocType 'Selling Settings'
 #: erpnext/selling/doctype/selling_settings/selling_settings.json
 msgid "Enable Cut-Off Date on Bulk Delivery Note Creation"
-msgstr "Omogući rok za masovno kreiranje Dostavnica"
+msgstr "Omogući Zadnji Datum za Masovno Kreiranje Dostavnica"
 
 #. Label of the enable_deferred_expense (Check) field in DocType 'Purchase
 #. Invoice Item'
@@ -43475,7 +43475,7 @@ msgstr "Poništi Standard Vrijednosti Kompanije"
 
 #: erpnext/erpnext_integrations/doctype/plaid_settings/plaid_settings.js:19
 msgid "Reset Plaid Link"
-msgstr "Resetuj Plaid Link"
+msgstr "Poništi Plaid Link"
 
 #. Label of the reset_raw_materials_table (Button) field in DocType
 #. 'Subcontracting Receipt'
@@ -53994,7 +53994,7 @@ msgstr "Radni List {0} je već završen ili otkazan"
 #: erpnext/projects/doctype/timesheet/timesheet.py:544
 #: erpnext/templates/pages/projects.html:59
 msgid "Timesheets"
-msgstr "Radni Listovi"
+msgstr "Radni List"
 
 #: erpnext/utilities/activation.py:124
 msgid "Timesheets help keep track of time, cost and billing for activities done by your team"
