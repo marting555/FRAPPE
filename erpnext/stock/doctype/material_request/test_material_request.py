@@ -1859,7 +1859,7 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer(name="_Test Customer")
 		create_supplier(supplier_name="_Test Supplier")
 		create_item("_Test Item",warehouse="Stores - _TC")
-		create_fiscal_with_company("_Test Company")
+		get_fiscal_year("_Test Company")
 		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
 		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 		
@@ -2041,7 +2041,7 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer(name="_Test Customer")
 		create_supplier(supplier_name="_Test Supplier")
 		create_item("_Test Item",warehouse="Stores - _TC")
-		create_fiscal_with_company("_Test Company")
+		get_fiscal_year("_Test Company")
 		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
 		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 		
@@ -2485,7 +2485,7 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer(name="_Test Customer")
 		create_supplier(supplier_name="_Test Supplier")
 		create_item("_Test Item",warehouse="Stores - _TC")
-		create_fiscal_with_company("_Test Company")
+		get_fiscal_year("_Test Company")
 		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
 		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 		
@@ -2765,7 +2765,7 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer(name="_Test Customer")
 		create_supplier(supplier_name="_Test Supplier")
 		create_item("_Test Item",warehouse="Stores - _TC")
-		create_fiscal_with_company("_Test Company")
+		get_fiscal_year("_Test Company")
 		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
 		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 		
@@ -2863,7 +2863,7 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer(name="_Test Customer")
 		create_supplier(supplier_name="_Test Supplier")
 		create_item("_Test Item",warehouse="Stores - _TC")
-		create_fiscal_with_company("_Test Company")
+		get_fiscal_year("_Test Company")
 		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
 		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 		
@@ -2923,7 +2923,7 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer(name="_Test Customer")
 		create_supplier(supplier_name="_Test Supplier")
 		create_item("_Test Item",warehouse="Stores - _TC")
-		create_fiscal_with_company("_Test Company")
+		get_fiscal_year("_Test Company")
 		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
 		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 		
@@ -3173,7 +3173,7 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer(name="_Test Customer")
 		create_supplier(supplier_name="_Test Supplier")
 		create_item("_Test Item",warehouse="Stores - _TC")
-		create_fiscal_with_company("_Test Company")
+		get_fiscal_year("_Test Company")
 		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
 		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 		
@@ -3220,7 +3220,7 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer(name="_Test Customer")
 		create_supplier(supplier_name="_Test Supplier")
 		create_item("_Test Item",warehouse="Stores - _TC")
-		create_fiscal_with_company("_Test Company")
+		get_fiscal_year("_Test Company")
 		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
 		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 
@@ -3402,7 +3402,7 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer(name="_Test Customer")
 		create_supplier(supplier_name="_Test Supplier")
 		create_item("_Test Item",warehouse="Stores - _TC")
-		create_fiscal_with_company("_Test Company")
+		get_fiscal_year("_Test Company")
 		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
 		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 		
@@ -3735,7 +3735,7 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer(name="_Test Customer")
 		create_supplier(supplier_name="_Test Supplier")
 		create_item("_Test Item",warehouse="Stores - _TC")
-		create_fiscal_with_company("_Test Company")
+		get_fiscal_year("_Test Company")
 		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
 		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 		
@@ -3919,7 +3919,7 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer(name="_Test Customer")
 		create_supplier(supplier_name="_Test Supplier")
 		create_item("_Test Item",warehouse="Stores - _TC")
-		create_fiscal_with_company("_Test Company")
+		get_fiscal_year("_Test Company")
 		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
 		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 		
@@ -3990,7 +3990,7 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer(name="_Test Customer")
 		create_supplier(supplier_name="_Test Supplier")
 		create_item("_Test Item",warehouse="Stores - _TC")
-		create_fiscal_with_company("_Test Company")
+		get_fiscal_year("_Test Company")
 		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
 		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 		
@@ -4178,7 +4178,7 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer(name="_Test Customer")
 		create_supplier(supplier_name="_Test Supplier")
 		create_item("_Test Item",warehouse="Stores - _TC")
-		create_fiscal_with_company("_Test Company")
+		get_fiscal_year("_Test Company")
 		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company",'is_group':0},"name")
 		mr = make_material_request(warehouse= 'Goods In Transit - _TC',uom = "Unit",cost_center = cost_center[0].name)
 		
@@ -7760,8 +7760,17 @@ def create_fiscal_with_company(company):
 		end_date = date(today.year, 3, 31)
 
 	fy_doc = frappe.new_doc("Fiscal Year")
-	fy_doc.year = "2025 PO"
+	fy_doc.year = "2024-2025"
 	fy_doc.year_start_date = start_date
 	fy_doc.year_end_date = end_date
 	fy_doc.append("companies", {"company": company})
 	fy_doc.submit()
+
+
+def get_fiscal_year(company):
+	if frappe.db.exists("Fiscal Year", "2024-2025"):
+		fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
+		fiscal_year.append("companies", {"company": company})
+		fiscal_year.save()
+	else:
+		create_fiscal_with_company(company)
