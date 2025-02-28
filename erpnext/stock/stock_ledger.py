@@ -455,7 +455,7 @@ def get_items_to_be_repost(voucher_type=None, voucher_no=None, doc=None, reposti
 		items_to_be_repost = frappe.db.sql(
 			"""
 			SELECT item_code, warehouse, posting_date, posting_time, creation
-			FROM "tabStock Ledger Entry"
+			FROM `tabStock Ledger Entry`
 			WHERE voucher_type = %(voucher_type)s
 			AND voucher_no = %(voucher_no)s
 			GROUP BY item_code, warehouse, posting_date, posting_time, creation
