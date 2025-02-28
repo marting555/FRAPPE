@@ -53,7 +53,7 @@
    "in_standard_filter": 1,
    "label": "Employee",
    "options": "Employee"
-  }
+  },
 
   {
    "fieldname": "make",
