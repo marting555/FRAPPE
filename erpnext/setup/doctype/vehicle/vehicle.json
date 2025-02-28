@@ -33,7 +33,8 @@
    "label": "Image ",
    "fieldtype": "Attach Image",
    "fieldname": "vehicle_image",
-   "options": "image"
+   "options": "image",
+   "hidden":1
   },
   {
    "fieldname": "license_plate",
