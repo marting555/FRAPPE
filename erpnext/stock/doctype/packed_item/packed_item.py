@@ -139,10 +139,12 @@ def get_indexed_packed_items_table(doc):
 
 	Use: to quickly retrieve/check if row existed in table instead of looping n times
 	"""
-	indexed_table = {}
+	from collections import defaultdict
+
+	indexed_table = defaultdict(list)
 	for packed_item in doc.get("packed_items"):
 		key = (packed_item.parent_item, packed_item.item_code, packed_item.parent_detail_docname)
-		indexed_table[key] = packed_item
+		indexed_table[key].append(packed_item)
 
 	return indexed_table
 
@@ -201,7 +203,7 @@ def get_product_bundle_items(item_code="", *, product_bundle_name=""):
 	return query.run(as_dict=True)
 
 
-def add_packed_item_row(doc, packing_item, main_item_row, packed_items_table, reset):
+def add_packed_item_row(doc, packing_item, main_item_row, packed_items_table: dict[tuple, list], reset):
 	"""Add and return packed item row.
 	doc: Transaction document
 	packing_item (dict): Packed Item details
@@ -214,7 +216,7 @@ def add_packed_item_row(doc, packing_item, main_item_row, packed_items_table, re
 	# check if row already exists in packed items table
 	key = (main_item_row.item_code, packing_item.item_code, main_item_row.name)
 	if packed_items_table.get(key):
-		pi_row, exists = packed_items_table.get(key), True
+		pi_row, exists = packed_items_table[key].pop(), True
 
 	if not exists:
 		pi_row = doc.append("packed_items", {})
