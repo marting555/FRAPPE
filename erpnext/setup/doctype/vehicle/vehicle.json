@@ -28,6 +28,7 @@
 
   "amended_from"
  ],
+
  "fields": [
 
   {
@@ -65,7 +66,8 @@
   {
    "label": "Make",
    "fieldname": "make",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
+   "options": "Brand",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "reqd": 1
@@ -100,7 +102,7 @@
    "label": "Fuel UOM",
    "options": "UOM",
    "default": "Litre",
-   "reqd": 1
+   "hidden": 0
   },
   {
    "fieldname": "column_break_8",
@@ -207,9 +209,6 @@
    "fieldtype": "Date",
    "label": "End Date"
   },
-
-
-
   {
    "fieldname": "amended_from",
    "fieldtype": "Link",
