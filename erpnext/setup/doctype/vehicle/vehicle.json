@@ -14,14 +14,14 @@
   "company",  "employee",
   
   "vehicle_details",
-  "make","model", "year", "last_odometer",  
+  "make","model", "year", "fuel_type",  "uom",
   "column_break_8",
-  "chassis_no", "vin_number", "engine_no",
+   "last_odometer",  "chassis_no", "vin_number", "engine_no",
   
   "additional_details",
-  "fuel_type",  "uom",  "carbon_check_date", "location",
+  "vehicle_value", "acquisition_date", "carbon_check_date", "location",
   "column_break_21",
-  "color",  "wheels",  "doors", "vehicle_value", "acquisition_date",
+  "color",  "wheels",  "doors", 
 
   "insurance_details",
   "insurance_company",  "policy_no",
