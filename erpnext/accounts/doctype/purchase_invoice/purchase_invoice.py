@@ -1283,8 +1283,17 @@ class PurchaseInvoice(BuyingController):
 		net_amt_precision = item.precision("base_net_amount")
 		val_rate_db_precision = 6 if cint(item.precision("valuation_rate")) <= 6 else 9
 
+		valuation_rate = item.valuation_rate
+		# During the reposting the rate gets changed so refetch the rate from the original document
+		if self.is_return and not item.landed_cost_voucher_amount and item.purchase_invoice_item:
+			valuation_rate = frappe.db.get_value(
+				"Purchase Invoice Item",
+				item.purchase_invoice_item,
+				"valuation_rate",
+			)
+
 		warehouse_debit_amount = flt(
-			flt(item.valuation_rate, val_rate_db_precision) * flt(item.qty) * flt(item.conversion_factor),
+			flt(valuation_rate, val_rate_db_precision) * flt(item.qty) * flt(item.conversion_factor),
 			net_amt_precision,
 		)
 
@@ -1302,7 +1311,7 @@ class PurchaseInvoice(BuyingController):
 			gl_entries.append(
 				self.get_gl_dict(
 					{
-						"account": cost_of_goods_sold_account,
+						"account": item.expense_account or cost_of_goods_sold_account,
 						"against": item.expense_account,
 						"debit": stock_adjustment_amt,
 						"remarks": self.get("remarks") or _("Stock Adjustment"),
