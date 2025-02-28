@@ -105,12 +105,18 @@ def make_packing_list(doc):
 		set_product_bundle_rate_amount(doc, parent_items_price)  # set price in bundle item
 
 
-def is_product_bundle(item_code="", *, product_bundle_name="") -> bool:
+def is_product_bundle(item_code="", *, product_bundle_name="", as_name=False) -> bool | str:
 	if not item_code and not product_bundle_name:
 		return False
+
 	if product_bundle_name:
-		return bool(frappe.db.exists("Product Bundle", {"name": product_bundle_name, "disabled": 0}))
-	return bool(frappe.db.exists("Product Bundle", {"new_item_code": item_code, "disabled": 0}))
+		name = frappe.db.exists("Product Bundle", {"name": product_bundle_name, "disabled": 0})
+	else:
+		name = frappe.db.exists("Product Bundle", {"new_item_code": item_code, "disabled": 0})
+
+	if as_name:
+		return name  # type: ignore
+	return bool(name)
 
 
 def get_product_bundle(item_code="", *, product_bundle_name="") -> "ProductBundle | None":
