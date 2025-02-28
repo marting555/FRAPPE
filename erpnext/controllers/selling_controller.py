@@ -35,6 +35,7 @@ class SellingController(StockController):
 	def validate(self):
 		super().validate()
 		self.validate_items()
+		self.validate_items_product_bundle()
 		if not (self.get("is_debit_note") or self.get("is_return")):
 			self.validate_max_discount()
 		self.validate_selling_price()
@@ -790,6 +791,7 @@ class SellingController(StockController):
 
 		validate_item_type(self, "is_sales_item", "sales")
 
+	def validate_items_product_bundle(self):
 		for item in self.items:
 			bundle = None
 			if self.has_product_bundle(item.item_code):

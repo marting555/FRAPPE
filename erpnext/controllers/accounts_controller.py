@@ -3824,6 +3824,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 					)
 	else:  # Sales Order
 		parent.validate_for_duplicate_items()
+		parent.validate_items_product_bundle()
 		parent.validate_warehouse()
 		parent.update_reserved_qty()
 		parent.update_project()
@@ -3852,6 +3853,16 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 
 			if parent.per_picked == 0:
 				parent.create_stock_reservation_entries()
+
+		# Check that old packed items were not already ordered
+	# 	old_packed_items = (parent.get_doc_before_save() or {}).get("packed_items") or []
+	# 	new_packed_items = parent.get("packed_items")
+	# 	print(old_packed_items, new_packed_items)
+	# 	removed = {pi.name for pi in old_packed_items} - {pi.name for pi in new_packed_items}
+	# 	if frappe.db.exists("Purchase Order Item", {"sales_order_packed_item": ("in", removed), "docstatus": 1}):
+	# 		frappe.throw("Cannot edit Product Bundle already ordered in Purchase Order")
+
+	# frappe.throw("lorem")
 
 
 def check_if_child_table_updated(child_table_before_update, child_table_after_update, fields_to_check):
