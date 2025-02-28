@@ -64,7 +64,7 @@
    "fieldtype": "Section Break"
   },
   {
-   "label": "Make",
+   "label": "Manufacturer",
    "fieldname": "make",
    "fieldtype": "Link",
    "options": "Brand",
@@ -88,18 +88,18 @@
    "fieldtype": "Data"
   },
   {
+   "label": "Fuel Type",
    "fieldname": "fuel_type",
    "fieldtype": "Select",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Fuel Type",
    "options": "Petrol\nDiesel\nNatural Gas\nElectric",
    "reqd": 1
   },
   {
+   "label": "Fuel UOM",
    "fieldname": "uom",
    "fieldtype": "Link",
-   "label": "Fuel UOM",
    "options": "UOM",
    "default": "Litre",
    "hidden": 0
@@ -117,14 +117,14 @@
    "set_only_once": 1
   },
   {
+   "label": "VIN",
    "fieldname": "vin_number",
-   "fieldtype": "Data",
-   "label": "VIN Number"
+   "fieldtype": "Data"
   },
   {
+   "label": "Engine No",
    "fieldname": "engine_no",
-   "fieldtype": "Data",
-   "label": "Engine Number"
+   "fieldtype": "Data"
   },
   {
    "fieldname": "chassis_no",
