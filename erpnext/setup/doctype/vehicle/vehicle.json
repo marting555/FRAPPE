@@ -97,7 +97,6 @@
   {
    "fieldname": "uom",
    "fieldtype": "Link",
-   "in_list_view": 1,
    "label": "Fuel UOM",
    "options": "UOM",
    "default": "Litre",
