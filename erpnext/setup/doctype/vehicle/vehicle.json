@@ -8,36 +8,30 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "license_plate",
-  "make",
+
+  "license_plate",  
   "column_break_3",
-  "model",
-  "company",
+  "company",  "employee",
+  
   "vehicle_details",
-  "last_odometer",
-  "acquisition_date",
-  "location",
+  "make","model", "last_odometer", "acquisition_date", "location",
   "column_break_8",
-  "chassis_no",
-  "vehicle_value",
-  "employee",
+  "chassis_no","vin_number", "engine_no", "vehicle_value", 
+  
   "insurance_details",
-  "insurance_company",
-  "policy_no",
+  "insurance_company",  "policy_no",
   "column_break_15",
-  "start_date",
-  "end_date",
+  "start_date",  "end_date",
+  
   "additional_details",
-  "fuel_type",
-  "uom",
-  "carbon_check_date",
+  "fuel_type",  "uom",  "carbon_check_date",
   "column_break_21",
-  "color",
-  "wheels",
-  "doors",
+  "color",  "wheels",  "doors",
+
   "amended_from"
  ],
  "fields": [
+    
   {
    "fieldname": "license_plate",
    "fieldtype": "Data",
@@ -47,10 +41,40 @@
    "unique": 1
   },
   {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Employee",
+   "options": "Employee"
+  }
+
+  {
    "fieldname": "make",
    "fieldtype": "Data",
    "label": "Make",
    "reqd": 1
+  },
+  {
+   "fieldname": "year",
+   "fieldtype": "Data",
+   "label": "Year"
+  },
+  {
+   "fieldname": "vin_number",
+   "fieldtype": "Data",
+   "label": "VIN Number"
+  },
+  {
+   "fieldname": "engine_no",
+   "fieldtype": "Data",
+   "label": "Engine Number"
   },
   {
    "fieldname": "column_break_3",
@@ -104,14 +128,57 @@
    "label": "Vehicle Value",
    "print_hide_if_no_value": 1
   },
+
   {
-   "fieldname": "employee",
-   "fieldtype": "Link",
-   "in_standard_filter": 1,
-   "label": "Employee",
-   "options": "Employee"
+   "fieldname": "additional_details",
+   "fieldtype": "Section Break",
+   "label": "Additional Details"
   },
   {
+   "fieldname": "fuel_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Fuel Type",
+   "options": "\nPetrol\nDiesel\nNatural Gas\nElectric",
+   "reqd": 1
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Fuel UOM",
+   "options": "UOM",
+   "default": "Litre",
+   "reqd": 1
+  },
+  {
+   "fieldname": "carbon_check_date",
+   "fieldtype": "Date",
+   "label": "Last Carbon Check"
+  },
+  {
+   "fieldname": "column_break_21",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "color",
+   "fieldtype": "Data",
+   "label": "Color"
+  },
+  {
+   "fieldname": "wheels",
+   "fieldtype": "Int",
+   "label": "Wheels"
+  },
+  {
+   "fieldname": "doors",
+   "fieldtype": "Int",
+   "label": "Doors"
+  },
+
+  {
+    "collapsible": 1,
    "fieldname": "insurance_details",
    "fieldtype": "Section Break",
    "label": "Insurance Details"
@@ -140,52 +207,9 @@
    "fieldtype": "Date",
    "label": "End Date"
   },
-  {
-   "fieldname": "additional_details",
-   "fieldtype": "Section Break",
-   "label": "Additional Details"
-  },
-  {
-   "fieldname": "fuel_type",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Fuel Type",
-   "options": "Petrol\nDiesel\nNatural Gas\nElectric",
-   "reqd": 1
-  },
-  {
-   "fieldname": "uom",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Fuel UOM",
-   "options": "UOM",
-   "reqd": 1
-  },
-  {
-   "fieldname": "carbon_check_date",
-   "fieldtype": "Date",
-   "label": "Last Carbon Check"
-  },
-  {
-   "fieldname": "column_break_21",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "color",
-   "fieldtype": "Data",
-   "label": "Color"
-  },
-  {
-   "fieldname": "wheels",
-   "fieldtype": "Int",
-   "label": "Wheels"
-  },
-  {
-   "fieldname": "doors",
-   "fieldtype": "Int",
-   "label": "Doors"
-  },
+
+
+
   {
    "fieldname": "amended_from",
    "fieldtype": "Link",
@@ -194,13 +218,6 @@
    "options": "Vehicle",
    "print_hide": 1,
    "read_only": 1
-  },
-  {
-   "fieldname": "company",
-   "fieldtype": "Link",
-   "in_standard_filter": 1,
-   "label": "Company",
-   "options": "Company"
   }
  ],
  "links": [],
