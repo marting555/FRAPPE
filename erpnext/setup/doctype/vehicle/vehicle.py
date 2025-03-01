@@ -54,6 +54,8 @@ class Vehicle(Document):
 			self.vin_number = self.vin_number.replace(" ", "").upper()
 		if self.vin_number:
 			self.vin_number = self.vin_number.replace(" ", "").upper()
+		if self.model:
+			self.model = self.model.title()
 
 	def before_save(self):		
 		if self.license_plate:
@@ -64,4 +66,6 @@ class Vehicle(Document):
 			self.vin_number = self.vin_number.replace(" ", "").upper()
 		if self.chassis_no:
 			self.chassis_no = self.chassis_no.replace(" ", "").upper()
+		if self.model:
+			self.model = self.model.title()
 
