@@ -12,7 +12,7 @@
   "license_plate", "company", "column_break_3", "employee", "vehicle_image",
   
   "vehicle_details",
-  "make","model", "year", "fuel_type",  "uom",
+  "fuel_type", "make","model", "year", "uom",
   "column_break_8",
    "last_odometer", "vin_number", "chassis_no", "engine_no",
   
