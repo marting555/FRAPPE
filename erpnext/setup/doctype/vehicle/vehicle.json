@@ -102,7 +102,7 @@
    "fieldtype": "Link",
    "options": "UOM",
    "default": "Litre",
-   "hidden": 0
+   "hidden": 1
   },
   {
    "fieldname": "column_break_8",
@@ -186,9 +186,10 @@
    "label": "Insurance Details"
   },
   {
+   "label": "Insurance Company",
    "fieldname": "insurance_company",
-   "fieldtype": "Data",
-   "label": "Insurance Company"
+   "fieldtype": "Link",
+   "options": "supplier"
   },
   {
    "fieldname": "policy_no",
