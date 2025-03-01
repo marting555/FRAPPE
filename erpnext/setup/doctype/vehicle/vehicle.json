@@ -34,6 +34,7 @@
    "fieldtype": "Attach Image",
    "fieldname": "vehicle_image",
    "options": "image",
+   "is_private": 0,
    "hidden":1
   },
   {
