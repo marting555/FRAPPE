@@ -40,7 +40,27 @@ class Vehicle(Document):
 	# end: auto-generated types
 
 	def validate(self):
+		
 		if getdate(self.start_date) > getdate(self.end_date):
 			frappe.throw(_("Insurance Start date should be less than Insurance End date"))
 		if getdate(self.carbon_check_date) > getdate():
 			frappe.throw(_("Last carbon check date cannot be a future date"))
+
+	def before_insert(self):
+
+		if self.license_plate:
+			self.license_plate = self.license_plate.replace(" ", "").upper()
+		if self.engine_no:
+			self.engine_no = self.engine_no.replace(" ", "").upper()
+		if self.vin_number:
+			self.vin_number = self.vin_number.replace(" ", "").upper()
+
+	def before_save(self):
+		
+		if self.license_plate:
+			self.license_plate = self.license_plate.replace(" ", "").upper()
+		if self.engine_no:
+			self.engine_no = self.engine_no.replace(" ", "").upper()
+		if self.vin_number:
+			self.vin_number = self.vin_number.replace(" ", "").upper()
+
