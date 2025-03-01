@@ -189,7 +189,7 @@
    "label": "Insurance Company",
    "fieldname": "insurance_company",
    "fieldtype": "Link",
-   "options": "supplier"
+   "options": "Supplier"
   },
   {
    "fieldname": "policy_no",
