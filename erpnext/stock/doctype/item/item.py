@@ -167,10 +167,10 @@ class Item(Document):
 		self.update_variants()
 		self.update_item_price()
 		if not self.has_variants:
-            if self.default_pricelist and self.standard_rate:
-                # Check if an Item Price already exists for this item and price list
-                item_price = frappe.db.get_value(
-                    "Item Price",
+			if self.default_pricelist and self.standard_rate:
+				# Check if an Item Price already exists for this item and price list
+				item_price = frappe.db.get_value(
+					"Item Price",
                     {
                         "item_code": self.item_code,
                         "price_list": self.default_pricelist,
@@ -178,7 +178,6 @@ class Item(Document):
                     },
                     "name",
                 )
-
                 if item_price:
                     # Update existing Item Price
                     frappe.db.set_value(
