@@ -155,72 +155,61 @@ class Item(Document):
 		self.set_onload("asset_naming_series", get_asset_naming_series())
 
 	def autoname(self):
-		if frappe.db.get_default("item_naming_by") == "Naming Series":
-			if self.variant_of:
-				if not self.item_code:
-					template_item_name = frappe.db.get_value("Item", self.variant_of, "item_name")
-					make_variant_item_code(self.variant_of, template_item_name, self)
-			else:
-				from frappe.model.naming import set_name_by_naming_series
-
-				set_name_by_naming_series(self)
-				self.item_code = self.name
-
-		self.item_code = strip(self.item_code)
 		self.name = self.item_code
 
 	def after_insert(self):
-		"""set opening stock and item price"""
-		if self.standard_rate:
-			for default in self.item_defaults or [frappe._dict()]:
-				self.add_price(default.default_price_list)
-
-		if self.opening_stock:
 			self.set_opening_stock()
 
 	def validate(self):
-		if not self.item_name:
-			self.item_name = self.item_code
-
-		if not strip_html(cstr(self.description)).strip():
-			self.description = self.item_name
-
-		self.validate_uom()
-		self.validate_description()
-		self.add_default_uom_in_conversion_factor_table()
-		self.validate_conversion_factor()
-		self.validate_item_type()
-		self.validate_naming_series()
-		self.check_for_active_boms()
-		self.fill_customer_code()
-		self.check_item_tax()
-		self.validate_barcode()
-		self.validate_warehouse_for_reorder()
-		self.update_bom_item_desc()
-
-		self.validate_has_variants()
-		self.validate_attributes_in_variants()
-		self.validate_stock_exists_for_template_item()
-		self.validate_attributes()
-		self.validate_variant_attributes()
-		self.validate_variant_based_on_change()
-		self.validate_fixed_asset()
-		self.clear_retain_sample()
-		self.validate_retain_sample()
-		self.validate_uom_conversion_factor()
-		self.validate_customer_provided_part()
-		self.update_defaults_from_item_group()
-		self.validate_item_defaults()
-		self.validate_auto_reorder_enabled_in_stock_settings()
-		self.cant_change()
-		self.validate_item_tax_net_rate_range()
-
-		if not self.is_new():
 			self.old_item_group = frappe.db.get_value(self.doctype, self.name, "item_group")
 
 	def on_update(self):
 		self.update_variants()
 		self.update_item_price()
+
+	def update_or_create_item_price(self):
+        """
+        Automatically insert or update the Item Price record for the item.
+        This will only execute if the item is not a variant.
+        """
+        if not self.variant_of and not self.has_variants:
+            if self.default_pricelist and self.standard_rate:
+                # Check if an Item Price already exists for this item and price list
+                item_price = frappe.db.get_value(
+                    "Item Price",
+                    {
+                        "item_code": self.item_code,
+                        "price_list": self.default_pricelist,
+                        "uom": self.stock_uom,
+                    },
+                    "name",
+                )
+
+                if item_price:
+                    # Update existing Item Price
+                    frappe.db.set_value(
+                        "Item Price",
+                        item_price,
+                        {
+                            "price_list_rate": self.standard_rate,
+                            "valid_from": nowdate(),
+                        },
+                    )
+                    frappe.msgprint(_("Item Price updated for {0}").format(self.item_code))
+                else:
+                    # Create new Item Price
+                    item_price_doc = frappe.get_doc(
+                        {
+                            "doctype": "Item Price",
+                            "item_code": self.item_code,
+                            "price_list": self.default_pricelist,
+                            "uom": self.stock_uom,
+                            "price_list_rate": self.standard_rate,
+                            "valid_from": nowdate(),
+                        }
+                    )
+                    item_price_doc.insert()
+                    frappe.msgprint(_("Item Price created for {0}").format(self.item_code))
 
 	def validate_description(self):
 		"""Clean HTML description if set"""
