@@ -142,7 +142,7 @@
     "label": "Default ",
     "fieldname": "default_pricelist",
     "fieldtype": "Link",
-    "options": "Price_List",
+    "options": "Price List",
     "allow_in_quick_entry": 1
   },
   {
