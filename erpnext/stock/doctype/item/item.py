@@ -167,6 +167,7 @@ class Item(Document):
 	def on_update(self):
 		self.update_variants()
 		self.update_item_price()
+		self.update_or_create_item_price()
 
 	def update_or_create_item_price(self):
 		if not self.variant_of and not self.has_variants:
