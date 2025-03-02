@@ -159,7 +159,6 @@ class Item(Document):
 
 	def after_insert(self):
 			self.set_opening_stock()
-			self.update_or_create_item_price()
 
 	def validate(self):
 			self.old_item_group = frappe.db.get_value(self.doctype, self.name, "item_group")
@@ -167,11 +166,10 @@ class Item(Document):
 	def on_update(self):
 		self.update_variants()
 		self.update_item_price()
-		self.update_or_create_item_price()
 
 	def update_or_create_item_price(self):
 		if not self.variant_of and not self.has_variants:
-			if self.default_pricelist and self.standard_rate:
+			if self.item_code and self.default_pricelist and self.standard_rate:
 				item_price = frappe.db.get_value(
 					"Item Price",
                     {
