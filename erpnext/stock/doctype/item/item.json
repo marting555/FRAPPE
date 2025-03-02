@@ -143,6 +143,7 @@
     "fieldname": "default_pricelist",
     "fieldtype": "Link",
     "options": "Price List",
+   "default": "Standard Selling",
     "allow_in_quick_entry": 1
   },
   {
@@ -247,7 +248,6 @@
    "fieldname": "standard_rate",
    "fieldtype": "Currency",
    "label": "Standard Selling Rate",
-   "default": "Standard Selling",
    "allow_in_quick_entry": 1
   },
   {
