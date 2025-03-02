@@ -167,7 +167,7 @@ class Item(Document):
 		self.update_variants()
 		self.update_item_price()
 		
-    def validate_description(self):
+	def validate_description(self):
 		"""Clean HTML description if set"""
 		if cint(frappe.db.get_single_value("Stock Settings", "clean_description_html")):
 			self.description = clean_html(self.description)
