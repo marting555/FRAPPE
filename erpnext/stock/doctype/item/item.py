@@ -201,9 +201,9 @@ class Item(Document):
                             "valid_from": nowdate(),
                         }
                     )
-                    item_price_doc.insert()
-                    frappe.msgprint(_("Item Price created for {0}").format(self.item_code))
-
+					item_price_doc.insert()
+					frappe.msgprint(_("Item Price created for {0}").format(self.item_code))
+	
 	def validate_description(self):
 		"""Clean HTML description if set"""
 		if cint(frappe.db.get_single_value("Stock Settings", "clean_description_html")):
