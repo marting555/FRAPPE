@@ -190,21 +190,11 @@ class Item(Document):
                     )
 					frappe.msgprint(_("Item Price updated for {0}").format(self.item_code))
 				else:
-                    # Create new Item Price
-                    item_price_doc = frappe.get_doc(
-                        {
-                            "doctype": "Item Price",
-                            "item_code": self.item_code,
-                            "price_list": self.default_pricelist,
-                            "uom": self.stock_uom,
-                            "price_list_rate": self.standard_rate,
-                            "valid_from": nowdate(),
-                        }
-                    )
+                    item_price_doc = frappe.get_doc({"doctype": "Item Price","item_code": self.item_code,"price_list": self.default_pricelist,"uom": self.stock_uom,"price_list_rate": self.standard_rate,"valid_from": nowdate(),})
                     item_price_doc.insert()
                     frappe.msgprint(_("Item Price created for {0}").format(self.item_code))
-
-	def validate_description(self):
+                    
+    def validate_description(self):
 		"""Clean HTML description if set"""
 		if cint(frappe.db.get_single_value("Stock Settings", "clean_description_html")):
 			self.description = clean_html(self.description)
