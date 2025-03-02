@@ -22,9 +22,9 @@
   "is_stock_item",
   "has_variants",
   "opening_stock",
-  "valuation_rate",
-  "standard_rate",
   "default_pricelist",
+  "standard_rate",
+  "valuation_rate",
   "is_fixed_asset",
   "auto_create_assets",
   "is_grouped_asset",
@@ -247,6 +247,7 @@
    "fieldname": "standard_rate",
    "fieldtype": "Currency",
    "label": "Standard Selling Rate",
+   "default": "Standard Selling",
    "allow_in_quick_entry": 1
   },
   {
