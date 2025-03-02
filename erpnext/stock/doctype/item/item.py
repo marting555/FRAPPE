@@ -159,6 +159,7 @@ class Item(Document):
 
 	def after_insert(self):
 			self.set_opening_stock()
+			self.update_or_create_item_price()
 
 	def validate(self):
 			self.old_item_group = frappe.db.get_value(self.doctype, self.name, "item_group")
