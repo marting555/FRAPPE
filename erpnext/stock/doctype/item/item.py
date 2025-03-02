@@ -188,8 +188,8 @@ class Item(Document):
                             "valid_from": nowdate(),
                         },
                     )
-                    frappe.msgprint(_("Item Price updated for {0}").format(self.item_code))
-                else:
+					frappe.msgprint(_("Item Price updated for {0}").format(self.item_code))
+				else:
                     # Create new Item Price
                     item_price_doc = frappe.get_doc(
                         {
