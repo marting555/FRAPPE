@@ -168,10 +168,6 @@ class Item(Document):
 		self.update_item_price()
 
 	def update_or_create_item_price(self):
-        """
-        Automatically insert or update the Item Price record for the item.
-        This will only execute if the item is not a variant.
-        """
         if not self.variant_of and not self.has_variants:
             if self.default_pricelist and self.standard_rate:
                 # Check if an Item Price already exists for this item and price list
