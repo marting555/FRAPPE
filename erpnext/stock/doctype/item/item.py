@@ -178,10 +178,9 @@ class Item(Document):
                         "uom": self.stock_uom,
                     },
                     "name",
-                )
-                if item_price:
-                    # Update existing Item Price
-                    frappe.db.set_value(
+				)
+				if item_price:
+					frappe.db.set_value(
                         "Item Price",
                         item_price,
                         {
