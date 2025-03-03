@@ -52,13 +52,16 @@ class SalesOrder(SellingController):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
+		from frappe.types import DF
+
 		from erpnext.accounts.doctype.payment_schedule.payment_schedule import PaymentSchedule
 		from erpnext.accounts.doctype.pricing_rule_detail.pricing_rule_detail import PricingRuleDetail
-		from erpnext.accounts.doctype.sales_taxes_and_charges.sales_taxes_and_charges import SalesTaxesandCharges
+		from erpnext.accounts.doctype.sales_taxes_and_charges.sales_taxes_and_charges import (
+			SalesTaxesandCharges,
+		)
 		from erpnext.selling.doctype.sales_order_item.sales_order_item import SalesOrderItem
 		from erpnext.selling.doctype.sales_team.sales_team import SalesTeam
 		from erpnext.stock.doctype.packed_item.packed_item import PackedItem
-		from frappe.types import DF
 
 		additional_discount_percentage: DF.Float
 		address_display: DF.SmallText | None
@@ -97,7 +100,9 @@ class SalesOrder(SellingController):
 		customer_group: DF.Link | None
 		customer_name: DF.Data | None
 		delivery_date: DF.Date | None
-		delivery_status: DF.Literal["Not Delivered", "Fully Delivered", "Partly Delivered", "Closed", "Not Applicable"]
+		delivery_status: DF.Literal[
+			"Not Delivered", "Fully Delivered", "Partly Delivered", "Closed", "Not Applicable"
+		]
 		disable_rounded_total: DF.Check
 		discount_amount: DF.Currency
 		dispatch_address: DF.SmallText | None
@@ -149,7 +154,10 @@ class SalesOrder(SellingController):
 		shipping_rule: DF.Link | None
 		skip_delivery_note: DF.Check
 <<<<<<< HEAD
+<<<<<<< HEAD
 		source: DF.Link | None
+=======
+>>>>>>> 71f65bab5e (fix: Linters)
 		status: DF.Literal[
 			"",
 			"Draft",
@@ -162,9 +170,12 @@ class SalesOrder(SellingController):
 			"Cancelled",
 			"Closed",
 		]
+<<<<<<< HEAD
 =======
 		status: DF.Literal["", "Draft", "On Hold", "To Pay", "To Deliver and Bill", "To Bill", "To Deliver", "Completed", "Cancelled", "Closed"]
 >>>>>>> c1e4e7af28 (feat: Unit Price Contract)
+=======
+>>>>>>> 71f65bab5e (fix: Linters)
 		tax_category: DF.Link | None
 		tax_id: DF.Data | None
 		taxes: DF.Table[SalesTaxesandCharges]
@@ -1133,9 +1144,7 @@ def make_sales_invoice(source_name, target_doc=None, ignore_permissions=False):
 				target.cost_center = cost_center
 
 	# has_unit_price_items = 0 is accepted as the qty uncertain for some items
-	has_unit_price_items = frappe.db.get_value(
-		"Sales Order", source_name, "has_unit_price_items"
-	)
+	has_unit_price_items = frappe.db.get_value("Sales Order", source_name, "has_unit_price_items")
 	doclist = get_mapped_doc(
 		"Sales Order",
 		source_name,
@@ -1157,12 +1166,9 @@ def make_sales_invoice(source_name, target_doc=None, ignore_permissions=False):
 				},
 				"postprocess": update_item,
 				"condition": lambda doc: (
-					doc.qty
-					and (
-						doc.base_amount == 0
-						or abs(doc.billed_amt) < abs(doc.amount)
-					)
-				) or has_unit_price_items,
+					doc.qty and (doc.base_amount == 0 or abs(doc.billed_amt) < abs(doc.amount))
+				)
+				or has_unit_price_items,
 			},
 			"Sales Taxes and Charges": {
 				"doctype": "Sales Taxes and Charges",
