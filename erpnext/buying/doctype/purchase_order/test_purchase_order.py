@@ -3831,16 +3831,23 @@ class TestPurchaseOrder(FrappeTestCase):
 			self.assertEqual(gl_stock_debit, 50000)
 
 	def test_create_po_pr_TC_SCK_177(self):
-		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
-
-		po = create_purchase_order(qty=10)
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_item("_Test Item",warehouse="Stores - _TC")
+		create_supplier(supplier_name="_Test Supplier")
+		po = create_purchase_order(qty=10,warehouse="Stores - _TC")
+		if frappe.db.exists("Fiscal Year", "2024-2025"):
+			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
+			fiscal_year.append("companies", {"company": "_Test Company"})
+			fiscal_year.save()
+		else:
+			create_fiscal_with_company("_Test Company")
 		po.submit()
-
 		frappe.db.set_value("Item", "_Test Item", "over_delivery_receipt_allowance", 10)
 		pr = make_purchase_receipt(po.name)
 		pr.company = "_Test Company"
 		pr.set_warehouse = "All Warehouses - _TC"
-		pr.rejected_warehouse = create_warehouse("_Test Warehouse8", company=pr.company)
+		pr.rejected_warehouse = "Finished Goods - _TC"
 		pr.get("items")[0].qty = 8
 		pr.get("items")[0].rejected_qty = 2
 		pr.insert()
@@ -8435,7 +8442,7 @@ def create_fiscal_with_company(company):
 		end_date = date(today.year, 3, 31)
 
 	fy_doc = frappe.new_doc("Fiscal Year")
-	fy_doc.year = "2025 PO"
+	fy_doc.year = "2024-2025"
 	fy_doc.year_start_date = start_date
 	fy_doc.year_end_date = end_date
 	fy_doc.append("companies", {"company": company})
