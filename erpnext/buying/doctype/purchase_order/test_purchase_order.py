@@ -45,6 +45,7 @@ from erpnext.buying.doctype.request_for_quotation.request_for_quotation import m
 from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 from io import BytesIO
 from erpnext.accounts.doctype.shipping_rule.test_shipping_rule import create_shipping_rule
+from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
 
 class TestPurchaseOrder(FrappeTestCase):
 	def test_purchase_order_qty(self):
@@ -1788,11 +1789,11 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(payment_request.reference_name, po.name)
 	
 	def test_purchase_invoice_return_TC_B_032(self):
-		frappe.set_user("Administrator")
-		company = "_Test Company"
-		item = make_test_item("Testing-31")
-		target_warehouse = "Stores - _TC"
-		supplier = "_Test Supplier 1"
+		get_company_supplier = create_data()
+		company = get_company_supplier.get("child_company")
+		supplier = get_company_supplier.get("supplier")
+		item = make_test_item("test_item_")
+		warehouse = "Stores - TC-3"
 		qty = 6
 		rate = 100
 		amount = qty * rate
@@ -1804,7 +1805,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"items": [
 				{
 					"item_code": item.item_code,
-					"warehouse": target_warehouse,
+					"warehouse": warehouse,
 					"qty": qty,
 					"rate": rate,
 					"amount": amount,
@@ -1812,6 +1813,9 @@ class TestPurchaseOrder(FrappeTestCase):
 			],
 			"update_stock": 1,
 		})
+		purchase_invoice.bill_no = "test_bill_1122"
+		purchase_invoice.taxes_and_charges = ""
+		purchase_invoice.taxes = []
 		purchase_invoice.insert()
 		purchase_invoice.submit()
 		
@@ -1825,7 +1829,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"items": [
 				{
 					"item_code": item.item_code,
-					"warehouse": target_warehouse,
+					"warehouse": warehouse,
 					"qty": -qty,
 					"rate": rate,
 					"amount": amount,
@@ -1833,6 +1837,9 @@ class TestPurchaseOrder(FrappeTestCase):
 			],
 			"update_stock": 1,
 		})
+		purchase_invoice_return.bill_no = "test_bill_1122"
+		purchase_invoice_return.taxes_and_charges = ""
+		purchase_invoice_return.taxes = []
 		purchase_invoice_return.insert()
 		purchase_invoice_return.submit()
 		
@@ -1861,7 +1868,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			filters={
 				"voucher_type": "Purchase Invoice",
 				"voucher_no": purchase_invoice_return.name,
-				"warehouse": target_warehouse,
+				"warehouse": warehouse,
 			},
 			fields=["actual_qty"],
 		)
@@ -1964,18 +1971,42 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertTrue(stock_decrease_passed)
 
 	def test_pr_to_lcv_add_value_to_stock_TC_B_034(self):
-		frappe.set_user("Administrator")
-		frappe.db.set_value("Company", "_Test Company", {"enable_perpetual_inventory":1, "stock_received_but_not_billed": "_Test Account Excise Duty - _TC"})
-		item = make_test_item("Testing-31")
+		get_company_supplier = create_data()
+		company = get_company_supplier.get("child_company")
+		supplier = get_company_supplier.get("supplier")
+		item = make_test_item("test_item")
+		warehouse = "Stores - TC-3"
+		parent_account = frappe.get_doc(
+			{
+				"doctype": "Account",
+				"account_name": "Test Account",
+				"parent_account": "Cash In Hand - TC-1",
+				"account_type": "Tax",
+				"company": get_company_supplier.get("parent_company")
+			}
+		)
+		parent_account.insert(ignore_if_duplicate=1)
+		account = frappe.get_doc(
+			{
+				"doctype": "Account",
+				"account_name": "Test Account",
+				"parent_account": "Cash In Hand - TC-3",
+				"account_type": "Tax",
+				"company": company
+			}
+		)
+		account.insert(ignore_if_duplicate=1)
+		frappe.db.set_value("Company", company, {"enable_perpetual_inventory":1, "stock_received_but_not_billed": account.name})
+		item = make_test_item("_test_itemss")
 		# Step 1: Create Purchase Receipt
 		doc_pr = frappe.get_doc({
 			"doctype": "Purchase Receipt",
-			"company": "_Test Company",
-			"supplier": "_Test Supplier",
+			"company": company,
+			"supplier": supplier,
 			"items": [
 				{
 					"item_code": item.item_code,
-					"warehouse": "Stores - _TC",
+					"warehouse": warehouse,
 					"qty": 10,
 					"rate": 100,
 				}
@@ -1987,7 +2018,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		doc_lcv = frappe.get_doc({
 			"doctype": "Landed Cost Voucher",
-			"company": "_Test Company",
+			"company": company,
 			"purchase_receipts": [
 				{
 					"receipt_document_type": "Purchase Receipt",
@@ -1998,7 +2029,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			],
 			"taxes": [
 				{
-					"expense_account": "_Test Account Education Cess - _TC",
+					"expense_account": account.name,
 					"amount": 500,
 					"description": "test_description"
 				}
@@ -2013,8 +2044,8 @@ class TestPurchaseOrder(FrappeTestCase):
 			"Stock Ledger Entry",
 			filters={
 				"voucher_no": doc_pr.name,
-				"warehouse": "Stores - _TC",
-				"item_code": "Testing-31"
+				"warehouse": warehouse,
+				"item_code": item.item_code
 			},
 			fields=["valuation_rate"],
 			order_by="creation desc"
@@ -3149,10 +3180,10 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(pi.status,'Unpaid')
 
 	def test_po_ignore_pricing_rule_TC_B_049(self):
-		frappe.set_user("Administrator")
-		company = "_Test Company"
-		target_warehouse = "Stores - _TC"
-		supplier = "_Test Supplier 1"
+		get_company_supplier = create_data()
+		company = get_company_supplier.get("child_company")
+		supplier = get_company_supplier.get("supplier")
+		warehouse = "Stores - TC-3"
 		item_price = 130
 		item = make_test_item("Testing-31")
 		item.is_purchase_item = 1
@@ -3186,11 +3217,11 @@ class TestPurchaseOrder(FrappeTestCase):
 			"supplier": supplier,
 			"company": company,
 			"schedule_date":today(),
-			"set_warehouse": target_warehouse,
+			"set_warehouse": warehouse,
 			"items": [
 				{
 					"item_code": item.item_code,
-					"warehouse": target_warehouse,
+					"warehouse": warehouse,
 					"qty": 1
 				}
 			]
@@ -4002,11 +4033,10 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.grand_total, 980)
 
 	def test_putaway_rule_with_po_pr_pi_TC_B_155(self):
-		frappe.set_user("Administrator")
-		company = "_Test Company"
-		warehouse = "Stores - _TC"
-		overflow_warehouse = "Overflow Warehouse - _TC"
-		supplier = "_Test Supplier 1"
+		get_company_supplier = create_data()
+		company = get_company_supplier.get("child_company")
+		supplier = get_company_supplier.get("supplier")
+		warehouse = "Stores - TC-3"
 		item = make_test_item("Test Item with Putaway Rule")
 
 		if not frappe.db.exists("Putaway Rule", {"item_code": item.item_code, "warehouse": warehouse}):
@@ -4017,7 +4047,6 @@ class TestPurchaseOrder(FrappeTestCase):
 				"warehouse": warehouse,
 				"capacity": 20,
 				"priority": 1,
-				"default_location": overflow_warehouse,
 			}).insert(ignore_if_duplicate=1)
 
 		po = frappe.get_doc({
@@ -4032,11 +4061,15 @@ class TestPurchaseOrder(FrappeTestCase):
 			}],
 			"apply_putaway_rule": 1
 		})
+		po.taxes_and_charges = ""
+		po.taxes = []
 		po.insert()
 		po.submit()
 		self.assertEqual(po.docstatus, 1)
 
 		pr = make_purchase_receipt(po.name)
+		pr.taxes_and_charges = ""
+		pr.taxes = []
 		pr.insert()
 		pr.submit()
 		self.assertEqual(pr.docstatus,1)
@@ -4053,6 +4086,9 @@ class TestPurchaseOrder(FrappeTestCase):
 		warehouse_qty = sum(entry.actual_qty for entry in stock_ledger_entries if entry.warehouse == warehouse)
 		self.assertEqual(warehouse_qty, 20)
 		pi = make_purchase_invoice(pr.name)
+		pi.bill_no = "test_bill_1122"
+		pi.taxes_and_charges = ""
+		pi.taxes = []
 		pi.insert()
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
@@ -5174,11 +5210,13 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi_outstanding = frappe.db.get_value("Purchase Invoice", pi.name, "outstanding_amount")
 		self.assertEqual(pi_outstanding, 0)
 
+	@if_app_installed("india_compliance")
 	def test_shipping_rule_net_weight_pr_pi_pe_with_gst_TC_B_111(self):
-		frappe.set_user("Administrator")
-		company = "_Test Company"
-		warehouse = "Stores - _TC"
-		supplier = "_Test Supplier 1"
+		get_company_supplier = create_data()
+		company = get_company_supplier.get("child_company")
+		supplier = get_company_supplier.get("supplier")
+		item = make_test_item("test_item")
+		warehouse = "Stores - TC-3"
 		item = make_test_item("test_item_with_net_weight_shipping_rule")
 		item.weight_uom = "Kg",
 		item.weight_per_unit = 2.5
@@ -5191,14 +5229,14 @@ class TestPurchaseOrder(FrappeTestCase):
 			"label": "Net Weight Shipping Rule",
 			"calculate_based_on": "Net Weight",
 			"shipping_rule_type": "Buying",
-			"account": "_Test Account Service Tax - _TC",
-			"cost_center": "Main - _TC",
+			"account": "Cash - TC-3",
+			"cost_center": "Main - TC-3",
 			"conditions": [{
 				"from_value": 10,  # Net weight range
 				"to_value": 50,
 				"shipping_amount": 250
 			}]
-		}).insert()
+		}).insert(ignore_if_duplicate=1)
 
 		# Create Purchase Order
 		po = frappe.get_doc({
@@ -5215,7 +5253,6 @@ class TestPurchaseOrder(FrappeTestCase):
 					"warehouse": warehouse,
 				}
 			],
-			"taxes_and_charges": "Input GST In-state - _TC",
 			"shipping_rule": shipping_rule.name
 		})
 		po.insert()
@@ -5232,6 +5269,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		# Create Purchase Invoice from Purchase Receipt
 		pi = make_purchase_invoice(pr.name)
+		pi.bill_no = "test_bill_1122"
 		pi.insert()
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
@@ -5248,9 +5286,9 @@ class TestPurchaseOrder(FrappeTestCase):
 			"voucher_no": pe.name
 		},fields=["account", "debit", "credit", "posting_date"])
 		self.assertTrue(gl_entries_pe)
-		self.assertEqual(gl_entries_pe[0].get("account"), "Cash - _TC")
+		self.assertEqual(gl_entries_pe[0].get("account"), "Cash - TC-3")
 		self.assertEqual(gl_entries_pe[0].get('credit'), 1430)
-		self.assertEqual(gl_entries_pe[1].get("account"), "Creditors - _TC")
+		self.assertEqual(gl_entries_pe[1].get("account"), "Creditors - TC-3")
 		self.assertEqual(gl_entries_pe[1].get("debit"), 1430)
 
 	def test_shipping_rule_fixed_restricted_country_po_with_gst_TC_B_115(self):
