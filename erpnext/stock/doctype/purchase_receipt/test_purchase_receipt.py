@@ -4869,8 +4869,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(stock_qty, self.qty_received - self.qty_issued)
 
 	def test_sales_order_reservation_TC_SCK_223(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
 		create_company()
 		create_item("_Test Item",warehouse="Stores - _TC")
 		create_supplier(supplier_name="_Test Supplier")
@@ -4947,9 +4946,12 @@ class TestPurchaseReceipt(FrappeTestCase):
 			"stock_uom":"Box",
 			"qty" : 5
 		}
-		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
-		fiscal_year.append("companies", {"company": "_Test Company"})
-		fiscal_year.save()
+		if frappe.db.exists("Fiscal Year", "2024-2025"):
+			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
+			fiscal_year.append("companies", {"company": "_Test Company"})
+			fiscal_year.save()
+		else:
+			create_fiscal_with_company("_Test Company")
 		# target_warehouse = create_warehouse("_Test Warehouse", properties=None, company=pr_fields['company'])
 		item = make_item("Ball point Pen", item_fields).name
 		# self.item_code = "Ball Point Pen"
@@ -4995,9 +4997,12 @@ class TestPurchaseReceipt(FrappeTestCase):
 		warehouse = []
 		date = []
 
-		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
-		fiscal_year.append("companies", {"company": "_Test Company"})
-		fiscal_year.save()
+		if frappe.db.exists("Fiscal Year", "2024-2025"):
+			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
+			fiscal_year.append("companies", {"company": "_Test Company"})
+			fiscal_year.save()
+		else:
+			create_fiscal_with_company("_Test Company")
 		warehouse_new = create_warehouse("Stores", properties=None, company="_Test Company")
 		item_code = make_item("_Test Item225", {'item_name':"_Test Item225", "valuation_rate":500, "is_stock_item":1}).name
 		se1 = make_stock_entry(item_code=item_code, qty=10, to_warehouse=warehouse_new, purpose="Material Receipt")
@@ -5038,9 +5043,12 @@ class TestPurchaseReceipt(FrappeTestCase):
 		item = []
 		warehouse = []
 		date = []
-		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
-		fiscal_year.append("companies", {"company": "_Test Company"})
-		fiscal_year.save()
+		if frappe.db.exists("Fiscal Year", "2024-2025"):
+			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
+			fiscal_year.append("companies", {"company": "_Test Company"})
+			fiscal_year.save()
+		else:
+			create_fiscal_with_company("_Test Company")
 		if not frappe.db.exists("Item Group", {"item_group_name":"_Test Group"}):
 			item_group = frappe.new_doc("Item Group")
 			item_group.item_group_name =  "_Test Group"
@@ -5379,3 +5387,20 @@ def create_company(company):
 		company_doc.country="India",
 		company_doc.default_currency= "INR",
 		company_doc.insert()
+
+def create_fiscal_with_company(company):
+	from datetime import date
+	today = date.today()
+	if today.month >= 4:  # Fiscal year starts in April
+		start_date = date(today.year, 4, 1)
+		end_date = date(today.year + 1, 3, 31)
+	else:
+		start_date = date(today.year - 1, 4, 1)
+		end_date = date(today.year, 3, 31)
+
+	fy_doc = frappe.new_doc("Fiscal Year")
+	fy_doc.year = "2024-2025"
+	fy_doc.year_start_date = start_date
+	fy_doc.year_end_date = end_date
+	fy_doc.append("companies", {"company": company})
+	fy_doc.submit()
