@@ -35,6 +35,7 @@ from erpnext.buying.doctype.supplier.test_supplier import create_supplier
 from erpnext.stock.doctype.material_request.material_request import make_purchase_order_based_on_supplier
 from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
+from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
 
 class TestMaterialRequest(FrappeTestCase):
@@ -2584,28 +2585,50 @@ class TestMaterialRequest(FrappeTestCase):
 			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pr1.name, 'account': 'Stock In Hand - _TC'},'credit')
 			self.assertEqual(gl_stock_debit, 500)
 
+	@change_settings("Stock Settings",{"over_delivery_receipt_allowance": 100})
 	def test_mr_to_partial_pr_TC_B_023(self):
 		# MR => 1RFQ => 2SQ => 2PO => 1PR => 1PI
-		frappe.set_user("Administrator")
-		item = make_test_item("Testing-31")
+		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
+		get_company_supplier = create_data()
+		company = get_company_supplier.get("child_company")
+		supplier = get_company_supplier.get("supplier")
+		customer = get_company_supplier.get("customer")
+		warehouse = "Stores - TC-3"
+		item = make_test_item("_test_item_partial_pr")
 		args = frappe._dict()
 		args['mr'] = [{
-			"company": "_Test Company",
+			"company": company,
 			"item_code": item.item_code,
-			"warehouse": "Stores - _TC",
+			"warehouse": warehouse,
 			"qty": 20,
 			"rate": 100,
+			"customer": customer,
+			"uom": "Nos",
+			"cost_center": "Main - TC-3"
 		}]
 		args['sq'] = [10, 10]
 		total_po_qty = sum(args['sq'])
 		total_pi_qty = 0
 		doc_mr = make_material_request(**args['mr'][0])
-		doc_rfq = make_test_rfq(doc_mr.name, received_qty=args['mr'][0]["qty"])
+		doc_rfq = make_request_for_quotation(doc_mr.name)
+		doc_rfq.append(
+			"suppliers",
+			{
+				"supplier": supplier,
+				"email_id": "123_testrfquser@example.com"
+			}
+		)
+		doc_rfq.message_for_supplier = "Please supply the specified items at the best possible rates."
+		doc_rfq.insert()
+		doc_rfq.submit()
 		for sq_qty in args['sq']:
-			doc_sq = make_test_sq(doc_rfq.name, rate=100, received_qty=sq_qty)
+			doc_sq = make_test_sq(doc_rfq.name, rate=100, received_qty=sq_qty, supplier = supplier)
 			doc_po = make_test_po(doc_sq.name, type='Supplier Quotation', received_qty=sq_qty)
 		doc_pr = make_test_pr(doc_po.name, received_qty=total_po_qty)
-		doc_pi = make_test_pi(doc_pr.name, received_qty=total_po_qty)
+		doc_pi = make_purchase_invoice(doc_pr.name)
+		doc_pi.bill_no = "test_bill_1122"
+		doc_pi.insert()
+		doc_pi.submit()
 		total_pi_qty += doc_pi.items[0].qty
 		self.assertEqual(doc_pi.docstatus, 1)
 		self.assertEqual(doc_mr.items[0].qty, total_pi_qty)
@@ -5908,11 +5931,11 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(gl_stock_debit, 100)
 
 	def test_mr_to_po_pr_with_serial_no_TC_B_156(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
-		frappe.set_user("Administrator")
-		company = "_Test Company"
-		warehouse = "Stores - _TC"
-		supplier = "_Test Supplier 1"
+		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
+		get_company_supplier = create_data()
+		company = get_company_supplier.get("child_company")
+		supplier = get_company_supplier.get("supplier")
+		warehouse = "Stores - TC-3"
 		item = make_test_item("_Test Item With Serial No")
 		item.has_serial_no = 1
 		item.save()
@@ -5926,7 +5949,8 @@ class TestMaterialRequest(FrappeTestCase):
 			"items": [{
 				"item_code": item.item_code,
 				"qty": quantity,
-				"warehouse": warehouse
+				"warehouse": warehouse,
+				"schedule_date": today()
 			}]
 		})
 		mr.insert()
@@ -5962,11 +5986,11 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(sn.item_code, item.item_code)
 
 	def test_mr_to_po_pr_with_multiple_serial_nos_TC_B_157(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
-		frappe.set_user("Administrator")
-		company = "_Test Company"
-		warehouse = "Stores - _TC"
-		supplier = "_Test Supplier 1"
+		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
+		get_company_supplier = create_data()
+		company = get_company_supplier.get("child_company")
+		supplier = get_company_supplier.get("supplier")
+		warehouse = "Stores - TC-3"
 		total_quantity = 5
 		first_pr_quantity = 3
 		second_pr_quantity = 2
@@ -5982,7 +6006,8 @@ class TestMaterialRequest(FrappeTestCase):
 			"items": [{
 				"item_code": item.item_code,
 				"qty": total_quantity,
-				"warehouse": warehouse
+				"warehouse": warehouse,
+				"schedule_date": today()
 			}]
 		})
 		mr.insert()
@@ -6043,11 +6068,11 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(sn.item_code, item.item_code)
 
 	def test_mr_to_po_pi_with_serial_nos_TC_B_158(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
-		frappe.set_user("Administrator")
-		company = "_Test Company"
-		warehouse = "Stores - _TC"
-		supplier = "_Test Supplier 1"
+		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
+		get_company_supplier = create_data()
+		company = get_company_supplier.get("child_company")
+		supplier = get_company_supplier.get("supplier")
+		warehouse = "Stores - TC-3"
 		quantity = 3
 		item = make_test_item("_Test Item With Serial No")
 		item.has_serial_no = 1
@@ -6061,7 +6086,8 @@ class TestMaterialRequest(FrappeTestCase):
 			"items": [{
 				"item_code": item.item_code,
 				"qty": quantity,
-				"warehouse": warehouse
+				"warehouse": warehouse,
+				"schedule_date": today()
 			}]
 		})
 		mr.insert()
@@ -6074,6 +6100,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po.submit()
 
 		pi = create_purchase_invoice(po.name)
+		pi.bill_no = "test_bill_1122"
 		pi.update_stock = 1
 		pi.insert()
 		serial_numbers = [f"test_item_00{i}" for i in range(1, quantity + 1)]
@@ -6140,44 +6167,49 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_to_pi_with_partial_PE_TC_B_077(self):
 		# MR =>  PO => [Partial]PE => PR => PI [PE with oustanding amount]
-		frappe.set_user("Administrator")
-		item = make_test_item("Testing-31")
+		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
+		get_company_supplier = create_data()
+		company = get_company_supplier.get("child_company")
+		supplier = get_company_supplier.get("supplier")
+		customer = get_company_supplier.get("customer")
+		item = make_test_item("_test_item")
+		warehouse = "Stores - TC-3"
 		mr_dict_list = {
-				"company" : "_Test Company",
+				"company" : company,
 				"item_code" : item.item_code,
-				"warehouse" : "Stores - _TC",
+				"warehouse" : warehouse,
 				"qty" : 4,
 				"rate" : 3000,
+				"customer": customer,
+				"uom": "Nos",
+				"cost_center": "Main - TC-3"
 			}
 
 		doc_mr = make_material_request(**mr_dict_list)
 		self.assertEqual(doc_mr.docstatus, 1)
 
 		
-		doc_po = make_test_po(doc_mr.name)
-		args = {
-			"mode_of_payment" : "Cash",
-			"reference_no" : "For Testing"
-		}
+		doc_po = make_purchase_order(doc_mr.name)
+		doc_po.supplier = supplier
+		doc_po.insert()
+		doc_po.submit()
 
-		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, 6000, args)
+		doc_pe = get_payment_entry(doc_po.doctype, doc_po.name, 6000)
+		doc_pe.insert()
+		doc_pe.submit()
 
-		doc_pr = make_test_pr(doc_po.name)
+		doc_pr = make_purchase_receipt(doc_po.name)
+		doc_pr.insert()
+		doc_pr.submit()
 
-		args = {
-			"is_paid" : 1,
-			"mode_of_payment" : 'Cash',
-			"cash_bank_account" : doc_pe.paid_from,
-			"paid_amount" : doc_pe.base_received_amount
-		}
+		doc_pi = make_purchase_invoice(doc_pr.name)
+		doc_pi.bill_no = "test_bill_1122"
+		doc_pi.insert()
+		doc_pi.submit()
 
-		doc_pi = make_test_pi(doc_pr.name, args = args)
-
-		args = {
-			"mode_of_payment" : "Cash",
-			"reference_no" : "For Testing"
-		}
-		make_payment_entry(doc_pi.doctype, doc_pi.name, doc_pi.outstanding_amount, args)
+		doc_pe1 = get_payment_entry(doc_pi.doctype, doc_pi.name, doc_pi.outstanding_amount)
+		doc_pe1.insert()
+		doc_pe1.submit()
 
 		self.assertEqual(doc_pi.docstatus, 1)
 		self.assertEqual(doc_pi.items[0].qty, doc_po.items[0].qty)
@@ -7540,9 +7572,9 @@ def make_test_rfq(source_name, received_qty=0):
 	return doc_rfq
 
 
-def make_test_sq(source_name, rate = 0, received_qty=0, item_dict = None, type = "RFQ", args = None):
+def make_test_sq(source_name, rate = 0, received_qty=0, item_dict = None, type = "RFQ", supplier = None, args = None):
 	if type == "RFQ" : 
-		doc_sq = make_supplier_quotation_from_rfq(source_name, for_supplier = "_Test Supplier")
+		doc_sq = make_supplier_quotation_from_rfq(source_name, for_supplier = supplier or "_Test Supplier")
 	
 	elif type == "Material Request" :
 		from erpnext.stock.doctype.material_request.material_request import  make_supplier_quotation
