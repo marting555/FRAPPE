@@ -400,12 +400,8 @@ def validate_account_number(name, account_number, company):
 
 @frappe.whitelist()
 def update_account_number(name, account_name, account_number=None, from_descendant=False):
-<<<<<<< HEAD
-	account = frappe.db.get_value("Account", name, "company", as_dict=True)
-=======
 	_ensure_idle_system()
-	account = frappe.get_cached_doc("Account", name)
->>>>>>> 999f1cf96d (fix: don't allow renaming account while system is actively in use (#46176))
+	account = frappe.db.get_value("Account", name, "company", as_dict=True)
 	if not account:
 		return
 
