@@ -239,7 +239,8 @@ def get_pos_reserved_serial_nos(filters):
 			[returned_sr_nos.append(x) for x in get_serial_nos(d.serial_no)]
 
 	for x in returned_sr_nos:
-		reserved_sr_nos.remove(x)
+		if x in reserved_sr_nos:
+			reserved_sr_nos.remove(x)
 
 	return reserved_sr_nos
 
