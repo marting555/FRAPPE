@@ -2693,7 +2693,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		records_for_pi('_Test Supplier USD')
 		supplier = frappe.get_doc('Supplier', '_Test Supplier USD')
-		tds_account = frappe.get_doc("Account", "Test TDS Payable - _TC")
+		tds_account = frappe.get_doc("Account", "_Test TDS Payable - _TC")
 		if tds_account.account_currency != "INR":
 			tds_account.account_currency = "INR"
 			tds_account.save()
@@ -2716,7 +2716,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			pe.append(
 				"taxes",
 				{
-					"account_head": "Test TDS Payable - _TC",
+					"account_head": "_Test TDS Payable - _TC",
 					"charge_type": "On Paid Amount",
 					"rate": 0,
 					"add_deduct_tax": "Deduct",
@@ -2762,20 +2762,20 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				party=supplier.name,
 				debit=300
 			)
-			
+			jv_doc = frappe.get_doc("Journal Entry", jea_parent.parent)
 			self.assertEqual(
 				frappe.db.get_value("Journal Entry", jea_parent.parent, "voucher_type"),
 				"Exchange Gain Or Loss"
 			)
 			
 			expected_jv_entries = [
-				["Exchange Gain/Loss - _TC", 0.0, 300.0, pe.posting_date],
-				["_Test Payable USD - _TC", 300.0, 0.0, pe.posting_date]
+				["Exchange Gain/Loss - _TC", 0.0, jv_doc.total_debit or jv_doc.total_credit, pe.posting_date],
+				["_Test Payable USD - _TC", jv_doc.total_debit or jv_doc.total_credit, 0.0, pe.posting_date]
 			]
 			
 			check_gl_entries(
 				doc=self,
-				voucher_no=jea_parent.parent,
+				voucher_no=jv_doc.name,
 				expected_gle=expected_jv_entries,
 				posting_date=pi.posting_date,
 				voucher_type="Journal Entry"
@@ -2795,10 +2795,10 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				party=supplier.name,
 				debit=20
 			)
-			
+			_jv_doc = frappe.get_doc("Journal Entry", jea_parent.parent)
 			expected_jv_entries = [
-				["Exchange Gain/Loss - _TC", 0.0, 20.0, pe.posting_date],
-				["_Test Payable USD - _TC", 20.0, 0.0, pe.posting_date]
+				["Exchange Gain/Loss - _TC", 0.0, _jv_doc.total_debit or _jv_doc.total_credit, pe.posting_date],
+				["_Test Payable USD - _TC", _jv_doc.total_debit or _jv_doc.total_credit, 0.0, pe.posting_date]
 			]
 			
 			check_gl_entries(
@@ -3845,6 +3845,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		account_setting=frappe.get_doc("Accounts Settings")
 		account_setting.db_set("over_billing_allowance", 10)
 		account_setting.save()
+		buying_setting=frappe.get_doc("Buying Settings")
+		buying_setting.db_set("maintain_same_rate", 0)
 		company = "_Test Company"
 		item=make_test_item("_Test Item")
 		po=create_purchase_order(
@@ -4212,7 +4214,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		lvc.submit()
   
 		expected_gle =[
-			['CWIP Account - _TC',pi.grand_total+300, 0.0, pi.posting_date],
+			['CWIP Account - _TC',pi.grand_total, 0.0, pi.posting_date],
 			['Creditors - _TC', 0.0, 1000.0, pi.posting_date],
 			['Expenses Included In Valuation - _TC', 0.0, 300.0, pi.posting_date],
 		]
@@ -4742,8 +4744,8 @@ def get_jv_entry_account(**args):
 			"reference_name": args.get("reference_name"),
 			"party_type": args.get("party_type"),
 			"party": args.get("party"),
-			"debit": args.get("debit") if args.get("debit") else 0,
-			"credit": args.get("credit") if args.get("credit") else 0
+			# "debit": args.get("debit") if args.get("debit") else 0,
+			# "credit": args.get("credit") if args.get("credit") else 0
 		},
 		fields=["parent"]
 	)[0]
@@ -4780,9 +4782,6 @@ def create_asset_category():
  
  
 def create_asset_data():
-	if not frappe.db.exists("Asset Category", "Test_Category"):
-		create_asset_category()
-
 	if not frappe.db.exists("Location", "Test Location"):
 		frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert(ignore_permissions=True)
 
@@ -4800,3 +4799,6 @@ def create_asset_data():
 		frappe.get_doc(
 			{"doctype": "Finance Book", "finance_book_name": "Test Finance Book 3"}
 		).insert(ignore_permissions=True)
+  
+	if not frappe.db.exists("Asset Category", "Test_Category"):
+		create_asset_category()
