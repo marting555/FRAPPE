@@ -11,7 +11,10 @@ from frappe.query_builder.functions import CombineDatetime, Sum
 from frappe.utils import cint, flt, get_datetime
 
 from erpnext.stock.doctype.inventory_dimension.inventory_dimension import get_inventory_dimensions
-from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
+from erpnext.stock.doctype.serial_no.serial_no import (
+	get_serial_nos,
+	get_serial_nos_from_serial_and_batch_bundle,
+)
 from erpnext.stock.doctype.stock_reconciliation.stock_reconciliation import get_stock_balance_for
 from erpnext.stock.doctype.warehouse.warehouse import apply_warehouse_filter
 from erpnext.stock.utils import (
@@ -84,7 +87,7 @@ def execute(filters=None):
 
 		sle.update({"in_qty": max(sle.actual_qty, 0), "out_qty": min(sle.actual_qty, 0)})
 
-		if sle.serial_no:
+		if frappe.get_value("Item", sle.item_code, "has_serial_no"):
 			update_available_serial_nos(available_serial_nos, sle)
 
 		if sle.actual_qty:
@@ -174,7 +177,11 @@ def get_serial_batch_bundle_details(sl_entries, filters=None):
 
 
 def update_available_serial_nos(available_serial_nos, sle):
-	serial_nos = get_serial_nos(sle.serial_no)
+	serial_nos = (
+		get_serial_nos(sle.serial_no)
+		if sle.serial_no
+		else get_serial_nos_from_serial_and_batch_bundle(sle.serial_and_batch_bundle)
+	)
 	key = (sle.item_code, sle.warehouse)
 	if key not in available_serial_nos:
 		stock_balance = get_stock_balance_for(
@@ -182,19 +189,15 @@ def update_available_serial_nos(available_serial_nos, sle):
 		)
 		serials = get_serial_nos(stock_balance["serial_nos"]) if stock_balance["serial_nos"] else []
 		available_serial_nos.setdefault(key, serials)
+		sle.balance_serial_no = "\n".join(serials)
+		return
 
 	existing_serial_no = available_serial_nos[key]
 	for sn in serial_nos:
-		if sle.actual_qty > 0:
-			if sn in existing_serial_no:
-				existing_serial_no.remove(sn)
-			else:
-				existing_serial_no.append(sn)
+		if sn in existing_serial_no:
+			existing_serial_no.remove(sn)
 		else:
-			if sn in existing_serial_no:
-				existing_serial_no.remove(sn)
-			else:
-				existing_serial_no.append(sn)
+			existing_serial_no.append(sn)
 
 	sle.balance_serial_no = "\n".join(existing_serial_no)
 
@@ -346,6 +349,7 @@ def get_columns(filters):
 				"options": "Serial and Batch Bundle",
 				"width": 100,
 			},
+			{"label": _("Balance Serial No"), "fieldname": "balance_serial_no", "width": 100},
 			{
 				"label": _("Project"),
 				"fieldname": "project",
