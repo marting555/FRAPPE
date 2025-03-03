@@ -3329,50 +3329,23 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		self.assertEqual(pi_status, "Paid")
 	
 	def test_pi_ignore_pricing_rule_TC_B_051(self):
-		from erpnext.accounts.doctype.pricing_rule.test_pricing_rule import make_pricing_rule
-
-		frappe.delete_doc_if_exists("Pricing Rule", "Boat Earpods - Monica Discount")
-		self.pricing_rule =make_pricing_rule(
-			apply_on="Item Code",
-			title="Boat Earpods - Monica Discount",
-			items=[{"item_code": "Boat Earpods"}],
-			supplier="Monica",
-			min_qty= 10,
-			company= "_Test Company",
-			rate_or_discount="Discount Percentage",
-			discount_percentage=10,
-			valid_from="2024-12-01",
-			selling = 0,
-			buying = 1,
-			apply_discount_on = "Rate",
-			price_or_product_discount= "Price",
-			apply_rule_on = "Transaction",
-			apply_on_transaction = "Purchase Invoice"
-		)
-
-		frappe.set_user("Administrator")
-		company = "_Test Company"
-		item_code = "Testing-31"
-		target_warehouse = "Stores - _TC"
-		supplier = "_Test Supplier 1"
+		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		item_price = 130
+		get_company_supplier = create_data()
+		company = get_company_supplier.get("child_company")
+		supplier = get_company_supplier.get("supplier")
+		target_warehouse = "Stores - TC-3"
+		item = make_test_item("test_item_ignore_rule")
+		item.is_purchase_item = 1
+		item.is_sales_item = 0
+		item.save()
 
-		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"is_stock_item": 1,
-				"is_purchase_item": 1,
-				"is_sales_item": 0,
-				"company": company
-			}).insert()
-
-		if not frappe.db.exists("Item Price", {"item_code": item_code, "price_list": "Standard Buying"}):
+		if not frappe.db.exists("Item Price", {"item_code": item.item_code, "price_list": "Standard Buying"}):
 			frappe.get_doc({
 				"doctype": "Item Price",
 				"price_list": "Standard Buying",
-				"item_code": item_code,
+				"item_code": item.item_code,
 				"price_list_rate": item_price
 			}).insert()
 
@@ -3384,7 +3357,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				"apply_on": "Item Code",
 				"items": [
 					{
-						"item_code": item_code
+						"item_code": item.item_code
 					}
 				],
 				"rate_or_discount": "Discount Percentage",
@@ -3401,12 +3374,13 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			"set_warehouse": target_warehouse,
 			"items": [
 				{
-					"item_code": item_code,
+					"item_code": item.item_code,
 					"warehouse": target_warehouse,
 					"qty": 1
 				}
 			]
 		})
+		pi.bill_no = "test_bill_1122"
 		pi.insert()
 		self.assertEqual(len(pi.items), 1)
 		self.assertEqual(pi.items[0].rate, 117)
