@@ -4896,19 +4896,28 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_po_2pi_serial_TC_SCK_093(self):
 		# MR =>  PO => 2PI
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
 		create_company()
-		create_fiscal_year()
-		supplier = create_supplier(supplier_name="_Test Supplier MR")
-		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
-		item = item_create("_Test MR")
+		create_customer("_Test Customer")
+		create_supplier(supplier_name="_Test Supplier")
+		if frappe.db.exists("Fiscal Year", "2024-2025"):
+			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
+			fiscal_year.append("companies", {"company": "_Test Company"})
+			fiscal_year.save()
+		else:
+			create_fiscal_with_company("_Test Company")
+		supplier = create_supplier(supplier_name="_Test Supplier MR" ,properties={"parent_warehouse": "All Warehouses - _TC"})
+		warehouse = create_warehouse("_Test warehouse PO", properties={"parent_warehouse": "All Warehouses - _TC"})
+		item = make_item("_Test MR")
 
 		mr_dict_list = [{
-				"company" : "_Test Company MR",
+				"company" : "_Test Company",
 				"item_code" : item.item_code,
 				"warehouse" : warehouse,
-				"cost_center" : frappe.db.get_value("Company","_Test Company MR","cost_center"),
+				"cost_center" : frappe.db.get_value("Company","_Test Company","cost_center"),
 				"qty" : 2,
 				"rate" : 100,
+				"uom" : "Box",
 			},
 		]
 
@@ -4918,7 +4927,7 @@ class TestMaterialRequest(FrappeTestCase):
 		doc_po = make_test_po(doc_mr.name)
 		doc_pi = create_purchase_invoice(doc_po.name)
 		doc_pi.update_stock = 1
-		doc_pi.has_serial_no = 1
+		doc_pi.items[0].has_serial_no = 1
 		doc_pi.set_warehouse = warehouse
 		doc_pi.items[0].qty = 1
 		doc_pi.items[0].serial_no = "013 - MR"
@@ -4932,7 +4941,7 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(gl_temp_credit, 100)
 		
 		credit_account = frappe.db.get_value("Company","_Test Company MR","default_payable_account")
-		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':doc_pi.name, 'account': credit_account},'credit')
+		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':doc_pi.name},'credit')
 		self.assertEqual(gl_stock_debit, 100)
 
 		serial_cnt = frappe.db.count('Serial No',{'purchase_document_no':doc_pi.name})

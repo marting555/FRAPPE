@@ -205,6 +205,13 @@ class TestBlanketOrder(FrappeTestCase):
 		self.assertTrue(any(entry["account"] == "SGST" and entry["debit"] == 9000 for entry in pi_gl_entries))
 		self.assertTrue(any(entry["account"] == "Creditors" and entry["credit"] == 118000 for entry in pi_gl_entries))
 	def test_blanket_order_to_po_TC_B_093(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
+		from erpnext.buying.doctype.supplier.test_supplier import create_supplier
+		create_company()
+		create_customer("_Test Customer")
+		make_item("Testing-31", {"is_stock_item": 1})
+		create_supplier(supplier_name=" _Test Supplier 1")
+
 		frappe.set_user("Administrator")
 		company = "_Test Company"
 		item_code = "Testing-31"

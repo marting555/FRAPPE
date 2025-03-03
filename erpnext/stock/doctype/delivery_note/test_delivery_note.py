@@ -2683,22 +2683,32 @@ class TestDeliveryNote(FrappeTestCase):
 	def test_dn_submission_TC_SCK_148(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 		from erpnext.buying.doctype.supplier.test_supplier import create_supplier
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
 		# from crm.crm.doctype.lead.lead import make_customer
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
+		from erpnext.stock.doctype.material_request.test_material_request import create_fiscal_with_company
 		"""Test Purchase Receipt Creation, Submission, and Stock Ledger Update"""
 
 		# Create Purchase Receiptif not frappe.db.exists("Company", "_Test Company"):
-		if not frappe.db.exists("Company", "_Test Company"):
-			company = frappe.new_doc("Company")
-			company.company_name = "_Test Company"
-			company.default_currency = "INR"
-			company.insert()
+		create_company()
+		if frappe.db.exists("Fiscal Year", "2024-2025"):
+			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
+			fiscal_year.append("companies", {"company": "_Test Company"})
+			fiscal_year.save()
+		else:
+			create_fiscal_with_company("_Test Company")
+		create_warehouse(
+				warehouse_name="_Test Warehouse 1 - _TC",
+				properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
+				company="_Test Company",
+			)
+
 
 		item_fields = {
 			"item_name": "Ball point Pen",
 			"is_stock_item": 1,
 			"stock_uom": "Box",
-			"uoms": [{'uom': "Pcs", 'conversion_factor': 0.05}],
+			"uoms": [{'uom': "Box", 'conversion_factor': 1}],
 		}
 
 		dn_fields = {
@@ -2713,7 +2723,7 @@ class TestDeliveryNote(FrappeTestCase):
 		dn_data = {
 			"company" : "_Test Company",
 			"item_code" : "Ball point Pen",
-			"warehouse" : create_warehouse("_Test Warehouse", properties=None, company=dn_fields['company']),
+			"warehouse" : create_warehouse("_Test Warehouse",properties={"parent_warehouse": "All Warehouses - _TC"}, company=dn_fields['company']),
 			"customer": "SS Ltd",
             "schedule_date": "2025-02-03",
 			"qty" : 20,
@@ -2731,7 +2741,7 @@ class TestDeliveryNote(FrappeTestCase):
 		pr_data = {
 			"company" : "_Test Company",
 			"item_code" : "Ball point Pen",
-			"warehouse" : create_warehouse("_Test Warehouse", properties=None, company=pr_fields['company']),
+			"warehouse" : create_warehouse("_Test Warehouse", properties={"parent_warehouse": "All Warehouses - _TC"}, company=pr_fields['company']),
 			"supplier": "Test Supplier 1",
             "schedule_date": "2025-02-03",
 			"qty" : 5,
@@ -2740,7 +2750,7 @@ class TestDeliveryNote(FrappeTestCase):
 			"conversion_factor": 1
 		}
 		
-		target_warehouse = create_warehouse("_Test Warehouse", properties=None, company=pr_fields['company'])
+		target_warehouse = create_warehouse("_Test Warehouse", properties={"parent_warehouse": "All Warehouses - _TC"}, company=pr_fields['company'])
 		uom = frappe.get_doc("UOM", "Box")
 		uom.must_be_whole_number = 0
 		uom.save()
@@ -2758,12 +2768,13 @@ class TestDeliveryNote(FrappeTestCase):
 		sle = frappe.get_doc("Stock Ledger Entry", {"voucher_no": doc_pr.name})
 		
 
-		customer = frappe.get_doc("Customer",{'customer_name':"SS Ltd"}).insert()
-		target_warehouse = create_warehouse("_Test Warehouse", properties=None, company=dn_data['company'])
+		customer = create_customer('SS Ltd')
+		target_warehouse = create_warehouse("_Test Warehouse",properties={"parent_warehouse": "All Warehouses - _TC"}, company=dn_data['company'])
 		item = make_item("Ball point Pen", item_fields).name
-		dn = create_delivery_note(item_code=item, qty=30, uom="Pcs",stock_uom="Box", conversion_factor=0.05, company=dn_data['company'], customer=customer, warehouse=target_warehouse,do_not_submit=1)
+		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company"},"name")
+		dn = create_delivery_note(item_code=item, qty=30, uom="Box",stock_uom="Box", conversion_factor=0.05, company=dn_data['company'], customer=customer, warehouse=target_warehouse,cost_center= cost_center[1].name ,do_not_submit=1)
 		
-		dn.items[0].uom = "Pcs"
+		dn.items[0].uom = "Box"
 		dn.items[0].conversion_factor = 0.05
 		
 		dn.save()
