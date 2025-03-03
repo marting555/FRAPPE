@@ -1473,9 +1473,12 @@ class TestPurchaseOrder(FrappeTestCase):
 		create_item("_Test Item",warehouse="Stores - _TC")
 		create_supplier(supplier_name="_Test Supplier")
 
-		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
-		fiscal_year.append("companies", {"company": "_Test Company"})
-		fiscal_year.save()
+		if frappe.db.exists("Fiscal Year", "2024-2025"):
+					fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
+					fiscal_year.append("companies", {"company": "_Test Company"})
+					fiscal_year.save()
+		else:
+			create_fiscal_with_company("_Test Company")
 	
 		po = create_purchase_order(rate=10000,qty=10,warehouse = "Stores - _TC")
 		po.submit()
@@ -2172,9 +2175,12 @@ class TestPurchaseOrder(FrappeTestCase):
 			company="_Test Company",
 		)
 		create_item("_Test Item")
-		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
-		fiscal_year.append("companies", {"company": "_Test Company"})
-		fiscal_year.save()
+		if frappe.db.exists("Fiscal Year", "2024-2025"):
+			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
+			fiscal_year.append("companies", {"company": "_Test Company"})
+			fiscal_year.save()
+		else:
+			create_fiscal_with_company("_Test Company")
 
 		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
 		purchase_tax.title = "TEST"
@@ -2221,9 +2227,12 @@ class TestPurchaseOrder(FrappeTestCase):
 			company="_Test Company",
 		)
 		create_item("_Test Item")
-		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
-		fiscal_year.append("companies", {"company": "_Test Company"})
-		fiscal_year.save()
+		if frappe.db.exists("Fiscal Year", "2024-2025"):
+			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
+			fiscal_year.append("companies", {"company": "_Test Company"})
+			fiscal_year.save()
+		else:
+			create_fiscal_with_company("_Test Company")
 
 		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
 		purchase_tax.title = "TEST"
@@ -3141,9 +3150,12 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		})
 		purchase_tax_and_template.save()
-		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
-		fiscal_year.append("companies", {"company": company})
-		fiscal_year.save()
+		if frappe.db.exists("Fiscal Year", "2024-2025"):
+			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
+			fiscal_year.append("companies", {"company": "_Test Company"})
+			fiscal_year.save()
+		else:
+			create_fiscal_with_company("_Test Company")
 		
 		create_supplier(supplier_name="_Test Registered Supplier")
 		warehouse = create_warehouse(
@@ -3154,11 +3166,10 @@ class TestPurchaseOrder(FrappeTestCase):
 		create_item("_Test Item",warehouse=warehouse)
 		po = create_purchase_order(supplier='_Test Registered Supplier',qty=1,rate = 100, do_not_save=True)
 		po.save()
-		print(po.company,'company')
+		
 		p =  frappe.db.get_all("Account",{'company':po.company},["name"])
-		print(p)
+	
 		purchase_tax_and_value = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company,'tax_category':'Out-State'},'name')
-		print(purchase_tax_and_value,0000)
 		po.taxes_and_charges = purchase_tax_and_value
 		po.save()
 		po.submit()
@@ -3403,9 +3414,12 @@ class TestPurchaseOrder(FrappeTestCase):
 			company="_Test Company",
 		)
 		create_item("_Test Item")
-		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
-		fiscal_year.append("companies", {"company": "_Test Company"})
-		fiscal_year.save()
+		if frappe.db.exists("Fiscal Year", "2024-2025"):
+			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
+			fiscal_year.append("companies", {"company": "_Test Company"})
+			fiscal_year.save()
+		else:
+			create_fiscal_with_company("_Test Company")
 		po = create_purchase_order(qty=10,rate = 1000, do_not_save=True)
 		po.save()
 		purchase_tax_template = frappe.new_doc("Purchase Taxes and Charges Template")
@@ -3434,11 +3448,10 @@ class TestPurchaseOrder(FrappeTestCase):
 			purchase_tax_template.append("taxes", items)
 		purchase_tax_template.save()
 		purchase_tax_and_value = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company},'name')
-		print(purchase_tax_and_value,8888)
 		po.taxes_and_charges = purchase_tax_template.name
 		po.save()
 		account = frappe.db.get_all("Account",{'company':po.company},["name"])
-		print(account)
+	
 		po.append('taxes',{
 			'charge_type':'Actual',
 			'account_head' : 'Freight and Forwarding Charges - _TC',
@@ -3847,9 +3860,12 @@ class TestPurchaseOrder(FrappeTestCase):
 		create_item("_Test Item",warehouse="Stores - _TC")
 		create_supplier(supplier_name="_Test Supplier")
 
-		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
-		fiscal_year.append("companies", {"company": "_Test Company"})
-		fiscal_year.save()
+		if frappe.db.exists("Fiscal Year", "2024-2025"):
+			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
+			fiscal_year.append("companies", {"company": "_Test Company"})
+			fiscal_year.save()
+		else:
+			create_fiscal_with_company("_Test Company")
 		po = create_purchase_order(rate=10000,qty=10,warehouse="Stores - _TC")
 		po.submit()
 
@@ -5560,9 +5576,12 @@ class TestPurchaseOrder(FrappeTestCase):
 			company="_Test Company"
 		)
 		create_item("_Test Item")
-		fiscal_year = frappe.get_doc('Fiscal Year', '2025')
-		fiscal_year.append("companies", {"company": "_Test Company"})
-		fiscal_year.save()
+		if frappe.db.exists("Fiscal Year", "2024-2025"):
+			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
+			fiscal_year.append("companies", {"company": "_Test Company"})
+			fiscal_year.save()
+		else:
+			create_fiscal_with_company("_Test Company")
 		po = create_purchase_order(qty=10,Rate=1000, do_not_save=True)
 		po.save()
 		tax_template = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company,'tax_category':'In-State'},'name')
