@@ -24,6 +24,7 @@
   "apply_tds",
   "tax_withholding_category",
   "is_subcontracted",
+  "has_unit_price_items",
   "supplier_warehouse",
   "amended_from",
   "accounting_dimensions_section",
@@ -1280,11 +1281,20 @@
    "print_hide": 1
   },
   {
+<<<<<<< HEAD
    "fieldname": "dispatch_address_display",
    "fieldtype": "Text Editor",
    "label": "Dispatch Address Details",
    "print_hide": 1,
    "read_only": 1
+=======
+   "default": "0",
+   "fieldname": "has_unit_price_items",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Has Unit Price Items",
+   "no_copy": 1
+>>>>>>> e403d3f153 (feat: Unit Price Items in Buying (RFQ, SQ, PO))
   }
  ],
  "grid_page_length": 50,
@@ -1292,7 +1302,11 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2025-04-09 16:54:08.836106",
+=======
+ "modified": "2025-03-03 16:48:08.697520",
+>>>>>>> e403d3f153 (feat: Unit Price Items in Buying (RFQ, SQ, PO))
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order",

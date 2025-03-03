@@ -37,8 +37,8 @@
 =======
   "enable_discount_accounting",
   "enable_cutoff_date_on_bulk_delivery_note_creation",
-  "allow_zero_qty_in_sales_order",
   "allow_zero_qty_in_quotation",
+  "allow_zero_qty_in_sales_order",
   "experimental_section",
   "use_server_side_reactivity"
 >>>>>>> c1e4e7af28 (feat: Unit Price Contract)
@@ -233,14 +233,18 @@
    "default": "0",
    "fieldname": "allow_zero_qty_in_sales_order",
    "fieldtype": "Check",
-   "label": "Allow 0 Qty in Sales Order (Unit Price Contract)"
+   "label": "Allow 0 Qty in Sales Order (Unit Price Items)"
   },
   {
    "default": "0",
    "fieldname": "allow_zero_qty_in_quotation",
    "fieldtype": "Check",
+<<<<<<< HEAD
    "label": "Allow 0 Qty in Quotation (Unit Price Contract)"
 >>>>>>> c1e4e7af28 (feat: Unit Price Contract)
+=======
+   "label": "Allow 0 Qty in Quotation (Unit Price Items)"
+>>>>>>> e403d3f153 (feat: Unit Price Items in Buying (RFQ, SQ, PO))
   }
  ],
  "grid_page_length": 50,
@@ -250,10 +254,14 @@
  "issingle": 1,
  "links": [],
 <<<<<<< HEAD
+<<<<<<< HEAD
  "modified": "2023-10-25 14:03:03.966701",
 =======
  "modified": "2025-02-28 18:19:46.436595",
 >>>>>>> c1e4e7af28 (feat: Unit Price Contract)
+=======
+ "modified": "2025-03-03 16:39:16.360823",
+>>>>>>> e403d3f153 (feat: Unit Price Items in Buying (RFQ, SQ, PO))
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Selling Settings",
