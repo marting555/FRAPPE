@@ -8374,6 +8374,7 @@ def get_or_create_fiscal_year(company):
 				pass
 			else:
 				fiscal_year.append("companies", {"company": company})
+				fiscal_year.save()
 	else:
 		current_year = datetime.now().year
 		first_date = f"01-01-{current_year}"
