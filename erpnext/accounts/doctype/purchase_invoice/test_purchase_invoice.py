@@ -3734,53 +3734,54 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 
 	def test_pi_with_tds_TC_B_151(self):
-		company = "_Test Company"
-		tax_category = "test_tax_withholding_category"
-		supplier = "_Test Supplier 1"
-		item_code = "Testing-31"
-		target_warehouse = "Stores - _TC"
-		supplier = "_Test Supplier 1"
-		if not frappe.db.exists("Tax Withholding Category", tax_category):
-			doc = frappe.get_doc({
-				"doctype": "Tax Withholding Category",
-				"name": tax_category,
-				"category_name": tax_category,
-				"rates": [
-					{
-						"from_date": get_year_start(getdate()),
-						"to_date": get_year_ending(getdate()),
-						"tax_withholding_rate": 2,
-						"single_threshold": 1000,
-						"cumulative_threshold": 100000
-					}
-				],
-				"accounts": [
-					{
-						"company": company,
-						"account": 'Test TDS Payable - _TC',
-					}
-				]
-			})
-			doc.insert()
-			tax_category = doc.name
+		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		get_company_supplier = create_data()
+		company = get_company_supplier.get("child_company")
+		supplier = get_company_supplier.get("supplier")
+		item = make_test_item("_test_item")
+		warehouse = "Stores - TC-3"
+		tax_category = frappe.get_doc({
+			"doctype": "Tax Withholding Category",
+			"__newname": "test_tax_withholding_category",
+			"rates": [
+				{
+					"from_date": get_year_start(getdate()),
+					"to_date": get_year_ending(getdate()),
+					"tax_withholding_rate": 2,
+					"single_threshold": 1000,
+					"cumulative_threshold": 100000
+				}
+			],
+			"accounts": [
+				{
+					"company": company,
+					"account": 'TDS Payable - TC-3',
+				}
+			]
+		})
+		tax_category.insert(ignore_if_duplicate=1)
 
-		frappe.db.set_value("Supplier", supplier, "tax_withholding_category", tax_category)
+		frappe.db.set_value("Supplier", supplier, "tax_withholding_category", tax_category.name)
 		pi = frappe.get_doc({
 			"doctype": "Purchase Invoice",
 			"supplier": supplier,
 			"company": company,
 			"posting_date": today(),
 			"apply_tds": 1,
-			"tax_withholding_category": tax_category,
 			"items": [
 				{
-					"item_code": item_code,
+					"item_code": item.item_code,
 					"qty": 2,
 					"rate": 500,
-					"warehouse": target_warehouse,
+					"warehouse": warehouse,
 				}
 			],
 		})
+		pi.bill_no = "test_bill_1122"
+		pi.taxes_and_charges = ""
+		pi.taxes = []
+		pi.tax_withholding_category = tax_category.name
 		pi.insert()
 		pi.submit()
 
@@ -3793,7 +3794,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name, "company": company}, fields=["account", "debit", "credit"])
 
-		tds_entry = next(entry for entry in gl_entries if entry["account"] == "Test TDS Payable - _TC")
+		tds_entry = next(entry for entry in gl_entries if entry["account"] == "TDS Payable - TC-3")
 		self.assertEqual(tds_entry["credit"], 20)
 		self.assertEqual(tds_entry["debit"], 0)
 
