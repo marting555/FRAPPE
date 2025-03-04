@@ -66,7 +66,7 @@ def get_ordered_to_be_billed_data(args, filters=None):
 	if docname:
 		query = query.where(doctype.name == docname)
 
-	return query.run(as_dict=True, debug=1)
+	return query.run(as_dict=True)
 
 
 def get_project_field(doctype, child_doctype, party):
