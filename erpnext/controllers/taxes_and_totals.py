@@ -851,6 +851,7 @@ class calculate_taxes_and_totals:
 		if (
 			self.doc.is_return
 			and self.doc.return_against
+			and not self.doc.update_outstanding_for_self
 			and not self.doc.get("is_pos")
 			or self.is_internal_invoice()
 		):

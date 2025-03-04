@@ -168,6 +168,43 @@ class AccountsController(TransactionBase):
 						raise_exception=1,
 					)
 
+	def validate_against_voucher_outstanding(self):
+		if self.get("is_return") and self.return_against and not self.get("is_pos"):
+			against_voucher_outstanding = frappe.get_value(
+				self.doctype, self.return_against, "outstanding_amount"
+			)
+			document_type = "Credit Note" if self.doctype == "Sales Invoice" else "Debit Note"
+
+			msg = ""
+			if self.get("update_outstanding_for_self"):
+				msg = (
+					"We can see {0} is made against {1}. If you want {1}'s outstanding to be updated, "
+					"uncheck '{2}' checkbox. <br><br>Or"
+				).format(
+					frappe.bold(document_type),
+					get_link_to_form(self.doctype, self.get("return_against")),
+					frappe.bold(_("Update Outstanding for Self")),
+				)
+
+			elif not self.update_outstanding_for_self and (
+				abs(self.outstanding_amount) or abs(self.rounded_total) > against_voucher_outstanding
+			):
+				self.update_outstanding_for_self = 1
+				msg = (
+					"The outstanding amount {} in {} is lesser than {}. Updating the outstanding to this invoice. <br><br>And"
+				).format(
+					against_voucher_outstanding,
+					get_link_to_form(self.doctype, self.get("return_against")),
+					flt(abs(self.outstanding_amount)),
+				)
+
+			if msg:
+				msg += " you can use {} tool to reconcile against {} later.".format(
+					get_link_to_form("Payment Reconciliation"),
+					get_link_to_form(self.doctype, self.get("return_against")),
+				)
+				frappe.msgprint(_(msg))
+
 	def validate(self):
 		if not self.get("is_return") and not self.get("is_debit_note"):
 			self.validate_qty_is_not_zero()
@@ -196,6 +233,7 @@ class AccountsController(TransactionBase):
 		self.disable_tax_included_prices_for_internal_transfer()
 		self.set_incoming_rate()
 		self.init_internal_values()
+		self.validate_against_voucher_outstanding()
 
 		if self.meta.get_field("currency"):
 			self.calculate_taxes_and_totals()
