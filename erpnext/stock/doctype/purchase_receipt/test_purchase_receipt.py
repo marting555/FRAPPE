@@ -4946,12 +4946,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 			"stock_uom":"Box",
 			"qty" : 5
 		}
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		# target_warehouse = create_warehouse("_Test Warehouse", properties=None, company=pr_fields['company'])
 		item = make_item("Ball point Pen", item_fields).name
 		# self.item_code = "Ball Point Pen"
@@ -4997,12 +4992,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 		warehouse = []
 		date = []
 
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		warehouse_new = create_warehouse("Stores", properties=None, company="_Test Company")
 		item_code = make_item("_Test Item225", {'item_name':"_Test Item225", "valuation_rate":500, "is_stock_item":1}).name
 		se1 = make_stock_entry(item_code=item_code, qty=10, to_warehouse=warehouse_new, purpose="Material Receipt")
@@ -5043,12 +5033,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 		item = []
 		warehouse = []
 		date = []
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		if not frappe.db.exists("Item Group", {"item_group_name":"_Test Group"}):
 			item_group = frappe.new_doc("Item Group")
 			item_group.item_group_name =  "_Test Group"
@@ -5388,19 +5373,36 @@ def create_company(company):
 		company_doc.default_currency= "INR",
 		company_doc.insert()
 
-def create_fiscal_with_company(company):
-	from datetime import date
-	today = date.today()
-	if today.month >= 4:  # Fiscal year starts in April
-		start_date = date(today.year, 4, 1)
-		end_date = date(today.year + 1, 3, 31)
-	else:
-		start_date = date(today.year - 1, 4, 1)
-		end_date = date(today.year, 3, 31)
+def get_or_create_fiscal_year(company):
+	from datetime import datetime
+	current_date = datetime.today()
+	formatted_date = current_date.strftime("%m-%d-%Y")
+	existing_fy = frappe.get_all(
+		"Fiscal Year",
+		filters={ 
+			"year_start_date": ["<=", formatted_date],
+			"year_end_date": [">=", formatted_date],
+		},
+		fields=["name"]
+	)
 
-	fy_doc = frappe.new_doc("Fiscal Year")
-	fy_doc.year = "2024-2025"
-	fy_doc.year_start_date = start_date
-	fy_doc.year_end_date = end_date
-	fy_doc.append("companies", {"company": company})
-	fy_doc.submit()
+	if existing_fy:
+		fiscal_year = frappe.get_doc("Fiscal Year",existing_fy[0].name)
+		for years in fiscal_year.companies:
+			if years.company == company:
+				pass
+			else:
+				fiscal_year.append("companies", {"company": company})
+				fiscal_year.save()
+	else:
+		current_year = datetime.now().year
+		first_date = f"01-01-{current_year}"
+		last_date = f"31-12-{current_year}"
+		fiscal_year = frappe.new_doc("Fiscal Year")
+		fiscal_year.year = f"{current_year}"
+		fiscal_year.year_start_date = first_date
+		fiscal_year.year_end_date = last_date
+		fiscal_year.append('companies',{
+			'company':company
+		})
+		fiscal_year.save()
