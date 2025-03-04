@@ -1517,11 +1517,17 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.grand_total, doc_pi.grand_total)
 	
 	def test_create_purchase_receipt_partial_TC_SCK_037(self):
-		po = create_purchase_order(rate=10000,qty=10)
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_item("_Test Item",warehouse="Stores - _TC")
+		create_supplier(supplier_name="_Test Supplier")
+		get_or_create_fiscal_year('_Test Company')
+		po = create_purchase_order(rate=10000,qty=10,warehouse = "Stores - _TC")
 		po.submit()
 
 		pr = create_pr_against_po(po.name, received_qty=5)
-		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "_Test Warehouse - _TC"}, "actual_qty")
+
+		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "Stores - _TC"}, "actual_qty")
 		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':pr.name})
 		self.assertEqual(sle.qty_after_transaction, bin_qty)
 		self.assertEqual(sle.warehouse, po.get("items")[0].warehouse)
@@ -2276,10 +2282,13 @@ class TestPurchaseOrder(FrappeTestCase):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
 		create_company()
 		create_supplier(supplier_name="_Test Supplier")
-		create_warehouse("_Test Warehouse - _TC")
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
+			company="_Test Company",
+		)
+		get_or_create_fiscal_year('_Test Company')
 		create_item("_Test Item")
-		create_fiscal_with_company("_Test Company")
-
 		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
 		purchase_tax.title = "TEST"
 		purchase_tax.company = "_Test Company"
@@ -2288,7 +2297,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"category":"Total",
 			"add_deduct_tax":"Add",
 			"charge_type":"On Net Total",
-			"account_head":"Input Tax CGST - _TC",
+			"account_head":"Stock In Hand - _TC",
 			"rate":100,
 			"description":"GST"
 		})
@@ -2319,11 +2328,14 @@ class TestPurchaseOrder(FrappeTestCase):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
 		create_company()
 		create_supplier(supplier_name="_Test Supplier")
-		create_warehouse("_Test Warehouse - _TC")
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
+			company="_Test Company",
+		)
 		create_item("_Test Item")
-		create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 
-		accounts = frappe.get_all("Account", filters={"company": "_Test Company"}, fields=["name"])
 		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
 		purchase_tax.title = "TEST"
 		purchase_tax.company = "_Test Company"
@@ -2332,7 +2344,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"category":"Total",
 			"add_deduct_tax":"Add",
 			"charge_type":"On Net Total",
-			"account_head":"Input Tax CGST - _TC",
+			"account_head":"Stock In Hand - _TC",
 			"rate":100,
 			"description":"GST"
 		})
@@ -2560,6 +2572,8 @@ class TestPurchaseOrder(FrappeTestCase):
 		frappe.delete_doc_if_exists("Pricing Rule", "Discount on _Test Item")
 		
 	def setUp(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
 		validate_fiscal_year('_Test Company')
 
 	def test_po_with_pricing_rule_TC_B_047(self):
@@ -3232,8 +3246,36 @@ class TestPurchaseOrder(FrappeTestCase):
 	
 
 	def test_outer_state_IGST_TC_B_098(self):
-		po = create_purchase_order(supplier='_Test Registered Supplier',qty=1,rate = 100,do_not_save=True)
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		company = "_Test Company"
+		purchase_tax_and_template = frappe.new_doc("Purchase Taxes and Charges Template")
+		purchase_tax_and_template.title = 'Test'
+		purchase_tax_and_template.company = company
+		purchase_tax_and_template.tax_category = 'Out-State'
+		purchase_tax_and_template.append("taxes", {
+			'category': 'Total',
+			'add_deduct_tax':'Add',
+			'rate': 18,
+			'account_head': 'Stock In Hand - _TC',
+			'description':'test'
+
+		})
+		purchase_tax_and_template.save()
+		get_or_create_fiscal_year('_Test Company')
+		
+		create_supplier(supplier_name="_Test Registered Supplier")
+		warehouse = create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
+			company=company,
+		)
+		create_item("_Test Item",warehouse=warehouse)
+		po = create_purchase_order(supplier='_Test Registered Supplier',qty=1,rate = 100, do_not_save=True)
 		po.save()
+		
+		p =  frappe.db.get_all("Account",{'company':po.company},["name"])
+	
 		purchase_tax_and_value = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company,'tax_category':'Out-State'},'name')
 		po.taxes_and_charges = purchase_tax_and_value
 		po.save()
@@ -3241,7 +3283,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		po.reload()
 		self.assertEqual(po.grand_total, 118)
 		pr = make_purchase_receipt(po.name)
-		pr.taxes_and_charges = purchase_tax_and_value
+		pr.taxes_and_charges = purchase_tax_and_template.name
 		pr.save()
 
 		frappe.db.set_value('Company',pr.company,'enable_perpetual_inventory',1)
@@ -3467,14 +3509,45 @@ class TestPurchaseOrder(FrappeTestCase):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
 		create_company()
 		create_supplier(supplier_name="_Test Supplier")
-		create_warehouse("_Test Warehouse - _TC")
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
+			company="_Test Company",
+		)
 		create_item("_Test Item")
-		create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		po = create_purchase_order(qty=10,rate = 1000, do_not_save=True)
 		po.save()
-		purchase_tax_and_value = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company,'tax_category':'In-State'},'name')
-		po.taxes_and_charges = purchase_tax_and_value
+		purchase_tax_template = frappe.new_doc("Purchase Taxes and Charges Template")
+		purchase_tax_template.title = 'Test'
+		purchase_tax_template.company = po.company
+		purchase_tax_template.tax_category = 'In-State'
+		value_list = [{
+			'category': 'Total',
+			'add_deduct_tax':'Add',
+			'charge_type':'On Net Total',
+			'account_head': 'Stock In Hand - _TC',
+			'description':'test',
+			"tax_amount":100,
+			"rate":9
+		},
+		{
+			'category': 'Total',
+			'add_deduct_tax':'Add',
+			'charge_type':'On Net Total',
+			'account_head': 'Stock In Hand - _TC',
+			'description':'test',
+			"tax_amount":100,
+			"rate":9
+		}]
+		for items in value_list:
+			purchase_tax_template.append("taxes", items)
+		purchase_tax_template.save()
+		purchase_tax_and_value = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company},'name')
+		po.taxes_and_charges = purchase_tax_template.name
 		po.save()
+		account = frappe.db.get_all("Account",{'company':po.company},["name"])
+	
 		po.append('taxes',{
 			'charge_type':'Actual',
 			'account_head' : 'Freight and Forwarding Charges - _TC',
@@ -3878,11 +3951,19 @@ class TestPurchaseOrder(FrappeTestCase):
 				self.assertEqual(entries.credit,2875)
 
 	def test_create_po_pr_partial_TC_SCK_046(self):
-		po = create_purchase_order(rate=10000,qty=10)
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_item("_Test Item",warehouse="Stores - _TC")
+		create_supplier(supplier_name="_Test Supplier")
+
+		get_or_create_fiscal_year('_Test Company')
+		po = create_purchase_order(rate=10000,qty=10,warehouse="Stores - _TC")
 		po.submit()
 
 		pr = create_pr_against_po(po.name, received_qty=5)
-		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "_Test Warehouse - _TC"}, "actual_qty")
+		
+		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "Stores - _TC"}, "actual_qty")
+	
 		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':pr.name})
 		self.assertEqual(sle.qty_after_transaction, bin_qty)
 		self.assertEqual(sle.warehouse, po.get("items")[0].warehouse)
@@ -3903,13 +3984,14 @@ class TestPurchaseOrder(FrappeTestCase):
 		return_pr.get("items")[0].received_qty = -5
 		return_pr.submit()
 
-		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "_Test Warehouse - _TC"}, "actual_qty")
+		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "Stores - _TC"}, "actual_qty")
 		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':return_pr.name})
 		self.assertEqual(sle.qty_after_transaction, bin_qty)
 
 		#if account setup in company
+
 		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
-			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'debit')
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':return_pr.name, 'account': 'Stock Received But Not Billed - _TC'},'debit')
 			self.assertEqual(gl_temp_credit, 50000)
 
 		#if account setup in company
@@ -5301,9 +5383,13 @@ class TestPurchaseOrder(FrappeTestCase):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
 		create_company()
 		create_supplier(supplier_name="_Test Supplier")
-		create_warehouse("_Test Warehouse - _TC")
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
+			company="_Test Company"
+		)
 		create_item("_Test Item")
-		create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		po = create_purchase_order(qty=10,Rate=1000, do_not_save=True)
 		po.save()
 		tax_template = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company,'tax_category':'In-State'},'name')
@@ -8267,3 +8353,36 @@ def create_fiscal_with_company(company):
 	fy_doc.year_end_date = end_date
 	fy_doc.append("companies", {"company": company})
 	fy_doc.submit()
+
+def get_or_create_fiscal_year(company):
+	from datetime import datetime
+	current_date = datetime.today()
+	formatted_date = current_date.strftime("%m-%d-%Y")
+	existing_fy = frappe.get_all(
+		"Fiscal Year",
+		filters={ 
+			"year_start_date": ["<=", formatted_date],
+			"year_end_date": [">=", formatted_date],
+		},
+		fields=["name"]
+	)
+
+	if existing_fy:
+		fiscal_year = frappe.get_doc("Fiscal Year",existing_fy[0].name)
+		for years in fiscal_year.companies:
+			if years.company == company:
+				pass
+			else:
+				fiscal_year.append("companies", {"company": company})
+	else:
+		current_year = datetime.now().year
+		first_date = f"01-01-{current_year}"
+		last_date = f"31-12-{current_year}"
+		fiscal_year = frappe.new_doc("Fiscal Year")
+		fiscal_year.year = f"{current_year}"
+		fiscal_year.year_start_date = first_date
+		fiscal_year.year_end_date = last_date
+		fiscal_year.append('companies',{
+			'company':company
+		})
+		fiscal_year.save()
