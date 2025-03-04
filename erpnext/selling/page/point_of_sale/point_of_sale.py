@@ -288,13 +288,7 @@ def get_past_order_list(search_term, status, limit=20):
 
 		invoice_list = invoices_by_customer + invoices_by_name
 	elif status:
-<<<<<<< HEAD
-		invoice_list = frappe.db.get_all("POS Invoice", filters={"status": status}, fields=fields)
-=======
-		invoice_list = frappe.db.get_list(
-			"POS Invoice", filters={"status": status}, fields=fields, page_length=limit
-		)
->>>>>>> a08bc6b913 (fix: use get_list to check permissions)
+		invoice_list = frappe.db.get_list("POS Invoice", filters={"status": status}, fields=fields)
 
 	return invoice_list
 
