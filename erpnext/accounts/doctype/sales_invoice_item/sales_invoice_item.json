@@ -102,6 +102,7 @@
   "sales_order",
   "so_detail",
   "sales_invoice_item",
+  "pos_invoice_item",
   "column_break_74",
   "delivery_note",
   "dn_detail",
@@ -952,18 +953,29 @@
    "no_copy": 1,
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "pos_invoice_item",
+   "fieldtype": "Data",
+   "ignore_user_permissions": 1,
+   "label": "POS Invoice Item",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
   }
  ],
+ "grid_page_length": 50,
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-11-25 16:27:33.287341",
+ "modified": "2025-03-04 11:25:27.744139",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice Item",
  "naming_rule": "Random",
  "owner": "Administrator",
  "permissions": [],
+ "row_format": "Dynamic",
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": []
