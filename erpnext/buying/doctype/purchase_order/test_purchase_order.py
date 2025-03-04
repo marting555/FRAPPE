@@ -1472,14 +1472,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		create_company()
 		create_item("_Test Item",warehouse="Stores - _TC")
 		create_supplier(supplier_name="_Test Supplier")
-
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-					fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-					fiscal_year.append("companies", {"company": "_Test Company"})
-					fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
-	
+		get_or_create_fiscal_year('_Test Company')
 		po = create_purchase_order(rate=10000,qty=10,warehouse = "Stores - _TC")
 		po.submit()
 
@@ -2174,14 +2167,8 @@ class TestPurchaseOrder(FrappeTestCase):
 			properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
 			company="_Test Company",
 		)
+		get_or_create_fiscal_year('_Test Company')
 		create_item("_Test Item")
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
-
 		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
 		purchase_tax.title = "TEST"
 		purchase_tax.company = "_Test Company"
@@ -2227,12 +2214,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			company="_Test Company",
 		)
 		create_item("_Test Item")
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 
 		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
 		purchase_tax.title = "TEST"
@@ -3150,12 +3132,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		})
 		purchase_tax_and_template.save()
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		
 		create_supplier(supplier_name="_Test Registered Supplier")
 		warehouse = create_warehouse(
@@ -3414,12 +3391,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			company="_Test Company",
 		)
 		create_item("_Test Item")
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		po = create_purchase_order(qty=10,rate = 1000, do_not_save=True)
 		po.save()
 		purchase_tax_template = frappe.new_doc("Purchase Taxes and Charges Template")
@@ -3860,12 +3832,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		create_item("_Test Item",warehouse="Stores - _TC")
 		create_supplier(supplier_name="_Test Supplier")
 
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		po = create_purchase_order(rate=10000,qty=10,warehouse="Stores - _TC")
 		po.submit()
 
@@ -5576,12 +5543,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			company="_Test Company"
 		)
 		create_item("_Test Item")
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		po = create_purchase_order(qty=10,Rate=1000, do_not_save=True)
 		po.save()
 		tax_template = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company,'tax_category':'In-State'},'name')
@@ -8469,3 +8431,36 @@ def create_fiscal_with_company(company):
 	fy_doc.year_end_date = end_date
 	fy_doc.append("companies", {"company": company})
 	fy_doc.submit()
+
+def get_or_create_fiscal_year(company):
+	from datetime import datetime
+	current_date = datetime.today()
+	formatted_date = current_date.strftime("%m-%d-%Y")
+	existing_fy = frappe.get_all(
+		"Fiscal Year",
+		filters={ 
+			"year_start_date": ["<=", formatted_date],
+			"year_end_date": [">=", formatted_date],
+		},
+		fields=["name"]
+	)
+
+	if existing_fy:
+		fiscal_year = frappe.get_doc("Fiscal Year",existing_fy[0].name)
+		for years in fiscal_year.companies:
+			if years.company == company:
+				pass
+			else:
+				fiscal_year.append("companies", {"company": company})
+	else:
+		current_year = datetime.now().year
+		first_date = f"01-01-{current_year}"
+		last_date = f"31-12-{current_year}"
+		fiscal_year = frappe.new_doc("Fiscal Year")
+		fiscal_year.year = f"{current_year}"
+		fiscal_year.year_start_date = first_date
+		fiscal_year.year_end_date = last_date
+		fiscal_year.append('companies',{
+			'company':company
+		})
+		fiscal_year.save()
