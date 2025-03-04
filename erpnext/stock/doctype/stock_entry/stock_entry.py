@@ -1634,6 +1634,7 @@ class StockEntry(StockController):
 				item.sample_quantity,
 				item.has_serial_no,
 				item.allow_alternative_item,
+				item_default.expense_account,
 				item_default.buying_cost_center,
 			)
 			.where(
@@ -1688,6 +1689,11 @@ class StockEntry(StockController):
 
 		if self.purpose == "Material Issue":
 			ret["expense_account"] = item.get("expense_account") or item_group_defaults.get("expense_account")
+
+		if self.purpose == "Manufacture":
+			ret["expense_account"] = frappe.get_cached_value(
+				"Company", self.company, "stock_adjustment_account"
+			)
 
 		for company_field, field in {
 			"stock_adjustment_account": "expense_account",
