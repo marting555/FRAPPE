@@ -164,6 +164,9 @@ class POSInvoiceMergeLog(Document):
 	def process_merging_into_credit_notes(self, data):
 		credit_notes = {}
 		for key, value in data.items():
+			if not value:
+				continue
+
 			credit_note = self.get_new_sales_invoice()
 			credit_note.is_return = 1
 
