@@ -641,7 +641,11 @@ def get_sales_invoice_item(pos_invoice_item):
 			frappe.qb.from_(SalesInvoice)
 			.from_(SalesInvoiceItem)
 			.select(SalesInvoiceItem.name)
-			.where((SalesInvoice.is_return == 0) & (SalesInvoiceItem.pos_invoice_item == pos_invoice_item))
+			.where(
+				(SalesInvoice.name == SalesInvoiceItem.parent)
+				& (SalesInvoice.is_return == 0)
+				& (SalesInvoiceItem.pos_invoice_item == pos_invoice_item)
+			)
 		)
 
 		result = query.run(as_dict=True)
