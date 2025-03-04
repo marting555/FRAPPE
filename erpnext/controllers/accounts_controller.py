@@ -169,6 +169,11 @@ class AccountsController(TransactionBase):
 					)
 
 	def validate_against_voucher_outstanding(self):
+		from frappe.model.meta import get_meta
+
+		if not get_meta(self.doctype).has_field("outstanding_amount"):
+			return
+
 		if self.get("is_return") and self.return_against and not self.get("is_pos"):
 			against_voucher_outstanding = frappe.get_value(
 				self.doctype, self.return_against, "outstanding_amount"
