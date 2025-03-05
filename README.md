@@ -1,11 +1,6 @@
 <div align="center">
-<<<<<<< HEAD
     <a href="https://erpnext.com">
         <img src="https://raw.githubusercontent.com/frappe/erpnext/develop/erpnext/public/images/erpnext-logo.png" height="128">
-=======
-    <a href="https://frappe.io/erpnext">
-	<img src="./erpnext/public/images/v16/erpnext.svg" alt="ERPNext Logo" height="80px" width="80xp"/>
->>>>>>> 41fe30ea6e (chore: erpnext.com -> frappe.io/erpnext (#46288))
     </a>
     <h2>ERPNext</h2>
     <p align="center">
@@ -52,17 +47,7 @@ ERPNext is built on the [Frappe Framework](https://github.com/frappe/frappe), a 
     </a>
 </div>
 
-<<<<<<< HEAD
 > Login for the PWD site: (username: Administrator, password: admin)
-=======
-<div align="center">
-	<a href="https://erpnext-demo.frappe.cloud/app/home">Live Demo</a>
-	-
-	<a href="https://frappe.io/erpnext">Website</a>
-	-
-	<a href="https://docs.frappe.io/erpnext/">Documentation</a>
-</div>
->>>>>>> 41fe30ea6e (chore: erpnext.com -> frappe.io/erpnext (#46288))
 
 ### Containerized Installation
 
@@ -75,38 +60,6 @@ The Easy Way: our install script for bench will install all dependencies (e.g. M
 New passwords will be created for the ERPNext "Administrator" user, the MariaDB root user, and the frappe user (the script displays the passwords and saves them to ~/frappe_passwords.txt).
 
 
-<<<<<<< HEAD
-=======
-### Local
-
-To setup the repository locally follow the steps mentioned below:
-
-1. Setup bench by following the [Installation Steps](https://frappeframework.com/docs/user/en/installation) and start the server
-   ```
-   bench start
-   ```
-
-2. In a separate terminal window, run the following commands:
-   ```
-   # Create a new site
-   bench new-site erpnext.dev
-
-   # Map your site to localhost
-   bench --site erpnext.dev add-to-hosts
-   ```
-
-3. Get the ERPNext app and install it
-   ```
-   # Get the ERPNext app
-   bench get-app https://github.com/frappe/erpnext
-
-   # Install the app
-   bench --site erpnext.dev install-app erpnext
-   ```
-
-4. Open the URL `http://erpnext.dev:8000/app` in your browser, you should see the app running
-
->>>>>>> 41fe30ea6e (chore: erpnext.com -> frappe.io/erpnext (#46288))
 ## Learning and community
 
 1. [Frappe School](https://frappe.school) - Learn Frappe Framework and ERPNext from the various courses by the maintainers or from the community.
