@@ -2511,12 +2511,15 @@ class TestPurchaseOrder(FrappeTestCase):
 	def test_po_with_pricing_rule_TC_B_046(self):
 		# Scenario : PO => Pricing Rule => PR => PI
 
+		company, supplier = get_company_or_supplier().values()
+		item = make_test_item("_test_item_2")
+
 		po_data = {
-			"company" : "_Test Company",
-			"item_code" : "_Test Item",
-			"warehouse" : "Stores - _TC",
-			"supplier": "_Test Supplier",
-            "schedule_date": "2025-01-13",
+			"company" : company,
+			"item_code" : item.item_code,
+			"warehouse" : "Stores - TC-5",
+			"supplier": supplier,
+			"schedule_date": today(),
 			"qty" : 1,
 		}
 
@@ -2526,22 +2529,22 @@ class TestPurchaseOrder(FrappeTestCase):
 			"apply_on": "Item Code",
 			"items": [
 				{
-					"item_code": "_Test Item",
+					"item_code": item.item_code,
 				}
-				],
+			],
 			"price_or_product_discount": "Price",
 			"applicable_for": "Supplier",
-			"supplier": "_Test Supplier",
+			"supplier": supplier,
 			"buying": 1,
 			"currency": "INR",
 
 			"min_qty": 1,
 			"min_amt": 100,
-			"valid_from": "2025-01-01",
+			"valid_from": today(),
 			"rate_or_discount": "Discount Percentage",
 			"discount_percentage": 10,
 			"price_list": "Standard Buying",
-			"company" : "_Test Company",
+			"company" : company,
 
 		}
 		if not frappe.db.exists('Pricing Rule', {'title': 'Discount on _Test Item'}):
@@ -2552,8 +2555,8 @@ class TestPurchaseOrder(FrappeTestCase):
 			{
 				"doctype": "Item Price",
 				"price_list": "Standard Buying",
-				"item_code": "_Test Item",
-				"price_list_rate": 130,
+				"item_code": item.item_code,
+				"price_list_rate": 130
 			}
 		).insert()
 
@@ -2589,7 +2592,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"item_code" : item.item_code,
 			"warehouse" : warehouse,
 			"supplier": supplier,
-            "schedule_date": today(),
+			"schedule_date": today(),
 			"qty" : 1,
 		}
 
@@ -2651,7 +2654,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"item_code" : "_Test Item",
 			"warehouse" : "Stores - _TC",
 			"supplier": "_Test Supplier",
-            "schedule_date": "2025-01-13",
+			"schedule_date": "2025-01-13",
 			"qty" : 1,
 			"rate" : 10000,
 			"apply_discount_on" : "Net Total",
@@ -2669,11 +2672,11 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		doc_po = create_purchase_order(**po_data)
 		doc_po.append("taxes", {
-                    "charge_type": "On Net Total",
-                    "account_head": account_name,
-                    "rate": 12,
-                    "description": "Input GST",
-                })
+					"charge_type": "On Net Total",
+					"account_head": account_name,
+					"rate": 12,
+					"description": "Input GST",
+				})
 		doc_po.submit()
 		self.assertEqual(doc_po.discount_amount, 1000)
 		self.assertEqual(doc_po.grand_total, 10080)
@@ -2699,7 +2702,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"item_code" : "_Test Item",
 			"warehouse" : "Stores - _TC",
 			"supplier": "_Test Supplier",
-            "schedule_date": "2025-01-13",
+			"schedule_date": "2025-01-13",
 			"qty" : 1,
 			"rate" : 10000,
 			"apply_discount_on" : "Net Total",
@@ -2717,11 +2720,11 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		doc_po = create_purchase_order(**po_data)
 		doc_po.append("taxes", {
-                    "charge_type": "On Net Total",
-                    "account_head": account_name,
-                    "rate": 12,
-                    "description": "Input GST",
-                })
+					"charge_type": "On Net Total",
+					"account_head": account_name,
+					"rate": 12,
+					"description": "Input GST",
+				})
 		doc_po.submit()
 		self.assertEqual(doc_po.discount_amount, 1000)
 		self.assertEqual(doc_po.grand_total, 10080)
@@ -2747,7 +2750,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"item_code" : "_Test Item",
 			"warehouse" : "Stores - _TC",
 			"supplier": "_Test Supplier",
-            "schedule_date": "2025-01-13",
+			"schedule_date": "2025-01-13",
 			"qty" : 1,
 			"rate" : 10000,
 			"apply_discount_on" : "Grand Total",
@@ -2765,11 +2768,11 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		doc_po = create_purchase_order(**po_data)
 		doc_po.append("taxes", {
-                    "charge_type": "On Net Total",
-                    "account_head": account_name,
-                    "rate": 12,
-                    "description": "Input GST",
-                })
+					"charge_type": "On Net Total",
+					"account_head": account_name,
+					"rate": 12,
+					"description": "Input GST",
+				})
 		doc_po.submit()
 		self.assertEqual(doc_po.discount_amount, 1120)
 		self.assertEqual(doc_po.grand_total, 10080)
@@ -2795,7 +2798,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"item_code" : "_Test Item",
 			"warehouse" : "Stores - _TC",
 			"supplier": "_Test Supplier",
-            "schedule_date": "2025-01-13",
+			"schedule_date": "2025-01-13",
 			"qty" : 1,
 			"rate" : 10000,
 			"apply_discount_on" : "Grand Total",
@@ -2813,11 +2816,11 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		doc_po = create_purchase_order(**po_data)
 		doc_po.append("taxes", {
-                    "charge_type": "On Net Total",
-                    "account_head": account_name,
-                    "rate": 12,
-                    "description": "Input GST",
-                })
+					"charge_type": "On Net Total",
+					"account_head": account_name,
+					"rate": 12,
+					"description": "Input GST",
+				})
 		doc_po.submit()
 		self.assertEqual(doc_po.discount_amount, 1120)
 		self.assertEqual(doc_po.grand_total, 10080)
@@ -2843,7 +2846,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"item_code" : "_Test Item",
 			"warehouse" : "Stores - _TC",
 			"supplier": "_Test Supplier",
-            "schedule_date": "2025-01-13",
+			"schedule_date": "2025-01-13",
 			"qty" : 1,
 			"rate" : 10000,
 			"apply_discount_on" : "Grand Total",
@@ -2861,11 +2864,11 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		doc_po = create_purchase_order(**po_data)
 		doc_po.append("taxes", {
-                    "charge_type": "On Net Total",
-                    "account_head": account_name,
-                    "rate": 12,
-                    "description": "Input GST",
-                })
+					"charge_type": "On Net Total",
+					"account_head": account_name,
+					"rate": 12,
+					"description": "Input GST",
+				})
 		doc_po.submit()
 		self.assertEqual(doc_po.discount_amount, 1120)
 		self.assertEqual(doc_po.grand_total, 10080)
@@ -3023,65 +3026,53 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(pi.items[1].amount, 2500)
 		self.assertEqual(pi.total, 3500)
 
+	@if_app_installed("india_compliance")
 	def test_previous_row_total_flow_TC_B_141(self):
-		supplier = create_supplier(supplier_name="_Test Supplier")
-		company = "_Test Company"
-		if not frappe.db.exists("Company", company):
-			company = frappe.new_doc("Company")
-			company.company_name = company
-			company.country="India",
-			company.default_currency= "INR",
-			company.save()
-		else:
-			company = frappe.get_doc("Company", company) 
-		item = create_item("Test Item")
+		get_company_supplier = create_data()
+		company = get_company_supplier.get("child_company")
+		supplier = get_company_supplier.get("supplier")
+		item = make_test_item("test_item")
+		warehouse = "Stores - TC-3"
+
+		parent_acc = frappe.new_doc("Account")
+		parent_acc.company = get_company_supplier.get("parent_company")
+		parent_acc.account_name = "Environmental Cess"
+		parent_acc.parent_account = "Indirect Expenses - TC-1"
+		parent_acc.account_type = "Chargeable"
+		parent_acc_account_name_cess = frappe.db.exists("Account", {"account_name": parent_acc.account_name, "company": get_company_supplier.get("parent_company")})
+		if not parent_acc_account_name_cess:
+			parent_acc_account_name_cess = parent_acc.insert()
+
 		acc = frappe.new_doc("Account")
-		acc.account_name = "Environmental Cess a/c"
-		acc.parent_account = "Indirect Expenses - _TC"
+		acc.account_name = "Environmental Cess"
+		acc.parent_account = "Indirect Expenses - TC-3"
 		acc.account_type = "Chargeable"
-		acc.company = company.name
-		account_name_cess = frappe.db.exists("Account", {"account_name": "Environmental Cess a/c", "company": company.name})
+		acc.company = company
+		account_name_cess = frappe.db.exists("Account", {"account_name": acc.account_name, "company": company})
 		if not account_name_cess:
 			account_name_cess = acc.insert()
 		
-		acc = frappe.new_doc("Account")
-		acc.account_name = "Input Tax CGST"
-		acc.parent_account = "Tax Assets - _TC"
-		acc.company = company.name
-		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax CGST","company": company.name })
-		if not account_name:
-			account_name = acc.insert()
-		
-		acc = frappe.new_doc("Account")
-		acc.account_name = "Input Tax SGST"
-		acc.parent_account = "Tax Assets - _TC"
-		acc.company = company.name
-		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax SGST","company": company.name })
-		if not account_name:
-			account_name = acc.insert()
-
-		taxes = create_taxes_interstate()
-		taxes.append({
-			"charge_type": "On Previous Row Total",
-			"account_head": account_name_cess,
-			"rate": 5,
-			"description": "Environmental Cess",
-			"row_id":2,
-			"category": "Total"
-		}
-		)
 		po_data = {
-			"company": company.name,
-			"supplier": supplier.name,
-			"warehouse": create_warehouse("Stores - _TC", company=company.name),
+			"company": company,
+			"supplier": supplier,
+			"warehouse": warehouse,
 			"item_code": item.item_code,
 			"qty": 10,
 			"rate": 100,
 			"do_not_submit" : 1
 		}
 		doc_po = create_purchase_order(**po_data)
-		for tax in taxes:
-			doc_po.append("taxes", tax)
+		doc_po.append(
+			"taxes",
+			{
+				"charge_type": "On Previous Row Total",
+				"account_head": account_name_cess,
+				"rate": 5,
+				"description": "Environmental Cess",
+				"row_id":2,
+				"category": "Total"
+			}
+		)
 		doc_po.save()
 		doc_po.submit()
 		self.assertEqual(doc_po.grand_total, 1239)
@@ -4438,16 +4429,17 @@ class TestPurchaseOrder(FrappeTestCase):
 	
 	def test_po_to_pi_with_partial_payment_entry_TC_B_073(self):
 		# Scenario : PO => PE => PR => PI [With Adv Partial Payment]
-
+		company, supplier = get_company_or_supplier().values()
+		item = make_test_item("_test_item_")
 		po_data = {
-			"company" : "_Test Company",
-			"item_code" : "_Test Item",
-			"warehouse" : "Stores - _TC",
+			"company" : company,
+			"item_code" :item.item_code,
+			"warehouse" : "Stores - TC-5",
 			"qty" : 4,
 			"rate" : 3000,
-
+			"supplier": supplier
 		}
-		
+
 		doc_po = create_purchase_order(**po_data)
 		self.assertEqual(doc_po.docstatus, 1)
 
@@ -4479,37 +4471,41 @@ class TestPurchaseOrder(FrappeTestCase):
 		doc_pi.reload()
 		self.assertEqual(doc_po.status, 'Completed')
 		self.assertEqual(doc_pi.status, 'Paid')
-	
+
+	@if_app_installed("india_compliance")
 	def test_po_to_pi_with_Adv_payment_entry_n_tax_TC_B_074(self):
 		# Scenario : PO => PE => PR => PI [With Adv Payment and Tax]
-
-		po_data = {
-			"company" : "_Test Company",
-			"item_code" : "_Test Item",
-			"warehouse" : "Stores - _TC",
-			"qty" : 1,
-			"rate" : 3000,
-			"do_not_submit" : 1
-		}
+		company, supplier = get_company_or_supplier().values()
+		item = make_test_item("_test_item_")
 		
 		acc = frappe.new_doc("Account")
 		acc.account_name = "Input Tax IGST"
-		acc.parent_account = "Tax Assets - _TC"
-		acc.company = "_Test Company"
-		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
+		acc.parent_account = "Tax Assets - TC-5"
+		acc.company = company
+		account_name = frappe.db.exists("Account", {"account_name": acc.account_name, "company": company})
 		if not account_name:
 			account_name = acc.insert()
 
+		po_data = {
+			"company" : company,
+			"item_code" : item.item_code,
+			"warehouse" : "Stores - TC-5",
+			"qty" : 1,
+			"rate" : 3000,
+			"do_not_submit" : 1,
+			"supplier": supplier
+		}
 		doc_po = create_purchase_order(**po_data)
-		
-		doc_po.append("taxes", {
-                    "charge_type": "On Net Total",
-                    "account_head": account_name,
-                    "rate": 18,
-                    "description": "Input GST",
-                })
+		doc_po.append(
+			"taxes",
+			{
+				"charge_type": "On Net Total",
+				"account_head": account_name,
+				"rate": 18,
+				"description": "Input GST",
+			}
+		)
 		doc_po.submit()
-
 		self.assertEqual(doc_po.docstatus, 1)
 
 		args = {
@@ -4538,36 +4534,41 @@ class TestPurchaseOrder(FrappeTestCase):
 		doc_po.reload()
 		self.assertEqual(doc_po.status, 'Completed')
 		self.assertEqual(doc_pi.status, 'Paid')
-	
+
+	@if_app_installed("india_compliance")
 	def test_po_to_pi_with_partial_payment_entry_TC_B_075(self):
 		# Scenario : PO => PE => PR => PI [With Adv Partial Payment and Tax]
+		company, supplier = get_company_or_supplier().values()
+		item = make_test_item("_test_items_1")
 
 		po_data = {
-			"company" : "_Test Company",
-			"item_code" : "_Test Item",
-			"warehouse" : "Stores - _TC",
+			"company" : company,
+			"item_code" : item.item_code,
+			"warehouse" : "Stores - TC-5",
 			"qty" : 4,
 			"rate" : 3000,
-			"do_not_submit" : 1
+			"do_not_submit" : 1,
+			"supplier": supplier
 		}
-		
 		
 		acc = frappe.new_doc("Account")
 		acc.account_name = "Input Tax IGST"
-		acc.parent_account = "Tax Assets - _TC"
-		acc.company = "_Test Company"
-		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
+		acc.parent_account = "Tax Assets - TC-5"
+		acc.company = company
+		account_name = frappe.db.exists("Account", {"account_name" : acc.account_name, "company": company})
 		if not account_name:
 			account_name = acc.insert()
 
 		doc_po = create_purchase_order(**po_data)
-		
-		doc_po.append("taxes", {
-                    "charge_type": "On Net Total",
-                    "account_head": account_name,
-                    "rate": 18,
-                    "description": "Input GST",
-                })
+		doc_po.append(
+			"taxes",
+			{
+				"charge_type": "On Net Total",
+				"account_head": account_name,
+				"rate": 18,
+				"description": "Input GST",
+			}
+		)
 		doc_po.submit()
 
 		self.assertEqual(doc_po.docstatus, 1)
@@ -6145,13 +6146,13 @@ class TestPurchaseOrder(FrappeTestCase):
 				"account_head": account_name_cgst,
 				"rate": 2.5,
 				"description": "Input GST",
-            },
+			},
 			{
 				"charge_type": "On Net Total",
 				"account_head": account_name_sgst,
 				"rate": 2.5,
 				"description": "Input GST",
-            }
+			}
 		]
 		doc_po.taxes_and_charges = ""
 		doc_po.taxes = []
@@ -6175,17 +6176,8 @@ class TestPurchaseOrder(FrappeTestCase):
 		doc_pi.submit()
 
 	def test_po_to_qi_to_pr_pi_TC_B_148(self):
-		item = create_item("Testing Item QI")
-		supplier = create_supplier(supplier_name="_Test Supplier PO")
-		company = "_Test Company"
-		if not frappe.db.exists("Company", company):
-			company = frappe.new_doc("Company")
-			company.company_name = company
-			company.country="India",
-			company.default_currency= "INR",
-			company.save()
-		else:
-			company = frappe.get_doc("Company", company)
+		company, supplier = get_company_or_supplier().values()
+		item = make_test_item("_test_items_2")
 		item.inspection_required_before_purchase = 1
 		template = "Syringe"
 		if not frappe.db.exists("Quality Inspection Template", template):
@@ -6197,10 +6189,10 @@ class TestPurchaseOrder(FrappeTestCase):
 		item.save()
 
 		po_data = {
-			"company" : company.name,
-			"supplier": supplier.name,
+			"company" : company,
+			"supplier": supplier,
 			"item_code" : item.item_code,
-			"warehouse" : create_warehouse("_Test Warehouse 1 - _TC", company=company.name),
+			"warehouse" : "Stores - TC-5",
 			"qty" : 5,
 			"rate" : 200
 		}
@@ -6888,18 +6880,19 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(doc_pi_2.items[0].rate, 100)
 
 	def test_multicurrecy_TC_B_099(self):
-		company = "_Test Company"
-		if not frappe.db.exists("Company", company):
-			company = frappe.new_doc("Company")
-			company.company_name = company
-			company.country="India",
-			company.default_currency= "INR",
-			company.save()
-		else:
-			company = frappe.get_doc("Company", company)
-		warehouse = create_warehouse("Stores - _TC", company=company.name)
-		supplier = create_supplier(supplier_name="_Test Supplier 123", default_currency="USD")
-		account = self.create_account("Creditors USD 12", company.name, "USD", "Accounts Payable - _TC")
+		get_company_supplier = get_company_or_supplier()
+		company = frappe.get_doc("Company", get_company_supplier.get("company"))
+		company.default_currency = "INR"
+		company.unrealized_exchange_gain_loss_account = "Cash - TC-5"
+		company.save()
+
+		supplier = frappe.get_doc("Supplier", get_company_supplier.get("supplier"))
+		supplier.default_currency = "USD"
+		supplier.save()
+
+		item = make_test_item("_test_item_3")
+
+		account = self.create_account("Creditors USD 12", company.name, "USD", "Accounts Payable - TC-5")
 		if not [x for x in supplier.accounts if x.company == company.name]:
 			supplier.append("accounts", {"company": company.name, "account": account.name})
 			supplier.save()
@@ -6915,15 +6908,22 @@ class TestPurchaseOrder(FrappeTestCase):
 			bank_account = frappe.new_doc("Bank Account")
 			bank_account.account_name = bank_name
 			bank_account.bank = bank.name
-			bank_account.account_type = "Current A/c"
 			bank_account.company = company.name
 			bank_account.is_company_account = 1
 			bank_account.insert()
 		else:
 			bank_account = frappe.get_doc("Bank Account", bank_account_name)
 
-		item = create_item("Testing-312")
-		po_doc = create_purchase_order(qty=10,company=company.name,supplier=supplier.name,item=item.item_code, warehouse=warehouse,rate=1.59, currency="USD", do_not_save=1)
+		po_doc = create_purchase_order(
+			qty=10,
+			company = company,
+			supplier = supplier,
+			item = item.item_code,
+			warehouse = "Stores - TC-5",
+			rate = 1.59,
+			currency = "USD",
+			do_not_save = 1
+		)
 		po_doc.conversion_rate = 62.9
 		po_doc.save()
 		po_doc.submit()
@@ -6937,17 +6937,16 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi.save()
 		pi.submit()
 		pr_gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
-		for gl_entries_pr in pr_gl_entries:
-			if gl_entries_pr['account'] == "Stock In Hand - _TC":
-				self.assertEqual(gl_entries_pr['debit'], 1000.11)
-			elif gl_entries_pr['account'] == "Stock Received But Not Billed - _TC":
-				self.assertEqual(gl_entries_pr['credit'], 1000.11)
+		self.assertEqual(pr_gl_entries[0].get("account"), "Stock Received But Not Billed - TC-5")
+		self.assertEqual(pr_gl_entries[0].get("debit"), 1000.11)
+		self.assertEqual(pr_gl_entries[1].get("account"), "Creditors USD 12 - TC-5")
+		self.assertEqual(pr_gl_entries[1].get("credit"), 1000.11)
 
 		pe = get_payment_entry(pi.doctype, pi.name, bank_account=pi.credit_to)
 		pe.mode_of_payment = "Bank Draft"
 		pe.posting_date = add_days(today(), 1)
 		pe.bank_account = bank_account.name
-		pe.paid_from = "Cash - _TC"
+		pe.paid_from = "Cash - TC-5"
 		pe.paid_from_account_currency = "INR"
 		pe.reference_no = "123"
 		pe.reference_date = nowdate()
@@ -7402,15 +7401,12 @@ class TestPurchaseOrder(FrappeTestCase):
 			self.assertEqual(entry["debit"], expected_pi_entries.get(entry["account"], {}).get("debit", 0))
 			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
 
+	@if_app_installed("india_compliance")
 	def test_po_with_item_tax_5_pr_pi_TC_B_142(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item as make_item
-		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
-		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
-		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
 		get_company_supplier = create_data()
 		company = get_company_supplier.get("child_company")
 		supplier = get_company_supplier.get("supplier")
-		item = make_item("test_item")
+		item = make_test_item("_test_item")
 		tax_template = "GST 5% - TC-3"
 		if not frappe.db.exists("Item Tax Template", tax_template):
 			tax_template = get_item_tax_template(company, tax_template, 5)
@@ -7979,17 +7975,17 @@ def create_taxes_interstate():
 		
 		return [
 			{
-                    "charge_type": "On Net Total",
-                    "account_head": account_name_cgst,
-                    "rate": 9,
-                    "description": "Input GST",
-            },
+					"charge_type": "On Net Total",
+					"account_head": account_name_cgst,
+					"rate": 9,
+					"description": "Input GST",
+			},
 			{
-                    "charge_type": "On Net Total",
-                    "account_head": account_name_sgst,
-                    "rate": 9,
-                    "description": "Input GST",
-            }
+					"charge_type": "On Net Total",
+					"account_head": account_name_sgst,
+					"rate": 9,
+					"description": "Input GST",
+			}
 		]
 def create_new_account(account_name,company,parent_account):
 		account = frappe.get_doc(
@@ -8291,29 +8287,30 @@ def get_tax_template(company, tax_template, rate):
 		return tax_template.name
 
 def create_quality_inspection_template(template):
-	if not frappe.db.exists(template):
+	if not frappe.db.exists("Quality Inspection Template", template):
 		qi_template = frappe.get_doc(
 			{
-			"doctype":"Quality Inspection Template",
-			"item_quality_inspection_parameter":[
-				{
-					"specification":"Needle Shape",
-					"value":"OK"
-				},
-				{
-					"specification":"Syringe Shape",
-					"value":"OK"
-				},
-				{
-					"specification":"Plastic Clarity",
-					"value":"OK"
-				},
-				{
-					"specification":"Syringe Length",
-					"min_value":4,
-					"max_value":6
-				},
-			]
+				"doctype":"Quality Inspection Template",
+				"quality_inspection_template_name": template,
+				"item_quality_inspection_parameter":[
+					{
+						"specification":"Needle Shape",
+						"value":"OK"
+					},
+					{
+						"specification":"Syringe Shape",
+						"value":"OK"
+					},
+					{
+						"specification":"Plastic Clarity",
+						"value":"OK"
+					},
+					{
+						"specification":"Syringe Length",
+						"min_value":4,
+						"max_value":6
+					},
+				]
 			}
 		)
 		qi_template.insert(ignore_if_duplicate=True)
@@ -8386,3 +8383,38 @@ def get_or_create_fiscal_year(company):
 			'company':company
 		})
 		fiscal_year.save()
+
+def get_company_or_supplier():
+	from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import get_active_fiscal_year
+	fiscal_year = get_active_fiscal_year()
+	company = "Test Company-5566"
+	supplier = "Test Supplier-5566"
+
+	if not frappe.db.exists("Company", company):
+		frappe.get_doc(
+			{
+				"doctype": "Company",
+				"company_name": company,
+				"abbr": "TC-5",
+				"default_currency": "INR"
+			}
+		).insert()
+
+		set_company_fiscal_year = frappe.get_doc("Fiscal Year", fiscal_year)
+		set_company_fiscal_year.append("companies",{"company": company})
+		set_company_fiscal_year.save()
+
+	if not frappe.db.exists("Supplier", supplier):
+		frappe.get_doc(
+			{
+				"doctype": "Supplier",
+				"supplier_name": supplier,
+				"supplier_type": "Individual",
+				"country": "India"
+			}
+		).insert()
+
+	return {
+		"company": company,
+		"supplier": supplier
+	}
