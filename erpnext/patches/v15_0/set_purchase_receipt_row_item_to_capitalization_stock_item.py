@@ -2,6 +2,7 @@ import frappe
 
 
 def execute():
+	# nosemgrep
 	frappe.db.sql(
 		"""
         UPDATE `tabAsset Capitalization Stock Item` ACSI
