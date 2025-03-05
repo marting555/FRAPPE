@@ -742,6 +742,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		});
 	}
 
+<<<<<<< HEAD
 	add_taxes_from_item_tax_template(item_tax_map) {
 		let me = this;
 
@@ -762,6 +763,8 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		}
 	}
 
+=======
+>>>>>>> a700345cee (refactor: Remove duplicate inherited method (#46030))
 	serial_no(doc, cdt, cdn) {
 		var me = this;
 		var item = frappe.get_doc(cdt, cdn);
