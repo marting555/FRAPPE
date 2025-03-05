@@ -247,6 +247,7 @@ function get_filters() {
 					company: frappe.query_report.get_filter_value("company"),
 				});
 			},
+			options: "Cost Center",
 		},
 		{
 			fieldname: "project",
@@ -257,6 +258,7 @@ function get_filters() {
 					company: frappe.query_report.get_filter_value("company"),
 				});
 			},
+			options: "Project",
 		},
 	];
 
