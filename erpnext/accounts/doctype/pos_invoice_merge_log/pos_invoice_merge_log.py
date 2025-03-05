@@ -235,9 +235,12 @@ class POSInvoiceMergeLog(Document):
 				item.base_amount = item.base_net_amount
 				item.price_list_rate = 0
 				si_item = map_child_doc(item, invoice, {"doctype": "Sales Invoice Item"})
+				si_item.pos_invoice = doc.name
 				si_item.pos_invoice_item = item.name
 				if doc.is_return:
-					si_item.sales_invoice_item = get_sales_invoice_item(item.pos_invoice_item)
+					si_item.sales_invoice_item = get_sales_invoice_item(
+						doc.return_against, item.pos_invoice_item
+					)
 				if item.serial_and_batch_bundle:
 					si_item.serial_and_batch_bundle = item.serial_and_batch_bundle
 				items.append(si_item)
@@ -632,7 +635,7 @@ def get_error_message(message) -> str:
 		return str(message)
 
 
-def get_sales_invoice_item(pos_invoice_item):
+def get_sales_invoice_item(return_against_pos_invoice, pos_invoice_item):
 	try:
 		SalesInvoice = DocType("Sales Invoice")
 		SalesInvoiceItem = DocType("Sales Invoice Item")
@@ -644,6 +647,7 @@ def get_sales_invoice_item(pos_invoice_item):
 			.where(
 				(SalesInvoice.name == SalesInvoiceItem.parent)
 				& (SalesInvoice.is_return == 0)
+				& (SalesInvoiceItem.pos_invoice == return_against_pos_invoice)
 				& (SalesInvoiceItem.pos_invoice_item == pos_invoice_item)
 			)
 		)
