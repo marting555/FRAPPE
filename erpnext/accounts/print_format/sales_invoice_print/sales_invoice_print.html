@@ -26,7 +26,8 @@
 		}
 		.print-format label{
 			color: #74808b;
-			font-size: 11px;
+			font-size: 12px;
+			margin-bottom: 4px;
 		}
 
 	</style>
@@ -51,21 +52,24 @@
 				{{ doc.address_display }}
 			</div>
 			<div class="col-xs-12">
-				{{ doc.contact_mobile if doc.contact_mobile else '' }}
+				{{ _("Conatct: ")+doc.contact_display if doc.contact_display else '' }}
+			</div>
+			<div class="col-xs-12">
+				{{ _("Mobile: ")+doc.contact_mobile if doc.contact_mobile else '' }}
 			</div>
 		</div>
 		<div class="col-xs-3"></div>
 		<div class="col-xs-3" style="padding-left: 5px;">
 			<div>
-				<div><label class="text-uppercase">{{ _("Invoice ID") }}</label></div>
+				<div><label>{{ _("Invoice ID") }}</label></div>
 				<div>{{ doc.name }}</div>
 			</div>
 			<div style="margin-top: 20px;">
-				<div><label class="text-uppercase">{{ _("Invoice Date") }}</label></div>
+				<div><label>{{ _("Invoice Date") }}</label></div>
 				<div>{{ frappe.utils.format_date(doc.posting_date) }}</div>
 			</div>
 			<div style="margin-top: 20px;">
-				<div><label class="text-uppercase">{{ _("Due Date") }}</label></div>
+				<div><label>{{ _("Due Date") }}</label></div>
 				<div>{{ frappe.utils.format_date(doc.due_date) }}</div>
 			</div>
 		</div>
@@ -122,21 +126,21 @@
 			</div>
 			<div class="col-xs-6">
 				<div class="row section-break">
-					<div class="text-uppercase col-xs-7"><label>{{ _("Sub Total") }}</label></div>
+					<div class="col-xs-7"><div>{{ _("Sub Total") }}</div></div>
 					<div class="col-xs-5" style="text-align: right;">{{ doc.get_formatted("net_total", doc) }}</div>
 				</div>
 				<div>
 					{% for d in doc.taxes %}
 						{% if d.tax_amount %}
 							<div class="row">
-								<div class="col-xs-8"><label>{{ _(d.description) }}</label></div>
+								<div class="col-xs-8"><div>{{ _(d.description) }}</div></div>
 								<div class="col-xs-4" style="text-align: right;">{{ d.get_formatted("tax_amount") }}</div>
 							</div>
 						{% endif %}
 					{% endfor %}
 				</div>
 				<div class="row">
-					<div class="col-xs-7 text-uppercase"><label>{{ _("Total") }}</label></div>
+					<div class="col-xs-7"><div>{{ _("Total") }}</div></div>
 					<div class="col-xs-5" style="text-align: right;">{{ doc.get_formatted("grand_total", doc) }}</div>
 				</div>
 			</div>
@@ -148,7 +152,7 @@
 	<div class="row">
 		<div class="col-xs-12">
 			<div class="row important data-field">
-				<div class="col-xs-12"><label class="text-uppercase">{{ _("Terms and Conditions") }}: </label></div>
+				<div class="col-xs-12"><label>{{ _("Terms and Conditions") }}: </label></div>
 				<div class="col-xs-12">{{ doc.terms if doc.terms else '' }}</div>
 			</div>
 		</div>
