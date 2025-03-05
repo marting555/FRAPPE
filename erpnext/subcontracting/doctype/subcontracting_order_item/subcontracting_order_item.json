@@ -384,9 +384,6 @@
    "search_index": 1
   },
   {
-<<<<<<< HEAD
-   "fieldname": "sc_conversion_factor",
-=======
    "fieldname": "references_section",
    "fieldtype": "Section Break",
    "label": "References"
@@ -404,7 +401,6 @@
   },
   {
    "fieldname": "subcontracting_conversion_factor",
->>>>>>> b4f65154f5 (refactor: rename subcontracting fields)
    "fieldtype": "Float",
    "hidden": 1,
    "label": "Subcontracting Conversion Factor",
