@@ -5342,8 +5342,9 @@ def make_purchase_receipt_with_multiple_items(**args):
 
 	return pr
 
-
-test_dependencies = ["BOM", "Item Price", "Location"]
+test_dependencies = ["BOM", "Item Price"]
+if "Asset" in frappe.get_installed_apps():
+	test_dependencies.append("Location")
 test_records = frappe.get_test_records("Purchase Receipt")
 
 
