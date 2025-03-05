@@ -150,7 +150,7 @@ erpnext.assets.AssetCapitalization = class AssetCapitalization extends erpnext.s
 			return me.frm.call({
 				method: "erpnext.assets.doctype.asset_capitalization.asset_capitalization.get_items_tagged_to_wip_composite_asset",
 				args: {
-					args: {
+					params: {
 						target_asset: target_asset,
 						finance_book: me.frm.doc.finance_book,
 						posting_date: me.frm.doc.posting_date,

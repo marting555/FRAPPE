@@ -846,9 +846,9 @@ def get_service_item_details(ctx):
 
 
 @frappe.whitelist()
-def get_items_tagged_to_wip_composite_asset(args):
-	if isinstance(args, str):
-		args = json.loads(args)
+def get_items_tagged_to_wip_composite_asset(params):
+	if isinstance(params, str):
+		params = json.loads(params)
 
 	fields = [
 		"item_code",
@@ -869,7 +869,7 @@ def get_items_tagged_to_wip_composite_asset(args):
 
 	pr_items = frappe.get_all(
 		"Purchase Receipt Item",
-		filters={"wip_composite_asset": args.get("target_asset"), "docstatus": 1},
+		filters={"wip_composite_asset": params.get("target_asset"), "docstatus": 1},
 		fields=fields,
 	)
 
