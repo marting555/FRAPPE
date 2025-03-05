@@ -34,16 +34,6 @@ class UnitTestSerialNo(UnitTestCase):
 
 
 class TestSerialNo(IntegrationTestCase):
-	def setUp(self):
-		self.create_currency_exchange()
-
-	def create_currency_exchange(self):
-		c_doc = frappe.new_doc("Currency Exchange")
-		c_doc.from_currency = "INR"
-		c_doc.to_currency = "USD"
-		c_doc.exchange_rate = 87.33
-		c_doc.insert()
-
 	def tearDown(self):
 		frappe.db.rollback()
 
