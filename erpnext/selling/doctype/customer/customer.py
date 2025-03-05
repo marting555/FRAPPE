@@ -60,12 +60,14 @@ class Customer(TransactionBase):
 		disabled: DF.Check
 		dn_required: DF.Check
 		email_id: DF.ReadOnly | None
+		first_name: DF.ReadOnly | None
 		gender: DF.Link | None
 		image: DF.AttachImage | None
 		industry: DF.Link | None
 		is_frozen: DF.Check
 		is_internal_customer: DF.Check
 		language: DF.Link | None
+		last_name: DF.ReadOnly | None
 		lead_name: DF.Link | None
 		loyalty_program: DF.Link | None
 		loyalty_program_tier: DF.Data | None
