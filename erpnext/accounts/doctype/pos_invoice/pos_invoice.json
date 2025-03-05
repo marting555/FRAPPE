@@ -1622,13 +1622,6 @@
  "sort_order": "DESC",
  "states": [],
  "timeline_field": "customer",
-<<<<<<< HEAD
  "title_field": "title",
- "track_changes": 1,
- "track_seen": 1
-}
-=======
- "title_field": "customer_name",
  "track_changes": 1
 }
->>>>>>> ded0aab680 (perf: don't track seen for POS Invoice (#46187))
