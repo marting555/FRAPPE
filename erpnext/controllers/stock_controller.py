@@ -1654,7 +1654,7 @@ def future_sle_exists(args, sl_entries=None, allow_force_reposting=True):
 
 	or_conditions = get_conditions_to_validate_future_sle(sl_entries)
 
-	args["posting_datetime"] = datetime.strptime(f"{args['posting_date']} {args['posting_time']}", "%Y-%m-%d %H:%M:%S")
+	args["posting_datetime"] = datetime.strptime(f"{args['posting_date']} {args['posting_time']}", "%Y-%m-%d %H:%M:%S") #Combine them
 
 	data = frappe.db.sql(
 		"""
