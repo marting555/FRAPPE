@@ -70,3 +70,12 @@ ignore = [
 quote-style = "double"
 indent-style = "tab"
 docstring-code-format = true
+<<<<<<< HEAD
+=======
+
+
+[project.urls]
+Homepage = "https://frappe.io/erpnext"
+Repository = "https://github.com/frappe/erpnext.git"
+"Bug Reports" = "https://github.com/frappe/erpnext/issues"
+>>>>>>> 41fe30ea6e (chore: erpnext.com -> frappe.io/erpnext (#46288))
