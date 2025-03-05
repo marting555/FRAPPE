@@ -395,3 +395,4 @@ erpnext.patches.v14_0.disable_add_row_in_gross_profit
 erpnext.patches.v15_0.set_difference_amount_in_asset_value_adjustment
 erpnext.patches.v14_0.update_posting_datetime
 erpnext.stock.doctype.stock_ledger_entry.patches.ensure_sle_indexes
+erpnext.patches.v15_0.update_query_report
