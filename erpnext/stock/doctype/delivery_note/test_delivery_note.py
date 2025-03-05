@@ -2686,17 +2686,12 @@ class TestDeliveryNote(FrappeTestCase):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
 		# from crm.crm.doctype.lead.lead import make_customer
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
-		from erpnext.stock.doctype.material_request.test_material_request import create_fiscal_with_company
+		from erpnext.selling.doctype.sales_order.test_sales_order import get_or_create_fiscal_year
 		"""Test Purchase Receipt Creation, Submission, and Stock Ledger Update"""
 
 		# Create Purchase Receiptif not frappe.db.exists("Company", "_Test Company"):
 		create_company()
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		create_warehouse(
 				warehouse_name="_Test Warehouse 1 - _TC",
 				properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},

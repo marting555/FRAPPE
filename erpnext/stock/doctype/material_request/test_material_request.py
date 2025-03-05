@@ -4897,15 +4897,11 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_mr_po_2pi_serial_TC_SCK_093(self):
 		# MR =>  PO => 2PI
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
+		from erpnext.selling.doctype.sales_order.test_sales_order import get_or_create_fiscal_year
 		create_company()
 		create_customer("_Test Customer")
 		create_supplier(supplier_name="_Test Supplier")
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		supplier = create_supplier(supplier_name="_Test Supplier MR" ,properties={"parent_warehouse": "All Warehouses - _TC"})
 		warehouse = create_warehouse("_Test warehouse PO", properties={"parent_warehouse": "All Warehouses - _TC"})
 		item = make_item("_Test MR")

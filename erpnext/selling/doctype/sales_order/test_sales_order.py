@@ -4715,18 +4715,12 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 	def test_sales_order_for_auto_stock_reservation_TC_S_070(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
 		from erpnext.buying.doctype.supplier.test_supplier import create_supplier
-		from erpnext.stock.doctype.material_request.test_material_request import create_fiscal_with_company
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 		create_company()
 		make_item("_Test Item", {"is_stock_item": 1})
 		create_customer("_Test Customer")
 		create_supplier(supplier_name="_Test Supplier")
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		create_warehouse(
 				warehouse_name="_Test Warehouse - _TC",
 				properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
@@ -6089,7 +6083,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 	@change_settings("Stock Settings", {"enable_stock_reservation": 1})
 	def test_stock_reservation_from_so_to_dn_TC_SCK_143(self):
-		from erpnext.buying.doctype.purchase_order.test_purchase_order import create_fiscal_with_company
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 		create_company()
@@ -6101,12 +6094,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 				properties={"parent_warehouse": "All Warehouses - _TC"},
 				company="_Test Company",
 			)
-		if frappe.db.exists("Fiscal Year", "2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		make_stock_entry(
 			item_code="_Test Item",
 			target="_Test Warehouse - _TC",
@@ -6473,3 +6461,37 @@ def make_sales_order_workflow():
 	workflow.insert(ignore_permissions=True)
 
 	return workflow
+
+def get_or_create_fiscal_year(company):
+	from datetime import datetime
+	current_date = datetime.today()
+	formatted_date = current_date.strftime("%m-%d-%Y")
+	existing_fy = frappe.get_all(
+		"Fiscal Year",
+		filters={ 
+			"year_start_date": ["<=", formatted_date],
+			"year_end_date": [">=", formatted_date],
+		},
+		fields=["name"]
+	)
+
+	if existing_fy:
+		fiscal_year = frappe.get_doc("Fiscal Year",existing_fy[0].name)
+		for years in fiscal_year.companies:
+			if years.company == company:
+				pass
+			else:
+				fiscal_year.append("companies", {"company": company})
+				fiscal_year.save()
+	else:
+		current_year = datetime.now().year
+		first_date = f"01-01-{current_year}"
+		last_date = f"31-12-{current_year}"
+		fiscal_year = frappe.new_doc("Fiscal Year")
+		fiscal_year.year = f"{current_year}"
+		fiscal_year.year_start_date = first_date
+		fiscal_year.year_end_date = last_date
+		fiscal_year.append('companies',{
+			'company':company
+		})
+		fiscal_year.save()
