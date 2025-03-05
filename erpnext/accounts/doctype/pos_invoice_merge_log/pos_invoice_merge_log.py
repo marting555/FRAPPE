@@ -183,7 +183,7 @@ class POSInvoiceMergeLog(Document):
 			credit_note.submit()
 
 			self.consolidated_credit_note = credit_note.name
-			credit_notes[credit_note.name] = value
+			credit_notes[credit_note.name] = [d.name for d in value]
 
 		return credit_notes
 
@@ -336,7 +336,7 @@ class POSInvoiceMergeLog(Document):
 			inv = sales_invoice
 			if doc.is_return:
 				for key, value in credit_notes.items():
-					if doc in value:
+					if doc.name in value:
 						inv = key
 						break
 			doc.update({"consolidated_invoice": None if self.docstatus == 2 else inv})
