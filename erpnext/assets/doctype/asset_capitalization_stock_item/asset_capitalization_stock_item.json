@@ -191,12 +191,8 @@
  "name": "Asset Capitalization Stock Item",
  "owner": "Administrator",
  "permissions": [],
-<<<<<<< HEAD
- "sort_field": "modified",
-=======
  "row_format": "Dynamic",
  "sort_field": "creation",
->>>>>>> f50d479bfd (fix: exclude already consumed purchase receipt items from asset capitalization (#46329))
  "sort_order": "DESC",
  "states": [],
  "track_changes": 1
