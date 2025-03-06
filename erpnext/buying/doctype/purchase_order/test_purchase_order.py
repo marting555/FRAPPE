@@ -3996,12 +3996,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		create_item("_Test Item",warehouse="Stores - _TC")
 		create_supplier(supplier_name="_Test Supplier")
 		po = create_purchase_order(qty=10,warehouse="Stores - _TC")
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		po.submit()
 		frappe.db.set_value("Item", "_Test Item", "over_delivery_receipt_allowance", 10)
 		pr = make_purchase_receipt(po.name)
@@ -8371,6 +8366,7 @@ def get_or_create_fiscal_year(company):
 				pass
 			else:
 				fiscal_year.append("companies", {"company": company})
+				fiscal_year.save()
 	else:
 		current_year = datetime.now().year
 		first_date = f"01-01-{current_year}"

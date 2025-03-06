@@ -543,7 +543,7 @@ class TestStockEntry(FrappeTestCase):
 
 	def check_gl_entries(self, voucher_type, voucher_no, expected_gl_entries):
 		expected_gl_entries.sort(key=lambda x: x[0])
-
+		
 		gl_entries = frappe.db.sql(
 			"""select account, debit, credit
 			from `tabGL Entry` where voucher_type=%s and voucher_no=%s
@@ -2163,18 +2163,14 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(reserved_qty, 5)
 
 	def test_stock_ent_TC_SCK_233(self):
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		from erpnext.stock.utils import get_bin
 		if not frappe.db.exists("Company", "_Test Company"):
 			company = frappe.new_doc("Company")
 			company.company_name = "_Test Company"
 			company.default_currency = "INR"
 			company.insert()
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		parent_warehouse = frappe.db.get_value("Warehouse", {"company": "_Test Company","is_group":1}, "name")
 		warehouse = create_warehouse(
 			warehouse_name="Department Store",
@@ -2389,17 +2385,19 @@ class TestStockEntry(FrappeTestCase):
 
 		return se
 	
+	def setUp(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
+		create_company()
+		create_customer(name = '_Test Customer')
+		
 	def test_partial_material_issue_TC_SCK_204(self):
 		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+
 		create_company()
 		company = "_Test Company"
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		create_customer(name = '_Test Customer')
 
 		fields = {
@@ -3100,14 +3098,10 @@ class TestStockEntry(FrappeTestCase):
 	def test_partial_material_issue_TC_SCK_205(self):
 		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		create_company()
 		company = "_Test Company"
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		create_customer(name = '_Test Customer')
 		fields = {
 			"shelf_life_in_days": 365,
@@ -3191,14 +3185,10 @@ class TestStockEntry(FrappeTestCase):
 	def test_partial_material_issue_TC_SCK_206(self):
 		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		create_company()
 		company = "_Test Company"
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		create_customer(name = '_Test Customer' )
 		fields = {
 			"shelf_life_in_days": 365,
@@ -3261,6 +3251,8 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(mr.status, "Partially Ordered")
 
 		# Check Stock Ledger Entries
+	
+		
 		self.check_stock_ledger_entries(
 			"Stock Entry",
 			se1.name,
@@ -3286,14 +3278,10 @@ class TestStockEntry(FrappeTestCase):
 	def test_partial_material_transfer_TC_SCK_207(self):
 		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		create_company()
 		company = "_Test Company"
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		create_customer(name = '_Test Customer' )
 		fields = {
 			"shelf_life_in_days": 365,
@@ -3382,14 +3370,10 @@ class TestStockEntry(FrappeTestCase):
 	def test_partial_material_transfer_TC_SCK_208(self):
 		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		create_company()
 		company = "_Test Company"
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		create_customer(name = '_Test Customer' )
 		fields = {
 			"shelf_life_in_days": 365,
@@ -3478,14 +3462,10 @@ class TestStockEntry(FrappeTestCase):
 	def test_partial_material_transfer_TC_SCK_209(self):
 		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		create_company()
 		company = "_Test Company"
-		if frappe.db.exists("Fiscal Year", "2024-2025"):
-			fiscal_year = frappe.get_doc('Fiscal Year', '2024-2025')
-			fiscal_year.append("companies", {"company": "_Test Company"})
-			fiscal_year.save()
-		else:
-			create_fiscal_with_company("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		create_customer(name = '_Test Customer' )
 		fields = {
 			"shelf_life_in_days": 365,
@@ -3829,14 +3809,17 @@ class TestStockEntry(FrappeTestCase):
 				self.assertEqual(sle['actual_qty'], 50)
 
 	def test_create_two_stock_entries_TC_SCK_230(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		company = create_company()
-		item_1 = make_item("Book")
+		item_1 = make_item("_Test Item 1",properties = {'valuation_rate':100})
+		get_or_create_fiscal_year('_Test Company')
 		warehouse_1 = create_warehouse("_Test warehouse PO", company=company)
 		se_1 = make_stock_entry(item_code=item_1.name, target=warehouse_1, qty=10, purpose="Material Receipt", company=company)
 		self.assertEqual(se_1.items[0].item_code, item_1.name)
 		self.assertEqual(se_1.items[0].qty, 10)
 		self.check_stock_ledger_entries("Stock Entry", se_1.name, [[item_1.name, warehouse_1, 10]])
-		item_2 = make_item("_Test Item")
+		item_2 = make_item("_Test Item",properties = {'valuation_rate':100})
 		warehouse_2 = create_warehouse("Stores", company=company)
 		se_2 = make_stock_entry(item_code=item_2.name, target=warehouse_2, qty=20, purpose="Material Receipt", company=company)
 		self.assertEqual(se_2.items[0].item_code, item_2.name)
