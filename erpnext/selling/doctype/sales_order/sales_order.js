@@ -1321,8 +1321,9 @@ erpnext.selling.SalesOrderController = class SalesOrderController extends erpnex
 			// calculate ordered qty based on packed items in case of product bundle
 			let packed_items = so.packed_items.filter((pi) => pi.parent_detail_docname == item.name);
 			if (packed_items && packed_items.length) {
-				ordered_qty = packed_items.reduce((sum, pi) => sum + flt(pi.ordered_qty), 0);
-				ordered_qty = ordered_qty / packed_items.length;
+				const pi_qty = packed_items.reduce((sum, pi) => sum + flt(pi.qty), 0);
+				const pi_ordered_qty = packed_items.reduce((sum, pi) => sum + flt(pi.ordered_qty), 0);
+				ordered_qty = item.stock_qty * (pi_ordered_qty / pi_qty);
 			}
 		}
 		return ordered_qty;
