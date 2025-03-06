@@ -832,12 +832,24 @@ def get_tax_template(doctype, txt, searchfield, start, page_len, filters):
 		valid_from = filters.get("valid_from")
 		valid_from = valid_from[1] if isinstance(valid_from, list) else valid_from
 
+<<<<<<< HEAD
 		args = {
 			"item_code": filters.get("item_code"),
 			"posting_date": valid_from,
 			"tax_category": filters.get("tax_category"),
 			"company": company,
 		}
+=======
+		ctx = ItemDetailsCtx(
+			{
+				"item_code": filters.get("item_code"),
+				"posting_date": valid_from,
+				"tax_category": filters.get("tax_category"),
+				"company": company,
+				"base_net_rate": filters.get("base_net_rate"),
+			}
+		)
+>>>>>>> d01367eefe (fix: `base_net_rate` Required to Check Valid Range (#46332))
 
 		taxes = _get_item_tax_template(args, taxes, for_validate=True)
 		txt = txt.lower()

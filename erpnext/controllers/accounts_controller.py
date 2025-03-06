@@ -3282,12 +3282,24 @@ def get_supplier_block_status(party_name):
 
 
 def set_child_tax_template_and_map(item, child_item, parent_doc):
+<<<<<<< HEAD
 	args = {
 		"item_code": item.item_code,
 		"posting_date": parent_doc.transaction_date,
 		"tax_category": parent_doc.get("tax_category"),
 		"company": parent_doc.get("company"),
 	}
+=======
+	ctx = ItemDetailsCtx(
+		{
+			"item_code": item.item_code,
+			"posting_date": parent_doc.transaction_date,
+			"tax_category": parent_doc.get("tax_category"),
+			"company": parent_doc.get("company"),
+			"base_net_rate": item.get("base_net_rate"),
+		}
+	)
+>>>>>>> d01367eefe (fix: `base_net_rate` Required to Check Valid Range (#46332))
 
 	child_item.item_tax_template = _get_item_tax_template(args, item.taxes)
 	if child_item.get("item_tax_template"):
