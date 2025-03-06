@@ -21,7 +21,7 @@ frappe.ui.form.ContactAddressQuickEntryForm = class ContactAddressQuickEntryForm
 		const map_field_names = {
 			email_address: "email_id",
 			mobile_number: "mobile_no",
-			map_to_first_name : "first_name",
+			map_to_first_name: "first_name",
 			map_to_last_name: "last_name",
 		};
 
