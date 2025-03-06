@@ -34,6 +34,13 @@ from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
 class TestPurchaseReceipt(FrappeTestCase):
 	def setUp(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_warehouse(
+			warehouse_name="_Test Warehouse 1 - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
 		frappe.db.set_single_value("Buying Settings", "allow_multiple_items", 1)
 
 	def test_purchase_receipt_received_qty(self):
@@ -4869,6 +4876,13 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(stock_qty, self.qty_received - self.qty_issued)
 
 	def test_sales_order_reservation_TC_SCK_223(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
+		create_company()
+		create_item("_Test Item",warehouse="Stores - _TC")
+		create_supplier(supplier_name="_Test Supplier")
+		create_customer(name = 'Test Customer')
+
+		frappe.db.set_value("Stock Settings","Stock Settings",'enable_stock_reservation',1)
 		if not frappe.db.exists("Company", "_Test Company"):
 			company = frappe.new_doc("Company")
 			company.company_name = "_Test Company"
@@ -4905,7 +4919,13 @@ class TestPurchaseReceipt(FrappeTestCase):
 		"""Test Purchase Receipt Creation, Submission, and Stock Ledger Update"""
 
 		# Create Purchase Receipt
-
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_warehouse(
+			warehouse_name="_Test Warehouse 1 - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
 		if not frappe.db.exists("Company", "_Test Company"):
 			company = frappe.new_doc("Company")
 			company.company_name = "_Test Company"
@@ -4916,7 +4936,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 			"item_name": "Ball point Pen",
 			"is_stock_item": 1,
 			"stock_uom": "Box",
-			"uoms": [{'uom': "Pcs", 'conversion_factor': 20}],
+			"uoms": [{'uom': "Unit", 'conversion_factor': 20}],
 		}
 
 		pr_fields = {
@@ -4931,13 +4951,15 @@ class TestPurchaseReceipt(FrappeTestCase):
 		pr_data = {
 			"company" : "_Test Company",
 			"item_code" : "Ball point Pen",
-			"warehouse" : create_warehouse("_Test Warehouse", properties=None, company=pr_fields['company']),
+			"warehouse" : create_warehouse("_Test Warehouse 1 - _TC", properties={"parent_warehouse": "All Warehouses - _TC"}, company=pr_fields['company']),
 			"supplier": "Test Supplier 1",
             "schedule_date": "2025-02-03",
-			"qty" : 5,
+			"uom":"Unit",
+			"stock_uom":"Box",
+			"qty" : 5
 		}
-		
-		target_warehouse = create_warehouse("_Test Warehouse", properties=None, company=pr_fields['company'])
+		get_or_create_fiscal_year('_Test Company')
+		# target_warehouse = create_warehouse("_Test Warehouse", properties=None, company=pr_fields['company'])
 		item = make_item("Ball point Pen", item_fields).name
 		# self.item_code = "Ball Point Pen"
 		supplier = create_supplier(
@@ -4976,13 +4998,18 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(stock_qty, self.qty_reconciled)
 
 	def test_stock_ledger_report_TC_SCK_225(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
 		item = []
 		warehouse = []
 		date = []
+
+		get_or_create_fiscal_year('_Test Company')
 		warehouse_new = create_warehouse("Stores", properties=None, company="_Test Company")
 		item_code = make_item("_Test Item225", {'item_name':"_Test Item225", "valuation_rate":500, "is_stock_item":1}).name
 		se1 = make_stock_entry(item_code=item_code, qty=10, to_warehouse=warehouse_new, purpose="Material Receipt")
-
+	
+		
 		from erpnext.stock.report.stock_ledger.stock_ledger import execute
 		
 		filters = frappe._dict({  # Convert to allow dot notation
@@ -5013,9 +5040,12 @@ class TestPurchaseReceipt(FrappeTestCase):
 			self.assertTrue(from_date <= i <= to_date)
 
 	def test_stock_ledger_report_TC_SCK_226(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
 		item = []
 		warehouse = []
 		date = []
+		get_or_create_fiscal_year('_Test Company')
 		if not frappe.db.exists("Item Group", {"item_group_name":"_Test Group"}):
 			item_group = frappe.new_doc("Item Group")
 			item_group.item_group_name =  "_Test Group"
@@ -5355,3 +5385,37 @@ def create_company(company):
 		company_doc.country="India",
 		company_doc.default_currency= "INR",
 		company_doc.insert()
+
+def get_or_create_fiscal_year(company):
+	from datetime import datetime
+	current_date = datetime.today()
+	formatted_date = current_date.strftime("%m-%d-%Y")
+	existing_fy = frappe.get_all(
+		"Fiscal Year",
+		filters={ 
+			"year_start_date": ["<=", formatted_date],
+			"year_end_date": [">=", formatted_date],
+		},
+		fields=["name"]
+	)
+
+	if existing_fy:
+		fiscal_year = frappe.get_doc("Fiscal Year",existing_fy[0].name)
+		for years in fiscal_year.companies:
+			if years.company == company:
+				pass
+			else:
+				fiscal_year.append("companies", {"company": company})
+				fiscal_year.save()
+	else:
+		current_year = datetime.now().year
+		first_date = f"01-01-{current_year}"
+		last_date = f"31-12-{current_year}"
+		fiscal_year = frappe.new_doc("Fiscal Year")
+		fiscal_year.year = f"{current_year}"
+		fiscal_year.year_start_date = first_date
+		fiscal_year.year_end_date = last_date
+		fiscal_year.append('companies',{
+			'company':company
+		})
+		fiscal_year.save()
