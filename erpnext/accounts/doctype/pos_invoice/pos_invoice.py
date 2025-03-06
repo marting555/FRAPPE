@@ -667,6 +667,8 @@ class POSInvoice(SalesInvoice):
 		print_format = profile.get("print_format") if profile else None
 		if not print_format and not cint(frappe.db.get_value("Print Format", "POS Invoice", "disabled")):
 			print_format = "POS Invoice"
+			if self.is_return:
+				print_format = "Return POS Invoice"
 
 		if profile:
 			return {
