@@ -686,6 +686,8 @@ class SalesInvoice(SellingController):
 		print_format = pos.get("print_format") if pos else None
 		if not print_format and not cint(frappe.db.get_value("Print Format", "POS Invoice", "disabled")):
 			print_format = "POS Invoice"
+			if self.is_return:
+				print_format = "Return POS Invoice"
 
 		if pos:
 			return {
