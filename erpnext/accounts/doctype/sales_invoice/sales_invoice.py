@@ -1096,16 +1096,17 @@ class SalesInvoice(SellingController):
 					timesheet.billing_amount = ts_doc.total_billable_amount
 
 	def update_timesheet_billing_for_project(self):
-		if self.timesheets:
+		if not self.timesheets and self.project and self.is_auto_fetch_timesheet_enabled():
+			self.add_timesheet_data()
+		else:
 			self.calculate_billing_amount_for_timesheet()
 
-	@frappe.whitelist(methods=["PUT"])
-	def add_timesheet_data(self):
-		if not self.timesheets and self.project:
-			self._add_timesheet_data()
-			self.save()
+	@frappe.whitelist()
+	def is_auto_fetch_timesheet_enabled(self):
+		return frappe.db.get_single_value("Projects Settings", "fetch_timesheet_in_sales_invoice")
 
-	def _add_timesheet_data(self):
+	@frappe.whitelist()
+	def add_timesheet_data(self):
 		self.set("timesheets", [])
 		if self.project:
 			for data in get_projectwise_timesheet_data(self.project):
@@ -1933,13 +1934,16 @@ def is_overdue(doc, total):
 		"base_payment_amount" if doc.party_account_currency != doc.currency else "payment_amount"
 	)
 
-	payable_amount = sum(
-		payment.get(payment_amount_field)
-		for payment in doc.payment_schedule
-		if getdate(payment.due_date) < today
+	payable_amount = flt(
+		sum(
+			payment.get(payment_amount_field)
+			for payment in doc.payment_schedule
+			if getdate(payment.due_date) < today
+		),
+		doc.precision("outstanding_amount"),
 	)
 
-	return (total - outstanding_amount) < payable_amount
+	return flt(total - outstanding_amount, doc.precision("outstanding_amount")) < payable_amount
 
 
 def get_discounting_status(sales_invoice):
