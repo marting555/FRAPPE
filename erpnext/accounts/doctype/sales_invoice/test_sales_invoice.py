@@ -4683,6 +4683,11 @@ class TestSalesInvoice(FrappeTestCase):
 				posting_date=pe.posting_date	
 			)
 	def test_sales_invoice_without_sales_order_with_gst_TC_S_016(self):
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		
+		if not frappe.db.exists("Warehouse", "Stores - _TIRC"):
+			create_warehouse("Test Warehouse", company="_Test Company")
+
 		setting = frappe.get_doc("Selling Settings")
 		setting.so_required = 'No'
 		setting.save()
