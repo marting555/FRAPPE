@@ -266,7 +266,6 @@
   {
    "allow_on_submit": 1,
    "fetch_from": "company.default_letter_head",
-   "fetch_if_empty": 1,
    "fieldname": "letter_head",
    "fieldtype": "Link",
    "label": "Letter Head",
