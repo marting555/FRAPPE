@@ -36,7 +36,7 @@
   },
   {
    "fieldname": "description",
-   "fieldtype": "Data",
+   "fieldtype": "Text Editor",
    "in_list_view": 1,
    "label": "Description"
   },
@@ -78,7 +78,7 @@
  "icon": "fa fa-sitemap",
  "idx": 1,
  "links": [],
- "modified": "2025-03-20 12:01:04.853423",
+ "modified": "2025-03-20 12:01:28.501152",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Product Bundle",

@@ -22,7 +22,7 @@ class ProductBundle(Document):
 
 		from erpnext.selling.doctype.product_bundle_item.product_bundle_item import ProductBundleItem
 
-		description: DF.Data | None
+		description: DF.TextEditor | None
 		disabled: DF.Check
 		items: DF.Table[ProductBundleItem]
 		new_item_code: DF.Link
