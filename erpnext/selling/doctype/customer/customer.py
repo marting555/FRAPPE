@@ -730,7 +730,6 @@ def make_contact(args, is_primary_contact=1):
 	if args.get("last_name"):
 		contact.last_name = args.get("last_name")
 
-
 	if flags := args.get("flags"):
 		contact.insert(ignore_permissions=flags.get("ignore_permissions"))
 	else:
