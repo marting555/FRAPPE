@@ -2455,6 +2455,13 @@ class TestStockEntry(FrappeTestCase):
 		se1.submit()
 
 	def test_stock_enrty_with_batch_TC_SCK_076(self):
+		from erpnext.accounts.doctype.account.test_account import create_account
+		create_account(
+			account_name= "Stock Adjustment",
+			parent_account="Stock Expenses - _TC",
+			company="_Test Company",
+		)
+
 		fields = {
 			"is_stock_item": 1, 
 			"has_batch_no":1,
@@ -2466,7 +2473,7 @@ class TestStockEntry(FrappeTestCase):
 			fields["gst_hsn_code"] = "01011010"
 
 		item = make_item("_Test Batch Item", properties=fields).name
-		se = make_stock_entry(item_code=item, qty=10, rate=100, target="_Test Warehouse - _TC",purpose="Material Receipt")
+		se = make_stock_entry(item_code=item, qty=10, rate=100, target="_Test Warehouse - _TC",purpose="Material Receipt", expense_account="Stock Adjustment - _TC")
 
 		batch = frappe.get_all('Batch',filters={'item': item,"reference_name":se.name},fields=['name',"batch_qty",'item',"reference_name"])
 		
