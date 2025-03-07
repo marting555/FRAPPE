@@ -105,7 +105,7 @@ class TestRequestforQuotation(FrappeTestCase):
 		self.assertEqual(supplier_quotation.items[0].qty, 5)
 		self.assertEqual(supplier_quotation.items[0].stock_qty, 10)
 
-	@if_app_installed("crm")
+	@if_app_installed("custom_crm")
 	def test_make_rfq_from_opportunity(self):
 		from custom_crm.crm.doctype.opportunity.opportunity import make_request_for_quotation as make_rfq
 		from custom_crm.crm.doctype.opportunity.test_opportunity import make_opportunity
