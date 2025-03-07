@@ -4975,8 +4975,11 @@ class TestSalesInvoice(FrappeTestCase):
 		gl_entries_dn = frappe.get_all("GL Entry", filters={"voucher_no": dn_return.name}, fields=["account", "debit", "credit"])
 		gl_debits_dn = {entry.account: entry.debit for entry in gl_entries_dn}
 		gl_credits_dn = {entry.account: entry.credit for entry in gl_entries_dn}
-		self.assertAlmostEqual(gl_credits_dn['Cost of Goods Sold - _TC'], 5000)
-		self.assertAlmostEqual(gl_debits_dn['Stock In Hand - _TC'], 5000)
+		inventory_account = frappe.db.get_value("Company", "_Test Company", "default_inventory_account")
+		expense_account = frappe.db.get_value("Company", "_Test Company", "default_expense_account")
+
+		self.assertAlmostEqual(gl_credits_dn[expense_account], 5000)
+		self.assertAlmostEqual(gl_debits_dn[inventory_account], 5000)
 
 
 		sle_dn_return = frappe.get_all(
