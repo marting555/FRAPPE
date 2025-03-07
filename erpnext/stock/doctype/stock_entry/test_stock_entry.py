@@ -2993,7 +2993,7 @@ class TestStockEntry(FrappeTestCase):
 
 		semt = make_stock_entry(
 			item_code=item_1, qty=10, rate=100, source="_Test Warehouse - _TC", target = "Stores - _TC",
-			purpose="Material Issue"
+			purpose="Material Issue", expense_account="Stock Adjustment - _TC"
 		)
 
 		sle = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": semt.name}, fields=["actual_qty", "item_code"])
@@ -3005,6 +3005,13 @@ class TestStockEntry(FrappeTestCase):
 
 	@change_settings("Stock Settings", {"use_serial_batch_fields": 0,"disable_serial_no_and_batch_selector":0,"auto_create_serial_and_batch_bundle_for_outward":0,"pick_serial_and_batch_based_on":"FIFO"})
 	def test_mi_with_multiple_item_disable_batch_selector_TC_SCK_121(self):
+		from erpnext.accounts.doctype.account.test_account import create_account
+		create_account(
+			account_name= "Stock Adjustment",
+			parent_account="Stock Expenses - _TC",
+			company="_Test Company",
+		)
+
 		fields = {
 			"is_stock_item": 1, 
 			"has_batch_no":1,
@@ -3023,14 +3030,15 @@ class TestStockEntry(FrappeTestCase):
 
 		semr = make_stock_entry(
 			item_code=item_1, qty=15, rate=100, target="_Test Warehouse - _TC",
-			purpose="Material Receipt", do_not_save=True
+			purpose="Material Receipt", expense_account="Stock Adjustment - _TC", do_not_save=True
 		)
 
 		semr.append("items", {
 			"item_code": item_2,
 			"qty": 15,
 			"basic_rate": 150,
-			"t_warehouse": "Stores - _TC"
+			"t_warehouse": "Stores - _TC",
+			"expense_account": "Stock Adjustment - _TC"
 		})
 
 		semr.save()
@@ -3038,7 +3046,7 @@ class TestStockEntry(FrappeTestCase):
 
 		semt = make_stock_entry(
 			item_code=item_1, qty=10, rate=100, source="_Test Warehouse - _TC", target = "Stores - _TC",
-			purpose="Material Issue", do_not_save=True
+			purpose="Material Issue", expense_account="Stock Adjustment - _TC", do_not_save=True
 		)
 
 		semt.append("items", {
@@ -3046,7 +3054,8 @@ class TestStockEntry(FrappeTestCase):
 			"qty": 10,
 			"basic_rate": 150,
 			"t_warehouse": "_Test Warehouse - _TC",
-			"s_warehouse": "Stores - _TC"
+			"s_warehouse": "Stores - _TC",
+			"expense_account": "Stock Adjustment - _TC"
 		})
 
 		semt.save()
