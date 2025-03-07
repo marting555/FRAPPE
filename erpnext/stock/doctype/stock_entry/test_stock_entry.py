@@ -3739,6 +3739,7 @@ class TestStockEntry(FrappeTestCase):
 	@change_settings("Stock Settings", {"allow_negative_stock": 1})
 	def test_create_mr_se_TC_SCK_063(self):
 		from erpnext.stock.doctype.material_request.material_request import make_stock_entry as _make_stock_entry
+		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		item = make_item("_Test Item")
 		target_warehouse = create_warehouse("_Test Warehouse", company="_Test Company")
 		source_warehouse = create_warehouse("_Test Source Warehouse", company="_Test Company")
