@@ -280,6 +280,7 @@ class TestQualityInspection(FrappeTestCase):
 		se.delete()
 
 	def test_qa_for_pr_TC_SCK_159(self):
+		create_company()
 		item_code = create_item("_Test Item with QA", valuation_rate=200).name
 		pr = make_purchase_receipt(item_code = item_code)
 		frappe.db.set_value("Item", "_Test Item with QA", "inspection_required_before_purchase", 1)
