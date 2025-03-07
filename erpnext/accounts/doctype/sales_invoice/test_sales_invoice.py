@@ -7196,7 +7196,8 @@ def create_company_and_supplier():
 				]
 			}
 		).insert()
-	
+
+	frappe.db.commit()
 
 	return {
 		"parent_company": parent_company,

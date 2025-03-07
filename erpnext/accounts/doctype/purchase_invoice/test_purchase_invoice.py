@@ -3371,6 +3371,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			"supplier": supplier,
 			"company": company,
 			"posting_date": today(),
+			"currency": "INR",
 			"set_warehouse": target_warehouse,
 			"items": [
 				{
@@ -3734,13 +3735,21 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 
 	def test_pi_with_tds_TC_B_151(self):
-		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_company_or_supplier, create_new_account
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
-		get_company_supplier = create_data()
-		company = get_company_supplier.get("child_company")
+		get_company_supplier = get_company_or_supplier()
+		company = get_company_supplier.get("company")
 		supplier = get_company_supplier.get("supplier")
 		item = make_test_item("_test_item")
-		warehouse = "Stores - TC-3"
+		warehouse = "Stores - TC-5"
+		account = 'TDS Payable - TC-5'
+		if not frappe.db.exists("Account", account):
+			account = create_new_account(
+				account_name = "TDS Payable",
+				company = company,
+				parent_account = "Duties and Taxes - TC-5",
+				account_type = "Tax"
+			)
 		tax_category = frappe.get_doc({
 			"doctype": "Tax Withholding Category",
 			"__newname": "test_tax_withholding_category",
@@ -3756,7 +3765,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			"accounts": [
 				{
 					"company": company,
-					"account": 'TDS Payable - TC-3',
+					"account": account,
 				}
 			]
 		})
@@ -3794,13 +3803,17 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name, "company": company}, fields=["account", "debit", "credit"])
 
-		tds_entry = next(entry for entry in gl_entries if entry["account"] == "TDS Payable - TC-3")
+		tds_entry = next(entry for entry in gl_entries if entry["account"] == account)
 		self.assertEqual(tds_entry["credit"], 20)
 		self.assertEqual(tds_entry["debit"], 0)
 
 		total_debit = sum(entry["debit"] for entry in gl_entries)
 		total_credit = sum(entry["credit"] for entry in gl_entries)
 		self.assertEqual(total_debit, total_credit)
+
+		self.addCleanup(lambda: frappe.delete_doc("Purchase Invoice", pi.name, force=1, ignore_permissions=True))
+		self.addCleanup(lambda: frappe.delete_doc("Tax Withholding Category", tax_category.name, force=1, ignore_permissions=True))
+		self.addCleanup(lambda: frappe.db.set_value("Supplier", supplier, "tax_withholding_category", ""))
 	
 	def test_repost_account_ledger_for_pi_TC_ACC_117(self):
 		from erpnext.accounts.doctype.repost_accounting_ledger.test_repost_accounting_ledger import update_repost_settings
