@@ -2748,7 +2748,7 @@ class TestStockEntry(FrappeTestCase):
 			"item_code": item_2,
 			"qty": 15,
 			"basic_rate": 150,
-			"t_warehouse": "_Test Warehouse - _TC"
+			"t_warehouse": "_Test Warehouse - _TC",
 		})
 
 		semr.save()
@@ -2886,7 +2886,8 @@ class TestStockEntry(FrappeTestCase):
 		)
 
 		item_1 = create_item(item_code="_Test Item New", is_stock_item=1, opening_stock=15,valuation_rate=100)
-		item_1.get("item_defaults")[0].get("expense_account") = "Stock Adjustment - _TC"
+		for itm in item_1.item_defaults:
+			itm.expense_account = "Stock Adjustment - _TC"
 		item_1.save()
 		
 		stock = frappe.get_all("Stock Ledger Entry", filters={"item_code": item_1.name}, 
