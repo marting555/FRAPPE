@@ -23,6 +23,7 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 from erpnext.stock.doctype.material_request.material_request import make_stock_entry as make_mr_se
 from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
+from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 from erpnext.stock.doctype.serial_no.serial_no import *
 from erpnext.stock.doctype.stock_entry.stock_entry import FinishedGoodError, make_stock_in_entry
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
@@ -3739,7 +3740,6 @@ class TestStockEntry(FrappeTestCase):
 	@change_settings("Stock Settings", {"allow_negative_stock": 1})
 	def test_create_mr_se_TC_SCK_063(self):
 		from erpnext.stock.doctype.material_request.material_request import make_stock_entry as _make_stock_entry
-		from erpnext.stock.doctype.material_request.test_material_request import make_material_request
 		item = make_item("_Test Item")
 		target_warehouse = create_warehouse("_Test Warehouse", company="_Test Company")
 		source_warehouse = create_warehouse("_Test Source Warehouse", company="_Test Company")
