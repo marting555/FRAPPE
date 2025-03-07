@@ -140,4 +140,16 @@ frappe.ui.form.on("POS Profile", {
 	toggle_display_account_head: function (frm) {
 		frm.toggle_display("expense_account", erpnext.is_perpetual_inventory_enabled(frm.doc.company));
 	},
+
+	real_time_update: function (frm) {
+		if (frm.doc.real_time_update) {
+			frappe.show_alert(
+				{
+					message: __("This feature is not recommended for high volume transactions."),
+					indicator: "orange",
+				},
+				5
+			);
+		}
+	},
 });

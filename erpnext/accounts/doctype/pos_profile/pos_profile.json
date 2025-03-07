@@ -32,6 +32,7 @@
   "allow_rate_change",
   "allow_discount_change",
   "disable_grand_total_to_default_mop",
+  "real_time_update",
   "section_break_23",
   "item_groups",
   "column_break_25",
@@ -417,6 +418,7 @@
    "options": "Project"
   }
  ],
+ "grid_page_length": 50,
  "icon": "icon-cog",
  "idx": 1,
  "index_web_pages_for_search": 1,
