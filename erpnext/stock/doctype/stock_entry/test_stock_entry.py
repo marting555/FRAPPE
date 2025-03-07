@@ -2964,6 +2964,13 @@ class TestStockEntry(FrappeTestCase):
 	
 	@change_settings("Stock Settings", {"use_serial_batch_fields": 0,"disable_serial_no_and_batch_selector":0,"auto_create_serial_and_batch_bundle_for_outward":0})
 	def test_mi_with_disable_batch_selector_TC_SCK_120(self):
+		from erpnext.accounts.doctype.account.test_account import create_account
+		create_account(
+			account_name= "Stock Adjustment",
+			parent_account="Stock Expenses - _TC",
+			company="_Test Company",
+		)
+
 		fields = {
 			"is_stock_item": 1, 
 			"has_batch_no":1,
@@ -2981,7 +2988,7 @@ class TestStockEntry(FrappeTestCase):
 
 		semr = make_stock_entry(
 			item_code=item_1, qty=15, rate=100, target="_Test Warehouse - _TC",
-			purpose="Material Receipt"
+			purpose="Material Receipt", expense_account="Stock Adjustment - _TC"
 		)
 
 		semt = make_stock_entry(
