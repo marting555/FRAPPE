@@ -11,13 +11,7 @@ from frappe.model.document import Document
 from custom_crm.crm.doctype.lead.lead import get_lead_with_phone_number
 from custom_crm.crm.doctype.utils import get_scheduled_employees_for_popup, strip_number
 
-installed_apps = frappe.get_installed_apps()
-if 'custom_crm' in installed_apps:
-	from custom_crm.crm.doctype.lead.lead import get_lead_with_phone_number
-	from custom_crm.crm.doctype.utils import get_scheduled_employees_for_popup, strip_number
-else:
-	from crm.crm.doctype.lead.lead import get_lead_with_phone_number
-	from crm.crm.doctype.utils import get_scheduled_employees_for_popup, strip_number
+
 
 END_CALL_STATUSES = ["No Answer", "Completed", "Busy", "Failed"]
 ONGOING_CALL_STATUSES = ["Ringing", "In Progress"]
