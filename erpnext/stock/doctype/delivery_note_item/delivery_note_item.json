@@ -888,8 +888,7 @@
    "depends_on": "eval:doc.use_serial_batch_fields === 1",
    "fieldname": "serial_no",
    "fieldtype": "Text",
-   "label": "Serial No",
-   "no_copy": 1
+   "label": "Serial No"
   },
   {
    "depends_on": "eval:doc.use_serial_batch_fields === 1",
@@ -943,7 +942,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-03-07 10:25:49.103293",
+ "modified": "2025-03-07 12:33:40.868499",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note Item",
