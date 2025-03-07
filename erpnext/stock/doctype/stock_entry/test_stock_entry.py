@@ -3907,7 +3907,7 @@ class TestStockEntry(FrappeTestCase):
 	
 	@change_settings("Stock Settings", {"allow_negative_stock": 1})
 	def test_create_stock_entry_with_manufacture_purpose_TC_SCK_137(self):
-		company = create_company()
+		company = create_company("_Test Company")
 		item_1 = make_item("W-N-001", properties={"valuation_rate":100})
 		item_2 = make_item("ST-N-001", properties={"valuation_rate":200})
 		item_3 = make_item("GU-SE-001", properties={"valuation_rate":300})
