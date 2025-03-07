@@ -888,7 +888,8 @@
    "depends_on": "eval:doc.use_serial_batch_fields === 1",
    "fieldname": "serial_no",
    "fieldtype": "Text",
-   "label": "Serial No"
+   "label": "Serial No",
+   "no_copy": 1
   },
   {
    "depends_on": "eval:doc.use_serial_batch_fields === 1",
@@ -937,17 +938,19 @@
    "fieldtype": "Column Break"
   }
  ],
+ "grid_page_length": 50,
  "idx": 1,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-02-05 14:27:32.322181",
+ "modified": "2025-03-07 10:25:49.103293",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note Item",
  "naming_rule": "Random",
  "owner": "Administrator",
  "permissions": [],
+ "row_format": "Dynamic",
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": []
