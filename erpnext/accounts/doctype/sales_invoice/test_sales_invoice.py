@@ -4683,6 +4683,11 @@ class TestSalesInvoice(FrappeTestCase):
 				posting_date=pe.posting_date	
 			)
 	def test_sales_invoice_without_sales_order_with_gst_TC_S_016(self):
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+
+		if not frappe.db.exists("Warehouse", "Stores - _TIRC"):
+			create_warehouse("Stores - _TIRC", company="_Test Indian Registered Company")
+
 		setting = frappe.get_doc("Selling Settings")
 		setting.so_required = 'No'
 		setting.save()
@@ -4751,6 +4756,11 @@ class TestSalesInvoice(FrappeTestCase):
 				self.assertEqual(dn_acc_debit, qty_change[0].get("valuation_rate") * 4)
 	
 	def test_sales_invoice_with_update_stock_checked_with_gst_TC_S_017(self): 
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+
+		if not frappe.db.exists("Warehouse", "Stores - _TIRC"):
+			create_warehouse("Stores - _TIRC", company="_Test Indian Registered Company")
+
 		company = frappe.get_all("Company", {"name": "_Test Indian Registered Company"}, ["gstin", "gst_category"])
 		customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
 		company_add = frappe.get_all("Address", {"name": "_Test Indian Registered Company-Billing"}, ["name", "gstin", "gst_category"])

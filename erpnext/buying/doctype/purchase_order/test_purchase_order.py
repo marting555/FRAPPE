@@ -7667,6 +7667,21 @@ class TestPurchaseOrder(FrappeTestCase):
 
 	def test_single_po_pi_multi_pr_TC_SCK_122(self):
 		# Scenario : 1PO => 2PR => 1PI
+		pricing_rule = frappe.get_doc({
+			"doctype": "Pricing Rule",
+			"title": "10% Discount",
+			"company": "_Test Company",
+			"apply_on": "Item Code",
+			"items":[
+				{
+					"item_code":"_Test Item"
+				}
+			],
+			"rate_or_discount": "Discount Percentage",
+			"discount_percentage": 10,
+			"selling": 0,
+			"buying": 1
+		}).insert(ignore_if_duplicate=1)
 		
 		purchase_order_list = [{
 			"company" : "_Test Company",
