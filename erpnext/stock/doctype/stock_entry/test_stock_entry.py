@@ -2522,6 +2522,13 @@ class TestStockEntry(FrappeTestCase):
 			self.assertEqual(serial['batch_no'], batch[0]['name'])
 
 	def test_stock_entry_for_multiple_items_with_serial_batch_no_TC_SCK_078(self):
+		from erpnext.accounts.doctype.account.test_account import create_account
+		create_account(
+			account_name= "Stock Adjustment",
+			parent_account="Stock Expenses - _TC",
+			company="_Test Company",
+		)
+
 		fields = {
 			"is_stock_item": 1, 
 			"has_batch_no": 1,
@@ -2539,14 +2546,15 @@ class TestStockEntry(FrappeTestCase):
 
 		se = make_stock_entry(
 			item_code=item_1, qty=5, rate=100, target="_Test Warehouse - _TC",
-			purpose="Material Receipt", do_not_save=True
+			purpose="Material Receipt", expense_account="Stock Adjustment - _TC", do_not_save=True
 		)
 
 		se.append("items", {
 			"item_code": item_2,
 			"qty": 5,
 			"basic_rate": 150,
-			"t_warehouse": "_Test Warehouse - _TC"
+			"t_warehouse": "_Test Warehouse - _TC",
+			"expense_account": "Stock Adjustment - _TC"
 		})
 
 		se.save()
@@ -2577,6 +2585,13 @@ class TestStockEntry(FrappeTestCase):
 				self.assertEqual(serial['batch_no'], batch[0]['name'])
 
 	def test_stock_entry_for_multiple_items_with_batch_no_TC_SCK_079(self):
+		from erpnext.accounts.doctype.account.test_account import create_account
+		create_account(
+			account_name= "Stock Adjustment",
+			parent_account="Stock Expenses - _TC",
+			company="_Test Company",
+		)
+
 		fields = {
 			"is_stock_item": 1, 
 			"has_batch_no": 1,
@@ -2592,14 +2607,15 @@ class TestStockEntry(FrappeTestCase):
 
 		se = make_stock_entry(
 			item_code=item_1, qty=5, rate=100, target="_Test Warehouse - _TC",
-			purpose="Material Receipt", do_not_save=True
+			purpose="Material Receipt", expense_account="Stock Adjustment - _TC", do_not_save=True
 		)
 
 		se.append("items", {
 			"item_code": item_2,
 			"qty": 5,
 			"basic_rate": 150,
-			"t_warehouse": "_Test Warehouse - _TC"
+			"t_warehouse": "_Test Warehouse - _TC",
+			"expense_account": "Stock Adjustment - _TC"
 		})
 
 		se.save()
