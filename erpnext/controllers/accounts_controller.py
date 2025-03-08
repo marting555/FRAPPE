@@ -423,7 +423,7 @@ class AccountsController(TransactionBase):
 			.where(doc_field.fieldname == "company")
 		).run(as_list=True)
 
-		dimension_list = sum(dimension_list, ["Project"])
+		dimension_list = sum(dimension_list, ["Project", "Cost Center"])
 		self.validate_company(dimension_list)
 
 		for child in self.get_all_children() or []:
@@ -825,10 +825,14 @@ class AccountsController(TransactionBase):
 									and item.get("use_serial_batch_fields")
 								)
 							):
-								if fieldname == "batch_no" and not item.batch_no and not item.is_free_item:
-									item.set("rate", ret.get("rate"))
-									item.set("price_list_rate", ret.get("price_list_rate"))
 								item.set(fieldname, value)
+
+								if fieldname == "batch_no" and item.batch_no and not item.is_free_item:
+									if ret.get("rate"):
+										item.set("rate", ret.get("rate"))
+
+									if not item.get("price_list_rate") and ret.get("price_list_rate"):
+										item.set("price_list_rate", ret.get("price_list_rate"))
 
 							elif fieldname in ["cost_center", "conversion_factor"] and not item.get(
 								fieldname
@@ -3308,6 +3312,7 @@ def set_child_tax_template_and_map(item, child_item, parent_doc):
 			"posting_date": parent_doc.transaction_date,
 			"tax_category": parent_doc.get("tax_category"),
 			"company": parent_doc.get("company"),
+			"base_net_rate": item.get("base_net_rate"),
 		}
 	)
 

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-03-02 09:35+0000\n"
-"PO-Revision-Date: 2025-03-03 04:14\n"
+"PO-Revision-Date: 2025-03-05 04:06\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: French\n"
 "MIME-Version: 1.0\n"
@@ -7571,7 +7571,7 @@ msgstr "critére de restriction"
 
 #: erpnext/setup/doctype/holiday_list/holiday_list.js:60
 msgid "Based on your HR Policy, select your leave allocation period's end date"
-msgstr ""
+msgstr "En fonction de votre politique RH, sélectionnez la date de fin de la période d'attribution des congés"
 
 #: erpnext/setup/doctype/holiday_list/holiday_list.js:55
 msgid "Based on your HR Policy, select your leave allocation period's start date"
