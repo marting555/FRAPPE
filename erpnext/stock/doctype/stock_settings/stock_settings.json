@@ -85,7 +85,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Item Naming By",
-   "options": "Item Code\nNaming Series"
+   "options": "Naming Series\nItem Code"
   },
   {
    "fieldname": "item_group",
