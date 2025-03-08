@@ -40,7 +40,7 @@
    "fieldname": "supp_master_name",
    "fieldtype": "Select",
    "label": "Supplier Naming By",
-   "options": "Supplier Name\nNaming Series\nAuto Name"
+   "options": "Naming Series\nSupplier Name\nAuto Name"
   },
   {
    "fieldname": "supplier_group",
