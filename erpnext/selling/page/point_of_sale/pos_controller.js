@@ -455,8 +455,9 @@ erpnext.PointOfSale.Controller = class {
 		this.recent_order_list = new erpnext.PointOfSale.PastOrderList({
 			wrapper: this.$components_wrapper,
 			events: {
-				open_invoice_data: (name) => {
-					frappe.db.get_doc("POS Invoice", name).then((doc) => {
+				open_invoice_data: (doctype, name) => {
+					if (!doctype.includes(["POS Invoice", "Sales Invoice"])) return;
+					frappe.db.get_doc(doctype, name).then((doc) => {
 						this.order_summary.load_summary_of(doc);
 					});
 				},
