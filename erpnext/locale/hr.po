@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-03-02 09:35+0000\n"
-"PO-Revision-Date: 2025-03-05 04:06\n"
+"PO-Revision-Date: 2025-03-08 04:38\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Croatian\n"
 "MIME-Version: 1.0\n"
@@ -25,48 +25,48 @@ msgstr ""
 
 #: erpnext/selling/doctype/quotation/quotation.js:65
 msgid " Address"
-msgstr ""
+msgstr " Adresa"
 
 #: erpnext/accounts/report/item_wise_sales_register/item_wise_sales_register.py:657
 msgid " Amount"
-msgstr ""
+msgstr "Iznos"
 
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:114
 msgid " BOM"
-msgstr ""
+msgstr " Sastavnica"
 
 #. Label of the istable (Check) field in DocType 'Inventory Dimension'
 #: erpnext/stock/doctype/inventory_dimension/inventory_dimension.json
 msgid " Is Child Table"
-msgstr ""
+msgstr "Podređena tabela"
 
 #. Label of the is_subcontracted (Check) field in DocType 'Job Card'
 #: erpnext/manufacturing/doctype/job_card/job_card.json
 msgid " Is Subcontracted"
-msgstr ""
+msgstr "Podizvođač"
 
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:174
 msgid " Item"
-msgstr ""
+msgstr " Artikal"
 
 #: erpnext/accounts/report/tax_withholding_details/tax_withholding_details.py:184
 #: erpnext/accounts/report/tds_computation_summary/tds_computation_summary.py:107
 #: erpnext/selling/report/sales_analytics/sales_analytics.py:128
 msgid " Name"
-msgstr ""
+msgstr " Naziv"
 
 #: erpnext/accounts/report/item_wise_sales_register/item_wise_sales_register.py:648
 msgid " Rate"
-msgstr ""
+msgstr " Cijena"
 
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:122
 msgid " Raw Material"
-msgstr ""
+msgstr " Sirovina"
 
 #. Label of the reserve_stock (Check) field in DocType 'Work Order'
 #: erpnext/manufacturing/doctype/work_order/work_order.json
 msgid " Reserve Stock"
-msgstr ""
+msgstr " Rezerviši"
 
 #. Label of the skip_material_transfer (Check) field in DocType 'BOM Operation'
 #: erpnext/manufacturing/doctype/bom_operation/bom_operation.json
@@ -417,7 +417,7 @@ msgstr ""
 #: erpnext/crm/doctype/opportunity/opportunity.json
 #: erpnext/crm/doctype/prospect/prospect.json
 msgid "1-10"
-msgstr ""
+msgstr "1-10"
 
 #. Option for the 'No of Employees' (Select) field in DocType 'Lead'
 #. Option for the 'No of Employees' (Select) field in DocType 'Opportunity'
