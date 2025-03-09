@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-03-02 09:35+0000\n"
-"PO-Revision-Date: 2025-03-06 04:23\n"
+"PO-Revision-Date: 2025-03-09 04:38\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Bosnian\n"
 "MIME-Version: 1.0\n"
@@ -76,7 +76,7 @@ msgstr " Preskoči Prijenos Materijala"
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:133
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:163
 msgid " Sub Assembly"
-msgstr " Podmontaža"
+msgstr " Podsklop"
 
 #: erpnext/projects/doctype/project_update/project_update.py:104
 msgid " Summary"
@@ -2816,7 +2816,7 @@ msgstr "Dodaj zalihe"
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:259
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:390
 msgid "Add Sub Assembly"
-msgstr "Dodaj Podmontažu"
+msgstr "Dodaj Podsklop"
 
 #: erpnext/buying/doctype/request_for_quotation/request_for_quotation.js:473
 #: erpnext/public/js/event.js:32
@@ -6851,7 +6851,7 @@ msgstr "Artikal Sastavnice"
 #: erpnext/manufacturing/report/bom_explorer/bom_explorer.py:60
 #: erpnext/manufacturing/report/production_plan_summary/production_plan_summary.py:175
 msgid "BOM Level"
-msgstr "Nivo Spiska Materijala"
+msgstr "Nivo Sastavnice"
 
 #. Label of the bom_no (Link) field in DocType 'BOM Item'
 #. Label of the bom_no (Link) field in DocType 'BOM Operation'
@@ -6918,7 +6918,7 @@ msgstr "Otpadni Artikal Sastavnice"
 #: erpnext/manufacturing/workspace/manufacturing/manufacturing.json
 #: erpnext/stock/report/bom_search/bom_search.json
 msgid "BOM Search"
-msgstr "Pretraživač Spiska Materijala"
+msgstr "Pretraga Sastavnice"
 
 #. Name of a report
 #: erpnext/manufacturing/report/bom_stock_calculated/bom_stock_calculated.json
@@ -7815,7 +7815,7 @@ msgstr "Šarža nije dostupna za povrat"
 #. Label of the batch_number_series (Data) field in DocType 'Item'
 #: erpnext/stock/doctype/item/item.json
 msgid "Batch Number Series"
-msgstr "Imenovanje Šarže"
+msgstr "Serija Imenovanje Šarže"
 
 #: erpnext/stock/report/serial_and_batch_summary/serial_and_batch_summary.py:153
 msgid "Batch Qty"
@@ -31008,7 +31008,7 @@ msgstr "Mjesto"
 #: erpnext/stock/doctype/stock_closing_entry/stock_closing_entry.json
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "Naming Series"
-msgstr "Imenovanje Serije"
+msgstr "Serija Imenovanja"
 
 #. Label of the naming_series_prefix (Data) field in DocType 'Stock Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
@@ -31019,7 +31019,7 @@ msgstr "Prefiks Serije Imenovanja"
 #. DocType 'Buying Settings'
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 msgid "Naming Series and Price Defaults"
-msgstr "Imenovanje Serije & Standard Cijene"
+msgstr "Serija Imenovanja & Standard Cijene"
 
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py:90
 msgid "Naming Series is mandatory"
@@ -46525,7 +46525,7 @@ msgstr "API-evi Pretrage"
 
 #: erpnext/stock/report/bom_search/bom_search.js:38
 msgid "Search Sub Assemblies"
-msgstr "Pretražite Podskupine"
+msgstr "Pretraži Podskopove"
 
 #. Label of the search_term_param_name (Data) field in DocType 'Support Search
 #. Source'
