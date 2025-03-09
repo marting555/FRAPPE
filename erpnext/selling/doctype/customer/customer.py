@@ -91,9 +91,12 @@ class Customer(TransactionBase):
 	# end: auto-generated types
 
 	def onload(self):
-		self.customer_name = self.customer_name.upper()
-		self.first_name = self.first_name.upper()
-		self.last_name = self.last_name.upper()
+		if self.customer_name:
+			self.customer_name = self.customer_name.
+		if self.first_name:
+			self.first_name = self.first_name.upper()
+		if self.last_name:
+			self.last_name = self.last_name.upper()
 		"""Load address and contacts in `__onload`"""
 		load_address_and_contact(self)
 		self.load_dashboard_info()
@@ -112,7 +115,12 @@ class Customer(TransactionBase):
 			set_name_from_naming_options(frappe.get_meta(self.doctype).autoname, self)
 
 	def get_customer_name(self):
-		self.customer_name = self.customer_name.upper()
+		if self.customer_name:
+			self.customer_name = self.customer_name.upper()
+		if self.first_name:
+			self.first_name = self.first_name.upper()
+		if self.last_name:
+			self.last_name = self.last_name.upper()
 		if frappe.db.get_value("Customer", self.customer_name) and not frappe.flags.in_import:
 			count = frappe.db.sql(
 				"""select ifnull(MAX(CAST(SUBSTRING_INDEX(name, ' ', -1) AS UNSIGNED)), 0) from tabCustomer
@@ -138,9 +146,12 @@ class Customer(TransactionBase):
 		return self.customer_name
 
 	def after_insert(self):
-		self.customer_name = self.customer_name.upper()
-		self.first_name = self.first_name.upper()
-		self.last_name = self.last_name.upper()
+		if self.customer_name:
+			self.customer_name = self.customer_name.upper()
+		if self.first_name:
+			self.first_name = self.first_name.upper()
+		if self.last_name:
+			self.last_name = self.last_name.upper()
 		"""If customer created from Lead, update customer id in quotations, opportunities"""
 		self.update_lead_status()
 
@@ -237,9 +248,12 @@ class Customer(TransactionBase):
 			)
 
 	def on_update(self):
-		self.customer_name = self.customer_name.upper()
-		self.first_name = self.first_name.upper()
-		self.last_name = self.last_name.upper()
+		if self.customer_name:
+			self.customer_name = self.customer_name.upper()
+		if self.first_name:
+			self.first_name = self.first_name.upper()
+		if self.last_name:
+			self.last_name = self.last_name.upper()
 		
 		self.validate_name_with_customer_group()
 		self.create_primary_contact()
@@ -266,9 +280,14 @@ class Customer(TransactionBase):
 			)
 
 	def create_primary_contact(self):
-		self.customer_name = self.customer_name.upper()
-		self.first_name = self.first_name.upper()
-		self.last_name = self.last_name.upper()
+		
+		if self.customer_name:
+			self.customer_name = self.customer_name.upper()
+		if self.first_name:
+			self.first_name = self.first_name.upper()
+		if self.last_name:
+			self.last_name = self.last_name.upper()
+		
 		if not self.customer_primary_contact and not self.lead_name:
 			if self.mobile_no or self.email_id or self.first_name or self.last_name:
 				contact = make_contact(self)
@@ -279,9 +298,14 @@ class Customer(TransactionBase):
 			frappe.set_value("Contact", self.customer_primary_contact, "is_primary_contact", 1)  # ensure
 
 	def create_primary_address(self):
-		self.customer_name = self.customer_name.upper()
-		self.first_name = self.first_name.upper()
-		self.last_name = self.last_name.upper()
+		
+		if self.customer_name:
+			self.customer_name = self.customer_name.upper()
+		if self.first_name:
+			self.first_name = self.first_name.upper()
+		if self.last_name:
+			self.last_name = self.last_name.upper()
+			
 		from frappe.contacts.doctype.address.address import get_address_display
 
 		if self.flags.is_new_doc and self.get("address_line1"):
