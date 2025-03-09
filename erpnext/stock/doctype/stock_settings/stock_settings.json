@@ -100,7 +100,7 @@
    "in_list_view": 1,
    "label": "Default Stock UOM",
    "options": "UOM",
-   "default" "Unit"
+   "default": "Unit"
   },
   {
    "fieldname": "default_warehouse",
