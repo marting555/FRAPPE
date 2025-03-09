@@ -28,14 +28,14 @@ class Employee(NestedSet):
 
 	def autoname(self):
 		set_name_by_naming_series(self)
-		self.employee = self.name
+		self.employee = self.name.upper()
 
 	def validate(self):
 		from erpnext.controllers.status_updater import validate_status
 
 		validate_status(self.status, ["Active", "Inactive", "Suspended", "Left"])
 
-		self.employee = self.name
+		self.employee = self.name.upper()
 		self.set_employee_name()
 		self.validate_date()
 		self.validate_email()
@@ -321,7 +321,7 @@ def deactivate_sales_person(status=None, employee=None):
 def create_user(employee, user=None, email=None):
 	emp = frappe.get_doc("Employee", employee)
 
-	employee_name = emp.employee_name.split(" ")
+	employee_name = emp.employee_name.split(" ").upper()
 	middle_name = last_name = ""
 
 	if len(employee_name) >= 3:
@@ -338,12 +338,12 @@ def create_user(employee, user=None, email=None):
 	user = frappe.new_doc("User")
 	user.update(
 		{
-			"name": emp.employee_name,
+			"name": emp.employee_name.upper(),
 			"email": emp.prefered_email,
 			"enabled": 1,
-			"first_name": first_name,
-			"middle_name": middle_name,
-			"last_name": last_name,
+			"first_name": first_name.upper(),
+			"middle_name": middle_name.upper(),
+			"last_name": last_name.upper(),
 			"gender": emp.gender,
 			"birth_date": emp.date_of_birth,
 			"phone": emp.cell_number,
