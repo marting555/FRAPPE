@@ -111,6 +111,9 @@ class Company(NestedSet):
 
 	nsm_parent_field = "parent_company"
 
+	self.company_name = self.company_name.upper()
+	self.name = self.name.upper()
+
 	def onload(self):
 		load_address_and_contact(self, "company")
 
@@ -138,9 +141,7 @@ class Company(NestedSet):
 		return exists
 
 	def validate(self):
-		if self.is_new():
-			self.company_name = self.company_name.upper()
-	
+		self.company_name = self.company_name.upper()
 		self.update_default_account = False
 		if self.is_new():
 			self.update_default_account = True
@@ -158,6 +159,9 @@ class Company(NestedSet):
 		self.validate_parent_company()
 
 	def validate_abbr(self):
+		
+		self.company_name = self.company_name.upper()
+		
 		if not self.abbr:
 			self.abbr = "".join(c[0] for c in self.company_name.split()).upper()
 
@@ -241,6 +245,7 @@ class Company(NestedSet):
 			)
 
 	def on_update(self):
+		self.company_name = self.company_name.upper()
 		NestedSet.on_update(self)
 		if not frappe.db.sql(
 			"""select name from tabAccount
