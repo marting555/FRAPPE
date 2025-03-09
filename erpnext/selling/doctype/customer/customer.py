@@ -155,11 +155,11 @@ class Customer(TransactionBase):
 		self.validate_internal_customer()
 		self.add_role_for_user()
 		self.validate_currency_for_receivable_payable_and_advance_account()
-		if self.customer_name
+		if self.customer_name:
 		self.customer_name = self.customer_name.upper()
-		if self.first_name
+		if self.first_name:
 		self.first_name = self.first_name.upper()
-		if self.last_name
+		if self.last_name:
 		self.last_name = self.last_name.upper()
 
 		# set loyalty program tier
