@@ -113,8 +113,6 @@ class Customer(TransactionBase):
 
 	def get_customer_name(self):
 		self.customer_name = self.customer_name.upper()
-		self.first_name = self.first_name.upper()
-		self.last_name = self.last_name.upper()
 		if frappe.db.get_value("Customer", self.customer_name) and not frappe.flags.in_import:
 			count = frappe.db.sql(
 				"""select ifnull(MAX(CAST(SUBSTRING_INDEX(name, ' ', -1) AS UNSIGNED)), 0) from tabCustomer
