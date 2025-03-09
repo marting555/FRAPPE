@@ -41,15 +41,21 @@ class Prospect(CRMNote):
 	# end: auto-generated types
 
 	def onload(self):
+		if self.company_name:
+			self.company_name = self.company_name.upper()
 		load_address_and_contact(self)
 
 	def on_update(self):
+		if self.company_name:
+			self.company_name = self.company_name.upper()
 		self.link_with_lead_contact_and_address()
 
 	def on_trash(self):
 		delete_contact_and_address(self.doctype, self.name)
 
 	def after_insert(self):
+		if self.company_name:
+			self.company_name = self.company_name.upper()
 		carry_forward_communication_and_comments = frappe.db.get_single_value(
 			"CRM Settings", "carry_forward_communication_and_comments"
 		)
