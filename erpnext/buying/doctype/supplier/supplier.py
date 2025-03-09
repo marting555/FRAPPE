@@ -75,11 +75,13 @@ class Supplier(TransactionBase):
 	# end: auto-generated types
 
 	def onload(self):
+		self.supplier_name = self.supplier_name.upper()
 		"""Load address and contacts in `__onload`"""
 		load_address_and_contact(self)
 		self.load_dashboard_info()
 
 	def before_save(self):
+		self.supplier_name = self.supplier_name.upper()
 		if not self.on_hold:
 			self.hold_type = ""
 			self.release_date = ""
