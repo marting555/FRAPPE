@@ -156,11 +156,11 @@ class Customer(TransactionBase):
 		self.add_role_for_user()
 		self.validate_currency_for_receivable_payable_and_advance_account()
 		if self.customer_name:
-		self.customer_name = self.customer_name.upper()
+			self.customer_name = self.customer_name.upper()
 		if self.first_name:
-		self.first_name = self.first_name.upper()
+			self.first_name = self.first_name.upper()
 		if self.last_name:
-		self.last_name = self.last_name.upper()
+			self.last_name = self.last_name.upper()
 
 		# set loyalty program tier
 		if frappe.db.exists("Customer", self.name):
