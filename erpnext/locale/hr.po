@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: info@erpnext.com\n"
 "POT-Creation-Date: 2025-03-02 09:35+0000\n"
-"PO-Revision-Date: 2025-03-08 04:38\n"
+"PO-Revision-Date: 2025-03-09 04:38\n"
 "Last-Translator: info@erpnext.com\n"
 "Language-Team: Croatian\n"
 "MIME-Version: 1.0\n"
@@ -71,12 +71,12 @@ msgstr " Rezerviši"
 #. Label of the skip_material_transfer (Check) field in DocType 'BOM Operation'
 #: erpnext/manufacturing/doctype/bom_operation/bom_operation.json
 msgid " Skip Material Transfer"
-msgstr ""
+msgstr " Preskoči Prijenos Materijala"
 
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:133
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:163
 msgid " Sub Assembly"
-msgstr ""
+msgstr " Podsklop"
 
 #: erpnext/projects/doctype/project_update/project_update.py:104
 msgid " Summary"
@@ -96,20 +96,20 @@ msgstr ""
 
 #: erpnext/public/js/utils/serial_no_batch_selector.js:262
 msgid "\"SN-01::10\" for \"SN-01\" to \"SN-10\""
-msgstr ""
+msgstr "\"SB-01::10\" za \"SB-01\" do \"SB-10\""
 
 #: erpnext/manufacturing/report/work_order_stock_report/work_order_stock_report.py:148
 msgid "# In Stock"
-msgstr ""
+msgstr "# Na Zalihama"
 
 #: erpnext/manufacturing/report/work_order_stock_report/work_order_stock_report.py:141
 msgid "# Req'd Items"
-msgstr ""
+msgstr "# Obavezni Artikli"
 
 #. Label of the per_delivered (Percent) field in DocType 'Sales Order'
 #: erpnext/selling/doctype/sales_order/sales_order.json
 msgid "%  Delivered"
-msgstr ""
+msgstr "%  Dostavljeno"
 
 #. Label of the per_billed (Percent) field in DocType 'Timesheet'
 #. Label of the per_billed (Percent) field in DocType 'Sales Order'
@@ -160,12 +160,12 @@ msgstr ""
 #. Label of the per_ordered (Percent) field in DocType 'Material Request'
 #: erpnext/stock/doctype/material_request/material_request.json
 msgid "% Ordered"
-msgstr ""
+msgstr "% Naručeno"
 
 #. Label of the per_picked (Percent) field in DocType 'Sales Order'
 #: erpnext/selling/doctype/sales_order/sales_order.json
 msgid "% Picked"
-msgstr ""
+msgstr "% Odabrano"
 
 #. Label of the process_loss_percentage (Percent) field in DocType 'BOM'
 #. Label of the process_loss_percentage (Percent) field in DocType 'Stock
@@ -178,7 +178,7 @@ msgstr ""
 #. Label of the progress (Percent) field in DocType 'Task'
 #: erpnext/projects/doctype/task/task.json
 msgid "% Progress"
-msgstr ""
+msgstr "% Napredak"
 
 #. Label of the per_received (Percent) field in DocType 'Purchase Order'
 #. Label of the per_received (Percent) field in DocType 'Material Request'
@@ -187,7 +187,7 @@ msgstr ""
 #: erpnext/stock/doctype/material_request/material_request.json
 #: erpnext/subcontracting/doctype/subcontracting_order/subcontracting_order.json
 msgid "% Received"
-msgstr ""
+msgstr "% Primljeno"
 
 #. Label of the per_returned (Percent) field in DocType 'Delivery Note'
 #. Label of the per_returned (Percent) field in DocType 'Purchase Receipt'
@@ -197,7 +197,7 @@ msgstr ""
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.json
 #: erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.json
 msgid "% Returned"
-msgstr ""
+msgstr "% Vraćeno"
 
 #. Description of the '% Amount Billed' (Percent) field in DocType 'Sales
 #. Order'
@@ -2566,7 +2566,7 @@ msgstr ""
 #: erpnext/public/js/utils/serial_no_batch_selector.js:191
 #: erpnext/stock/dashboard/item_dashboard_list.html:61
 msgid "Add"
-msgstr ""
+msgstr "Dodaj"
 
 #: erpnext/stock/doctype/item/item.js:485
 #: erpnext/stock/doctype/price_list/price_list.js:8
@@ -2672,7 +2672,7 @@ msgstr ""
 #: erpnext/manufacturing/doctype/bom/bom.js:914
 #: erpnext/manufacturing/doctype/bom_operation/bom_operation.json
 msgid "Add Raw Materials"
-msgstr ""
+msgstr "Dodaj Sirovine"
 
 #: erpnext/public/js/event.js:48
 msgid "Add Sales Partners"
@@ -3722,7 +3722,7 @@ msgstr ""
 
 #: erpnext/manufacturing/doctype/bom/bom.py:303
 msgid "All BOMs"
-msgstr ""
+msgstr "Sve Sastavnice"
 
 #. Option for the 'Send To' (Select) field in DocType 'SMS Center'
 #: erpnext/selling/doctype/sms_center/sms_center.json
@@ -6669,30 +6669,30 @@ msgstr ""
 #: erpnext/subcontracting/doctype/subcontracting_order_item/subcontracting_order_item.json
 #: erpnext/subcontracting/doctype/subcontracting_receipt_item/subcontracting_receipt_item.json
 msgid "BOM"
-msgstr ""
+msgstr "Sastavnica"
 
 #: erpnext/manufacturing/page/bom_comparison_tool/bom_comparison_tool.js:21
 msgid "BOM 1"
-msgstr ""
+msgstr "Sastavnica 1"
 
 #: erpnext/manufacturing/doctype/bom/bom.py:1501
 msgid "BOM 1 {0} and BOM 2 {1} should not be same"
-msgstr ""
+msgstr "Sastavnica 1 {0} i Sastavnica 2 {1} ne bi trebali biti isti"
 
 #: erpnext/manufacturing/page/bom_comparison_tool/bom_comparison_tool.js:38
 msgid "BOM 2"
-msgstr ""
+msgstr "Sastavnica 2"
 
 #. Label of a Link in the Manufacturing Workspace
 #: erpnext/manufacturing/page/bom_comparison_tool/bom_comparison_tool.js:4
 #: erpnext/manufacturing/workspace/manufacturing/manufacturing.json
 msgid "BOM Comparison Tool"
-msgstr ""
+msgstr "Alat Poređenja Sastavnica"
 
 #. Label of the bom_created (Check) field in DocType 'BOM Creator Item'
 #: erpnext/manufacturing/doctype/bom_creator_item/bom_creator_item.json
 msgid "BOM Created"
-msgstr ""
+msgstr "Sastavnica Stvorena"
 
 #. Label of the bom_creator (Link) field in DocType 'BOM'
 #. Name of a DocType
@@ -6701,14 +6701,14 @@ msgstr ""
 #: erpnext/manufacturing/doctype/bom_creator/bom_creator.json
 #: erpnext/manufacturing/workspace/manufacturing/manufacturing.json
 msgid "BOM Creator"
-msgstr ""
+msgstr "Konstruktor Sastavnice"
 
 #. Label of the bom_creator_item (Data) field in DocType 'BOM'
 #. Name of a DocType
 #: erpnext/manufacturing/doctype/bom/bom.json
 #: erpnext/manufacturing/doctype/bom_creator_item/bom_creator_item.json
 msgid "BOM Creator Item"
-msgstr ""
+msgstr "Artikal Sastavnice Konstruktora"
 
 #. Label of the bom_detail_no (Data) field in DocType 'Purchase Order Item
 #. Supplied'
@@ -6723,37 +6723,37 @@ msgstr ""
 #: erpnext/subcontracting/doctype/subcontracting_order_supplied_item/subcontracting_order_supplied_item.json
 #: erpnext/subcontracting/doctype/subcontracting_receipt_supplied_item/subcontracting_receipt_supplied_item.json
 msgid "BOM Detail No"
-msgstr ""
+msgstr "Broj Detalja Sastavnice"
 
 #. Name of a report
 #: erpnext/manufacturing/report/bom_explorer/bom_explorer.json
 msgid "BOM Explorer"
-msgstr ""
+msgstr "Istraživač Sastavnice"
 
 #. Name of a DocType
 #: erpnext/manufacturing/doctype/bom_explosion_item/bom_explosion_item.json
 msgid "BOM Explosion Item"
-msgstr ""
+msgstr "Nestavljeni Artikli Sastavnice"
 
 #: erpnext/manufacturing/report/bom_operations_time/bom_operations_time.js:20
 #: erpnext/manufacturing/report/bom_operations_time/bom_operations_time.py:101
 msgid "BOM ID"
-msgstr ""
+msgstr "Sastavnica"
 
 #. Label of the bom_info_section (Section Break) field in DocType 'Stock Entry'
 #: erpnext/stock/doctype/stock_entry/stock_entry.json
 msgid "BOM Info"
-msgstr ""
+msgstr "Informacija Sastavnice"
 
 #. Name of a DocType
 #: erpnext/manufacturing/doctype/bom_item/bom_item.json
 msgid "BOM Item"
-msgstr ""
+msgstr "Artikal Sastavnice"
 
 #: erpnext/manufacturing/report/bom_explorer/bom_explorer.py:60
 #: erpnext/manufacturing/report/production_plan_summary/production_plan_summary.py:175
 msgid "BOM Level"
-msgstr ""
+msgstr "Nivo Sastavnice"
 
 #. Label of the bom_no (Link) field in DocType 'BOM Item'
 #. Label of the bom_no (Link) field in DocType 'BOM Operation'
@@ -6776,56 +6776,56 @@ msgstr ""
 #: erpnext/stock/doctype/stock_entry/stock_entry.json
 #: erpnext/stock/doctype/stock_entry_detail/stock_entry_detail.json
 msgid "BOM No"
-msgstr ""
+msgstr "Broj Sastavnice"
 
 #. Label of the bom_no (Link) field in DocType 'Work Order Operation'
 #: erpnext/manufacturing/doctype/work_order_operation/work_order_operation.json
 msgid "BOM No (For Semi-Finished Goods)"
-msgstr ""
+msgstr "Broj Sastavnice (za poluproizvod)"
 
 #. Description of the 'BOM No' (Link) field in DocType 'Stock Entry Detail'
 #: erpnext/stock/doctype/stock_entry_detail/stock_entry_detail.json
 msgid "BOM No. for a Finished Good Item"
-msgstr ""
+msgstr "Broj Sastavnice (za gotov proizvod)"
 
 #. Name of a DocType
 #. Label of the operations (Table) field in DocType 'Routing'
 #: erpnext/manufacturing/doctype/bom_operation/bom_operation.json
 #: erpnext/manufacturing/doctype/routing/routing.json
 msgid "BOM Operation"
-msgstr ""
+msgstr "Operacija Sastavnice"
 
 #. Name of a report
 #. Label of a Link in the Manufacturing Workspace
 #: erpnext/manufacturing/report/bom_operations_time/bom_operations_time.json
 #: erpnext/manufacturing/workspace/manufacturing/manufacturing.json
 msgid "BOM Operations Time"
-msgstr ""
+msgstr "Operativno Vrijeme Sastavnice"
 
 #: erpnext/manufacturing/report/bom_stock_report/bom_stock_report.py:27
 msgid "BOM Qty"
-msgstr ""
+msgstr "Količina Sastavnice"
 
 #: erpnext/stock/report/item_prices/item_prices.py:60
 msgid "BOM Rate"
-msgstr ""
+msgstr "Cijena Sastavnice"
 
 #. Name of a DocType
 #: erpnext/manufacturing/doctype/bom_scrap_item/bom_scrap_item.json
 msgid "BOM Scrap Item"
-msgstr ""
+msgstr "Otpadni Artikal Sastavnice"
 
 #. Label of a Link in the Manufacturing Workspace
 #. Name of a report
 #: erpnext/manufacturing/workspace/manufacturing/manufacturing.json
 #: erpnext/stock/report/bom_search/bom_search.json
 msgid "BOM Search"
-msgstr ""
+msgstr "Pretraga Sastavnice"
 
 #. Name of a report
 #: erpnext/manufacturing/report/bom_stock_calculated/bom_stock_calculated.json
 msgid "BOM Stock Calculated"
-msgstr ""
+msgstr "Obračunate Zalihe Sastavnice"
 
 #. Name of a report
 #. Label of a Link in the Manufacturing Workspace
@@ -6834,37 +6834,37 @@ msgstr ""
 #: erpnext/manufacturing/report/bom_stock_report/bom_stock_report.json
 #: erpnext/manufacturing/workspace/manufacturing/manufacturing.json
 msgid "BOM Stock Report"
-msgstr ""
+msgstr "Izvještaj Zaliha Sastavnice"
 
 #. Label of the tab_2_tab (Tab Break) field in DocType 'BOM Creator'
 #: erpnext/manufacturing/doctype/bom_creator/bom_creator.json
 msgid "BOM Tree"
-msgstr ""
+msgstr "Stablo Sastavnice"
 
 #: erpnext/manufacturing/report/bom_stock_report/bom_stock_report.py:28
 msgid "BOM UoM"
-msgstr ""
+msgstr "Jedinica Sastavnice"
 
 #. Name of a DocType
 #: erpnext/manufacturing/doctype/bom_update_batch/bom_update_batch.json
 msgid "BOM Update Batch"
-msgstr ""
+msgstr "Sastavnica Ažurira Šaržu"
 
 #: erpnext/manufacturing/doctype/bom_update_tool/bom_update_tool.js:84
 msgid "BOM Update Initiated"
-msgstr ""
+msgstr "Pokrenuto Ažuriranje Sastavnice"
 
 #. Name of a DocType
 #: erpnext/manufacturing/doctype/bom_update_log/bom_update_log.json
 msgid "BOM Update Log"
-msgstr ""
+msgstr "Zapisnik Ažuriranja Sastavnice"
 
 #. Name of a DocType
 #. Label of a Link in the Manufacturing Workspace
 #: erpnext/manufacturing/doctype/bom_update_tool/bom_update_tool.json
 #: erpnext/manufacturing/workspace/manufacturing/manufacturing.json
 msgid "BOM Update Tool"
-msgstr ""
+msgstr "Alat Ažuriranje Sastavnice"
 
 #. Description of a DocType
 #: erpnext/manufacturing/doctype/bom_update_log/bom_update_log.json
@@ -6882,12 +6882,12 @@ msgstr ""
 #. Name of a report
 #: erpnext/manufacturing/report/bom_variance_report/bom_variance_report.json
 msgid "BOM Variance Report"
-msgstr ""
+msgstr "Izvješće Odstupanja Sastavnice"
 
 #. Name of a DocType
 #: erpnext/manufacturing/doctype/bom_website_item/bom_website_item.json
 msgid "BOM Website Item"
-msgstr ""
+msgstr "Artikal Web Stranice Sastavnice"
 
 #. Name of a DocType
 #: erpnext/manufacturing/doctype/bom_website_operation/bom_website_operation.json
@@ -6902,7 +6902,7 @@ msgstr ""
 #. 'Manufacturing Settings'
 #: erpnext/manufacturing/doctype/manufacturing_settings/manufacturing_settings.json
 msgid "BOM and Production"
-msgstr ""
+msgstr "Sastavnica & Proizvodnja"
 
 #: erpnext/stock/doctype/material_request/material_request.js:349
 #: erpnext/stock/doctype/stock_entry/stock_entry.js:682
@@ -7837,7 +7837,7 @@ msgstr ""
 #: erpnext/stock/doctype/material_request/material_request.js:107
 #: erpnext/stock/doctype/stock_entry/stock_entry.js:612
 msgid "Bill of Materials"
-msgstr ""
+msgstr "Sastavnica"
 
 #. Option for the 'Status' (Select) field in DocType 'Timesheet'
 #: erpnext/controllers/website_list_for_contact.py:203
@@ -14800,7 +14800,7 @@ msgstr ""
 #: erpnext/accounts/report/trial_balance_for_party/trial_balance_for_party.py:205
 #: erpnext/accounts/report/voucher_wise_balance/voucher_wise_balance.py:27
 msgid "Debit"
-msgstr ""
+msgstr "Debit"
 
 #: erpnext/accounts/report/general_ledger/general_ledger.py:645
 msgid "Debit (Transaction)"
@@ -14808,7 +14808,7 @@ msgstr ""
 
 #: erpnext/accounts/report/general_ledger/general_ledger.py:623
 msgid "Debit ({0})"
-msgstr ""
+msgstr "Debit ({0})"
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.js:558
 msgid "Debit Account"
@@ -17364,7 +17364,7 @@ msgstr ""
 #: erpnext/accounts/doctype/transaction_deletion_record_details/transaction_deletion_record_details.json
 #: erpnext/setup/doctype/transaction_deletion_record_item/transaction_deletion_record_item.json
 msgid "DocType"
-msgstr ""
+msgstr "DocType"
 
 #: erpnext/setup/doctype/transaction_deletion_record/transaction_deletion_record.py:69
 msgid "DocTypes should not be added manually to the 'Excluded DocTypes' table. You are only allowed to remove entries from it."
@@ -17378,7 +17378,7 @@ msgstr ""
 #: erpnext/accounts/doctype/repost_allowed_types/repost_allowed_types.json
 #: erpnext/selling/report/inactive_customers/inactive_customers.js:14
 msgid "Doctype"
-msgstr ""
+msgstr "DocType"
 
 #. Label of the document_name (Dynamic Link) field in DocType 'Contract'
 #. Label of the document_name (Dynamic Link) field in DocType 'Quality Meeting
@@ -58488,7 +58488,7 @@ msgstr ""
 #: erpnext/accounts/doctype/subscription_plan/subscription_plan.json
 #: erpnext/setup/setup_wizard/data/uom_data.json
 msgid "Week"
-msgstr ""
+msgstr "Tjedan"
 
 #: erpnext/selling/report/sales_analytics/sales_analytics.py:422
 #: erpnext/stock/report/stock_analytics/stock_analytics.py:112
