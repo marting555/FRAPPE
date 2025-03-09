@@ -138,7 +138,9 @@ class Company(NestedSet):
 		return exists
 
 	def validate(self):
-		self.company_name = self.company_name.upper()
+		if self.is_new():
+			self.company_name = self.company_name.upper()
+	
 		self.update_default_account = False
 		if self.is_new():
 			self.update_default_account = True
