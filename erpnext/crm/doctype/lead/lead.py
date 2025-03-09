@@ -143,17 +143,25 @@ class Lead(SellingController, CRMNote):
 			self.first_name, self.middle_name, self.last_name = parse_full_name(self.lead_name)
 
 	def after_insert(self):
-		self.first_name = self.first_name.upper()
-		self.last_name = self.last_name.upper()
-		self.lead_name = self.lead_name.upper()
-		self.middle_name = self.middle_name.upper()
+		if self.first_name:
+			self.first_name = self.first_name.upper()
+		if self.last_name:
+			self.last_name = self.last_name.upper()
+		if self.lead_name:
+			self.lead_name = self.lead_name.upper()
+		if self.middle_name:
+			self.middle_name = self.middle_name.upper()
 		self.link_to_contact()
 
 	def on_update(self):
-		self.first_name = self.first_name.upper()
-		self.last_name = self.last_name.upper()
-		self.lead_name = self.lead_name.upper()
-		self.middle_name = self.middle_name.upper()
+		if self.first_name:
+			self.first_name = self.first_name.upper()
+		if self.last_name:
+			self.last_name = self.last_name.upper()
+		if self.lead_name:
+			self.lead_name = self.lead_name.upper()
+		if self.middle_name:
+			self.middle_name = self.middle_name.upper()
 		self.update_prospect()
 
 	def on_trash(self):
@@ -162,10 +170,14 @@ class Lead(SellingController, CRMNote):
 		self.remove_link_from_prospect()
 
 	def set_full_name(self):
-		self.first_name = self.first_name.upper()
-		self.last_name = self.last_name.upper()
-		self.lead_name = self.lead_name.upper()
-		self.middle_name = self.middle_name.upper()
+		if self.first_name:
+			self.first_name = self.first_name.upper()
+		if self.last_name:
+			self.last_name = self.last_name.upper()
+		if self.lead_name:
+			self.lead_name = self.lead_name.upper()
+		if self.middle_name:
+			self.middle_name = self.middle_name.upper()
 		if self.first_name:
 			self.lead_name = " ".join(
 				filter(None, [self.salutation, self.first_name, self.middle_name, self.last_name])
