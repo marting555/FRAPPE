@@ -92,7 +92,7 @@ class Customer(TransactionBase):
 
 	def onload(self):
 		if self.customer_name:
-			self.customer_name = self.customer_name.
+			self.customer_name = self.customer_name.upper()
 		if self.first_name:
 			self.first_name = self.first_name.upper()
 		if self.last_name:
