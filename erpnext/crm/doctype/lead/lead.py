@@ -87,12 +87,28 @@ class Lead(SellingController, CRMNote):
 	# end: auto-generated types
 
 	def onload(self):
+		if self.first_name:
+			self.first_name = self.first_name.upper()
+		if self.last_name:
+			self.last_name = self.last_name.upper()
+		if self.lead_name:
+			self.lead_name = self.lead_name.upper()
+		if self.middle_name:
+			self.middle_name = self.middle_name.upper()
 		customer = frappe.db.get_value("Customer", {"lead_name": self.name})
 		self.get("__onload").is_customer = customer
 		load_address_and_contact(self)
 		self.set_onload("linked_prospects", self.get_linked_prospects())
 
 	def validate(self):
+		if self.first_name:
+			self.first_name = self.first_name.upper()
+		if self.last_name:
+			self.last_name = self.last_name.upper()
+		if self.lead_name:
+			self.lead_name = self.lead_name.upper()
+		if self.middle_name:
+			self.middle_name = self.middle_name.upper()
 		self.set_full_name()
 		self.set_lead_name()
 		self.set_title()
@@ -101,6 +117,14 @@ class Lead(SellingController, CRMNote):
 		self.validate_email_id()
 
 	def before_insert(self):
+		if self.first_name:
+			self.first_name = self.first_name.upper()
+		if self.last_name:
+			self.last_name = self.last_name.upper()
+		if self.lead_name:
+			self.lead_name = self.lead_name.upper()
+		if self.middle_name:
+			self.middle_name = self.middle_name.upper()
 		self.contact_doc = None
 		if frappe.db.get_single_value("CRM Settings", "auto_creation_of_contact"):
 			if self.utm_source == "Existing Customer" and self.customer:
@@ -119,9 +143,25 @@ class Lead(SellingController, CRMNote):
 			self.first_name, self.middle_name, self.last_name = parse_full_name(self.lead_name)
 
 	def after_insert(self):
+		if self.first_name:
+			self.first_name = self.first_name.upper()
+		if self.last_name:
+			self.last_name = self.last_name.upper()
+		if self.lead_name:
+			self.lead_name = self.lead_name.upper()
+		if self.middle_name:
+			self.middle_name = self.middle_name.upper()
 		self.link_to_contact()
 
 	def on_update(self):
+		if self.first_name:
+			self.first_name = self.first_name.upper()
+		if self.last_name:
+			self.last_name = self.last_name.upper()
+		if self.lead_name:
+			self.lead_name = self.lead_name.upper()
+		if self.middle_name:
+			self.middle_name = self.middle_name.upper()
 		self.update_prospect()
 
 	def on_trash(self):
@@ -131,11 +171,20 @@ class Lead(SellingController, CRMNote):
 
 	def set_full_name(self):
 		if self.first_name:
+			self.first_name = self.first_name.upper()
+		if self.last_name:
+			self.last_name = self.last_name.upper()
+		if self.lead_name:
+			self.lead_name = self.lead_name.upper()
+		if self.middle_name:
+			self.middle_name = self.middle_name.upper()
+		if self.first_name:
 			self.lead_name = " ".join(
 				filter(None, [self.salutation, self.first_name, self.middle_name, self.last_name])
 			)
 
 	def set_lead_name(self):
+		self.middle_name = self.middle_name.upper()
 		if not self.lead_name:
 			# Check for leads being created through data import
 			if not self.company_name and not self.email_id and not self.flags.ignore_mandatory:

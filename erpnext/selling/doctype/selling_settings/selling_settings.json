@@ -44,7 +44,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Customer Naming By",
-   "options": "Customer Name\nNaming Series\nAuto Name"
+   "options": "Naming Series\nCustomer Name\nAuto Name"
   },
   {
    "fieldname": "customer_group",

@@ -112,6 +112,9 @@ class Company(NestedSet):
 	nsm_parent_field = "parent_company"
 
 	def onload(self):
+		self.name = self.name.upper()
+		self.company_name = self.company_name.upper()
+		self.abbr = self.abbr.upper()
 		load_address_and_contact(self, "company")
 
 	@frappe.whitelist()
@@ -138,6 +141,9 @@ class Company(NestedSet):
 		return exists
 
 	def validate(self):
+		self.name = self.name.upper()
+		self.company_name = self.company_name.upper()
+		self.abbr = self.abbr.upper()
 		self.update_default_account = False
 		if self.is_new():
 			self.update_default_account = True
@@ -155,10 +161,14 @@ class Company(NestedSet):
 		self.validate_parent_company()
 
 	def validate_abbr(self):
+		self.name = self.name.upper()
+		self.company_name = self.company_name.upper()
+		
 		if not self.abbr:
 			self.abbr = "".join(c[0] for c in self.company_name.split()).upper()
 
 		self.abbr = self.abbr.strip()
+		self.abbr = self.abbr.upper()
 
 		if not self.abbr.strip():
 			frappe.throw(_("Abbreviation is mandatory"))
@@ -238,6 +248,9 @@ class Company(NestedSet):
 			)
 
 	def on_update(self):
+		self.name = self.name.upper()
+		self.company_name = self.company_name.upper()
+		self.abbr = self.abbr.upper()
 		NestedSet.on_update(self)
 		if not frappe.db.sql(
 			"""select name from tabAccount
@@ -612,7 +625,10 @@ class Company(NestedSet):
 		clear_defaults_cache()
 
 	def abbreviate(self):
+		self.company_name = self.company_name.upper()
+		self.name = self.name.upper()
 		self.abbr = "".join(c[0].upper() for c in self.company_name.split())
+		self.abbr = self.abbr.upper()
 
 	def on_trash(self):
 		"""

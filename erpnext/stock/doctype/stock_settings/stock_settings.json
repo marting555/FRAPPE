@@ -85,7 +85,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Item Naming By",
-   "options": "Item Code\nNaming Series"
+   "options": "Naming Series\nItem Code"
   },
   {
    "fieldname": "item_group",
@@ -99,7 +99,8 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Default Stock UOM",
-   "options": "UOM"
+   "options": "UOM",
+   "default": "Unit"
   },
   {
    "fieldname": "default_warehouse",

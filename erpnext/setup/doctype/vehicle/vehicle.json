@@ -8,36 +8,35 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "license_plate",
-  "make",
-  "column_break_3",
-  "model",
-  "company",
+
+  "license_plate", "company", "column_break_3", "employee", "vehicle_image",
+  
   "vehicle_details",
-  "last_odometer",
-  "acquisition_date",
-  "location",
+  "fuel_type", "make","model", "year", "uom",
   "column_break_8",
-  "chassis_no",
-  "vehicle_value",
-  "employee",
-  "insurance_details",
-  "insurance_company",
-  "policy_no",
-  "column_break_15",
-  "start_date",
-  "end_date",
+   "last_odometer", "vin_number", "chassis_no", "engine_no",
+  
   "additional_details",
-  "fuel_type",
-  "uom",
-  "carbon_check_date",
+  "location", "acquisition_date", "vehicle_value",  "carbon_check_date", 
   "column_break_21",
-  "color",
-  "wheels",
-  "doors",
+  "color",  "wheels",  "doors", 
+
+  "insurance_details",
+  "insurance_company",  "policy_no",  "column_break_15", "start_date",  "end_date",
+
   "amended_from"
  ],
+
  "fields": [
+
+  {
+   "label": "Image ",
+   "fieldtype": "Attach Image",
+   "fieldname": "vehicle_image",
+   "options": "image",
+   "is_private": 0,
+   "hidden":1
+  },
   {
    "fieldname": "license_plate",
    "fieldtype": "Data",
@@ -47,41 +46,98 @@
    "unique": 1
   },
   {
-   "fieldname": "make",
-   "fieldtype": "Data",
-   "label": "Make",
-   "reqd": 1
-  },
-  {
    "fieldname": "column_break_3",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee"
+  },
+  
+  {
+   "label": "Details",
+   "fieldname": "vehicle_details",
+   "fieldtype": "Section Break"
+  },
+  {
+   "label": "Manufacturer",
+   "fieldname": "make",
+   "fieldtype": "Link",
+   "options": "Brand",
+   "in_list_view": 1,
+   "reqd": 1
   },
   {
    "fieldname": "model",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Model",
    "reqd": 1
   },
   {
-   "fieldname": "vehicle_details",
-   "fieldtype": "Section Break",
-   "label": "Details"
+   "label": "Year",
+   "fieldname": "year",
+   "in_list_view": 1,
+   "fieldtype": "Data"
   },
   {
+   "label": "Fuel Type",
+   "fieldname": "fuel_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "options": "Petrol\nDiesel\nNatural Gas\nElectric",
+   "reqd": 1
+  },
+  {
+   "label": "Fuel UOM",
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "options": "UOM",
+   "default": "Litre",
+   "hidden": 1
+  },
+  {
+   "fieldname": "column_break_8",
+   "fieldtype": "Column Break"
+  },
+  {
+   "label": "Odometer (Last)",
    "fieldname": "last_odometer",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Odometer Value (Last)",
    "no_copy": 1,
-   "reqd": 1,
-   "set_only_once": 1
+   "set_only_once": 1,
+   "allow_in_quick_entry": 1
   },
   {
-   "fieldname": "acquisition_date",
-   "fieldtype": "Date",
-   "label": "Acquisition Date"
+   "label": "VIN",
+   "fieldname": "vin_number",
+   "fieldtype": "Data"
+  },
+  {
+   "label": "Engine No",
+   "fieldname": "engine_no",
+   "fieldtype": "Data"
+  },
+  {
+   "fieldname": "chassis_no",
+   "fieldtype": "Data",
+   "label": "Chassis No"
+  },
+
+  {
+    "collapsible": 1,
+   "fieldname": "additional_details",
+   "fieldtype": "Section Break",
+   "label": "Additional Details"
   },
   {
    "fieldname": "location",
@@ -89,78 +145,15 @@
    "label": "Location"
   },
   {
-   "fieldname": "column_break_8",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "chassis_no",
-   "fieldtype": "Data",
-   "label": "Chassis No"
+   "fieldname": "acquisition_date",
+   "fieldtype": "Date",
+   "label": "Acquisition Date"
   },
   {
    "fieldname": "vehicle_value",
    "fieldtype": "Currency",
-   "in_list_view": 1,
    "label": "Vehicle Value",
    "print_hide_if_no_value": 1
-  },
-  {
-   "fieldname": "employee",
-   "fieldtype": "Link",
-   "in_standard_filter": 1,
-   "label": "Employee",
-   "options": "Employee"
-  },
-  {
-   "fieldname": "insurance_details",
-   "fieldtype": "Section Break",
-   "label": "Insurance Details"
-  },
-  {
-   "fieldname": "insurance_company",
-   "fieldtype": "Data",
-   "label": "Insurance Company"
-  },
-  {
-   "fieldname": "policy_no",
-   "fieldtype": "Data",
-   "label": "Policy No"
-  },
-  {
-   "fieldname": "column_break_15",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "start_date",
-   "fieldtype": "Date",
-   "label": "Start Date"
-  },
-  {
-   "fieldname": "end_date",
-   "fieldtype": "Date",
-   "label": "End Date"
-  },
-  {
-   "fieldname": "additional_details",
-   "fieldtype": "Section Break",
-   "label": "Additional Details"
-  },
-  {
-   "fieldname": "fuel_type",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
-   "label": "Fuel Type",
-   "options": "Petrol\nDiesel\nNatural Gas\nElectric",
-   "reqd": 1
-  },
-  {
-   "fieldname": "uom",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Fuel UOM",
-   "options": "UOM",
-   "reqd": 1
   },
   {
    "fieldname": "carbon_check_date",
@@ -186,6 +179,38 @@
    "fieldtype": "Int",
    "label": "Doors"
   },
+
+  {
+    "collapsible": 1,
+   "fieldname": "insurance_details",
+   "fieldtype": "Section Break",
+   "label": "Insurance Details"
+  },
+  {
+   "label": "Insurance Company",
+   "fieldname": "insurance_company",
+   "fieldtype": "Link",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "policy_no",
+   "fieldtype": "Data",
+   "label": "Policy No"
+  },
+  {
+   "fieldname": "column_break_15",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "label": "Start Date"
+  },
+  {
+   "fieldname": "end_date",
+   "fieldtype": "Date",
+   "label": "End Date"
+  },
   {
    "fieldname": "amended_from",
    "fieldtype": "Link",
@@ -194,16 +219,11 @@
    "options": "Vehicle",
    "print_hide": 1,
    "read_only": 1
-  },
-  {
-   "fieldname": "company",
-   "fieldtype": "Link",
-   "in_standard_filter": 1,
-   "label": "Company",
-   "options": "Company"
   }
+
  ],
  "links": [],
+ "image_field": "vehicle_image",
  "modified": "2025-01-24 06:22:33.129805",
  "modified_by": "Administrator",
  "module": "Setup",

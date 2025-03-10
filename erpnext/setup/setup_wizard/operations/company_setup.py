@@ -21,7 +21,7 @@ def create_fiscal_year_and_company(args):
 		frappe.get_doc(
 			{
 				"doctype": "Company",
-				"company_name": args.get("company_name"),
+				"company_name": args.get("company_name").upper(),
 				"enable_perpetual_inventory": 1,
 				"abbr": args.get("company_abbr"),
 				"default_currency": args.get("currency"),

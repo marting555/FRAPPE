@@ -45,13 +45,13 @@
    "default": "ACC-BTN-.YYYY.-",
    "fieldname": "naming_series",
    "fieldtype": "Select",
-   "hidden": 1,
    "label": "Series",
    "no_copy": 1,
    "options": "ACC-BTN-.YYYY.-",
    "print_hide": 1,
    "reqd": 1,
-   "set_only_once": 1
+   "set_only_once": 1,
+   "read_only": 1
   },
   {
    "fieldname": "date",
