@@ -173,13 +173,19 @@ class Quotation(SellingController):
 		if not ordered_items:
 			return status
 
-		has_alternatives = any(row.is_alternative for row in self.get("items"))
-		self._items = self.get_valid_items() if has_alternatives else self.get("items")
+		items = (
+			self.get_valid_items()
+			if any(row.is_alternative for row in self.get("items"))
+			else self.get("items")
+		)
 
-		if any(row.qty > ordered_items.get(row.item_code, 0.0) for row in self._items):
-			status = "Partially Ordered"
-		else:
+		if all(
+			qty <= ordered_items.get(item_code, 0.0)
+			for item_code, qty in create_qty_dict_grouped_by_item(items).items()
+		):
 			status = "Ordered"
+		else:
+			status = "Partially Ordered"
 
 		return status
 
@@ -322,6 +328,13 @@ class Quotation(SellingController):
 		return rows_with_alternatives
 
 
+def create_qty_dict_grouped_by_item(items):
+	qty_grouped_by_item = {}
+	for row in items:
+		qty_grouped_by_item[row.item_code] = qty_grouped_by_item.get(row.item_code, 0) + row.qty
+	return qty_grouped_by_item
+
+
 def get_list_context(context=None):
 	from erpnext.controllers.website_list_for_contact import get_list_context
 
@@ -355,6 +368,9 @@ def make_sales_order(source_name: str, target_doc=None):
 
 
 def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
+	if frappe.get_value("Quotation", source_name, "status") in ["Lost", "Ordered"]:
+		frappe.throw(_("Cannot create Sales Order from a Lost or Ordered Quotation"))
+
 	customer = _make_customer(source_name, ignore_permissions)
 	ordered_items = frappe._dict(
 		frappe.db.get_all(
@@ -367,6 +383,9 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	)
 
 	selected_rows = [x.get("name") for x in frappe.flags.get("args", {}).get("selected_items", [])]
+	qty_grouped_by_item = create_qty_dict_grouped_by_item(
+		frappe.get_doc("Quotation", source_name).get("items")
+	)
 
 	def set_missing_values(source, target):
 		if customer:
@@ -396,14 +415,15 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		target.run_method("calculate_taxes_and_totals")
 
 	def update_item(obj, target, source_parent):
-		balance_qty = obj.qty - ordered_items.get(obj.item_code, 0.0)
-		target.qty = balance_qty if balance_qty > 0 else 0
+		target.qty = qty_grouped_by_item.get(obj.item_code) - ordered_items.get(obj.item_code, 0.0)
 		target.stock_qty = flt(target.qty) * flt(obj.conversion_factor)
 
 		if obj.against_blanket_order:
 			target.against_blanket_order = obj.against_blanket_order
 			target.blanket_order = obj.blanket_order
 			target.blanket_order_rate = obj.blanket_order_rate
+
+	item_list = []
 
 	def can_map_row(item) -> bool:
 		"""
@@ -412,7 +432,11 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		2. If selections: Is Alternative Item/Has Alternative Item: Map if selected and adequate qty
 		3. If selections: Simple row: Map if adequate qty
 		"""
-		balance_qty = item.qty - ordered_items.get(item.item_code, 0.0)
+		if item.item_code in item_list:
+			return False
+
+		item_list.append(item.item_code)
+		balance_qty = qty_grouped_by_item.get(item.item_code) - ordered_items.get(item.item_code, 0.0)
 		if balance_qty <= 0:
 			return False
 
