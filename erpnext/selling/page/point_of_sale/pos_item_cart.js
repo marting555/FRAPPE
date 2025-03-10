@@ -989,13 +989,13 @@ erpnext.PointOfSale.ItemCart = class {
 	}
 
 	fetch_customer_transactions() {
-		frappe.db
-			.get_list("POS Invoice", {
-				filters: { customer: this.customer_info.customer, docstatus: 1 },
-				fields: ["name", "grand_total", "status", "posting_date", "posting_time", "currency"],
-				limit: 20,
+		frappe
+			.call({
+				method: "erpnext.selling.page.point_of_sale.point_of_sale.get_customer_recent_transactions",
+				args: { customer: this.customer_info.customer },
 			})
 			.then((res) => {
+				res = res.message;
 				const transaction_container = this.$customer_section.find(".customer-transactions");
 
 				if (!res.length) {
@@ -1019,6 +1019,7 @@ erpnext.PointOfSale.ItemCart = class {
 						Draft: "red",
 						Return: "gray",
 						Consolidated: "blue",
+						"Credit Note Issued": "gray",
 					};
 
 					transaction_container.append(

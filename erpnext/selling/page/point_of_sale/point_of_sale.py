@@ -469,3 +469,23 @@ def get_invoice_filters(doctype, status, name=None, customer=None):
 		filters["is_consolidated"] = 0
 
 	return filters
+
+
+@frappe.whitelist()
+def get_customer_recent_transactions(customer):
+	sales_invoices = frappe.db.get_list(
+		"Sales Invoice",
+		filters={"customer": customer, "docstatus": 1, "is_pos": 1, "is_consolidated": 0},
+		fields=["name", "grand_total", "status", "posting_date", "posting_time", "currency"],
+		page_length=20,
+	)
+
+	pos_invoices = frappe.db.get_list(
+		"POS Invoice",
+		filters={"customer": customer, "docstatus": 1},
+		fields=["name", "grand_total", "status", "posting_date", "posting_time", "currency"],
+		page_length=20,
+	)
+
+	invoices = order_results_by_posting_date(sales_invoices + pos_invoices)
+	return invoices
