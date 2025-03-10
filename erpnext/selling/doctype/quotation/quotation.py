@@ -530,9 +530,9 @@ def _make_customer(source_name, ignore_permissions=False):
 
 	return None
 
-@if_app_installed("custom_crm")
+@if_app_installed("erpnext_crm")
 def create_customer_from_lead(lead_name, ignore_permissions=False):
-	from custom_crm.crm.doctype.lead.lead import _make_customer
+	from erpnext_crm.crm.doctype.lead.lead import _make_customer
 
 	customer = _make_customer(lead_name, ignore_permissions=ignore_permissions)
 	customer.flags.ignore_permissions = ignore_permissions
@@ -543,9 +543,9 @@ def create_customer_from_lead(lead_name, ignore_permissions=False):
 	except frappe.MandatoryError as e:
 		handle_mandatory_error(e, customer, lead_name)
 
-@if_app_installed("custom_crm")
+@if_app_installed("erpnext_crm")
 def create_customer_from_prospect(prospect_name, ignore_permissions=False):
-	from custom_crm.crm.doctype.prospect.prospect import make_customer as make_customer_from_prospect
+	from erpnext_crm.crm.doctype.prospect.prospect import make_customer as make_customer_from_prospect
 
 	customer = make_customer_from_prospect(prospect_name)
 	customer.flags.ignore_permissions = ignore_permissions

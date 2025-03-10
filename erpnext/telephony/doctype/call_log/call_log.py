@@ -46,10 +46,10 @@ class CallLog(Document):
 	def validate(self):
 		deduplicate_dynamic_links(self)
 
-	@if_app_installed("custom_crm")
+	@if_app_installed("erpnext_crm")
 	def before_insert(self):
-		from custom_crm.crm.doctype.lead.lead import get_lead_with_phone_number
-		from custom_crm.crm.doctype.utils import get_scheduled_employees_for_popup, strip_number
+		from erpnext_crm.crm.doctype.lead.lead import get_lead_with_phone_number
+		from erpnext_crm.crm.doctype.utils import get_scheduled_employees_for_popup, strip_number
 		"""Add lead(third party person) links to the document."""
 		lead_number = self.get("from") if self.is_incoming_call() else self.get("to")
 		lead_number = strip_number(lead_number)
@@ -95,9 +95,9 @@ class CallLog(Document):
 	def add_link(self, link_type, link_name):
 		self.append("links", {"link_doctype": link_type, "link_name": link_name})
 
-	@if_app_installed("custom_crm")
+	@if_app_installed("erpnext_crm")
 	def trigger_call_popup(self):
-		from custom_crm.crm.doctype.utils import get_scheduled_employees_for_popup
+		from erpnext_crm.crm.doctype.utils import get_scheduled_employees_for_popup
 		if not self.is_incoming_call():
 			return
 
@@ -136,9 +136,9 @@ def add_call_summary_and_call_type(call_log, summary, call_type):
 	doc.save()
 	doc.add_comment("Comment", frappe.bold(_("Call Summary")) + "<br><br>" + summary)
 
-@if_app_installed("custom_crm")
+@if_app_installed("erpnext_crm")
 def get_employees_with_number(number):
-	from custom_crm.crm.doctype.utils import get_scheduled_employees_for_popup, strip_number
+	from erpnext_crm.crm.doctype.utils import get_scheduled_employees_for_popup, strip_number
 	number = strip_number(number)
 	if not number:
 		return []
@@ -157,9 +157,9 @@ def get_employees_with_number(number):
 
 	return employee_doc_name_and_emails
 
-@if_app_installed("custom_crm")
+@if_app_installed("erpnext_crm")
 def link_existing_conversations(doc, state):
-	from custom_crm.crm.doctype.utils import get_scheduled_employees_for_popup, strip_number
+	from erpnext_crm.crm.doctype.utils import get_scheduled_employees_for_popup, strip_number
 	"""
 	Called from hooks on creation of Contact or Lead to link all the existing conversations.
 	"""

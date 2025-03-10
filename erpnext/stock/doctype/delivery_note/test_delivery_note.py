@@ -2680,11 +2680,11 @@ class TestDeliveryNote(FrappeTestCase):
 		dn = create_delivery_note(posting_date="2025-01-01",do_not_submit=True)
 		self.assertRaises(StockFreezeError, dn.submit)
 
-	@if_app_installed("custom_crm")
+	@if_app_installed("erpnext_crm")
 	def test_dn_submission_TC_SCK_148(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 		from erpnext.buying.doctype.supplier.test_supplier import create_supplier
-		# from custom_crm.crm.doctype.lead.lead import make_customer
+		# from erpnext_crm.crm.doctype.lead.lead import make_customer
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 		"""Test Purchase Receipt Creation, Submission, and Stock Ledger Update"""
 

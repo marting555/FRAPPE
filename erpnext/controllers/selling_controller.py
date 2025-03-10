@@ -55,7 +55,7 @@ class SellingController(StockController):
 		self.set_missing_lead_customer_details(for_validate=for_validate)
 		self.set_price_list_and_item_details(for_validate=for_validate)
 
-	@if_app_installed("custom_crm")
+	@if_app_installed("erpnext_crm")
 	def set_missing_lead_customer_details(self, for_validate=False):
 		customer, lead = None, None
 		if getattr(self, "customer", None):
@@ -91,7 +91,7 @@ class SellingController(StockController):
 			self.update_if_missing(party_details)
 
 		elif lead:
-			from custom_crm.crm.doctype.lead.lead import get_lead_details
+			from erpnext_crm.crm.doctype.lead.lead import get_lead_details
 
 			self.update_if_missing(
 				get_lead_details(
