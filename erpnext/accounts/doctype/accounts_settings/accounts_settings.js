@@ -22,4 +22,18 @@ frappe.ui.form.on("Accounts Settings", {
 			}
 		);
 	},
+	validate: async function (frm) {
+		const use_sales_invoice = await frappe.db.get_single_value("Accounts Settings", "use_sales_invoice");
+		const pos_opening_entry_count = await frappe.db.count("POS Opening Entry", {
+			filters: { docstatus: 1, status: "Open" },
+		});
+
+		if (frm.doc.use_sales_invoice != use_sales_invoice && pos_opening_entry_count > 0) {
+			frappe.throw(
+				__("{0} can be enabled/disabled only if all the POS Profiles are closed.", [
+					__("Use Sales Invoice").bold(),
+				])
+			);
+		}
+	},
 });
