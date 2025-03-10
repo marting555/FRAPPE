@@ -2308,8 +2308,6 @@ class AccountsController(TransactionBase):
 				and self.linked_order_has_payment_terms(po_or_so, fieldname, doctype)
 			):
 				self.fetch_payment_terms_from_order(po_or_so, doctype)
-				if self.get("payment_terms_template"):
-					self.ignore_default_payment_terms_template = 1
 			elif self.get("payment_terms_template"):
 				data = get_payment_terms(
 					self.payment_terms_template, posting_date, grand_total, base_grand_total
@@ -2349,7 +2347,6 @@ class AccountsController(TransactionBase):
 					)
 		else:
 			self.fetch_payment_terms_from_order(po_or_so, doctype)
-			self.ignore_default_payment_terms_template = 1
 
 	def get_order_details(self):
 		if not self.get("items"):
