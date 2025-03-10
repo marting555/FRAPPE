@@ -134,6 +134,120 @@ frappe.ui.form.on("Job Card", {
 		}
 	},
 
+<<<<<<< HEAD
+=======
+	complete_job_card(frm) {
+		let fields = [
+			{
+				fieldtype: "Float",
+				label: __("Completed Quantity"),
+				fieldname: "qty",
+				reqd: 1,
+				default: frm.doc.for_quantity - frm.doc.total_completed_qty,
+			},
+			{
+				fieldtype: "Datetime",
+				label: __("End Time"),
+				fieldname: "end_time",
+				default: frappe.datetime.now_datetime(),
+			},
+		];
+
+		frappe.prompt(
+			fields,
+			(data) => {
+				if (data.qty <= 0) {
+					frappe.throw(__("Quantity should be greater than 0"));
+				}
+
+				frm.call({
+					method: "complete_job_card",
+					doc: frm.doc,
+					args: {
+						qty: data.qty,
+						end_time: data.end_time,
+					},
+					callback: function (r) {
+						frm.reload_doc();
+					},
+				});
+			},
+			__("Enter Value"),
+			__("Update"),
+			__("Set Finished Good Quantity")
+		);
+	},
+
+	make_subcontracting_po(frm) {
+		if (frm.doc.docstatus === 1 && frm.doc.for_quantity > frm.doc.manufactured_qty) {
+			frm.add_custom_button(__("Make Subcontracting PO"), () => {
+				frappe.model.open_mapped_doc({
+					method: "erpnext.manufacturing.doctype.job_card.job_card.make_subcontracting_po",
+					frm: frm,
+				});
+			}).addClass("btn-primary");
+		}
+	},
+
+	start_timer(frm, start_time, employees) {
+		frm.call({
+			method: "start_timer",
+			doc: frm.doc,
+			args: {
+				start_time: start_time,
+				employees: employees,
+			},
+			callback: function (r) {
+				frm.reload_doc();
+				frm.trigger("make_dashboard");
+			},
+		});
+	},
+
+	make_finished_good(frm) {
+		let fields = [
+			{
+				fieldtype: "Float",
+				label: __("Completed Quantity"),
+				fieldname: "qty",
+				reqd: 1,
+				default: frm.doc.for_quantity - frm.doc.manufactured_qty,
+			},
+			{
+				fieldtype: "Datetime",
+				label: __("End Time"),
+				fieldname: "end_time",
+				default: frappe.datetime.now_datetime(),
+			},
+		];
+
+		frappe.prompt(
+			fields,
+			(data) => {
+				if (data.qty <= 0) {
+					frappe.throw(__("Quantity should be greater than 0"));
+				}
+
+				frm.call({
+					method: "make_finished_good",
+					doc: frm.doc,
+					args: {
+						qty: data.qty,
+						end_time: data.end_time,
+					},
+					callback: function (r) {
+						var doc = frappe.model.sync(r.message);
+						frappe.set_route("Form", doc[0].doctype, doc[0].name);
+					},
+				});
+			},
+			__("Enter Value"),
+			__("Update"),
+			__("Set Finished Good Quantity")
+		);
+	},
+
+>>>>>>> db93302a53 (fix: show remaining qty on 'Complete Job' button instead of full qty)
 	setup_quality_inspection: function (frm) {
 		let quality_inspection_field = frm.get_docfield("quality_inspection");
 		quality_inspection_field.get_route_options_for_new_doc = function (frm) {
