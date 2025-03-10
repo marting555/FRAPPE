@@ -281,7 +281,7 @@ class TestQualityInspection(FrappeTestCase):
 
 	def test_qa_for_pr_TC_SCK_159(self):
 		item_code = create_item("_Test Item with QA", valuation_rate=200).name
-		pr = make_purchase_receipt(item_code = item_code)
+		pr = make_purchase_receipt(item_code = item_code, do_not_submit=True)
 		frappe.db.set_value("Item", "_Test Item with QA", "inspection_required_before_purchase", 1)
 
 		qa = create_quality_inspection(
@@ -292,6 +292,8 @@ class TestQualityInspection(FrappeTestCase):
 		self.assertEqual(qa.docstatus, 0)
 		qa.submit()
 		qa.reload()
+		pr.reload()
+		pr.submit()
 		self.assertEqual(qa.status, "Accepted")
 
 		qa.reload()
@@ -359,7 +361,7 @@ class TestQualityInspection(FrappeTestCase):
 
 	def test_qa_for_pr_out_TC_SCK_162(self):
 		item_code = create_item("_Test Item with QA", valuation_rate=200).name
-		pr = make_purchase_receipt(item_code = item_code)
+		pr = make_purchase_receipt(item_code = item_code, do_not_submit=True)
 		frappe.db.set_value("Item", "_Test Item with QA", "inspection_required_before_purchase", 1)
 
 		qa = create_quality_inspection(
@@ -369,6 +371,8 @@ class TestQualityInspection(FrappeTestCase):
 		qa.reload()
 		self.assertEqual(qa.docstatus, 0)
 		qa.submit()
+		pr.reload()
+		pr.submit()
 		qa.reload()
 		self.assertEqual(qa.status, "Accepted")
 
@@ -431,7 +435,7 @@ class TestQualityInspection(FrappeTestCase):
 
 	def test_qa_for_pr_proc_TC_SCK_166(self):
 		item_code = create_item("_Test Item with QA", valuation_rate=200).name
-		pr = make_purchase_receipt(item_code = item_code)
+		pr = make_purchase_receipt(item_code = item_code, do_not_submit=True)
 		frappe.db.set_value("Item", "_Test Item with QA", "inspection_required_before_purchase", 1)
 
 		qa = create_quality_inspection(
@@ -442,6 +446,8 @@ class TestQualityInspection(FrappeTestCase):
 		self.assertEqual(qa.docstatus, 0)
 		qa.submit()
 		qa.reload()
+		pr.reload()
+		pr.submit()
 		self.assertEqual(qa.status, "Accepted")
 
 		qa.reload()
