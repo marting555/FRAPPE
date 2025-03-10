@@ -54,7 +54,13 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 	def setUp(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 		create_company()
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company"
+		)
 		self.create_customer("_Test Customer Credit")
 
 	def tearDown(self):
@@ -4483,6 +4489,18 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 	
 	@change_settings("Stock Settings", {"enable_stock_reservation": 1})
 	def test_sales_order_for_stock_reservation_TC_S_063(self, reuse=None, get_so_with_stock_reserved=None):
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
+		make_item("_Test Item")
+		create_company()
+		create_customer("_Test Customer",currency = "INR")
+		frappe.db.set_value('Customer Credit Limit',{'parent':'_Test Customer'},'credit_limit',0)
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
+			company="_Test Company"
+		)
+		get_or_create_fiscal_year("_Test Company")
 		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="_Test Warehouse - _TC")
   
 		stock_setting = frappe.get_doc('Stock Settings')
@@ -4653,8 +4671,20 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(cn.status, "Return", "Credit Note not created")
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Sales - _TC'}, 'credit'), 5000)
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Debtors - _TC'}, 'debit'), 5000)
-  
+	
+	@change_settings("Stock Settings", {"enable_stock_reservation": 1})
 	def test_sales_order_for_stock_reservation_with_pick_list_TC_S_069(self):
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
+		create_customer("_Test Customer",currency="INR")
+		make_item("_Test Item", {"is_stock_item": 1})
+		get_or_create_fiscal_year("_Test Company")
+
 		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="_Test Warehouse - _TC")
   
 		stock_setting = frappe.get_doc('Stock Settings')
@@ -4713,17 +4743,18 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(si.status, 'Unpaid')
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Sales - _TC'}, 'credit'), 5000)
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name, 'account': 'Debtors - _TC'}, 'debit'), 5000)
-  
+	
+	@change_settings("Stock Settings", {"enable_stock_reservation": 1})
 	def test_sales_order_for_auto_stock_reservation_TC_S_070(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
 		from erpnext.buying.doctype.supplier.test_supplier import create_supplier
-		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 		create_company()
 		make_item("_Test Item", {"is_stock_item": 1})
 		create_customer("_Test Customer")
 		create_supplier(supplier_name="_Test Supplier")
 		get_or_create_fiscal_year('_Test Company')
 		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="_Test Warehouse - _TC")
+		frappe.db.set_value('Customer Credit Limit',{'parent':'_Test Customer'},'credit_limit',0)
   
 		stock_setting = frappe.get_doc('Stock Settings')
 		stock_setting.auto_reserve_stock_for_sales_order_on_purchase = 1
@@ -4758,7 +4789,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(pr.status, "To Bill")
 		qty_change = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': pr.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
 		self.assertEqual(qty_change, 1)
-	
 		self.assertEqual(frappe.db.get_value("Stock Reservation Entry", {"voucher_no": so.name, "from_voucher_no": pr.name}, "status"), "Reserved")
   
 		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
