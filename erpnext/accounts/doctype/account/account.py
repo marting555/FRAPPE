@@ -610,6 +610,7 @@ def _ensure_idle_system():
 		# We also lock inserts to GL entry table with for_update here.
 		last_gl_update = frappe.db.get_value("GL Entry", {}, "modified", for_update=True, wait=False)
 	except frappe.QueryTimeoutError:
+		last_gl_update = now_datetime()
 		# wait=False fails immediately if there's an active transaction.
 		last_gl_update = add_to_date(now_datetime(), seconds=-1)
 
