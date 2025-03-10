@@ -4,6 +4,7 @@
 
 import frappe
 from frappe import _, throw
+from frappe.utils import now_datetime
 from frappe.utils import add_to_date, cint, cstr, pretty_date
 from frappe.utils.nestedset import NestedSet, get_ancestors_of, get_descendants_of
 
@@ -610,9 +611,9 @@ def _ensure_idle_system():
 		last_gl_update = frappe.db.get_value("GL Entry", {}, "modified", for_update=True, wait=False)
 	except frappe.QueryTimeoutError:
 		# wait=False fails immediately if there's an active transaction.
-		last_gl_update = add_to_date(None, seconds=-1)
+		last_gl_update = add_to_date(now_datetime(), seconds=-1)
 
-	if last_gl_update > add_to_date(None, minutes=-5):
+	if last_gl_update > add_to_date(now_datetime(), minutes=-5):
 		frappe.throw(
 			_(
 				"Last GL Entry update was done {}. This operation is not allowed while system is actively being used. Please wait for 5 minutes before retrying."
