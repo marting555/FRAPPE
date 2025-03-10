@@ -599,25 +599,27 @@ def sync_update_account_number_in_child(
 
 
 def _ensure_idle_system():
-	# Don't allow renaming if accounting entries are actively being updated, there are two main reasons:
-	# 1. Correctness: It's next to impossible to ensure that renamed account is not being used *right now*.
-	# 2. Performance: Renaming requires locking out many tables entirely and severely degrades performance.
-
+	
 	if frappe.flags.in_test:
 		return
 
 	try:
-		# We also lock inserts to GL entry table with for_update here.
 		last_gl_update = frappe.db.get_value("GL Entry", {}, "modified", for_update=True, wait=False)
 	except frappe.QueryTimeoutError:
 		last_gl_update = now_datetime()
-		# wait=False fails immediately if there's an active transaction.
-		last_gl_update = add_to_date(now_datetime(), seconds=-1)
+		frappe.logger().info("QueryTimeoutError: Setting last_gl_update to current time.")
+
+	if last_gl_update is None:
+		last_gl_update = add_to_date(now_datetime(), minutes=-10)
+		frappe.logger().info("No GL Entry records found. Setting last_gl_update to a time in the past.")
+
+	frappe.logger().info(f"last_gl_update: {last_gl_update}")
+	frappe.logger().info(f"Comparison time: {add_to_date(now_datetime(), minutes=-5)}")
 
 	if last_gl_update > add_to_date(now_datetime(), minutes=-5):
 		frappe.throw(
 			_(
-				"Last GL Entry update was done {}. This operation is not allowed while system is actively being used. Please wait for 5 minutes before retrying."
+				"Last GL Entry update was done {}. This operation is not allowed while the system is actively being used. Please wait for 5 minutes before retrying."
 			).format(pretty_date(last_gl_update)),
 			title=_("System In Use"),
 		)
