@@ -152,4 +152,19 @@ frappe.ui.form.on("POS Profile", {
 			);
 		}
 	},
+
+	validate: async function (frm) {
+		const r = await frappe.db.get_value("POS Profile", frm.doc.name, "real_time_update");
+		const pos_opening_entry_count = await frappe.db.count("POS Opening Entry", {
+			filters: { pos_profile: frm.doc.name, docstatus: 1, status: "Open" },
+		});
+
+		if (frm.doc.real_time_update != r.message.real_time_update && pos_opening_entry_count > 0) {
+			frappe.throw(
+				__("{0} cannot be changed when POS Opening Entry is open.", [
+					__("Real-time update of G/L and Stock Ledger").bold(),
+				])
+			);
+		}
+	},
 });
