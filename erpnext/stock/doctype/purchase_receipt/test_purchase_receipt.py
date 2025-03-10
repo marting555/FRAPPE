@@ -4238,6 +4238,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 				"item_group": "Test Item Group",
 				"is_stock_item": 1,
 				"is_purchase_item": 1,
+				"gst_hsn_code": "01011010",
 				"has_serial_no": 1,
 				"serial_no_series": "SERI-.#####",
 				"company": company
