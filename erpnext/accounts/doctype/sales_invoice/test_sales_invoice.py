@@ -4685,6 +4685,8 @@ class TestSalesInvoice(FrappeTestCase):
 	def test_sales_invoice_without_sales_order_with_gst_TC_S_016(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
+		create_registered_company()
+		
 		if not frappe.db.exists("Warehouse", "Stores - _TIRC"):
 			create_warehouse("Stores - _TIRC", company="_Test Indian Registered Company")
 
@@ -4757,6 +4759,8 @@ class TestSalesInvoice(FrappeTestCase):
 	
 	def test_sales_invoice_with_update_stock_checked_with_gst_TC_S_017(self): 
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+
+		create_registered_company()
 
 		if not frappe.db.exists("Warehouse", "Stores - _TIRC"):
 			create_warehouse("Stores - _TIRC", company="_Test Indian Registered Company")
@@ -7226,3 +7230,15 @@ def get_active_fiscal_year():
 		}).insert(ignore_permissions=True).name
 
 	return get_fiscal_year
+
+def create_registered_company():
+	frappe.set_user("Administrator")
+	if not frappe.db.exists("Company", "_Test Indian Registered Company"):
+		frappe.get_doc({
+			"doctype": "Company",
+			"company_name": "_Test Indian Registered Company",
+			"company_type": "Company",
+			"default_currency": "INR",
+			"company_email": "test@example.com",
+			"abbr":"_TIRC"
+		}).insert(ignore_permissions=True)
