@@ -39,16 +39,6 @@ from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_ent
 
 
 class TestMaterialRequest(FrappeTestCase):
-	def setUp(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
-		create_company()
-		create_customer("_Test Customer")
-		create_warehouse(
-			warehouse_name="_Test Warehouse - _TC",
-			properties={"parent_warehouse": "All Warehouses - _TC"},
-			company="_Test Company",
-		)
-	
 	def test_make_purchase_order(self):
 		mr = frappe.copy_doc(test_records[0]).insert()
 
@@ -2758,21 +2748,7 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(doc_pi.docstatus, 1)
 
 	def test_create_mr_to_po_to_pr_cancel_TC_SCK_055(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
-		create_company()
-		create_customer("_Test Customer")
-		make_item("_Test Item", {"is_stock_item": 1})
-		create_supplier(supplier_name="_Test Supplier")
-
-		get_or_create_fiscal_year("_Test Company")
-		create_warehouse(
-				warehouse_name="_Test Warehouse - _TC",
-				properties={"parent_warehouse": "All Warehouses - _TC"},
-				company="_Test Company",
-			)
-
-		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company"},"name")
-		mr = make_material_request(uom="Unit",cost_center = cost_center[1].name)
+		mr = make_material_request()
 
 		po = make_purchase_order(mr.name)
 		po.supplier = "_Test Supplier"
@@ -2791,11 +2767,13 @@ class TestMaterialRequest(FrappeTestCase):
 		
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
-			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit_in_transaction_currency')
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
+			self.assertEqual(gl_temp_credit, 1000)
 		
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
-			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit_in_transaction_currency')
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit')
+			self.assertEqual(gl_stock_debit, 1000)
 
 		#PR Cancel
 		pr.cancel()
@@ -2806,13 +2784,13 @@ class TestMaterialRequest(FrappeTestCase):
 		
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
-			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'debit_in_transaction_currency', order_by="creation DESC")
-			self.assertEqual(gl_stock_debit, 0)
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
+			self.assertEqual(gl_temp_credit, 0)
 		
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
-			gl_stock_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'credit_in_transaction_currency',order_by="creation DESC")
-			self.assertEqual(gl_stock_credit, 0)
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit')
+			self.assertEqual(gl_stock_debit, 0)
 
 	def test_create_material_req_to_2po_to_2pr_cancel_TC_SCK_056(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
@@ -4418,21 +4396,9 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(gl_stock_debit, 500)
 
 	def test_create_mr_to_2po_to_1pr_part_return_TC_SCK_042(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
-		create_company()
-		create_customer("_Test Customer")
-		create_supplier(supplier_name="_Test Supplier")
-		make_item("_Test Item", {"is_stock_item": 1})
-		frappe.db.set_value("Stock Settings","Stock Settings","enable_stock_reservation",1)
-		get_or_create_fiscal_year('_Test Company')
-		create_warehouse(
-				warehouse_name="_Test Warehouse - _TC",
-				properties={"parent_warehouse": "All Warehouses - _TC"},
-				company="_Test Company",
-			)
-
-		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company"},"name")
-		mr = make_material_request(uom = "Unit" ,cost_center = cost_center[1].name)
+		mr = make_material_request()
+		
+		#partially qty
 		po = make_purchase_order(mr.name)
 		po.supplier = "_Test Supplier"
 		po.get("items")[0].rate = 100
@@ -4459,12 +4425,12 @@ class TestMaterialRequest(FrappeTestCase):
 		
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
-			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit_in_transaction_currency')
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
 			self.assertEqual(gl_temp_credit, 1000)
 		
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
-			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit_in_transaction_currency')
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit')
 			self.assertEqual(gl_stock_debit, 1000)
 
 		#Return PI's
@@ -4478,30 +4444,18 @@ class TestMaterialRequest(FrappeTestCase):
 		pr.reload()
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
-			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit_in_transaction_currency')
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit')
 			self.assertEqual(gl_temp_credit, 1000)
 		
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
-			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit_in_transaction_currency')
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit')
 			self.assertEqual(gl_stock_debit, 1000)
 
 	def test_create_mr_to_2po_to_2pi_partial_return_TC_SCK_106(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
-		create_company()
-		create_customer("_Test Customer")
-		make_item("_Test Item", {"is_stock_item": 1})
-		create_supplier(supplier_name="_Test Supplier")
-		frappe.db.set_value("Stock Settings","Stock Settings","enable_stock_reservation",1)
-		create_warehouse(
-				warehouse_name="_Test Warehouse - _TC",
-				properties={"parent_warehouse": "All Warehouses - _TC"},
-				company="_Test Company",
-			)
-		get_or_create_fiscal_year('_Test Company')
-
-		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company"},"name")
-		mr = make_material_request(uom = "Unit",cost_center = cost_center[1].name)
+		mr = make_material_request()
+		
+		#partially qty
 		po = make_purchase_order(mr.name)
 		po.supplier = "_Test Supplier"
 		po.get("items")[0].rate = 100
@@ -4561,31 +4515,17 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_create_mr_for_purchase_2po_to_1pr_TC_SCK_021(self):
 		from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import get_sl_entries, get_gl_entries
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
 
-		create_company()
-		create_customer(name = '_Test Customer')
-		create_warehouse(
-			warehouse_name="_Test Warehouse - _TC",
-			properties={"parent_warehouse": "All Warehouses - _TC"},
-			company="_Test Company",
-		)
-		create_item("_Test Item",warehouse="_Test Warehouse - _TC")
-		create_supplier(supplier_name="_Test Supplier")
 		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
 		frappe.db.set_value("Company", "_Test Company", "stock_adjustment_account", "Stock Adjustment - _TC")
 		frappe.db.set_value(
 			"Company", "_Test Company", "stock_received_but_not_billed", "Stock Received But Not Billed - _TC"
 		)
-		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company"},"name")
-		get_or_create_fiscal_year('_Test Company')
 		mr = make_material_request(
 			material_request_type="Purchase",
 			qty=10,
 			item_code="_Test Item",
 			rate=100,
-			uom = "Box",
-			cost_center = cost_center[1].name,
 			do_not_submit=True
 		)
 		mr.transaction_date = "01-08-2024"
@@ -4622,13 +4562,15 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(expected_sle[sle.warehouse], sle.actual_qty)
 
 		# check gl entries
-		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
-			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock Received But Not Billed - _TC'},'credit_in_transaction_currency')
-			self.assertEqual(gl_temp_credit, 1000)
+		gl_entries = get_gl_entries("Purchase Receipt", pr.name)
+		expected_values = {
+			stock_in_hand_account: [1000.0, 0.0],
+			"Stock Received But Not Billed - _TC": [0.0, 1000.0],
+		}
 
-		if frappe.db.exists('GL Entry',{'account': 'Stock In Hand - _TC'}):
-			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit_in_transaction_currency')
-			self.assertEqual(gl_stock_debit, 1000)
+		for gle in gl_entries:
+			self.assertEqual(expected_values[gle.account][0], gle.debit)
+			self.assertEqual(expected_values[gle.account][1], gle.credit)
 
 	def test_fetching_item_from_open_mr_TC_B_096(self):
 		#Scenario :Fetching Items from Open Material Requests
@@ -4894,19 +4836,7 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(doc_po.status, 'Completed')
 
 	def test_create_mr_to_2po_to_1pi_partial_return_TC_SCK_107(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
-		create_company()
-		create_item("_Test Item",warehouse="Stores - _TC")
-		create_supplier(supplier_name="_Test Supplier")
-		create_customer("_Test Customer")
-		create_warehouse(
-			warehouse_name="_Test Warehouse - _TC",
-			properties={"parent_warehouse": "All Warehouses - _TC"},
-			company="_Test Company",
-		)
-		get_or_create_fiscal_year('_Test Company')
-		cost_center = frappe.db.get_all('Cost Center',{'company':"_Test Company"},"name")
-		mr = make_material_request(uom ="Box",cost_center = cost_center[1].name)
+		mr = make_material_request()
 		
 		#partially qty
 		po = make_purchase_order(mr.name)
@@ -4999,22 +4929,19 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_po_2pi_serial_TC_SCK_093(self):
 		# MR =>  PO => 2PI
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
 		create_company()
-		create_customer("_Test Customer")
-		create_supplier(supplier_name="_Test Supplier")
-		get_or_create_fiscal_year('_Test Company')
-		supplier = create_supplier(supplier_name="_Test Supplier MR" ,properties={"parent_warehouse": "All Warehouses - _TC"})
-		warehouse = create_warehouse("_Test warehouse PO", properties={"parent_warehouse": "All Warehouses - _TC"})
-		item = make_item("_Test MR")
+		create_fiscal_year()
+		supplier = create_supplier(supplier_name="_Test Supplier MR")
+		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
+		item = item_create("_Test MR")
+
 		mr_dict_list = [{
-				"company" : "_Test Company",
+				"company" : "_Test Company MR",
 				"item_code" : item.item_code,
 				"warehouse" : warehouse,
-				"cost_center" : frappe.db.get_value("Company","_Test Company","cost_center"),
+				"cost_center" : frappe.db.get_value("Company","_Test Company MR","cost_center"),
 				"qty" : 2,
 				"rate" : 100,
-				"uom" : "Box"
 			},
 		]
 
@@ -5024,7 +4951,7 @@ class TestMaterialRequest(FrappeTestCase):
 		doc_po = make_test_po(doc_mr.name)
 		doc_pi = create_purchase_invoice(doc_po.name)
 		doc_pi.update_stock = 1
-		doc_pi.items[0].has_serial_no = 1
+		doc_pi.has_serial_no = 1
 		doc_pi.set_warehouse = warehouse
 		doc_pi.items[0].qty = 1
 		doc_pi.items[0].serial_no = "013 - MR"
@@ -5060,7 +4987,7 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(gl_temp_credit, 100)
 		
 		credit_account = frappe.db.get_value("Company","_Test Company MR","default_payable_account")
-		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':doc_pi.name},'credit')
+		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':doc_pi1.name, 'account': credit_account},'credit')
 		self.assertEqual(gl_stock_debit, 100)
 
 		serial_cnt = frappe.db.count('Serial No',{'purchase_document_no':doc_pi1.name})
@@ -7889,37 +7816,3 @@ def get_fiscal_year(company):
 		fiscal_year.save()
 	else:
 		create_fiscal_with_company(company)
-
-def get_or_create_fiscal_year(company):
-	from datetime import datetime
-	current_date = datetime.today()
-	formatted_date = current_date.strftime("%m-%d-%Y")
-	existing_fy = frappe.get_all(
-		"Fiscal Year",
-		filters={ 
-			"year_start_date": ["<=", formatted_date],
-			"year_end_date": [">=", formatted_date],
-		},
-		fields=["name"]
-	)
-
-	if existing_fy:
-		fiscal_year = frappe.get_doc("Fiscal Year",existing_fy[0].name)
-		for years in fiscal_year.companies:
-			if years.company == company:
-				pass
-			else:
-				fiscal_year.append("companies", {"company": company})
-				fiscal_year.save()
-	else:
-		current_year = datetime.now().year
-		first_date = f"01-01-{current_year}"
-		last_date = f"31-12-{current_year}"
-		fiscal_year = frappe.new_doc("Fiscal Year")
-		fiscal_year.year = f"{current_year}"
-		fiscal_year.year_start_date = first_date
-		fiscal_year.year_end_date = last_date
-		fiscal_year.append('companies',{
-			'company':company
-		})
-		fiscal_year.save()
