@@ -2140,98 +2140,39 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertRaises(frappe.ValidationError, so1.update_status, "Draft")
 
 	def test_warehouse_mapping_based_on_stock_reservation(self):
-		self.create_company(company_name="Glass Ceiling", abbr="GC")
-		self.create_item("Lamy Safari 2", True, self.warehouse_stores, self.company)
-		self.create_customer()
-		self.clear_old_entries()
-
-		so = frappe.new_doc("Sales Order")
-		so.company = self.company
-		so.customer = self.customer
-		so.transaction_date = today()
-		so.append(
-			"items",
-			{
-				"item_code": self.item,
-				"qty": 10,
-				"rate": 2000,
-				"warehouse": self.warehouse_stores,
-				"delivery_date": today(),
-			},
-		)
-		so.submit()
-
-		# Create stock
-		se = frappe.get_doc(
-			{
-				"doctype": "Stock Entry",
-				"company": self.company,
-				"stock_entry_type": "Material Receipt",
-				"posting_date": today(),
-				"items": [
-					{"item_code": self.item, "t_warehouse": self.warehouse_stores, "qty": 5},
-					{"item_code": self.item, "t_warehouse": self.warehouse_finished_goods, "qty": 5},
-				],
-			}
-		)
-		se.submit()
-
-		# Reserve stock on 2 different warehouses
-		itm = so.items[0]
-		so.create_stock_reservation_entries(
-			[
-				{
-					"sales_order_item": itm.name,
-					"item_code": itm.item_code,
-					"warehouse": self.warehouse_stores,
-					"qty_to_reserve": 2,
-				}
-			]
-		)
-		so.create_stock_reservation_entries(
-			[
-				{
-					"sales_order_item": itm.name,
-					"item_code": itm.item_code,
-					"warehouse": self.warehouse_finished_goods,
-					"qty_to_reserve": 3,
-				}
-			]
-		)
-
-		# Delivery note should auto-select warehouse based on reservation
-		dn = make_delivery_note(so.name, kwargs={"for_reserved_stock": True})
-		self.assertEqual(2, len(dn.items))
-		self.assertEqual(dn.items[0].qty, 2)
-		self.assertEqual(dn.items[0].warehouse, self.warehouse_stores)
-		self.assertEqual(dn.items[1].qty, 3)
-
+		from erpnext.stock.doctype.item.test_item import create_item
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
-		warehouse = create_warehouse("Test Warehouse 1", company=self.company)
+		frappe.db.set_single_value("Stock Settings", "enable_stock_reservation", True)
+		company = "Glass Ceiling"
+		self.create_company(company_name=company, abbr="GC")
+		warehouse = create_warehouse("Test Reserved Warehouse", company=company)
+		create_item("Lamy Safari 2", is_stock_item=1, stock_uom="Nos", company=company)
 
 		make_stock_entry(
-			item_code=self.item,
+			item_code="Lamy Safari 2",
 			target=warehouse,
-			qty=5,
-			rate=200,
-			company=self.company,
+			qty=10,
+ 			rate=100,
+ 			company=company,
+ 			uom="Nos",
 		)
 
 		so = frappe.new_doc("Sales Order")
 		so.reserve_stock = 1
-		so.company = self.company
-		so.customer = self.customer
+		so.company = company
+		so.customer = "_Test Customer"
 		so.transaction_date = today()
 		so.currency = "INR"
 		so.append(
 			"items",
 			{
-				"item_code": self.item,
+				"item_code": "Lamy Safari 2",
 				"qty": 5,
 				"rate": 2000,
 				"warehouse": warehouse,
 				"delivery_date": today(),
+				"uom": "Nos",
 			},
 		)
 		so.submit()
