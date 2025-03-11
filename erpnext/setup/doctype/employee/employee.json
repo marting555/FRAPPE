@@ -822,11 +822,7 @@
  "image_field": "image",
  "is_tree": 1,
  "links": [],
- <<<<<<< HEAD
- "modified": "2024-01-03 17:36:20.984421",
- =======
   "modified": "2025-02-07 13:54:40.122345",
- >>>>>>> 0207d2d7b6 (fix: unable to remove image from employee)
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Employee",
