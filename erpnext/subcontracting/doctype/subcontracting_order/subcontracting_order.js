@@ -254,9 +254,10 @@ erpnext.buying.SubcontractingOrderController = class SubcontractingOrderControll
 			.then((over_delivery_receipt_allowance) => {
 				var me = this;
 
+				let can_receive_more_items = me.can_receive_more_items(over_delivery_receipt_allowance);
 				if (doc.docstatus == 1) {
 					if (doc.status != "Closed") {
-						if (flt(doc.per_received) < 100 + over_delivery_receipt_allowance) {
+						if (can_receive_more_items) {
 							this.frm.add_custom_button(
 								__("Subcontracting Receipt"),
 								this.make_subcontracting_receipt,
@@ -270,10 +271,7 @@ erpnext.buying.SubcontractingOrderController = class SubcontractingOrderControll
 								);
 							}
 						}
-						if (
-							flt(doc.per_received) < 100 + over_delivery_receipt_allowance &&
-							me.has_unsupplied_items()
-						) {
+						if (me.has_unsupplied_items()) {
 							this.frm.page.set_inner_btn_group_as_primary(__("Transfer"));
 						} else {
 							this.frm.page.set_inner_btn_group_as_primary(__("Create"));
@@ -308,6 +306,13 @@ erpnext.buying.SubcontractingOrderController = class SubcontractingOrderControll
 		return this.frm.doc["supplied_items"].some((item) => {
 			let required_qty = item.required_qty + (item.required_qty * over_transfer_allowance) / 100;
 			return required_qty > item.supplied_qty - item.returned_qty;
+		});
+	}
+
+	can_receive_more_items(over_delivery_receipt_allowance) {
+		return this.frm.doc["items"].some((item) => {
+			let max_qty = item.qty + (item.qty * over_delivery_receipt_allowance) / 100;
+			return item.received_qty < max_qty;
 		});
 	}
 

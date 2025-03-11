@@ -503,7 +503,7 @@ class StatusUpdater(Document):
 
 		if sum_ref > 0:
 			percentage = round(
-				sum(max(abs(record[target_field]), abs(record[target_ref_field])) for record in child_records)
+				sum(min(abs(record[target_field]), abs(record[target_ref_field])) for record in child_records)
 				/ sum_ref
 				* 100,
 				6,
