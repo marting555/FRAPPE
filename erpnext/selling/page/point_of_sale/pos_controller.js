@@ -139,6 +139,8 @@ erpnext.PointOfSale.Controller = class {
 			this.allow_negative_stock = flt(message.allow_negative_stock) || false;
 		});
 
+		const use_sales_invoice = await frappe.db.get_single_value("Accounts Settings", "use_sales_invoice");
+
 		frappe.call({
 			method: "erpnext.selling.page.point_of_sale.point_of_sale.get_pos_profile_data",
 			args: { pos_profile: this.pos_profile },
@@ -146,6 +148,7 @@ erpnext.PointOfSale.Controller = class {
 				const profile = res.message;
 				Object.assign(this.settings, profile);
 				this.settings.customer_groups = profile.customer_groups.map((group) => group.name);
+				this.settings.frm_doctype = use_sales_invoice ? "Sales Invoice" : "POS Invoice";
 				this.make_app();
 			},
 		});
@@ -539,7 +542,7 @@ erpnext.PointOfSale.Controller = class {
 	}
 
 	make_sales_invoice_frm() {
-		const doctype = "POS Invoice";
+		const doctype = this.settings.frm_doctype;
 		return new Promise((resolve) => {
 			if (this.frm) {
 				this.frm = this.get_new_frm(this.frm);
@@ -558,7 +561,7 @@ erpnext.PointOfSale.Controller = class {
 	}
 
 	get_new_frm(_frm) {
-		const doctype = "POS Invoice";
+		const doctype = this.settings.frm_doctype;
 		const page = $("<div>");
 		const frm = _frm || new frappe.ui.form.Form(doctype, page, false);
 		const name = frappe.model.make_new_doc_and_get_name(doctype, true);
