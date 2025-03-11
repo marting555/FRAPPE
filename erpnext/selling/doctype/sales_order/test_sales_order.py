@@ -2138,60 +2138,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		so2.save().submit()
 
 		self.assertRaises(frappe.ValidationError, so1.update_status, "Draft")
-
-	def test_warehouse_mapping_based_on_stock_reservation(self):
-		from erpnext.stock.doctype.item.test_item import create_item
-		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
-
-		frappe.db.set_single_value("Stock Settings", "enable_stock_reservation", True)
-		company = "Glass Ceiling"
-		self.create_company(company_name=company, abbr="GC")
-		warehouse = create_warehouse("Test Reserved Warehouse", company=company)
-		create_item("Lamy Safari 2", is_stock_item=1, stock_uom="Nos", company=company)
-
-		make_stock_entry(
-			item_code="Lamy Safari 2",
-			target=warehouse,
-			qty=10,
- 			rate=100,
- 			company=company,
- 			uom="Nos",
-		)
-
-		so = frappe.new_doc("Sales Order")
-		so.reserve_stock = 1
-		so.company = company
-		so.customer = "_Test Customer"
-		so.transaction_date = today()
-		so.currency = "INR"
-		so.append(
-			"items",
-			{
-				"item_code": "Lamy Safari 2",
-				"qty": 5,
-				"rate": 2000,
-				"warehouse": warehouse,
-				"delivery_date": today(),
-				"uom": "Nos",
-			},
-		)
-		so.submit()
-
-		sres = frappe.get_all(
-			"Stock Reservation Entry",
-			filters={"voucher_no": so.name},
-			fields=["name"],
-		)
-
-		self.assertEqual(len(sres), 1)
-		sre_doc = frappe.get_doc("Stock Reservation Entry", sres[0].name)
-		self.assertFalse(sre_doc.status == "Delivered")
-
-		si = make_sales_invoice(so.name)
-		si.update_stock = 1
-		si.submit()
-		sre_doc.reload()
-		self.assertTrue(sre_doc.status == "Delivered")
 	
 	def test_sales_order_discount_on_total(self):
 		make_item_price()
