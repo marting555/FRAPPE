@@ -6,13 +6,8 @@ import unittest
 
 import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
-<<<<<<< HEAD
 from frappe.tests.utils import FrappeTestCase, change_settings
-from frappe.utils import add_days, today
-=======
- from frappe.tests import IntegrationTestCase, UnitTestCase
- from frappe.utils import add_days, add_months, today
- >>>>>>> 0cdd346f8f (test: ldc @ 0 rate)
+from frappe.utils import add_days, add_months, today
 
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 from erpnext.accounts.utils import get_fiscal_year
