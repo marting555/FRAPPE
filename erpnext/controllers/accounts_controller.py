@@ -466,9 +466,9 @@ class AccountsController(TransactionBase):
 				pluck="parent",
 			)
 			if billing_address and billing_address not in party_address:
-				frappe.throw(f"Billing Address does not belong to the {party}")
+				frappe.throw(_("Billing Address does not belong to the {0}").format(party))
 			elif shipping_address and shipping_address not in party_address:
-				frappe.throw(f"Shipping Address does not belong to the {party}")
+				frappe.throw(_("Shipping Address does not belong to the {0}").format(party))
 
 	def validate_party_contact(self, party, party_type):
 		if self.get("contact_person"):
@@ -478,7 +478,7 @@ class AccountsController(TransactionBase):
 				pluck="parent",
 			)
 			if self.contact_person and self.contact_person not in contact:
-				frappe.throw(f"Contact Person does not belong to the {party}")
+				frappe.throw(_("Contact Person does not belong to the {party}").format(party))
 
 	def validate_return_against_account(self):
 		if self.doctype in ["Sales Invoice", "Purchase Invoice"] and self.is_return and self.return_against:
@@ -3568,7 +3568,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 
 		1. Change rate of subcontracting - regardless of other changes.
 		2. Change qty and/or add new items and/or remove items
-		                Exception: Transfer/Consumption is already made, qty change not allowed.
+		        Exception: Transfer/Consumption is already made, qty change not allowed.
 		"""
 
 		supplied_items_processed = any(
