@@ -254,10 +254,9 @@ erpnext.buying.SubcontractingOrderController = class SubcontractingOrderControll
 			.then((over_delivery_receipt_allowance) => {
 				var me = this;
 
-				let can_receive_more_items = me.can_receive_more_items(over_delivery_receipt_allowance);
 				if (doc.docstatus == 1) {
 					if (doc.status != "Closed") {
-						if (can_receive_more_items) {
+						if (me.can_receive_more_items(over_delivery_receipt_allowance)) {
 							this.frm.add_custom_button(
 								__("Subcontracting Receipt"),
 								this.make_subcontracting_receipt,
