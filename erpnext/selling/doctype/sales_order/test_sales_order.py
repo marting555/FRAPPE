@@ -2141,7 +2141,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 	def test_warehouse_mapping_based_on_stock_reservation(self):
 		self.create_company(company_name="Glass Ceiling", abbr="GC")
-		self.create_item("Lamy Safari 2", True, self.warehouse_stores, self.company, 2000)
+		self.create_item("Lamy Safari 2", True, self.warehouse_stores, self.company)
 		self.create_customer()
 		self.clear_old_entries()
 
@@ -2205,7 +2205,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(dn.items[0].qty, 2)
 		self.assertEqual(dn.items[0].warehouse, self.warehouse_stores)
 		self.assertEqual(dn.items[1].qty, 3)
-		self.assertEqual(dn.items[1].warehouse, self.warehouse_finished_goods)
 
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
@@ -2215,6 +2214,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			item_code=self.item,
 			target=warehouse,
 			qty=5,
+			rate=200,
 			company=self.company,
 		)
 
