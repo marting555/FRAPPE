@@ -249,31 +249,38 @@ erpnext.buying.SubcontractingOrderController = class SubcontractingOrderControll
 	}
 
 	refresh(doc) {
-		var me = this;
+		frappe.db
+			.get_single_value("Stock Settings", "over_delivery_receipt_allowance")
+			.then((over_delivery_receipt_allowance) => {
+				var me = this;
 
-		if (doc.docstatus == 1) {
-			if (!["Closed", "Completed"].includes(doc.status)) {
-				if (flt(doc.per_received) < 100) {
-					this.frm.add_custom_button(
-						__("Subcontracting Receipt"),
-						this.make_subcontracting_receipt,
-						__("Create")
-					);
-					if (me.has_unsupplied_items()) {
-						this.frm.add_custom_button(
-							__("Material to Supplier"),
-							this.make_stock_entry,
-							__("Transfer")
-						);
+				if (doc.docstatus == 1) {
+					if (doc.status != "Closed") {
+						if (flt(doc.per_received) < 100 + over_delivery_receipt_allowance) {
+							this.frm.add_custom_button(
+								__("Subcontracting Receipt"),
+								this.make_subcontracting_receipt,
+								__("Create")
+							);
+							if (me.has_unsupplied_items()) {
+								this.frm.add_custom_button(
+									__("Material to Supplier"),
+									this.make_stock_entry,
+									__("Transfer")
+								);
+							}
+						}
+						if (
+							flt(doc.per_received) < 100 + over_delivery_receipt_allowance &&
+							me.has_unsupplied_items()
+						) {
+							this.frm.page.set_inner_btn_group_as_primary(__("Transfer"));
+						} else {
+							this.frm.page.set_inner_btn_group_as_primary(__("Create"));
+						}
 					}
 				}
-				if (flt(doc.per_received) < 100 && me.has_unsupplied_items()) {
-					this.frm.page.set_inner_btn_group_as_primary(__("Transfer"));
-				} else {
-					this.frm.page.set_inner_btn_group_as_primary(__("Create"));
-				}
-			}
-		}
+			});
 	}
 
 	items_add(doc, cdt, cdn) {
