@@ -209,6 +209,11 @@ erpnext.PointOfSale.ItemCart = class {
 			// called when discount is applied
 			this.update_totals_section(frm);
 		});
+
+		frappe.ui.form.on("Sales Invoice", "paid_amount", (frm) => {
+			// called when discount is applied
+			this.update_totals_section(frm);
+		});
 	}
 
 	attach_shortcuts() {
