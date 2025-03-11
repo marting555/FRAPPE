@@ -704,6 +704,13 @@ class SalesInvoice(SellingController):
 				"allow_print_before_pay": pos.get("allow_print_before_pay"),
 			}
 
+	@frappe.whitelist()
+	def reset_mode_of_payments(self):
+		if self.pos_profile:
+			pos_profile = frappe.get_cached_doc("POS Profile", self.pos_profile)
+			update_multi_mode_option(self, pos_profile)
+			self.paid_amount = 0
+
 	def update_time_sheet(self, sales_invoice):
 		for d in self.timesheets:
 			if d.time_sheet:

@@ -476,9 +476,9 @@ erpnext.PointOfSale.Controller = class {
 			events: {
 				get_frm: () => this.frm,
 
-				process_return: (name) => {
+				process_return: (doctype, name) => {
 					this.recent_order_list.toggle_component(false);
-					frappe.db.get_doc("POS Invoice", name).then((doc) => {
+					frappe.db.get_doc(doctype, name).then((doc) => {
 						frappe.run_serially([
 							() => this.make_return_invoice(doc),
 							() => this.cart.load_invoice(),
@@ -533,7 +533,7 @@ erpnext.PointOfSale.Controller = class {
 	make_new_invoice() {
 		return frappe.run_serially([
 			() => frappe.dom.freeze(),
-			() => this.make_sales_invoice_frm(),
+			() => this.make_invoice_frm(),
 			() => this.set_pos_profile_data(),
 			() => this.set_pos_profile_status(),
 			() => this.cart.load_invoice(),
@@ -541,10 +541,10 @@ erpnext.PointOfSale.Controller = class {
 		]);
 	}
 
-	make_sales_invoice_frm() {
+	make_invoice_frm() {
 		const doctype = this.settings.frm_doctype;
 		return new Promise((resolve) => {
-			if (this.frm) {
+			if (this.frm && this.frm.doctype == doctype) {
 				this.frm = this.get_new_frm(this.frm);
 				this.frm.doc.items = [];
 				this.frm.doc.is_pos = 1;
