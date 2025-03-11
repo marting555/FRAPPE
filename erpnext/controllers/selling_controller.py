@@ -775,6 +775,9 @@ class SellingController(StockController):
 	def update_stock_reservation_entries(self) -> None:
 		"""Updates Delivered Qty in Stock Reservation Entries."""
 
+		if not frappe.db.get_single_value("Stock Settings", "enable_stock_reservation"):
+ 			return
+
 		# Don't update Delivered Qty on Return.
 		if self.is_return:
 			return
@@ -812,7 +815,7 @@ class SellingController(StockController):
 					sre_doc = frappe.get_doc("Stock Reservation Entry", sre)
 
 					qty_can_be_deliver = 0
-					if sre_doc.reservation_based_on == "Serial and Batch":
+					if sre_doc.reservation_based_on == "Serial and Batch" and item.serial_and_batch_bundle:
 						sbb = frappe.get_doc("Serial and Batch Bundle", item.serial_and_batch_bundle)
 						if sre_doc.has_serial_no:
 							delivered_serial_nos = [d.serial_no for d in sbb.entries]
@@ -881,7 +884,7 @@ class SellingController(StockController):
 					sre_doc = frappe.get_doc("Stock Reservation Entry", sre)
 
 					qty_can_be_undelivered = 0
-					if sre_doc.reservation_based_on == "Serial and Batch":
+					if sre_doc.reservation_based_on == "Serial and Batch" and item.serial_and_batch_bundle:
 						sbb = frappe.get_doc("Serial and Batch Bundle", item.serial_and_batch_bundle)
 						if sre_doc.has_serial_no:
 							serial_nos_to_undelivered = [d.serial_no for d in sbb.entries]
