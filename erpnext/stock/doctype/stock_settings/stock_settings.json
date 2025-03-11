@@ -56,6 +56,8 @@
   "use_serial_batch_fields",
   "do_not_update_serial_batch_on_creation_of_auto_bundle",
   "allow_existing_serial_no",
+  "serial_and_batch_bundle_section",
+  "set_serial_and_batch_bundle_naming_based_on_naming_series",
   "stock_planning_tab",
   "auto_material_request",
   "auto_indent",
@@ -467,6 +469,27 @@
    "fieldname": "allow_existing_serial_no",
    "fieldtype": "Check",
    "label": "Allow existing Serial No to be Manufactured/Received again"
+<<<<<<< HEAD
+=======
+    },
+    {
+    "default": "0",
+    "description": "Upon submission of the Sales Order, Work Order, or Production Plan, the system will automatically reserve the stock.",
+    "fieldname": "auto_reserve_stock",
+    "fieldtype": "Check",
+    "label": "Auto Reserve Stock"
+    },
+    {
+    "fieldname": "serial_and_batch_bundle_section",
+    "fieldtype": "Section Break",
+    "label": "Serial and Batch Bundle"
+    },
+    {
+    "default": "0",
+    "fieldname": "set_serial_and_batch_bundle_naming_based_on_naming_series",
+    "fieldtype": "Check",
+    "label": "Set Serial and Batch Bundle Naming Based on Naming Series"
+>>>>>>> fe43975cdd (fix: provision to enable naming series for SABB)
   }
  ],
  "icon": "icon-cog",
@@ -474,7 +497,11 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
+ <<<<<<< HEAD
  "modified": "2024-12-09 17:52:36.030456",
+ =======
+  "modified": "2025-02-17 13:36:36.177743",
+ >>>>>>> fe43975cdd (fix: provision to enable naming series for SABB)
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Settings",
