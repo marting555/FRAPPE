@@ -110,7 +110,8 @@
    "depends_on": "eval:doc.use_serial_batch_fields === 1",
    "fieldname": "serial_no",
    "fieldtype": "Long Text",
-   "label": "Serial No"
+   "label": "Serial No",
+   "no_copy": 1
   },
   {
    "fieldname": "column_break_11",
@@ -253,16 +254,22 @@
    "label": "Reconcile All Serial Nos / Batches"
   }
  ],
+ "grid_page_length": 50,
  "istable": 1,
  "links": [],
- "modified": "2024-05-30 23:20:00.947243",
+ "modified": "2025-03-07 10:26:25.856337",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Reconciliation Item",
  "owner": "Administrator",
  "permissions": [],
  "quick_entry": 1,
+<<<<<<< HEAD
  "sort_field": "modified",
+=======
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+>>>>>>> 5a72edcb82 (fix: enable no copy for serial no field (#46381))
  "sort_order": "DESC",
  "states": [],
  "track_changes": 1
