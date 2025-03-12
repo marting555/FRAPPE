@@ -480,11 +480,14 @@ erpnext.PointOfSale.Controller = class {
 					this.recent_order_list.toggle_component(false);
 					frappe.db.get_doc(doctype, name).then((doc) => {
 						frappe.run_serially([
+							() => frappe.dom.freeze(),
+							() => this.make_invoice_frm(doc.doctype),
 							() => this.make_return_invoice(doc),
 							() => this.cart.load_invoice(),
 							() => this.item_selector.toggle_component(true),
 							() => this.item_selector.resize_selector(false),
 							() => this.item_details.toggle_component(false),
+							() => frappe.dom.unfreeze(),
 						]);
 					});
 				},
@@ -533,7 +536,7 @@ erpnext.PointOfSale.Controller = class {
 	make_new_invoice() {
 		return frappe.run_serially([
 			() => frappe.dom.freeze(),
-			() => this.make_invoice_frm(),
+			() => this.make_invoice_frm(this.settings.frm_doctype),
 			() => this.set_pos_profile_data(),
 			() => this.set_pos_profile_status(),
 			() => this.cart.load_invoice(),
@@ -541,17 +544,16 @@ erpnext.PointOfSale.Controller = class {
 		]);
 	}
 
-	make_invoice_frm() {
-		const doctype = this.settings.frm_doctype;
+	make_invoice_frm(doctype) {
 		return new Promise((resolve) => {
 			if (this.frm && this.frm.doctype == doctype) {
-				this.frm = this.get_new_frm(this.frm);
+				this.frm = this.get_new_frm(this.frm, doctype);
 				this.frm.doc.items = [];
 				this.frm.doc.is_pos = 1;
 				resolve();
 			} else {
 				frappe.model.with_doctype(doctype, () => {
-					this.frm = this.get_new_frm();
+					this.frm = this.get_new_frm(undefined, doctype);
 					this.frm.doc.items = [];
 					this.frm.doc.is_pos = 1;
 					resolve();
@@ -560,8 +562,7 @@ erpnext.PointOfSale.Controller = class {
 		});
 	}
 
-	get_new_frm(_frm) {
-		const doctype = this.settings.frm_doctype;
+	get_new_frm(_frm, doctype = this.settings.frm_doctype) {
 		const page = $("<div>");
 		const frm = _frm || new frappe.ui.form.Form(doctype, page, false);
 		const name = frappe.model.make_new_doc_and_get_name(doctype, true);
@@ -571,11 +572,11 @@ erpnext.PointOfSale.Controller = class {
 	}
 
 	async make_return_invoice(doc) {
-		frappe.dom.freeze();
-		this.frm = this.get_new_frm(this.frm);
-		this.frm.doc.items = [];
 		return frappe.call({
-			method: "erpnext.accounts.doctype.pos_invoice.pos_invoice.make_sales_return",
+			method:
+				doc.doctype == "POS Invoice"
+					? "erpnext.accounts.doctype.pos_invoice.pos_invoice.make_sales_return"
+					: "erpnext.accounts.doctype.sales_invoice.sales_invoice.make_sales_return",
 			args: {
 				source_name: doc.name,
 				target_doc: this.frm.doc,
@@ -583,9 +584,7 @@ erpnext.PointOfSale.Controller = class {
 			callback: (r) => {
 				frappe.model.sync(r.message);
 				frappe.get_doc(r.message.doctype, r.message.name).__run_link_triggers = false;
-				this.set_pos_profile_data().then(() => {
-					frappe.dom.unfreeze();
-				});
+				this.set_pos_profile_data();
 			},
 		});
 	}
