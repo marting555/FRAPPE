@@ -220,7 +220,9 @@ class StatusUpdater(Document):
 		}
 		"""
 		if self.doctype not in status_map:
-			return {"status": self.get("status")}
+			return {
+				"status": self.get("status")
+			}  # sometimes status field is not present on certain DocTypes such as Stock Entry
 
 		sl = status_map[self.doctype][:]
 		sl.reverse()
