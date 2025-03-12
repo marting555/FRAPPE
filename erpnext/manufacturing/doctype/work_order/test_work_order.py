@@ -3640,6 +3640,12 @@ class TestWorkOrder(FrappeTestCase):
 		"get_rm_cost_from_consumption_entry": 0
 		}
 	)
+	@change_settings(
+		"Stock Settings", 
+		{
+			"allow_negative_stock": 1,
+		}
+	)
 	def test_mafac_wo_wth_consum_skp_transf_btch_srl_tc_sck_216(self):
 		item = make_item(
 			"Test FG Item To Test Return Case",
