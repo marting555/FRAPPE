@@ -215,7 +215,58 @@ class StatusUpdater(Document):
 				self.add_comment("Label", _(self.status))
 
 			if update:
+<<<<<<< HEAD
 				self.db_set("status", self.status, update_modified=update_modified)
+=======
+				self.db_set("status", new_status, update_modified=update_modified)
+
+	def get_status(self):
+		"""
+		Get the status of the document.
+
+		Returns:
+		dict: A dictionary containing the status. This allows callers to receive
+		a dictionary for efficient bulk updates, for example when `per_billed`
+		and other status fields also need to be updated.
+
+		Note:
+		Can be overriden on a doctype to implement more localized status updater logic.
+
+		Example:
+		{
+		"status": "Draft",
+		"per_billed": 50,
+		"billing_status": "Partly Billed"
+		}
+		"""
+		if self.doctype not in status_map:
+			return {
+				"status": self.get("status")
+			}  # sometimes status field is not present on certain DocTypes such as Stock Entry
+
+		sl = status_map[self.doctype][:]
+		sl.reverse()
+
+		for s in sl:
+			if not s[1]:
+				return {"status": s[0]}
+			elif s[1].startswith("eval:"):
+				if frappe.safe_eval(
+					s[1][5:],
+					None,
+					{
+						"self": self.as_dict(),
+						"getdate": getdate,
+						"nowdate": nowdate,
+						"get_value": frappe.db.get_value,
+					},
+				):
+					return {"status": s[0]}
+			elif getattr(self, s[1])():
+				return {"status": s[0]}
+
+		return {"status": self.status}
+>>>>>>> 41c93c8832 (fix: return None if document does not have status field in get_status… (#46415))
 
 	def validate_qty(self):
 		"""Validates qty at row level"""
@@ -487,10 +538,20 @@ class StatusUpdater(Document):
 					where name='{name}'""".format(**args)
 				)
 
+<<<<<<< HEAD
 			if update_modified:
 				target = frappe.get_doc(args["target_parent_dt"], args["name"])
 				target.set_status(update=True)
 				target.notify_update()
+=======
+		if update_data:
+			target = frappe.get_doc(args["target_parent_dt"], args["name"])
+			target.update(update_data)  # status calculus might depend on it
+			status = target.get_status()
+			if status.get("status"):
+				update_data.update(status)
+			target.db_set(update_data, update_modified=update_modified, notify=True)
+>>>>>>> 41c93c8832 (fix: return None if document does not have status field in get_status… (#46415))
 
 	def _update_modified(self, args, update_modified):
 		if not update_modified:
