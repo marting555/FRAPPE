@@ -1054,14 +1054,19 @@ def get_batch_based_item_price(params, item_code) -> float:
 		item_price = get_item_price(params, item_code, ignore_party=True, force_batch_no=True)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 	if item_price and item_price[0][2] == params.get("uom"):
 		return item_price[0][1]
 =======
 	if item_price and item_price[0].uom == pctx.uom and not pctx.get("items")[0].get("is_free_item"):
+=======
+	if item_price and item_price[0].uom == pctx.uom and not pctx.get("items", [{}])[0].get("is_free_item", 0):
+>>>>>>> 7c9c0c7776 (fix: error)
 		return item_price[0].price_list_rate
 >>>>>>> a3596f717b (fix: dont update rate of free item when batch is updated)
 
 	return 0.0
+
 
 
 def get_price_list_rate_for(args, item_code):
