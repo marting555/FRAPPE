@@ -448,7 +448,10 @@ class AccountsController(TransactionBase):
 		party, party_type = None, None
 		if self.get("customer"):
 			party, party_type = self.customer, "Customer"
-			billing_address, shipping_address = self.get("customer_address"), self.get("shipping_address")
+			billing_address, shipping_address = (
+				self.get("customer_address"),
+				self.get("shipping_address_name"),
+			)
 			self.validate_party_address(party, party_type, billing_address, shipping_address)
 		elif self.get("supplier"):
 			party, party_type = self.supplier, "Supplier"
