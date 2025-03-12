@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-03-09 09:34+0000\n"
-"PO-Revision-Date: 2025-03-11 01:17\n"
+"PO-Revision-Date: 2025-03-12 01:21\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Chinese Simplified\n"
 "MIME-Version: 1.0\n"
@@ -76,7 +76,7 @@ msgstr " 跳过物料转移"
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:133
 #: erpnext/public/js/bom_configurator/bom_configurator.bundle.js:163
 msgid " Sub Assembly"
-msgstr " 半成品"
+msgstr "子装配件"
 
 #: erpnext/projects/doctype/project_update/project_update.py:104
 msgid " Summary"
