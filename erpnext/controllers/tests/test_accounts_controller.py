@@ -913,7 +913,7 @@ class TestAccountsController(FrappeTestCase):
 		self.assertEqual(exc_je_for_si, [])
 		self.assertEqual(exc_je_for_pe, [])
 
-	@IntegrationTestCase.change_settings("Accounts Settings", {"add_taxes_from_item_tax_template": 1})
+	@change_settings("Accounts Settings", {"add_taxes_from_item_tax_template": 1})
 	def test_18_fetch_taxes_based_on_taxes_and_charges_template(self):
 		# Create a Sales Taxes and Charges Template
 		if not frappe.db.exists("Sales Taxes and Charges Template", "_Test Tax - _TC"):
