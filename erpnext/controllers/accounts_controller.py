@@ -481,7 +481,7 @@ class AccountsController(TransactionBase):
 				pluck="parent",
 			)
 			if self.contact_person and self.contact_person not in contact:
-				frappe.throw(_("Contact Person does not belong to the {party}").format(party))
+				frappe.throw(_("Contact Person does not belong to the {0}").format(party))
 
 	def validate_return_against_account(self):
 		if self.doctype in ["Sales Invoice", "Purchase Invoice"] and self.is_return and self.return_against:
