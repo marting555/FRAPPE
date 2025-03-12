@@ -387,6 +387,7 @@ class TestPricingRule(FrappeTestCase):
 			"price_or_product_discount": "Product",
 			"same_item": 1,
 			"free_qty": 1,
+			"enforce_free_item_qty": 1,
 			"company": "_Test Company",
 		}
 		frappe.get_doc(test_record.copy()).insert()
@@ -419,6 +420,7 @@ class TestPricingRule(FrappeTestCase):
 			"same_item": 0,
 			"free_item": "_Test Item 2",
 			"free_qty": 1,
+			"enforce_free_item_qty": 1,
 			"company": "_Test Company",
 		}
 		frappe.get_doc(test_record.copy()).insert()
@@ -1112,6 +1114,7 @@ class TestPricingRule(FrappeTestCase):
 			"price_or_product_discount": "Product",
 			"same_item": 1,
 			"free_qty": 1,
+			"enforce_free_item_qty": 1,
 			"round_free_qty": 1,
 			"is_recursive": 1,
 			"recurse_for": 2,
@@ -1687,6 +1690,7 @@ def make_pricing_rule(**args):
 			"discount_amount": args.discount_amount or 0.0,
 			"apply_multiple_pricing_rules": args.apply_multiple_pricing_rules or 0,
 			"has_priority": args.has_priority or 0,
+			"enforce_free_item_qty": args.enforce_free_item_qty or 1,
 		}
 	)
 
