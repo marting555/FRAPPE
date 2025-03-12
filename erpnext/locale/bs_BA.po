@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-03-09 09:34+0000\n"
-"PO-Revision-Date: 2025-03-11 01:17\n"
+"PO-Revision-Date: 2025-03-12 01:21\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Bosnian\n"
 "MIME-Version: 1.0\n"
@@ -13139,7 +13139,7 @@ msgstr "Kreiraj {0} {1}?"
 
 #: erpnext/manufacturing/report/work_order_summary/work_order_summary.py:224
 msgid "Created On"
-msgstr "Kreirano na"
+msgstr "Kreirano"
 
 #: erpnext/buying/doctype/supplier_scorecard/supplier_scorecard.py:250
 msgid "Created {0} scorecards for {1} between:"
