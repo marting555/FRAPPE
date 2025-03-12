@@ -1214,9 +1214,6 @@ def make_rm_stock_entry(
 						or rm_item.get("item_code") == fg_item_code
 					):
 						rm_item_code = rm_item.get("rm_item_code")
-						over_transfer_allowance = frappe.db.get_single_value(
-							"Buying Settings", "over_transfer_allowance"
-						)
 						items_dict = {
 							rm_item_code: {
 								rm_detail_field: rm_item.get("name"),
@@ -1224,15 +1221,7 @@ def make_rm_stock_entry(
 								or item_wh.get(rm_item_code, {}).get("item_name", ""),
 								"description": item_wh.get(rm_item_code, {}).get("description", ""),
 								"qty": rm_item.get("qty")
-								or max(rm_item.get("required_qty") - rm_item.get("total_supplied_qty"), 0)
-								or max(
-									(
-										rm_item.get("required_qty")
-										+ (rm_item.get("required_qty") * (over_transfer_allowance / 100))
-									)
-									- rm_item.get("total_supplied_qty"),
-									0,
-								),
+								or max(rm_item.get("required_qty") - rm_item.get("total_supplied_qty"), 0),
 								"from_warehouse": rm_item.get("warehouse")
 								or rm_item.get("reserve_warehouse"),
 								"to_warehouse": subcontract_order.supplier_warehouse,
@@ -1252,7 +1241,7 @@ def make_rm_stock_entry(
 							}
 						}
 
-						stock_entry.add_to_stock_entry_detail(items_dict)
+						stock_entry.add_to_stock_entry_detail(items_dict, allow_zero_qty=True)
 
 			if target_doc:
 				return stock_entry

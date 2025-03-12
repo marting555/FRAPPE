@@ -2573,13 +2573,16 @@ class StockEntry(StockController):
 		)
 		return [d.item_code for d in job_card_items]
 
-	def add_to_stock_entry_detail(self, item_dict, bom_no=None):
+	def add_to_stock_entry_detail(self, item_dict, bom_no=None, allow_zero_qty=False):
 		precision = frappe.get_precision("Stock Entry Detail", "qty")
 		for d in item_dict:
 			item_row = item_dict[d]
 
 			child_qty = flt(item_row["qty"], precision)
-			if not self.is_return and child_qty <= 0 and not item_row.get("is_scrap_item"):
+			if not self.is_return and child_qty < 0 and not item_row.get("is_scrap_item"):
+				continue
+
+			if child_qty == 0 and not allow_zero_qty:
 				continue
 
 			se_child = self.append("items")
