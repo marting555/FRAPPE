@@ -1053,9 +1053,11 @@ def get_batch_based_item_price(params, item_code) -> float:
 	if not item_price:
 		item_price = get_item_price(params, item_code, ignore_party=True, force_batch_no=True)
 
-	is_free_item = params.get("items", [{}])[0].get("is_free_item")
- 
-	if item_price and item_price[0][2] == params.get("uom") and not is_free_item:
+	if (
+ 		item_price
+ 		and item_price[0][2] == params.get("uom")
+ 		and not params.get("items", [{}])[0].get("is_free_item", 0)
+ 	):
 		return item_price[0][1]
 
 	return 0.0
