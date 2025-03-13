@@ -962,8 +962,9 @@ def get_price_list_rate(ctx: ItemDetailsCtx, item_doc, out: ItemDetails = None):
 			price_list_rate = get_price_list_rate_for(ctx, item_doc.variant_of)
 
 		# insert in database
-		if price_list_rate is None or frappe.db.get_single_value(
-			"Stock Settings", "update_existing_price_list_rate"
+		if price_list_rate is None or (
+			frappe.db.get_single_value("Stock Settings", "update_existing_price_list_rate")
+			and ctx.docstatus == 1
 		):
 			insert_item_price(ctx)
 
@@ -993,9 +994,7 @@ def insert_item_price(ctx: ItemDetailsCtx):
 	):
 		if frappe.has_permission("Item Price", "write"):
 			price_list_rate = (
-				(flt(ctx.rate) + flt(ctx.discount_amount)) / ctx.conversion_factor
-				if ctx.conversion_factor
-				else (flt(ctx.rate) + flt(ctx.discount_amount))
+				(flt(ctx.rate) / ctx.conversion_factor) if ctx.conversion_factor else flt(ctx.rate)
 			)
 
 			item_price = frappe.db.get_value(
