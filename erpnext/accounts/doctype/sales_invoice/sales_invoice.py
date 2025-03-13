@@ -1340,6 +1340,7 @@ class SalesInvoice(SellingController):
 							"debit_in_account_currency": flt(self.base_change_amount)
 							if self.party_account_currency == self.company_currency
 							else flt(self.change_amount),
+							"debit_in_transaction_currency": flt(self.change_amount),
 							"against_voucher": self.return_against
 							if cint(self.is_return) and self.return_against
 							else self.name,
@@ -1352,13 +1353,13 @@ class SalesInvoice(SellingController):
 					)
 				)
 
-<<<<<<< HEAD
 				gl_entries.append(
 					self.get_gl_dict(
 						{
 							"account": self.account_for_change_amount,
 							"against": self.customer,
 							"credit": self.base_change_amount,
+							"credit_in_transaction_currency": self.change_amount,
 							"cost_center": self.cost_center,
 						},
 						item=self,
@@ -1366,44 +1367,6 @@ class SalesInvoice(SellingController):
 				)
 			else:
 				frappe.throw(_("Select change amount account"), title=_("Mandatory Field"))
-=======
- 		if not self.account_for_change_amount:
- 			frappe.throw(_("Please set Account for Change Amount"), title=_("Mandatory Field"))
- 
- 		return [
- 			self.get_gl_dict(
- 				{
- 					"account": self.debit_to,
- 					"party_type": "Customer",
- 					"party": self.customer,
- 					"against": self.account_for_change_amount,
- 					"debit": flt(self.base_change_amount),
- 					"debit_in_account_currency": flt(self.base_change_amount)
- 					if self.party_account_currency == self.company_currency
- 					else flt(self.change_amount),
- 					"debit_in_transaction_currency": flt(self.change_amount),
- 					"against_voucher": self.return_against
- 					if cint(self.is_return) and self.return_against
- 					else self.name,
- 					"against_voucher_type": self.doctype,
- 					"cost_center": self.cost_center,
- 					"project": self.project,
- 				},
- 				self.party_account_currency,
- 				item=self,
- 			),
- 			self.get_gl_dict(
- 				{
- 					"account": self.account_for_change_amount,
- 					"against": self.customer,
- 					"credit": self.base_change_amount,
- 					"credit_in_transaction_currency": self.change_amount,
- 					"cost_center": self.cost_center,
- 				},
- 				item=self,
- 			),
- 		]
->>>>>>> 3e292ef2cb (refactor: set transaction currency dr/cr in sales invoice)
 
 	def make_write_off_gl_entry(self, gl_entries):
 		# write off entries, applicable if only pos
