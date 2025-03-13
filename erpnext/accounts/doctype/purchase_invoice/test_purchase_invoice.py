@@ -2212,7 +2212,6 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		frappe.db.set_single_value("Buying Settings", "maintain_same_rate", 1)
 
-<<<<<<< HEAD
 	def test_last_purchase_rate(self):
 		item = create_item("_Test Item For Last Purchase Rate from PI", is_stock_item=1)
 		pi1 = make_purchase_invoice(item_code=item.item_code, qty=10, rate=100)
@@ -2227,7 +2226,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi1.cancel()
 		item.reload()
 		self.assertEqual(item.last_purchase_rate, 0)
-=======
+
 	def test_adjust_incoming_rate_from_pi_with_multi_currency_and_partial_billing(self):
 		frappe.db.set_single_value("Buying Settings", "maintain_same_rate", 0)
 
@@ -2297,7 +2296,6 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		frappe.db.set_single_value("Buying Settings", "set_landed_cost_based_on_purchase_invoice_rate", 0)
  
 		frappe.db.set_single_value("Buying Settings", "maintain_same_rate", 1)
->>>>>>> 17d415b105 (fix: set landed cost based on purchase invoice rate)
 
 	def test_opening_invoice_rounding_adjustment_validation(self):
 		pi = make_purchase_invoice(do_not_save=1)
