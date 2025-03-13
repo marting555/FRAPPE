@@ -3,6 +3,8 @@
 
 
 import frappe
+import frappe.query_builder
+import frappe.query_builder.functions
 from frappe import _
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils import flt, getdate, nowdate
@@ -160,15 +162,19 @@ class Quotation(SellingController):
 
 	def get_ordered_status(self):
 		status = "Open"
-		ordered_items = frappe._dict(
-			frappe.db.get_all(
-				"Sales Order Item",
-				{"prevdoc_docname": self.name, "docstatus": 1},
-				["item_code", "sum(qty)"],
-				group_by="item_code",
-				as_list=1,
+
+		table = frappe.qb.DocType("Sales Order Item")
+		query = (
+			frappe.qb.from_(table)
+			.select(table.quotation_item, frappe.query_builder.functions.Sum(table.qty).as_("qty"))
+			.where(
+				(table.prevdoc_docname == self.name)
+				& (table.docstatus == 1)
+				& (table.quotation_item.isnotnull())
 			)
+			.groupby(table.quotation_item)
 		)
+		ordered_items = query.run(as_dict=True)
 
 		if not ordered_items:
 			return status
@@ -176,10 +182,12 @@ class Quotation(SellingController):
 		has_alternatives = any(row.is_alternative for row in self.get("items"))
 		self._items = self.get_valid_items() if has_alternatives else self.get("items")
 
-		if any(row.qty > ordered_items.get(row.item_code, 0.0) for row in self._items):
-			status = "Partially Ordered"
-		else:
-			status = "Ordered"
+		status = "Ordered"
+		for row in self._items:
+			ordered_item = list(filter(lambda item: item.quotation_item == row.name, ordered_items))
+			if row.qty > (ordered_item[0].qty if ordered_item else 0):
+				status = "Partially Ordered"
+				break
 
 		return status
 
@@ -340,6 +348,9 @@ def get_list_context(context=None):
 
 @frappe.whitelist()
 def make_sales_order(source_name: str, target_doc=None):
+	if frappe.get_value("Quotation", source_name, "status") in ["Lost", "Ordered"]:
+		frappe.throw(_("Cannot create Sales Order from a Lost or Ordered Quotation"))
+
 	if not frappe.db.get_singles_value(
 		"Selling Settings", "allow_sales_order_creation_for_expired_quotation"
 	):
@@ -356,15 +367,18 @@ def make_sales_order(source_name: str, target_doc=None):
 
 def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	customer = _make_customer(source_name, ignore_permissions)
-	ordered_items = frappe._dict(
-		frappe.db.get_all(
-			"Sales Order Item",
-			{"prevdoc_docname": source_name, "docstatus": 1},
-			["item_code", "sum(qty)"],
-			group_by="item_code",
-			as_list=1,
+	table = frappe.qb.DocType("Sales Order Item")
+	query = (
+		frappe.qb.from_(table)
+		.select(table.quotation_item, frappe.query_builder.functions.Sum(table.qty).as_("qty"))
+		.where(
+			(table.prevdoc_docname == source_name)
+			& (table.docstatus == 1)
+			& (table.quotation_item.isnotnull())
 		)
+		.groupby(table.quotation_item)
 	)
+	ordered_items = query.run(as_dict=True)
 
 	selected_rows = [x.get("name") for x in frappe.flags.get("args", {}).get("selected_items", [])]
 
@@ -396,7 +410,8 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		target.run_method("calculate_taxes_and_totals")
 
 	def update_item(obj, target, source_parent):
-		balance_qty = obj.qty - ordered_items.get(obj.item_code, 0.0)
+		ordered_item = list(filter(lambda item: item.quotation_item == obj.name, ordered_items))
+		balance_qty = obj.qty - (ordered_item[0].qty if ordered_item else 0)
 		target.qty = balance_qty if balance_qty > 0 else 0
 		target.stock_qty = flt(target.qty) * flt(obj.conversion_factor)
 
@@ -412,7 +427,8 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		2. If selections: Is Alternative Item/Has Alternative Item: Map if selected and adequate qty
 		3. If selections: Simple row: Map if adequate qty
 		"""
-		balance_qty = item.qty - ordered_items.get(item.item_code, 0.0)
+		ordered_item = list(filter(lambda obj: obj.quotation_item == item.name, ordered_items))
+		balance_qty = item.qty - (ordered_item[0].qty if ordered_item else 0)
 		if balance_qty <= 0:
 			return False
 
