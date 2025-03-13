@@ -26,7 +26,7 @@
   "quantity_and_rate",
   "qty",
   "stock_uom",
-  "sco_qty",
+  "subcontracted_quantity",
   "col_break2",
   "uom",
   "conversion_factor",
@@ -910,7 +910,7 @@
   },
   {
    "allow_on_submit": 1,
-   "fieldname": "sco_qty",
+   "fieldname": "subcontracted_quantity",
    "fieldtype": "Float",
    "label": "Subcontracted Quantity",
    "no_copy": 1,
@@ -918,6 +918,7 @@
    "read_only": 1
   }
  ],
+ "grid_page_length": 50,
  "idx": 1,
  "index_web_pages_for_search": 1,
  "istable": 1,
@@ -930,6 +931,7 @@
  "owner": "Administrator",
  "permissions": [],
  "quick_entry": 1,
+ "row_format": "Dynamic",
  "search_fields": "item_name",
  "sort_field": "modified",
  "sort_order": "DESC",
