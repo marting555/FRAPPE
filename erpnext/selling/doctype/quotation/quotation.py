@@ -3,8 +3,6 @@
 
 
 import frappe
-import frappe.query_builder
-import frappe.query_builder.functions
 from frappe import _
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils import flt, getdate, nowdate
