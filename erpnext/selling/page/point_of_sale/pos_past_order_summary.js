@@ -209,7 +209,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		});
 
 		this.$summary_container.on("click", ".edit-btn", () => {
-			this.events.edit_order(this.doc.name);
+			this.events.edit_order(this.doc.doctype, this.doc.name);
 			this.toggle_component(false);
 			this.$component.find(".no-summary-placeholder").css("display", "flex");
 			this.$summary_wrapper.css("display", "none");

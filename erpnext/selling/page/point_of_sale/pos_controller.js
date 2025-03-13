@@ -491,9 +491,11 @@ erpnext.PointOfSale.Controller = class {
 						]);
 					});
 				},
-				edit_order: (name) => {
+				edit_order: (doctype, name) => {
 					this.recent_order_list.toggle_component(false);
 					frappe.run_serially([
+						() => this.make_invoice_frm(doctype),
+						() => this.sync_draft_invoice_to_frm(doctype, name),
 						() => this.frm.refresh(name),
 						() => this.frm.call("reset_mode_of_payments"),
 						() => this.cart.load_invoice(),
@@ -569,6 +571,12 @@ erpnext.PointOfSale.Controller = class {
 		frm.refresh(name);
 
 		return frm;
+	}
+
+	sync_draft_invoice_to_frm(doctype, invoice) {
+		return frappe.db.get_doc(doctype, invoice).then((doc) => {
+			frappe.model.sync(doc);
+		});
 	}
 
 	async make_return_invoice(doc) {
