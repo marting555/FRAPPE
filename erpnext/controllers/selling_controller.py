@@ -91,7 +91,7 @@ class SellingController(StockController):
 			self.update_if_missing(party_details)
 
 		elif lead:
-			from erpnext_crm.crm.doctype.lead.lead import get_lead_details
+			from erpnext_crm.erpnext_crm.doctype.lead.lead import get_lead_details
 
 			self.update_if_missing(
 				get_lead_details(

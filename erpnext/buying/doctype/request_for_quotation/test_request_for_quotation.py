@@ -107,8 +107,8 @@ class TestRequestforQuotation(FrappeTestCase):
 
 	@if_app_installed("erpnext_crm")
 	def test_make_rfq_from_opportunity(self):
-		from erpnext_crm.crm.doctype.opportunity.opportunity import make_request_for_quotation as make_rfq
-		from erpnext_crm.crm.doctype.opportunity.test_opportunity import make_opportunity
+		from erpnext_crm.erpnext_crm.doctype.opportunity.opportunity import make_request_for_quotation as make_rfq
+		from erpnext_crm.erpnext_crm.doctype.opportunity.test_opportunity import make_opportunity
 		opportunity = make_opportunity(with_items=1)
 		supplier_data = get_supplier_data()
 		rfq = make_rfq(opportunity.name)

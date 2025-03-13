@@ -271,8 +271,8 @@ class TestTaxRule(unittest.TestCase):
 		)
 	@if_app_installed("erpnext_crm")
 	def test_taxes_fetch_via_tax_rule(self):
-		from erpnext_crm.crm.doctype.opportunity.opportunity import make_quotation
-		from erpnext_crm.crm.doctype.opportunity.test_opportunity import make_opportunity
+		from erpnext_crm.erpnext_crm.doctype.opportunity.opportunity import make_quotation
+		from erpnext_crm.erpnext_crm.doctype.opportunity.test_opportunity import make_opportunity
 		make_tax_rule(
 			customer="_Test Customer",
 			billing_city="_Test City",
