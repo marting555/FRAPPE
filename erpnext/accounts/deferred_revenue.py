@@ -567,6 +567,13 @@ def book_revenue_via_journal_entry(
 	journal_entry.company = doc.company
 	journal_entry.voucher_type = "Deferred Revenue" if doc.doctype == "Sales Invoice" else "Deferred Expense"
 	journal_entry.process_deferred_accounting = deferred_process
+	company_currency = frappe.get_cached_value("Company", doc.company, "default_currency")
+
+	account_currencies = frappe.get_all(
+		"Account", filters={"name": ["in", [debit_account, credit_account]]}, pluck="account_currency"
+	)
+
+	journal_entry.multi_currency = any(currency != company_currency for currency in account_currencies)
 
 	debit_entry = {
 		"account": credit_account,
