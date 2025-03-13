@@ -256,7 +256,7 @@ erpnext.buying.SubcontractingOrderController = class SubcontractingOrderControll
 
 				if (doc.docstatus == 1) {
 					if (doc.status != "Closed") {
-						let can_receive_more_items = me.can_receive_more_items(
+						const can_receive_more_items = me.can_receive_more_items(
 							over_delivery_receipt_allowance
 						);
 						if (can_receive_more_items) {
@@ -313,7 +313,7 @@ erpnext.buying.SubcontractingOrderController = class SubcontractingOrderControll
 
 	can_receive_more_items(over_delivery_receipt_allowance) {
 		return this.frm.doc["items"].some((item) => {
-			let max_qty = item.qty + (item.qty * over_delivery_receipt_allowance) / 100;
+			const max_qty = item.qty + (item.qty * over_delivery_receipt_allowance) / 100;
 			return item.received_qty < max_qty;
 		});
 	}

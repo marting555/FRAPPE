@@ -356,9 +356,12 @@ def get_mapped_subcontracting_receipt(source_name, target_doc=None):
 		target.qty = qty if qty > 0 else 0
 		target.amount = target.qty * flt(source.rate)
 
-	over_delivery_receipt_allowance = frappe.db.get_single_value(
-		"Stock Settings", "over_delivery_receipt_allowance"
-	)
+	def can_receive_more(doc):
+		over_delivery_receipt_allowance = frappe.db.get_single_value(
+			"Stock Settings", "over_delivery_receipt_allowance"
+		)
+		return abs(doc.received_qty) < abs(doc.qty) + (abs(doc.qty) * (over_delivery_receipt_allowance / 100))
+
 	target_doc = get_mapped_doc(
 		"Subcontracting Order",
 		source_name,
@@ -381,8 +384,7 @@ def get_mapped_subcontracting_receipt(source_name, target_doc=None):
 					"bom": "bom",
 				},
 				"postprocess": update_item,
-				"condition": lambda doc: abs(doc.received_qty)
-				< abs(doc.qty) + (abs(doc.qty) * (over_delivery_receipt_allowance / 100)),
+				"condition": can_receive_more,
 			},
 		},
 		target_doc,
