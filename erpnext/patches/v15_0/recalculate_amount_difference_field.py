@@ -8,6 +8,7 @@ from erpnext.stock.doctype.purchase_receipt.purchase_receipt import adjust_incom
 
 def execute():
 <<<<<<< HEAD
+<<<<<<< HEAD
 	table = frappe.qb.DocType("Purchase Receipt Item")
 	parent = frappe.qb.DocType("Purchase Receipt")
 	query = (
@@ -52,6 +53,11 @@ def execute():
 				adjusted_amt * flt(item.conversion_rate),
 				precision,
 =======
+=======
+ 	if not frappe.db.get_single_value("Buying Settings", "set_landed_cost_based_on_purchase_invoice_rate"):
+ 		return
+ 
+>>>>>>> 95d1976931 (fix: check if set_landed_cost_based_on_purchase_invoice_rate is enabled before running patch)
  	for company in frappe.get_all("Company", pluck="name"):
  		table = frappe.qb.DocType("Purchase Receipt Item")
  		parent = frappe.qb.DocType("Purchase Receipt")
