@@ -7063,7 +7063,7 @@ class TestMaterialRequest(FrappeTestCase):
 		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi1.name, 'account': 'Stock In Hand - _TC'},'credit')
 		self.assertEqual(gl_stock_debit, 500)
 
-	def test_mr_2po_2pr_serl_part_retn_tc_sck_212(self):
+	def test_mr_2po_2pr_serl_part_retn_TC_SCK_212(self):
 		create_company()
 		create_fiscal_year()
 		company = "_Test Company MR"
@@ -7182,7 +7182,7 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(gl_stock_debit, 500)
 		frappe.db.rollback()
 
-	def test_create_mr_to_2po_to_1pr_serl_part_retn_tc_sck_213(self):
+	def test_create_mr_to_2po_to_1pr_serl_part_retn_TC_SCK_213(self):
 		create_company()
 		create_fiscal_year()
 		company = "_Test Company MR"
