@@ -111,6 +111,12 @@ def filter_result_items(result, pos_profile):
 			return
 		result["items"] = [item for item in result.get("items") if item.get("item_group") in pos_item_groups]
 
+@frappe.whitelist()
+def get_parent_item_group():
+	# Using get_all to ignore user permission
+	item_group = frappe.get_all("Item Group", {"lft": 1, "is_group": 1}, pluck="name")
+	if item_group:
+		return item_group[0]
 
 @frappe.whitelist()
 def get_items(start, page_length, price_list, item_group, pos_profile, search_term=""):
