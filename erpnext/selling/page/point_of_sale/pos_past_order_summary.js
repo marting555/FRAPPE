@@ -1,8 +1,8 @@
 erpnext.PointOfSale.PastOrderSummary = class {
-	constructor({ wrapper, events, pos_profile }) {
+	constructor({ wrapper, settings, events }) {
 		this.wrapper = wrapper;
 		this.events = events;
-		this.pos_profile = pos_profile;
+		this.print_receipt_on_order_complete = settings.print_receipt_on_order_complete;
 
 		this.init_component();
 	}
@@ -357,8 +357,8 @@ erpnext.PointOfSale.PastOrderSummary = class {
 
 		this.add_summary_btns(condition_btns_map);
 
-		if (after_submission) {
-			this.print_receipt_on_order_complete();
+		if (after_submission && this.print_receipt_on_order_complete) {
+			this.print_receipt();
 		}
 	}
 
@@ -427,6 +427,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		show ? this.$component.css("display", "flex") : this.$component.css("display", "none");
 	}
 
+<<<<<<< HEAD
 	async print_receipt_on_order_complete() {
 		const res = await frappe.db.get_value(
 			"POS Profile",
@@ -437,5 +438,15 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		if (res.message.print_receipt_on_order_complete) {
 			this.print_receipt();
 		}
+=======
+	async is_pos_invoice_returnable(invoice) {
+		const r = await frappe.call({
+			method: "erpnext.controllers.sales_and_purchase_return.is_pos_invoice_returnable",
+			args: {
+				pos_invoice: invoice,
+			},
+		});
+		return r.message;
+>>>>>>> 0552209310 (refactor: print receipt on order complete on pos (#46501))
 	}
 };
