@@ -462,7 +462,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		show ? this.$component.css("display", "flex") : this.$component.css("display", "none");
 	}
 
-	async is_pos_invoice_returnable(invoice) {
+	async is_invoice_returnable(doctype, invoice) {
 		const r = await frappe.call({
 			method: "erpnext.controllers.sales_and_purchase_return.is_invoice_returnable",
 			args: {
