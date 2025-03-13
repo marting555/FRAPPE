@@ -4557,6 +4557,36 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi.load_from_db()
 		frappe.delete_doc("Budget", budget.name,force=1)
 		frappe.delete_doc("Purchase Order", pi.name,force=1)
+
+def test_trx_currency_debit_credit_for_high_precision(self):
+		exc_rate = 0.737517516
+		pi = make_purchase_invoice(
+			currency="USD", conversion_rate=exc_rate, qty=1, rate=2000, do_not_save=True
+		)
+		pi.supplier = "_Test Supplier USD"
+		pi.save().submit()
+
+		expected = (
+			("_Test Account Cost for Goods Sold - _TC", 1475.04, 0.0, 2000.0, 0.0, "USD", exc_rate),
+			("_Test Payable USD - _TC", 0.0, 1475.04, 0.0, 2000.0, "USD", exc_rate),
+		)
+
+		actual = frappe.db.get_all(
+			"GL Entry",
+			filters={"voucher_no": pi.name},
+			fields=[
+				"account",
+				"debit",
+				"credit",
+				"debit_in_transaction_currency",
+				"credit_in_transaction_currency",
+				"transaction_currency",
+				"transaction_exchange_rate",
+			],
+			order_by="account",
+			as_list=1,
+		)
+		self.assertEqual(actual, expected)
 		
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
