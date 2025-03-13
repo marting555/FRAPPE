@@ -4507,6 +4507,11 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		stock_setting = frappe.get_doc('Stock Settings')
 		stock_setting.enable_stock_resrvation = 1
 		stock_setting.save()
+
+		customer = frappe.get_doc("Customer","_Test Customer")
+		if customer:
+			customer.credit_limits=[]
+			customer.save()
   
 		so = self.create_and_submit_sales_order(qty=1, rate=5000)
 		
