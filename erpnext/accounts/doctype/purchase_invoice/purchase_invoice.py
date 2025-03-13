@@ -981,7 +981,10 @@ class PurchaseInvoice(BuyingController):
 										"account": item.expense_account,
 										"against": self.supplier,
 										"debit": warehouse_debit_amount,
-										"debit_in_transaction_currency": item.net_amount,
+										"debit_in_transaction_currency": flt(
+ 											warehouse_debit_amount / self.conversion_rate,
+ 											item.precision("net_amount"),
+ 										),
 										"remarks": self.get("remarks") or _("Accounting Entry for Stock"),
 										"cost_center": item.cost_center,
 										"project": item.project or self.get("project") if "projects" in frappe.get_installed_apps() else "",
@@ -1126,8 +1129,10 @@ class PurchaseInvoice(BuyingController):
 									"account": stock_rbnb,
 									"against": self.supplier,
 									"debit": flt(item.item_tax_amount, item.precision("item_tax_amount")),
-									"debit_in_transaction_currency": item.item_tax_amount
- 									/ self.conversion_rate,
+									"debit_in_transaction_currency": flt(
+ 										item.item_tax_amount / self.conversion_rate,
+ 										item.precision("item_tax_amount"),
+ 									),
 									"remarks": self.remarks or _("Accounting Entry for Stock"),
 									"cost_center": self.cost_center,
 									"project": item.project or self.get("project") if "projects" in frappe.get_installed_apps() else "",
@@ -1300,6 +1305,10 @@ class PurchaseInvoice(BuyingController):
 								"cost_center": tax.cost_center,
 								"against": self.supplier,
 								"credit": applicable_amount,
+								"credit_in_transaction_currency": flt(
+ 									applicable_amount / self.conversion_rate,
+ 									frappe.get_precision("Purchase Invoice Item", "item_tax_amount"),
+ 								),
 								"remarks": self.remarks or _("Accounting Entry for Stock"),
 							},
 							item=tax,
@@ -1318,6 +1327,10 @@ class PurchaseInvoice(BuyingController):
 								"cost_center": tax.cost_center,
 								"against": self.supplier,
 								"credit": valuation_tax[tax.name],
+								"credit_in_transaction_currency": flt(
+ 									valuation_tax[tax.name] / self.conversion_rate,
+ 									frappe.get_precision("Purchase Invoice Item", "item_tax_amount"),
+ 								),
 								"remarks": self.remarks or _("Accounting Entry for Stock"),
 							},
 							item=tax,
