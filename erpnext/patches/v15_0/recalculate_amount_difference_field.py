@@ -25,8 +25,11 @@ def execute():
 		)
 		.where((table.amount_difference_with_purchase_invoice != 0) & (table.docstatus == 1))
 	)
-	if fiscal_year_dates := get_fiscal_year(frappe.utils.datetime.date.today(), raise_on_missing=False):
-		query.where(parent.posting_date.between(fiscal_year_dates[1], fiscal_year_dates[2]))
+	try:
+		if fiscal_year_dates := get_fiscal_year(frappe.utils.datetime.date.today()):
+			query.where(parent.posting_date.between(fiscal_year_dates[1], fiscal_year_dates[2]))
+	except Exception:
+		return
 
 	if result := query.run(as_dict=True):
 		item_wise_billed_qty = get_billed_qty_against_purchase_receipt([item.name for item in result])
