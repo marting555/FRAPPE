@@ -426,27 +426,4 @@ erpnext.PointOfSale.PastOrderSummary = class {
 	toggle_component(show) {
 		show ? this.$component.css("display", "flex") : this.$component.css("display", "none");
 	}
-
-<<<<<<< HEAD
-	async print_receipt_on_order_complete() {
-		const res = await frappe.db.get_value(
-			"POS Profile",
-			this.pos_profile,
-			"print_receipt_on_order_complete"
-		);
-
-		if (res.message.print_receipt_on_order_complete) {
-			this.print_receipt();
-		}
-=======
-	async is_pos_invoice_returnable(invoice) {
-		const r = await frappe.call({
-			method: "erpnext.controllers.sales_and_purchase_return.is_pos_invoice_returnable",
-			args: {
-				pos_invoice: invoice,
-			},
-		});
-		return r.message;
->>>>>>> 0552209310 (refactor: print receipt on order complete on pos (#46501))
-	}
 };
