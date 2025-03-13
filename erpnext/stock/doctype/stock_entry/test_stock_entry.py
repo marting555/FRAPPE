@@ -4021,11 +4021,11 @@ class TestStockEntry(FrappeTestCase):
 		}
 		item1 = make_item("_Test Item2271", item_fields1)
 		item2 = make_item("_Test Item2281", item_fields2)
-		se = make_stock_entry(item_code=item1.name,purpose="Material Receipt", posting_date="01-12-2025",company=company,target=target_warehouse, qty=15)
-		se1 = make_stock_entry(item_code=item1.name,purpose="Material Receipt", posting_date="01-01-2025",company=company,target=target_warehouse, qty=25)
-		se2 = make_stock_entry(item_code=item1.name,set_posting_time=1,purpose="Material Issue", posting_date="01-01-2025",company=company,source=target_warehouse, qty=10)
-		se3 = make_stock_entry(item_code=item1.name,purpose="Material Issue", posting_date="02-07-2025",company=company,source=target_warehouse, qty=20)
-
+		se = make_stock_entry(item_code=item1.name,purpose="Material Receipt", posting_date=nowdate(),company=company,target=target_warehouse, qty=15)
+		se1 = make_stock_entry(item_code=item1.name,purpose="Material Receipt", posting_date=add_days(nowdate(), 30),company=company,target=target_warehouse, qty=25)
+		se2 = make_stock_entry(item_code=item1.name,set_posting_time=1,purpose="Material Issue", posting_date=add_days(nowdate(), 30),company=company,source=target_warehouse, qty=10)
+		se3 = make_stock_entry(item_code=item1.name,purpose="Material Issue", posting_date=add_days(nowdate(), 90),company=company,source=target_warehouse, qty=20)
+		
 		filters = frappe._dict({  # Convert to allow dot notation
 		"territory": "India",
         "item": item1.name,
