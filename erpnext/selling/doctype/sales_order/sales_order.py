@@ -366,7 +366,7 @@ class SalesOrder(SellingController):
 					frappe.get_cached_value("Item", d.item_code, "is_stock_item") == 1
 					or (
 						self.has_product_bundle(d.item_code)
-						and self.product_bundle_has_stock_item(d.item_code)
+						and self.product_bundle_has_stock_item(d.product_bundle_name or d.item_code)
 					)
 				)
 				and not d.warehouse
