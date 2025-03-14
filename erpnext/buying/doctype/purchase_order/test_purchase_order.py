@@ -1234,7 +1234,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		po.reload()
 		self.assertEqual(po.items[0].received_qty, 5)
-		# PO still has qty 0, so billed % should be unset
+		# PO still has qty 0, so received % should be unset
 		self.assertFalse(po.per_received)
 		self.assertEqual(po.status, "To Receive and Bill")
 
