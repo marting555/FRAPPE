@@ -445,7 +445,7 @@ class BOM(WebsiteGenerator):
 			"image": item and args["image"] or "",
 			"stock_uom": item and args["stock_uom"] or "",
 			"uom": args["uom"] if hasattr(args, "uom") else item and args["stock_uom"] or "",
-			"conversion_factor": args["conversion_factor"] if hasattr(args, "conversion_factor") else 1,
+			"conversion_factor": args.get("conversion_factor") or 1,
 			"bom_no": args["bom_no"],
 			"rate": rate,
 			"qty": args.get("qty") or args.get("stock_qty") or 1,
