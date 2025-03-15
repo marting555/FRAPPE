@@ -552,12 +552,14 @@ erpnext.PointOfSale.Controller = class {
 				this.frm = this.get_new_frm(this.frm, doctype);
 				this.frm.doc.items = [];
 				this.frm.doc.is_pos = 1;
+				if (doctype == "Sales Invoice") this.frm.doc.is_created_using_pos = 1;
 				resolve();
 			} else {
 				frappe.model.with_doctype(doctype, () => {
 					this.frm = this.get_new_frm(undefined, doctype);
 					this.frm.doc.items = [];
 					this.frm.doc.is_pos = 1;
+					if (doctype == "Sales Invoice") this.frm.doc.is_created_using_pos = 1;
 					resolve();
 				});
 			}

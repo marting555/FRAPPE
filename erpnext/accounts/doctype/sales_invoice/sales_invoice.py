@@ -133,6 +133,7 @@ class SalesInvoice(SellingController):
 		inter_company_invoice_reference: DF.Link | None
 		is_cash_or_non_trade_discount: DF.Check
 		is_consolidated: DF.Check
+		is_created_using_pos: DF.Check
 		is_debit_note: DF.Check
 		is_discounted: DF.Check
 		is_internal_customer: DF.Check
@@ -162,6 +163,7 @@ class SalesInvoice(SellingController):
 		plc_conversion_rate: DF.Float
 		po_date: DF.Date | None
 		po_no: DF.Data | None
+		pos_closing_entry: DF.Link | None
 		pos_profile: DF.Link | None
 		posting_date: DF.Date
 		posting_time: DF.Time | None
@@ -305,6 +307,9 @@ class SalesInvoice(SellingController):
 
 		if cint(self.is_pos):
 			self.validate_pos()
+
+		if cint(self.is_created_using_pos):
+			self.validate_created_using_pos()
 
 		self.validate_dropship_item()
 
@@ -1031,6 +1036,10 @@ class SalesInvoice(SellingController):
 				flt(invoice_total)
 			) > 1.0 / (10.0 ** (self.precision("grand_total") + 1.0)):
 				frappe.throw(_("Paid amount + Write Off Amount can not be greater than Grand Total"))
+
+	def validate_created_using_pos(self):
+		if self.is_created_using_pos and not self.pos_profile:
+			frappe.throw(_("POS Profile is mandatory to mark this invoice as POS Transaction."))
 
 	def validate_warehouse(self):
 		super().validate_warehouse()
