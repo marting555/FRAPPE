@@ -24,6 +24,18 @@ from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
 class TestQualityInspection(FrappeTestCase):
 	def setUp(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
+		create_warehouse(
+			warehouse_name="_Test Warehouse 1 - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
 		super().setUp()
 		create_item("_Test Item with QA")
 		frappe.db.set_value("Item", "_Test Item with QA", "inspection_required_before_delivery", 1)
@@ -280,9 +292,24 @@ class TestQualityInspection(FrappeTestCase):
 		se.delete()
 
 	def test_qa_for_pr_TC_SCK_159(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		from erpnext.buying.doctype.supplier.test_supplier import create_supplier
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		create_company()
+		create_supplier(supplier_name = "_Test Supplier")
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
+		get_or_create_fiscal_year("_Test Company")
+		create_warehouse(
+			warehouse_name="_Test Warehouse 1 - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
 		item_code = create_item("_Test Item with QA", valuation_rate=200).name
-		pr = make_purchase_receipt(item_code = item_code, company = "_Test Company QA",do_not_submit=True)
+		pr = make_purchase_receipt(item_code = item_code, company = "_Test Company", stock_uom = "Box" , do_not_submit=True)
 
 		frappe.db.set_value("Item", "_Test Item with QA", "inspection_required_before_purchase", 1)
 
@@ -362,10 +389,25 @@ class TestQualityInspection(FrappeTestCase):
 		si.cancel()
 
 	def test_qa_for_pr_out_TC_SCK_162(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		from erpnext.buying.doctype.supplier.test_supplier import create_supplier
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		create_company()
+		create_supplier(supplier_name = "_Test Supplier")
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
+		get_or_create_fiscal_year("_Test Company")
+		create_warehouse(
+			warehouse_name="_Test Warehouse 1 - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
 		item_code = create_item("_Test Item with QA", valuation_rate=200).name
 
-		pr = make_purchase_receipt(item_code = item_code, company = "_Test Company QA",do_not_submit=True)
+		pr = make_purchase_receipt(item_code = item_code, company = "_Test Company",stock_uom= "Box", do_not_submit=True)
 
 		frappe.db.set_value("Item", "_Test Item with QA", "inspection_required_before_purchase", 1)
 		qa = create_quality_inspection(
@@ -438,8 +480,24 @@ class TestQualityInspection(FrappeTestCase):
 		qa.cancel()
 
 	def test_qa_for_pr_proc_TC_SCK_166(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		from erpnext.buying.doctype.supplier.test_supplier import create_supplier
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		create_company()
+		create_supplier(supplier_name = "_Test Supplier")
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
+		create_warehouse(
+			warehouse_name="_Test Warehouse 1 - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
+		get_or_create_fiscal_year("_Test Company")
 		item_code = create_item("_Test Item with QA", valuation_rate=200).name
-		pr = make_purchase_receipt(item_code = item_code, do_not_submit=True)
+		pr = make_purchase_receipt(item_code = item_code, uom ="Box" ,stock_uom = "Box" ,do_not_submit=True)
 		frappe.db.set_value("Item", "_Test Item with QA", "inspection_required_before_purchase", 1)
 
 		qa = create_quality_inspection(
