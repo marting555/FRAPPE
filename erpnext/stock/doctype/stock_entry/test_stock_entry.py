@@ -4382,20 +4382,18 @@ def create_fiscal_with_company(company):
 		start_date = date(today.year - 1, 4, 1)
 		end_date = date(today.year, 3, 31)
 
-	existing_fiscal_years = frappe.db.sql(
-			"""select name from `tabFiscal Year`
-			where (
-				(%(year_start_date)s between year_start_date and year_end_date)
-				or (%(year_end_date)s between year_start_date and year_end_date)
-				or (year_start_date between %(year_start_date)s and %(year_end_date)s)
-				or (year_end_date between %(year_start_date)s and %(year_end_date)s)
-			)""",
-			{
-				"year_start_date": start_date,
-				"year_end_date": end_date,
-			},
-			as_dict=True,
+	FiscalYear = frappe.qb.DocType("Fiscal Year")
+
+	existing_fiscal_years = (
+		frappe.qb.from_(FiscalYear)
+		.select(FiscalYear.name)
+		.where(
+			(FiscalYear.year_start_date <= start_date) & (FiscalYear.year_end_date >= start_date)
+			| (FiscalYear.year_start_date <= end_date) & (FiscalYear.year_end_date >= end_date)
+			| (start_date <= FiscalYear.year_start_date) & (end_date >= FiscalYear.year_start_date)
+			| (start_date <= FiscalYear.year_end_date) & (end_date >= FiscalYear.year_end_date)
 		)
+	).run(as_dict=True)
 	
 	#fix for overlapping fiscal year
 	if existing_fiscal_years != []:
