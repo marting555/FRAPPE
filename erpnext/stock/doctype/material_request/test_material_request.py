@@ -33,8 +33,8 @@ from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchas
 from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_invoice as create_purchase_invoice
 from erpnext.buying.doctype.supplier.test_supplier import create_supplier
 from erpnext.stock.doctype.material_request.material_request import make_purchase_order_based_on_supplier
-# from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
-# from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
+from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
 
