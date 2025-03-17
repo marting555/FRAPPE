@@ -42,6 +42,11 @@ class TestMaterialRequest(FrappeTestCase):
 	def setUp(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
 		create_customer("_Test Customer")
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
 		create_company()
 
 	def test_make_purchase_order(self):
@@ -5031,6 +5036,8 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
+		if not frappe.db.exists('Supplier', '_Test Supplier'):
+			create_supplier(supplier_name="_Test Supplier")
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
 		item = item_create("_Test MR")
@@ -5078,6 +5085,8 @@ class TestMaterialRequest(FrappeTestCase):
 		create_company()
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
+		if not frappe.db.exists('Supplier', '_Test Supplier'):
+			create_supplier(supplier_name="_Test Supplier")
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
@@ -5331,6 +5340,8 @@ class TestMaterialRequest(FrappeTestCase):
 		create_company()
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
+		if not frappe.db.exists('Supplier', '_Test Supplier'):
+			create_supplier(supplier_name="_Test Supplier")
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
@@ -5580,6 +5591,8 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
+		if not frappe.db.exists('Supplier', '_Test Supplier'):
+			create_supplier(supplier_name="_Test Supplier")
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
 		item = item_create("_Test MR")
@@ -5639,6 +5652,8 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
+		if not frappe.db.exists('Supplier', '_Test Supplier'):
+			create_supplier(supplier_name="_Test Supplier")
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
 		item = item_create("_Test MR")
@@ -5894,6 +5909,8 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
+		if not frappe.db.exists('Supplier', '_Test Supplier'):
+			create_supplier(supplier_name="_Test Supplier")
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
 
@@ -5956,6 +5973,8 @@ class TestMaterialRequest(FrappeTestCase):
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
+		if not frappe.db.exists('Supplier', '_Test Supplier'):
+			create_supplier(supplier_name="_Test Supplier")
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
 		item = item_create("_Test MR")
