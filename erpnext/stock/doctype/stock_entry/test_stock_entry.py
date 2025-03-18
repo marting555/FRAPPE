@@ -4001,7 +4001,7 @@ class TestStockEntry(FrappeTestCase):
 			company=company,
 		)
 
-		# get_or_create_fiscal_year(company)
+		get_or_create_fiscal_year(company)
 
 		# Create items
 		item_fields1 = {

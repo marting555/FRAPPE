@@ -6094,6 +6094,10 @@ class TestMaterialRequest(FrappeTestCase):
 		item.save()
 		quantity = 2
 
+		existing_serial_nos = frappe.get_all("Serial No", filters={"item_code": item.item_code}, pluck="name")
+		for serial_no in existing_serial_nos:
+			frappe.delete_doc("Serial No", serial_no, force=True)
+
 		mr = frappe.get_doc({
 			"doctype": "Material Request",
 			"material_request_type": "Purchase",
@@ -6150,6 +6154,10 @@ class TestMaterialRequest(FrappeTestCase):
 		item = make_test_item("_Test Item With Serial No")
 		item.has_serial_no = 1
 		item.save()
+
+		existing_serial_nos = frappe.get_all("Serial No", filters={"item_code": item.item_code}, pluck="name")
+		for serial_no in existing_serial_nos:
+			frappe.delete_doc("Serial No", serial_no, force=True)
 
 		mr = frappe.get_doc({
 			"doctype": "Material Request",
@@ -6230,6 +6238,10 @@ class TestMaterialRequest(FrappeTestCase):
 		item = make_test_item("_Test Item With Serial No")
 		item.has_serial_no = 1
 		item.save()
+
+		existing_serial_nos = frappe.get_all("Serial No", filters={"item_code": item.item_code}, pluck="name")
+		for serial_no in existing_serial_nos:
+			frappe.delete_doc("Serial No", serial_no, force=True)
 
 		mr = frappe.get_doc({
 			"doctype": "Material Request",
