@@ -50,9 +50,8 @@ frappe.query_reports["Supplier Quotation Comparison"] = {
 			fieldname: "supplier",
 			label: __("Supplier"),
 			fieldtype: "MultiSelectList",
-			options: "Supplier",
 			get_data: function (txt) {
-				return frappe.db.get_link_options("Supplier", txt);fieldtype: "MultiSelectList",
+				return frappe.db.get_link_options("Supplier", txt);
 			},
 		},
 		{
@@ -60,7 +59,6 @@ frappe.query_reports["Supplier Quotation Comparison"] = {
 			label: __("Supplier Quotation"),
 			fieldname: "supplier_quotation",
 			default: "",
-			options: "Supplier Quotation",
 			get_data: function (txt) {
 				return frappe.db.get_link_options("Supplier Quotation", txt, { docstatus: ["<", 2] });
 			},

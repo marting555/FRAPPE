@@ -478,7 +478,7 @@ def make_request_for_quotation(source_name, target_doc=None):
 				"field_map": [
 					["name", "material_request_item"],
 					["parent", "material_request"],
-					["project", "project_name"],
+					["uom", "uom"],
 				],
 			},
 		},
