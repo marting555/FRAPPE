@@ -171,7 +171,7 @@ class AccountsController(TransactionBase):
 			self.validate_qty_is_not_zero()
 
 		if (
-			self.doctype in ["Sales Invoice", "Purchase Invoice"]
+			self.doctype in ["Sales Invoice", "Purchase Invoice", "POS Invoice"]
 			and self.get("is_return")
 			and self.get("update_stock")
 		):
@@ -195,6 +195,14 @@ class AccountsController(TransactionBase):
 		self.set_incoming_rate()
 		self.init_internal_values()
 
+		# Need to set taxes based on taxes_and_charges template
+		# before calculating taxes and totals
+		if self.meta.get_field("taxes_and_charges"):
+			self.validate_enabled_taxes_and_charges()
+			self.validate_tax_account_company()
+ 
+		self.set_taxes_and_charges()
+
 		if self.meta.get_field("currency"):
 			self.calculate_taxes_and_totals()
 
@@ -204,10 +212,6 @@ class AccountsController(TransactionBase):
 			validate_return(self)
 
 		self.validate_all_documents_schedule()
-
-		if self.meta.get_field("taxes_and_charges"):
-			self.validate_enabled_taxes_and_charges()
-			self.validate_tax_account_company()
 
 		self.validate_party()
 		self.validate_currency()
@@ -252,8 +256,6 @@ class AccountsController(TransactionBase):
 
 			self.validate_deferred_income_expense_account()
 			self.set_inter_company_account()
-		
-		self.set_taxes_and_charges()
 
 		if self.doctype == "Purchase Invoice":
 			self.calculate_paid_amount()
@@ -821,10 +823,14 @@ class AccountsController(TransactionBase):
 									and item.get("use_serial_batch_fields")
 								)
 							):
-								if fieldname == "batch_no" and not item.batch_no:
-									item.set("rate", ret.get("rate"))
-									item.set("price_list_rate", ret.get("price_list_rate"))
 								item.set(fieldname, value)
+
+								if fieldname == "batch_no" and item.batch_no and not item.is_free_item:
+									if ret.get("rate"):
+										item.set("rate", ret.get("rate"))
+ 
+									if not item.get("price_list_rate") and ret.get("price_list_rate"):
+										item.set("price_list_rate", ret.get("price_list_rate"))
 
 							elif fieldname in ["cost_center", "conversion_factor"] and not item.get(
 								fieldname
@@ -1113,21 +1119,19 @@ class AccountsController(TransactionBase):
 			)
 
 		# Update details in transaction currency
-		gl_dict.update(
-			{
-				"transaction_currency": self.get("currency") or self.company_currency,
-				"transaction_exchange_rate": self.get("conversion_rate", 1),
-				"transaction_exchange_rate": item.get("exchange_rate", 1)
-				if self.doctype == "Journal Entry" and item
-				else self.get("conversion_rate", 1),
-				"debit_in_transaction_currency": self.get_value_in_transaction_currency(
-					account_currency, gl_dict, "debit"
-				),
-				"credit_in_transaction_currency": self.get_value_in_transaction_currency(
-					account_currency, gl_dict, "credit"
-				),
-			}
-		)
+		if self.doctype not in ["Purchase Invoice", "Sales Invoice", "Journal Entry", "Payment Entry"]:
+			gl_dict.update(
+				{
+					"transaction_currency": self.get("currency") or self.company_currency,
+					"transaction_exchange_rate": self.get("conversion_rate", 1),
+					"debit_in_transaction_currency": self.get_value_in_transaction_currency(
+						account_currency, gl_dict, "debit"
+					),
+					"credit_in_transaction_currency": self.get_value_in_transaction_currency(
+						account_currency, gl_dict, "credit"
+					),
+				}
+			)
 
 		if not args.get("against_voucher_type") and self.get("against_voucher_type"):
 			gl_dict.update({"against_voucher_type": self.get("against_voucher_type")})
@@ -1897,22 +1901,22 @@ class AccountsController(TransactionBase):
 				continue
 
 			ref_amt = flt(reference_details.get(item.get(item_ref_dn)), self.precision(based_on, item))
+			based_on_amt = flt(item.get(based_on))
 
 			if not ref_amt:
-				frappe.msgprint(
-					_("System will not check over billing since amount for Item {0} in {1} is zero").format(
-						item.item_code, ref_dt
-					),
-					title=_("Warning"),
-					indicator="orange",
-				)
+				if based_on_amt:  # Skip warning for free items
+					frappe.msgprint(
+						_(
+							"System will not check over billing since amount for Item {0} in {1} is zero"
+						).format(item.item_code, ref_dt),
+						title=_("Warning"),
+						indicator="orange",
+					)
 				continue
 
 			already_billed = self.get_billed_amount_for_item(item, item_ref_dn, based_on)
 
-			total_billed_amt = flt(
-				flt(already_billed) + flt(item.get(based_on)), self.precision(based_on, item)
-			)
+			total_billed_amt = flt(flt(already_billed) + based_on_amt, self.precision(based_on, item))
 
 			allowance, item_allowance, global_qty_allowance, global_amount_allowance = get_allowance_for(
 				item.item_code, item_allowance, global_qty_allowance, global_amount_allowance, "amount"
@@ -2728,6 +2732,10 @@ class AccountsController(TransactionBase):
 			elif self.doctype == "Payment Entry":
 				self.make_advance_payment_ledger_for_payment()
 
+	def set_transaction_currency_and_rate_in_gl_map(self, gl_entries):
+		for x in gl_entries:
+			x["transaction_currency"] = self.currency
+			x["transaction_exchange_rate"] = self.get("conversion_rate") or 1
 
 @frappe.whitelist()
 def get_tax_rate(account_head):

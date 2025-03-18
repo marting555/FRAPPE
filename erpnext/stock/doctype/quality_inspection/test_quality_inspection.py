@@ -296,6 +296,7 @@ class TestQualityInspection(FrappeTestCase):
 		from erpnext.buying.doctype.supplier.test_supplier import create_supplier
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		create_company()
+
 		create_supplier(supplier_name = "_Test Supplier")
 		create_warehouse(
 			warehouse_name="_Test Warehouse - _TC",
@@ -312,7 +313,6 @@ class TestQualityInspection(FrappeTestCase):
 		pr = make_purchase_receipt(item_code = item_code, company = "_Test Company", stock_uom = "Box" , do_not_submit=True)
 
 		frappe.db.set_value("Item", "_Test Item with QA", "inspection_required_before_purchase", 1)
-
 		qa = create_quality_inspection(
 			reference_type="Purchase Receipt", reference_name=pr.name, status="Accepted", inspection_type="Incoming", do_not_submit=True
 		)
@@ -421,7 +421,6 @@ class TestQualityInspection(FrappeTestCase):
 		pr.submit()
 		qa.reload()
 		self.assertEqual(qa.status, "Accepted")
-		
 		qa.reload()
 		qa.cancel()
 		pr.reload()
