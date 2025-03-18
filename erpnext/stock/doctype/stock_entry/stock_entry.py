@@ -2380,7 +2380,7 @@ class StockEntry(StockController):
 			item_row = item_dict[d]
 
 			child_qty = flt(item_row["qty"], precision)
-			if not self.is_return and child_qty <= 0 and not item_row.get("is_scrap_item"):
+			if not self.is_return and child_qty <= 0:
 				continue
 
 			se_child = self.append("items")
