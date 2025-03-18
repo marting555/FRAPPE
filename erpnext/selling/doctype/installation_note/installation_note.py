@@ -46,7 +46,10 @@ class InstallationNote(TransactionBase):
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self.status_updater = [
+
+	@property
+	def status_updater(self) -> list[dict]:
+		return [
 			{
 				"source_dt": "Installation Note Item",
 				"target_dt": "Delivery Note Item",

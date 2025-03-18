@@ -35,7 +35,10 @@ class PackingSlip(StatusUpdater):
 
 	def __init__(self, *args, **kwargs) -> None:
 		super().__init__(*args, **kwargs)
-		self.status_updater = [
+
+	@property
+	def status_updater(self) -> list[dict]:
+		return [
 			{
 				"target_dt": "Delivery Note Item",
 				"join_field": "dn_detail",

@@ -84,7 +84,9 @@ class SubcontractingOrder(SubcontractingController):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 
-		self.status_updater = [
+	@property
+	def status_updater(self) -> list[dict]:
+		return [
 			{
 				"source_dt": "Subcontracting Order Item",
 				"target_dt": "Material Request Item",

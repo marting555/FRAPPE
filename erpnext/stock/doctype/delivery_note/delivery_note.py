@@ -144,7 +144,10 @@ class DeliveryNote(SellingController):
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self.status_updater = [
+
+	@property
+	def status_updater(self) -> list[dict]:
+		updater = [
 			{
 				"source_dt": "Delivery Note Item",
 				"target_dt": "Sales Order Item",
@@ -178,7 +181,7 @@ class DeliveryNote(SellingController):
 			},
 		]
 		if cint(self.is_return):
-			self.status_updater.extend(
+			updater.extend(
 				[
 					{
 						"source_dt": "Delivery Note Item",
@@ -208,6 +211,8 @@ class DeliveryNote(SellingController):
 					},
 				]
 			)
+
+		return updater
 
 	def onload(self):
 		super().onload()

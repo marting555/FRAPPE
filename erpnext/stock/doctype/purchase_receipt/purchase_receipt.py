@@ -141,7 +141,10 @@ class PurchaseReceipt(BuyingController):
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self.status_updater = [
+
+	@property
+	def status_updater(self) -> list[dict]:
+		updater = [
 			{
 				"target_dt": "Purchase Order Item",
 				"join_field": "purchase_order_item",
@@ -195,7 +198,7 @@ class PurchaseReceipt(BuyingController):
 		]
 
 		if cint(self.is_return):
-			self.status_updater.extend(
+			updater.extend(
 				[
 					{
 						"source_dt": "Purchase Receipt Item",
@@ -224,6 +227,8 @@ class PurchaseReceipt(BuyingController):
 					},
 				]
 			)
+
+		return updater
 
 	def before_validate(self):
 		from erpnext.stock.doctype.putaway_rule.putaway_rule import apply_putaway_rule

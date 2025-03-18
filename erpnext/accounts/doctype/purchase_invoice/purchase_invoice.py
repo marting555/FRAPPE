@@ -223,20 +223,80 @@ class PurchaseInvoice(BuyingController):
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self.status_updater = [
-			{
-				"source_dt": "Purchase Invoice Item",
-				"target_dt": "Purchase Order Item",
-				"join_field": "po_detail",
-				"target_field": "billed_amt",
-				"target_parent_dt": "Purchase Order",
-				"target_parent_field": "per_billed",
-				"target_ref_field": "amount",
-				"source_field": "amount",
-				"percent_join_field": "purchase_order",
-				"overflow_type": "billing",
-			}
-		]
+
+	@property
+	def status_updater(self) -> list[dict]:
+		if self.is_return and not self.update_billed_amount_in_purchase_order:
+			# `billed_amt` updation is bypassed
+			updater = []
+		else:
+			updater = [
+				{
+					"source_dt": "Purchase Invoice Item",
+					"target_dt": "Purchase Order Item",
+					"join_field": "po_detail",
+					"target_field": "billed_amt",
+					"target_parent_dt": "Purchase Order",
+					"target_parent_field": "per_billed",
+					"target_ref_field": "amount",
+					"source_field": "amount",
+					"percent_join_field": "purchase_order",
+					"overflow_type": "billing",
+				}
+			]
+
+		if cint(self.update_stock):
+			updater.extend(
+				[
+					{
+						"source_dt": "Purchase Invoice Item",
+						"target_dt": "Purchase Order Item",
+						"join_field": "po_detail",
+						"target_field": "received_qty",
+						"target_parent_dt": "Purchase Order",
+						"target_parent_field": "per_received",
+						"target_ref_field": "qty",
+						"source_field": "received_qty",
+						"second_source_dt": "Purchase Receipt Item",
+						"second_source_field": "received_qty",
+						"second_join_field": "purchase_order_item",
+						"percent_join_field": "purchase_order",
+						"overflow_type": "receipt",
+						"extra_cond": """ and exists(select name from `tabPurchase Invoice`
+					where name=`tabPurchase Invoice Item`.parent and update_stock = 1)""",
+					},
+					{
+						"source_dt": "Purchase Invoice Item",
+						"target_dt": "Material Request Item",
+						"join_field": "material_request_item",
+						"target_field": "received_qty",
+						"target_parent_dt": "Material Request",
+						"target_parent_field": "per_received",
+						"target_ref_field": "stock_qty",
+						"source_field": "stock_qty",
+						"percent_join_field": "material_request",
+					},
+				]
+			)
+
+			if cint(self.is_return):
+				updater.append(
+					{
+						"source_dt": "Purchase Invoice Item",
+						"target_dt": "Purchase Order Item",
+						"join_field": "po_detail",
+						"target_field": "returned_qty",
+						"source_field": "-1 * qty",
+						"second_source_dt": "Purchase Receipt Item",
+						"second_source_field": "-1 * qty",
+						"second_join_field": "purchase_order_item",
+						"overflow_type": "receipt",
+						"extra_cond": """ and exists (select name from `tabPurchase Invoice`
+						where name=`tabPurchase Invoice Item`.parent and update_stock=1 and is_return=1)""",
+					}
+				)
+
+		return updater
 
 	def onload(self):
 		super().onload()
@@ -665,57 +725,6 @@ class PurchaseInvoice(BuyingController):
 				if not submitted:
 					frappe.throw(_("Purchase Receipt {0} is not submitted").format(d.purchase_receipt))
 
-	def update_status_updater_args(self):
-		if cint(self.update_stock):
-			self.status_updater.append(
-				{
-					"source_dt": "Purchase Invoice Item",
-					"target_dt": "Purchase Order Item",
-					"join_field": "po_detail",
-					"target_field": "received_qty",
-					"target_parent_dt": "Purchase Order",
-					"target_parent_field": "per_received",
-					"target_ref_field": "qty",
-					"source_field": "received_qty",
-					"second_source_dt": "Purchase Receipt Item",
-					"second_source_field": "received_qty",
-					"second_join_field": "purchase_order_item",
-					"percent_join_field": "purchase_order",
-					"overflow_type": "receipt",
-					"extra_cond": """ and exists(select name from `tabPurchase Invoice`
-					where name=`tabPurchase Invoice Item`.parent and update_stock = 1)""",
-				}
-			)
-			self.status_updater.append(
-				{
-					"source_dt": "Purchase Invoice Item",
-					"target_dt": "Material Request Item",
-					"join_field": "material_request_item",
-					"target_field": "received_qty",
-					"target_parent_dt": "Material Request",
-					"target_parent_field": "per_received",
-					"target_ref_field": "stock_qty",
-					"source_field": "stock_qty",
-					"percent_join_field": "material_request",
-				}
-			)
-			if cint(self.is_return):
-				self.status_updater.append(
-					{
-						"source_dt": "Purchase Invoice Item",
-						"target_dt": "Purchase Order Item",
-						"join_field": "po_detail",
-						"target_field": "returned_qty",
-						"source_field": "-1 * qty",
-						"second_source_dt": "Purchase Receipt Item",
-						"second_source_field": "-1 * qty",
-						"second_join_field": "purchase_order_item",
-						"overflow_type": "receipt",
-						"extra_cond": """ and exists (select name from `tabPurchase Invoice`
-						where name=`tabPurchase Invoice Item`.parent and update_stock=1 and is_return=1)""",
-					}
-				)
-
 	def validate_purchase_receipt_if_update_stock(self):
 		if self.update_stock:
 			for item in self.get("items"):
@@ -739,12 +748,6 @@ class PurchaseInvoice(BuyingController):
 		super().on_submit()
 
 		self.check_prev_docstatus()
-
-		if self.is_return and not self.update_billed_amount_in_purchase_order:
-			# NOTE status updating bypassed for is_return
-			self.status_updater = []
-
-		self.update_status_updater_args()
 		self.update_prevdoc_status()
 
 		frappe.get_doc("Authorization Control").validate_approving_authority(
@@ -1652,12 +1655,6 @@ class PurchaseInvoice(BuyingController):
 		super().on_cancel()
 
 		self.check_on_hold_or_closed_status()
-
-		if self.is_return and not self.update_billed_amount_in_purchase_order:
-			# NOTE status updating bypassed for is_return
-			self.status_updater = []
-
-		self.update_status_updater_args()
 		self.update_prevdoc_status()
 
 		if not self.is_return:

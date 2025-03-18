@@ -87,7 +87,10 @@ class SubcontractingReceipt(SubcontractingController):
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self.status_updater = [
+
+	@property
+	def status_updater(self) -> list[dict]:
+		updater = [
 			{
 				"target_dt": "Subcontracting Order Item",
 				"join_field": "subcontracting_order_item",
@@ -101,6 +104,33 @@ class SubcontractingReceipt(SubcontractingController):
 				"overflow_type": "receipt",
 			},
 		]
+		if cint(self.is_return):
+			updater.extend(
+				[
+					{
+						"source_dt": "Subcontracting Receipt Item",
+						"target_dt": "Subcontracting Order Item",
+						"join_field": "subcontracting_order_item",
+						"target_field": "returned_qty",
+						"source_field": "-1 * qty",
+						"extra_cond": """ and exists (select name from `tabSubcontracting Receipt`
+						where name=`tabSubcontracting Receipt Item`.parent and is_return=1)""",
+					},
+					{
+						"source_dt": "Subcontracting Receipt Item",
+						"target_dt": "Subcontracting Receipt Item",
+						"join_field": "subcontracting_receipt_item",
+						"target_field": "returned_qty",
+						"target_parent_dt": "Subcontracting Receipt",
+						"target_parent_field": "per_returned",
+						"target_ref_field": "received_qty",
+						"source_field": "-1 * received_qty",
+						"percent_join_field_parent": "return_against",
+					},
+				]
+			)
+
+		return updater
 
 	def onload(self):
 		self.set_onload(
@@ -144,7 +174,6 @@ class SubcontractingReceipt(SubcontractingController):
 	def on_submit(self):
 		self.validate_closed_subcontracting_order()
 		self.validate_available_qty_for_consumption()
-		self.update_status_updater_args()
 		self.update_prevdoc_status()
 		self.set_subcontracting_order_status()
 		self.set_consumed_qty_in_subcontract_order()
@@ -171,7 +200,6 @@ class SubcontractingReceipt(SubcontractingController):
 			"Serial and Batch Bundle",
 		)
 		self.validate_closed_subcontracting_order()
-		self.update_status_updater_args()
 		self.update_prevdoc_status()
 		self.set_consumed_qty_in_subcontract_order()
 		self.set_subcontracting_order_status()
@@ -472,33 +500,6 @@ class SubcontractingReceipt(SubcontractingController):
 					in Consumed Items Table."""
 
 				frappe.throw(_(msg))
-
-	def update_status_updater_args(self):
-		if cint(self.is_return):
-			self.status_updater.extend(
-				[
-					{
-						"source_dt": "Subcontracting Receipt Item",
-						"target_dt": "Subcontracting Order Item",
-						"join_field": "subcontracting_order_item",
-						"target_field": "returned_qty",
-						"source_field": "-1 * qty",
-						"extra_cond": """ and exists (select name from `tabSubcontracting Receipt`
-						where name=`tabSubcontracting Receipt Item`.parent and is_return=1)""",
-					},
-					{
-						"source_dt": "Subcontracting Receipt Item",
-						"target_dt": "Subcontracting Receipt Item",
-						"join_field": "subcontracting_receipt_item",
-						"target_field": "returned_qty",
-						"target_parent_dt": "Subcontracting Receipt",
-						"target_parent_field": "per_returned",
-						"target_ref_field": "received_qty",
-						"source_field": "-1 * received_qty",
-						"percent_join_field_parent": "return_against",
-					},
-				]
-			)
 
 	def update_status(self, status=None, update_modified=False):
 		if not status:

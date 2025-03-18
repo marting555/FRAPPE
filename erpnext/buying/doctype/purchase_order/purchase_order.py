@@ -170,7 +170,10 @@ class PurchaseOrder(BuyingController):
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self.status_updater = [
+
+	@property
+	def status_updater(self) -> list[dict]:
+		updater = [
 			{
 				"source_dt": "Purchase Order Item",
 				"target_dt": "Material Request Item",
@@ -183,6 +186,51 @@ class PurchaseOrder(BuyingController):
 				"percent_join_field": "material_request",
 			}
 		]
+
+		is_submitted = self.docstatus == 1
+		is_cancelled = self.docstatus == 2
+
+		if self.is_against_so() and (is_submitted or is_cancelled):
+			updater.extend(
+				[
+					{
+						"source_dt": "Purchase Order Item",
+						"target_dt": "Sales Order Item",
+						"target_field": "ordered_qty",
+						"target_parent_dt": "Sales Order",
+						"target_parent_field": "",
+						"join_field": "sales_order_item",
+						"target_ref_field": "stock_qty",
+						"source_field": "stock_qty",
+					},
+					{
+						"source_dt": "Purchase Order Item",
+						"target_dt": "Packed Item",
+						"target_field": "ordered_qty",
+						"target_parent_dt": "Sales Order",
+						"target_parent_field": "",
+						"join_field": "sales_order_packed_item",
+						"target_ref_field": "qty",
+						"source_field": "stock_qty",
+					},
+				]
+			)
+
+		if self.is_against_pp() and is_submitted:
+			updater.append(
+				{
+					"source_dt": "Purchase Order Item",
+					"target_dt": "Production Plan Sub Assembly Item",
+					"join_field": "production_plan_sub_assembly_item",
+					"target_field": "received_qty",
+					"target_parent_dt": "Production Plan",
+					"target_parent_field": "",
+					"target_ref_field": "qty",
+					"source_field": "fg_item_qty",
+				}
+			)
+
+		return updater
 
 	def onload(self):
 		supplier_tds = frappe.db.get_value("Supplier", self.supplier, "tax_withholding_category")
@@ -466,12 +514,6 @@ class PurchaseOrder(BuyingController):
 	def on_submit(self):
 		super().on_submit()
 
-		if self.is_against_so():
-			self.update_status_updater()
-
-		if self.is_against_pp():
-			self.update_status_updater_if_from_pp()
-
 		self.update_prevdoc_status()
 		if not self.is_subcontracted or self.is_old_subcontracting_flow:
 			self.update_requested_qty()
@@ -500,9 +542,6 @@ class PurchaseOrder(BuyingController):
 
 		super().on_cancel()
 
-		if self.is_against_so():
-			self.update_status_updater()
-
 		if self.has_drop_ship_item():
 			self.update_delivered_qty_in_sales_order()
 
@@ -526,46 +565,6 @@ class PurchaseOrder(BuyingController):
 
 	def on_update(self):
 		pass
-
-	def update_status_updater(self):
-		self.status_updater.append(
-			{
-				"source_dt": "Purchase Order Item",
-				"target_dt": "Sales Order Item",
-				"target_field": "ordered_qty",
-				"target_parent_dt": "Sales Order",
-				"target_parent_field": "",
-				"join_field": "sales_order_item",
-				"target_ref_field": "stock_qty",
-				"source_field": "stock_qty",
-			}
-		)
-		self.status_updater.append(
-			{
-				"source_dt": "Purchase Order Item",
-				"target_dt": "Packed Item",
-				"target_field": "ordered_qty",
-				"target_parent_dt": "Sales Order",
-				"target_parent_field": "",
-				"join_field": "sales_order_packed_item",
-				"target_ref_field": "qty",
-				"source_field": "stock_qty",
-			}
-		)
-
-	def update_status_updater_if_from_pp(self):
-		self.status_updater.append(
-			{
-				"source_dt": "Purchase Order Item",
-				"target_dt": "Production Plan Sub Assembly Item",
-				"join_field": "production_plan_sub_assembly_item",
-				"target_field": "received_qty",
-				"target_parent_dt": "Production Plan",
-				"target_parent_field": "",
-				"target_ref_field": "qty",
-				"source_field": "fg_item_qty",
-			}
-		)
 
 	def update_delivered_qty_in_sales_order(self):
 		"""Update delivered qty in Sales Order for drop ship"""

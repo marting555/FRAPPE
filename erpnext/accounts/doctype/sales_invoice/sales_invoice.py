@@ -237,22 +237,74 @@ class SalesInvoice(SellingController):
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self.status_updater = [
+
+	@property
+	def status_updater(self) -> list[dict]:
+		if self.is_return and not self.update_billed_amount_in_sales_order:
+			# `billed_amt` updation is bypassed
+			updater = []
+		else:
+			updater = [
+				{
+					"source_dt": "Sales Invoice Item",
+					"target_field": "billed_amt",
+					"target_ref_field": "amount",
+					"target_dt": "Sales Order Item",
+					"join_field": "so_detail",
+					"target_parent_dt": "Sales Order",
+					"target_parent_field": "per_billed",
+					"source_field": "amount",
+					"percent_join_field": "sales_order",
+					"status_field": "billing_status",
+					"keyword": "Billed",
+					"overflow_type": "billing",
+				}
+			]
+
+		if not cint(self.update_stock):
+			return updater
+
+		updater.append(
 			{
 				"source_dt": "Sales Invoice Item",
-				"target_field": "billed_amt",
-				"target_ref_field": "amount",
+				"target_dt": "Sales Order Item",
+				"target_parent_dt": "Sales Order",
+				"target_parent_field": "per_delivered",
+				"target_field": "delivered_qty",
+				"target_ref_field": "qty",
+				"source_field": "qty",
+				"join_field": "so_detail",
+				"percent_join_field": "sales_order",
+				"status_field": "delivery_status",
+				"keyword": "Delivered",
+				"second_source_dt": "Delivery Note Item",
+				"second_source_field": "qty",
+				"second_join_field": "so_detail",
+				"overflow_type": "delivery",
+				"extra_cond": """ and exists(select name from `tabSales Invoice`
+				where name=`tabSales Invoice Item`.parent and update_stock = 1)""",
+			}
+		)
+
+		if not cint(self.is_return):
+			return updater
+
+		updater.append(
+			{
+				"source_dt": "Sales Invoice Item",
 				"target_dt": "Sales Order Item",
 				"join_field": "so_detail",
+				"target_field": "returned_qty",
 				"target_parent_dt": "Sales Order",
-				"target_parent_field": "per_billed",
-				"source_field": "amount",
-				"percent_join_field": "sales_order",
-				"status_field": "billing_status",
-				"keyword": "Billed",
-				"overflow_type": "billing",
+				"source_field": "-1 * qty",
+				"second_source_dt": "Delivery Note Item",
+				"second_source_field": "-1 * qty",
+				"second_join_field": "so_detail",
+				"extra_cond": """ and exists (select name from `tabSales Invoice` where name=`tabSales Invoice Item`.parent and update_stock=1 and is_return=1)""",
 			}
-		]
+		)
+
+		return updater
 
 	def set_indicator(self):
 		"""Set indicator for portal"""
@@ -430,12 +482,6 @@ class SalesInvoice(SellingController):
 			)
 
 		self.check_prev_docstatus()
-
-		if self.is_return and not self.update_billed_amount_in_sales_order:
-			# NOTE status updating bypassed for is_return
-			self.status_updater = []
-
-		self.update_status_updater_args()
 		self.update_prevdoc_status()
 
 		self.update_billing_status_in_dn()
@@ -540,12 +586,6 @@ class SalesInvoice(SellingController):
 		super().on_cancel()
 
 		self.check_sales_order_on_hold_or_close("sales_order")
-
-		if self.is_return and not self.update_billed_amount_in_sales_order:
-			# NOTE status updating bypassed for is_return
-			self.status_updater = []
-
-		self.update_status_updater_args()
 		self.update_prevdoc_status()
 		self.update_billing_status_in_dn()
 
@@ -597,50 +637,6 @@ class SalesInvoice(SellingController):
 		)
 
 		self.delete_auto_created_batches()
-
-	def update_status_updater_args(self):
-		if not cint(self.update_stock):
-			return
-
-		self.status_updater.append(
-			{
-				"source_dt": "Sales Invoice Item",
-				"target_dt": "Sales Order Item",
-				"target_parent_dt": "Sales Order",
-				"target_parent_field": "per_delivered",
-				"target_field": "delivered_qty",
-				"target_ref_field": "qty",
-				"source_field": "qty",
-				"join_field": "so_detail",
-				"percent_join_field": "sales_order",
-				"status_field": "delivery_status",
-				"keyword": "Delivered",
-				"second_source_dt": "Delivery Note Item",
-				"second_source_field": "qty",
-				"second_join_field": "so_detail",
-				"overflow_type": "delivery",
-				"extra_cond": """ and exists(select name from `tabSales Invoice`
-				where name=`tabSales Invoice Item`.parent and update_stock = 1)""",
-			}
-		)
-
-		if not cint(self.is_return):
-			return
-
-		self.status_updater.append(
-			{
-				"source_dt": "Sales Invoice Item",
-				"target_dt": "Sales Order Item",
-				"join_field": "so_detail",
-				"target_field": "returned_qty",
-				"target_parent_dt": "Sales Order",
-				"source_field": "-1 * qty",
-				"second_source_dt": "Delivery Note Item",
-				"second_source_field": "-1 * qty",
-				"second_join_field": "so_detail",
-				"extra_cond": """ and exists (select name from `tabSales Invoice` where name=`tabSales Invoice Item`.parent and update_stock=1 and is_return=1)""",
-			}
-		)
 
 	def check_credit_limit(self):
 		from erpnext.selling.doctype.customer.customer import check_credit_limit
