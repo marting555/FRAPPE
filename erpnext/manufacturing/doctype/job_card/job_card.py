@@ -216,7 +216,7 @@ class JobCard(Document):
 
 				open_job_cards = []
 				if d.get("employee"):
-					open_job_cards = self.get_open_job_cards(d.get("employee"), workstation=self.workstation)
+					open_job_cards = self.get_open_job_cards(d.get("employee"))
 
 				data = self.get_overlap_for(d, open_job_cards=open_job_cards)
 				if data:
@@ -257,13 +257,9 @@ class JobCard(Document):
 				frappe.get_cached_value("Workstation", self.workstation, "production_capacity") or 1
 			)
 
-		if self.get_open_job_cards(args.get("employee")):
-			frappe.throw(
-				_(
-					"Employee {0} is currently working on another workstation. Please assign another employee."
-				).format(args.get("employee")),
- 				OverlapError,
-			)
+		if args.get("employee"):
+			# override capacity for employee
+			production_capacity = 1
 
 		if not self.has_overlap(production_capacity, time_logs):
 			return {}
@@ -370,7 +366,7 @@ class JobCard(Document):
 
 		return time_logs
 
-	def get_open_job_cards(self, employee, workstation=None):
+	def get_open_job_cards(self, employee):
 		jc = frappe.qb.DocType("Job Card")
 		jctl = frappe.qb.DocType("Job Card Time Log")
 
@@ -381,14 +377,12 @@ class JobCard(Document):
 			.select(jc.name)
 			.where(
 				(jctl.parent == jc.name)
+				& (jc.workstation == self.workstation)
 				& (jctl.employee == employee)
 				& (jc.docstatus < 1)
 				& (jc.name != self.name)
 			)
 		)
-
-		if workstation:
-			query = query.where(jc.workstation == workstation)
 
 		jobs = query.run(as_dict=True)
 		return [job.get("name") for job in jobs] if jobs else []

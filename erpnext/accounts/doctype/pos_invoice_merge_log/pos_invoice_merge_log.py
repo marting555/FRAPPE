@@ -12,9 +12,7 @@ from frappe.utils import cint, flt, get_time, getdate, nowdate, nowtime
 from frappe.utils.background_jobs import enqueue, is_job_enqueued
 from frappe.utils.scheduler import is_scheduler_inactive
 
-from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
- 	get_checks_for_pl_and_bs_accounts,
- )
+from erpnext.accounts.doctype.pos_profile.pos_profile import required_accounting_dimensions
 
 
 class POSInvoiceMergeLog(Document):
@@ -294,23 +292,22 @@ class POSInvoiceMergeLog(Document):
 		invoice.disable_rounded_total = cint(
 			frappe.db.get_value("POS Profile", invoice.pos_profile, "disable_rounded_total")
 		)
-		accounting_dimensions = get_checks_for_pl_and_bs_accounts()
-		accounting_dimensions_fields = [d.fieldname for d in accounting_dimensions]
+		accounting_dimensions = required_accounting_dimensions()
 		dimension_values = frappe.db.get_value(
-			"POS Profile", {"name": invoice.pos_profile}, accounting_dimensions_fields, as_dict=1
+			"POS Profile", {"name": invoice.pos_profile}, accounting_dimensions, as_dict=1
 		)
 		for dimension in accounting_dimensions:
-			dimension_value = dimension_values.get(dimension.fieldname)
+			dimension_value = dimension_values.get(dimension)
 
-			if not dimension_value and (dimension.mandatory_for_pl or dimension.mandatory_for_bs):
+			if not dimension_value:
 				frappe.throw(
 					_("Please set Accounting Dimension {} in {}").format(
-						frappe.bold(dimension.label),
+						frappe.bold(frappe.unscrub(dimension)),
 						frappe.get_desk_link("POS Profile", invoice.pos_profile),
 					)
 				)
 
-			invoice.set(dimension.fieldname, dimension_value)
+			invoice.set(dimension, dimension_value)
 
 		if self.merge_invoices_based_on == "Customer Group":
 			invoice.flags.ignore_pos_profile = True

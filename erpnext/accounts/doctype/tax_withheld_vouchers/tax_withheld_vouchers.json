@@ -13,15 +13,17 @@
  "fields": [
   {
    "fieldname": "voucher_type",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Voucher Type"
+   "label": "Voucher Type",
+   "options": "DocType"
   },
   {
    "fieldname": "voucher_name",
-   "fieldtype": "Data",
+   "fieldtype": "Dynamic Link",
    "in_list_view": 1,
-   "label": "Voucher Name"
+   "label": "Voucher Name",
+   "options": "voucher_type"
   },
   {
    "fieldname": "taxable_amount",

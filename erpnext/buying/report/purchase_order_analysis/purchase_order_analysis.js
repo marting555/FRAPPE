@@ -19,10 +19,6 @@ frappe.query_reports["Purchase Order Analysis"] = {
 			width: "80",
 			reqd: 1,
 			default: frappe.datetime.add_months(frappe.datetime.get_today(), -1),
-			on_change: (report) => {
-				report.set_filter_value("name", []);
-				report.refresh();
-			},
 		},
 		{
 			fieldname: "to_date",
@@ -31,10 +27,6 @@ frappe.query_reports["Purchase Order Analysis"] = {
 			width: "80",
 			reqd: 1,
 			default: frappe.datetime.get_today(),
-			on_change: (report) => {
-				report.set_filter_value("name", []);
-				report.refresh();
-			},
 		},
 		{
 			fieldname: "project",
@@ -46,17 +38,13 @@ frappe.query_reports["Purchase Order Analysis"] = {
 		{
 			fieldname: "name",
 			label: __("Purchase Order"),
-			fieldtype: "MultiSelectList",
+			fieldtype: "Link",
 			width: "80",
 			options: "Purchase Order",
-			get_data: function (txt) {
-				let filters = { docstatus: 1 };
-
-				const from_date = frappe.query_report.get_filter_value("from_date");
-				const to_date = frappe.query_report.get_filter_value("to_date");
-				if (from_date && to_date) filters["transaction_date"] = ["between", [from_date, to_date]];
-
-				return frappe.db.get_link_options("Purchase Order", txt, filters);
+			get_query: () => {
+				return {
+					filters: { docstatus: 1 },
+				};
 			},
 		},
 		{
@@ -64,16 +52,8 @@ frappe.query_reports["Purchase Order Analysis"] = {
 			label: __("Status"),
 			fieldtype: "MultiSelectList",
 			width: "80",
-			options: ["To Pay", "To Bill", "To Receive", "To Receive and Bill", "Completed", "Closed"],
 			get_data: function (txt) {
-				let status = [
-					"To Pay",
-					"To Bill",
-					"To Receive",
-					"To Receive and Bill",
-					"Completed",
-					"Closed",
-				];
+				let status = ["To Bill", "To Receive", "To Receive and Bill", "Completed"];
 				let options = [];
 				for (let option of status) {
 					options.push({

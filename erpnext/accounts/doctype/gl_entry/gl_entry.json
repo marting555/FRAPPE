@@ -275,8 +275,7 @@
   {
    "fieldname": "transaction_exchange_rate",
    "fieldtype": "Float",
-   "label": "Transaction Exchange Rate",
-    "precision": "9"
+   "label": "Transaction Exchange Rate"
   },
   {
    "fieldname": "debit_in_transaction_currency",
