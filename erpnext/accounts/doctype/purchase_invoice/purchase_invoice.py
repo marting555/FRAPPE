@@ -226,11 +226,11 @@ class PurchaseInvoice(BuyingController):
 
 	@property
 	def status_updater(self) -> list[dict]:
-		if self.is_return and not self.update_billed_amount_in_purchase_order:
-			# `billed_amt` updation is bypassed
-			updater = []
-		else:
-			updater = [
+		updater = []
+
+		# Skip `billed_amt updation` if True
+		if not (self.is_return and not self.update_billed_amount_in_purchase_order):
+			updater.append(
 				{
 					"source_dt": "Purchase Invoice Item",
 					"target_dt": "Purchase Order Item",
@@ -243,7 +243,7 @@ class PurchaseInvoice(BuyingController):
 					"percent_join_field": "purchase_order",
 					"overflow_type": "billing",
 				}
-			]
+			)
 
 		if cint(self.update_stock):
 			updater.extend(

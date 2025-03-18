@@ -240,11 +240,11 @@ class SalesInvoice(SellingController):
 
 	@property
 	def status_updater(self) -> list[dict]:
-		if self.is_return and not self.update_billed_amount_in_sales_order:
-			# `billed_amt` updation is bypassed
-			updater = []
-		else:
-			updater = [
+		updater = []
+
+		# Skip `billed_amt` updation if True
+		if not (self.is_return and not self.update_billed_amount_in_sales_order):
+			updater.append(
 				{
 					"source_dt": "Sales Invoice Item",
 					"target_field": "billed_amt",
@@ -259,7 +259,7 @@ class SalesInvoice(SellingController):
 					"keyword": "Billed",
 					"overflow_type": "billing",
 				}
-			]
+			)
 
 		if not cint(self.update_stock):
 			return updater
