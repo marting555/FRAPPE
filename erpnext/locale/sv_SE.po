@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-03-16 09:34+0000\n"
-"PO-Revision-Date: 2025-03-17 11:25\n"
+"PO-Revision-Date: 2025-03-18 11:44\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -53414,7 +53414,7 @@ msgstr "Artiklar {0} och {1} finns i följande {2}:"
 
 #: erpnext/controllers/buying_controller.py:1024
 msgid "The items {items} are not marked as {type_of} item. You can enable them as {type_of} item from their Item masters."
-msgstr "Artikalr {items} är inte angivna som {type_of} artiklar. Du kan aktivera dem som {type_of} artiklar från deras Artikel Inställningar."
+msgstr "Artiklar {items} är inte angivna som {type_of} artiklar. Du kan aktivera dem som {type_of} artiklar från deras Artikel Inställningar."
 
 #: erpnext/manufacturing/doctype/workstation/workstation.py:531
 msgid "The job card {0} is in {1} state and you cannot complete."
