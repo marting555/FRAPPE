@@ -1981,14 +1981,14 @@ class TestMaterialRequest(FrappeTestCase):
 		pr.submit()
 		
 		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':pr.name})
-		self.assertEqual(sle.qty_after_transaction, bin_qty + 5)
+		self.assertEqual(sle.qty_after_transaction, bin_qty + 305)
 		self.assertEqual(sle.warehouse, mr.get("items")[0].warehouse)
 		
 		debit_act = frappe.db.get_value("Company",pr.company,"stock_received_but_not_billed")
 		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': debit_act},'credit')
 		self.assertEqual(gl_temp_credit, 500)
 		
-		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': 'Stock In Hand - _TC'},'debit')
+		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': '_Test SWarehouse - _TC'},'debit')
 		self.assertEqual(gl_stock_debit, 500)
 
 		#remaining qty
@@ -1999,14 +1999,14 @@ class TestMaterialRequest(FrappeTestCase):
 		pr1.submit()
 		
 		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':pr1.name})
-		self.assertEqual(sle.qty_after_transaction, bin_qty + 5)
+		self.assertEqual(sle.qty_after_transaction, bin_qty + 310)
 		self.assertEqual(sle.warehouse, mr.get("items")[0].warehouse)
 		
 		debit_act = frappe.db.get_value("Company",pr.company,"stock_received_but_not_billed")
 		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr1.name, 'account': debit_act},'credit')
 		self.assertEqual(gl_temp_credit, 500)
 		
-		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr1.name, 'account': 'Stock In Hand - _TC'},'debit')
+		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr1.name, 'account': '_Test SWarehouse - _TC'},'debit')
 		self.assertEqual(gl_stock_debit, 500)
 
 		from erpnext.controllers.sales_and_purchase_return import make_return_doc
@@ -2015,7 +2015,7 @@ class TestMaterialRequest(FrappeTestCase):
 
 		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "Goods In Transit - _TC"}, "actual_qty")
 		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':return_pr.name})
-		self.assertEqual(sle.qty_after_transaction, bin_qty)
+		self.assertEqual(sle.qty_after_transaction, bin_qty + 305)
 		self.assertEqual(sle.warehouse, mr.get("items")[0].warehouse)
 		
 		#if account setup in company
@@ -2033,7 +2033,7 @@ class TestMaterialRequest(FrappeTestCase):
 
 		bin_qty = frappe.db.get_value("Bin", {"item_code": "_Test Item", "warehouse": "Goods In Transit - _TC"}, "actual_qty")
 		sle = frappe.get_doc('Stock Ledger Entry',{'voucher_no':return_pr1.name})
-		self.assertEqual(sle.qty_after_transaction, bin_qty)
+		self.assertEqual(sle.qty_after_transaction, bin_qty + 300)
 		self.assertEqual(sle.warehouse, mr.get("items")[0].warehouse)
 		
 		#if account setup in company
