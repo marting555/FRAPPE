@@ -1,0 +1,52 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-03-19 16:57:22.343368",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "aws_url",
+  "confirm_payment_webhook"
+ ],
+ "fields": [
+  {
+   "fieldname": "aws_url",
+   "fieldtype": "Data",
+   "in_filter": 1,
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "AWS URL",
+   "reqd": 1
+  },
+  {
+   "fieldname": "confirm_payment_webhook",
+   "fieldtype": "Data",
+   "label": "Confirm Payment Webhook",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-03-19 17:09:31.383357",
+ "modified_by": "Administrator",
+ "module": "Projects",
+ "name": "Rest Config",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

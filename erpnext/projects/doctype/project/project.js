@@ -169,6 +169,88 @@ frappe.ui.form.on("Project", {
 					)
 				});
 			})
+			frm.add_custom_button(__("Pay Invoice"), async () => {
+				if(frm.doc.status === "Invoice paid" || frm.doc.status === "Completed" || frm.doc.status === "Cancelled") {
+					  frappe.msgprint(__('The project is already paid or completed or cancelled'))
+						return
+				}
+				frappe.prompt([
+						{
+								title: __('Select Payment Type'),
+								label: __('Select Payment Type'),
+								fieldname: 'confirm_method',
+								fieldtype: 'Select',
+								options: ['workshop' , 'loan car'],
+								reqd: 1
+						}
+				], async (values) => {
+						frappe.confirm(
+								__('Are you sure you want to mark approved quotations as paid?'),
+								async () => {
+										try {
+												const response = await frappe.call({
+														method: "frappe.desk.reportview.get_list",
+														args: {
+																doctype: "Quotation",
+																filters: [["project_name", "=", frm.doc.name], ["status", "=", "Approved"]],
+																fields: ["name", "grand_total"]
+														}
+												});
+		
+												if (response.message && response.message.length > 0) {
+														const quotations = response.message;
+														const totalAmount = quotations.reduce((sum, q) => sum + q.grand_total, 0);
+														const { aws_url ,confirm_payment_webhook} = await frappe.db.get_doc('Rest Config')
+														if(!aws_url || !confirm_payment_webhook) {
+																frappe.msgprint(__('AWS URL or Confirm Payment Webhook not found'))
+																return
+														}
+												
+														const paymentData = {
+																confirm_payment_webhook: confirm_payment_webhook,
+																selected_method: values.confirm_method,
+																name: frm.doc.name,
+																payment_gateway: "manual",
+																total: totalAmount
+														};
+									
+														const apiResponse = await fetch(`${aws_url}manual-confirm-payment`, {
+																method: 'POST',
+																headers: {
+																		'Content-Type': 'application/json',
+																},
+																body: JSON.stringify(paymentData)
+														});
+		
+														if (apiResponse.ok) {
+																frappe.msgprint({
+																		title: __('Success'),
+																		indicator: 'green',
+																		message: __('Payment confirmed successfully')
+																});
+																frm.reload_doc();
+														} else {
+																throw new Error('API call failed');
+														}
+												} else {
+														frappe.msgprint(__('No quotations found for this project'));
+												}
+										} catch (error) {
+												frappe.msgprint({
+														title: __('Error'),
+														indicator: 'red',
+														message: __('An error occurred while processing the payment: ') + error.message
+												});
+										}
+								},
+								() => {
+										frappe.msgprint(__('Payment action cancelled'));
+								}
+						);
+				});
+		});
+		
+		
 		}
 
 		if (!await erpnext.utils.isWorkshopViewer(this.frm)) {
@@ -563,7 +645,6 @@ async function insertCarousel(frm) {
 
 				} else {
 					container.style = 'height: 0;overflow:hidden;'
-					console.log('No attachments found for this project.');
 				}
 			})
 		}, 3000)// if this time is less than 3 sec it'll be render a wrong carousel
