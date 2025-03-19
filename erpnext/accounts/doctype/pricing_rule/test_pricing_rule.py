@@ -19,7 +19,8 @@ from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 class TestPricingRule(FrappeTestCase):
 	def setUp(self):
 		delete_existing_pricing_rules()
-		setup_pricing_rule_data()
+		if "custom_crm" in frappe.get_installed_apps():
+			setup_pricing_rule_data()
 
 	def tearDown(self):
 		delete_existing_pricing_rules()

@@ -159,7 +159,7 @@ def get_employees_with_number(number):
 
 
 def link_existing_conversations(doc, state):
-	from custom_crm.crm.doctype.utils import get_scheduled_employees_for_popup, strip_number
+	# from custom_crm.crm.doctype.utils import get_scheduled_employees_for_popup, strip_number
 	"""
 	Called from hooks on creation of Contact or Lead to link all the existing conversations.
 	"""
