@@ -533,7 +533,22 @@ class SalesInvoice(SellingController):
 				)
 				frappe.throw(msg, title=_("Not Allowed"))
 
+	def check_if_created_using_pos_and_pos_closing_entry_generated(self):
+		if self.doctype == "Sales Invoice" and self.is_created_using_pos and self.pos_closing_entry:
+			pos_closing_entry_docstatus = frappe.db.get_value(
+				"POS Closing Entry", self.pos_closing_entry, "docstatus"
+			)
+			if pos_closing_entry_docstatus == 1:
+				frappe.throw(
+					msg=_("To cancel this Sales Invoice you need to cancel the POS Closing Entry {}.").format(
+						get_link_to_form("POS Closing Entry", self.pos_closing_entry)
+					),
+					title=_("Not Allowed"),
+				)
+
 	def before_cancel(self):
+		# check if generated via POS and already included in POS Closing Entry
+		self.check_if_created_using_pos_and_pos_closing_entry_generated()
 		self.check_if_consolidated_invoice()
 
 		super().before_cancel()
@@ -602,6 +617,15 @@ class SalesInvoice(SellingController):
 		)
 
 		self.delete_auto_created_batches()
+
+		if (
+			self.doctype == "Sales Invoice"
+			and self.is_pos
+			and self.is_return
+			and self.is_created_using_pos
+			and not self.pos_closing_entry
+		):
+			self.cancel_pos_invoice_credit_note_generated_during_sales_invoice_mode()
 
 	def update_status_updater_args(self):
 		if not cint(self.update_stock):
@@ -673,6 +697,15 @@ class SalesInvoice(SellingController):
 			timesheet.unlink_sales_invoice(self.name)
 			timesheet.flags.ignore_validate_update_after_submit = True
 			timesheet.db_update_all()
+
+	def cancel_pos_invoice_credit_note_generated_during_sales_invoice_mode(self):
+		pos_invoices = frappe.get_all(
+			"POS Invoice", filters={"consolidated_invoice": self.name}, pluck="name"
+		)
+		if pos_invoices:
+			for pos_invoice in pos_invoices:
+				pos_invoice_doc = frappe.get_doc("POS Invoice", pos_invoice)
+				pos_invoice_doc.cancel()
 
 	@frappe.whitelist()
 	def set_missing_values(self, for_validate=False):

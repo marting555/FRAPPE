@@ -4,6 +4,7 @@
 
 import frappe
 from frappe import _, bold
+from frappe.model.mapper import map_child_doc, map_doc
 from frappe.query_builder.functions import IfNull, Sum
 from frappe.utils import cint, flt, get_link_to_form, getdate, nowdate
 from frappe.utils.nestedset import get_descendants_of
@@ -197,6 +198,7 @@ class POSInvoice(SalesInvoice):
 		# run on validate method of selling controller
 		super(SalesInvoice, self).validate()
 		self.validate_pos_opening_entry()
+		self.validate_is_pos_using_sales_invoice()
 		self.validate_auto_set_posting_time()
 		self.validate_mode_of_payment()
 		self.validate_uom_is_integer("stock_uom", "stock_qty")
@@ -244,6 +246,12 @@ class POSInvoice(SalesInvoice):
 			update_coupon_code_count(self.coupon_code, "used")
 		self.clear_unallocated_mode_of_payments()
 
+		if self.is_return and self.is_pos_using_sales_invoice:
+			sales_inv = self.create_return_sales_invoice()
+			self.load_from_db()
+			self.consolidated_invoice = sales_inv.name
+			self.set_status(update=True)
+
 	def before_cancel(self):
 		if (
 			self.consolidated_invoice
@@ -286,6 +294,36 @@ class POSInvoice(SalesInvoice):
 
 		sip = frappe.qb.DocType("Sales Invoice Payment")
 		frappe.qb.from_(sip).delete().where(sip.parent == self.name).where(sip.amount == 0).run()
+
+	def create_return_sales_invoice(self):
+		return_sales_invoice = frappe.new_doc("Sales Invoice")
+		return_sales_invoice.is_pos = 1
+		return_sales_invoice.is_return = 1
+		map_doc(self, return_sales_invoice, table_map={"doctype": return_sales_invoice.doctype})
+		return_sales_invoice.return_against = self.consolidated_invoice
+		return_sales_invoice.is_created_using_pos = 1
+		items, taxes, payments = [], [], []
+		for d in self.items:
+			si_item = map_child_doc(d, return_sales_invoice, {"doctype": "Sales Invoice Item"})
+			si_item.pos_invoice = self.name
+			si_item.pos_invoice_item = d.name
+			items.append(si_item)
+
+		for d in self.get("taxes"):
+			tax = map_child_doc(d, return_sales_invoice, {"doctype": "Sales Taxes and Charges"})
+			taxes.append(tax)
+
+		for d in self.get("payments"):
+			payment = map_child_doc(d, return_sales_invoice, {"doctype": "Sales Invoice Payment"})
+			payments.append(payment)
+
+		return_sales_invoice.set("items", items)
+		return_sales_invoice.set("taxes", taxes)
+		return_sales_invoice.set("payments", payments)
+		return_sales_invoice.save()
+		return_sales_invoice.submit()
+
+		return return_sales_invoice
 
 	def delink_serial_and_batch_bundle(self):
 		for row in self.items:
@@ -377,6 +415,11 @@ class POSInvoice(SalesInvoice):
 						).format(d.idx, item_code, warehouse, available_stock),
 						title=_("Item Unavailable"),
 					)
+
+	def validate_is_pos_using_sales_invoice(self):
+		self.is_pos_using_sales_invoice = frappe.db.get_single_value("Accounts Settings", "use_sales_invoice")
+		if self.is_pos_using_sales_invoice and not self.is_return:
+			frappe.throw(_("Sales Invoice mode is activated in POS. Please create Sales Invoice instead."))
 
 	def validate_serialised_or_batched_item(self):
 		error_msg = []
