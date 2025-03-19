@@ -552,7 +552,6 @@ cur_frm.cscript["Make Delivery Note"] = function () {
 		frm: cur_frm,
 	});
 };
-
 cur_frm.fields_dict.cash_bank_account.get_query = function (doc) {
 	return {
 		filters: [
