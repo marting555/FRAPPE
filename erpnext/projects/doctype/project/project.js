@@ -90,7 +90,7 @@ frappe.ui.form.on("Project", {
 		}
 
 		if (!frm.is_new() && !await erpnext.utils.isWorkshopViewer(frm)) {
-			frm.add_custom_button(__("Create quotation"), async () => {
+			frm.add_custom_button(__("Generate Quotation"), async () => {
 				const doc = await frappe.model.get_new_doc('Quotation');
 				doc.party_name = frm.doc.customer;
 				frappe.new_doc('Quotation', {
@@ -99,7 +99,7 @@ frappe.ui.form.on("Project", {
 					quotation_to: 'Customer'
 				});
 			})
-			frm.add_custom_button(__("Customer info"), async () => {
+			frm.add_custom_button(__("View Customer Details"), async () => {
 				const customer = await frappe.db.get_doc('Customer', frm.doc.customer)
 				const linked_contacts_and_addresses = await frappe.db.get_list(
 					"Address",
@@ -169,23 +169,32 @@ frappe.ui.form.on("Project", {
 					)
 				});
 			})
-			frm.add_custom_button(__("Pay Invoice"), async () => {
-				if(frm.doc.status === "Invoice paid" || frm.doc.status === "Completed" || frm.doc.status === "Cancelled") {
-					  frappe.msgprint(__('The project is already paid or completed or cancelled'))
-						return
+			frm.add_custom_button("Validate Bank Transfer Payment", async () => {
+				if (frm.doc.status === "Invoice paid" || frm.doc.status === "Completed" || frm.doc.status === "Cancelled") {
+						frappe.msgprint('The project is already paid, completed, or cancelled');
+						return;
 				}
 				frappe.prompt([
 						{
-								title: __('Select Payment Type'),
-								label: __('Select Payment Type'),
+								label: 'Select Payment Type',
 								fieldname: 'confirm_method',
 								fieldtype: 'Select',
-								options: ['workshop' , 'loan car'],
-								reqd: 1
+								options: ['workshop', 'loan car'],
+								reqd: 1,
+								description: `
+									<ul style="color: #d14343; padding-left: 20px;">
+											<li>Approved quotations will be marked as paid.</li>
+											<li>An invoice will be generated.</li>
+											<li>The invoice will be sent to the customer.</li>
+											<li>The project status will be updated to "Invoice Paid".</li>
+											<li>This action can <span style="font-weight: bold;">NOT</span> be undone.</li>
+									</ul>
+							`
 						}
-				], async (values) => {
+				], 
+				async (values) => {
 						frappe.confirm(
-								__('Are you sure you want to mark approved quotations as paid?'),
+								'Are you sure you want to mark approved quotations as paid?',
 								async () => {
 										try {
 												const response = await frappe.call({
@@ -200,12 +209,12 @@ frappe.ui.form.on("Project", {
 												if (response.message && response.message.length > 0) {
 														const quotations = response.message;
 														const totalAmount = quotations.reduce((sum, q) => sum + q.grand_total, 0);
-														const { aws_url ,confirm_payment_webhook} = await frappe.db.get_doc('Rest Config')
-														if(!aws_url || !confirm_payment_webhook) {
-																frappe.msgprint(__('AWS URL or Confirm Payment Webhook not found'))
-																return
+														const { aws_url, confirm_payment_webhook } = await frappe.db.get_doc('Rest Config');
+														if (!aws_url || !confirm_payment_webhook) {
+																frappe.msgprint('AWS URL or Confirm Payment Webhook not found');
+																return;
 														}
-												
+		
 														const paymentData = {
 																confirm_payment_webhook: confirm_payment_webhook,
 																selected_method: values.confirm_method,
@@ -213,7 +222,7 @@ frappe.ui.form.on("Project", {
 																payment_gateway: "manual",
 																total: totalAmount
 														};
-									
+		
 														const apiResponse = await fetch(`${aws_url}manual-confirm-payment`, {
 																method: 'POST',
 																headers: {
@@ -224,30 +233,32 @@ frappe.ui.form.on("Project", {
 		
 														if (apiResponse.ok) {
 																frappe.msgprint({
-																		title: __('Success'),
+																		title: 'Success',
 																		indicator: 'green',
-																		message: __('Payment confirmed successfully')
+																		message: 'Payment confirmed successfully'
 																});
 																frm.reload_doc();
 														} else {
 																throw new Error('API call failed');
 														}
 												} else {
-														frappe.msgprint(__('No quotations found for this project'));
+														frappe.msgprint('No quotations found for this project');
 												}
 										} catch (error) {
 												frappe.msgprint({
-														title: __('Error'),
+														title: 'Error',
 														indicator: 'red',
-														message: __('An error occurred while processing the payment: ') + error.message
+														message: 'An error occurred while processing the payment: ' + error.message
 												});
 										}
 								},
 								() => {
-										frappe.msgprint(__('Payment action cancelled'));
+										frappe.msgprint('Payment action cancelled');
 								}
 						);
-				});
+				},
+				'Confirm Payment Method',
+				'Confirm Payment Type and Proceed');
 		});
 		
 		
