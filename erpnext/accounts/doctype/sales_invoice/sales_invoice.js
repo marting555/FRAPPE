@@ -61,9 +61,10 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 	refresh(doc, dt, dn) {
 		const me = this;
 		super.refresh();
-		if (cur_frm.msgbox && cur_frm.msgbox.$wrapper.is(":visible")) {
 			// hide new msgbox
 			cur_frm.msgbox.hide();
+			if (this.frm?.msgbox && this.frm.msgbox.$wrapper.is(":visible")) {
+				this.frm.msgbox.hide();
 		}
 
 		this.frm.toggle_reqd("due_date", !this.frm.doc.is_return);
@@ -562,7 +563,6 @@ cur_frm.fields_dict.cash_bank_account.get_query = function (doc) {
 		],
 	};
 };
-
 cur_frm.fields_dict.write_off_account.get_query = function (doc) {
 	return {
 		filters: {

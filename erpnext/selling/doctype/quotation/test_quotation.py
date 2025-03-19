@@ -2,7 +2,7 @@
 # License: GNU General Public License v3. See license.txt
 
 import frappe
-from frappe.tests.utils import FrappeTestCase
+from frappe.tests.utils import FrappeTestCase, if_app_installed
 from frappe.utils import add_days, add_months, flt, getdate, nowdate
 
 
@@ -931,16 +931,7 @@ class TestQuotation(FrappeTestCase):
 		quotation.reload()
 		self.assertEqual(quotation.status, "Ordered")
 
-		pe=get_payment_entry(dt="Sales Order",dn=sales_order.name)
-		pe.save()
-		pe.submit()
-
-		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pe.name}, fields=["account", "debit", "credit"])
-		gl_debits = {entry.account: entry.debit for entry in gl_entries}
-		gl_credits = {entry.account: entry.credit for entry in gl_entries}
-
-		self.assertAlmostEqual(gl_debits["Cash - _TC"], 5000)
-		self.assertAlmostEqual(gl_credits["Debtors - _TC"], 5000)
+		self.create_and_submit_payment_entry(dt="Sales Order", dn=sales_order.name)
 
 		delivery_note = self.create_and_submit_delivery_note(sales_order.name)
 		self.stock_check(voucher=delivery_note.name,qty=-1)
@@ -950,26 +941,13 @@ class TestQuotation(FrappeTestCase):
 	
 
 	def test_quotation_to_sales_invoice_with_partially_payment_entry_TC_S_080(self):
-		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
 		quotation = self.create_and_submit_quotation("_Test Item Home Desktop 100", 1, 5000, "Stores - _TC")
 		sales_order = self.create_and_submit_sales_order(quotation.name, add_days(nowdate(), 5))
 		quotation.reload()
 		self.assertEqual(quotation.status, "Ordered")
 
-		pe=get_payment_entry(dt="Sales Order",dn=sales_order.name)
-		pe.paid_amount= 2000
-		for i in pe.references:
-			i.allocated_amount = 2000
-		pe.save()
-		pe.submit()
-
-		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pe.name}, fields=["account", "debit", "credit"])
-		gl_debits = {entry.account: entry.debit for entry in gl_entries}
-		gl_credits = {entry.account: entry.credit for entry in gl_entries}
-
-		self.assertAlmostEqual(gl_debits["Cash - _TC"], 2000)
-		self.assertAlmostEqual(gl_credits["Debtors - _TC"], 2000)
+		self.create_and_submit_payment_entry(dt="Sales Order", dn=sales_order.name, amt=2000)
 
 		delivery_note = self.create_and_submit_delivery_note(sales_order.name)
 		self.stock_check(voucher=delivery_note.name,qty=-1)
@@ -977,9 +955,7 @@ class TestQuotation(FrappeTestCase):
 		sales_invoice.reload()
 		self.assertEqual(sales_invoice.status, "Partly Paid")
 
-		pe=get_payment_entry(dt="Sales Invoice",dn=sales_invoice.name)
-		pe.save()
-		pe.submit()
+		self.create_and_submit_payment_entry(dt="Sales Invoice", dn=sales_invoice.name)
 
 		sales_invoice.reload()
 		self.assertEqual(sales_invoice.status, "Paid")
@@ -1075,6 +1051,7 @@ class TestQuotation(FrappeTestCase):
 		quotation.reload()
 		self.assertEqual(quotation.status, "Ordered")
 		mr = make_material_request(sales_order.name)
+		mr.schedule_date = nowdate()
 		mr.save()
 		mr.submit()
 		mr.reload()
@@ -1121,11 +1098,12 @@ class TestQuotation(FrappeTestCase):
 		self.assertEqual(sales_order.status, "To Bill")
 		self.assertEqual(purchase_orders[0].status, "Delivered")
 
+	@if_app_installed("india_compliance")
 	def test_quotation_to_po_with_drop_ship_with_GST_TC_S_112(self):
 		from erpnext.stock.doctype.item.test_item import make_item
 		from erpnext.selling.doctype.sales_order.sales_order import make_purchase_order_for_default_supplier
 		from erpnext.buying.doctype.purchase_order.purchase_order import update_status
-
+		from erpnext.selling.doctype.sales_order.test_sales_order import (create_test_tax_data, test_item_tax_template)
 		make_item("_Test Item for Drop Shipping", {"is_stock_item": 1, "delivered_by_supplier": 1})
 		so_items = [
 			{
@@ -1136,6 +1114,10 @@ class TestQuotation(FrappeTestCase):
 				"delivered_by_supplier": 1,
 				"supplier": "_Test Supplier",
 			}]
+
+		create_test_tax_data()
+		if not frappe.db.exists("Item Tax Template", "GST 18% - _TC"):
+			test_item_tax_template(company="_Test Company", gst_rate=18,title="GST 18%")
 
 		quotation = make_quotation(item="_Test Item for Drop Shipping", qty=1, rate=5000, warehouse="Stores - _TC",do_not_save =1)
 		for i in quotation.items:
@@ -1236,13 +1218,14 @@ class TestQuotation(FrappeTestCase):
 		self.assertEqual(si.status, "Unpaid")
 		self.validate_gl_entries(voucher_no= si.name,amount= 5000)
 
-
+	@if_app_installed("india_compliance")
 	def test_quotation_to_si_with_pi_and_drop_ship_with_GST_TC_S_116(self):
 		from erpnext.stock.doctype.item.test_item import make_item
 		from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 		from erpnext.selling.doctype.sales_order.sales_order import make_purchase_order_for_default_supplier
 		from erpnext.buying.doctype.purchase_order.purchase_order import update_status
 		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_invoice as make_pi_from_po
+		from erpnext.selling.doctype.sales_order.test_sales_order import (create_test_tax_data, test_item_tax_template)
 		make_item("_Test Item for Drop Shipping", {"is_stock_item": 1, "delivered_by_supplier": 1})
 		so_items = [
 			{
@@ -1253,6 +1236,10 @@ class TestQuotation(FrappeTestCase):
 				"delivered_by_supplier": 1,
 				"supplier": "_Test Supplier",
 			}]
+
+		create_test_tax_data()
+		if not frappe.db.exists("Item Tax Template", "GST 18% - _TC"):
+			test_item_tax_template(company="_Test Company", gst_rate=18,title="GST 18%")
 
 		quotation = make_quotation(item="_Test Item for Drop Shipping", qty=1, rate=5000, warehouse="Stores - _TC",do_not_save =1)
 		for i in quotation.items:
@@ -1401,6 +1388,22 @@ class TestQuotation(FrappeTestCase):
 		self.assertAlmostEqual(gl_debits[debtor_account], amount)
 		self.assertAlmostEqual(gl_credits[sales_account], amount)
 
+	def create_and_submit_payment_entry(self, dt=None, dn=None, amt=None):
+		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+		payment_entry = get_payment_entry(dt=dt,dn=dn)
+		payment_entry.insert()
+		if amt:
+			payment_entry.paid_amount= amt
+			for i in payment_entry.references:
+				i.allocated_amount = amt
+		payment_entry.save()
+		payment_entry.submit()
+  
+		self.assertEqual(payment_entry.status, "Submitted", "Payment Entry not created")
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': payment_entry.name, 'account': 'Debtors - _TC'}, 'credit'), payment_entry.paid_amount)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': payment_entry.name, 'account': 'Cash - _TC'}, 'debit'), payment_entry.paid_amount)
+		return payment_entry
+	
 test_records = frappe.get_test_records("Quotation")
 
 

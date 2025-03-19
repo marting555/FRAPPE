@@ -2473,7 +2473,10 @@ class TestDeliveryNote(FrappeTestCase):
 			make_test_item
 		)
 		
-		make_test_item("_Test Item 1")
+		item= make_test_item("_Test Item 1")
+		item.is_stock_item = 1
+		item.save()
+		frappe.db.set_value("Company", "_Test Company", "stock_adjustment_account", "Stock Adjustment - _TC")
 		make_stock_entry(item_code="_Test Item", qty=5, rate=1000, target="_Test Warehouse - _TC")
 		make_stock_entry(item_code="_Test Item 1", qty=5, rate=1000, target="_Test Warehouse - _TC")
 		dn = create_delivery_note(qty = 5, rate = 1000)
@@ -2680,7 +2683,7 @@ class TestDeliveryNote(FrappeTestCase):
 	def test_dn_submission_TC_SCK_148(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 		from erpnext.buying.doctype.supplier.test_supplier import create_supplier
-		# from crm.crm.doctype.lead.lead import make_customer
+		# from custom_crm.crm.doctype.lead.lead import make_customer
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 		"""Test Purchase Receipt Creation, Submission, and Stock Ledger Update"""
 
