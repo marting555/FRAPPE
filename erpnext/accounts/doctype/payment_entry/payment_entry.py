@@ -1327,7 +1327,7 @@ class PaymentEntry(AccountsController):
 					"Journal Entry",
 					"Payment Entry",
 				):
-					self.add_advance_gl_for_reference(gl_entries, ref, clearing_date)
+					self.add_advance_gl_for_reference(gl_entries, ref)
 
 	def get_dr_and_account_for_advances(self, reference):
 		if reference.reference_doctype == "Sales Invoice":
