@@ -362,9 +362,12 @@ class TestQualityInspection(FrappeTestCase):
 		si.cancel()
 
 	def test_qa_for_pr_out_TC_SCK_162(self):
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		create_company()
+		
 		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company QA")
 		item_code = create_item("_Test Item with QA", valuation_rate=200).name
+		get_or_create_fiscal_year("_Test Company QA")
 		pr = make_purchase_receipt(item_code = item_code,warehouse=warehouse, company = "_Test Company QA",do_not_submit=True)
 		frappe.db.set_value("Item", "_Test Item with QA", "inspection_required_before_purchase", 1)
 		qa = create_quality_inspection(

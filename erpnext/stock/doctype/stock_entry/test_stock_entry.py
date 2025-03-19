@@ -4073,6 +4073,9 @@ class TestStockEntry(FrappeTestCase):
 		if data:
 			self.assertEqual(data[0]['territory'], "India")
 			self.assertEqual(data[0]['item'], item1.name)
+		
+		else:
+			self.fail(f"No data found for active item: {item1.name}")
 
 		# Test for Inactive Item
 		filters1 = frappe._dict({
@@ -4087,7 +4090,8 @@ class TestStockEntry(FrappeTestCase):
 		if data1:
 			self.assertEqual(data1[0]['territory'], "India")
 			self.assertEqual(data1[0]['item'], item2.name)
-
+		else:
+			self.fail(f"Item {item2.name} is correctly inactive (no transactions).")
 
 	
 	@change_settings("Stock Settings", {"allow_negative_stock": 1})
