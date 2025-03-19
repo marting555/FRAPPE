@@ -8447,8 +8447,6 @@ def get_company_or_supplier():
 			}
 		).insert()
 
-	frappe.db.commit()
-
 	return {
 		"company": company,
 		"supplier": supplier
