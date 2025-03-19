@@ -4354,6 +4354,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name,'account': '_Test Account Shipping Charges - _TC'}, 'credit'), 50)
   
 	def test_sales_order_creating_si_with_product_bundle_and_gst_rule_TC_S_059(self):
+		create_test_warehouse(name= "Stores - _TIRC", warehouse_name="Stores", company="_Test Indian Registered Company")
 		make_item("_Test Item", {"is_stock_item": 1})
 		product_bundle = make_item("_Test Product Bundle", {"is_stock_item": 0})
 		make_item("_Test Bundle Item 1", {"is_stock_item": 1})
@@ -4506,6 +4507,11 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		stock_setting = frappe.get_doc('Stock Settings')
 		stock_setting.enable_stock_resrvation = 1
 		stock_setting.save()
+
+		customer = frappe.get_doc("Customer","_Test Customer")
+		if customer:
+			customer.credit_limits=[]
+			customer.save()
   
 		so = self.create_and_submit_sales_order(qty=1, rate=5000)
 		
@@ -4577,6 +4583,8 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 	
 	@change_settings("Stock Settings", {"enable_stock_reservation": 1})
 	def test_sales_order_for_stock_reservation_with_gst_TC_S_065(self):
+		create_test_warehouse(name= "Stores - _TIRC", warehouse_name="Stores", company="_Test Indian Registered Company")
+
 		if not frappe.db.exists("Company", "_Test Indian Registered Company"):
 			company = frappe.new_doc("Company")
 			company.company_name = "_Test Indian Registered Company"
@@ -4763,6 +4771,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		so = self.create_and_submit_sales_order(qty=1, rate=5000)
   
 		mr = make_material_request(so.name)
+		mr.schedule_date = nowdate()
 		for i in mr.items:
 			i.cost_center =  "Main - _TC"
 			i.rate = 5000
@@ -5889,6 +5898,8 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		return sales_order
 
 	def create_and_submit_sales_order_with_gst(self, item_code, qty=None, rate=None):
+		create_test_warehouse(name= "Stores - _TIRC", warehouse_name="Stores", company="_Test Indian Registered Company")
+
 		make_stock_entry(item_code="_Test Item", qty=10, rate=rate, target="Stores - _TIRC")
   
 		company = get_gst_details("Company", {"name": "_Test Indian Registered Company"})[0]
@@ -6246,6 +6257,12 @@ def test_item_tax_template(**data):
 		)
 
 	return doc.insert()
+
+def create_test_warehouse(name, warehouse_name,company):
+	from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+	if not frappe.db.exists("Warehouse", name):
+		warehouse=create_warehouse(warehouse_name, company=company)
+		return warehouse
 
 def get_transport_details(customer):
     driver = frappe.get_all("Driver", filters={"full_name": "Test Driver"}, fields=["name"])
