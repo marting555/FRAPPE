@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-03-16 09:34+0000\n"
-"PO-Revision-Date: 2025-03-17 11:26\n"
+"PO-Revision-Date: 2025-03-19 11:46\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Bosnian\n"
 "MIME-Version: 1.0\n"
@@ -2836,7 +2836,7 @@ msgstr "Dodaj Radne Listove"
 #. List'
 #: erpnext/setup/doctype/holiday_list/holiday_list.json
 msgid "Add Weekly Holidays"
-msgstr "Dodajte sedmične praznike"
+msgstr "Dodaj sedmične praznike"
 
 #: erpnext/public/js/utils/crm_activities.js:142
 msgid "Add a Note"
@@ -2859,7 +2859,7 @@ msgstr "Dodaj ili Oduzmi"
 
 #: erpnext/utilities/activation.py:113
 msgid "Add the rest of your organization as your users. You can also add invite Customers to your portal by adding them from Contacts"
-msgstr "Dodajte ostatak organizacije kao svoje korisnike. Također možete dodati pozvane kupce na svoj portal tako što ćete ih dodati iz kontakata"
+msgstr "Dodaj ostatak organizacije kao svoje korisnike. Također možete dodati pozvane kupce na svoj portal tako što ćete ih dodati iz kontakata"
 
 #. Label of the get_weekly_off_dates (Button) field in DocType 'Holiday List'
 #. Label of the get_local_holidays (Button) field in DocType 'Holiday List'
@@ -36431,7 +36431,7 @@ msgstr "Dodaj ulogu 'Dobavljač' korisniku {0}."
 
 #: erpnext/selling/page/point_of_sale/pos_controller.js:101
 msgid "Please add Mode of payments and opening balance details."
-msgstr "Dodajte Način Plaćanja i detalje o Početnom Stanju."
+msgstr "Dodaj Način Plaćanja i detalje o Početnom Stanju."
 
 #: erpnext/buying/doctype/request_for_quotation/request_for_quotation.py:168
 msgid "Please add Request for Quotation to the sidebar in Portal Settings."
