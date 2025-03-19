@@ -8392,6 +8392,7 @@ def get_or_create_fiscal_year(company):
 		filters={ 
 			"year_start_date": ["<=", formatted_date],
 			"year_end_date": [">=", formatted_date],
+			"disabled": 0
 		},
 		fields=["name"]
 	)
