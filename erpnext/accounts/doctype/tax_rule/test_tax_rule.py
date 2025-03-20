@@ -10,6 +10,7 @@ from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import  create_sa
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
 from frappe.tests.utils import FrappeTestCase, change_settings, if_app_installed
 
+
 test_records = frappe.get_test_records("Tax Rule")
 
 
@@ -270,10 +271,11 @@ class TestTaxRule(unittest.TestCase):
 			"_Test Sales Taxes and Charges Template 1 - _TC",
 		)
 
-	@if_app_installed("custom_crm")
+	@if_app_installed("erpnext_crm")
 	def test_taxes_fetch_via_tax_rule(self):
-		from custom_crm.crm.doctype.opportunity.opportunity import make_quotation
-		from custom_crm.crm.doctype.opportunity.test_opportunity import make_opportunity
+		from erpnext_crm.erpnext_crm.doctype.opportunity.opportunity import make_quotation
+		from erpnext_crm.erpnext_crm.doctype.opportunity.test_opportunity import make_opportunity
+
 		make_tax_rule(
 			customer="_Test Customer",
 			billing_city="_Test City",
