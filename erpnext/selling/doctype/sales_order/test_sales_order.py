@@ -5882,6 +5882,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(is_field_hidden("Sales Order", "tax_id"),  1)
 
 	def create_and_submit_sales_order(self, qty=None, rate=None):
+		customer = frappe.get_doc("Customer","_Test Customer")
+		if customer:
+			customer.credit_limits=[]
+			customer.save()
 		sales_order = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
 		sales_order.delivery_date = nowdate()
 		if qty and rate:
@@ -5910,7 +5914,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		if not (is_registered_regular(company) and is_registered_regular(customer) and
 				is_registered_regular(company_add) and is_registered_regular(customer_add)):
 			self.fail("GST details are not properly configured")
-
+		customer = frappe.get_doc("Customer","_Test Registered Customer")
+		if customer:
+			customer.credit_limits=[]
+			customer.save()
 		so = make_sales_order(
 			company="_Test Indian Registered Company",
 			customer="_Test Registered Customer",
@@ -6050,6 +6057,8 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			sales_order.load_from_db()
 			sales_order.submit()
 			self.assertRaises(frappe.ValidationError,sales_order.submit)
+			customer.credit_limits=[]
+			customer.save()
 		except Exception as e:
 			pass
 		
@@ -6516,6 +6525,7 @@ def get_or_create_fiscal_year(company):
 		filters={ 
 			"year_start_date": ["<=", formatted_date],
 			"year_end_date": [">=", formatted_date],
+			"disabled": 0
 		},
 		fields=["name"]
 	)
