@@ -3861,6 +3861,7 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertEqual(doc.total_billed_amount, si.grand_total)
 
 
+<<<<<<< HEAD
 def check_gl_entries(doc, voucher_no, expected_gle, posting_date):
 	gl_entries = frappe.db.sql(
 		"""select account, debit, credit, posting_date
@@ -3870,6 +3871,105 @@ def check_gl_entries(doc, voucher_no, expected_gle, posting_date):
 		order by posting_date asc, account asc""",
 		(voucher_no, posting_date),
 		as_dict=1,
+=======
+		si = create_sales_invoice(do_not_submit=True)
+
+		project = frappe.new_doc("Project")
+		project.company = "_Test Company"
+		project.project_name = "Test Total Billed Amount"
+		project.save()
+
+		si.project = project.name
+		si.items.append(copy(si.items[0]))
+		si.items.append(copy(si.items[0]))
+		si.items[0].project = project.name
+		si.items[1].project = project.name
+		# Not setting project on last item
+		si.items[1].insert()
+		si.items[2].insert()
+		si.submit()
+
+		project.reload()
+		self.assertIsNone(si.items[2].project)
+		self.assertEqual(project.total_billed_amount, 300)
+
+	def test_pos_returns_with_party_account_currency(self):
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_sales_return
+
+		pos_profile = make_pos_profile()
+		pos_profile.payments = []
+		pos_profile.append("payments", {"default": 1, "mode_of_payment": "Cash"})
+		pos_profile.save()
+
+		pos = create_sales_invoice(
+			customer="_Test Customer USD",
+			currency="USD",
+			conversion_rate=86.595000000,
+			qty=2,
+			do_not_save=True,
+		)
+		pos.is_pos = 1
+		pos.pos_profile = pos_profile.name
+		pos.debit_to = "_Test Receivable USD - _TC"
+		pos.append("payments", {"mode_of_payment": "Cash", "account": "_Test Bank - _TC", "amount": 20.35})
+		pos.save().submit()
+
+		pos_return = make_sales_return(pos.name)
+		self.assertEqual(abs(pos_return.payments[0].amount), pos.payments[0].amount)
+
+	def test_create_return_invoice_for_self_update(self):
+		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
+		from erpnext.controllers.sales_and_purchase_return import make_return_doc
+
+		invoice = create_sales_invoice()
+
+		payment_entry = get_payment_entry(dt=invoice.doctype, dn=invoice.name)
+		payment_entry.reference_no = "test001"
+		payment_entry.reference_date = getdate()
+
+		payment_entry.save()
+		payment_entry.submit()
+
+		r_invoice = make_return_doc(invoice.doctype, invoice.name)
+
+		r_invoice.update_outstanding_for_self = 0
+		r_invoice.save()
+
+		self.assertEqual(r_invoice.update_outstanding_for_self, 1)
+
+		r_invoice.submit()
+
+		self.assertNotEqual(r_invoice.outstanding_amount, 0)
+
+		invoice.reload()
+
+		self.assertEqual(invoice.outstanding_amount, 0)
+
+	def test_prevents_fully_returned_invoice_with_zero_quantity(self):
+		from erpnext.controllers.sales_and_purchase_return import StockOverReturnError, make_return_doc
+
+		invoice = create_sales_invoice(qty=10)
+
+		return_doc = make_return_doc(invoice.doctype, invoice.name)
+		return_doc.items[0].qty = -10
+		return_doc.save().submit()
+
+		return_doc = make_return_doc(invoice.doctype, invoice.name)
+		return_doc.items[0].qty = 0
+
+		self.assertRaises(StockOverReturnError, return_doc.save)
+
+
+def set_advance_flag(company, flag, default_account):
+	frappe.db.set_value(
+		"Company",
+		company,
+		{
+			"book_advance_payments_in_separate_party_account": flag,
+			"default_advance_received_account": default_account,
+		},
+>>>>>>> 7b0882600a (test: add unit test to validate outstanding amount for update_outstanding_for_self checkbox enabled)
 	)
 
 	for i, gle in enumerate(gl_entries):
