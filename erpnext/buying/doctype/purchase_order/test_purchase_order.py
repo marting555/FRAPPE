@@ -3245,19 +3245,27 @@ class TestPurchaseOrder(FrappeTestCase):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
 		create_company()
 		company = "_Test Company"
-		purchase_tax_and_template = frappe.new_doc("Purchase Taxes and Charges Template")
-		purchase_tax_and_template.title = 'Test'
-		purchase_tax_and_template.company = company
-		purchase_tax_and_template.tax_category = 'Out-State'
-		purchase_tax_and_template.append("taxes", {
-			'category': 'Total',
-			'add_deduct_tax':'Add',
-			'rate': 18,
-			'account_head': 'Stock In Hand - _TC',
-			'description':'test'
 
-		})
-		purchase_tax_and_template.save()
+		exists_purchase_tax = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':company,'tax_category':'Out-State'},'name')
+		if exists_purchase_tax is None:
+			purchase_tax_and_template = frappe.new_doc("Purchase Taxes and Charges Template")
+			purchase_tax_and_template.title = 'Test'
+			purchase_tax_and_template.company = company
+			purchase_tax_and_template.tax_category = 'Out-State'
+			purchase_tax_and_template.append("taxes", {
+				'category': 'Total',
+				'add_deduct_tax':'Add',
+				'rate': 18,
+				'account_head': 'Stock In Hand - _TC',
+				'description':'test'
+
+			})
+			purchase_tax_and_template.save()
+
+			purchase_tax = purchase_tax_and_template.name
+		else:
+			purchase_tax = exists_purchase_tax
+
 		get_or_create_fiscal_year('_Test Company')
 		
 		create_supplier(supplier_name="_Test Registered Supplier")
@@ -3279,7 +3287,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		po.reload()
 		self.assertEqual(po.grand_total, 118)
 		pr = make_purchase_receipt(po.name)
-		pr.taxes_and_charges = purchase_tax_and_template.name
+		pr.taxes_and_charges = purchase_tax
 		pr.save()
 
 		frappe.db.set_value('Company',pr.company,'enable_perpetual_inventory',1)
@@ -3517,33 +3525,39 @@ class TestPurchaseOrder(FrappeTestCase):
 		get_or_create_fiscal_year('_Test Company')
 		po = create_purchase_order(qty=10,rate = 1000, do_not_save=True)
 		po.save()
-		purchase_tax_template = frappe.new_doc("Purchase Taxes and Charges Template")
-		purchase_tax_template.title = 'Test'
-		purchase_tax_template.company = po.company
-		purchase_tax_template.tax_category = 'In-State'
-		value_list = [{
-			'category': 'Total',
-			'add_deduct_tax':'Add',
-			'charge_type':'On Net Total',
-			'account_head': 'Stock In Hand - _TC',
-			'description':'test',
-			"tax_amount":100,
-			"rate":9
-		},
-		{
-			'category': 'Total',
-			'add_deduct_tax':'Add',
-			'charge_type':'On Net Total',
-			'account_head': 'Stock In Hand - _TC',
-			'description':'test',
-			"tax_amount":100,
-			"rate":9
-		}]
-		for items in value_list:
-			purchase_tax_template.append("taxes", items)
-		purchase_tax_template.save()
-		purchase_tax_and_value = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':po.company},'name')
-		po.taxes_and_charges = purchase_tax_template.name
+		exists_purchase_tax = frappe.db.get_value('Purchase Taxes and Charges Template',{'company':"_Test Company",'tax_category':'In-State'},'name')
+		if exists_purchase_tax is None:
+
+			purchase_tax_template = frappe.new_doc("Purchase Taxes and Charges Template")
+			purchase_tax_template.title = 'Test'
+			purchase_tax_template.company = po.company
+			purchase_tax_template.tax_category = 'In-State'
+			value_list = [{
+				'category': 'Total',
+				'add_deduct_tax':'Add',
+				'charge_type':'On Net Total',
+				'account_head': 'Stock In Hand - _TC',
+				'description':'test',
+				"tax_amount":100,
+				"rate":9
+			},
+			{
+				'category': 'Total',
+				'add_deduct_tax':'Add',
+				'charge_type':'On Net Total',
+				'account_head': 'Stock In Hand - _TC',
+				'description':'test',
+				"tax_amount":100,
+				"rate":9
+			}]
+			for items in value_list:
+				purchase_tax_template.append("taxes", items)
+			purchase_tax_template.save()
+			purchase_tax = purchase_tax_template.name
+		else:
+			purchase_tax = exists_purchase_tax
+		
+		po.taxes_and_charges = purchase_tax
 		po.save()
 		account = frappe.db.get_all("Account",{'company':po.company},["name"])
 	
@@ -8392,6 +8406,7 @@ def get_or_create_fiscal_year(company):
 		filters={ 
 			"year_start_date": ["<=", formatted_date],
 			"year_end_date": [">=", formatted_date],
+			"disabled": 0
 		},
 		fields=["name"]
 	)
@@ -8446,8 +8461,6 @@ def get_company_or_supplier():
 				"country": "India"
 			}
 		).insert()
-
-	frappe.db.commit()
 
 	return {
 		"company": company,

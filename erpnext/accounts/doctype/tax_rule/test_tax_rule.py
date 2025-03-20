@@ -8,7 +8,8 @@ import frappe
 from erpnext.accounts.doctype.tax_rule.tax_rule import ConflictingTaxRule, get_tax_template
 from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import  create_sales_invoice
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
-from frappe.tests.utils import if_app_installed
+from frappe.tests.utils import FrappeTestCase, change_settings, if_app_installed
+
 
 test_records = frappe.get_test_records("Tax Rule")
 
@@ -269,10 +270,12 @@ class TestTaxRule(unittest.TestCase):
 			get_tax_template("2015-01-01", {"customer": "_Test Customer", "billing_city": "Test City 1"}),
 			"_Test Sales Taxes and Charges Template 1 - _TC",
 		)
+
 	@if_app_installed("erpnext_crm")
 	def test_taxes_fetch_via_tax_rule(self):
 		from erpnext_crm.erpnext_crm.doctype.opportunity.opportunity import make_quotation
 		from erpnext_crm.erpnext_crm.doctype.opportunity.test_opportunity import make_opportunity
+
 		make_tax_rule(
 			customer="_Test Customer",
 			billing_city="_Test City",

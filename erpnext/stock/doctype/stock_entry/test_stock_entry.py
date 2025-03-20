@@ -447,7 +447,7 @@ class TestStockEntry(FrappeTestCase):
 
 	def test_repack_with_additional_costs(self):
 		company = frappe.db.get_value("Warehouse", "Stores - TCP1", "company")
-
+		create_fiscal_with_company(company)
 		make_stock_entry(
 			item_code="_Test Item",
 			target="Stores - TCP1",
@@ -2210,7 +2210,7 @@ class TestStockEntry(FrappeTestCase):
 			company.insert()
 
 		warehouse = frappe.db.get_all("Warehouse", filters={"company": "_Test Company"})
-		get_or_create_fiscal_year('_Test Company')
+		create_fiscal_with_company('_Test Company')
 		self.source_warehouse = create_warehouse("Stores-test", properties={"parent_warehouse": "All Warehouses - _TC"}, company="_Test Company")
 		self.target_warehouse = create_warehouse("Department Stores-test", properties={"parent_warehouse": "All Warehouses - _TC"}, company="_Test Company")
 
@@ -3984,31 +3984,26 @@ class TestStockEntry(FrappeTestCase):
 		from erpnext.accounts.report.inactive_sales_items.inactive_sales_items import execute
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
 
-		create_company()
-		create_warehouse(
-				warehouse_name="_Test Warehouse - _TC",
-				properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
-				company="_Test Company",
-			)
-		avail_qty = 30
 		company = "_Test Company"
-		target_warehouse = create_warehouse(
-				warehouse_name="Test Warehouse",
-				properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
-				company="_Test Company",
-			)
-		get_or_create_fiscal_year('_Test Company')
-		item_c = []
-		q = []
-		range1 = []
-		range2 = []
+
+		# Ensure company exists
 		if not frappe.db.exists("Company", company):
 			company_doc = frappe.new_doc("Company")
-			company_doc.company_doc_name = company
-			company_doc.country="India",
-			company_doc.default_currency= "INR",
-			company_doc.save()
+			company_doc.company_name = company
+			company_doc.country = "India"
+			company_doc.default_currency = "INR"
+			company_doc.insert()
 
+		# Create Warehouse
+		target_warehouse = create_warehouse(
+			warehouse_name="Test Warehouse",
+			properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
+			company=company,
+		)
+
+		get_or_create_fiscal_year(company)
+
+		# Create items
 		item_fields1 = {
 			"item_name": "_Test Item2271",
 			"valuation_rate": 500,
@@ -4021,32 +4016,82 @@ class TestStockEntry(FrappeTestCase):
 		}
 		item1 = make_item("_Test Item2271", item_fields1)
 		item2 = make_item("_Test Item2281", item_fields2)
-		se = make_stock_entry(item_code=item1.name,purpose="Material Receipt", posting_date="01-12-2025",company=company,target=target_warehouse, qty=15)
-		se1 = make_stock_entry(item_code=item1.name,purpose="Material Receipt", posting_date="01-01-2025",company=company,target=target_warehouse, qty=25)
-		se2 = make_stock_entry(item_code=item1.name,set_posting_time=1,purpose="Material Issue", posting_date="01-01-2025",company=company,source=target_warehouse, qty=10)
-		se3 = make_stock_entry(item_code=item1.name,purpose="Material Issue", posting_date="02-07-2025",company=company,source=target_warehouse, qty=20)
 
-		filters = frappe._dict({  # Convert to allow dot notation
-		"territory": "India",
-        "item": item1.name,
-		"based_on": "Sales Invoice",
-		"days": "30"
-    	})
+		# Create stock transactions for item1 (Active)
+		make_stock_entry(
+			item_code=item1.name, 
+			purpose="Material Receipt", 
+			stock_entry_type="Material Receipt",
+			posting_date=nowdate(), 
+			company=company, 
+			target=target_warehouse, 
+			qty=15
+		)
+
+		make_stock_entry(
+			item_code=item1.name, 
+			purpose="Material Receipt", 
+			stock_entry_type="Material Receipt",
+			posting_date=add_days(nowdate(), 30), 
+			company=company, 
+			target=target_warehouse, 
+			qty=25
+		)
+
+		make_stock_entry(
+			item_code=item1.name, 
+			purpose="Material Issue", 
+			stock_entry_type="Material Issue",
+			posting_date=add_days(nowdate(), 30), 
+			company=company, 
+			source=target_warehouse, 
+			qty=10
+		)
+
+		make_stock_entry(
+			item_code=item1.name, 
+			purpose="Material Issue", 
+			stock_entry_type="Material Issue",
+			posting_date=add_days(nowdate(), 90), 
+			company=company, 
+			source=target_warehouse, 
+			qty=20
+		)
+
+		# No stock transactions for item2 (Inactive)
+		
+		# Test for Active Item
+		filters = frappe._dict({
+			"territory": "India",
+			"item": item1.name,
+			"based_on": "Sales Invoice",
+			"days": "30"
+		})
 
 		columns, data = execute(filters)
-		self.assertEqual(data[0]['territory'], "India")
-		self.assertEqual(data[0]['item'], item1.name)
-		filters1 = frappe._dict({  # Convert to allow dot notation
-		"territory": "India",
-        "item": item2.name,
-		"based_on": "Sales Invoice",
-		"days": "30"
-    	})
+
+		if data:
+			self.assertEqual(data[0]['territory'], "India")
+			self.assertEqual(data[0]['item'], item1.name)
+		
+		else:
+			self.fail(f"No data found for active item: {item1.name}")
+
+		# Test for Inactive Item
+		filters1 = frappe._dict({
+			"territory": "India",
+			"item": item2.name,
+			"based_on": "Sales Invoice",
+			"days": "30"
+		})
 
 		columns1, data1 = execute(filters1)
-		self.assertEqual(data1[0]['territory'], "India")
-		self.assertEqual(data1[0]['item'], item2.name)
 
+		if data1:
+			self.assertEqual(data1[0]['territory'], "India")
+			self.assertEqual(data1[0]['item'], item2.name)
+		else:
+			self.fail(f"Item {item2.name} is correctly inactive (no transactions).")
 
 	
 	@change_settings("Stock Settings", {"allow_negative_stock": 1})
@@ -4382,13 +4427,33 @@ def create_fiscal_with_company(company):
 		start_date = date(today.year - 1, 4, 1)
 		end_date = date(today.year, 3, 31)
 
-	fy_doc = frappe.new_doc("Fiscal Year")
-	fy_doc.year = "2024-2025"
-	fy_doc.year_start_date = start_date
-	fy_doc.year_end_date = end_date
-	fy_doc.append("companies", {"company": company})
+	FiscalYear = frappe.qb.DocType("Fiscal Year")
 
-	fy_doc.submit()
+	existing_fiscal_years = (
+		frappe.qb.from_(FiscalYear)
+		.select(FiscalYear.name)
+		.where(
+			(FiscalYear.year_start_date <= start_date) & (FiscalYear.year_end_date >= start_date)
+			| (FiscalYear.year_start_date <= end_date) & (FiscalYear.year_end_date >= end_date)
+			| (start_date <= FiscalYear.year_start_date) & (end_date >= FiscalYear.year_start_date)
+			| (start_date <= FiscalYear.year_end_date) & (end_date >= FiscalYear.year_end_date)
+		)
+	).run(as_dict=True)
+	
+	#fix for overlapping fiscal year
+	if existing_fiscal_years != []:
+		for fiscal_years in existing_fiscal_years:
+			fy_doc = frappe.get_doc("Fiscal Year",fiscal_years.get("name"))
+			if not frappe.db.exists("Fiscal Year Company", {"company": company}):
+				fy_doc.append("companies", {"company": company})
+				fy_doc.insert()
+	else:
+		fy_doc = frappe.new_doc("Fiscal Year")
+		fy_doc.year = "2024-2025"
+		fy_doc.year_start_date = start_date
+		fy_doc.year_end_date = end_date
+		fy_doc.append("companies", {"company": company})
+		fy_doc.submit()
 
 
 def get_fiscal_year(company):
@@ -4426,6 +4491,7 @@ def get_or_create_fiscal_year(company):
 		filters={ 
 			"year_start_date": ["<=", formatted_date],
 			"year_end_date": [">=", formatted_date],
+			"disabled": 0
 		},
 		fields=["name"]
 	)

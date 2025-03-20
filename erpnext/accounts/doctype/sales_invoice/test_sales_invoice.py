@@ -6360,6 +6360,8 @@ class TestSalesInvoice(FrappeTestCase):
 			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
 
 	def test_sales_invoice_ignoring_pricing_rule_TC_S_156(self):
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		if not frappe.db.exists('Pricing Rule', {'title': 'Test Offer'}):
 			pricing_rule_doc = frappe.new_doc('Pricing Rule')
 			pricing_rule_data = {
@@ -6408,6 +6410,8 @@ class TestSalesInvoice(FrappeTestCase):
   
 	@change_settings("Selling Settings", {"allow_multiple_items": 1})
 	def test_sales_invoice_to_allow_item_multiple_times_TC_S_159(self):
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		si_items = [
 			{
 				"item_code": "_Test Item",
@@ -6431,6 +6435,8 @@ class TestSalesInvoice(FrappeTestCase):
   
 	@change_settings("Selling Settings", {"dont_reserve_sales_order_qty_on_sales_return": 1})
 	def test_sales_invoice_dont_reserve_sales_order_qty_on_sales_return_TC_S_158(self):
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		si = create_sales_invoice(qty= 1, rate=300, update_stock=1, warehouse="_Test Warehouse - _TC", do_not_submit=0)
 		self.assertEqual(si.status, "Unpaid")
 
@@ -7205,8 +7211,6 @@ def create_company_and_supplier():
 				]
 			}
 		).insert()
-
-	frappe.db.commit()
 
 	return {
 		"parent_company": parent_company,
