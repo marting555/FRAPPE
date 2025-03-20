@@ -1441,14 +1441,14 @@ class TestPaymentEntry(FrappeTestCase):
 			make_purchase_invoice as _make_purchase_invoice,
 		)
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
-
+		
 		company = "_Test Company"
-
+		from erpnext.accounts.doctype.account.test_account import create_account
 		advance_account = create_account(
 			parent_account="Current Liabilities - _TC",
 			account_name="Advances Paid",
 			company=company,
-			account_type="Liability",
+			account_type="Payable",
 		)
 
 		frappe.db.set_value(
@@ -1727,7 +1727,7 @@ class TestPaymentEntry(FrappeTestCase):
 
 	def test_opening_flag_for_advance_as_liability(self):
 		company = "_Test Company"
-
+		from erpnext.accounts.doctype.account.test_account import create_account
 		advance_account = create_account(
 			parent_account="Current Assets - _TC",
 			account_name="Advances Received",
