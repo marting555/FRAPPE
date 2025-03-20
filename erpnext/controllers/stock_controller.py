@@ -1635,7 +1635,7 @@ def is_reposting_pending():
 
 def future_sle_exists(args, sl_entries=None, allow_force_reposting=True):
 	from erpnext.stock.utils import get_combine_datetime
-	
+
 	if allow_force_reposting and frappe.db.get_single_value(
 		"Stock Reposting Settings", "do_reposting_for_each_stock_transaction"
 	):
