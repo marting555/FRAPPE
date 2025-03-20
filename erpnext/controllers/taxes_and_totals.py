@@ -855,6 +855,8 @@ class calculate_taxes_and_totals:
 			and not self.doc.get("is_pos")
 			or self.is_internal_invoice()
 		):
+			# Do not calculate the outstanding amount for a return invoice if 'update_outstanding_for_self' is not enabled.
+			self.doc.outstanding_amount = 0
 			return
 
 		self.doc.round_floats_in(self.doc, ["grand_total", "total_advance", "write_off_amount"])
