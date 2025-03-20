@@ -5534,7 +5534,8 @@ class TestSalesInvoice(FrappeTestCase):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			make_test_item
 		)
-
+		si_name = None
+		pe_name = None
 		account_setting = frappe.get_doc("Accounts Settings")
 		account_setting.unlink_payment_on_cancellation_of_invoice = 0
 		account_setting.save()
@@ -5547,15 +5548,16 @@ class TestSalesInvoice(FrappeTestCase):
 				qty=1,
 				rate=100
 			)
-			
+			si_name = si.name
 			pe = get_payment_entry(si.doctype,si.name,bank_account="Cash - _TC")
 			pe.submit()
+			pe_name = pe.name
 			si.load_from_db()
 			
 			si.cancel()
 		except Exception as e:
 			error_msg = str(e)
-			self.assertEqual(error_msg,f'Cannot delete or cancel because Sales Invoice {si.name} is linked with Payment Entry {pe.name} at Row: 1')
+			self.assertEqual(error_msg,f'Cannot delete or cancel because Sales Invoice {si_name} is linked with Payment Entry {pe_name} at Row: 1')
 
 	def test_si_cancel_amend_with_item_details_change_TC_S_128(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
