@@ -189,7 +189,7 @@ class AccountsController(TransactionBase):
 				)
 
 			elif not self.update_outstanding_for_self and (
-				abs(self.rounded_total) > against_voucher_outstanding
+				abs(flt(self.rounded_total) or flt(self.grand_total)) > flt(against_voucher_outstanding)
 			):
 				self.update_outstanding_for_self = 1
 				msg = (
