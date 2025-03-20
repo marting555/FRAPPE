@@ -3734,6 +3734,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			pi.posting_date,
 		)
 
+	@change_settings("Global Defaults", {"default_currency": "INR"})
 	def test_pi_with_tds_TC_B_151(self):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_company_or_supplier, create_new_account
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
