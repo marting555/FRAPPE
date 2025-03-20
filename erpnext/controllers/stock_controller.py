@@ -1657,8 +1657,8 @@ def future_sle_exists(args, sl_entries=None, allow_force_reposting=True):
 
 	or_conditions = get_conditions_to_validate_future_sle(sl_entries)
 
-	args["posting_datetime"] = get_combine_datetime(args['posting_date'], args['posting_time'])
-	
+	args["posting_datetime"] = get_combine_datetime(args["posting_date"], args["posting_time"])
+
 	data = frappe.db.sql(
 		"""
 		select item_code, warehouse, count(name) as total_row
