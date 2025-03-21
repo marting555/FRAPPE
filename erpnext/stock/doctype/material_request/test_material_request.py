@@ -8067,10 +8067,10 @@ def create_fiscal_year(company=None):
 		company = company
 	else:
 		create_company()
-		company="_Test Company MR"
+		company="_Test Company"
 	fy_list = frappe.db.get_all("Fiscal Year", {"year_start_date":start_date, "year_end_date": end_date}, pluck='name')
 	for i in fy_list:
-		if frappe.db.get_value("Fiscal Year Company", {'parent': i}, 'company') == "_Test Company MR":
+		if frappe.db.get_value("Fiscal Year Company", {'parent': i}, 'company') == "_Test Company":
 			frappe.msgprint(f"Fiscal Year already exists for {company}", alert=True)
 			return
 	

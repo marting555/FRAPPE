@@ -11,7 +11,7 @@ from erpnext.stock.doctype.item.test_item import make_item
 from .blanket_order import make_order
 from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_receipt
 from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
-
+from erpnext.accounts.doctype.fiscal_year.test_fiscal_year import create_fiscal_year
 
 class TestBlanketOrder(FrappeTestCase):
 	def setUp(self):
@@ -256,7 +256,7 @@ class TestBlanketOrder(FrappeTestCase):
 		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
 		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
 		frappe.flags.args.doctype = "Sales Order"
-
+		create_fiscal_year("_Test Company")
 		bo = make_blanket_order(blanket_order_type="Selling",quantity=50,rate=1000)
 		so = make_order(bo.name)
 		so.delivery_date = add_days(nowdate(), 5)
