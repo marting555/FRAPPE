@@ -8,7 +8,7 @@ from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_pu
 import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import add_days, cstr, flt, getdate, nowdate, nowtime, today
-
+from frappe.tests.utils import if_app_installed
 from erpnext.accounts.doctype.account.test_account import get_inventory_account
 from erpnext.accounts.utils import get_balance_on
 from erpnext.selling.doctype.product_bundle.test_product_bundle import make_product_bundle
@@ -2680,6 +2680,7 @@ class TestDeliveryNote(FrappeTestCase):
 		dn = create_delivery_note(posting_date="2025-01-01",do_not_submit=True)
 		self.assertRaises(StockFreezeError, dn.submit)
 
+
 	def setUp(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
@@ -2695,11 +2696,12 @@ class TestDeliveryNote(FrappeTestCase):
 			company="_Test Company",
 		)
 		
+	@if_app_installed("erpnext_crm")
 	def test_dn_submission_TC_SCK_148(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 		from erpnext.buying.doctype.supplier.test_supplier import create_supplier
-		from erpnext.selling.doctype.sales_order.test_sales_order import get_or_create_fiscal_year
-		# from custom_crm.crm.doctype.lead.lead import make_customer
+    from erpnext.selling.doctype.sales_order.test_sales_order import get_or_create_fiscal_year
+		# from erpnext_crm.erpnext_crm.doctype.lead.lead import make_customer
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 		"""Test Purchase Receipt Creation, Submission, and Stock Ledger Update"""
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer

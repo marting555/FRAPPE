@@ -5,7 +5,7 @@
 import frappe
 from frappe import _, bold, throw
 from frappe.utils import cint, flt, get_link_to_form, nowtime
-
+from frappe.tests.utils import if_app_installed
 from erpnext.accounts.party import render_address
 from erpnext.controllers.accounts_controller import get_taxes_and_charges
 from erpnext.controllers.sales_and_purchase_return import get_rate_for_return
@@ -55,6 +55,7 @@ class SellingController(StockController):
 		self.set_missing_lead_customer_details(for_validate=for_validate)
 		self.set_price_list_and_item_details(for_validate=for_validate)
 
+	@if_app_installed("erpnext_crm")
 	def set_missing_lead_customer_details(self, for_validate=False):
 		customer, lead = None, None
 		if getattr(self, "customer", None):
@@ -90,7 +91,7 @@ class SellingController(StockController):
 			self.update_if_missing(party_details)
 
 		elif lead:
-			from custom_crm.crm.doctype.lead.lead import get_lead_details
+			from erpnext_crm.erpnext_crm.doctype.lead.lead import get_lead_details
 
 			self.update_if_missing(
 				get_lead_details(
