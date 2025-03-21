@@ -69,7 +69,7 @@ def get_transaction_list(
 	filters=None,
 	limit_start=0,
 	limit_page_length=20,
-	order_by="modified desc",
+	order_by="creation desc",
 	custom=False,
 ):
 	user = frappe.session.user
