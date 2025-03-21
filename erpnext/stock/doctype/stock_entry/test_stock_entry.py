@@ -4032,7 +4032,7 @@ class TestStockEntry(FrappeTestCase):
 			item_code=item1.name, 
 			purpose="Material Receipt", 
 			stock_entry_type="Material Receipt",
-			posting_date=add_days(nowdate(), 30), 
+			posting_date=nowdate(), 
 			company=company, 
 			target=target_warehouse, 
 			qty=25
@@ -4042,7 +4042,7 @@ class TestStockEntry(FrappeTestCase):
 			item_code=item1.name, 
 			purpose="Material Issue", 
 			stock_entry_type="Material Issue",
-			posting_date=add_days(nowdate(), 30), 
+			posting_date=nowdate(),
 			company=company, 
 			source=target_warehouse, 
 			qty=10
@@ -4052,7 +4052,7 @@ class TestStockEntry(FrappeTestCase):
 			item_code=item1.name, 
 			purpose="Material Issue", 
 			stock_entry_type="Material Issue",
-			posting_date=add_days(nowdate(), 90), 
+			posting_date=nowdate(), 
 			company=company, 
 			source=target_warehouse, 
 			qty=20
@@ -4485,7 +4485,7 @@ def generate_serial_nos(item_code, qty):
 def get_or_create_fiscal_year(company):
 	from datetime import datetime
 	current_date = datetime.today()
-	formatted_date = current_date.strftime("%m-%d-%Y")
+	formatted_date = current_date.strftime("%Y-%m-%d")
 	existing_fy = frappe.get_all(
 		"Fiscal Year",
 		filters={ 
