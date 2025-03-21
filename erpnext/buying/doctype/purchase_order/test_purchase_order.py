@@ -2940,6 +2940,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"supplier": supplier.name,
 			"company" : company.name,
 			"transaction_date": today(),
+			"currency": "INR",
 			"warehouse" : warehouse,
 			"items":[
 				{
