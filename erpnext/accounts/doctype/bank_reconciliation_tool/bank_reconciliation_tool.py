@@ -826,8 +826,12 @@ def get_je_matching_query(
 		.orderby(je.cheque_date if cint(filter_by_reference_date) else je.posting_date)
 	)
 
-	ref_condition = subquery.reference_no == transaction.reference_number
-	ref_rank = frappe.qb.terms.Case().when(ref_condition, 1).else_(0)
+	ref_condition = je.cheque_no == transaction.reference_number
+
+	if frappe.flags.auto_reconcile_vouchers is True:
+		subquery = subquery.where(ref_condition)
+
+	ref_rank = frappe.qb.terms.Case().when(subquery.reference_no == transaction.reference_number, 1).else_(0)
 	amount_equality = subquery.paid_amount == transaction.unallocated_amount
 	amount_rank = frappe.qb.terms.Case().when(amount_equality, 1).else_(0)
 
@@ -839,9 +843,6 @@ def get_je_matching_query(
 		)
 		.where(amount_equality if exact_match else subquery.paid_amount > 0.0)
 	)
-
-	if frappe.flags.auto_reconcile_vouchers is True:
-		query = query.where(ref_condition)
 
 	return query
 

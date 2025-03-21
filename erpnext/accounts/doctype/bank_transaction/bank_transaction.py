@@ -104,6 +104,19 @@ class BankTransaction(Document):
 		self.allocated_amount = flt(allocated_amount, self.precision("allocated_amount"))
 		self.unallocated_amount = flt(unallocated_amount, self.precision("unallocated_amount"))
 
+	def delink_old_payment_entries(self):
+		if self.flags.updating_linked_bank_transaction:
+			return
+
+		old_doc = self.get_doc_before_save()
+		payment_entry_names = set(pe.name for pe in self.payment_entries)
+
+		for old_pe in old_doc.payment_entries:
+			if old_pe.name in payment_entry_names:
+				continue
+
+			self.delink_payment_entry(old_pe)
+
 	def before_submit(self):
 		self.allocate_payment_entries()
 		self.set_status()
@@ -114,6 +127,7 @@ class BankTransaction(Document):
 	def before_update_after_submit(self):
 		self.validate_duplicate_references()
 		self.update_allocated_amount()
+		self.delink_old_payment_entries()
 		self.allocate_payment_entries()
 		self.set_status()
 
@@ -152,6 +166,9 @@ class BankTransaction(Document):
 		    - 0 > a: Error: already over-allocated
 		- clear means: set the latest transaction date as clearance date
 		"""
+		if self.flags.updating_linked_bank_transaction or not self.payment_entries:
+			return
+
 		remaining_amount = self.unallocated_amount
 		payment_entry_docs = [(pe.payment_document, pe.payment_entry) for pe in self.payment_entries]
 		pe_bt_allocations = get_total_allocated_amount(payment_entry_docs)
@@ -262,6 +279,7 @@ class BankTransaction(Document):
 			if not pe:
 				return
 
+			bt.flags.updating_linked_bank_transaction = True
 			bt.remove(pe)
 
 		bt.save()
@@ -306,14 +324,12 @@ def get_clearance_details(transaction, payment_entry, bt_allocations, gles, gl_b
 	transaction_date = frappe.utils.getdate(transaction.date)
 
 	if payment_entry.payment_document == "Bank Transaction":
-		unallocated_amount = abs(
+		allocable_amount = abs(
 			frappe.db.get_value("Bank Transaction", payment_entry.payment_entry, "unallocated_amount")
 		)
-		return unallocated_amount, True, transaction_date
+		return allocable_amount, True, transaction_date
 
-	has_matching_gle = any(gle_account == gl_bank_account for gle_account in gles)
-
-	if not has_matching_gle:
+	if gl_bank_account not in gles:
 		frappe.throw(
 			_("Voucher {0} is not affecting bank account {1}").format(
 				payment_entry.payment_entry, gl_bank_account
