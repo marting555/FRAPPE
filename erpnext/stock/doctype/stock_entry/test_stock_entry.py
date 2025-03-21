@@ -4446,7 +4446,7 @@ def create_fiscal_with_company(company):
 			fy_doc = frappe.get_doc("Fiscal Year",fiscal_years.get("name"))
 			if not frappe.db.exists("Fiscal Year Company", {"company": company}):
 				fy_doc.append("companies", {"company": company})
-				fy_doc.save()
+				fy_doc.insert()
 	else:
 		fy_doc = frappe.new_doc("Fiscal Year")
 		fy_doc.year = "2024-2025"
@@ -4485,7 +4485,7 @@ def generate_serial_nos(item_code, qty):
 def get_or_create_fiscal_year(company):
 	from datetime import datetime
 	current_date = datetime.today()
-	formatted_date = current_date.strftime("%Y-%m-%d")
+	formatted_date = current_date.strftime("%d-%m-%y")
 	existing_fy = frappe.get_all(
 		"Fiscal Year",
 		filters={ 
