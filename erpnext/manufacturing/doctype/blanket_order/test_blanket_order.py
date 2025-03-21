@@ -283,7 +283,7 @@ class TestBlanketOrder(FrappeTestCase):
 	def test_blanket_order_to_sales_invoice_with_update_stock_TC_S_055(self):
 		from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 		frappe.flags.args.doctype = "Sales Order"
-
+		create_fiscal_year("_Test Company")
 		bo = make_blanket_order(blanket_order_type="Selling",quantity=50,rate=1000)
 		so = make_order(bo.name)
 		so.delivery_date = add_days(nowdate(), 5)
