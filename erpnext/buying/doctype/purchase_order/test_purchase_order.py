@@ -6529,19 +6529,21 @@ class TestPurchaseOrder(FrappeTestCase):
 				if entry["credit"]:
 					self.assertEqual(entry["credit"], expected_pi_entries[entry["account"]])
 
+	@if_app_installed("india_compliance")
 	def test_po_with_update_items_TC_B_128(self):
-		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
-		get_company_supplier = create_data()
-		company = get_company_supplier.get("child_company")
+		get_company_supplier = get_company_or_supplier()
+		company = get_company_supplier.get("company")
 		supplier = get_company_supplier.get("supplier")
-		item = make_test_item("test_item_with_update_item")
-		warehouse = "Stores - TC-3"
+		item = make_test_item("test_item")
+		warehouse = "Stores - TC-5"
+		tax_account = create_or_get_purchase_taxes_template(company)
 
 		po = frappe.get_doc({
 			"doctype": "Purchase Order",
 			"supplier": supplier,
 			"company": company,
 			"schedule_date": today(),
+			"currency": "INR",
 			"set_warehouse": warehouse,
 			"items": [
 				{
@@ -6551,8 +6553,27 @@ class TestPurchaseOrder(FrappeTestCase):
 					"rate": 1000,
 				}
 			],
-			"taxes_and_charges": "Input GST In-state - TC-3"
 		})
+		taxes = [
+			{
+				"charge_type": "On Net Total",
+				"add_deduct_tax": "Add",
+				"category": "Total",
+				"rate": 9,
+				"account_head": tax_account.get('sgst_account'),
+				"description": "SGST"
+			},
+			{
+				"charge_type": "On Net Total",
+				"add_deduct_tax": "Add",
+				"category": "Total",
+				"rate": 9,
+				"account_head": tax_account.get('cgst_account'),
+				"description": "CGST"
+			}
+		]
+		for tax in taxes:
+			po.append("taxes", tax)
 		po.insert()
 		po.submit()
 		self.assertEqual(po.docstatus, 1)
