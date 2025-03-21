@@ -119,7 +119,7 @@ class BankTransaction(Document):
 
 	def on_cancel(self):
 		for payment_entry in self.payment_entries:
-			self.clear_linked_payment_entry(payment_entry, for_cancel=True)
+			self.delink_payment_entry(payment_entry)
 
 		self.set_status()
 
@@ -153,56 +153,49 @@ class BankTransaction(Document):
 		- clear means: set the latest transaction date as clearance date
 		"""
 		remaining_amount = self.unallocated_amount
-		to_remove = []
 		payment_entry_docs = [(pe.payment_document, pe.payment_entry) for pe in self.payment_entries]
 		pe_bt_allocations = get_total_allocated_amount(payment_entry_docs)
 		gles = get_related_bank_gl_entries(payment_entry_docs)
 		gl_bank_account = frappe.db.get_value("Bank Account", self.bank_account, "account")
 
-		for payment_entry in self.payment_entries:
-			if payment_entry.allocated_amount == 0.0:
-				allocable_amount, should_clear, clearance_date = get_clearance_details(
-					self,
-					payment_entry,
-					pe_bt_allocations.get((payment_entry.payment_document, payment_entry.payment_entry))
-					or {},
-					gles.get((payment_entry.payment_document, payment_entry.payment_entry)) or {},
-					gl_bank_account,
+		for payment_entry in list(self.payment_entries):
+			if payment_entry.allocated_amount != 0:
+				continue
+
+			allocable_amount, should_clear, clearance_date = get_clearance_details(
+				self,
+				payment_entry,
+				pe_bt_allocations.get((payment_entry.payment_document, payment_entry.payment_entry)) or {},
+				gles.get((payment_entry.payment_document, payment_entry.payment_entry)) or {},
+				gl_bank_account,
+			)
+
+			if allocable_amount < 0:
+				frappe.throw(_("Voucher {0} is over-allocated by {1}").format(allocable_amount))
+
+			if remaining_amount <= 0:
+				self.remove(payment_entry)
+				continue
+
+			if allocable_amount == 0:
+				if should_clear:
+					self.clear_linked_payment_entry(payment_entry, clearance_date=clearance_date)
+				self.remove(payment_entry)
+				continue
+
+			should_clear = should_clear and allocable_amount <= remaining_amount
+			payment_entry.allocated_amount = min(allocable_amount, remaining_amount)
+			remaining_amount = flt(
+				remaining_amount - payment_entry.allocated_amount,
+				self.precision("unallocated_amount"),
+			)
+
+			if payment_entry.payment_document == "Bank Transaction":
+				self.update_linked_bank_transaction(
+					payment_entry.payment_entry, payment_entry.allocated_amount
 				)
-
-				if 0.0 == allocable_amount:
-					if should_clear:
-						self.clear_linked_payment_entry(payment_entry, clearance_date=clearance_date)
-					to_remove.append(payment_entry)
-
-				elif remaining_amount <= 0.0:
-					to_remove.append(payment_entry)
-
-				elif 0.0 < allocable_amount <= remaining_amount:
-					payment_entry.allocated_amount = allocable_amount
-					remaining_amount = flt(
-						remaining_amount - allocable_amount, self.precision("unallocated_amount")
-					)
-					if should_clear:
-						self.clear_linked_payment_entry(
-							payment_entry, clearance_date=clearance_date, allocated_amount=allocable_amount
-						)
-
-				elif 0.0 < allocable_amount:
-					payment_entry.allocated_amount = remaining_amount
-					remaining_amount = 0.0
-					if payment_entry.payment_document == "Bank Transaction":
-						self.clear_linked_payment_entry(
-							payment_entry,
-							clearance_date=clearance_date,
-							allocated_amount=payment_entry.allocated_amount,
-						)
-
-				elif 0.0 > allocable_amount:
-					frappe.throw(_("Voucher {0} is over-allocated by {1}").format(allocable_amount))
-
-		for payment_entry in to_remove:
-			self.remove(payment_entry)
+			elif should_clear:
+				self.clear_linked_payment_entry(payment_entry, clearance_date=clearance_date)
 
 		self.update_allocated_amount()
 
@@ -215,47 +208,63 @@ class BankTransaction(Document):
 
 	def remove_payment_entry(self, payment_entry):
 		"Clear payment entry and clearance"
-		self.clear_linked_payment_entry(payment_entry, for_cancel=True)
+		self.delink_payment_entry(payment_entry)
 		self.remove(payment_entry)
 
-	def clear_linked_payment_entry(
-		self, payment_entry, clearance_date=None, allocated_amount=None, for_cancel=False
-	):
-		clearance_date = None if for_cancel else (clearance_date or self.date)
+	def delink_payment_entry(self, payment_entry):
+		if payment_entry.payment_document == "Bank Transaction":
+			self.update_linked_bank_transaction(payment_entry.payment_entry, allocated_amount=None)
+		else:
+			self.clear_linked_payment_entry(payment_entry, clearance_date=None)
+
+	def clear_linked_payment_entry(self, payment_entry, clearance_date=None):
 		doctype = payment_entry.payment_document
 		docname = payment_entry.payment_entry
 
-		if doctype in get_doctypes_for_bank_reconciliation():
-			if doctype == "Sales Invoice":
-				frappe.db.set_value(
-					"Sales Invoice Payment",
-					dict(parenttype=doctype, parent=docname),
-					"clearance_date",
-					clearance_date,
-				)
+		# might be a bank transaction
+		if doctype not in get_doctypes_for_bank_reconciliation():
+			return
+
+		if doctype == "Sales Invoice":
+			frappe.db.set_value(
+				"Sales Invoice Payment",
+				dict(parenttype=doctype, parent=docname),
+				"clearance_date",
+				clearance_date,
+			)
+			return
+
+		frappe.db.set_value(doctype, docname, "clearance_date", clearance_date)
+
+	def update_linked_bank_transaction(self, bank_transaction_name, allocated_amount=None):
+		"""For when a second bank transaction has fixed another, e.g. refund"""
+
+		bt = frappe.get_doc(self.doctype, bank_transaction_name)
+		if allocated_amount:
+			bt.append(
+				"payment_entries",
+				{
+					"payment_document": self.doctype,
+					"payment_entry": self.name,
+					"allocated_amount": allocated_amount,
+				},
+			)
+
+		else:
+			pe = next(
+				(
+					pe
+					for pe in bt.payment_entries
+					if pe.payment_document == self.doctype and pe.payment_entry == self.name
+				),
+				None,
+			)
+			if not pe:
 				return
 
-			frappe.db.set_value(doctype, docname, "clearance_date", clearance_date)
+			bt.remove(pe)
 
-		elif doctype == "Bank Transaction":
-			# For when a second bank transaction has fixed another, e.g. refund
-			bt = frappe.get_doc(doctype, docname)
-			if clearance_date and allocated_amount:
-				bt.append(
-					"payment_entries",
-					{
-						"payment_document": "Bank Transaction",
-						"payment_entry": self.name,
-						"allocated_amount": allocated_amount,
-					},
-				)
-				bt.save()
-			else:
-				for pe in bt.payment_entries:
-					if pe.payment_document == self.doctype and pe.payment_entry == self.name:
-						bt.remove(pe)
-						bt.save()
-						break
+		bt.save()
 
 	def auto_set_party(self):
 		from erpnext.accounts.doctype.bank_transaction.auto_match_party import AutoMatchParty
