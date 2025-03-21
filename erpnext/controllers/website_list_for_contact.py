@@ -69,7 +69,11 @@ def get_transaction_list(
 	filters=None,
 	limit_start=0,
 	limit_page_length=20,
+<<<<<<< HEAD
 	order_by="modified",
+=======
+	order_by="creation desc",
+>>>>>>> 2c1077d332 (fix: unwired order_by argument)
 	custom=False,
 ):
 	user = frappe.session.user
@@ -115,7 +119,11 @@ def get_transaction_list(
 		limit_page_length,
 		fields="name",
 		ignore_permissions=ignore_permissions,
+<<<<<<< HEAD
 		order_by="modified desc",
+=======
+		order_by=order_by,
+>>>>>>> 2c1077d332 (fix: unwired order_by argument)
 	)
 
 	if custom:
