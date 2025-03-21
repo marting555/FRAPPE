@@ -4485,7 +4485,7 @@ def generate_serial_nos(item_code, qty):
 def get_or_create_fiscal_year(company):
 	from datetime import datetime
 	current_date = datetime.today()
-	formatted_date = current_date.strftime("%d-%m-%y")
+	formatted_date = current_date.strftime("%m-%d-%Y")
 	existing_fy = frappe.get_all(
 		"Fiscal Year",
 		filters={ 
