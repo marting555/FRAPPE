@@ -833,9 +833,8 @@ class JournalEntry(AccountsController):
 				if invoice.docstatus != 1:
 					frappe.throw(_("{0} {1} is not submitted").format(reference_type, reference_name))
 
-				if flt(total, invoice.precision("outstanding_amount")) and flt(
-					invoice.outstanding_amount, invoice.precision("outstanding_amount")
-				) < flt(total, invoice.precision("outstanding_amount")):
+				precision = invoice.precision("outstanding_amount")
+				if total and flt(invoice.outstanding_amount, precision) < flt(total, precision):
 					frappe.throw(
 						_("Payment against {0} {1} cannot be greater than Outstanding Amount {2}").format(
 							reference_type, reference_name, invoice.outstanding_amount
