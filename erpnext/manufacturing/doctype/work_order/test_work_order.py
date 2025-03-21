@@ -31,8 +31,7 @@ from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 from erpnext.stock.doctype.stock_entry import test_stock_entry
 from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 from erpnext.stock.utils import get_bin
-from erpnext.accounts.doctype.fiscal_year.test_fiscal_year import create_fiscal_year
-
+from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 
 test_dependencies = ["BOM"]
 
@@ -2349,7 +2348,7 @@ class TestWorkOrder(FrappeTestCase):
 		frappe.db.set_single_value("Manufacturing Settings", "validate_components_quantities_per_bom", 0)
 
 	def test_manufacture_with_work_order_batch_TC_SCK_169(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		frappe.db.set_single_value(
 			"Manufacturing Settings",
 			"backflush_raw_materials_based_on",
@@ -2412,7 +2411,7 @@ class TestWorkOrder(FrappeTestCase):
 		self.assertEqual(serial_cnt, 1)
 
 	def test_manufacture_with_work_order_batch_serial_TC_SCK_170(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		frappe.db.set_single_value(
 			"Manufacturing Settings",
 			"backflush_raw_materials_based_on",
@@ -2477,7 +2476,7 @@ class TestWorkOrder(FrappeTestCase):
 		self.assertEqual(serial_cnt, 1)
 
 	def test_manufacture_with_work_order_without_consum_TC_SCK_171(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		frappe.db.set_single_value(
 			"Manufacturing Settings",
 			"backflush_raw_materials_based_on",
@@ -2528,7 +2527,7 @@ class TestWorkOrder(FrappeTestCase):
 		self.assertEqual(wo_doc.status, "Completed")
 
 	def test_manufacture_with_work_order_batch_without_consum_TC_SCK_172(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		frappe.db.set_single_value(
 			"Manufacturing Settings",
 			"backflush_raw_materials_based_on",
@@ -2586,7 +2585,7 @@ class TestWorkOrder(FrappeTestCase):
 		self.assertEqual(serial_cnt, 1)
 
 	def test_manufacture_with_work_order_batch_serial_without_consum_TC_SCK_173(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		frappe.db.set_single_value(
 			"Manufacturing Settings",
 			"backflush_raw_materials_based_on",
@@ -2646,7 +2645,7 @@ class TestWorkOrder(FrappeTestCase):
 		self.assertEqual(serial_cnt, 1)
 
 	def test_manfu_wo_scrap_without_consum_TC_SCK_174(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		frappe.db.set_single_value(
 			"Manufacturing Settings",
 			"backflush_raw_materials_based_on",
@@ -2731,7 +2730,7 @@ class TestWorkOrder(FrappeTestCase):
 		self.assertEqual(manufacture_entry.items[0].s_warehouse, "Stores - _TC")
 
 	def test_manfu_wo_scrap_with_consum_TC_SCK_195(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		frappe.db.set_single_value(
 			"Manufacturing Settings",
 			"backflush_raw_materials_based_on",
@@ -2792,7 +2791,7 @@ class TestWorkOrder(FrappeTestCase):
 		self.assertEqual(wo_doc.status, "Completed")
 
 	def test_mafac_wo_btch_scp_with_consum_TC_SCK_196(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		frappe.db.set_single_value(
 			"Manufacturing Settings",
 			"backflush_raw_materials_based_on",
@@ -2857,7 +2856,7 @@ class TestWorkOrder(FrappeTestCase):
 		self.assertEqual(serial_cnt, 1)
 
 	def test_mafac_wo_btch_serial_scp_TC_SCK_197(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		frappe.db.set_single_value(
 			"Manufacturing Settings",
 			"backflush_raw_materials_based_on",
@@ -2926,7 +2925,7 @@ class TestWorkOrder(FrappeTestCase):
 		self.assertEqual(serial_cnt, 1)
 
 	def test_mafac_wo_btch_scp_without_consum_TC_SCK_175(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		frappe.db.set_single_value(
 			"Manufacturing Settings",
 			"backflush_raw_materials_based_on",
@@ -2986,7 +2985,7 @@ class TestWorkOrder(FrappeTestCase):
 		self.assertEqual(serial_cnt, 1)
 
 	def test_mafac_wo_btch_sril_scp_without_consum_TC_SCK_176(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		frappe.db.set_single_value(
 			"Manufacturing Settings",
 			"backflush_raw_materials_based_on",
@@ -3048,7 +3047,7 @@ class TestWorkOrder(FrappeTestCase):
 		self.assertEqual(serial_cnt, 1)
 
 	def test_mafac_wo_withconsum_TC_SCK_158(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		frappe.db.set_single_value(
 			"Manufacturing Settings",
 			"backflush_raw_materials_based_on",
@@ -3178,7 +3177,7 @@ class TestWorkOrder(FrappeTestCase):
 		self.assertEqual(wo_doc.status, "Completed")
 
 	def test_manfu_pp_wo_scrap_with_consum_TC_SCK_199(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		frappe.db.set_single_value(
 			"Manufacturing Settings",
 			"backflush_raw_materials_based_on",
@@ -3662,7 +3661,7 @@ class TestWorkOrder(FrappeTestCase):
 		}
 	)
 	def test_mafac_wo_wth_consum_skp_transf_btch_srl_tc_sck_216(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		item = make_item(
 			"Test FG Item To Test Return Case",
 			{
@@ -3892,7 +3891,7 @@ class TestWorkOrder(FrappeTestCase):
 		{"backflush_raw_materials_based_on": "BOM"}
 	)
 	def test_wo_without_consum_bom_TC_SCK_234(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		item = make_item(
 			"Test FG Item To Test Return Case",
 			{
@@ -3941,7 +3940,7 @@ class TestWorkOrder(FrappeTestCase):
 		{"backflush_raw_materials_based_on": "BOM"}
 	)
 	def test_wo_without_consum_bom_bth_TC_SCK_235(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		item = make_item(
 			"Test FG Item To Test Return Case",
 			{
@@ -3995,7 +3994,7 @@ class TestWorkOrder(FrappeTestCase):
 		{"backflush_raw_materials_based_on": "BOM"}
 	)
 	def test_wo_without_consum_bom_bth_srl_TC_SCK_236(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		item = make_item(
 			"Test FG Item To Test Return Case",
 			{
@@ -4051,7 +4050,7 @@ class TestWorkOrder(FrappeTestCase):
 		{"backflush_raw_materials_based_on": "Material Transferred for Manufacture"}
 	)
 	def test_wo_without_consum_manu_TC_SCK_237(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		item = make_item(
 			"Test FG Item To Test Return Case",
 			{
@@ -4100,7 +4099,7 @@ class TestWorkOrder(FrappeTestCase):
 		{"backflush_raw_materials_based_on": "Material Transferred for Manufacture"}
 	)
 	def test_wo_without_consum_manu_bth_TC_SCK_238(self):
-		create_fiscal_year("_Test Company")
+		get_or_create_fiscal_year('_Test Company')
 		item = make_item(
 			"Test FG Item To Test Return Case",
 			{
