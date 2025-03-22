@@ -259,11 +259,7 @@
  "idx": 1,
  "in_create": 1,
  "links": [],
-<<<<<<< HEAD
- "modified": "2024-03-19 18:30:49.613401",
-=======
  "modified": "2025-03-21 15:29:11.221890",
->>>>>>> 92be7cbbbf (perf: timeout while renaming cost center)
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "GL Entry",
