@@ -52,85 +52,216 @@ def get_leaderboards():
 	return leaderboards
 
 
+# @frappe.whitelist()
+# def get_all_customers(date_range, company, field, limit=None):
+# 	filters = [["docstatus", "=", "1"], ["company", "=", company]]
+# 	from_date, to_date = parse_date_range(date_range)
+# 	if field == "outstanding_amount":
+# 		if from_date and to_date:
+# 			filters.append(["posting_date", "between", [from_date, to_date]])
+
+# 		return frappe.get_list(
+# 			"Sales Invoice",
+# 			fields=["customer as name", "sum(outstanding_amount) as value"],
+# 			filters=filters,
+# 			group_by="customer",
+# 			order_by="value desc",
+# 			limit=limit,
+# 		)
+# 	else:
+# 		if field == "total_sales_amount":
+# 			select_field = "base_net_total"
+# 		elif field == "total_qty_sold":
+# 			select_field = "total_qty"
+
+# 		if from_date and to_date:
+# 			filters.append(["transaction_date", "between", [from_date, to_date]])
+
+# 		return frappe.get_list(
+# 			"Sales Order",
+# 			fields=["customer as name", f"sum({select_field}) as value"],
+# 			filters=filters,
+# 			group_by="customer",
+# 			order_by="value desc",
+# 			limit=limit,
+# 		)
+
+
 @frappe.whitelist()
 def get_all_customers(date_range, company, field, limit=None):
-	filters = [["docstatus", "=", "1"], ["company", "=", company]]
-	from_date, to_date = parse_date_range(date_range)
-	if field == "outstanding_amount":
-		if from_date and to_date:
-			filters.append(["posting_date", "between", [from_date, to_date]])
+    filters = [["docstatus", "=", "1"], ["company", "=", company]]
+    from_date, to_date = parse_date_range(date_range)
+    
+    if field == "outstanding_amount":
+        if from_date and to_date:
+            filters.append(["posting_date", "between", [from_date, to_date]])
 
-		return frappe.get_list(
-			"Sales Invoice",
-			fields=["customer as name", "sum(outstanding_amount) as value"],
-			filters=filters,
-			group_by="customer",
-			order_by="value desc",
-			limit=limit,
-		)
-	else:
-		if field == "total_sales_amount":
-			select_field = "base_net_total"
-		elif field == "total_qty_sold":
-			select_field = "total_qty"
+        return frappe.get_list(
+            "Sales Invoice",
+            fields=["customer as name", "sum(outstanding_amount) as value"],
+            filters=filters,
+            group_by="customer",
+            order_by="value desc",
+            limit=limit,
+        )
+    else:
+        if field == "total_sales_amount":
+            select_field = "base_net_total"
+        elif field == "total_qty_sold":
+            select_field = "total_qty"
 
-		if from_date and to_date:
-			filters.append(["transaction_date", "between", [from_date, to_date]])
+        if from_date and to_date:
+            filters.append(["posting_date", "between", [from_date, to_date]])
 
-		return frappe.get_list(
-			"Sales Order",
-			fields=["customer as name", f"sum({select_field}) as value"],
-			filters=filters,
-			group_by="customer",
-			order_by="value desc",
-			limit=limit,
-		)
+        # Include POS Invoice in the query
+        return frappe.get_list(
+            ["Sales Invoice", "POS Invoice"],
+            fields=["customer as name", f"sum({select_field}) as value"],
+            filters=filters,
+            group_by="customer",
+            order_by="value desc",
+            limit=limit,
+        )
+
+
+
 
 
 @frappe.whitelist()
 def get_all_items(date_range, company, field, limit=None):
-	if field in ("available_stock_qty", "available_stock_value"):
-		select_field = "sum(actual_qty)" if field == "available_stock_qty" else "sum(stock_value)"
-		results = frappe.db.get_all(
-			"Bin",
-			fields=["item_code as name", f"{select_field} as value"],
-			group_by="item_code",
-			order_by="value desc",
-			limit=limit,
-		)
-		readable_active_items = set(frappe.get_list("Item", filters={"disabled": 0}, pluck="name"))
-		return [item for item in results if item["name"] in readable_active_items]
-	else:
-		if field == "total_sales_amount":
-			select_field = "base_net_amount"
-			select_doctype = "Sales Order"
-		elif field == "total_purchase_amount":
-			select_field = "base_net_amount"
-			select_doctype = "Purchase Order"
-		elif field == "total_qty_sold":
-			select_field = "stock_qty"
-			select_doctype = "Sales Order"
-		elif field == "total_qty_purchased":
-			select_field = "stock_qty"
-			select_doctype = "Purchase Order"
+    if limit is not None:
+        limit = int(limit)  # Convert limit to an integer
 
-		filters = [["docstatus", "=", "1"], ["company", "=", company]]
-		from_date, to_date = parse_date_range(date_range)
-		if from_date and to_date:
-			filters.append(["transaction_date", "between", [from_date, to_date]])
+    if field in ("available_stock_qty", "available_stock_value"):
+        # Fetch initial quantity and total quantity sold
+        item_details = frappe.db.get_all(
+            "Item",
+            fields=["name", "valuation_rate as price"],
+            filters={"disabled": 0},
+        )
 
-		child_doctype = f"{select_doctype} Item"
-		return frappe.get_list(
-			select_doctype,
-			fields=[
-				f"`tab{child_doctype}`.item_code as name",
-				f"sum(`tab{child_doctype}`.{select_field}) as value",
-			],
-			filters=filters,
-			order_by="value desc",
-			group_by=f"`tab{child_doctype}`.item_code",
-			limit=limit,
-		)
+        # Fetch total quantity sold for each item
+        filters = [["docstatus", "=", "1"], ["company", "=", company]]
+        from_date, to_date = parse_date_range(date_range)
+        if from_date and to_date:
+            filters.append(["posting_date", "between", [from_date, to_date]])
+
+        # Query Sales Invoice
+        sales_invoice_items = frappe.get_list(
+            "Sales Invoice",
+            fields=[
+                "`tabSales Invoice Item`.item_code as name",
+                "sum(`tabSales Invoice Item`.stock_qty) as total_qty_sold",
+            ],
+            filters=filters,
+            group_by="`tabSales Invoice Item`.item_code",
+        )
+
+        # Query POS Invoice
+        pos_invoice_items = frappe.get_list(
+            "POS Invoice",
+            fields=[
+                "`tabPOS Invoice Item`.item_code as name",
+                "sum(`tabPOS Invoice Item`.stock_qty) as total_qty_sold",
+            ],
+            filters=filters,
+            group_by="`tabPOS Invoice Item`.item_code",
+        )
+
+        # Combine results
+        from collections import defaultdict
+        total_qty_sold = defaultdict(float)
+        for item in sales_invoice_items + pos_invoice_items:
+            total_qty_sold[item["name"]] += item["total_qty_sold"]
+
+        # Fetch initial quantity from Bin
+        bin_data = frappe.db.get_all(
+            "Bin",
+            fields=["item_code", "sum(actual_qty) as initial_qty"],
+            group_by="item_code",
+        )
+        initial_qty = {item["item_code"]: item["initial_qty"] for item in bin_data}
+
+        # Calculate available stock qty and value
+        results = []
+        for item in item_details:
+            item_code = item["name"]
+            initial = initial_qty.get(item_code, 0)
+            sold = total_qty_sold.get(item_code, 0)
+            available_qty = initial - sold
+
+            if field == "available_stock_qty":
+                results.append({"name": item_code, "value": available_qty})
+            elif field == "available_stock_value":
+                price = item["price"]
+                results.append({"name": item_code, "value": available_qty * price})
+
+        # Sort and limit results
+        results.sort(key=lambda x: x["value"], reverse=True)
+        if limit:
+            results = results[:limit]
+
+        return results
+
+    else:
+        # Existing logic for other fields
+        if field == "total_sales_amount":
+            select_field = "base_net_amount"
+        elif field == "total_purchase_amount":
+            select_field = "base_net_amount"
+        elif field == "total_qty_sold":
+            select_field = "stock_qty"
+        elif field == "total_qty_purchased":
+            select_field = "stock_qty"
+
+        filters = [["docstatus", "=", "1"], ["company", "=", company]]
+        from_date, to_date = parse_date_range(date_range)
+        if from_date and to_date:
+            filters.append(["posting_date", "between", [from_date, to_date]])
+
+        # Query Sales Invoice
+        sales_invoice_items = frappe.get_list(
+            "Sales Invoice",
+            fields=[
+                "`tabSales Invoice Item`.item_code as name",
+                f"sum(`tabSales Invoice Item`.{select_field}) as value",
+            ],
+            filters=filters,
+            order_by="value desc",
+            group_by="`tabSales Invoice Item`.item_code",
+            limit=limit,
+        )
+
+        # Query POS Invoice
+        pos_invoice_items = frappe.get_list(
+            "POS Invoice",
+            fields=[
+                "`tabPOS Invoice Item`.item_code as name",
+                f"sum(`tabPOS Invoice Item`.{select_field}) as value",
+            ],
+            filters=filters,
+            order_by="value desc",
+            group_by="`tabPOS Invoice Item`.item_code",
+            limit=limit,
+        )
+
+        # Combine results
+        from collections import defaultdict
+        aggregated_items = defaultdict(float)
+        for item in sales_invoice_items + pos_invoice_items:
+            aggregated_items[item["name"]] += item["value"]
+
+        # Convert to list of dictionaries
+        result = [{"name": k, "value": v} for k, v in aggregated_items.items()]
+
+        # Sort by value in descending order
+        result.sort(key=lambda x: x["value"], reverse=True)
+
+        # Apply limit
+        if limit:
+            result = result[:limit]
+
+        return result
 
 
 @frappe.whitelist()
