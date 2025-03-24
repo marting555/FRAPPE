@@ -7,7 +7,7 @@ import json
 import frappe
 from frappe import qb
 from frappe.model.dynamic_links import get_dynamic_link_map
-from frappe.tests.utils import FrappeTestCase, change_settings
+from frappe.tests.utils import FrappeTestCase, change_settings, if_app_installed
 from frappe.utils import add_days, flt, format_date, getdate, nowdate, today
 from erpnext.stock.get_item_details import get_item_tax_map
 import erpnext
@@ -4682,6 +4682,7 @@ class TestSalesInvoice(FrappeTestCase):
 				voucher_type="Payment Entry",
 				posting_date=pe.posting_date	
 			)
+	@if_app_installed("india_compliance")
 	def test_sales_invoice_without_sales_order_with_gst_TC_S_016(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
@@ -4757,6 +4758,7 @@ class TestSalesInvoice(FrappeTestCase):
 				dn_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
 				self.assertEqual(dn_acc_debit, qty_change[0].get("valuation_rate") * 4)
 	
+	@if_app_installed("india_compliance")
 	def test_sales_invoice_with_update_stock_checked_with_gst_TC_S_017(self): 
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
@@ -5811,6 +5813,7 @@ class TestSalesInvoice(FrappeTestCase):
 		si = make_sales_invoice(so.name)
 		self.assertEquals(si.payment_terms_template,"_Test Payment Term Template")
 	
+	@if_app_installed("india_compliance")
 	def test_generate_sales_invoice_with_items_different_gst_rates_TC_ACC_131(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		import json
