@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-03-23 09:35+0000\n"
-"PO-Revision-Date: 2025-03-23 12:30\n"
+"PO-Revision-Date: 2025-03-24 13:47\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Chinese Simplified\n"
 "MIME-Version: 1.0\n"
@@ -5928,87 +5928,87 @@ msgstr "资产资本化{0}提交后完成资产入账"
 
 #: erpnext/assets/doctype/asset/asset.py:199
 msgid "Asset created"
-msgstr ""
+msgstr "资产已创建"
 
 #: erpnext/assets/doctype/asset_capitalization/asset_capitalization.py:589
 msgid "Asset created after Asset Capitalization {0} was submitted"
-msgstr ""
+msgstr "资产资本化{0}提交后资产已创建"
 
 #: erpnext/assets/doctype/asset/asset.py:1288
 msgid "Asset created after being split from Asset {0}"
-msgstr ""
+msgstr "从资产{0}拆分后资产已创建"
 
 #: erpnext/assets/doctype/asset/asset.py:202
 msgid "Asset deleted"
-msgstr ""
+msgstr "资产已删除"
 
 #: erpnext/assets/doctype/asset_movement/asset_movement.py:180
 msgid "Asset issued to Employee {0}"
-msgstr ""
+msgstr "资产已发放给员工{0}"
 
 #: erpnext/assets/doctype/asset_repair/asset_repair.py:108
 msgid "Asset out of order due to Asset Repair {0}"
-msgstr ""
+msgstr "因资产维修{0}导致资产停用"
 
 #: erpnext/assets/doctype/asset_movement/asset_movement.py:165
 msgid "Asset received at Location {0} and issued to Employee {1}"
-msgstr ""
+msgstr "资产在位置{0}接收并发放给员工{1}"
 
 #: erpnext/assets/doctype/asset/depreciation.py:531
 msgid "Asset restored"
-msgstr ""
+msgstr "资产已恢复"
 
 #: erpnext/assets/doctype/asset_capitalization/asset_capitalization.py:648
 msgid "Asset restored after Asset Capitalization {0} was cancelled"
-msgstr ""
+msgstr "资产资本化{0}取消后资产已恢复"
 
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.py:1366
 msgid "Asset returned"
-msgstr ""
+msgstr "资产已退回"
 
 #: erpnext/assets/doctype/asset/depreciation.py:475
 msgid "Asset scrapped"
-msgstr ""
+msgstr "资产已报废"
 
 #: erpnext/assets/doctype/asset/depreciation.py:477
 msgid "Asset scrapped via Journal Entry {0}"
-msgstr "通过资产手工凭证报废{0}"
+msgstr "通过日记账分录{0}报废资产"
 
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.py:1403
 msgid "Asset sold"
-msgstr ""
+msgstr "资产已出售"
 
 #: erpnext/assets/doctype/asset/asset.py:165
 msgid "Asset submitted"
-msgstr ""
+msgstr "资产已提交"
 
 #: erpnext/assets/doctype/asset_movement/asset_movement.py:173
 msgid "Asset transferred to Location {0}"
-msgstr ""
+msgstr "资产已转移至位置{0}"
 
 #: erpnext/assets/doctype/asset/asset.py:1222
 msgid "Asset updated after being split into Asset {0}"
-msgstr ""
+msgstr "资产拆分至资产{0}后已更新"
 
 #: erpnext/assets/doctype/asset_repair/asset_repair.py:203
 msgid "Asset updated after cancellation of Asset Repair {0}"
-msgstr ""
+msgstr "资产维修{0}取消后资产已更新"
 
 #: erpnext/assets/doctype/asset_repair/asset_repair.py:164
 msgid "Asset updated after completion of Asset Repair {0}"
-msgstr ""
+msgstr "资产维修{0}完成后资产已更新"
 
 #: erpnext/assets/doctype/asset_movement/asset_movement.py:106
 msgid "Asset {0} cannot be received at a location and given to an employee in a single movement"
-msgstr ""
+msgstr "资产{0}不可在同一移动中既接收至位置又发放给员工"
 
 #: erpnext/assets/doctype/asset/depreciation.py:440
 msgid "Asset {0} cannot be scrapped, as it is already {1}"
-msgstr "资产{0}不能被废弃，因为它已经是{1}"
+msgstr "资产{0}当前状态为{1}，不可报废"
 
 #: erpnext/assets/doctype/asset_capitalization/asset_capitalization.py:215
 msgid "Asset {0} does not belong to Item {1}"
-msgstr ""
+msgstr "资产{0}不属于物料{1}"
 
 #: erpnext/assets/doctype/asset_movement/asset_movement.py:45
 msgid "Asset {0} does not belong to company {1}"
@@ -6016,7 +6016,7 @@ msgstr "资产{0}不属于公司{1}"
 
 #: erpnext/assets/doctype/asset_movement/asset_movement.py:118
 msgid "Asset {0} does not belongs to the custodian {1}"
-msgstr "资产{0}不属于托管人{1}"
+msgstr "资产{0}不属于保管人{1}"
 
 #: erpnext/assets/doctype/asset_movement/asset_movement.py:57
 msgid "Asset {0} does not belongs to the location {1}"
@@ -6025,15 +6025,15 @@ msgstr "资产{0}不属于位置{1}"
 #: erpnext/assets/doctype/asset_capitalization/asset_capitalization.py:700
 #: erpnext/assets/doctype/asset_capitalization/asset_capitalization.py:792
 msgid "Asset {0} does not exist"
-msgstr ""
+msgstr "资产{0}不存在"
 
 #: erpnext/assets/doctype/asset_capitalization/asset_capitalization.py:595
 msgid "Asset {0} has been created. Please set the depreciation details if any and submit it."
-msgstr ""
+msgstr "资产{0}已创建，请设置折旧明细(如有)并提交。"
 
 #: erpnext/assets/doctype/asset_capitalization/asset_capitalization.py:614
 msgid "Asset {0} has been updated. Please set the depreciation details if any and submit it."
-msgstr ""
+msgstr "资产{0}已更新，请设置折旧明细(如有)并提交。"
 
 #: erpnext/assets/doctype/asset/depreciation.py:438
 msgid "Asset {0} must be submitted"
@@ -6045,15 +6045,15 @@ msgstr ""
 
 #: erpnext/assets/doctype/asset_shift_allocation/asset_shift_allocation.py:256
 msgid "Asset's depreciation schedule updated after Asset Shift Allocation {0}"
-msgstr ""
+msgstr "资产班次分配{0}后已更新折旧计划表"
 
 #: erpnext/assets/doctype/asset_value_adjustment/asset_value_adjustment.py:65
 msgid "Asset's value adjusted after cancellation of Asset Value Adjustment {0}"
-msgstr ""
+msgstr "资产价值调整{0}取消后已调整资产价值"
 
 #: erpnext/assets/doctype/asset_value_adjustment/asset_value_adjustment.py:55
 msgid "Asset's value adjusted after submission of Asset Value Adjustment {0}"
-msgstr ""
+msgstr "资产价值调整{0}提交后已调整资产价值"
 
 #. Label of the assets_tab (Tab Break) field in DocType 'Accounts Settings'
 #. Label of the asset_items (Table) field in DocType 'Asset Capitalization'
@@ -6079,7 +6079,7 @@ msgstr ""
 
 #: erpnext/manufacturing/doctype/job_card/job_card.js:146
 msgid "Assign Job to Employee"
-msgstr ""
+msgstr "分配任务至员工"
 
 #. Label of the assign_to_name (Read Only) field in DocType 'Asset Maintenance
 #. Log'
@@ -6099,11 +6099,11 @@ msgstr ""
 #: erpnext/support/report/issue_analytics/issue_analytics.js:81
 #: erpnext/support/report/issue_summary/issue_summary.js:69
 msgid "Assigned To"
-msgstr "已分配给"
+msgstr "分配至"
 
 #: erpnext/templates/pages/projects.html:48
 msgid "Assignment"
-msgstr ""
+msgstr "任务分配"
 
 #. Label of the filters_section (Section Break) field in DocType 'Service Level
 #. Agreement'
@@ -6142,11 +6142,11 @@ msgstr ""
 #: erpnext/accounts/doctype/pos_invoice/pos_invoice.py:428
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.py:513
 msgid "At least one mode of payment is required for POS invoice."
-msgstr "需要为POS费用清单定义至少一种付款模式"
+msgstr "POS发票必须设置至少一种支付方式。"
 
 #: erpnext/setup/doctype/terms_and_conditions/terms_and_conditions.py:34
 msgid "At least one of the Applicable Modules should be selected"
-msgstr "应选择至少一个适用模块"
+msgstr "必须选择至少一个适用模块"
 
 #: erpnext/accounts/doctype/pricing_rule/pricing_rule.py:204
 msgid "At least one of the Selling or Buying must be selected"
@@ -6158,11 +6158,11 @@ msgstr ""
 
 #: erpnext/manufacturing/doctype/routing/routing.py:50
 msgid "At row #{0}: the sequence id {1} cannot be less than previous row sequence id {2}"
-msgstr "在第{0}行：序列ID {1}不能小于上一行的序列ID {2}"
+msgstr "第#{0}行：序列ID{1}不可小于前一行序列ID{2}"
 
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py:850
 msgid "At row {0}: Batch No is mandatory for Item {1}"
-msgstr ""
+msgstr "第{0}行：物料{1}必须填写批次号"
 
 #: erpnext/manufacturing/doctype/bom_creator/bom_creator.py:93
 msgid "At row {0}: Parent Row No cannot be set for item {1}"
@@ -6174,7 +6174,7 @@ msgstr ""
 
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py:842
 msgid "At row {0}: Serial No is mandatory for Item {1}"
-msgstr ""
+msgstr "第{0}行：物料{1}必须填写序列号"
 
 #: erpnext/controllers/stock_controller.py:504
 msgid "At row {0}: Serial and Batch Bundle {1} has already created. Please remove the values from the serial no or batch no fields."
@@ -6197,7 +6197,7 @@ msgstr ""
 #: erpnext/public/js/utils/serial_no_batch_selector.js:244
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.js:73
 msgid "Attach CSV File"
-msgstr ""
+msgstr "附加 CSV 文件"
 
 #. Label of the import_file (Attach) field in DocType 'Chart of Accounts
 #. Importer'
@@ -6248,15 +6248,15 @@ msgstr ""
 
 #: erpnext/stock/doctype/item/item.py:928
 msgid "Attribute table is mandatory"
-msgstr "属性表中的信息必填"
+msgstr "属性表为必填项"
 
 #: erpnext/stock/doctype/item_attribute/item_attribute.py:108
 msgid "Attribute value: {0} must appear only once"
-msgstr ""
+msgstr "属性值{0}必须唯一"
 
 #: erpnext/stock/doctype/item/item.py:932
 msgid "Attribute {0} selected multiple times in Attributes Table"
-msgstr "属性{0}多次选择在属性表"
+msgstr "属性表重复选择属性{0}"
 
 #: erpnext/stock/doctype/item/item.py:860
 msgid "Attributes"
@@ -6282,7 +6282,7 @@ msgstr "审计员"
 
 #: erpnext/erpnext_integrations/doctype/plaid_settings/plaid_connector.py:68
 msgid "Authentication Failed"
-msgstr "身份验证失败"
+msgstr "认证失败"
 
 #. Label of the authorised_by_section (Section Break) field in DocType
 #. 'Contract'
@@ -6293,7 +6293,7 @@ msgstr ""
 #. Name of a DocType
 #: erpnext/setup/doctype/authorization_control/authorization_control.json
 msgid "Authorization Control"
-msgstr "授权控制"
+msgstr "权限控制"
 
 #. Name of a DocType
 #: erpnext/setup/doctype/authorization_rule/authorization_rule.json
@@ -6307,58 +6307,58 @@ msgstr "授权签字人"
 #. Label of the value (Float) field in DocType 'Authorization Rule'
 #: erpnext/setup/doctype/authorization_rule/authorization_rule.json
 msgid "Authorized Value"
-msgstr ""
+msgstr "核准价值"
 
 #. Label of the auto_create_assets (Check) field in DocType 'Item'
 #: erpnext/stock/doctype/item/item.json
 msgid "Auto Create Assets on Purchase"
-msgstr ""
+msgstr "采购时自动创建资产"
 
 #. Label of the auto_exchange_rate_revaluation (Check) field in DocType
 #. 'Company'
 #: erpnext/setup/doctype/company/company.json
 msgid "Auto Create Exchange Rate Revaluation"
-msgstr ""
+msgstr "自动创建汇率重估"
 
 #. Label of the auto_create_purchase_receipt (Check) field in DocType 'Buying
 #. Settings'
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 msgid "Auto Create Purchase Receipt"
-msgstr ""
+msgstr "自动创建采购收据"
 
 #. Label of the auto_create_serial_and_batch_bundle_for_outward (Check) field
 #. in DocType 'Stock Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "Auto Create Serial and Batch Bundle For Outward"
-msgstr ""
+msgstr "自动创建外发序列与批次组合"
 
 #. Label of the auto_create_subcontracting_order (Check) field in DocType
 #. 'Buying Settings'
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 msgid "Auto Create Subcontracting Order"
-msgstr ""
+msgstr "自动创建分包订单"
 
 #. Label of the auto_created (Check) field in DocType 'Fiscal Year'
 #: erpnext/accounts/doctype/fiscal_year/fiscal_year.json
 msgid "Auto Created"
-msgstr ""
+msgstr "自动创建"
 
 #. Label of the auto_created_serial_and_batch_bundle (Check) field in DocType
 #. 'Stock Ledger Entry'
 #: erpnext/stock/doctype/stock_ledger_entry/stock_ledger_entry.json
 msgid "Auto Created Serial and Batch Bundle"
-msgstr ""
+msgstr "自动创建序列与批次组合"
 
 #. Label of the auto_creation_of_contact (Check) field in DocType 'CRM
 #. Settings'
 #: erpnext/crm/doctype/crm_settings/crm_settings.json
 msgid "Auto Creation of Contact"
-msgstr ""
+msgstr "自动创建联系人"
 
 #. Label of a Link in the Settings Workspace
 #: erpnext/setup/workspace/settings/settings.json
 msgid "Auto Email Report"
-msgstr ""
+msgstr "自动邮件报告"
 
 #: erpnext/public/js/utils/serial_no_batch_selector.js:368
 msgid "Auto Fetch"
@@ -6372,17 +6372,17 @@ msgstr ""
 #. 'Stock Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "Auto Insert Item Price If Missing"
-msgstr ""
+msgstr "缺失时自动插入物料价格"
 
 #. Label of the auto_material_request (Section Break) field in DocType 'Stock
 #. Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "Auto Material Request"
-msgstr ""
+msgstr "自动物料申请"
 
 #: erpnext/stock/reorder_item.py:329
 msgid "Auto Material Requests Generated"
-msgstr "已自动生成材料需求"
+msgstr "已自动生成物料申请"
 
 #. Option for the 'Supplier Naming By' (Select) field in DocType 'Buying
 #. Settings'
@@ -6391,32 +6391,32 @@ msgstr "已自动生成材料需求"
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 #: erpnext/selling/doctype/selling_settings/selling_settings.json
 msgid "Auto Name"
-msgstr ""
+msgstr "自动命名"
 
 #. Label of the auto_opt_in (Check) field in DocType 'Loyalty Program'
 #: erpnext/accounts/doctype/loyalty_program/loyalty_program.json
 msgid "Auto Opt In (For all customers)"
-msgstr ""
+msgstr "自动选择加入（适用于所有客户）"
 
 #: erpnext/accounts/doctype/bank_reconciliation_tool/bank_reconciliation_tool.js:66
 msgid "Auto Reconcile"
-msgstr ""
+msgstr "自动对账"
 
 #. Label of the auto_reconcile_payments (Check) field in DocType 'Accounts
 #. Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Auto Reconcile Payments"
-msgstr ""
+msgstr "自动对账付款"
 
 #: erpnext/accounts/doctype/bank_reconciliation_tool/bank_reconciliation_tool.py:441
 msgid "Auto Reconciliation"
-msgstr ""
+msgstr "自动对账"
 
 #. Label of the auto_reconciliation_job_trigger (Int) field in DocType
 #. 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Auto Reconciliation Job Trigger"
-msgstr ""
+msgstr "自动对账任务触发器"
 
 #: erpnext/accounts/doctype/bank_reconciliation_tool/bank_reconciliation_tool.py:391
 msgid "Auto Reconciliation has started in the background"
@@ -6425,7 +6425,7 @@ msgstr ""
 #: erpnext/accounts/doctype/process_payment_reconciliation/process_payment_reconciliation.py:147
 #: erpnext/accounts/doctype/process_payment_reconciliation/process_payment_reconciliation.py:195
 msgid "Auto Reconciliation of Payments has been disabled. Enable it through {0}"
-msgstr ""
+msgstr "付款自动对账功能已禁用。请通过{0}启用"
 
 #. Label of the auto_repeat (Link) field in DocType 'Journal Entry'
 #. Label of the auto_repeat (Link) field in DocType 'Payment Entry'
@@ -6468,90 +6468,90 @@ msgstr "自动重复"
 #. 'Subcontracting Receipt'
 #: erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.json
 msgid "Auto Repeat Detail"
-msgstr ""
+msgstr "自动重复细节"
 
 #. Label of the auto_reserve_serial_and_batch (Check) field in DocType 'Stock
 #. Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "Auto Reserve Serial and Batch Nos"
-msgstr ""
+msgstr "自动预留序列号与批次"
 
 #. Label of the auto_reserve_stock (Check) field in DocType 'Stock Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "Auto Reserve Stock"
-msgstr ""
+msgstr "自动预留库存"
 
 #. Label of the auto_reserve_stock_for_sales_order_on_purchase (Check) field in
 #. DocType 'Stock Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "Auto Reserve Stock for Sales Order on Purchase"
-msgstr ""
+msgstr "采购时自动为销售订单预留库存"
 
 #. Description of the 'Close Replied Opportunity After Days' (Int) field in
 #. DocType 'CRM Settings'
 #: erpnext/crm/doctype/crm_settings/crm_settings.json
 msgid "Auto close Opportunity Replied after the no. of days mentioned above"
-msgstr ""
+msgstr "在上述指定天数后自动关闭已回复商机"
 
 #. Description of the 'Enable Automatic Party Matching' (Check) field in
 #. DocType 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Auto match and set the Party in Bank Transactions"
-msgstr ""
+msgstr "自动匹配并设置银行交易方"
 
 #. Label of the reorder_section (Section Break) field in DocType 'Item'
 #: erpnext/stock/doctype/item/item.json
 msgid "Auto re-order"
-msgstr ""
+msgstr "自动补货"
 
 #: erpnext/public/js/controllers/buying.js:317
 #: erpnext/public/js/utils/sales_common.js:427
 msgid "Auto repeat document updated"
-msgstr "自动重复文件更新"
+msgstr "自动重复单据已更新"
 
 #. Description of the 'Write Off Limit' (Currency) field in DocType 'POS
 #. Profile'
 #: erpnext/accounts/doctype/pos_profile/pos_profile.json
 msgid "Auto write off precision loss while consolidation"
-msgstr ""
+msgstr "合并时自动核销精度损失"
 
 #. Label of the auto_add_item_to_cart (Check) field in DocType 'POS Profile'
 #: erpnext/accounts/doctype/pos_profile/pos_profile.json
 msgid "Automatically Add Filtered Item To Cart"
-msgstr ""
+msgstr "自动添加筛选物料至购物车"
 
 #. Label of the add_taxes_from_item_tax_template (Check) field in DocType
 #. 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Automatically Add Taxes and Charges from Item Tax Template"
-msgstr ""
+msgstr "自动从物料税务模板添加税费"
 
 #. Label of the create_new_batch (Check) field in DocType 'Item'
 #: erpnext/stock/doctype/item/item.json
 msgid "Automatically Create New Batch"
-msgstr ""
+msgstr "自动创建新批次"
 
 #. Label of the automatically_fetch_payment_terms (Check) field in DocType
 #. 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Automatically Fetch Payment Terms from Order"
-msgstr ""
+msgstr "自动从订单获取付款条款"
 
 #. Label of the automatically_process_deferred_accounting_entry (Check) field
 #. in DocType 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Automatically Process Deferred Accounting Entry"
-msgstr ""
+msgstr "自动处理递延会计凭证"
 
 #. Label of the automatically_post_balancing_accounting_entry (Check) field in
 #. DocType 'Accounting Dimension Detail'
 #: erpnext/accounts/doctype/accounting_dimension_detail/accounting_dimension_detail.json
 msgid "Automatically post balancing accounting entry"
-msgstr ""
+msgstr "自动过账平衡会计凭证"
 
 #: erpnext/setup/setup_wizard/data/industry_type.txt:7
 msgid "Automotive"
-msgstr ""
+msgstr "汽车行业"
 
 #. Label of the availability_of_slots (Table) field in DocType 'Appointment
 #. Booking Settings'
@@ -6559,29 +6559,29 @@ msgstr ""
 #: erpnext/crm/doctype/appointment_booking_settings/appointment_booking_settings.json
 #: erpnext/crm/doctype/availability_of_slots/availability_of_slots.json
 msgid "Availability Of Slots"
-msgstr "插槽的可用性"
+msgstr "时段可用性"
 
 #: erpnext/manufacturing/doctype/workstation/workstation.js:513
 #: erpnext/manufacturing/report/production_planning_report/production_planning_report.py:372
 msgid "Available"
-msgstr "可用的"
+msgstr "可用"
 
 #. Label of the actual_batch_qty (Float) field in DocType 'Delivery Note Item'
 #: erpnext/stock/doctype/delivery_note_item/delivery_note_item.json
 msgid "Available Batch Qty at From Warehouse"
-msgstr ""
+msgstr "源仓库可用批次数量"
 
 #. Label of the actual_batch_qty (Float) field in DocType 'POS Invoice Item'
 #. Label of the actual_batch_qty (Float) field in DocType 'Sales Invoice Item'
 #: erpnext/accounts/doctype/pos_invoice_item/pos_invoice_item.json
 #: erpnext/accounts/doctype/sales_invoice_item/sales_invoice_item.json
 msgid "Available Batch Qty at Warehouse"
-msgstr ""
+msgstr "仓库可用批次数量"
 
 #. Name of a report
 #: erpnext/stock/report/available_batch_report/available_batch_report.json
 msgid "Available Batch Report"
-msgstr ""
+msgstr "可用批次报告"
 
 #: erpnext/assets/report/fixed_asset_register/fixed_asset_register.py:428
 msgid "Available For Use Date"
@@ -6604,19 +6604,19 @@ msgstr "可用数量"
 #: erpnext/buying/doctype/purchase_receipt_item_supplied/purchase_receipt_item_supplied.json
 #: erpnext/subcontracting/doctype/subcontracting_receipt_supplied_item/subcontracting_receipt_supplied_item.json
 msgid "Available Qty For Consumption"
-msgstr ""
+msgstr "可消耗数量"
 
 #. Label of the company_total_stock (Float) field in DocType 'Purchase Order
 #. Item'
 #: erpnext/buying/doctype/purchase_order_item/purchase_order_item.json
 msgid "Available Qty at Company"
-msgstr ""
+msgstr "公司现有数量"
 
 #. Label of the available_qty_at_source_warehouse (Float) field in DocType
 #. 'Work Order Item'
 #: erpnext/manufacturing/doctype/work_order_item/work_order_item.json
 msgid "Available Qty at Source Warehouse"
-msgstr ""
+msgstr "源仓库可用数量"
 
 #. Label of the actual_qty (Float) field in DocType 'Purchase Order Item'
 #: erpnext/buying/doctype/purchase_order_item/purchase_order_item.json
@@ -6681,7 +6681,7 @@ msgstr "可用{0}"
 #. Label of the available_for_use_date (Date) field in DocType 'Asset'
 #: erpnext/assets/doctype/asset/asset.json
 msgid "Available-for-use Date"
-msgstr ""
+msgstr "可用启用日期"
 
 #: erpnext/assets/doctype/asset/asset.py:399
 msgid "Available-for-use Date should be after purchase date"
