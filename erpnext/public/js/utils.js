@@ -788,7 +788,7 @@ erpnext.utils.update_child_items = function (opts) {
 		},
 		primary_action_label: __("Update"),
 	});
-	
+
 	dialog.show();
 };
 
