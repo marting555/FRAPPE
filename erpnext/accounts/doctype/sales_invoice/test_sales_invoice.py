@@ -6136,6 +6136,7 @@ class TestSalesInvoice(FrappeTestCase):
 				"due_date": today(),
 				"currency": "INR",
 				"selling_price_list": price_list,
+				"taxes_and_charges" :  "Output GST In-state - TC-1",
 				"items": [
 					{
 						"item_code": item_name,
@@ -6168,6 +6169,7 @@ class TestSalesInvoice(FrappeTestCase):
 
 		pi = make_inter_company_purchase_invoice(si.name)
 		pi.bill_no = "test bill"
+		pi.taxes_and_charges =  "Input GST In-state - TC-3"
 		pi.insert()
 		pi.submit()
 		self.assertEqual(pi.company, child_company)
@@ -6326,6 +6328,7 @@ class TestSalesInvoice(FrappeTestCase):
 				"transaction_date": today(),
 				"set_warehouse": "Stores - TC-1",
 				"selling_price_list": price_list,
+				"taxes_and_charges":"Output GST In-state - TC-1",
 				"items": [
 					{
 						"item_code": item.item_code,
@@ -6346,6 +6349,7 @@ class TestSalesInvoice(FrappeTestCase):
 		po = make_inter_company_purchase_order(so.name)
 		po.schedule_date = today()
 		po.set_warehouse = "Stores - TC-3"
+		po.taxes_and_charges =  "Input GST In-state - TC-3"
 
 		po.insert()
 		po.submit()
@@ -6391,6 +6395,7 @@ class TestSalesInvoice(FrappeTestCase):
 
 
 		pr = make_inter_company_purchase_receipt(dn.name)
+		pr.taxes_and_charges =  "Input GST In-state - TC-3"
 		pr.insert()
 		pr.submit()
 
@@ -6444,6 +6449,7 @@ class TestSalesInvoice(FrappeTestCase):
 
 		pi = make_inter_company_purchase_invoice(si.name)
 		pi.bill_no = "test bill"
+		pi.taxes_and_charges =  "Input GST In-state - TC-3"
 		pi.insert()
 		pi.submit()
 
@@ -7316,6 +7322,8 @@ def create_company_and_supplier():
 			}
 		).insert()
 
+	create_test_tax_data()
+
 	return {
 		"parent_company": parent_company,
 		"child_company": child_company,
@@ -7323,6 +7331,104 @@ def create_company_and_supplier():
 		"customer": customer,
 		"price_list": price_list
 	}
+
+def create_test_tax_data():
+	company = "Test Company-1122"
+	company_abbr = "TC-1" 
+	child_company = "Test Company-3344"
+	child_company_abbr="TC-3"
+
+	required_accounts_parent= [
+        ("Output Tax SGST", "Duties and Taxes"),
+        ("Output Tax CGST", "Duties and Taxes")
+    ]
+
+	required_accounts_child= [
+        ("Input Tax SGST", "Duties and Taxes"), 
+        ("Input Tax CGST", "Duties and Taxes")
+    ]
+    
+	if not frappe.db.exists("Account", f"Duties and Taxes - {company_abbr}"):
+		frappe.get_doc({
+			"doctype": "Account",
+			"account_name": "Duties and Taxes",
+			"parent_account": "Indirect Expenses - " + company_abbr,
+			"company": company,
+			"is_group": 1
+		}).insert()
+	
+	if not frappe.db.exists("Account", f"Duties and Taxes - {child_company_abbr}"):
+		frappe.get_doc({
+			"doctype": "Account",
+			"account_name": "Duties and Taxes",
+			"parent_account": "Indirect Expenses - " + child_company_abbr,
+			"company": child_company,
+			"is_group": 1
+		}).insert()
+
+	for account_name, parent in required_accounts_parent:
+		full_name = f"{account_name} - {company_abbr}"
+		if not frappe.db.exists("Account", full_name):
+			frappe.get_doc({
+				"doctype": "Account",
+				"account_name": account_name,
+				"parent_account": f"{parent} - {company_abbr}",
+				"company": company,
+				"account_type": "Tax"
+			}).insert()
+	
+	for account_name, parent in required_accounts_child:
+		full_name = f"{account_name} - {child_company_abbr}"
+		if not frappe.db.exists("Account", full_name):
+			frappe.get_doc({
+				"doctype": "Account",
+				"account_name": account_name,
+				"parent_account": f"{parent} - {child_company_abbr}",
+				"company": child_company,
+				"account_type": "Tax"
+			}).insert()
+
+	if not frappe.db.exists("Sales Taxes and Charges Template", "Output GST In-state - TC-1"):
+		frappe.get_doc({
+			"doctype": "Sales Taxes and Charges Template",
+			"title": "Output GST In-state",
+			"company": company,
+			"taxes": [
+				{
+					"charge_type": "On Net Total",
+					"account_head": f"Output Tax SGST - {company_abbr}",
+					"rate": 9,
+					"description": f"SGST - {company_abbr}"
+				},
+				{
+					"charge_type": "On Net Total", 
+					"account_head": f"Output Tax CGST - {company_abbr}",
+					"rate": 9,
+					"description": f"CGST - {company_abbr}"
+				}
+			]
+		}).insert()
+
+	if not frappe.db.exists("Purchase Taxes and Charges Template", "Input GST In-state - TC-1"):
+		frappe.get_doc({
+			"doctype": "Purchase Taxes and Charges Template",
+			"title": "Input GST In-state",
+			"company": child_company,
+			"taxes": [
+				{
+					"charge_type": "On Net Total",
+					"account_head": f"Input Tax CGST - {child_company_abbr}",
+					"rate": 9,
+					"description": f"CGST - {child_company_abbr}"
+				},
+				{
+					"charge_type": "On Net Total",
+					"account_head": f"Input Tax SGST - {child_company_abbr}",
+					"rate": 9,
+					"description": f"SGST - {child_company_abbr}"
+				}
+			]
+		}).insert()
 
 def get_active_fiscal_year():
 	from datetime import datetime
