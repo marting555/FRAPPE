@@ -6742,7 +6742,8 @@ class TestMaterialRequest(FrappeTestCase):
 
 		bin_qty = frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": warehouse}, "actual_qty")
 		pr = make_purchase_receipt(po.name)
-		serial_numbers = [f"test_item_00{i}" for i in range(1, int(po.get("items")[0].qty) + 1)]
+		serial_number = [f"test_item_00{i}" for i in range(1, int(po.get("items")[0].qty) + 1)]
+		serial_numbers = [i for i in serial_number if i not in frappe.db.get_all("Serial No", pluck = 'name')]
 		pr.items[0].serial_no = "\n".join(serial_numbers)
 		pr.insert()
 		pr.submit()
