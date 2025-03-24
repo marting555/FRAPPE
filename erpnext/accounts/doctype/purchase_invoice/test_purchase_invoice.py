@@ -4023,14 +4023,35 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			self.assertEquals(total_amount,rate.get('total_amount'))
 	def test_direct_purchase_invoice_via_update_stock_TC_SCK_131(self):
 		# Create Purchase Invoice with Update Stock
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		from erpnext.stock.doctype.item.test_item import make_item
+		from erpnext.selling.doctype.sales_order.test_sales_order import get_or_create_fiscal_year
+		create_company()
+		parent_warehouse = frappe.db.get_value('Warehouse',{'is_group':1,'company':'_Test Company'},'name')
+		make_item("Book", {"is_stock_item": 1})
+		create_warehouse(
+			warehouse_name="_Test Warehouse 1 - _TC",
+			properties={"parent_warehouse": f"{parent_warehouse}"},
+			company="_Test Company",
+		)
+		get_or_create_fiscal_year("_Test Company")
+		create_supplier(supplier_name="_Test Supplier 1")
+		warehouse = frappe.db.get_all('Warehouse',{'is_group':0,'company':'_Test Company'},['name'])
+		account = frappe.db.get_all('Account',{'company':'_Test Company'},['name'])
+		cost_center = frappe.db.get_all('Cost Center',{'company':'_Test Company'},['name'])
 		pi = make_purchase_invoice(
 			supplier="_Test Supplier 1",
 			item_code="Book",
 			qty=5,
 			update_stock=True,
-			warehouse="Stores - _TC",
+			warehouse=warehouse[-1].name,
+			supplier_warehouse = warehouse[0].name,
+			uom = "Box",
+			expense_account = account[3].name,
+			cost_center = cost_center[1].name,
 			do_not_save=True
 		)
+		pi.due_date = today()
 		pi.save()
 		pi.submit()
 
@@ -4042,7 +4063,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 		self.assertEqual(len(sle), 1)
 		self.assertEqual(sle[0].item_code, "Book")
-		self.assertEqual(sle[0].warehouse, "Stores - _TC")
+		self.assertEqual(sle[0].warehouse, "Stores - _C")
 		self.assertEqual(sle[0].actual_qty, 5)
 
 		# Check Accounting Ledger Entries
@@ -4051,11 +4072,10 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			filters={"voucher_no": pi.name},
 			fields=["account", "debit", "credit"]
 		)
-		print(gl_entries,pi.as_dict().grand_total)
 		self.assertTrue(gl_entries)
 		expected_gl_entries = [
-			{"account": "Creditors - _TC", "debit": 0, "credit": pi.grand_total},
-			{"account": "Stock In Hand - _TC", "debit": pi.grand_total, "credit": 0}
+			{"account": "Creditors - _C", "debit": 0, "credit": pi.grand_total},
+			{"account": "Stock In Hand - _C", "debit": pi.grand_total, "credit": 0}
 		]
 		for gle in expected_gl_entries:
 			self.assertTrue(any(entry["account"] == gle["account"] and entry["debit"] == gle["debit"] and entry["credit"] == gle["credit"] for entry in gl_entries))
