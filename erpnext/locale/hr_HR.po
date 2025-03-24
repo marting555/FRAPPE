@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-03-23 09:35+0000\n"
-"PO-Revision-Date: 2025-03-23 12:30\n"
+"PO-Revision-Date: 2025-03-24 05:19\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Croatian\n"
 "MIME-Version: 1.0\n"
@@ -717,7 +717,7 @@ msgstr ""
 #: erpnext/assets/workspace/assets/assets.json
 #: erpnext/quality_management/workspace/quality/quality.json
 msgid "<span class=\"h4\"><b>Reports & Masters</b></span>"
-msgstr ""
+msgstr "<span class=\"h4\"><b>Izvještaji & Pristupi</b></span>"
 
 #. Header text in the Accounting Workspace
 #. Header text in the Payables Workspace
@@ -740,7 +740,7 @@ msgstr ""
 #: erpnext/setup/workspace/home/home.json
 #: erpnext/support/workspace/support/support.json
 msgid "<span class=\"h4\"><b>Reports &amp; Masters</b></span>"
-msgstr ""
+msgstr "<span class=\"h4\"><b>Izvještaji &amp; Pristupi</b></span>"
 
 #. Header text in the Settings Workspace
 #: erpnext/setup/workspace/settings/settings.json
@@ -784,7 +784,7 @@ msgstr ""
 #: erpnext/setup/workspace/home/home.json
 #: erpnext/support/workspace/support/support.json
 msgid "<span class=\"h4\"><b>Your Shortcuts</b></span>"
-msgstr ""
+msgstr "<span class=\"h4\"><b>Prečice</b></span>"
 
 #: erpnext/accounts/doctype/payment_request/payment_request.py:1017
 msgid "<strong>Grand Total:</strong> {0}"
@@ -3382,7 +3382,7 @@ msgstr ""
 #. Label of the section_break_13 (Tab Break) field in DocType 'Pricing Rule'
 #: erpnext/accounts/doctype/pricing_rule/pricing_rule.json
 msgid "Advanced Settings"
-msgstr ""
+msgstr "Napredne Postavke"
 
 #. Label of the advances (Table) field in DocType 'POS Invoice'
 #. Label of the advances (Table) field in DocType 'Purchase Invoice'
