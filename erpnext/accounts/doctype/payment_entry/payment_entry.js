@@ -277,7 +277,6 @@ frappe.ui.form.on("Payment Entry", {
 
 	contact_person: function (frm) {
 		frm.set_value("contact_email", "");
-		erpnext.utils.get_contact_details(frm);
 	},
 
 	hide_unhide_fields: function (frm) {
