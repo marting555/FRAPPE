@@ -200,7 +200,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "party",
+   "depends_on": "eval: doc.party && doc.party_type !== \"Employee\"",
    "fieldname": "contact_person",
    "fieldtype": "Link",
    "label": "Contact",
@@ -777,7 +777,7 @@
    "table_fieldname": "payment_entries"
   }
  ],
- "modified": "2025-01-31 11:24:58.076393",
+ "modified": "2025-03-24 15:55:28.038963",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payment Entry",
