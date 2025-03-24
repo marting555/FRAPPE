@@ -4879,6 +4879,62 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertEqual(delivery_note.sales_invoice, sales_invoice.name)
 	
 	def test_sales_invoice_with_update_stock_and_SR_TC_S_027(self):
+		# Set up accounts if they don't exist
+		if not frappe.db.exists("Account", "Stock In Hand - _TC"):
+			frappe.get_doc({
+				"doctype": "Account",
+				"account_name": "Stock In Hand",
+				"parent_account": "Current Assets - _TC",
+				"company": "_Test Company",
+				"account_type": "Stock",
+				"is_group": 0
+			}).insert()
+		
+		if not frappe.db.exists("Account", "Cost of Goods Sold - _TC"):
+			frappe.get_doc({
+				"doctype": "Account",
+				"account_name": "Cost of Goods Sold",
+				"parent_account": "Cost of Goods Sold - _TC",
+				"company": "_Test Company",
+				"account_type": "Cost of Goods Sold",
+				"is_group": 0
+			}).insert()
+		
+		if not frappe.db.exists("Account", "Shipping Charges - _TC"):
+			frappe.get_doc({
+				"doctype": "Account",
+				"account_name": "Shipping Charges",
+				"parent_account": "Indirect Expenses - _TC",
+				"company": "_Test Company",
+				"account_type": "Expense Account",
+				"is_group": 0
+			}).insert()
+		
+		# Set default accounts for test company
+		frappe.db.set_value("Company", "_Test Company", {
+			"default_receivable_account": "Debtors - _TC",
+			"default_income_account": "Sales - _TC",
+			"default_expense_account": "Cost of Goods Sold - _TC",
+			"default_inventory_account": "Stock In Hand - _TC"
+		})
+		
+		# Set up shipping rule account
+		if not frappe.db.exists("Shipping Rule", "_Test Shipping Rule"):
+			shipping_rule = frappe.get_doc({
+				"doctype": "Shipping Rule",
+				"shipping_rule_name": "_Test Shipping Rule",
+				"conditions": [{
+					"doctype": "Shipping Rule Condition",
+					"from_value": 0,
+					"to_value": 100000,
+					"shipping_amount": 200
+				}],
+				"account": "Shipping Charges - _TC"
+			}).insert()
+		else:
+			frappe.db.set_value("Shipping Rule", "_Test Shipping Rule", "account", "Shipping Charges - _TC")
+
+		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
 		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=10, rate=4000)
 
 		sales_invoice = create_sales_invoice(
@@ -4921,7 +4977,6 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertEqual(sum([entry.actual_qty for entry in sle]), -4)  
 
 	def test_sales_invoice_with_SR_and_CRN_TC_S_038(self):
-
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
 		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
@@ -4929,8 +4984,27 @@ class TestSalesInvoice(FrappeTestCase):
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
 
-		frappe.db.set_value("Company", "_Test Company","enable_perpetual_inventory", 1)
-
+		# Enable perpetual inventory and set up accounts
+		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
+		
+		# Create or get inventory account if not exists
+		if not frappe.db.exists("Account", "Stock In Hand - _TC"):
+			frappe.get_doc({
+				"doctype": "Account",
+				"account_name": "Stock In Hand",
+				"parent_account": "Current Assets - _TC",
+				"company": "_Test Company",
+				"account_type": "Stock",
+				"is_group": 0
+			}).insert()
+		
+		# Set default accounts for test company
+		frappe.db.set_value("Company", "_Test Company", {
+			"default_receivable_account": "Debtors - _TC",
+			"default_income_account": "Sales - _TC",
+			"default_expense_account": "Cost of Goods Sold - _TC",
+			"default_inventory_account": "Stock In Hand - _TC"
+		})
 
 		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=10, rate=1000)
 
@@ -4965,7 +5039,7 @@ class TestSalesInvoice(FrappeTestCase):
 			item="_Test Item Home Desktop 100",
 			qty=-5,
 			warehouse="Stores - _TC",
-			do_not_save =True
+			do_not_save=True
 		)
 		for i in dn_return.items:
 			i.against_sales_order = sales_order.name
@@ -5001,7 +5075,7 @@ class TestSalesInvoice(FrappeTestCase):
 			rate=3000,
 			is_return=1,
 			return_against=sales_invoice.name,
-			do_not_save =True
+			do_not_save=True
 		)
 		for i in crn.items:
 			i.sales_order = sales_order.name
@@ -5023,7 +5097,34 @@ class TestSalesInvoice(FrappeTestCase):
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
 
-		frappe.db.set_value("Company", "_Test Company","enable_perpetual_inventory", 1)
+		# Set up required accounts if they don't exist
+		required_accounts = [
+			("Stock In Hand - _TC", "Current Assets - _TC", "Stock"),
+			("Cost of Goods Sold - _TC", "Cost of Goods Sold - _TC", "Cost of Goods Sold"),
+			("Sales - _TC", "Income - _TC", "Income Account"),
+			("Debtors - _TC", "Current Assets - _TC", "Receivable")
+		]
+
+		for account_name, parent_account, account_type in required_accounts:
+			if not frappe.db.exists("Account", account_name):
+				frappe.get_doc({
+					"doctype": "Account",
+					"account_name": account_name.split(" - ")[0],
+					"parent_account": parent_account,
+					"company": "_Test Company",
+					"account_type": account_type,
+					"is_group": 0
+				}).insert()
+
+		# Set default accounts for test company
+		frappe.db.set_value("Company", "_Test Company", {
+			"default_receivable_account": "Debtors - _TC",
+			"default_income_account": "Sales - _TC",
+			"default_expense_account": "Cost of Goods Sold - _TC",
+			"default_inventory_account": "Stock In Hand - _TC"
+		})
+
+		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
 		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=10, rate=2500)
 
 		sales_invoice = create_sales_invoice(
@@ -5031,8 +5132,8 @@ class TestSalesInvoice(FrappeTestCase):
 			item_code="_Test Item Home Desktop 100",
 			qty=5,
 			rate=3000,
-			income_account = "Sales - _TC",
-			expense_account ="Cost of Goods Sold - _TC",
+			income_account="Sales - _TC",
+			expense_account="Cost of Goods Sold - _TC",
 			update_stock=1
 		)
 
