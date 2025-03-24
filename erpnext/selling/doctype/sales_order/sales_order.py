@@ -323,16 +323,10 @@ class SalesOrder(SellingController):
 
 	def validate_delivery_date(self):
 		if self.order_type == "Sales" and not self.skip_delivery_note:
-			delivery_date_list = [d.delivery_date for d in self.get("items") if d.delivery_date]
-			max_delivery_date = max(delivery_date_list) if delivery_date_list else None
-			if (max_delivery_date and not self.delivery_date) or (
-				max_delivery_date and getdate(self.delivery_date) != getdate(max_delivery_date)
-			):
-				self.delivery_date = max_delivery_date
+			# If main delivery date is set, sync it to all items
 			if self.delivery_date:
 				for d in self.get("items"):
-					if not d.delivery_date:
-						d.delivery_date = self.delivery_date
+					d.delivery_date = self.delivery_date
 					if getdate(self.transaction_date) > getdate(d.delivery_date):
 						frappe.msgprint(
 							_("Expected Delivery Date should be after Sales Order Date"),
@@ -341,7 +335,20 @@ class SalesOrder(SellingController):
 							raise_exception=True,
 						)
 			else:
-				frappe.throw(_("Please enter Delivery Date"))
+				# If no main delivery date, check if any items have delivery dates
+				delivery_date_list = [d.delivery_date for d in self.get("items") if d.delivery_date]
+				if delivery_date_list:
+					# If items have delivery dates, suggest using the latest one
+					max_delivery_date = max(delivery_date_list)
+					frappe.msgprint(
+						_("Please set the Delivery Date to match the latest item delivery date ({0})").format(
+							max_delivery_date
+						),
+						indicator="orange",
+						title=_("Delivery Date Required"),
+					)
+				else:
+					frappe.throw(_("Please enter Delivery Date"))
 
 		self.validate_sales_mntc_quotation()
 
@@ -1253,10 +1260,10 @@ def get_events(start, end, filters=None):
 		from
 			`tabSales Order`, `tabSales Order Item`
 		where `tabSales Order`.name = `tabSales Order Item`.parent
-			and `tabSales Order`.skip_delivery_note = 0
+			and `tabSales Order `.skip_delivery_note = 0
 			and (ifnull(`tabSales Order Item`.delivery_date, '0000-00-00')!= '0000-00-00') \
 			and (`tabSales Order Item`.delivery_date between %(start)s and %(end)s)
-			and `tabSales Order`.docstatus < 2
+			and `tabSales Order `.docstatus < 2
 			{conditions}
 		""",
 		{"start": start, "end": end},

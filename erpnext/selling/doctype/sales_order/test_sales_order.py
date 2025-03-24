@@ -461,9 +461,8 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 
 		# add an item so as to try removing items
 		trans_item = json.dumps(
-			[
-				{"item_code": "_Test Item", "qty": 5, "rate": 1000, "docname": so.get("items")[0].name},
-				{"item_code": "_Test Item 2", "qty": 2, "rate": 500},
+			[{"item_code": "_Test Item", "qty": 5, "rate": 1000, "docname": so.get("items")[0].name},
+			 {"item_code": "_Test Item 2", "qty": 2, "rate": 500},
 			]
 		)
 		update_child_qty_rate("Sales Order", trans_item, so.name)
@@ -2320,6 +2319,62 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 		si.submit()
 		sre_doc.reload()
 		self.assertTrue(sre_doc.status == "Delivered")
+
+	def test_delivery_date_sync(self):
+		"""Test that main delivery date syncs to all items"""
+		so = make_sales_order(qty=1, rate=100, do_not_submit=True)
+		so.delivery_date = add_days(so.transaction_date, 5)
+		so.save()
+
+		# Verify all items have the same delivery date as main
+		for item in so.items:
+			self.assertEqual(item.delivery_date, so.delivery_date)
+
+	def test_delivery_date_update(self):
+		"""Test that changing main delivery date updates all items"""
+		so = make_sales_order(qty=1, rate=100, do_not_submit=True)
+		so.delivery_date = add_days(so.transaction_date, 5)
+		so.save()
+
+		# Change main delivery date
+		new_date = add_days(so.transaction_date, 10)
+		so.delivery_date = new_date
+		so.save()
+
+		# Verify all items have the new delivery date
+		for item in so.items:
+			self.assertEqual(item.delivery_date, new_date)
+
+	def test_item_delivery_date_override(self):
+		"""Test that individual item delivery dates don't override main date"""
+		so = make_sales_order(qty=1, rate=100, do_not_submit=True)
+		so.delivery_date = add_days(so.transaction_date, 5)
+		so.save()
+
+		# Try to set different delivery date for an item
+		so.items[0].delivery_date = add_days(so.transaction_date, 15)
+		so.save()
+
+		# Verify item delivery date was overridden by main date
+		self.assertEqual(so.items[0].delivery_date, so.delivery_date)
+
+	def test_delivery_date_validation(self):
+		"""Test validation when delivery date is before transaction date"""
+		so = make_sales_order(qty=1, rate=100, do_not_submit=True)
+		so.delivery_date = add_days(so.transaction_date, -1)
+		
+		# Should raise validation error
+		with self.assertRaises(frappe.ValidationError):
+			so.save()
+
+	def test_delivery_date_required(self):
+		"""Test validation when no delivery date is set"""
+		so = make_sales_order(qty=1, rate=100, do_not_submit=True)
+		so.delivery_date = None
+		
+		# Should raise validation error
+		with self.assertRaises(frappe.ValidationError):
+			so.save()
 
 
 def automatically_fetch_payment_terms(enable=1):
