@@ -232,3 +232,126 @@ class BankClearance(Document):
 			msgprint(_("Clearance Date updated"))
 		else:
 			msgprint(_("Clearance Date not mentioned"))
+<<<<<<< HEAD
+=======
+
+
+def get_payment_entries_for_bank_clearance(
+	from_date, to_date, account, bank_account, include_reconciled_entries, include_pos_transactions
+):
+	entries = []
+
+	condition = ""
+	if not include_reconciled_entries:
+		condition = "and (clearance_date IS NULL or clearance_date='0000-00-00')"
+
+	journal_entries = frappe.db.sql(
+		f"""
+			select
+				"Journal Entry" as payment_document, t1.name as payment_entry,
+				t1.cheque_no as cheque_number, t1.cheque_date,
+				sum(t2.debit_in_account_currency) as debit, sum(t2.credit_in_account_currency) as credit,
+				t1.posting_date, t2.against_account, t1.clearance_date, t2.account_currency
+			from
+				`tabJournal Entry` t1, `tabJournal Entry Account` t2
+			where
+				t2.parent = t1.name and t2.account = %(account)s and t1.docstatus=1
+				and t1.posting_date >= %(from)s and t1.posting_date <= %(to)s
+				and ifnull(t1.is_opening, 'No') = 'No' {condition}
+			group by t2.account, t1.name
+			order by t1.posting_date ASC, t1.name DESC
+		""",
+		{"account": account, "from": from_date, "to": to_date},
+		as_dict=1,
+	)
+
+	payment_entries = frappe.db.sql(
+		f"""
+			select
+				"Payment Entry" as payment_document, name as payment_entry,
+				reference_no as cheque_number, reference_date as cheque_date,
+				if(paid_from=%(account)s, paid_amount + total_taxes_and_charges, 0) as credit,
+				if(paid_from=%(account)s, 0, received_amount + total_taxes_and_charges) as debit,
+				posting_date, ifnull(party,if(paid_from=%(account)s,paid_to,paid_from)) as against_account, clearance_date,
+				if(paid_to=%(account)s, paid_to_account_currency, paid_from_account_currency) as account_currency
+			from `tabPayment Entry`
+			where
+				(paid_from=%(account)s or paid_to=%(account)s) and docstatus=1
+				and posting_date >= %(from)s and posting_date <= %(to)s
+				{condition}
+			order by
+				posting_date ASC, name DESC
+		""",
+		{
+			"account": account,
+			"from": from_date,
+			"to": to_date,
+		},
+		as_dict=1,
+	)
+
+	pos_sales_invoices, pos_purchase_invoices = [], []
+	if include_pos_transactions:
+		si_payment = frappe.qb.DocType("Sales Invoice Payment")
+		si = frappe.qb.DocType("Sales Invoice")
+		acc = frappe.qb.DocType("Account")
+
+		pos_sales_invoices = (
+			frappe.qb.from_(si_payment)
+			.inner_join(si)
+			.on(si_payment.parent == si.name)
+			.inner_join(acc)
+			.on(si_payment.account == acc.name)
+			.select(
+				ConstantColumn("Sales Invoice").as_("payment_document"),
+				si.name.as_("payment_entry"),
+				si_payment.reference_no.as_("cheque_number"),
+				si_payment.amount.as_("debit"),
+				si.posting_date,
+				si.customer.as_("against_account"),
+				si_payment.clearance_date,
+				acc.account_currency,
+				ConstantColumn(0).as_("credit"),
+			)
+			.where(
+				(si.docstatus == 1)
+				& (si_payment.account == account)
+				& (si.posting_date >= from_date)
+				& (si.posting_date <= to_date)
+			)
+			.orderby(si.posting_date)
+			.orderby(si.name, order=Order.desc)
+		).run(as_dict=True)
+
+		pi = frappe.qb.DocType("Purchase Invoice")
+
+		pos_purchase_invoices = (
+			frappe.qb.from_(pi)
+			.inner_join(acc)
+			.on(pi.cash_bank_account == acc.name)
+			.select(
+				ConstantColumn("Purchase Invoice").as_("payment_document"),
+				pi.name.as_("payment_entry"),
+				pi.paid_amount.as_("credit"),
+				pi.posting_date,
+				pi.supplier.as_("against_account"),
+				pi.clearance_date,
+				acc.account_currency,
+				ConstantColumn(0).as_("debit"),
+			)
+			.where(
+				(pi.docstatus == 1)
+				& (pi.cash_bank_account == account)
+				& (pi.posting_date >= from_date)
+				& (pi.posting_date <= to_date)
+			)
+			.orderby(pi.posting_date)
+			.orderby(pi.name, order=Order.desc)
+		).run(as_dict=True)
+
+	entries = (
+		list(payment_entries) + list(journal_entries) + list(pos_sales_invoices) + list(pos_purchase_invoices)
+	)
+
+	return entries
+>>>>>>> fa2fd5bf88 (fix: don't filter payment entries on Bank Account in Payment Clearance)
