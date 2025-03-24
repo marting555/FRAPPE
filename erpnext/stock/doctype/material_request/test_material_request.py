@@ -5023,8 +5023,38 @@ class TestMaterialRequest(FrappeTestCase):
 		doc_po.reload()
 		self.assertEqual(doc_po.status, 'Completed')
 
+	def setUp(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		create_company()
+		create_warehouse(
+			warehouse_name="_Test Warehouse 1 - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
+		
 	def test_create_mr_to_2po_to_1pi_partial_return_TC_SCK_107(self):
-		mr = make_material_request()
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		from erpnext.buying.doctype.supplier.test_supplier import create_supplier
+		from erpnext.selling.doctype.sales_order.test_sales_order import get_or_create_fiscal_year
+		# from custom_crm.crm.doctype.lead.lead import make_customer
+		"""Test Purchase Receipt Creation, Submission, and Stock Ledger Update"""
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
+		create_company()
+		create_customer("_Test Customer")
+		get_or_create_fiscal_year("_Test Company")
+		
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC"},
+			company="_Test Company",
+		)
+		create_supplier(supplier_name="_Test Supplier")
+		frappe.db.set_value('Account','Creditors - _TC','account_currency','USD')
+		create_item("_Test Item")
+		
+		cost_center = frappe.db.get_all('Cost Center',{'company':'_Test Company'},['name'])
+		mr = make_material_request(uom = "Box",cost_center = cost_center[1].name)
 		
 		#partially qty
 		po = make_purchase_order(mr.name)
@@ -5049,13 +5079,14 @@ class TestMaterialRequest(FrappeTestCase):
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Stock Received But Not Billed - _TC'}):
 			recive_account = frappe.db.get_value("Company",mr.company,"stock_received_but_not_billed")
-			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': recive_account},'debit')
+			
+			gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': recive_account},'debit_in_transaction_currency')
 			self.assertEqual(gl_temp_credit, 1000)
 		
 		#if account setup in company
 		if frappe.db.exists('GL Entry',{'account': 'Creditors - _TC'}):
 			payable_act = frappe.db.get_value("Company",mr.company,"default_payable_account")
-			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': payable_act},'credit')
+			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': payable_act},'credit_in_transaction_currency')
 			self.assertEqual(gl_stock_debit, 1000)
 
 		pr.load_from_db()
@@ -5067,11 +5098,11 @@ class TestMaterialRequest(FrappeTestCase):
 
 		#if account setup in company
 		credit_account = frappe.db.get_value("Company",return_pi.company,"stock_received_but_not_billed")
-		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': credit_account},'credit')
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': credit_account},'credit_in_transaction_currency')
 		self.assertEqual(gl_temp_credit, 500)
 		
 		debit_account = frappe.db.get_value("Company",return_pi.company,"default_payable_account")
-		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': debit_account},'debit')
+		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': debit_account},'debit_in_transaction_currency')
 		self.assertEqual(gl_stock_debit, 500)
 
 	def test_mr_po_pi_serial_TC_SCK_092(self):
