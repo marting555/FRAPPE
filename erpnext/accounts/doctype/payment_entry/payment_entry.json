@@ -207,7 +207,7 @@
    "options": "Contact"
   },
   {
-   "depends_on": "contact_person",
+   "depends_on": "eval: (doc.contact_person || doc.party_type === \"Employee\") && doc.contact_email",
    "fieldname": "contact_email",
    "fieldtype": "Data",
    "label": "Email",
@@ -777,7 +777,7 @@
    "table_fieldname": "payment_entries"
   }
  ],
- "modified": "2025-03-24 15:55:28.038963",
+ "modified": "2025-03-24 16:18:19.920701",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Payment Entry",
