@@ -38,11 +38,7 @@ frappe.ui.form.on("Purchase Order", {
 
 		frm.set_query("fg_item", "items", function () {
 			return {
-				filters: {
-					is_stock_item: 1,
-					is_sub_contracted_item: 1,
-					default_bom: ["!=", ""],
-				},
+				query: "erpnext.buying.doctype.purchase_order.purchase_order.get_item_codes_for_subcontracting",
 			};
 		});
 	},
