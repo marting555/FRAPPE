@@ -1010,6 +1010,7 @@ def get_item_codes_for_subcontracting(doctype, txt, searchfield, start, page_len
 					.isnotnull()
 				)
 			)
+			& (table.name.like(f"%{txt}%"))
 		)
 		.run()
 	)
