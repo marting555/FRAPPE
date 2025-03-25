@@ -737,18 +737,20 @@ class calculate_taxes_and_totals:
 						flt(self.doc.discount_amount) * item.net_amount / total_for_discount_amount
 					)
 
-					expected_net_total += item.net_amount - distributed_amount
-					item.net_amount = flt(item.net_amount - distributed_amount, item.precision("net_amount"))
+					adjusted_net_amount = item.net_amount - distributed_amount
+					expected_net_total += adjusted_net_amount
+					item.net_amount = flt(adjusted_net_amount, item.precision("net_amount"))
 					item.distributed_discount_amount = flt(
 						distributed_amount, item.precision("distributed_discount_amount")
 					)
 					net_total += item.net_amount
 
 					# discount amount rounding adjustment
-					if i == len(self._items) - 1:
-						rounding_difference = flt(
+					if i == len(self._items) - 1 and (
+						rounding_difference := flt(
 							expected_net_total - net_total, self.doc.precision("net_total")
 						)
+					):
 						item.net_amount = flt(
 							item.net_amount + rounding_difference, item.precision("net_amount")
 						)
