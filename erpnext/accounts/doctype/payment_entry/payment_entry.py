@@ -525,6 +525,9 @@ class PaymentEntry(AccountsController):
 				self.party_name = frappe.db.get_value(self.party_type, self.party, "name")
 
 		if self.party:
+			if self.party_type == "Employee":
+				self.contact_person = None
+
 			if not self.contact_person:
 				set_contact_details(
 					self, party=frappe._dict({"name": self.party}), party_type=self.party_type
