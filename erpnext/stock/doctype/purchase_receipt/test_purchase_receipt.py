@@ -4577,6 +4577,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 			"doctype": "Purchase Receipt",
 			"supplier": supplier,
 			"company": company,
+			"currency": "INR",
 			"items": [{
 				"item_code": item.item_code,
 				"qty": 20,
