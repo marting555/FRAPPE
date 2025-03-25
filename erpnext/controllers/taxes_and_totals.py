@@ -727,8 +727,8 @@ class calculate_taxes_and_totals:
 				return
 
 			total_for_discount_amount = self.get_total_for_discount_amount()
-			taxes = self.doc.get("taxes")
 			net_total = 0
+			expected_net_total = 0
 
 			if total_for_discount_amount:
 				# calculate item amount after Discount Amount
@@ -737,28 +737,23 @@ class calculate_taxes_and_totals:
 						flt(self.doc.discount_amount) * item.net_amount / total_for_discount_amount
 					)
 
+					expected_net_total += item.net_amount - distributed_amount
 					item.net_amount = flt(item.net_amount - distributed_amount, item.precision("net_amount"))
 					item.distributed_discount_amount = flt(
 						distributed_amount, item.precision("distributed_discount_amount")
 					)
 					net_total += item.net_amount
 
-					# discount amount rounding loss adjustment if no taxes
-					if (
-						self.doc.apply_discount_on == "Net Total"
-						or not taxes
-						or total_for_discount_amount == self.doc.net_total
-					) and i == len(self._items) - 1:
-						discount_amount_loss = flt(
-							self.doc.net_total - net_total - self.doc.discount_amount,
-							self.doc.precision("net_total"),
+					# discount amount rounding adjustment
+					if i == len(self._items) - 1:
+						rounding_difference = flt(
+							expected_net_total - net_total, self.doc.precision("net_total")
 						)
-
 						item.net_amount = flt(
-							item.net_amount + discount_amount_loss, item.precision("net_amount")
+							item.net_amount + rounding_difference, item.precision("net_amount")
 						)
 						item.distributed_discount_amount = flt(
-							distributed_amount + discount_amount_loss,
+							distributed_amount + rounding_difference,
 							item.precision("distributed_discount_amount"),
 						)
 

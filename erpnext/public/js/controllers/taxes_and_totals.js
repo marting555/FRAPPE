@@ -713,21 +713,21 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 
 			var total_for_discount_amount = this.get_total_for_discount_amount();
 			var net_total = 0;
+			var expected_net_total = 0;
 			// calculate item amount after Discount Amount
 			if (total_for_discount_amount) {
 				$.each(this.frm._items || [], function(i, item) {
 					distributed_amount = flt(me.frm.doc.discount_amount) * item.net_amount / total_for_discount_amount;
+					expected_net_total += item.net_amount - distributed_amount
 					item.net_amount = flt(item.net_amount - distributed_amount, precision("net_amount", item));
 					net_total += item.net_amount;
 
-					// discount amount rounding loss adjustment if no taxes
-					if ((!(me.frm.doc.taxes || []).length || total_for_discount_amount==me.frm.doc.net_total || (me.frm.doc.apply_discount_on == "Net Total"))
-							&& i == (me.frm._items || []).length - 1) {
-						var discount_amount_loss = flt(me.frm.doc.net_total - net_total
-							- me.frm.doc.discount_amount, precision("net_total"));
-						item.net_amount = flt(item.net_amount + discount_amount_loss,
-							precision("net_amount", item));
+					// discount amount rounding adjustment
+					if (i == (me.frm._items || []).length - 1) {
+						var rounding_difference = flt(expected_net_total - net_total, precision("net_total"));
+						item.net_amount = flt(item.net_amount + rounding_difference, precision("net_amount", item));
 					}
+
 					item.net_rate = item.qty ? flt(item.net_amount / item.qty, precision("net_rate", item)) : 0;
 					me.set_in_company_currency(item, ["net_rate", "net_amount"]);
 				});
