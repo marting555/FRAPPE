@@ -2339,7 +2339,7 @@ class TestDeliveryNote(FrappeTestCase):
 
 				for d in bundle_data:
 					self.assertEqual(d.incoming_rate, serial_no_valuation[d.serial_no])
-     
+	
 	def test_delivery_note_with_shipping_rule(self):
 		delivery_note = frappe.get_doc({
 			"doctype": "Delivery Note",
@@ -2358,7 +2358,7 @@ class TestDeliveryNote(FrappeTestCase):
 
 		delivery_note.insert()
 		delivery_note.submit()
-  
+
 		delivery_note = frappe.get_doc("Delivery Note", delivery_note.name)
 
 		taxes = delivery_note.taxes
@@ -2370,7 +2370,7 @@ class TestDeliveryNote(FrappeTestCase):
 			"Shipping charges are not applied correctly"
 		)
 		item_rate = delivery_note.items[0].get("net_rate")
-  
+
 		self.assertEqual(delivery_note.total, item_rate, "Net Total is incorrect")
 		self.assertEqual(
 			delivery_note.grand_total, 5500, "Grand Total is incorrect")
@@ -2422,7 +2422,7 @@ class TestDeliveryNote(FrappeTestCase):
 				"qty": 10 
 			}]
 		})
-  
+
 		delivery_note.insert(ignore_permissions=True)
 		delivery_note.submit()
 		
@@ -2729,7 +2729,7 @@ class TestDeliveryNote(FrappeTestCase):
 			"item_code" : "Ball point Pen",
 			"warehouse" : create_warehouse("_Test Warehouse", properties={"parent_warehouse": "All Warehouses - _TC"}, company=dn_fields['company']),
 			"customer": "SS Ltd",
-            "schedule_date": "2025-02-03",
+			"schedule_date": "2025-02-03",
 			"qty" : 20,
 			# "rate" : 130,
 		}
@@ -2747,7 +2747,7 @@ class TestDeliveryNote(FrappeTestCase):
 			"item_code" : "Ball point Pen",
 			"warehouse" : create_warehouse("_Test Warehouse",  properties={"parent_warehouse": "All Warehouses - _TC"}, company=pr_fields['company']),
 			"supplier": "Test Supplier 1",
-            "schedule_date": "2025-02-03",
+			"schedule_date": "2025-02-03",
 			"qty" : 5,
 			"uom" : "Box",
 			"stock_uom":"Box",
