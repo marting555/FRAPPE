@@ -2440,6 +2440,7 @@ class TestSalesInvoice(FrappeTestCase):
 			self.assertEqual(expected_account_values[0], gle.debit)
 			self.assertEqual(expected_account_values[1], gle.credit)
 
+	@if_app_installed("assets")
 	def test_rounding_adjustment_3(self):
 		from erpnext.accounts.doctype.accounting_dimension.test_accounting_dimension import (
 			create_dimension,
@@ -3389,6 +3390,7 @@ class TestSalesInvoice(FrappeTestCase):
 			invoice.reload()
 			self.assertEqual(invoice.status, "Overdue and Discounted")
 
+	@if_app_installed("sales_commission")
 	def test_sales_commission(self):
 		si = frappe.copy_doc(test_records[2])
 
@@ -3856,6 +3858,7 @@ class TestSalesInvoice(FrappeTestCase):
 		check_gl_entries(self, pe.name, expected_gle, nowdate(), voucher_type="Payment Entry")
 		set_advance_flag(company="_Test Company", flag=0, default_account="")
 
+	@if_app_installed("india_compliance")
 	def test_pulling_advance_based_on_debit_to(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
 
