@@ -2444,7 +2444,6 @@ class TestStockEntry(FrappeTestCase):
 			company=company,
 			do_not_save=True,
 		)
-		se_receipt.items[0].expense_account = ""
 		se_receipt.save()
 		se_receipt.submit()
 		cost_center = frappe.db.get_all('Cost Center',{'company':company,'is_group':0},"name")
