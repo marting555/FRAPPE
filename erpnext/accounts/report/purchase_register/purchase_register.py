@@ -397,7 +397,6 @@ def get_invoices(filters, additional_query_columns):
 			pi.mode_of_payment,
 		)
 		.where(pi.docstatus == 1)
-		.orderby(pi.posting_date, pi.name, order=Order.desc)
 	)
 
 	if additional_query_columns:
@@ -413,8 +412,28 @@ def get_invoices(filters, additional_query_columns):
 		filters, query, doctype="Purchase Invoice", child_doctype="Purchase Invoice Item"
 	)
 
+<<<<<<< HEAD
 	invoices = query.run(as_dict=True)
 	return invoices
+=======
+	if filters.get("include_payments"):
+		party_account = get_party_account(
+			"Supplier", filters.get("supplier"), filters.get("company"), include_advance=True
+		)
+		query = query.where(pi.credit_to.isin(party_account))
+
+	from frappe.desk.reportview import build_match_conditions
+
+	query, params = query.walk()
+	match_conditions = build_match_conditions("Purchase Invoice")
+
+	if match_conditions:
+		query += " and " + match_conditions
+
+	query += " order by posting_date desc, name desc"
+
+	return frappe.db.sql(query, params, as_dict=True)
+>>>>>>> f4bc1dfd00 (fix: user permissions in sales and purchase report)
 
 
 def get_conditions(filters, query, doctype):
