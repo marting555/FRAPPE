@@ -1316,7 +1316,7 @@ class TestPaymentEntry(FrappeTestCase):
 
 	def test_ledger_entries_for_advance_as_liability(self):
 		company = "_Test Company"
-
+		from erpnext.accounts.doctype.account.test_account import create_account
 		advance_account = create_account(
 			parent_account="Current Assets - _TC",
 			account_name="Advances Received",
@@ -1347,8 +1347,8 @@ class TestPaymentEntry(FrappeTestCase):
 		si = create_sales_invoice(qty=10, rate=100, customer="_Test Customer")
 
 		pre_reconciliation_gle = [
-			{"account": advance_account, "debit": 0.0, "credit": 1000.0},
 			{"account": "_Test Cash - _TC", "debit": 1000.0, "credit": 0.0},
+			{"account": advance_account, "debit": 0.0, "credit": 1000.0}
 		]
 		pre_reconciliation_ple = [
 			{
@@ -1387,10 +1387,10 @@ class TestPaymentEntry(FrappeTestCase):
 
 		# assert General and Payment Ledger entries post partial reconciliation
 		self.expected_gle = [
+			{"account": "_Test Cash - _TC", "debit": 1000.0, "credit": 0.0},
 			{"account": si.debit_to, "debit": 0.0, "credit": 400.0},
 			{"account": advance_account, "debit": 400.0, "credit": 0.0},
 			{"account": advance_account, "debit": 0.0, "credit": 1000.0},
-			{"account": "_Test Cash - _TC", "debit": 1000.0, "credit": 0.0},
 		]
 		self.expected_ple = [
 			{
@@ -1524,7 +1524,7 @@ class TestPaymentEntry(FrappeTestCase):
 		).run(as_dict=True)
 		for row in range(len(self.expected_gle)):
 			for field in ["account", "debit", "credit"]:
-				self.assertEqual(self.expected_gle[row][field], gl_entries[row][field])
+				self.assertEqual(gl_entries[row][field],self.expected_gle[row][field])
 
 	def test_outstanding_invoices_api(self):
 		"""
@@ -1603,6 +1603,7 @@ class TestPaymentEntry(FrappeTestCase):
 		self.assertEqual(len(pr.payments), 0)
 
 	def test_advance_reverse_payment_reconciliation(self):
+		from erpnext.accounts.doctype.account.test_account import create_account
 		company = "_Test Company"
 		customer = create_customer(frappe.generate_hash(length=10), "INR")
 		advance_account = create_account(
@@ -1611,7 +1612,6 @@ class TestPaymentEntry(FrappeTestCase):
 			company=company,
 			account_type="Receivable",
 		)
-
 		frappe.db.set_value(
 			"Company",
 			company,
@@ -1630,7 +1630,6 @@ class TestPaymentEntry(FrappeTestCase):
 		)
 		reverse_pe.save()  # use save() to trigger set_liability_account()
 		reverse_pe.submit()
-
 		# Advance Payment
 		pe = create_payment_entry(
 			party_type="Customer",
@@ -1641,7 +1640,6 @@ class TestPaymentEntry(FrappeTestCase):
 		)
 		pe.save()  # use save() to trigger set_liability_account()
 		pe.submit()
-
 		# Partially reconcile advance against invoice
 		pr = frappe.get_doc("Payment Reconciliation")
 		pr.company = company
@@ -1650,7 +1648,6 @@ class TestPaymentEntry(FrappeTestCase):
 		pr.receivable_payable_account = "Debtors - _TC"
 		pr.default_advance_account = advance_account
 		pr.get_unreconciled_entries()
-
 		self.assertEqual(len(pr.invoices), 1)
 		self.assertEqual(len(pr.payments), 1)
 
@@ -1662,10 +1659,10 @@ class TestPaymentEntry(FrappeTestCase):
 
 		# assert General and Payment Ledger entries post partial reconciliation
 		self.expected_gle = [
+			{"account": "_Test Cash - _TC", "debit": 1000.0, "credit": 0.0},
 			{"account": advance_account, "debit": 400.0, "credit": 0.0},
 			{"account": advance_account, "debit": 0.0, "credit": 1000.0},
-			{"account": advance_account, "debit": 0.0, "credit": 400.0},
-			{"account": "_Test Cash - _TC", "debit": 1000.0, "credit": 0.0},
+			{"account": advance_account, "debit": 0.0, "credit": 400.0}
 		]
 		self.expected_ple = [
 			{
@@ -1710,8 +1707,8 @@ class TestPaymentEntry(FrappeTestCase):
 
 		# assert General and Payment Ledger entries post unreconciliation
 		self.expected_gle = [
-			{"account": advance_account, "debit": 0.0, "credit": 1000.0},
 			{"account": "_Test Cash - _TC", "debit": 1000.0, "credit": 0.0},
+			{"account": advance_account, "debit": 0.0, "credit": 1000.0}
 		]
 		self.expected_ple = [
 			{
