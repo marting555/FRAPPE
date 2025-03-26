@@ -5,7 +5,7 @@
 import frappe
 from frappe import _, bold, throw
 from frappe.utils import cint, flt, get_link_to_form, nowtime
-
+from frappe.tests.utils import if_app_installed
 from erpnext.accounts.party import render_address
 from erpnext.controllers.accounts_controller import get_taxes_and_charges
 from erpnext.controllers.sales_and_purchase_return import get_rate_for_return
@@ -55,6 +55,7 @@ class SellingController(StockController):
 		self.set_missing_lead_customer_details(for_validate=for_validate)
 		self.set_price_list_and_item_details(for_validate=for_validate)
 
+	@if_app_installed("erpnext_crm")
 	def set_missing_lead_customer_details(self, for_validate=False):
 		customer, lead = None, None
 		if getattr(self, "customer", None):
@@ -90,7 +91,7 @@ class SellingController(StockController):
 			self.update_if_missing(party_details)
 
 		elif lead:
-			from crm.crm.doctype.lead.lead import get_lead_details
+			from erpnext_crm.erpnext_crm.doctype.lead.lead import get_lead_details
 
 			self.update_if_missing(
 				get_lead_details(
@@ -328,7 +329,7 @@ class SellingController(StockController):
 									"batch_no": p.batch_no if self.docstatus == 2 else None,
 									"uom": p.uom,
 									"serial_and_batch_bundle": p.serial_and_batch_bundle
-									or get_serial_and_batch_bundle(p, self),
+									or get_serial_and_batch_bundle(p, self, d),
 									"name": d.name,
 									"target_warehouse": p.target_warehouse,
 									"company": self.company,
@@ -780,7 +781,7 @@ def set_default_income_account_for_item(obj):
 				set_item_default(d.item_code, obj.company, "income_account", d.income_account)
 
 
-def get_serial_and_batch_bundle(child, parent):
+def get_serial_and_batch_bundle(child, parent, delivery_note_child=None):
 	from erpnext.stock.serial_batch_bundle import SerialBatchCreation
 
 	if child.get("use_serial_batch_fields"):
@@ -800,7 +801,7 @@ def get_serial_and_batch_bundle(child, parent):
 			"warehouse": child.warehouse,
 			"voucher_type": parent.doctype,
 			"voucher_no": parent.name if parent.docstatus < 2 else None,
-			"voucher_detail_no": child.name,
+			"voucher_detail_no": delivery_note_child.name if delivery_note_child else child.name,
 			"posting_date": parent.posting_date,
 			"posting_time": parent.posting_time,
 			"qty": child.qty,

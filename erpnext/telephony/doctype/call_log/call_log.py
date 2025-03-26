@@ -7,9 +7,7 @@ from frappe import _
 from frappe.contacts.doctype.contact.contact import get_contact_with_phone_number
 from frappe.core.doctype.dynamic_link.dynamic_link import deduplicate_dynamic_links
 from frappe.model.document import Document
-
-# from crm.crm.doctype.lead.lead import get_lead_with_phone_number
-# from crm.crm.doctype.utils import get_scheduled_employees_for_popup, strip_number
+from frappe.tests.utils import if_app_installed
 
 END_CALL_STATUSES = ["No Answer", "Completed", "Busy", "Failed"]
 ONGOING_CALL_STATUSES = ["Ringing", "In Progress"]
@@ -47,7 +45,11 @@ class CallLog(Document):
 	def validate(self):
 		deduplicate_dynamic_links(self)
 
+
+	@if_app_installed("custom_crm")
 	def before_insert(self):
+		from erpnext_crm.erpnext_crm.doctype.lead.lead import get_lead_with_phone_number
+		from erpnext_crm.erpnext_crm.doctype.utils import get_scheduled_employees_for_popup, strip_number
 		"""Add lead(third party person) links to the document."""
 		lead_number = self.get("from") if self.is_incoming_call() else self.get("to")
 		lead_number = strip_number(lead_number)
@@ -94,6 +96,7 @@ class CallLog(Document):
 		self.append("links", {"link_doctype": link_type, "link_name": link_name})
 
 	def trigger_call_popup(self):
+		from erpnext_crm.erpnext_crm.doctype.utils import get_scheduled_employees_for_popup
 		if not self.is_incoming_call():
 			return
 
@@ -132,8 +135,8 @@ def add_call_summary_and_call_type(call_log, summary, call_type):
 	doc.save()
 	doc.add_comment("Comment", frappe.bold(_("Call Summary")) + "<br><br>" + summary)
 
-
 def get_employees_with_number(number):
+	from erpnext_crm.erpnext_crm.doctype.utils import get_scheduled_employees_for_popup, strip_number
 	number = strip_number(number)
 	if not number:
 		return []
@@ -152,8 +155,8 @@ def get_employees_with_number(number):
 
 	return employee_doc_name_and_emails
 
-
 def link_existing_conversations(doc, state):
+	from erpnext_crm.erpnext_crm.doctype.utils import get_scheduled_employees_for_popup, strip_number
 	"""
 	Called from hooks on creation of Contact or Lead to link all the existing conversations.
 	"""

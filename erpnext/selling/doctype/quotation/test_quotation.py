@@ -931,16 +931,7 @@ class TestQuotation(FrappeTestCase):
 		quotation.reload()
 		self.assertEqual(quotation.status, "Ordered")
 
-		pe=get_payment_entry(dt="Sales Order",dn=sales_order.name)
-		pe.save()
-		pe.submit()
-
-		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pe.name}, fields=["account", "debit", "credit"])
-		gl_debits = {entry.account: entry.debit for entry in gl_entries}
-		gl_credits = {entry.account: entry.credit for entry in gl_entries}
-
-		self.assertAlmostEqual(gl_debits["Cash - _TC"], 5000)
-		self.assertAlmostEqual(gl_credits["Debtors - _TC"], 5000)
+		self.create_and_submit_payment_entry(dt="Sales Order", dn=sales_order.name)
 
 		delivery_note = self.create_and_submit_delivery_note(sales_order.name)
 		self.stock_check(voucher=delivery_note.name,qty=-1)
@@ -950,26 +941,13 @@ class TestQuotation(FrappeTestCase):
 	
 
 	def test_quotation_to_sales_invoice_with_partially_payment_entry_TC_S_080(self):
-		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
 		quotation = self.create_and_submit_quotation("_Test Item Home Desktop 100", 1, 5000, "Stores - _TC")
 		sales_order = self.create_and_submit_sales_order(quotation.name, add_days(nowdate(), 5))
 		quotation.reload()
 		self.assertEqual(quotation.status, "Ordered")
 
-		pe=get_payment_entry(dt="Sales Order",dn=sales_order.name)
-		pe.paid_amount= 2000
-		for i in pe.references:
-			i.allocated_amount = 2000
-		pe.save()
-		pe.submit()
-
-		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pe.name}, fields=["account", "debit", "credit"])
-		gl_debits = {entry.account: entry.debit for entry in gl_entries}
-		gl_credits = {entry.account: entry.credit for entry in gl_entries}
-
-		self.assertAlmostEqual(gl_debits["Cash - _TC"], 2000)
-		self.assertAlmostEqual(gl_credits["Debtors - _TC"], 2000)
+		self.create_and_submit_payment_entry(dt="Sales Order", dn=sales_order.name, amt=2000)
 
 		delivery_note = self.create_and_submit_delivery_note(sales_order.name)
 		self.stock_check(voucher=delivery_note.name,qty=-1)
@@ -977,9 +955,7 @@ class TestQuotation(FrappeTestCase):
 		sales_invoice.reload()
 		self.assertEqual(sales_invoice.status, "Partly Paid")
 
-		pe=get_payment_entry(dt="Sales Invoice",dn=sales_invoice.name)
-		pe.save()
-		pe.submit()
+		self.create_and_submit_payment_entry(dt="Sales Invoice", dn=sales_invoice.name)
 
 		sales_invoice.reload()
 		self.assertEqual(sales_invoice.status, "Paid")
@@ -1075,6 +1051,7 @@ class TestQuotation(FrappeTestCase):
 		quotation.reload()
 		self.assertEqual(quotation.status, "Ordered")
 		mr = make_material_request(sales_order.name)
+		mr.schedule_date = nowdate()
 		mr.save()
 		mr.submit()
 		mr.reload()
@@ -1411,6 +1388,22 @@ class TestQuotation(FrappeTestCase):
 		self.assertAlmostEqual(gl_debits[debtor_account], amount)
 		self.assertAlmostEqual(gl_credits[sales_account], amount)
 
+	def create_and_submit_payment_entry(self, dt=None, dn=None, amt=None):
+		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+		payment_entry = get_payment_entry(dt=dt,dn=dn)
+		payment_entry.insert()
+		if amt:
+			payment_entry.paid_amount= amt
+			for i in payment_entry.references:
+				i.allocated_amount = amt
+		payment_entry.save()
+		payment_entry.submit()
+  
+		self.assertEqual(payment_entry.status, "Submitted", "Payment Entry not created")
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': payment_entry.name, 'account': 'Debtors - _TC'}, 'credit'), payment_entry.paid_amount)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': payment_entry.name, 'account': 'Cash - _TC'}, 'debit'), payment_entry.paid_amount)
+		return payment_entry
+	
 test_records = frappe.get_test_records("Quotation")
 
 
