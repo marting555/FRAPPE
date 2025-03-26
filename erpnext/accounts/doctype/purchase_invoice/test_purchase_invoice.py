@@ -3157,7 +3157,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		from erpnext.selling.doctype.sales_order.test_sales_order import get_or_create_fiscal_year
 		create_company()
 		warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company','is_group':0},['name'])
-		account = frappe.db.get_all('Account',{'company':'_Test Company'},['name'])
+		account = frappe.db.get_all('Account',{'company':'_Test Company', 'is_group': 0},['name'])
 		cost_center = frappe.db.get_value('Cost Center',{'company':'_Test Company'},'name')
 		create_supplier(
 			supplier_name="_Test Supplier"
@@ -3174,7 +3174,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			company = "_Test Company",
 			supplier_warehouse = warehouse[0]['name'],
 			warehouse = warehouse[1]['name'],
-			expense_account = account[0]['name'],
+			expense_account = 'Cash - _TC',
 			uom= "Box",
 			cost_center = cost_center,
 			rate = 500,
@@ -3200,7 +3200,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			payment_type="Pay",
 			party_type="Supplier",
 			party=f"_Test Supplier",
-			paid_to=paid_to_account, 
+			paid_to='Creditors - _TC',
 			paid_from =paid_from_account,
 			paid_amount=pr.grand_total,
 		)
