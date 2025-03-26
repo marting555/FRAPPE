@@ -151,13 +151,13 @@ erpnext.PointOfSale.Controller = class {
 		});
 
 		frappe.realtime.on(`poe_${this.pos_opening}_closed`, (data) => {
-			if (data.is_closed) {
+			if (data) {
 				frappe.dom.freeze();
 				frappe.msgprint({
 					title: __("POS Closed"),
 					indicator: "orange",
 					message: __("POS has been closed at {0}. Please refresh the page.", [
-						frappe.datetime.str_to_user(data.closed_on).bold(),
+						frappe.datetime.str_to_user(data.creation).bold(),
 					]),
 					primary_action_label: __("Refresh"),
 					primary_action: {
