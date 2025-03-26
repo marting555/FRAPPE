@@ -363,13 +363,16 @@ class PurchaseOrder(BuyingController):
 							)
 						)
 					else:
-						if not frappe.get_value("Item", item.fg_item, "is_sub_contracted_item"):
+						is_sub_contracted_item, variant_of, default_bom = frappe.db.get_value(
+							"Item", item.fg_item, ["is_sub_contracted_item", "variant_of", "default_bom"]
+						)
+						if not is_sub_contracted_item:
 							frappe.throw(
 								_("Row #{0}: Finished Good Item {1} must be a sub-contracted item").format(
 									item.idx, item.fg_item
 								)
 							)
-						elif not item.bom and not frappe.get_value("Item", item.fg_item, "default_bom"):
+						elif not variant_of and not item.bom and not default_bom:
 							frappe.throw(
 								_("Row #{0}: Default BOM not found for FG Item {1}").format(
 									item.idx, item.fg_item

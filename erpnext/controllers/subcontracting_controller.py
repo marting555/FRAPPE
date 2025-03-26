@@ -126,7 +126,9 @@ class SubcontractingController(StockController):
 				item.amount = item.qty * item.rate
 
 				if item.bom:
-					is_active, bom_item = frappe.get_value("BOM", item.bom, ["is_active", "item"])
+					is_active, bom_item, has_variants = frappe.get_value(
+						"BOM", item.bom, ["is_active", "item", "has_variants"]
+					)
 
 					if not is_active:
 						frappe.throw(
@@ -134,7 +136,16 @@ class SubcontractingController(StockController):
 								item.idx, item.item_name
 							)
 						)
-					if bom_item != item.item_code:
+
+					should_throw = False
+					if not has_variants:
+						if bom_item != item.item_code:
+							should_throw = True
+					else:
+						if bom_item != frappe.get_value("Item", item.item_code, "variant_of"):
+							should_throw = True
+
+					if should_throw:
 						frappe.throw(
 							_("Row {0}: Please select an valid BOM for Item {1}.").format(
 								item.idx, item.item_name
@@ -745,12 +756,13 @@ class SubcontractingController(StockController):
 			):
 				continue
 
+			item_code = frappe.db.get_value("BOM", row.bom, "item")
 			if self.doctype == self.subcontract_data.order_doctype or self.backflush_based_on == "BOM":
 				for bom_item in self.__get_materials_from_bom(
-					row.item_code, row.bom, row.get("include_exploded_items")
+					item_code, row.bom, row.get("include_exploded_items")
 				):
 					qty = flt(bom_item.qty_consumed_per_unit) * flt(row.qty) * row.conversion_factor
-					bom_item.main_item_code = row.item_code
+					bom_item.main_item_code = item_code
 					self.__update_reserve_warehouse(bom_item, row)
 					self.__set_alternative_item(bom_item)
 					self.__add_supplied_item(row, bom_item, qty)
@@ -758,7 +770,7 @@ class SubcontractingController(StockController):
 			elif self.backflush_based_on != "BOM":
 				for key, transfer_item in self.available_materials.items():
 					if (key[1], key[2]) == (
-						row.item_code,
+						item_code,
 						row.get(self.subcontract_data.order_field),
 					) and transfer_item.qty > 0:
 						qty = flt(self.__get_qty_based_on_material_transfer(row, transfer_item))
@@ -767,7 +779,7 @@ class SubcontractingController(StockController):
 
 				if self.qty_to_be_received:
 					self.qty_to_be_received[
-						(row.item_code, row.get(self.subcontract_data.order_field))
+						(item_code, row.get(self.subcontract_data.order_field))
 					] -= row.qty
 
 	def __set_rate_for_serial_and_batch_bundle(self):

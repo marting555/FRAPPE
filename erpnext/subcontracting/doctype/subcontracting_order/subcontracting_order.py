@@ -280,7 +280,9 @@ class SubcontractingOrder(SubcontractingController):
 						"qty": si.fg_item_qty,
 						"subcontracting_conversion_factor": conversion_factor,
 						"stock_uom": item.stock_uom,
-						"bom": bom,
+						"bom": bom
+						if not item.variant_of
+						else frappe.get_value("Item", item.variant_of, "default_bom"),
 						"purchase_order_item": si.purchase_order_item,
 						"material_request": si.material_request,
 						"material_request_item": si.material_request_item,
