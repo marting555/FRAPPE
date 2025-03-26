@@ -5049,26 +5049,30 @@ class TestMaterialRequest(FrappeTestCase):
 			properties={"parent_warehouse": "All Warehouses - _TC"},
 			company="_Test Company",
 		)
-		create_supplier(supplier_name="_Test Supplier")
-		frappe.db.set_value('Account','Creditors - _TC','account_currency','USD')
-		create_item("_Test Item")
+		warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company','is_group':0},['name'])[0].name
+		create_supplier(supplier_name="_Test Supplier",default_currency = "INR")
+		create_item("_Test Item",warehouse=warehouse)
 		
 		cost_center = frappe.db.get_all('Cost Center',{'company':'_Test Company'},['name'])
 		mr = make_material_request(uom = "Box",cost_center = cost_center[1].name)
+		
 		
 		#partially qty
 		po = make_purchase_order(mr.name)
 		po.supplier = "_Test Supplier"
 		po.get("items")[0].rate = 100
 		po.get("items")[0].qty = 5
+		po.currency = "INR"
 		po.insert()
 		po.submit()
+		
 
 		#remaining qty
 		po1 = make_purchase_order(mr.name)
 		po1.supplier = "_Test Supplier"
 		po1.get("items")[0].rate = 100
 		po1.get("items")[0].qty = 5
+		po1.currency = "INR"
 		po1.insert()
 		po1.submit()
 
