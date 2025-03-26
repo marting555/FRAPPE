@@ -3303,9 +3303,6 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company','is_group':0},['name'])
 		account = frappe.db.get_all('Account',{'company':'_Test Company'},['name'])
 		get_or_create_fiscal_year("_Test Company")
-		new_tax_category = frappe.new_doc('Tax Category')
-		new_tax_category.title = "_Test Tax Category 1"
-		new_tax_category.save()
 		purchase_tax_category = frappe.db.get_value("Tax Category",{'title':"Test Tax Category 1"},"name")
 		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
 		purchase_tax.title = "TEST"
@@ -3332,7 +3329,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			rate = 500,
 			supplier_warehouse = warehouse[0]['name'],
 			warehouse = warehouse[1]['name'],
-			expense_account = account[0]['name'],
+			expense_account = 'Cash - _TC',
 			uom = "Box",
 			cost_center = cost_center,
 			do_not_save = True
@@ -3361,7 +3358,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			payment_type="Pay",
 			party_type="Supplier",
 			party=f"_Test Supplier",
-			paid_to=paid_to_account,
+			paid_to='Creditors - _TC',
 			paid_from =paid_from_account,
 			paid_amount=pr.grand_total,
 		)
