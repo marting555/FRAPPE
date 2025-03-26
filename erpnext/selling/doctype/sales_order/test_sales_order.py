@@ -4181,7 +4181,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		make_item_price()
 		make_pricing_rule()
   
-		so = self.create_and_submit_sales_order(qty=10)
+		so = self.create_and_submit_sales_order(qty=10,rate=90)
   
 		self.create_and_submit_payment_entry(dt="Sales Order", dn=so.name, amt=400)
   
