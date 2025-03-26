@@ -4150,7 +4150,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		make_item_price()
 		make_pricing_rule()
   
-		so = self.create_and_submit_sales_order(qty=10)
+		so = self.create_and_submit_sales_order(qty=10,rate=90)
   
 		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
   
