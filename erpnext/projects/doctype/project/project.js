@@ -194,7 +194,7 @@ frappe.ui.form.on("Project", {
 				], 
 				async (values) => {
 						frappe.confirm(
-								'Are you sure you want to mark approved quotations as paid?',
+								"Are you sure you want to mark approved quotations as paid? By confirming, you acknowledge that the payment has been verified in the company's account.",
 								async () => {
 										try {
 												const response = await frappe.call({
