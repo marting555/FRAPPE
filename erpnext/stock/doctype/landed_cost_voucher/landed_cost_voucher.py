@@ -281,8 +281,11 @@ class LandedCostVoucher(Document):
 				if not docs or total_asset_qty < item.qty:
 					frappe.throw(
 						_(
-							"There are only {0} asset created or linked to {1}. Please create or link {2} Assets with respective document."
-						).format(len(docs), item.receipt_document, item.qty)
+							"For item <b>{0}</b>, only <b>{1}</b> asset have been created or linked to <b>{2}</b>. "
+							"Please create or link <b>{3}</b> more asset with the respective document."
+						).format(
+							item.item_code, total_asset_qty, item.receipt_document, item.qty - total_asset_qty
+						)
 					)
 				if docs:
 					for d in docs:
