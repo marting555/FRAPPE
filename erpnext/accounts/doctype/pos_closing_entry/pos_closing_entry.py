@@ -124,6 +124,9 @@ class POSClosingEntry(StatusUpdater):
 
 	def on_submit(self):
 		consolidate_pos_invoices(closing_entry=self)
+		frappe.publish_realtime(
+			f"poe_{self.pos_opening_entry}_closed", {"is_closed": True, "closed_on": self.creation}
+		)
 
 	def on_cancel(self):
 		unconsolidate_pos_invoices(closing_entry=self)
