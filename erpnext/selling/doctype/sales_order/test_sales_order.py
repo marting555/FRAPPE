@@ -3313,17 +3313,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
 		from erpnext.stock.doctype.quality_inspection.test_quality_inspection import create_quality_inspection
 
-		item = frappe.get_doc({
-			"doctype": "Item",
-			"item_code": "_Test Item for quality inspection",
-			"item_name": "_Test Item for quality inspection",
-			"stock_uom": "Nos",
-			"is_stock_item": 1,
-			"opening_stock": 1000,
-			"valuation_rate": 100,
-			"inspection_required_before_delivery": 1,
-			"gst_hsn_code": "90183100"
-		}).insert()
+		item=make_item("_Test Item for quality inspection", {"is_stock_item": 1,"inspection_required_before_delivery":1})
 
 		parameters = ["_Test Needle Shape", "_Test Syringe Shape", "_Test Plastic Clarity", "_Test Syringe Length"]
 		for param in parameters:
