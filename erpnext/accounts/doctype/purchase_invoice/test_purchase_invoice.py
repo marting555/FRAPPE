@@ -3689,21 +3689,24 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi.submit()
 
 	def test_pi_with_uploader_TC_B_092(self):
-		# Test Data
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		item_1 = make_test_item("_Test Item")
+		item_2 = make_test_item("_Test Item Home Desktop 200")
 		pi_data = {
 			"doctype": "Purchase Invoice",
 			"company": "_Test Company",
 			"supplier": "_Test Supplier",
 			"set_posting_time": 1,
-			"posting_date": "2025-01-10",
+			"posting_date": today(),
 			"update_stock": 1,
+			"currency": "INR",
 			"items": []
 		}
 
 		# Uploader Data
 		uploaded_data = [
-			{"item_code": "_Test Item", "warehouse": "_Test Warehouse 1 - _TC", "qty": 1, "rate": 2000},
-			{"item_code": "_Test Item Home Desktop 200", "warehouse": "_Test Warehouse 1 - _TC", "qty": 1, "rate": 1000},
+			{"item_code": item_1.item_code, "warehouse": "_Test Warehouse 1 - _TC", "qty": 1, "rate": 2000},
+			{"item_code": item_2.item_code, "warehouse": "_Test Warehouse 1 - _TC", "qty": 1, "rate": 1000},
 		]
 
 		# Simulating Upload Feature: Fill items table using uploaded data
@@ -3734,8 +3737,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		# Validate Stock Ledger
 		sle = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": pi_doc.name}, fields=["item_code", "actual_qty", "stock_value"])
 		self.assertEqual(len(sle), 2, "Stock Ledger should have entries for both items.")
-		self.assertEqual(sle[0]["item_code"], "Tissue", "Stock Ledger should contain Tissue.")
-		self.assertEqual(sle[1]["item_code"], "Book", "Stock Ledger should contain Book.")
+		self.assertEqual(sle[0]["item_code"], "_Test Item Home Desktop 200")
+		self.assertEqual(sle[1]["item_code"], "_Test Item")
 		self.assertEqual(sle[0]["actual_qty"], 1, "Quantity for Tissue should be 1.")
 		self.assertEqual(sle[1]["actual_qty"], 1, "Quantity for Book should be 1.")
 
