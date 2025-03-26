@@ -46,9 +46,6 @@ class BankClearance(Document):
 			as_dict=1,
 		)
 
-		if self.bank_account:
-			condition += "and bank_account = %(bank_account)s"
-
 		payment_entries = frappe.db.sql(
 			f"""
 			select
@@ -70,7 +67,6 @@ class BankClearance(Document):
 				"account": self.account,
 				"from": self.from_date,
 				"to": self.to_date,
-				"bank_account": self.bank_account,
 			},
 			as_dict=1,
 		)
@@ -93,7 +89,7 @@ class BankClearance(Document):
 			.where(loan_disbursement.docstatus == 1)
 			.where(loan_disbursement.disbursement_date >= self.from_date)
 			.where(loan_disbursement.disbursement_date <= self.to_date)
-			.where(loan_disbursement.disbursement_account.isin([self.bank_account, self.account]))
+			.where(loan_disbursement.disbursement_account == self.account)
 			.orderby(loan_disbursement.disbursement_date)
 			.orderby(loan_disbursement.name, order=frappe.qb.desc)
 		)
@@ -121,7 +117,7 @@ class BankClearance(Document):
 			.where(loan_repayment.docstatus == 1)
 			.where(loan_repayment.posting_date >= self.from_date)
 			.where(loan_repayment.posting_date <= self.to_date)
-			.where(loan_repayment.payment_account.isin([self.bank_account, self.account]))
+			.where(loan_repayment.payment_account == self.account)
 		)
 
 		if not self.include_reconciled_entries:
