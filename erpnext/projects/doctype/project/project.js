@@ -500,9 +500,11 @@ async function installChat(frm) {
 		chat.setAttribute('url', aws_url)
 		chat.setAttribute('user-name', frappe.user_info().fullname)
 
+		frappe.realtime.off(`msg-${conversation.name}`)
 		frappe.realtime.on(`msg-${conversation.name}`, (data) => {
 			chat._instance.exposed.addMessage(data);
 		})
+		frappe.realtime.off(`translation-${frm.doc.name}`)
 		frappe.realtime.on(`translation-${frm.doc.name}`, (data) => {
 			chat._instance.exposed.onTranslate(data);
 		})
