@@ -7284,14 +7284,14 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(gl_stock_debit, 500)
 
 	def test_mr_2po_2pr_serl_part_retn_TC_SCK_212(self):
-		create_company()
-		create_fiscal_year()
-		company = "_Test Company MR"
-		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
-		supplier = create_supplier(supplier_name="_Test Supplier MR")
-		if not any(row.company == "_Test Company MR" for row in supplier.companies):
+		create_company("_Test Company")
+		create_fiscal_year("_Test Company")
+		company = "_Test Company"
+		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company")
+		supplier = create_supplier(supplier_name="_Test Supplier")
+		if not any(row.company == "_Test Company" for row in supplier.companies):
 			supplier.append("companies", {
-				"company": "_Test Company MR",
+				"company": "_Test Company",
 			})
 		supplier.submit()
 		item_code = "_Test Item With Serial No"
@@ -7403,11 +7403,11 @@ class TestMaterialRequest(FrappeTestCase):
 		frappe.db.rollback()
 
 	def test_create_mr_to_2po_to_1pr_serl_part_retn_TC_SCK_213(self):
-		create_company()
-		create_fiscal_year()
-		company = "_Test Company MR"
-		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
-		supplier = create_supplier(supplier_name="_Test Supplier MR")
+		create_company("_Test Company")
+		create_fiscal_year("_Test Company")
+		company = "_Test Company"
+		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company")
+		supplier = create_supplier(supplier_name="_Test Supplier")
 		item_code = "_Test Item With Serial No"
 
 		if not frappe.db.exists("Item", item_code):
