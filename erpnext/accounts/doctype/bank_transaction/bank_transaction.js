@@ -31,6 +31,12 @@ frappe.ui.form.on("Bank Transaction", {
 				},
 			};
 		});
+
+		frm.set_query("bank_account", function () {
+			return {
+				filters: { is_company_account: 1 },
+			};
+		});
 	},
 
 	get_payment_doctypes: function () {

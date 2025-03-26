@@ -518,13 +518,21 @@ def subtract_allocations(gl_account, vouchers):
 	voucher_allocated_amounts = get_total_allocated_amount(voucher_docs)
 
 	for voucher in vouchers:
-		row = voucher_allocated_amounts.get((voucher.get("doctype"), voucher.get("name")), {}).get(gl_account)
-
-		if amount := None if not row else row["total"]:
+		if amount := get_allocated_amount(voucher_allocated_amounts, voucher, gl_account):
 			voucher["paid_amount"] -= amount
 
 		copied.append(voucher)
 	return copied
+
+
+def get_allocated_amount(voucher_allocated_amounts, voucher, gl_account):
+	if not (voucher_details := voucher_allocated_amounts.get((voucher.get("doctype"), voucher.get("name")))):
+		return
+
+	if not (row := voucher_details.get(gl_account)):
+		return
+
+	return row.get("total")
 
 
 def check_matching(
@@ -826,10 +834,8 @@ def get_je_matching_query(
 		.orderby(je.cheque_date if cint(filter_by_reference_date) else je.posting_date)
 	)
 
-	ref_condition = je.cheque_no == transaction.reference_number
-
 	if frappe.flags.auto_reconcile_vouchers is True:
-		subquery = subquery.where(ref_condition)
+		subquery = subquery.where(je.cheque_no == transaction.reference_number)
 
 	ref_rank = frappe.qb.terms.Case().when(subquery.reference_no == transaction.reference_number, 1).else_(0)
 	amount_equality = subquery.paid_amount == transaction.unallocated_amount
