@@ -770,6 +770,48 @@ class TestDeliveryNote(FrappeTestCase):
 			{"warehouse": "_Test Warehouse - _TC"},
 		)
 
+	def test_delivery_note_internal_transfer_serial_no_status(self):
+		from erpnext.selling.doctype.customer.test_customer import create_internal_customer
+ 
+		item = make_item(
+			"_Test Item for Internal Transfer With Serial No Status",
+			properties={"has_serial_no": 1, "is_stock_item": 1, "serial_no_series": "INT-SN-.####"},
+		).name
+
+		warehouse = "_Test Warehouse - _TC"
+		target = "Stores - _TC"
+		company = "_Test Company"
+		customer = create_internal_customer(represents_company=company)
+		rate = 42
+
+		se = make_stock_entry(target=warehouse, qty=5, basic_rate=rate, item_code=item)
+		serial_nos = get_serial_nos_from_bundle(se.get("items")[0].serial_and_batch_bundle)
+
+		dn = create_delivery_note(
+			item_code=item,
+			company=company,
+			customer=customer,
+			qty=5,
+			rate=500,
+			warehouse=warehouse,
+			target_warehouse=target,
+			ignore_pricing_rule=0,
+			use_serial_batch_fields=1,
+			serial_no="\n".join(serial_nos),
+		)
+
+		for serial_no in serial_nos:
+			sn = frappe.db.get_value("Serial No", serial_no, ["status", "warehouse"], as_dict=1)
+			self.assertEqual(sn.status, "Active")
+			self.assertEqual(sn.warehouse, target)
+
+		dn.cancel()
+
+		for serial_no in serial_nos:
+			sn = frappe.db.get_value("Serial No", serial_no, ["status", "warehouse"], as_dict=1)
+			self.assertEqual(sn.status, "Active")
+			self.assertEqual(sn.warehouse, warehouse)
+
 	def test_delivery_of_bundled_items_to_target_warehouse(self):
 		from erpnext.selling.doctype.customer.test_customer import create_internal_customer
 
@@ -2339,7 +2381,7 @@ class TestDeliveryNote(FrappeTestCase):
 
 				for d in bundle_data:
 					self.assertEqual(d.incoming_rate, serial_no_valuation[d.serial_no])
-     
+	
 	def test_delivery_note_with_shipping_rule(self):
 		delivery_note = frappe.get_doc({
 			"doctype": "Delivery Note",
@@ -2358,7 +2400,7 @@ class TestDeliveryNote(FrappeTestCase):
 
 		delivery_note.insert()
 		delivery_note.submit()
-  
+
 		delivery_note = frappe.get_doc("Delivery Note", delivery_note.name)
 
 		taxes = delivery_note.taxes
@@ -2370,7 +2412,7 @@ class TestDeliveryNote(FrappeTestCase):
 			"Shipping charges are not applied correctly"
 		)
 		item_rate = delivery_note.items[0].get("net_rate")
-  
+
 		self.assertEqual(delivery_note.total, item_rate, "Net Total is incorrect")
 		self.assertEqual(
 			delivery_note.grand_total, 5500, "Grand Total is incorrect")
@@ -2422,7 +2464,7 @@ class TestDeliveryNote(FrappeTestCase):
 				"qty": 10 
 			}]
 		})
-  
+
 		delivery_note.insert(ignore_permissions=True)
 		delivery_note.submit()
 		
@@ -2700,7 +2742,7 @@ class TestDeliveryNote(FrappeTestCase):
 	def test_dn_submission_TC_SCK_148(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 		from erpnext.buying.doctype.supplier.test_supplier import create_supplier
-    from erpnext.selling.doctype.sales_order.test_sales_order import get_or_create_fiscal_year
+		from erpnext.selling.doctype.sales_order.test_sales_order import get_or_create_fiscal_year
 		# from erpnext_crm.erpnext_crm.doctype.lead.lead import make_customer
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 		"""Test Purchase Receipt Creation, Submission, and Stock Ledger Update"""
@@ -2729,7 +2771,7 @@ class TestDeliveryNote(FrappeTestCase):
 			"item_code" : "Ball point Pen",
 			"warehouse" : create_warehouse("_Test Warehouse", properties={"parent_warehouse": "All Warehouses - _TC"}, company=dn_fields['company']),
 			"customer": "SS Ltd",
-            "schedule_date": "2025-02-03",
+			"schedule_date": "2025-02-03",
 			"qty" : 20,
 			# "rate" : 130,
 		}
@@ -2747,7 +2789,7 @@ class TestDeliveryNote(FrappeTestCase):
 			"item_code" : "Ball point Pen",
 			"warehouse" : create_warehouse("_Test Warehouse",  properties={"parent_warehouse": "All Warehouses - _TC"}, company=pr_fields['company']),
 			"supplier": "Test Supplier 1",
-            "schedule_date": "2025-02-03",
+			"schedule_date": "2025-02-03",
 			"qty" : 5,
 			"uom" : "Box",
 			"stock_uom":"Box",

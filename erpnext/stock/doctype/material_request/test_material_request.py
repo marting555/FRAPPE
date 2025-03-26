@@ -4820,6 +4820,7 @@ class TestMaterialRequest(FrappeTestCase):
 			account_name = acc.insert()
 		doc_po = make_purchase_order(mr.name)
 		doc_po.supplier = supplier
+		doc_po.currency = "INR"
 		doc_po.append("taxes", {
                     "charge_type": "On Net Total",
                     "account_head": account_name,
@@ -5108,7 +5109,7 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_mr_po_pi_serial_TC_SCK_092(self):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
-		create_company()
+		create_company("_Test Company MR")
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
@@ -5116,7 +5117,7 @@ class TestMaterialRequest(FrappeTestCase):
 			create_supplier(supplier_name="_Test Supplier")
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
-		item = item_create("_Test MR")
+		item = item_create("_Test MR",warehouse=default_warehouse)
 
 		mr_dict_list = [{
 				"company" : "_Test Company MR",
@@ -5158,7 +5159,7 @@ class TestMaterialRequest(FrappeTestCase):
 		# MR =>  PO => 2PI
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
-		create_company()
+		create_company("_Test Company MR")
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
 		if not frappe.db.exists('Supplier', '_Test Supplier'):
@@ -5166,7 +5167,7 @@ class TestMaterialRequest(FrappeTestCase):
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
-		item = item_create("_Test MR")
+		item = item_create("_Test MR",warehouse=default_warehouse)
 
 		mr_dict_list = [{
 				"company" : "_Test Company MR",
@@ -5231,7 +5232,7 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_create_mr_to_2po_to_2pi_TC_SCK_094(self):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
-		create_company()
+		create_company("_Test Company MR")
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
@@ -5242,7 +5243,7 @@ class TestMaterialRequest(FrappeTestCase):
 		supplier.submit()
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
-		item = item_create("_Test MR")
+		item = item_create("_Test MR",warehouse=default_warehouse)
 		cost_center = frappe.db.get_value("Company","_Test Company MR","cost_center")
 
 		mr = make_material_request(company="_Test Company MR",qty=2,supplier=supplier,warehouse=warehouse,item_code=item.item_code,cost_center=cost_center,uom= 'Box')
@@ -5413,7 +5414,7 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_mr_po_2pi_serial_cancel_TC_SCK_097(self):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
-		create_company()
+		create_company("_Test Company MR")
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
 		if not frappe.db.exists('Supplier', '_Test Supplier'):
@@ -5422,7 +5423,7 @@ class TestMaterialRequest(FrappeTestCase):
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
 
-		item = item_create("_Test MR")
+		item = item_create("_Test MR",warehouse=default_warehouse)
 
 		mr_dict_list = [{
 				"company" : "_Test Company MR",
@@ -5508,7 +5509,7 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_mr_to_2po_to_2pi_serial_cancel_TC_SCK_098(self):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
-		create_company()
+		create_company("_Test Company MR")
 		create_customer("_Test Customer")
 		
 		get_or_create_fiscal_year("_Test Company MR")
@@ -5520,7 +5521,7 @@ class TestMaterialRequest(FrappeTestCase):
 		supplier.submit()
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
-		item = item_create("_Test MR")
+		item = item_create("_Test MR",warehouse=default_warehouse)
 		cost_center = frappe.db.get_value("Company","_Test Company MR","cost_center")
 
 		mr = make_material_request(company="_Test Company MR",qty=2,supplier=supplier,warehouse=warehouse,item_code=item.item_code,cost_center=cost_center,uom = "Box")
@@ -5601,13 +5602,13 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_create_mr_to_2po_to_1pi_serial_cancel_TC_SCK_099(self):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
-		create_company()
+		create_company("_Test Company MR")
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
-		item = item_create("_Test MR")
+		item = item_create("_Test MR",warehouse=default_warehouse)
 		cost_center = frappe.db.get_value("Company","_Test Company MR","cost_center")
 
 		mr = make_material_request(company="_Test Company MR",qty=2,supplier=supplier,warehouse=warehouse,item_code=item.item_code,cost_center=cost_center,uom = "Box")
@@ -5663,7 +5664,7 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_mr_po_pi_serial_return_TC_SCK_108(self):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
-		create_company()
+		create_company("_Test Company MR")
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
@@ -5671,7 +5672,7 @@ class TestMaterialRequest(FrappeTestCase):
 			create_supplier(supplier_name="_Test Supplier")
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
-		item = item_create("_Test MR")
+		item = item_create("_Test MR",warehouse=default_warehouse)
 
 		mr_dict_list = [{
 				"company" : "_Test Company MR",
@@ -5724,7 +5725,7 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_mr_po_2pi_serial_return_TC_SCK_109(self):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
-		create_company()
+		create_company("_Test Company MR")
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
@@ -5732,7 +5733,7 @@ class TestMaterialRequest(FrappeTestCase):
 			create_supplier(supplier_name="_Test Supplier")
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
-		item = item_create("_Test MR")
+		item = item_create("_Test MR",warehouse=default_warehouse)
 
 		mr_dict_list = [{
 				"company" : "_Test Company MR",
@@ -5821,7 +5822,7 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_mr_to_2po_to_2pi_serial_return_TC_SCK_110(self):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
-		create_company()
+		create_company("_Test Company MR")
 		create_customer("_Test Customer")
 		
 		get_or_create_fiscal_year("_Test Company MR")
@@ -5835,7 +5836,7 @@ class TestMaterialRequest(FrappeTestCase):
 		
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
-		item = item_create("_Test MR")
+		item = item_create("_Test MR",warehouse=default_warehouse)
 		cost_center = frappe.db.get_value("Company","_Test Company MR","cost_center")
 
 		mr = make_material_request(company="_Test Company MR",qty=2,supplier=supplier,warehouse=warehouse,item_code=item.item_code,cost_center=cost_center,uom = 'Box')
@@ -5917,13 +5918,13 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_create_mr_to_2po_to_1pi_serial_return_TC_SCK_111(self):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
-		create_company()
+		create_company("_Test Company MR")
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
-		item = item_create("_Test MR")
+		item = item_create("_Test MR",warehouse=default_warehouse)
 		cost_center = frappe.db.get_value("Company","_Test Company MR","cost_center")
 
 		mr = make_material_request(company="_Test Company MR",qty=2,supplier=supplier,warehouse=warehouse,item_code=item.item_code,cost_center=cost_center,uom = "Box")
@@ -5981,7 +5982,7 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_mr_po_pi_serial_partial_return_TC_SCK_112(self):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
-		create_company()
+		create_company("_Test Company MR")
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
@@ -5990,7 +5991,7 @@ class TestMaterialRequest(FrappeTestCase):
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
 
-		item = item_create("_Test MR")
+		item = item_create("_Test MR",warehouse=default_warehouse)
 
 		mr_dict_list = [{
 				"company" : "_Test Company MR",
@@ -6045,7 +6046,7 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_mr_po_2pi_serial_partial_return_TC_SCK_113(self):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
-		create_company()
+		create_company("_Test Company MR")
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
@@ -6053,7 +6054,7 @@ class TestMaterialRequest(FrappeTestCase):
 			create_supplier(supplier_name="_Test Supplier")
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
-		item = item_create("_Test MR")
+		item = item_create("_Test MR",warehouse=default_warehouse)
 
 		mr_dict_list = [{
 				"company" : "_Test Company MR",
@@ -6130,7 +6131,7 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_mr_to_2po_to_2pi_sr_partail_return_TC_SCK_114(self):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
-		create_company()
+		create_company("_Test Company MR")
 		create_customer("_Test Customer")
 		
 		get_or_create_fiscal_year("_Test Company MR")
@@ -6143,7 +6144,7 @@ class TestMaterialRequest(FrappeTestCase):
 		supplier.submit()
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
-		item = item_create("_Test MR")
+		item = item_create("_Test MR",warehouse=default_warehouse)
 		cost_center = frappe.db.get_value("Company","_Test Company MR","cost_center")
 		
 		mr = make_material_request(company="_Test Company MR",qty=2,supplier=supplier,item_code=item.item_code,cost_center=cost_center,uom = 'Box',warehouse = warehouse)
@@ -6213,7 +6214,7 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_create_mr_to_2po_to_1pi_sr_prtl_ret_TC_SCK_115(self):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
-		create_company()
+		create_company("_Test Company MR")
 		create_customer("_Test Customer")
 		get_or_create_fiscal_year("_Test Company MR")
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
@@ -6226,7 +6227,7 @@ class TestMaterialRequest(FrappeTestCase):
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company MR','is_group':0},['name'])[0].name
 		warehouse = default_warehouse
 
-		item = item_create("_Test MR")
+		item = item_create("_Test MR",warehouse=default_warehouse)
 		cost_center = frappe.db.get_value("Company","_Test Company MR","cost_center")
 
 		mr = make_material_request(company="_Test Company MR",qty=2,supplier=supplier,warehouse=warehouse,item_code=item.item_code,cost_center=cost_center,uom="Box")
