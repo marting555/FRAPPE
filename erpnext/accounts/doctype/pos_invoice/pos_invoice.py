@@ -294,10 +294,8 @@ class POSInvoice(SalesInvoice):
 
 	def create_and_add_consolidated_sales_invoice(self):
 		sales_inv = self.create_return_sales_invoice()
-		self.load_from_db()
-		self.consolidated_invoice = sales_inv.name
+		self.db_set("consolidated_invoice", sales_inv.name)
 		self.set_status(update=True)
-		self.save()
 
 	def create_return_sales_invoice(self):
 		return_sales_invoice = frappe.new_doc("Sales Invoice")
