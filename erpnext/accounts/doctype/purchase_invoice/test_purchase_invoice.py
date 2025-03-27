@@ -2700,6 +2700,40 @@ class TestPurchaseInvoice(IntegrationTestCase, StockTestMixin):
 
 		self.assertRaises(StockOverReturnError, return_doc.save)
 
+	def test_apply_discount_on_grand_total(self):
+		"""
+		To test if after applying discount on grand total,
+		the grand total is calculated correctly without any rounding errors
+		"""
+		invoice = make_purchase_invoice(qty=3, rate=100, do_not_save=True, do_not_submit=True)
+		invoice.append(
+			"items",
+			{
+				"item_code": "_Test Item",
+				"qty": 3,
+				"rate": 50.3,
+			},
+		)
+		invoice.append(
+			"taxes",
+			{
+				"charge_type": "On Net Total",
+				"account_head": "_Test Account VAT - _TC",
+				"description": "VAT",
+				"rate": 15,
+			},
+		)
+
+		# the grand total here will be 518.54
+		invoice.disable_rounded_total = 1
+		# apply discount on grand total to adjust the grand total to 518
+		invoice.discount_amount = 0.54
+
+		invoice.save()
+
+		# check if grand total is 518 and not something like 517.99 due to rounding errors
+		self.assertEqual(invoice.grand_total, 518)
+
 
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(

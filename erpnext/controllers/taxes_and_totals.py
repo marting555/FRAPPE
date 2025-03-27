@@ -384,10 +384,6 @@ class calculate_taxes_and_totals:
 			self._calculate()
 
 	def calculate_taxes(self):
-		rounding_adjustment_computed = self.doc.get("is_consolidated") and self.doc.get("rounding_adjustment")
-		if not rounding_adjustment_computed:
-			self.doc.rounding_adjustment = 0
-
 		# maintain actual tax rate based on idx
 		actual_tax_dict = dict(
 			[
@@ -455,21 +451,40 @@ class calculate_taxes_and_totals:
 
 					self._set_in_company_currency(tax, ["total"])
 
-					# adjust Discount Amount loss in last tax iteration
-					if (
-						i == (len(self.doc.get("taxes")) - 1)
-						and self.discount_amount_applied
-						and self.doc.discount_amount
-						and self.doc.apply_discount_on == "Grand Total"
-						and not rounding_adjustment_computed
-					):
-						self.doc.rounding_adjustment = flt(
-							self.doc.grand_total - flt(self.doc.discount_amount) - tax.total,
-							self.doc.precision("rounding_adjustment"),
-						)
 				logger.debug(
 					f"  net_amount: {current_net_amount:<20} tax_amount: {current_tax_amount:<20} - {tax.description}"
 				)
+
+		# set the rounding difference in last tax row where charge type is not Actual, On Item Quantity and tax amount is not 0
+		if not (
+			self.doc.get("taxes")
+			and self.discount_amount_applied
+			and self.doc.discount_amount
+			and self.doc.apply_discount_on == "Grand Total"
+		):
+			return
+
+		rounding_difference = flt(
+			self.doc.grand_total - flt(self.doc.discount_amount) - self.doc.get("taxes")[-1].total,
+			self.doc.precision("rounding_adjustment"),
+		)
+
+		if not rounding_difference:
+			return
+
+		last_tax = next(
+			(
+				tax
+				for tax in reversed(self.doc.get("taxes"))
+				if tax.tax_amount and tax.charge_type != "Actual" and tax.charge_type != "On Item Quantity"
+			),
+			None,
+		)
+
+		if not last_tax:
+			return
+
+		last_tax.total = flt(last_tax.total + rounding_difference, last_tax.precision("total"))
 
 	def get_tax_amount_if_for_valuation_or_deduction(self, tax_amount, tax):
 		# if just for valuation, do not add the tax amount in total

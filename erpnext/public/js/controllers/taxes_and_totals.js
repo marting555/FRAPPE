@@ -344,7 +344,6 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 
 	calculate_taxes() {
 		var me = this;
-		this.frm.doc.rounding_adjustment = 0;
 		var actual_tax_dict = {};
 
 		// maintain actual tax rate based on idx
@@ -414,16 +413,24 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 					me.set_cumulative_total(i, tax);
 
 					me.set_in_company_currency(tax, ["total"]);
-
-					// adjust Discount Amount loss in last tax iteration
-					if ((i == me.frm.doc["taxes"].length - 1) && me.discount_amount_applied
-						&& me.frm.doc.apply_discount_on == "Grand Total" && me.frm.doc.discount_amount) {
-						me.frm.doc.rounding_adjustment = flt(me.frm.doc.grand_total -
-							flt(me.frm.doc.discount_amount) - tax.total, precision("rounding_adjustment"));
-					}
 				}
 			});
 		});
+
+		// set the rounding difference in last tax row where charge type is not Actual, On Item Quantity and tax amount is not 0
+		if (this.frm.doc.taxes.length && this.discount_amount_applied && this.frm.doc.apply_discount_on == "Grand Total" && this.frm.doc.discount_amount) {
+			const rounding_difference = flt(
+				this.frm.doc.grand_total - this.frm.doc.discount_amount - this.frm.doc.taxes[this.frm.doc.taxes.length - 1].total,
+				precision("rounding_adjustment")
+			);
+			if (!rounding_difference) return;
+
+			const last_tax = this.frm.doc.taxes.findLast(
+				tax => tax.tax_amount && tax.charge_type !== "Actual" && tax.charge_type !== "On Item Quantity"
+			);
+
+			if (last_tax) last_tax.total += rounding_difference;
+		}
 	}
 
 	set_cumulative_total(row_idx, tax) {
