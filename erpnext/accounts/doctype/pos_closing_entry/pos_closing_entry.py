@@ -283,7 +283,7 @@ def get_sales_invoices(start, end, pos_profile, user):
 		as_dict=1,
 	)
 
-	data = list(filter(lambda d: get_datetime(start) <= get_datetime(d.timestamp) <= get_datetime(end), data))
+	data = [d for d in data if get_datetime(start) <= get_datetime(d.timestamp) <= get_datetime(end)]
 	# need to get taxes and payments so can't avoid get_doc
 	data = [frappe.get_doc("Sales Invoice", d.name).as_dict() for d in data]
 

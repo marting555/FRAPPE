@@ -247,10 +247,7 @@ class POSInvoice(SalesInvoice):
 		self.clear_unallocated_mode_of_payments()
 
 		if self.is_return and self.is_pos_using_sales_invoice:
-			sales_inv = self.create_return_sales_invoice()
-			self.load_from_db()
-			self.consolidated_invoice = sales_inv.name
-			self.set_status(update=True)
+			self.create_and_add_consolidated_sales_invoice()
 
 	def before_cancel(self):
 		if (
@@ -294,6 +291,13 @@ class POSInvoice(SalesInvoice):
 
 		sip = frappe.qb.DocType("Sales Invoice Payment")
 		frappe.qb.from_(sip).delete().where(sip.parent == self.name).where(sip.amount == 0).run()
+
+	def create_and_add_consolidated_sales_invoice(self):
+		sales_inv = self.create_return_sales_invoice()
+		self.load_from_db()
+		self.consolidated_invoice = sales_inv.name
+		self.set_status(update=True)
+		self.save()
 
 	def create_return_sales_invoice(self):
 		return_sales_invoice = frappe.new_doc("Sales Invoice")
