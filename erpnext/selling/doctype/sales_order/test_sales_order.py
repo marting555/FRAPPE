@@ -62,7 +62,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			company="_Test Company"
 		)
 		self.create_customer("_Test Customer Credit")
-		self.create_customer("_Test Customer")
+		self.create_customer("_Test Customer",currency = "INR")
 
 	def tearDown(self):
 		frappe.set_user("Administrator")
