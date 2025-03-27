@@ -608,6 +608,7 @@
 
 		&:hover {
 			background-color: var(--gray-50);
+			color: var(--neutral);
 		}
 
 		> .invoice-name-date {
@@ -1157,8 +1158,8 @@
 					}
 
 					> .new-btn {
-						background-color: var(--blue-500);
-						color: white;
+						background-color: var(--btn-primary);
+						color: var(--neutral);
 						font-weight: 500;
 					}
 				}
