@@ -724,10 +724,10 @@ class ReceivablePayableReport:
 			"update_outstanding_for_self": 0,
 		}
 		or_filters = {}
-		for party_type in self.party_type:
+		if party_type := self.filters.party_type:
 			party_field = scrub(party_type)
-			if self.filters.get(party_field):
-				or_filters.update({party_field: self.filters.get(party_field)})
+			if parties := self.filters.get("party"):
+				or_filters.update({party_field: ["in", parties]})
 		self.return_entries = frappe._dict(
 			frappe.get_all(
 				doctype, filters=filters, or_filters=or_filters, fields=["name", "return_against"], as_list=1
