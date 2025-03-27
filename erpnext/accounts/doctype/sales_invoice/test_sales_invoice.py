@@ -7,7 +7,7 @@ import json
 import frappe
 from frappe import qb
 from frappe.model.dynamic_links import get_dynamic_link_map
-from frappe.tests.utils import FrappeTestCase, change_settings
+from frappe.tests.utils import FrappeTestCase, change_settings, if_app_installed
 from frappe.utils import add_days, flt, format_date, getdate, nowdate, today
 from erpnext.stock.get_item_details import get_item_tax_map
 import erpnext
@@ -2440,6 +2440,7 @@ class TestSalesInvoice(FrappeTestCase):
 			self.assertEqual(expected_account_values[0], gle.debit)
 			self.assertEqual(expected_account_values[1], gle.credit)
 
+	@if_app_installed("assets")
 	def test_rounding_adjustment_3(self):
 		from erpnext.accounts.doctype.accounting_dimension.test_accounting_dimension import (
 			create_dimension,
@@ -3190,6 +3191,30 @@ class TestSalesInvoice(FrappeTestCase):
 		doc = frappe.get_doc("Project", project.name)
 		self.assertEqual(doc.total_billed_amount, si.grand_total)
 
+	def test_total_billed_amount_with_different_projects(self):
+		# This test case is for checking the scenario where project is set at document level and for **some** child items only, not all
+		from copy import copy
+ 
+		si = create_sales_invoice(do_not_submit=True)
+
+		project = frappe.new_doc("Project")
+		project.company = "_Test Company"
+		project.project_name = "Test Total Billed Amount"
+		project.save()
+
+		si.project = project.name
+		si.items.append(copy(si.items[0]))
+		si.items.append(copy(si.items[0]))
+		si.items[0].project = project.name
+		si.items[1].project = project.name
+		# Not setting project on last item
+		si.items[1].insert()
+		si.items[2].insert()
+		si.submit()
+
+		project.reload()
+		self.assertIsNone(si.items[2].project)
+		self.assertEqual(project.total_billed_amount, 300)
 
 		# party_link.delete()
 		frappe.db.set_single_value("Accounts Settings", "enable_common_party_accounting", 0)
@@ -3389,6 +3414,7 @@ class TestSalesInvoice(FrappeTestCase):
 			invoice.reload()
 			self.assertEqual(invoice.status, "Overdue and Discounted")
 
+	@if_app_installed("sales_commission")
 	def test_sales_commission(self):
 		si = frappe.copy_doc(test_records[2])
 
@@ -3856,6 +3882,7 @@ class TestSalesInvoice(FrappeTestCase):
 		check_gl_entries(self, pe.name, expected_gle, nowdate(), voucher_type="Payment Entry")
 		set_advance_flag(company="_Test Company", flag=0, default_account="")
 
+	@if_app_installed("india_compliance")
 	def test_pulling_advance_based_on_debit_to(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
 
@@ -4682,6 +4709,7 @@ class TestSalesInvoice(FrappeTestCase):
 				voucher_type="Payment Entry",
 				posting_date=pe.posting_date	
 			)
+	@if_app_installed("india_compliance")
 	def test_sales_invoice_without_sales_order_with_gst_TC_S_016(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
@@ -4757,6 +4785,7 @@ class TestSalesInvoice(FrappeTestCase):
 				dn_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
 				self.assertEqual(dn_acc_debit, qty_change[0].get("valuation_rate") * 4)
 	
+	@if_app_installed("india_compliance")
 	def test_sales_invoice_with_update_stock_checked_with_gst_TC_S_017(self): 
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
@@ -4877,6 +4906,62 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertEqual(delivery_note.sales_invoice, sales_invoice.name)
 	
 	def test_sales_invoice_with_update_stock_and_SR_TC_S_027(self):
+		# Set up accounts if they don't exist
+		if not frappe.db.exists("Account", "Stock In Hand - _TC"):
+			frappe.get_doc({
+				"doctype": "Account",
+				"account_name": "Stock In Hand",
+				"parent_account": "Current Assets - _TC",
+				"company": "_Test Company",
+				"account_type": "Stock",
+				"is_group": 0
+			}).insert()
+		
+		if not frappe.db.exists("Account", "Cost of Goods Sold - _TC"):
+			frappe.get_doc({
+				"doctype": "Account",
+				"account_name": "Cost of Goods Sold",
+				"parent_account": "Cost of Goods Sold - _TC",
+				"company": "_Test Company",
+				"account_type": "Cost of Goods Sold",
+				"is_group": 0
+			}).insert()
+		
+		if not frappe.db.exists("Account", "Shipping Charges - _TC"):
+			frappe.get_doc({
+				"doctype": "Account",
+				"account_name": "Shipping Charges",
+				"parent_account": "Indirect Expenses - _TC",
+				"company": "_Test Company",
+				"account_type": "Expense Account",
+				"is_group": 0
+			}).insert()
+		
+		# Set default accounts for test company
+		frappe.db.set_value("Company", "_Test Company", {
+			"default_receivable_account": "Debtors - _TC",
+			"default_income_account": "Sales - _TC",
+			"default_expense_account": "Cost of Goods Sold - _TC",
+			"default_inventory_account": "Stock In Hand - _TC"
+		})
+		
+		# Set up shipping rule account
+		if not frappe.db.exists("Shipping Rule", "_Test Shipping Rule"):
+			shipping_rule = frappe.get_doc({
+				"doctype": "Shipping Rule",
+				"shipping_rule_name": "_Test Shipping Rule",
+				"conditions": [{
+					"doctype": "Shipping Rule Condition",
+					"from_value": 0,
+					"to_value": 100000,
+					"shipping_amount": 200
+				}],
+				"account": "Shipping Charges - _TC"
+			}).insert()
+		else:
+			frappe.db.set_value("Shipping Rule", "_Test Shipping Rule", "account", "Shipping Charges - _TC")
+
+		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
 		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=10, rate=4000)
 
 		sales_invoice = create_sales_invoice(
@@ -4919,7 +5004,6 @@ class TestSalesInvoice(FrappeTestCase):
 		self.assertEqual(sum([entry.actual_qty for entry in sle]), -4)  
 
 	def test_sales_invoice_with_SR_and_CRN_TC_S_038(self):
-
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
 		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
@@ -4927,8 +5011,27 @@ class TestSalesInvoice(FrappeTestCase):
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
 
-		frappe.db.set_value("Company", "_Test Company","enable_perpetual_inventory", 1)
-
+		# Enable perpetual inventory and set up accounts
+		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
+		
+		# Create or get inventory account if not exists
+		if not frappe.db.exists("Account", "Stock In Hand - _TC"):
+			frappe.get_doc({
+				"doctype": "Account",
+				"account_name": "Stock In Hand",
+				"parent_account": "Current Assets - _TC",
+				"company": "_Test Company",
+				"account_type": "Stock",
+				"is_group": 0
+			}).insert()
+		
+		# Set default accounts for test company
+		frappe.db.set_value("Company", "_Test Company", {
+			"default_receivable_account": "Debtors - _TC",
+			"default_income_account": "Sales - _TC",
+			"default_expense_account": "Cost of Goods Sold - _TC",
+			"default_inventory_account": "Stock In Hand - _TC"
+		})
 
 		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=10, rate=1000)
 
@@ -4963,7 +5066,7 @@ class TestSalesInvoice(FrappeTestCase):
 			item="_Test Item Home Desktop 100",
 			qty=-5,
 			warehouse="Stores - _TC",
-			do_not_save =True
+			do_not_save=True
 		)
 		for i in dn_return.items:
 			i.against_sales_order = sales_order.name
@@ -4999,7 +5102,7 @@ class TestSalesInvoice(FrappeTestCase):
 			rate=3000,
 			is_return=1,
 			return_against=sales_invoice.name,
-			do_not_save =True
+			do_not_save=True
 		)
 		for i in crn.items:
 			i.sales_order = sales_order.name
@@ -5021,7 +5124,34 @@ class TestSalesInvoice(FrappeTestCase):
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_delivery_note
 
-		frappe.db.set_value("Company", "_Test Company","enable_perpetual_inventory", 1)
+		# Set up required accounts if they don't exist
+		required_accounts = [
+			("Stock In Hand - _TC", "Current Assets - _TC", "Stock"),
+			("Cost of Goods Sold - _TC", "Cost of Goods Sold - _TC", "Cost of Goods Sold"),
+			("Sales - _TC", "Income - _TC", "Income Account"),
+			("Debtors - _TC", "Current Assets - _TC", "Receivable")
+		]
+
+		for account_name, parent_account, account_type in required_accounts:
+			if not frappe.db.exists("Account", account_name):
+				frappe.get_doc({
+					"doctype": "Account",
+					"account_name": account_name.split(" - ")[0],
+					"parent_account": parent_account,
+					"company": "_Test Company",
+					"account_type": account_type,
+					"is_group": 0
+				}).insert()
+
+		# Set default accounts for test company
+		frappe.db.set_value("Company", "_Test Company", {
+			"default_receivable_account": "Debtors - _TC",
+			"default_income_account": "Sales - _TC",
+			"default_expense_account": "Cost of Goods Sold - _TC",
+			"default_inventory_account": "Stock In Hand - _TC"
+		})
+
+		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
 		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=10, rate=2500)
 
 		sales_invoice = create_sales_invoice(
@@ -5029,8 +5159,8 @@ class TestSalesInvoice(FrappeTestCase):
 			item_code="_Test Item Home Desktop 100",
 			qty=5,
 			rate=3000,
-			income_account = "Sales - _TC",
-			expense_account ="Cost of Goods Sold - _TC",
+			income_account="Sales - _TC",
+			expense_account="Cost of Goods Sold - _TC",
 			update_stock=1
 		)
 
@@ -5278,7 +5408,19 @@ class TestSalesInvoice(FrappeTestCase):
 		pos_return = make_sales_return(pos.name)
 		self.assertEqual(abs(pos_return.payments[0].amount), pos.payments[0].amount)
 
+	def test_prevents_fully_returned_invoice_with_zero_quantity(self):
+		from erpnext.controllers.sales_and_purchase_return import StockOverReturnError, make_return_doc
 
+		invoice = create_sales_invoice(qty=10)
+
+		return_doc = make_return_doc(invoice.doctype, invoice.name)
+		return_doc.items[0].qty = -10
+		return_doc.save().submit()
+
+		return_doc = make_return_doc(invoice.doctype, invoice.name)
+		return_doc.items[0].qty = 0
+
+		self.assertRaises(StockOverReturnError, return_doc.save)
 
 
 	def test_repost_account_ledger_for_si_TC_ACC_118(self):
@@ -5811,6 +5953,7 @@ class TestSalesInvoice(FrappeTestCase):
 		si = make_sales_invoice(so.name)
 		self.assertEquals(si.payment_terms_template,"_Test Payment Term Template")
 	
+	@if_app_installed("india_compliance")
 	def test_generate_sales_invoice_with_items_different_gst_rates_TC_ACC_131(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		import json
@@ -6032,6 +6175,7 @@ class TestSalesInvoice(FrappeTestCase):
 				"due_date": today(),
 				"currency": "INR",
 				"selling_price_list": price_list,
+				"taxes_and_charges" :  "Output GST In-state - TC-1",
 				"items": [
 					{
 						"item_code": item_name,
@@ -6064,6 +6208,7 @@ class TestSalesInvoice(FrappeTestCase):
 
 		pi = make_inter_company_purchase_invoice(si.name)
 		pi.bill_no = "test bill"
+		pi.taxes_and_charges =  "Input GST In-state - TC-3"
 		pi.insert()
 		pi.submit()
 		self.assertEqual(pi.company, child_company)
@@ -6222,6 +6367,7 @@ class TestSalesInvoice(FrappeTestCase):
 				"transaction_date": today(),
 				"set_warehouse": "Stores - TC-1",
 				"selling_price_list": price_list,
+				"taxes_and_charges":"Output GST In-state - TC-1",
 				"items": [
 					{
 						"item_code": item.item_code,
@@ -6242,6 +6388,7 @@ class TestSalesInvoice(FrappeTestCase):
 		po = make_inter_company_purchase_order(so.name)
 		po.schedule_date = today()
 		po.set_warehouse = "Stores - TC-3"
+		po.taxes_and_charges =  "Input GST In-state - TC-3"
 
 		po.insert()
 		po.submit()
@@ -6287,6 +6434,7 @@ class TestSalesInvoice(FrappeTestCase):
 
 
 		pr = make_inter_company_purchase_receipt(dn.name)
+		pr.taxes_and_charges =  "Input GST In-state - TC-3"
 		pr.insert()
 		pr.submit()
 
@@ -6340,6 +6488,7 @@ class TestSalesInvoice(FrappeTestCase):
 
 		pi = make_inter_company_purchase_invoice(si.name)
 		pi.bill_no = "test bill"
+		pi.taxes_and_charges =  "Input GST In-state - TC-3"
 		pi.insert()
 		pi.submit()
 
@@ -7212,6 +7361,8 @@ def create_company_and_supplier():
 			}
 		).insert()
 
+	create_test_tax_data()
+
 	return {
 		"parent_company": parent_company,
 		"child_company": child_company,
@@ -7219,6 +7370,104 @@ def create_company_and_supplier():
 		"customer": customer,
 		"price_list": price_list
 	}
+
+def create_test_tax_data():
+	company = "Test Company-1122"
+	company_abbr = "TC-1" 
+	child_company = "Test Company-3344"
+	child_company_abbr="TC-3"
+
+	required_accounts_parent= [
+        ("Output Tax SGST", "Duties and Taxes"),
+        ("Output Tax CGST", "Duties and Taxes")
+    ]
+
+	required_accounts_child= [
+        ("Input Tax SGST", "Duties and Taxes"), 
+        ("Input Tax CGST", "Duties and Taxes")
+    ]
+    
+	if not frappe.db.exists("Account", f"Duties and Taxes - {company_abbr}"):
+		frappe.get_doc({
+			"doctype": "Account",
+			"account_name": "Duties and Taxes",
+			"parent_account": "Indirect Expenses - " + company_abbr,
+			"company": company,
+			"is_group": 1
+		}).insert()
+	
+	if not frappe.db.exists("Account", f"Duties and Taxes - {child_company_abbr}"):
+		frappe.get_doc({
+			"doctype": "Account",
+			"account_name": "Duties and Taxes",
+			"parent_account": "Indirect Expenses - " + child_company_abbr,
+			"company": child_company,
+			"is_group": 1
+		}).insert()
+
+	for account_name, parent in required_accounts_parent:
+		full_name = f"{account_name} - {company_abbr}"
+		if not frappe.db.exists("Account", full_name):
+			frappe.get_doc({
+				"doctype": "Account",
+				"account_name": account_name,
+				"parent_account": f"{parent} - {company_abbr}",
+				"company": company,
+				"account_type": "Tax"
+			}).insert()
+	
+	for account_name, parent in required_accounts_child:
+		full_name = f"{account_name} - {child_company_abbr}"
+		if not frappe.db.exists("Account", full_name):
+			frappe.get_doc({
+				"doctype": "Account",
+				"account_name": account_name,
+				"parent_account": f"{parent} - {child_company_abbr}",
+				"company": child_company,
+				"account_type": "Tax"
+			}).insert()
+
+	if not frappe.db.exists("Sales Taxes and Charges Template", "Output GST In-state - TC-1"):
+		frappe.get_doc({
+			"doctype": "Sales Taxes and Charges Template",
+			"title": "Output GST In-state",
+			"company": company,
+			"taxes": [
+				{
+					"charge_type": "On Net Total",
+					"account_head": f"Output Tax SGST - {company_abbr}",
+					"rate": 9,
+					"description": f"SGST - {company_abbr}"
+				},
+				{
+					"charge_type": "On Net Total", 
+					"account_head": f"Output Tax CGST - {company_abbr}",
+					"rate": 9,
+					"description": f"CGST - {company_abbr}"
+				}
+			]
+		}).insert()
+
+	if not frappe.db.exists("Purchase Taxes and Charges Template", "Input GST In-state - TC-1"):
+		frappe.get_doc({
+			"doctype": "Purchase Taxes and Charges Template",
+			"title": "Input GST In-state",
+			"company": child_company,
+			"taxes": [
+				{
+					"charge_type": "On Net Total",
+					"account_head": f"Input Tax CGST - {child_company_abbr}",
+					"rate": 9,
+					"description": f"CGST - {child_company_abbr}"
+				},
+				{
+					"charge_type": "On Net Total",
+					"account_head": f"Input Tax SGST - {child_company_abbr}",
+					"rate": 9,
+					"description": f"SGST - {child_company_abbr}"
+				}
+			]
+		}).insert()
 
 def get_active_fiscal_year():
 	from datetime import datetime

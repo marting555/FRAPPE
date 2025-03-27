@@ -255,6 +255,7 @@ class TestBlanketOrder(FrappeTestCase):
 	def test_blanket_order_to_sales_invoice_TC_S_054(self):
 		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
 		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 		frappe.flags.args.doctype = "Sales Order"
 		get_or_create_fiscal_year('_Test Company')
 		bo = make_blanket_order(blanket_order_type="Selling",quantity=50,rate=1000)
@@ -282,6 +283,8 @@ class TestBlanketOrder(FrappeTestCase):
 
 	def test_blanket_order_to_sales_invoice_with_update_stock_TC_S_055(self):
 		from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
+		
 		frappe.flags.args.doctype = "Sales Order"
 		get_or_create_fiscal_year('_Test Company')
 		bo = make_blanket_order(blanket_order_type="Selling",quantity=50,rate=1000)
@@ -292,8 +295,16 @@ class TestBlanketOrder(FrappeTestCase):
 		bo.reload()
 		self.assertEqual(bo.items[0].ordered_qty, 50)
 
+		make_stock_entry(
+			item_code=bo.items[0].item_code,
+			qty=50,
+			to_warehouse="_Test Warehouse - _TC", 
+			rate=1000,
+			purpose="Material Receipt"
+		)
+
 		si = make_sales_invoice(so.name)
-		si.update_stock =1
+		si.update_stock = 1
 		si.insert()
 		si.submit()
 
