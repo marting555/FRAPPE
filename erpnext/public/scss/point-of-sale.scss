@@ -607,8 +607,7 @@
 		padding: var(--padding-sm);
 
 		&:hover {
-			background-color: var(--gray-50);
-			color: var(--neutral);
+			background-color: var(--control-bg);
 		}
 
 		> .invoice-name-date {
