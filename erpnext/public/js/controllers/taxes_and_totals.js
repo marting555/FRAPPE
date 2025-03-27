@@ -650,6 +650,7 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 		if (cint(disable_rounded_total)) {
 			this.frm.doc.rounded_total = 0;
 			this.frm.doc.base_rounded_total = 0;
+			this.frm.doc.rounding_adjustment = 0;
 			return;
 		}
 
