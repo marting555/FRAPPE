@@ -255,7 +255,9 @@ class TestBlanketOrder(FrappeTestCase):
 	def test_blanket_order_to_sales_invoice_TC_S_054(self):
 		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
 		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
+		from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 		frappe.flags.args.doctype = "Sales Order"
+		make_stock_entry(item_code="_Test Item", qty=100, rate=5000, target="_Test Warehouse - _TC")
 
 		bo = make_blanket_order(blanket_order_type="Selling",quantity=50,rate=1000)
 		so = make_order(bo.name)
