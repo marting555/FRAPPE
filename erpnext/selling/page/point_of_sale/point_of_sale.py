@@ -450,23 +450,29 @@ def order_results_by_posting_date(results):
 
 
 def get_invoice_filters(doctype, status, name=None, customer=None):
-	filters = {"status": status}
-	if status != "Draft" and doctype == "POS Invoice":
-		if status == "Paid":
-			filters["status"] = ["in", ["Paid", "Consolidated"]]
-			filters["is_return"] = 0
-		elif status == "Return":
-			filters["status"] = ["in", ["Return", "Consolidated"]]
-			filters["is_return"] = 1
+	filters = {}
 
 	if name:
 		filters["name"] = ["like", f"%{name}%"]
 	if customer:
 		filters["customer"] = ["like", f"%{customer}%"]
 
+	if doctype == "POS Invoice":
+		filters["status"] = status
+		return filters
+
 	if doctype == "Sales Invoice":
-		filters["is_pos"] = 1
-		filters["is_consolidated"] = 0
+		filters["is_created_using_pos"] = 1
+
+		if status == "Draft":
+			filters["docstatus"] = 0
+		else:
+			filters["docstatus"] = 1
+			if status == "Consolidated":
+				filters["pos_closing_entry"] = ["is", "set"]
+			else:
+				filters["is_return"] = 0 if status == "Paid" else 1
+				filters["pos_closing_entry"] = ["is", "not set"]
 
 	return filters
 
