@@ -697,7 +697,7 @@ erpnext.utils.update_child_items = function (opts) {
 								uom,
 								conversion_factor,
 								item_name,
-								default_bom,
+								bom_no,
 							} = r.message;
 							const row = dialog.fields_dict.trans_items.df.data.find(
 								(doc) => doc.idx == me.doc.idx
