@@ -50,11 +50,13 @@ def get_data(filters):
 	)
 
 	if filters.get("warehouse"):
-		query = query.where(bin.warehouse.isin(filters.get("warehouse")))
+		warehouse = [filters.get("warehouse")]
+		query = query.where(bin.warehouse.isin(warehouse))
 
 	if filters.get("company"):
 		query = query.where(wh.company == filters.get("company"))
 
+	print(query.get_sql())
 	return query.run(as_dict=True)
 
 
