@@ -4104,8 +4104,6 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		get_or_create_fiscal_year("_Test Company")
 		create_supplier(supplier_name="_Test Supplier 1")
 		warehouse = frappe.db.get_all('Warehouse',{'is_group':0,'company':'_Test Company'},['name'])
-		account = frappe.db.get_all('Account',{'company':'_Test Company'},['name'])
-		cost_center = frappe.db.get_all('Cost Center',{'company':'_Test Company'},['name'])
 		pi = make_purchase_invoice(
 			supplier="_Test Supplier 1",
 			item_code=create_item(item_code = "Book", warehouse=warehouse[-1].name, company="_Test Company").item_code,
@@ -4114,8 +4112,6 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			warehouse=warehouse[-1].name,
 			supplier_warehouse = warehouse[0].name,
 			uom = "Box",
-			expense_account = account[3].name,
-			cost_center = cost_center[1].name,
 			do_not_save=True
 		)
 		pi.due_date = today()
@@ -4130,7 +4126,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 		self.assertEqual(len(sle), 1)
 		self.assertEqual(sle[0].item_code, "Book")
-		self.assertEqual(sle[0].warehouse, "Stores - _C")
+		self.assertEqual(sle[0].warehouse, "Stores - _TC")
 		self.assertEqual(sle[0].actual_qty, 5)
 
 		# Check Accounting Ledger Entries
@@ -4141,8 +4137,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 		self.assertTrue(gl_entries)
 		expected_gl_entries = [
-			{"account": "Creditors - _C", "debit": 0, "credit": pi.grand_total},
-			{"account": "Stock In Hand - _C", "debit": pi.grand_total, "credit": 0}
+			{"account": "Creditors - _TC", "debit": 0, "credit": pi.grand_total},
+			{"account": "_Test Account Cost for Goods Sold - _TC", "debit": pi.grand_total, "credit": 0}
 		]
 		for gle in expected_gl_entries:
 			self.assertTrue(any(entry["account"] == gle["account"] and entry["debit"] == gle["debit"] and entry["credit"] == gle["credit"] for entry in gl_entries))
