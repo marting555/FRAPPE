@@ -384,6 +384,10 @@ class calculate_taxes_and_totals:
 			self._calculate()
 
 	def calculate_taxes(self):
+		rounding_adjustment_computed = self.doc.get("is_consolidated") and self.doc.get("rounding_adjustment")
+		if not rounding_adjustment_computed:
+			self.doc.rounding_adjustment = 0
+
 		# maintain actual tax rate based on idx
 		actual_tax_dict = dict(
 			[
@@ -451,40 +455,22 @@ class calculate_taxes_and_totals:
 
 					self._set_in_company_currency(tax, ["total"])
 
+					# adjust Discount Amount loss in last tax iteration
+					if (
+						i == (len(self.doc.get("taxes")) - 1)
+						and self.discount_amount_applied
+						and self.doc.discount_amount
+						and self.doc.apply_discount_on == "Grand Total"
+						and not rounding_adjustment_computed
+					):
+						self.doc.rounding_adjustment = flt(
+							self.doc.grand_total - flt(self.doc.discount_amount) - tax.total,
+							self.doc.precision("rounding_adjustment"),
+						)
+
 				logger.debug(
 					f"  net_amount: {current_net_amount:<20} tax_amount: {current_tax_amount:<20} - {tax.description}"
 				)
-
-		# set the rounding difference in last tax row where charge type is not Actual, On Item Quantity and tax amount is not 0
-		if not (
-			self.doc.get("taxes")
-			and self.discount_amount_applied
-			and self.doc.discount_amount
-			and self.doc.apply_discount_on == "Grand Total"
-		):
-			return
-
-		rounding_difference = flt(
-			self.doc.grand_total - flt(self.doc.discount_amount) - self.doc.get("taxes")[-1].total,
-			self.doc.precision("rounding_adjustment"),
-		)
-
-		if not rounding_difference:
-			return
-
-		last_tax = next(
-			(
-				tax
-				for tax in reversed(self.doc.get("taxes"))
-				if tax.tax_amount and tax.charge_type != "Actual" and tax.charge_type != "On Item Quantity"
-			),
-			None,
-		)
-
-		if not last_tax:
-			return
-
-		last_tax.total = flt(last_tax.total + rounding_difference, last_tax.precision("total"))
 
 	def get_tax_amount_if_for_valuation_or_deduction(self, tax_amount, tax):
 		# if just for valuation, do not add the tax amount in total
@@ -789,19 +775,31 @@ class calculate_taxes_and_totals:
 		if self.doc.apply_discount_on == "Net Total":
 			return self.doc.net_total
 		else:
+			total_actual_tax = 0
 			actual_taxes_dict = {}
 
 			for tax in self.doc.get("taxes"):
 				if tax.charge_type in ["Actual", "On Item Quantity"]:
-					tax_amount = self.get_tax_amount_if_for_valuation_or_deduction(tax.tax_amount, tax)
-					actual_taxes_dict.setdefault(tax.idx, tax_amount)
+					tax_amount = tax.tax_amount * (-1 if tax.add_deduct_tax == "Deduct" else 1)
+					total_actual_tax += 0 if tax.category == "Valuation" else tax_amount
+					actual_taxes_dict[tax.idx] = {
+						"tax_amount": tax_amount,
+						"cumulative_tax_amount": total_actual_tax,
+					}
 				elif tax.row_id in actual_taxes_dict:
-					actual_tax_amount = flt(actual_taxes_dict.get(tax.row_id, 0)) * flt(tax.rate) / 100
-					actual_taxes_dict.setdefault(tax.idx, actual_tax_amount)
+					actual_tax_amount = (
+						flt(actual_taxes_dict[tax.row_id]["tax_amount"]) * flt(tax.rate) / 100
+						if tax.charge_type == "On Previous Row Amount"
+						else flt(actual_taxes_dict[tax.row_id]["cumulative_tax_amount"])
+					)
+					actual_tax_amount *= -1 if tax.add_deduct_tax == "Deduct" else 1
+					total_actual_tax += 0 if tax.category == "Valuation" else actual_tax_amount
+					actual_taxes_dict[tax.idx] = {
+						"tax_amount": actual_tax_amount,
+						"cumulative_tax_amount": total_actual_tax,
+					}
 
-			return flt(
-				self.doc.grand_total - sum(actual_taxes_dict.values()), self.doc.precision("grand_total")
-			)
+			return flt(self.doc.grand_total - total_actual_tax, self.doc.precision("grand_total"))
 
 	def calculate_total_advance(self):
 		if not self.doc.docstatus.is_cancelled():

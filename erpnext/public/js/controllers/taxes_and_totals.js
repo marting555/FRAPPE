@@ -413,24 +413,16 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 					me.set_cumulative_total(i, tax);
 
 					me.set_in_company_currency(tax, ["total"]);
+
+					// adjust Discount Amount loss in last tax iteration
+					if ((i == me.frm.doc["taxes"].length - 1) && me.discount_amount_applied
+						&& me.frm.doc.apply_discount_on == "Grand Total" && me.frm.doc.discount_amount) {
+						me.frm.doc.rounding_adjustment = flt(me.frm.doc.grand_total -
+							flt(me.frm.doc.discount_amount) - tax.total, precision("rounding_adjustment"));
+					}
 				}
 			});
 		});
-
-		// set the rounding difference in last tax row where charge type is not Actual, On Item Quantity and tax amount is not 0
-		if (this.frm.doc.taxes.length && this.discount_amount_applied && this.frm.doc.apply_discount_on == "Grand Total" && this.frm.doc.discount_amount) {
-			const rounding_difference = flt(
-				this.frm.doc.grand_total - this.frm.doc.discount_amount - this.frm.doc.taxes[this.frm.doc.taxes.length - 1].total,
-				precision("rounding_adjustment")
-			);
-			if (!rounding_difference) return;
-
-			const last_tax = this.frm.doc.taxes.findLast(
-				tax => tax.tax_amount && tax.charge_type !== "Actual" && tax.charge_type !== "On Item Quantity"
-			);
-
-			if (last_tax) last_tax.total += rounding_difference;
-		}
 	}
 
 	set_cumulative_total(row_idx, tax) {
@@ -628,7 +620,7 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 		}
 
 		this.frm.doc.total_taxes_and_charges = flt(this.frm.doc.grand_total - this.frm.doc.net_total
-			- flt(this.frm.doc.rounding_adjustment), precision("total_taxes_and_charges"));
+			- flt(this.frm.doc.grand_total_diff), precision("total_taxes_and_charges"));
 
 		this.set_in_company_currency(this.frm.doc, ["total_taxes_and_charges", "rounding_adjustment"]);
 
@@ -735,9 +727,10 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 
 					// discount amount rounding adjustment
 					// assignment to rounding_difference is intentional
-					if (i == me.frm._items.length - 1 && (rounding_difference = flt(expected_net_total - net_total, precision("net_total"))))
+					if (rounding_difference = flt(expected_net_total - net_total, precision("net_total"))) {
 						item.net_amount = flt(item.net_amount + rounding_difference, precision("net_amount", item));
-
+						net_total += rounding_difference;
+					}
 					item.net_rate = item.qty ? flt(item.net_amount / item.qty, precision("net_rate", item)) : 0;
 					me.set_in_company_currency(item, ["net_rate", "net_amount"]);
 				});
@@ -757,17 +750,29 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 
 			$.each(this.frm.doc["taxes"] || [], function(i, tax) {
 				if (["Actual", "On Item Quantity"].includes(tax.charge_type)) {
-					var tax_amount = (tax.category == "Valuation") ? 0.0 : tax.tax_amount;
-					tax_amount *= (tax.add_deduct_tax == "Deduct") ? -1.0 : 1.0;
-					actual_taxes_dict[tax.idx] = tax_amount;
-				} else if (actual_taxes_dict[tax.row_id] !== null) {
-					var actual_tax_amount = flt(actual_taxes_dict[tax.row_id]) * flt(tax.rate) / 100;
-					actual_taxes_dict[tax.idx] = actual_tax_amount;
-				}
-			});
+					const tax_amount = tax.tax_amount * (tax.add_deduct_tax == "Deduct" ? -1.0 : 1.0);
+					total_actual_tax += tax.category == "Valuation" ? 0.0 : tax_amount;
 
-			$.each(actual_taxes_dict, function(key, value) {
-				if (value) total_actual_tax += value;
+					actual_taxes_dict[tax.idx] = {
+						tax_amount: tax_amount,
+						cumulative_total: total_actual_tax
+					};
+				} else if (actual_taxes_dict[tax.row_id] != null) {
+					// if charge type is 'On Previous Row Amount', calculate tax on previous row amount
+					// else (On Previous Row Total) calculate tax on cumulative total
+					var actual_tax_amount =
+					tax.charge_type == "On Previous Row Amount" ?
+						flt(actual_taxes_dict[tax.row_id]["tax_amount"]) * flt(tax.rate) / 100 :
+						flt(actual_taxes_dict[tax.row_id]["cumulative_total"]) * flt(tax.rate) / 100;
+
+					actual_tax_amount *= (tax.add_deduct_tax == "Deduct") ? -1.0 : 1.0;
+					total_actual_tax += (tax.category == "Valuation") ? 0.0 : actual_tax_amount;
+
+					actual_taxes_dict[tax.idx] = {
+						tax_amount: actual_tax_amount,
+						cumulative_total: total_actual_tax
+					};
+				}
 			});
 
 			return flt(this.frm.doc.grand_total - total_actual_tax, precision("grand_total"));
