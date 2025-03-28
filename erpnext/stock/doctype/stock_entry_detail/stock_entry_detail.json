@@ -606,7 +606,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-03-26 21:00:58.544797",
+ "modified": "2025-03-26 21:01:58.544797",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Entry Detail",
@@ -614,8 +614,6 @@
  "owner": "Administrator",
  "permissions": [],
  "sort_field": "modified",
- "row_format": "Dynamic",
- "sort_field": "creation",
  "sort_order": "ASC",
  "states": []
 }
