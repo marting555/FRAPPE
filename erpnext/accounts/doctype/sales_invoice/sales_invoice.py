@@ -2541,10 +2541,26 @@ def create_dunning(source_name, target_doc=None):
 			target.dunning_amount = amounts.get("dunning_amount")
 			target.grand_total = amounts.get("grand_total")
 
+<<<<<<< HEAD
 	doclist = get_mapped_doc(
 		"Sales Invoice",
 		source_name,
 		{
+=======
+		# update outstanding from doc
+		if source.payment_schedule and len(source.payment_schedule) == 1:
+			for row in target.overdue_payments:
+				if row.payment_schedule == source.payment_schedule[0].name:
+					row.outstanding = source.get("outstanding_amount")
+
+		target.validate()
+
+	return get_mapped_doc(
+		from_doctype="Sales Invoice",
+		from_docname=source_name,
+		target_doc=target_doc,
+		table_maps={
+>>>>>>> c2bdd30e6d (fix: correct outstanding amount for invoice in dunning)
 			"Sales Invoice": {
 				"doctype": "Dunning",
 			}
