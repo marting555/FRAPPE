@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-03-23 09:35+0000\n"
-"PO-Revision-Date: 2025-03-26 15:24\n"
+"PO-Revision-Date: 2025-03-28 15:49\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Chinese Simplified\n"
 "MIME-Version: 1.0\n"
@@ -46238,7 +46238,7 @@ msgstr "称呼"
 #. 'Asset Finance Book'
 #: erpnext/assets/doctype/asset_finance_book/asset_finance_book.json
 msgid "Salvage Value"
-msgstr ""
+msgstr "残值"
 
 #. Label of the salvage_value_percentage (Percent) field in DocType 'Asset
 #. Finance Book'
