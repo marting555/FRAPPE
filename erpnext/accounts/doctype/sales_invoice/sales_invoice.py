@@ -51,6 +51,10 @@ from erpnext.stock.doctype.delivery_note.delivery_note import update_billed_amou
 form_grid_templates = {"items": "templates/form_grid/item_grid.html"}
 
 
+class PartialPaymentValidationError(frappe.ValidationError):
+	pass
+
+
 class SalesInvoice(SellingController):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
@@ -310,6 +314,7 @@ class SalesInvoice(SellingController):
 
 		if cint(self.is_created_using_pos):
 			self.validate_created_using_pos()
+			self.validate_full_payment()
 
 		self.validate_dropship_item()
 
@@ -1073,6 +1078,22 @@ class SalesInvoice(SellingController):
 	def validate_created_using_pos(self):
 		if self.is_created_using_pos and not self.pos_profile:
 			frappe.throw(_("POS Profile is mandatory to mark this invoice as POS Transaction."))
+
+	def validate_full_payment(self):
+		invoice_total = flt(self.rounded_total) or flt(self.grand_total)
+
+		if self.docstatus == 1:
+			if self.is_return and self.paid_amount != invoice_total:
+				frappe.throw(
+					msg=_("Partial Payment in POS Transactions are not allowed."),
+					exc=PartialPaymentValidationError,
+				)
+
+			if self.paid_amount < invoice_total:
+				frappe.throw(
+					msg=_("Partial Payment in POS Transactions are not allowed."),
+					exc=PartialPaymentValidationError,
+				)
 
 	def validate_warehouse(self):
 		super().validate_warehouse()
