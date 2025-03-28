@@ -1079,6 +1079,10 @@ class SalesInvoice(SellingController):
 		if self.is_created_using_pos and not self.pos_profile:
 			frappe.throw(_("POS Profile is mandatory to mark this invoice as POS Transaction."))
 
+		self.is_pos_using_sales_invoice = frappe.db.get_single_value("Accounts Settings", "use_sales_invoice")
+		if not self.is_pos_using_sales_invoice and not self.is_return:
+			frappe.throw(_("Transactions using Sales Invoice in POS are disabled."))
+
 	def validate_full_payment(self):
 		invoice_total = flt(self.rounded_total) or flt(self.grand_total)
 
