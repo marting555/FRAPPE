@@ -276,7 +276,6 @@ def get_sales_invoices(start, end, pos_profile, user):
 		and is_pos = 1
 		and pos_profile = %s
 		and is_created_using_pos = 1
-		and is_consolidated = 0
 		and ifnull(pos_closing_entry,'') = ''
 	""",
 		(user, pos_profile),

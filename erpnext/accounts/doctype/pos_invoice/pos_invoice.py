@@ -298,8 +298,11 @@ class POSInvoice(SalesInvoice):
 		return_sales_invoice.is_pos = 1
 		return_sales_invoice.is_return = 1
 		map_doc(self, return_sales_invoice, table_map={"doctype": return_sales_invoice.doctype})
-		return_sales_invoice.return_against = self.consolidated_invoice
 		return_sales_invoice.is_created_using_pos = 1
+		return_sales_invoice.is_consolidated = 1
+		return_sales_invoice.return_against = frappe.db.get_value(
+			"POS Invoice", self.return_against, "consolidated_invoice"
+		)
 		items, taxes, payments = [], [], []
 		for d in self.items:
 			si_item = map_child_doc(d, return_sales_invoice, {"doctype": "Sales Invoice Item"})

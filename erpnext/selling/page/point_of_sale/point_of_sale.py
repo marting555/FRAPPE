@@ -5,7 +5,7 @@
 import json
 
 import frappe
-from frappe.utils import cint
+from frappe.utils import cint, get_datetime
 from frappe.utils.nestedset import get_root_of
 
 from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_stock_availability
@@ -379,7 +379,7 @@ def get_past_order_list(search_term, status, limit=20):
 		)
 		sales_invoice_list = add_doctype_to_results("Sales Invoice", sales_invoice_list)
 
-	invoice_list = order_results_by_posting_date(pos_invoice_list + sales_invoice_list)
+	invoice_list = order_results_by_posting_date([*pos_invoice_list, *sales_invoice_list])
 
 	return invoice_list
 
@@ -446,7 +446,11 @@ def add_doctype_to_results(doctype, results):
 
 
 def order_results_by_posting_date(results):
-	return sorted(results, key=lambda x: x.get("posting_date"), reverse=True)
+	return sorted(
+		results,
+		key=lambda x: get_datetime(f"{x.get('posting_date')} {x.get('posting_time')}"),
+		reverse=True,
+	)
 
 
 def get_invoice_filters(doctype, status, name=None, customer=None):
@@ -463,6 +467,7 @@ def get_invoice_filters(doctype, status, name=None, customer=None):
 
 	if doctype == "Sales Invoice":
 		filters["is_created_using_pos"] = 1
+		filters["is_consolidated"] = 0
 
 		if status == "Draft":
 			filters["docstatus"] = 0
