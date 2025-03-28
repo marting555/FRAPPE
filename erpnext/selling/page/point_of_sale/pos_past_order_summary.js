@@ -216,7 +216,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		});
 
 		this.$summary_container.on("click", ".delete-btn", () => {
-			this.events.delete_order(this.doc.name);
+			this.events.delete_order(this.doc.doctype, this.doc.name);
 			this.show_summary_placeholder();
 		});
 
