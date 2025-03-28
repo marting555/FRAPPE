@@ -163,8 +163,6 @@ class POSClosingEntry(StatusUpdater):
 				invalid_row.setdefault("msg", []).append(_("Sales Invoice is already consolidated"))
 				invalid_rows.append(invalid_row)
 				continue
-			if sales_invoice.is_consolidated:
-				invalid_row.setdefault("msg", []).append(_("Sales Invoice is a consolidated invoice."))
 			if sales_invoice.is_pos == 0:
 				invalid_row.setdefault("msg", []).append(_("Sales Invoice does not have Payments"))
 			if sales_invoice.is_created_using_pos == 0:

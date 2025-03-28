@@ -473,11 +473,12 @@ def get_invoice_filters(doctype, status, name=None, customer=None):
 			filters["docstatus"] = 0
 		else:
 			filters["docstatus"] = 1
-			if status == "Consolidated":
-				filters["pos_closing_entry"] = ["is", "set"]
-			else:
-				filters["is_return"] = 0 if status == "Paid" else 1
-				filters["pos_closing_entry"] = ["is", "not set"]
+			if status == "Paid":
+				filters["is_return"] = 0
+			if status == "Return":
+				filters["is_return"] = 1
+
+			filters["pos_closing_entry"] = ["is", "set"] if status == "Consolidated" else ["is", "not set"]
 
 	return filters
 
