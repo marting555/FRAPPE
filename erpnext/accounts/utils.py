@@ -9,10 +9,8 @@ import frappe
 import frappe.defaults
 from frappe import _, qb, throw
 from frappe.model.meta import get_field_precision
-from frappe.query_builder import AliasedQuery, Criterion, Table
-from frappe.query_builder.functions import Count, Sum, Min
 from frappe.query_builder import AliasedQuery, Case, Criterion, Table
-from frappe.query_builder.functions import Count, Max, Round, Sum
+from frappe.query_builder.functions import Count, Max, Sum
 from frappe.query_builder.utils import DocType
 from frappe.utils import (
 	add_days,
