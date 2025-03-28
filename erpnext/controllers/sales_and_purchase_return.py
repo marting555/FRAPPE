@@ -6,6 +6,7 @@ from collections import defaultdict
 import frappe
 from frappe import _
 from frappe.model.meta import get_field_precision
+from frappe.query_builder import DocType
 from frappe.utils import cint, flt, format_datetime, get_datetime
 
 import erpnext
@@ -1204,3 +1205,26 @@ def is_invoice_returnable(doctype, invoice):
 			already_full_returned += 1
 
 	return len(invoice_item_qty) != already_full_returned
+
+
+def get_sales_invoice_item_from_consolidated_invoice(return_against_pos_invoice, pos_invoice_item):
+	try:
+		SalesInvoice = DocType("Sales Invoice")
+		SalesInvoiceItem = DocType("Sales Invoice Item")
+
+		query = (
+			frappe.qb.from_(SalesInvoice)
+			.from_(SalesInvoiceItem)
+			.select(SalesInvoiceItem.name)
+			.where(
+				(SalesInvoice.name == SalesInvoiceItem.parent)
+				& (SalesInvoice.is_return == 0)
+				& (SalesInvoiceItem.pos_invoice == return_against_pos_invoice)
+				& (SalesInvoiceItem.pos_invoice_item == pos_invoice_item)
+			)
+		)
+
+		result = query.run(as_dict=True)
+		return result[0].name if result else None
+	except Exception:
+		return None

@@ -18,6 +18,7 @@ from erpnext.accounts.doctype.sales_invoice.sales_invoice import (
 )
 from erpnext.accounts.party import get_due_date, get_party_account
 from erpnext.controllers.queries import item_query as _item_query
+from erpnext.controllers.sales_and_purchase_return import get_sales_invoice_item_from_consolidated_invoice
 from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 
 
@@ -308,6 +309,9 @@ class POSInvoice(SalesInvoice):
 			si_item = map_child_doc(d, return_sales_invoice, {"doctype": "Sales Invoice Item"})
 			si_item.pos_invoice = self.name
 			si_item.pos_invoice_item = d.name
+			si_item.sales_invoice_item = get_sales_invoice_item_from_consolidated_invoice(
+				self.return_against, d.pos_invoice_item
+			)
 			items.append(si_item)
 
 		for d in self.get("taxes"):
