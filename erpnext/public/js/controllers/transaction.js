@@ -297,11 +297,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 			let d = locals[cdt][cdn];
 			return {
 				filters: {
-<<<<<<< HEAD
-					docstatus: 1,
-=======
 					docstatus: ["<", 2],
->>>>>>> 0c1a8e9c58 (fix: incorrect condition)
 					inspection_type: inspection_type,
 					reference_name: doc.name,
 					item_code: d.item_code
