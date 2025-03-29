@@ -43,7 +43,6 @@
   "has_batch_no",
   "column_break_18",
   "batch_size",
-  "required_items_section",
   "materials_and_operations_tab",
   "operations_section",
   "transfer_material_against",
@@ -104,7 +103,6 @@
    "oldfieldname": "status",
    "oldfieldtype": "Select",
    "options": "\nDraft\nSubmitted\nNot Started\nIn Process\nCompleted\nStopped\nClosed\nCancelled",
-   "read_only": 1,
    "reqd": 1,
    "search_index": 1
   },
@@ -269,11 +267,6 @@
    "fieldtype": "Link",
    "label": "Scrap Warehouse",
    "options": "Warehouse"
-  },
-  {
-   "fieldname": "required_items_section",
-   "fieldtype": "Section Break",
-   "label": "Required Items"
   },
   {
    "fieldname": "required_items",
@@ -593,7 +586,7 @@
  "image_field": "image",
  "is_submittable": 1,
  "links": [],
- "modified": "2024-02-11 15:47:13.454422",
+ "modified": "2025-03-03 12:36:35.364406",
  "modified_by": "Administrator",
  "module": "Manufacturing",
  "name": "Work Order",

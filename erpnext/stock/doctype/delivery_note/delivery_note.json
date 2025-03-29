@@ -493,6 +493,8 @@
    "print_hide": 1
   },
   {
+   "allow_on_submit": 1,
+   "default": "Finished Goods - CII",
    "fieldname": "set_warehouse",
    "fieldtype": "Link",
    "label": "Set Source Warehouse",
@@ -1397,7 +1399,7 @@
  "idx": 146,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-03-20 16:05:02.854990",
+ "modified": "2025-03-20 10:24:11.804672",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note",

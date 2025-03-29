@@ -479,6 +479,9 @@
    "label": "Warehouse and Reference"
   },
   {
+   "allow_on_submit": 1,
+   "default": "Finished Goods - CII",
+   "fetch_if_empty": 1,
    "fieldname": "warehouse",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -913,7 +916,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-03-21 18:15:07.603672",
+ "modified": "2025-03-20 10:25:45.340417",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note Item",

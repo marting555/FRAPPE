@@ -682,7 +682,9 @@
   },
   {
    "fieldname": "section_break_63",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "in_filter": 1,
+   "in_standard_filter": 1
   },
   {
    "fieldname": "item_tax_template",
@@ -910,7 +912,7 @@
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-03-21 18:15:56.625005",
+ "modified": "2025-02-07 09:26:35.217401",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order Item",

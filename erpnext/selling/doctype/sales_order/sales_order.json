@@ -235,7 +235,6 @@
    "read_only": 1
   },
   {
-   "default": "Sales",
    "fieldname": "order_type",
    "fieldtype": "Select",
    "hide_days": 1,
@@ -243,7 +242,7 @@
    "label": "Order Type",
    "oldfieldname": "order_type",
    "oldfieldtype": "Select",
-   "options": "\nSales\nMaintenance\nShopping Cart",
+   "options": "\nManufacturing\nTrading\nManufacturing & Trading",
    "print_hide": 1,
    "reqd": 1
   },
@@ -604,6 +603,8 @@
    "fieldtype": "Table",
    "hide_days": 1,
    "hide_seconds": 1,
+   "in_filter": 1,
+   "in_standard_filter": 1,
    "label": "Items",
    "oldfieldname": "sales_order_details",
    "oldfieldtype": "Table",
@@ -1646,7 +1647,7 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-05-23 16:35:54.905804",
+ "modified": "2025-02-07 09:24:51.582332",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
