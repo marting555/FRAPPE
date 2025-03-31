@@ -172,7 +172,7 @@ class BankTransaction(Document):
 		remaining_amount = self.unallocated_amount
 		payment_entry_docs = [(pe.payment_document, pe.payment_entry) for pe in self.payment_entries]
 		pe_bt_allocations = get_total_allocated_amount(payment_entry_docs)
-		gles = get_related_bank_gl_entries(payment_entry_docs)
+		gl_entries = get_related_bank_gl_entries(payment_entry_docs)
 		gl_bank_account = frappe.db.get_value("Bank Account", self.bank_account, "account")
 
 		for payment_entry in list(self.payment_entries):
@@ -183,7 +183,7 @@ class BankTransaction(Document):
 				self,
 				payment_entry,
 				pe_bt_allocations.get((payment_entry.payment_document, payment_entry.payment_entry)) or {},
-				gles.get((payment_entry.payment_document, payment_entry.payment_entry)) or {},
+				gl_entries.get((payment_entry.payment_document, payment_entry.payment_entry)) or {},
 				gl_bank_account,
 			)
 
@@ -314,21 +314,22 @@ def get_doctypes_for_bank_reconciliation():
 	return frappe.get_hooks("bank_reconciliation_doctypes")
 
 
-def get_clearance_details(transaction, payment_entry, bt_allocations, gles, gl_bank_account):
+def get_clearance_details(transaction, payment_entry, bt_allocations, gl_entries, gl_bank_account):
 	"""
-	There should only be one bank gle for a voucher, except for JE.
-	For JE, there can be multiple bank gles for the same account.
-	In this case, the allocable_amount will be the sum of amounts of all gles of the account.
-	There will be no gle for a Bank Transaction so return the unallocated amount.
-	Should only clear the voucher if all bank gles are allocated.
+	There should only be one bank gl entry for a voucher, except for JE.
+	For JE, there can be multiple bank gl entries for the same account.
+	In this case, the allocable_amount will be the sum of amounts of all gl entries of the account.
+	There will be no gl entry for a Bank Transaction so return the unallocated amount.
+	Should only clear the voucher if all bank gl entries are allocated.
 	"""
+
 	transaction_date = getdate(transaction.date)
 
 	if payment_entry.payment_document == "Bank Transaction":
 		bt = frappe.db.get_value(
 			"Bank Transaction",
 			payment_entry.payment_entry,
-			["unallocated_amount", "bank_account"],
+			("unallocated_amount", "bank_account"),
 			as_dict=True,
 		)
 
@@ -341,15 +342,14 @@ def get_clearance_details(transaction, payment_entry, bt_allocations, gles, gl_b
 
 		return abs(bt.unallocated_amount), True, transaction_date
 
-	if gl_bank_account not in gles:
+	if gl_bank_account not in gl_entries:
 		frappe.throw(
 			_("{} {} is not affecting bank account {}").format(
 				payment_entry.payment_document, payment_entry.payment_entry, gl_bank_account
 			)
 		)
 
-	allocable_amount = gles.pop(gl_bank_account) or 0
-
+	allocable_amount = gl_entries.pop(gl_bank_account) or 0
 	if allocable_amount <= 0.0:
 		frappe.throw(
 			_("Invalid amount in accounting entries of {} {} for Account {}: {}").format(
@@ -358,16 +358,18 @@ def get_clearance_details(transaction, payment_entry, bt_allocations, gles, gl_b
 		)
 
 	matching_bt_allocaion = bt_allocations.pop(gl_bank_account, {})
+
 	allocable_amount = flt(
 		allocable_amount - matching_bt_allocaion.get("total", 0), transaction.precision("unallocated_amount")
 	)
-	bt_allocation_date = matching_bt_allocaion.get("latest_date", None)
-
-	clearance_date = transaction_date if not bt_allocation_date else max(transaction_date, bt_allocation_date)
 
 	should_clear = all(
-		gles[gle_account] == bt_allocations.get(gle_account, {}).get("total", 0) for gle_account in gles
+		gl_entries[gle_account] == bt_allocations.get(gle_account, {}).get("total", 0)
+		for gle_account in gl_entries
 	)
+
+	bt_allocation_date = matching_bt_allocaion.get("latest_date", None)
+	clearance_date = transaction_date if not bt_allocation_date else max(transaction_date, bt_allocation_date)
 
 	return allocable_amount, should_clear, clearance_date
 
