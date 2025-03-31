@@ -5825,11 +5825,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
  
 	@if_app_installed("sales_commission")
 	def test_so_with_maintenance_visit_TC_S_138(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		from erpnext.maintenance.doctype.maintenance_visit.test_maintenance_visit import make_sales_person
 		from erpnext.selling.doctype.sales_order.sales_order import make_maintenance_visit
 
-		item=make_test_item("_Test Item 3")
+		item=make_item("_Test Item 3")
 		item.is_stock_item =0
 		item.save()
 		address=frappe.get_doc(
