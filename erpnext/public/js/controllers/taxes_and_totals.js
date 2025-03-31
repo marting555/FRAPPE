@@ -714,7 +714,7 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 			const total_for_discount_amount = this.get_total_for_discount_amount();
 			let net_total = 0;
 			let expected_net_total = 0;
-			let rounding_difference;
+
 			// calculate item amount after Discount Amount
 			if (total_for_discount_amount) {
 				$.each(this.frm._items || [], function(i, item) {
@@ -727,7 +727,7 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 
 					// discount amount rounding adjustment
 					// assignment to rounding_difference is intentional
-					rounding_difference = flt(expected_net_total - net_total, precision("net_total"));
+					const rounding_difference = flt(expected_net_total - net_total, precision("net_total"));
 					if (rounding_difference) {
 						item.net_amount = flt(item.net_amount + rounding_difference, precision("net_amount", item));
 						net_total += rounding_difference;
