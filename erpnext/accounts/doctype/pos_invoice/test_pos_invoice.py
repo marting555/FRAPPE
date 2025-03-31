@@ -990,6 +990,15 @@ class TestPOSInvoice(IntegrationTestCase):
 			frappe.db.rollback(save_point="before_test_delivered_serial_no_case")
 			frappe.set_user("Administrator")
 
+	@IntegrationTestCase.change_settings("Accounts Settings", {"use_sales_invoice_in_pos": 1})
+	def test_pos_invoice_creation_during_sales_invoice_mode(self):
+		pos = create_pos_invoice(do_not_save=1)
+
+		pos.append(
+			"payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 100, "default": 1}
+		)
+		self.assertRaises(frappe.ValidationError, pos.insert)
+
 
 def create_pos_invoice(**args):
 	args = frappe._dict(args)
