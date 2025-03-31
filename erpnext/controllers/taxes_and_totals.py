@@ -773,32 +773,34 @@ class calculate_taxes_and_totals:
 	def get_total_for_discount_amount(self):
 		if self.doc.apply_discount_on == "Net Total":
 			return self.doc.net_total
-		else:
-			total_actual_tax = 0
-			actual_taxes_dict = {}
 
-			for tax in self.doc.get("taxes"):
-				if tax.charge_type in ["Actual", "On Item Quantity"]:
-					tax_amount = tax.tax_amount * (-1 if tax.get("add_deduct_tax") == "Deduct" else 1)
-					total_actual_tax += 0 if tax.get("category") == "Valuation" else tax_amount
-					actual_taxes_dict[tax.idx] = {
-						"tax_amount": tax_amount,
-						"cumulative_tax_amount": total_actual_tax,
-					}
-				elif tax.row_id in actual_taxes_dict:
-					actual_tax_amount = (
-						flt(actual_taxes_dict[tax.row_id]["tax_amount"]) * flt(tax.rate) / 100
-						if tax.charge_type == "On Previous Row Amount"
-						else flt(actual_taxes_dict[tax.row_id]["cumulative_tax_amount"]) * flt(tax.rate) / 100
-					)
-					actual_tax_amount *= -1 if tax.get("add_deduct_tax") == "Deduct" else 1
-					total_actual_tax += 0 if tax.get("category") == "Valuation" else actual_tax_amount
-					actual_taxes_dict[tax.idx] = {
-						"tax_amount": actual_tax_amount,
-						"cumulative_tax_amount": total_actual_tax,
-					}
+		total_actual_tax = 0
+		actual_taxes_dict = {}
 
-			return flt(self.doc.grand_total - total_actual_tax, self.doc.precision("grand_total"))
+		def update_actual_tax_dict(tax, tax_amount):
+			nonlocal total_actual_tax
+			actual_tax_amount = tax_amount * (-1 if tax.get("add_deduct_tax") == "Deduct" else 1)
+			if tax.get("category") != "Valuation":
+				total_actual_tax += actual_tax_amount
+
+			actual_taxes_dict[tax.idx] = {
+				"tax_amount": actual_tax_amount,
+				"cumulative_tax_amount": actual_tax_amount,
+			}
+
+		for tax in self.doc.get("taxes"):
+			if tax.charge_type in ["Actual", "On Item Quantity"]:
+				update_actual_tax_dict(tax, tax.tax_amount)
+			elif tax.row_id in actual_taxes_dict:
+				base_tax_amount = (
+					flt(actual_taxes_dict[tax.row_id]["tax_amount"])
+					if tax.charge_type == "On Previous Row Amount"
+					else flt(actual_taxes_dict[tax.row_id]["cumulative_tax_amount"])
+				)
+				actual_tax_amount = base_tax_amount * flt(tax.rate) / 100
+				update_actual_tax_dict(tax, actual_tax_amount)
+
+		return flt(self.doc.grand_total - total_actual_tax, self.doc.precision("grand_total"))
 
 	def calculate_total_advance(self):
 		if not self.doc.docstatus.is_cancelled():

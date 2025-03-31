@@ -742,41 +742,39 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 	}
 
 	get_total_for_discount_amount() {
-		if(this.frm.doc.apply_discount_on == "Net Total") {
+		if(this.frm.doc.apply_discount_on == "Net Total")
 			return this.frm.doc.net_total;
-		} else {
-			var total_actual_tax = 0.0;
-			var actual_taxes_dict = {};
 
-			$.each(this.frm.doc["taxes"] || [], function(i, tax) {
-				if (["Actual", "On Item Quantity"].includes(tax.charge_type)) {
-					const tax_amount = tax.tax_amount * (tax.add_deduct_tax == "Deduct" ? -1.0 : 1.0);
-					total_actual_tax += tax.category == "Valuation" ? 0.0 : tax_amount;
+		let total_actual_tax = 0.0;
+		let actual_taxes_dict = {};
 
-					actual_taxes_dict[tax.idx] = {
-						tax_amount: tax_amount,
-						cumulative_total: total_actual_tax
-					};
-				} else if (actual_taxes_dict[tax.row_id] != null) {
-					// if charge type is 'On Previous Row Amount', calculate tax on previous row amount
-					// else (On Previous Row Total) calculate tax on cumulative total
-					var actual_tax_amount =
-					tax.charge_type == "On Previous Row Amount" ?
-						flt(actual_taxes_dict[tax.row_id]["tax_amount"]) * flt(tax.rate) / 100 :
-						flt(actual_taxes_dict[tax.row_id]["cumulative_total"]) * flt(tax.rate) / 100;
+		function update_actual_taxes_dict(tax, tax_amount) {
+			const actual_tax_amount = tax_amount * (tax.add_deduct_tax == "Deduct" ? -1.0 : 1.0);
+			if (tax.category != "Valuation") total_actual_tax += actual_tax_amount;
 
-					actual_tax_amount *= (tax.add_deduct_tax == "Deduct") ? -1.0 : 1.0;
-					total_actual_tax += (tax.category == "Valuation") ? 0.0 : actual_tax_amount;
-
-					actual_taxes_dict[tax.idx] = {
-						tax_amount: actual_tax_amount,
-						cumulative_total: total_actual_tax
-					};
-				}
-			});
-
-			return flt(this.frm.doc.grand_total - total_actual_tax, precision("grand_total"));
+			actual_taxes_dict[tax.idx] = {
+				tax_amount: actual_tax_amount,
+				cumulative_total: total_actual_tax
+			};
 		}
+
+		$.each(this.frm.doc["taxes"] || [], function(i, tax) {
+			if (["Actual", "On Item Quantity"].includes(tax.charge_type)) {
+				update_actual_taxes_dict(tax, tax.tax_amount);
+			} else if (actual_taxes_dict[tax.row_id] != null) {
+				// if charge type is 'On Previous Row Amount', calculate tax on previous row amount
+				// else (On Previous Row Total) calculate tax on cumulative total
+				const base_tax_amount =
+				tax.charge_type == "On Previous Row Amount" ?
+					flt(actual_taxes_dict[tax.row_id]["tax_amount"]):
+					flt(actual_taxes_dict[tax.row_id]["cumulative_total"]);
+
+				const actual_tax_amount = base_tax_amount * flt(tax.rate) / 100;
+				update_actual_taxes_dict(tax, actual_tax_amount);
+			}
+		});
+
+		return flt(this.frm.doc.grand_total - total_actual_tax, precision("grand_total"));
 	}
 
 	calculate_total_advance(update_paid_amount) {
