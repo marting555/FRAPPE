@@ -301,7 +301,20 @@ def make_closing_entry_from_opening(opening_entry):
 	closing_entry.net_total = 0
 	closing_entry.total_quantity = 0
 
-	invoices = get_pos_invoices(
+	is_pos_using_sales_invoice = frappe.db.get_single_value("Accounts Settings", "use_sales_invoice_in_pos")
+
+	pos_invoices = (
+		get_pos_invoices(
+			closing_entry.period_start_date,
+			closing_entry.period_end_date,
+			closing_entry.pos_profile,
+			closing_entry.user,
+		)
+		if is_pos_using_sales_invoice == 0
+		else []
+	)
+
+	sales_invoices = get_sales_invoices(
 		closing_entry.period_start_date,
 		closing_entry.period_end_date,
 		closing_entry.pos_profile,
@@ -309,6 +322,7 @@ def make_closing_entry_from_opening(opening_entry):
 	)
 
 	pos_transactions = []
+	sales_invoice_transactions = []
 	taxes = []
 	payments = []
 	for detail in opening_entry.balance_details:
@@ -322,7 +336,7 @@ def make_closing_entry_from_opening(opening_entry):
 			)
 		)
 
-	for d in invoices:
+	for d in pos_invoices:
 		pos_transactions.append(
 			frappe._dict(
 				{
@@ -333,6 +347,20 @@ def make_closing_entry_from_opening(opening_entry):
 				}
 			)
 		)
+
+	for d in sales_invoices:
+		sales_invoice_transactions.append(
+			frappe._dict(
+				{
+					"sales_invoice": d.name,
+					"posting_date": d.posting_date,
+					"grand_total": d.grand_total,
+					"customer": d.customer,
+				}
+			)
+		)
+
+	for d in [*pos_invoices, *sales_invoices]:
 		closing_entry.grand_total += flt(d.grand_total)
 		closing_entry.net_total += flt(d.net_total)
 		closing_entry.total_quantity += flt(d.total_qty)
@@ -362,6 +390,7 @@ def make_closing_entry_from_opening(opening_entry):
 				)
 
 	closing_entry.set("pos_transactions", pos_transactions)
+	closing_entry.set("sales_invoice_transactions", sales_invoice_transactions)
 	closing_entry.set("payment_reconciliation", payments)
 	closing_entry.set("taxes", taxes)
 
