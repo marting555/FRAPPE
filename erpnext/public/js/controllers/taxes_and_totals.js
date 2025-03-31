@@ -727,7 +727,8 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 
 					// discount amount rounding adjustment
 					// assignment to rounding_difference is intentional
-					if (rounding_difference = flt(expected_net_total - net_total, precision("net_total"))) {
+					rounding_difference = flt(expected_net_total - net_total, precision("net_total"));
+					if (rounding_difference) {
 						item.net_amount = flt(item.net_amount + rounding_difference, precision("net_amount", item));
 						net_total += rounding_difference;
 					}
@@ -749,11 +750,11 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 		let actual_taxes_dict = {};
 
 		function update_actual_taxes_dict(tax, tax_amount) {
-			const actual_tax_amount = tax_amount * (tax.add_deduct_tax == "Deduct" ? -1.0 : 1.0);
-			if (tax.category != "Valuation") total_actual_tax += actual_tax_amount;
+			if (tax.add_deduct_tax == "Deduct") tax_amount *= -1;
+			if (tax.category != "Valuation") total_actual_tax += tax_amount;
 
 			actual_taxes_dict[tax.idx] = {
-				tax_amount: actual_tax_amount,
+				tax_amount: tax_amount,
 				cumulative_total: total_actual_tax
 			};
 		}

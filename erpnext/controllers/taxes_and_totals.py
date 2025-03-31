@@ -779,13 +779,16 @@ class calculate_taxes_and_totals:
 
 		def update_actual_tax_dict(tax, tax_amount):
 			nonlocal total_actual_tax
-			actual_tax_amount = tax_amount * (-1 if tax.get("add_deduct_tax") == "Deduct" else 1)
+
+			if tax.get("add_deduct_tax") == "Deduct":
+				tax_amount *= -1
+
 			if tax.get("category") != "Valuation":
-				total_actual_tax += actual_tax_amount
+				total_actual_tax += tax_amount
 
 			actual_taxes_dict[tax.idx] = {
-				"tax_amount": actual_tax_amount,
-				"cumulative_tax_amount": actual_tax_amount,
+				"tax_amount": tax_amount,
+				"cumulative_tax_amount": total_actual_tax,
 			}
 
 		for tax in self.doc.get("taxes"):
