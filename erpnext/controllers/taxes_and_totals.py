@@ -793,11 +793,11 @@ class calculate_taxes_and_totals:
 				update_actual_tax_dict(tax, tax.tax_amount)
 			elif tax.row_id in actual_taxes_dict:
 				base_tax_amount = (
-					flt(actual_taxes_dict[tax.row_id]["tax_amount"])
+					actual_taxes_dict[tax.row_id]["tax_amount"]
 					if tax.charge_type == "On Previous Row Amount"
-					else flt(actual_taxes_dict[tax.row_id]["cumulative_tax_amount"])
+					else actual_taxes_dict[tax.row_id]["cumulative_tax_amount"]
 				)
-				actual_tax_amount = base_tax_amount * flt(tax.rate) / 100
+				actual_tax_amount = base_tax_amount * tax.rate / 100
 				update_actual_tax_dict(tax, actual_tax_amount)
 
 		return flt(self.doc.grand_total - total_actual_tax, self.doc.precision("grand_total"))

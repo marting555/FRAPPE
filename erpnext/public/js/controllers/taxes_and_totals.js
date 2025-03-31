@@ -766,10 +766,10 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 				// else (On Previous Row Total) calculate tax on cumulative total
 				const base_tax_amount =
 				tax.charge_type == "On Previous Row Amount" ?
-					flt(actual_taxes_dict[tax.row_id]["tax_amount"]):
-					flt(actual_taxes_dict[tax.row_id]["cumulative_total"]);
+					actual_taxes_dict[tax.row_id]["tax_amount"]:
+					actual_taxes_dict[tax.row_id]["cumulative_total"];
 
-				const actual_tax_amount = base_tax_amount * flt(tax.rate) / 100;
+				const actual_tax_amount = base_tax_amount * tax.rate / 100;
 				update_actual_taxes_dict(tax, actual_tax_amount);
 			}
 		});
