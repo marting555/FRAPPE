@@ -1055,7 +1055,7 @@ async function insertLoanCarButton(frm) {
 
 	if (!loan_car?.length) return
 
-	frm.add_custom_button('Loan Car', async () => {
+	frm.add_custom_button('View Loan Car Details', async () => {
 		frappe.open_in_new_tab = true
 		frappe.set_route('Form', 'Loan car', loan_car[0].name)
 	})
