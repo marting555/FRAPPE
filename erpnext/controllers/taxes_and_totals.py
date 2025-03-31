@@ -786,7 +786,7 @@ class calculate_taxes_and_totals:
 			if tax.get("category") != "Valuation":
 				total_actual_tax += tax_amount
 
-			actual_taxes_dict[cint(tax.idx)] = {
+			actual_taxes_dict[int(tax.idx)] = {
 				"tax_amount": tax_amount,
 				"cumulative_tax_amount": total_actual_tax,
 			}
@@ -794,16 +794,23 @@ class calculate_taxes_and_totals:
 		for tax in self.doc.get("taxes"):
 			if tax.charge_type in ["Actual", "On Item Quantity"]:
 				update_actual_tax_dict(tax, tax.tax_amount)
-			elif base_row := actual_taxes_dict.get(cint(tax.row_id)):
-				base_tax_amount = (
-					base_row["tax_amount"]
-					if tax.charge_type == "On Previous Row Amount"
-					else base_row["cumulative_tax_amount"]
-				)
-				actual_tax_amount = base_tax_amount * tax.rate / 100
-				update_actual_tax_dict(tax, actual_tax_amount)
+				continue
 
-		return flt(self.doc.grand_total - total_actual_tax, self.doc.precision("grand_total"))
+			if not tax.row_id:
+				continue
+
+			base_row = actual_taxes_dict.get(int(tax.row_id))
+			if not base_row:
+				continue
+
+			base_tax_amount = (
+				base_row["tax_amount"]
+				if tax.charge_type == "On Previous Row Amount"
+				else base_row["cumulative_tax_amount"]
+			)
+			update_actual_tax_dict(tax, base_tax_amount * tax.rate / 100)
+
+		return self.doc.grand_total - total_actual_tax
 
 	def calculate_total_advance(self):
 		if not self.doc.docstatus.is_cancelled():
