@@ -760,16 +760,14 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 		}
 
 		$.each(this.frm.doc["taxes"] || [], function(i, tax) {
-			if (["Actual", "On Item Quantity"].includes(tax.charge_type)) {
-				update_actual_taxes_dict(tax, tax.tax_amount);
-			} else if (actual_taxes_dict[tax.row_id] !== undefined) {
+			if (["Actual", "On Item Quantity"].includes(tax.charge_type))
+				return update_actual_taxes_dict(tax, tax.tax_amount);
+
+			const base_row = actual_taxes_dict[tax.row_id];
+			if (base_row) {
 				// if charge type is 'On Previous Row Amount', calculate tax on previous row amount
 				// else (On Previous Row Total) calculate tax on cumulative total
-				const base_tax_amount =
-				tax.charge_type == "On Previous Row Amount" ?
-					actual_taxes_dict[tax.row_id]["tax_amount"]:
-					actual_taxes_dict[tax.row_id]["cumulative_total"];
-
+				const base_tax_amount = tax.charge_type == "On Previous Row Amount" ? base_row["tax_amount"]: base_row["cumulative_total"];
 				const actual_tax_amount = base_tax_amount * tax.rate / 100;
 				update_actual_taxes_dict(tax, actual_tax_amount);
 			}
