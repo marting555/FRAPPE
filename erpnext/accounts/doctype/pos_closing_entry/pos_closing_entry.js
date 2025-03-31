@@ -38,7 +38,7 @@ frappe.ui.form.on("POS Closing Entry", {
 
 		const is_pos_using_sales_invoice = await frappe.db.get_single_value(
 			"Accounts Settings",
-			"use_sales_invoice"
+			"use_sales_invoice_in_pos"
 		);
 
 		if (is_pos_using_sales_invoice) {
@@ -162,7 +162,7 @@ frappe.ui.form.on("POS Closing Entry", {
 
 		const is_pos_using_sales_invoice = await frappe.db.get_single_value(
 			"Accounts Settings",
-			"use_sales_invoice"
+			"use_sales_invoice_in_pos"
 		);
 
 		if (is_pos_using_sales_invoice) {

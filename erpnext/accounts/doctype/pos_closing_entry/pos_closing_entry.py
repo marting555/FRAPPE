@@ -60,7 +60,9 @@ class POSClosingEntry(StatusUpdater):
 		if frappe.db.get_value("POS Opening Entry", self.pos_opening_entry, "status") != "Open":
 			frappe.throw(_("Selected POS Opening Entry should be open."), title=_("Invalid Opening Entry"))
 
-		self.is_pos_using_sales_invoice = frappe.db.get_single_value("Accounts Settings", "use_sales_invoice")
+		self.is_pos_using_sales_invoice = frappe.db.get_single_value(
+			"Accounts Settings", "use_sales_invoice_in_pos"
+		)
 
 		if self.is_pos_using_sales_invoice == 0:
 			self.validate_duplicate_pos_invoices()
