@@ -786,7 +786,7 @@ class calculate_taxes_and_totals:
 			if tax.get("category") != "Valuation":
 				total_actual_tax += tax_amount
 
-			actual_taxes_dict[int(tax.idx)] = {
+			actual_taxes_dict[cint(tax.idx)] = {
 				"tax_amount": tax_amount,
 				"cumulative_tax_amount": total_actual_tax,
 			}
@@ -794,7 +794,7 @@ class calculate_taxes_and_totals:
 		for tax in self.doc.get("taxes"):
 			if tax.charge_type in ["Actual", "On Item Quantity"]:
 				update_actual_tax_dict(tax, tax.tax_amount)
-			elif base_row := actual_taxes_dict.get(int(tax.row_id)):
+			elif base_row := actual_taxes_dict.get(cint(tax.row_id)):
 				base_tax_amount = (
 					base_row["tax_amount"]
 					if tax.charge_type == "On Previous Row Amount"
