@@ -733,7 +733,7 @@ class calculate_taxes_and_totals:
 
 			if total_for_discount_amount:
 				# calculate item amount after Discount Amount
-				for i, item in enumerate(self._items):
+				for item in self._items:
 					distributed_amount = (
 						flt(self.doc.discount_amount) * item.net_amount / total_for_discount_amount
 					)
@@ -747,10 +747,8 @@ class calculate_taxes_and_totals:
 					net_total += item.net_amount
 
 					# discount amount rounding adjustment
-					if i == len(self._items) - 1 and (
-						rounding_difference := flt(
-							expected_net_total - net_total, self.doc.precision("net_total")
-						)
+					if rounding_difference := flt(
+						expected_net_total - net_total, self.doc.precision("net_total")
 					):
 						item.net_amount = flt(
 							item.net_amount + rounding_difference, item.precision("net_amount")
@@ -759,6 +757,7 @@ class calculate_taxes_and_totals:
 							distributed_amount + rounding_difference,
 							item.precision("distributed_discount_amount"),
 						)
+						net_total += rounding_difference
 
 					item.net_rate = (
 						flt(item.net_amount / item.qty, item.precision("net_rate")) if item.qty else 0
@@ -780,8 +779,8 @@ class calculate_taxes_and_totals:
 
 			for tax in self.doc.get("taxes"):
 				if tax.charge_type in ["Actual", "On Item Quantity"]:
-					tax_amount = tax.tax_amount * (-1 if tax.add_deduct_tax == "Deduct" else 1)
-					total_actual_tax += 0 if tax.category == "Valuation" else tax_amount
+					tax_amount = tax.tax_amount * (-1 if tax.get("add_deduct_tax") == "Deduct" else 1)
+					total_actual_tax += 0 if tax.get("category") == "Valuation" else tax_amount
 					actual_taxes_dict[tax.idx] = {
 						"tax_amount": tax_amount,
 						"cumulative_tax_amount": total_actual_tax,
@@ -790,10 +789,10 @@ class calculate_taxes_and_totals:
 					actual_tax_amount = (
 						flt(actual_taxes_dict[tax.row_id]["tax_amount"]) * flt(tax.rate) / 100
 						if tax.charge_type == "On Previous Row Amount"
-						else flt(actual_taxes_dict[tax.row_id]["cumulative_tax_amount"])
+						else flt(actual_taxes_dict[tax.row_id]["cumulative_tax_amount"]) * flt(tax.rate) / 100
 					)
-					actual_tax_amount *= -1 if tax.add_deduct_tax == "Deduct" else 1
-					total_actual_tax += 0 if tax.category == "Valuation" else actual_tax_amount
+					actual_tax_amount *= -1 if tax.get("add_deduct_tax") == "Deduct" else 1
+					total_actual_tax += 0 if tax.get("category") == "Valuation" else actual_tax_amount
 					actual_taxes_dict[tax.idx] = {
 						"tax_amount": actual_tax_amount,
 						"cumulative_tax_amount": total_actual_tax,
