@@ -452,13 +452,6 @@ class calculate_taxes_and_totals:
 							self.doc.grand_total - flt(self.doc.discount_amount) - tax.total,
 							self.doc.precision("rounding_adjustment"),
 						)
-<<<<<<< HEAD
-=======
-
-				logger.debug(
-					f"  net_amount: {current_net_amount:<20} tax_amount: {current_tax_amount:<20} - {tax.description}"
-				)
->>>>>>> f25bf6dbd2 (fix: improved rounding adjustment when applying discount (#46720))
 
 	def get_tax_amount_if_for_valuation_or_deduction(self, tax_amount, tax):
 		# if just for valuation, do not add the tax amount in total
@@ -704,16 +697,9 @@ class calculate_taxes_and_totals:
 						flt(self.doc.discount_amount) * item.net_amount / total_for_discount_amount
 					)
 
-<<<<<<< HEAD
-					item.net_amount = flt(item.net_amount - distributed_amount, item.precision("net_amount"))
-=======
 					adjusted_net_amount = item.net_amount - distributed_amount
 					expected_net_total += adjusted_net_amount
 					item.net_amount = flt(adjusted_net_amount, item.precision("net_amount"))
-					item.distributed_discount_amount = flt(
-						distributed_amount, item.precision("distributed_discount_amount")
-					)
->>>>>>> f25bf6dbd2 (fix: improved rounding adjustment when applying discount (#46720))
 					net_total += item.net_amount
 
 					# discount amount rounding adjustment
@@ -723,14 +709,7 @@ class calculate_taxes_and_totals:
 						item.net_amount = flt(
 							item.net_amount + rounding_difference, item.precision("net_amount")
 						)
-<<<<<<< HEAD
-=======
-						item.distributed_discount_amount = flt(
-							distributed_amount + rounding_difference,
-							item.precision("distributed_discount_amount"),
-						)
 						net_total += rounding_difference
->>>>>>> f25bf6dbd2 (fix: improved rounding adjustment when applying discount (#46720))
 
 					item.net_rate = (
 						flt(item.net_amount / item.qty, item.precision("net_rate")) if item.qty else 0
