@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-03-30 09:35+0000\n"
-"PO-Revision-Date: 2025-03-30 16:33\n"
+"PO-Revision-Date: 2025-03-31 16:31\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Chinese Simplified\n"
 "MIME-Version: 1.0\n"
@@ -12215,15 +12215,15 @@ msgstr "物料{0}的换算系数已重置为1.0，因其单位{1}与库存单位
 
 #: erpnext/controllers/accounts_controller.py:2717
 msgid "Conversion rate cannot be 0"
-msgstr ""
+msgstr "汇率不能为 0"
 
 #: erpnext/controllers/accounts_controller.py:2724
 msgid "Conversion rate is 1.00, but document currency is different from company currency"
-msgstr ""
+msgstr "汇率设置为1.00，但单据货币与公司货币不同"
 
 #: erpnext/controllers/accounts_controller.py:2720
 msgid "Conversion rate must be 1.00 if document currency is same as company currency"
-msgstr ""
+msgstr "单据货币与公司本位币相同时，汇率必须为1.00"
 
 #. Label of the clean_description_html (Check) field in DocType 'Stock
 #. Settings'
@@ -12520,7 +12520,7 @@ msgstr "成本中心与预算"
 
 #: erpnext/public/js/utils/sales_common.js:460
 msgid "Cost Center for Item rows has been updated to {0}"
-msgstr ""
+msgstr "物料行的成本中心已更新为{0}"
 
 #: erpnext/accounts/doctype/cost_center/cost_center.py:75
 msgid "Cost Center is a part of Cost Center Allocation, hence cannot be converted to a group"
@@ -13444,7 +13444,7 @@ msgstr "贷记至"
 #. Label of the credit (Currency) field in DocType 'Journal Entry Account'
 #: erpnext/accounts/doctype/journal_entry_account/journal_entry_account.json
 msgid "Credit in Company Currency"
-msgstr "公司本位币贷方金额"
+msgstr "公司货币贷方金额"
 
 #: erpnext/selling/doctype/customer/customer.py:523
 #: erpnext/selling/doctype/customer/customer.py:578
@@ -15049,7 +15049,7 @@ msgstr "{0} #{1}的借贷不平，差额为{2}"
 #. Label of the debit (Currency) field in DocType 'Journal Entry Account'
 #: erpnext/accounts/doctype/journal_entry_account/journal_entry_account.json
 msgid "Debit in Company Currency"
-msgstr "公司本位币借方金额"
+msgstr "公司货币借方金额"
 
 #. Label of the debit_to (Link) field in DocType 'Discounted Invoice'
 #: erpnext/accounts/doctype/discounted_invoice/discounted_invoice.json
@@ -16750,7 +16750,7 @@ msgstr "差额金额"
 #. Label of the difference_amount (Currency) field in DocType 'Payment Entry'
 #: erpnext/accounts/doctype/payment_entry/payment_entry.json
 msgid "Difference Amount (Company Currency)"
-msgstr "差额金额（公司本位币）"
+msgstr "差额金额（公司货币）"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:203
 msgid "Difference Amount must be zero"
@@ -17959,7 +17959,7 @@ msgstr "催款金额"
 #. Label of the base_dunning_amount (Currency) field in DocType 'Dunning'
 #: erpnext/accounts/doctype/dunning/dunning.json
 msgid "Dunning Amount (Company Currency)"
-msgstr "催款金额（公司本位币）"
+msgstr "催款金额（公司货币）"
 
 #. Label of the dunning_fee (Currency) field in DocType 'Dunning'
 #. Label of the dunning_fee (Currency) field in DocType 'Dunning Type'
@@ -22252,7 +22252,7 @@ msgstr "总计"
 #: erpnext/stock/doctype/delivery_note/delivery_note.json
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.json
 msgid "Grand Total (Company Currency)"
-msgstr "总计（公司本位币）"
+msgstr "总计（公司货币）"
 
 #. Label of the grant_commission (Check) field in DocType 'POS Invoice Item'
 #. Label of the grant_commission (Check) field in DocType 'Sales Invoice Item'
@@ -23906,7 +23906,7 @@ msgstr "大写金额"
 #: erpnext/stock/doctype/delivery_note/delivery_note.json
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.json
 msgid "In Words (Company Currency)"
-msgstr "大写金额（公司本位币）"
+msgstr "大写金额（公司货币）"
 
 #. Description of the 'In Words' (Data) field in DocType 'Delivery Note'
 #: erpnext/stock/doctype/delivery_note/delivery_note.json
@@ -26991,7 +26991,7 @@ msgstr "因物料{0}允许零估价率，物料单价已更新为零"
 #. Label of the finished_good (Link) field in DocType 'Job Card'
 #: erpnext/manufacturing/doctype/job_card/job_card.json
 msgid "Item to Manufacture"
-msgstr ""
+msgstr "待生产物料"
 
 #. Description of the 'Item' (Link) field in DocType 'BOM'
 #: erpnext/manufacturing/doctype/bom/bom.json
@@ -29326,7 +29326,7 @@ msgstr "生产"
 #. Label of the semi_fg_bom (Link) field in DocType 'Job Card'
 #: erpnext/manufacturing/doctype/job_card/job_card.json
 msgid "Manufacturing BOM"
-msgstr ""
+msgstr "制造物料清单"
 
 #. Label of the manufacturing_date (Date) field in DocType 'Batch'
 #: erpnext/stock/doctype/batch/batch.json
@@ -31236,7 +31236,7 @@ msgstr "净额"
 #: erpnext/stock/doctype/delivery_note_item/delivery_note_item.json
 #: erpnext/stock/doctype/purchase_receipt_item/purchase_receipt_item.json
 msgid "Net Amount (Company Currency)"
-msgstr "净额（公司本位币）"
+msgstr "净额(公司货币)"
 
 #: erpnext/accounts/report/asset_depreciations_and_balances/asset_depreciations_and_balances.py:527
 #: erpnext/accounts/report/asset_depreciations_and_balances/asset_depreciations_and_balances.py:533
@@ -31345,7 +31345,7 @@ msgstr "净费率"
 #: erpnext/stock/doctype/delivery_note_item/delivery_note_item.json
 #: erpnext/stock/doctype/purchase_receipt_item/purchase_receipt_item.json
 msgid "Net Rate (Company Currency)"
-msgstr "净费率（公司本位币）"
+msgstr "净费率（公司货币）"
 
 #. Label of the net_total (Currency) field in DocType 'POS Closing Entry'
 #. Label of the net_total (Currency) field in DocType 'POS Invoice'
@@ -31425,7 +31425,7 @@ msgstr "净总计"
 #: erpnext/stock/doctype/delivery_note/delivery_note.json
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.json
 msgid "Net Total (Company Currency)"
-msgstr "净总计（公司本位币）"
+msgstr "净总计（公司货币）"
 
 #. Option for the 'Calculate Based On' (Select) field in DocType 'Shipping
 #. Rule'
@@ -33067,7 +33067,7 @@ msgstr "运营成本"
 #. Label of the base_operating_cost (Currency) field in DocType 'BOM'
 #: erpnext/manufacturing/doctype/bom/bom.json
 msgid "Operating Cost (Company Currency)"
-msgstr "运营成本（公司本位币）"
+msgstr "运营成本(公司货币)"
 
 #. Label of the operating_cost_per_bom_quantity (Currency) field in DocType
 #. 'BOM'
@@ -33082,7 +33082,7 @@ msgstr "按工单/物料清单计算的运营成本"
 #. Label of the base_operating_cost (Currency) field in DocType 'BOM Operation'
 #: erpnext/manufacturing/doctype/bom_operation/bom_operation.json
 msgid "Operating Cost(Company Currency)"
-msgstr "运营成本（公司本位币）"
+msgstr "运营成本（公司货币）"
 
 #. Label of the over_heads (Tab Break) field in DocType 'Workstation'
 #. Label of the over_heads (Section Break) field in DocType 'Workstation Type'
@@ -33730,7 +33730,7 @@ msgstr "未结清"
 #. Label of the base_outstanding (Currency) field in DocType 'Payment Schedule'
 #: erpnext/accounts/doctype/payment_schedule/payment_schedule.json
 msgid "Outstanding (Company Currency)"
-msgstr ""
+msgstr "未清金额（公司货币）"
 
 #. Label of the outstanding_amount (Float) field in DocType 'Cashier Closing'
 #. Label of the outstanding_amount (Currency) field in DocType 'Discounted
@@ -37385,11 +37385,11 @@ msgstr "请先设置物料编码"
 
 #: erpnext/manufacturing/doctype/job_card/job_card.py:1438
 msgid "Please set the Target Warehouse in the Job Card"
-msgstr ""
+msgstr "请在工单中设置目标仓库"
 
 #: erpnext/manufacturing/doctype/job_card/job_card.py:1442
 msgid "Please set the WIP Warehouse in the Job Card"
-msgstr ""
+msgstr "请在工单中设置在制品仓库"
 
 #: erpnext/accounts/doctype/gl_entry/gl_entry.py:174
 msgid "Please set the cost center field in {0} or setup a default Cost Center for the Company."
@@ -39836,7 +39836,7 @@ msgstr "采购订单金额"
 
 #: erpnext/buying/report/procurement_tracker/procurement_tracker.py:109
 msgid "Purchase Order Amount(Company Currency)"
-msgstr "采购订单金额（公司本位币）"
+msgstr "采购订单金额（公司货币）"
 
 #. Label of a Link in the Payables Workspace
 #. Name of a report
@@ -41382,7 +41382,7 @@ msgstr "费率与金额"
 #: erpnext/stock/doctype/delivery_note_item/delivery_note_item.json
 #: erpnext/stock/doctype/purchase_receipt_item/purchase_receipt_item.json
 msgid "Rate (Company Currency)"
-msgstr "费率（公司本位币）"
+msgstr "费率（公司货币）"
 
 #. Label of the rm_cost_as_per (Select) field in DocType 'BOM'
 #. Label of the rm_cost_as_per (Select) field in DocType 'BOM Creator'
@@ -41451,7 +41451,7 @@ msgstr "含利润率费率"
 #: erpnext/stock/doctype/delivery_note_item/delivery_note_item.json
 #: erpnext/stock/doctype/purchase_receipt_item/purchase_receipt_item.json
 msgid "Rate With Margin (Company Currency)"
-msgstr "含利润率费率（公司本位币）"
+msgstr "含利润率费率（公司货币）"
 
 #. Label of the rate_and_amount (Section Break) field in DocType 'Purchase
 #. Receipt Item'
@@ -41479,7 +41479,7 @@ msgstr "客户货币转换为客户本位币的汇率"
 #: erpnext/selling/doctype/sales_order/sales_order.json
 #: erpnext/stock/doctype/delivery_note/delivery_note.json
 msgid "Rate at which Price list currency is converted to company's base currency"
-msgstr "价格表货币转换为公司本位币的汇率"
+msgstr "价格表货币转换为公司货币的汇率"
 
 #. Description of the 'Price List Exchange Rate' (Float) field in DocType 'POS
 #. Invoice'
@@ -41497,13 +41497,13 @@ msgstr "价格表货币转换为客户本位币的汇率"
 #: erpnext/selling/doctype/sales_order/sales_order.json
 #: erpnext/stock/doctype/delivery_note/delivery_note.json
 msgid "Rate at which customer's currency is converted to company's base currency"
-msgstr "客户货币转换为公司本位币的汇率"
+msgstr "客户货币转换为公司货币的汇率"
 
 #. Description of the 'Exchange Rate' (Float) field in DocType 'Purchase
 #. Receipt'
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.json
 msgid "Rate at which supplier's currency is converted to company's base currency"
-msgstr "供应商货币转换为公司本位币的汇率"
+msgstr "供应商货币转换为公司货币的汇率"
 
 #. Description of the 'Tax Rate' (Float) field in DocType 'Account'
 #: erpnext/accounts/doctype/account/account.json
@@ -41595,7 +41595,7 @@ msgstr "原材料成本"
 #. Label of the base_raw_material_cost (Currency) field in DocType 'BOM'
 #: erpnext/manufacturing/doctype/bom/bom.json
 msgid "Raw Material Cost (Company Currency)"
-msgstr "原材料成本（公司本位币）"
+msgstr "原材料成本（公司货币）"
 
 #. Label of the rm_cost_per_qty (Currency) field in DocType 'Subcontracting
 #. Order Item'
@@ -52458,7 +52458,7 @@ msgstr "折后税额"
 #. DocType 'Sales Taxes and Charges'
 #: erpnext/accounts/doctype/sales_taxes_and_charges/sales_taxes_and_charges.json
 msgid "Tax Amount After Discount Amount (Company Currency)"
-msgstr "折后税额（公司本位币）"
+msgstr "折后税额（公司货币）"
 
 #. Description of the 'Round Tax Amount Row-wise' (Check) field in DocType
 #. 'Accounts Settings'
@@ -52825,7 +52825,7 @@ msgstr "加征税费"
 #: erpnext/buying/doctype/supplier_quotation/supplier_quotation.json
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.json
 msgid "Taxes and Charges Added (Company Currency)"
-msgstr "加征税费（公司本位币）"
+msgstr "加征税费（公司货币）"
 
 #. Label of the other_charges_calculation (Text Editor) field in DocType 'POS
 #. Invoice'
@@ -52885,7 +52885,7 @@ msgstr "减征税费"
 #: erpnext/buying/doctype/supplier_quotation/supplier_quotation.json
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.json
 msgid "Taxes and Charges Deducted (Company Currency)"
-msgstr "减征税费（公司本位币）"
+msgstr "减征税费（公司货币）"
 
 #: erpnext/stock/doctype/item/item.py:350
 msgid "Taxes row #{0}: {1} cannot be smaller than {2}"
@@ -55523,7 +55523,7 @@ msgstr "税费及附加合计"
 #: erpnext/stock/doctype/landed_cost_voucher/landed_cost_voucher.json
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.json
 msgid "Total Taxes and Charges (Company Currency)"
-msgstr "税费及附加合计（公司本位币）"
+msgstr "税费及附加合计（公司货币）"
 
 #: erpnext/manufacturing/report/cost_of_poor_quality_report/cost_of_poor_quality_report.py:130
 msgid "Total Time (in Mins)"
