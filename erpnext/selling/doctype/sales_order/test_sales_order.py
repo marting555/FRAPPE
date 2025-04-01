@@ -5461,8 +5461,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 	def test_so_to_si_with_loyalty_point_creating_payment_TC_S_108(self):
 		from erpnext.accounts.doctype.loyalty_program.loyalty_program import get_loyalty_program_details_with_points
 		from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
-		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="_Test Warehouse - _TC")
+		make_item("_Test Item", {"is_stock_item": 1})
 		get_or_create_fiscal_year('_Test Company')
+		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="_Test Warehouse - _TC")
+		
 		so = make_sales_order(qty=4,rate=5000)	
 
 		self.assertEqual(so.status, "To Deliver and Bill", "Sales Order not created")
@@ -5823,11 +5825,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
  
 	@if_app_installed("sales_commission")
 	def test_so_with_maintenance_visit_TC_S_138(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		from erpnext.maintenance.doctype.maintenance_visit.test_maintenance_visit import make_sales_person
 		from erpnext.selling.doctype.sales_order.sales_order import make_maintenance_visit
 
-		item=make_test_item("_Test Item 3")
+		item=make_item("_Test Item 3")
 		item.is_stock_item =0
 		item.save()
 		address=frappe.get_doc(
