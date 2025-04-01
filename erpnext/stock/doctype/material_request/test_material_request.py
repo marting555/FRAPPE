@@ -3059,12 +3059,11 @@ class TestMaterialRequest(FrappeTestCase):
 			fields["gst_hsn_code"] = "01011010"
 
 		qty = 10
-		# frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
 		frappe.db.set_value("Company", company, "stock_adjustment_account", "Stock Adjustment - TCP1")
 		default_warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company with perpetual inventory','is_group':0},['name'])[0].name
 		target_warehouse = default_warehouse
 		item = make_item("Test Use Serial and Batch Item SN Items", fields).name
-		account =  frappe.db.get_value('Account',{'company':company},'name')
+		account =  frappe.db.get_value('Account',{'company':company,'account_currency':"INR","account_type":"Cash"},'name')
 		new_stock = _make_stock_entry(
 			item_code=item,
 			qty=10,
