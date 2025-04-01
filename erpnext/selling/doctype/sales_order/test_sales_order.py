@@ -18,7 +18,6 @@ from erpnext.maintenance.doctype.maintenance_schedule.test_maintenance_schedule 
 from erpnext.maintenance.doctype.maintenance_visit.test_maintenance_visit import (
 	make_maintenance_visit,
 )
-from erpnext.manufacturing.doctype.blanket_order.test_blanket_order import make_blanket_order
 from erpnext.selling.doctype.product_bundle.test_product_bundle import make_product_bundle
 from erpnext.selling.doctype.sales_order.sales_order import (
 	WarehouseRequired,
@@ -1476,7 +1475,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		Second Sales Order should not add on to Blanket Orders Ordered Quantity.
 		"""
 
-		make_blanket_order(blanket_order_type="Selling", quantity=10, rate=10)
+		_make_blanket_order(blanket_order_type="Selling", quantity=10, rate=10)
 
 		so = make_sales_order(item_code="_Test Item", qty=5, against_blanket_order=1)
 		so_doc = frappe.get_doc("Sales Order", so.get("name"))
@@ -2147,7 +2146,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		self.assertEqual(dn.items[0].rate, 90)
 
-	def test_credit_limit_on_so_reopning(self):
+	def test_credit_limit_on_so_reopening(self):
 		# set credit limit
 		company = "_Test Company"
 		customer = frappe.get_doc("Customer", self.customer)
@@ -2169,12 +2168,14 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 		so1 = make_sales_order(qty=9, rate=100, do_not_submit=True)
 		so1.customer = self.customer
+		so1.customer_address = so1.shipping_address_name = None
 		so1.save().submit()
 
 		so1.update_status("Closed")
 
 		so2 = make_sales_order(qty=9, rate=100, do_not_submit=True)
 		so2.customer = self.customer
+		so2.customer_address = so2.shipping_address_name = None
 		so2.save().submit()
 
 		self.assertRaises(frappe.ValidationError, so1.update_status, "Draft")
@@ -6651,3 +6652,7 @@ def get_or_create_fiscal_year(company):
 			'company':company
 		})
 		fiscal_year.save()
+
+def _make_blanket_order(**args):
+	from erpnext.manufacturing.doctype.blanket_order.test_blanket_order import make_blanket_order
+	return make_blanket_order(**args)
