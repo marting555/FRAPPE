@@ -2763,7 +2763,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		records_for_pi('_Test Supplier USD')
 		supplier = frappe.get_doc('Supplier', '_Test Supplier USD')
-		tds_account = frappe.get_doc("Account", "_Test TDS Payable - _TC")
+		tds_account = frappe.get_doc("Account", "Test TDS Payable - _TC")
 		if tds_account.account_currency != "INR":
 			tds_account.account_currency = "INR"
 			tds_account.save()
@@ -3017,7 +3017,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 	def test_tds_computation_summary_report_TC_ACC_094(self):
 		"""Test the TDS Computation Summary report for Purchase Invoice data."""
 		from frappe.desk.query_report import get_report_result
-		from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
+
 		company = "_Test Company"
 		tds_account_args = {
 			"doctype": "Account",
@@ -3157,7 +3157,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		from erpnext.selling.doctype.sales_order.test_sales_order import get_or_create_fiscal_year
 		create_company()
 		warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company','is_group':0},['name'])
-		account = frappe.db.get_all('Account',{'company':'_Test Company'},['name'])
+		account = frappe.db.get_all('Account',{'company':'_Test Company', 'is_group': 0},['name'])
 		cost_center = frappe.db.get_value('Cost Center',{'company':'_Test Company'},'name')
 		create_supplier(
 			supplier_name="_Test Supplier"
@@ -3174,7 +3174,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			company = "_Test Company",
 			supplier_warehouse = warehouse[0]['name'],
 			warehouse = warehouse[1]['name'],
-			expense_account = account[0]['name'],
+			expense_account = 'Cash - _TC',
 			uom= "Box",
 			cost_center = cost_center,
 			rate = 500,
@@ -3200,7 +3200,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			payment_type="Pay",
 			party_type="Supplier",
 			party=f"_Test Supplier",
-			paid_to=paid_to_account, 
+			paid_to='Creditors - _TC',
 			paid_from =paid_from_account,
 			paid_amount=pr.grand_total,
 		)
@@ -3431,6 +3431,11 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		self.assertEqual(pi_status, "Paid")
 	
 	def test_pi_ignore_pricing_rule_TC_B_051(self):
+		frappe.set_user("Administrator")
+		company = "_Test Company"
+		item_code = "Testing-31"
+		target_warehouse = "Stores - _TC"
+		supplier = "_Test Supplier 1"
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		item_price = 130
@@ -4098,27 +4103,22 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		from erpnext.selling.doctype.sales_order.test_sales_order import get_or_create_fiscal_year
 		create_company()
 		parent_warehouse = frappe.db.get_value('Warehouse',{'is_group':1,'company':'_Test Company'},'name')
-		make_item("Book", {"is_stock_item": 1})
 		create_warehouse(
 			warehouse_name="_Test Warehouse 1 - _TC",
 			properties={"parent_warehouse": f"{parent_warehouse}"},
 			company="_Test Company",
-		)
+		) 
 		get_or_create_fiscal_year("_Test Company")
 		create_supplier(supplier_name="_Test Supplier 1")
 		warehouse = frappe.db.get_all('Warehouse',{'is_group':0,'company':'_Test Company'},['name'])
-		account = frappe.db.get_all('Account',{'company':'_Test Company'},['name'])
-		cost_center = frappe.db.get_all('Cost Center',{'company':'_Test Company'},['name'])
 		pi = make_purchase_invoice(
 			supplier="_Test Supplier 1",
-			item_code="Book",
+			item_code=create_item(item_code = "Book", warehouse=warehouse[-1].name, company="_Test Company").item_code,
 			qty=5,
 			update_stock=True,
 			warehouse=warehouse[-1].name,
 			supplier_warehouse = warehouse[0].name,
 			uom = "Box",
-			expense_account = account[3].name,
-			cost_center = cost_center[1].name,
 			do_not_save=True
 		)
 		pi.due_date = today()
@@ -4133,7 +4133,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 		self.assertEqual(len(sle), 1)
 		self.assertEqual(sle[0].item_code, "Book")
-		self.assertEqual(sle[0].warehouse, "Stores - _C")
+		self.assertEqual(sle[0].warehouse, "Stores - _TC")
 		self.assertEqual(sle[0].actual_qty, 5)
 
 		# Check Accounting Ledger Entries
@@ -4144,8 +4144,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 		self.assertTrue(gl_entries)
 		expected_gl_entries = [
-			{"account": "Creditors - _C", "debit": 0, "credit": pi.grand_total},
-			{"account": "Stock In Hand - _C", "debit": pi.grand_total, "credit": 0}
+			{"account": "Creditors - _TC", "debit": 0, "credit": pi.grand_total},
+			{"account": "_Test Account Cost for Goods Sold - _TC", "debit": pi.grand_total, "credit": 0}
 		]
 		for gle in expected_gl_entries:
 			self.assertTrue(any(entry["account"] == gle["account"] and entry["debit"] == gle["debit"] and entry["credit"] == gle["credit"] for entry in gl_entries))
@@ -4183,8 +4183,11 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			error_msg = str(e)
 			self.assertEqual(error_msg, f'Supplier Invoice No exists in Purchase Invoice {pi.name}')
 
-	def setUp(self):	
+	def setUp(self):
+		from erpnext.accounts.doctype.pricing_rule.test_pricing_rule import make_pricing_rule
 		from erpnext.stock.doctype.item.test_item import make_item
+
+		import random
         # Ensure supplier exists
 		if not frappe.db.exists("Company", "_Test Company"):
 			company = frappe.new_doc("Company")
@@ -4210,11 +4213,32 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		}
 		
 		item = make_item("Boat Earpods", it_fields).name
-		create_supplier(supplier_name = "_Test Supplier")
-
-
+		if not frappe.db.exists("Item Price", {"item_code": item, "price_list": "Standard Buying"}):
+			frappe.get_doc({
+				"doctype": "Item Price",
+				"price_list": "Standard Buying",
+				"item_code": item,
+				"price_list_rate": 5000
+			}).insert()
+		
 	def test_purchase_invoice_discount(self):
-        # Create Purchase Invoice
+		if not frappe.db.exists("Pricing Rule", {"title": "Boat Earpods - Monica Discount", "disable": 0}):
+			frappe.get_doc({
+				"doctype": "Pricing Rule",
+				"title": "Boat Earpods - Monica Discount",
+				"company": "_Test Company",
+				"apply_on": "Item Code",
+				"items": [
+					{
+						"item_code": "Boat Earpods"
+					}
+				],
+				"rate_or_discount": "Discount Percentage",
+				"discount_percentage": 10,
+				"selling": 0,
+				"buying": 1
+			}).insert()
+
 		pi = make_purchase_invoice(
 			company = "_Test Company",
 			supplier= "Monica",
@@ -4223,20 +4247,16 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			set_warehouse= create_warehouse("Stores-test", properties=None, company="_Test Company"),
 			warehouse= create_warehouse("Stores-test", properties=None, company="_Test Company"),
 			qty=20,
+			rate=50000,
 			item_code="Boat Earpods",
 		)
-		# pi.insert()
-		# pi.submit()
 
-        # Validate Stock Ledger Entry
 		sle = frappe.get_all("Stock Ledger Entry", 
                              filters={"voucher_no": pi.name},
                              fields=["actual_qty", "valuation_rate", "incoming_rate", "stock_value", "stock_value_difference"])
 		self.assertEqual(sle[0]["actual_qty"], 20)
-		self.assertEqual(sle[0]["valuation_rate"], 4500)
+		self.assertEqual(sle[0]["valuation_rate"], 45)
 
-  
-	
 		
 	def test_lcv_with_purchase_invoice_for_stock_item_TC_ACC_112(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
