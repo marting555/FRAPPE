@@ -3694,9 +3694,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi.submit()
 
 	def test_pi_with_uploader_TC_B_092(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
-		item_1 = make_test_item("_Test Item")
-		item_2 = make_test_item("_Test Item Home Desktop 200")
+		item_1 = create_item("_Test Item")
+		item_2 = create_item("_Test Item Home Desktop 200")
 		pi_data = {
 			"doctype": "Purchase Invoice",
 			"company": "_Test Company",
