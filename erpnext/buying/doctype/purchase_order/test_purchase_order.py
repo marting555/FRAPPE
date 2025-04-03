@@ -8669,38 +8669,42 @@ def create_fiscal_with_company(company):
 	fy_doc.submit()
 
 def get_or_create_fiscal_year(company):
-	from datetime import datetime
-	current_date = datetime.today()
-	formatted_date = current_date.strftime("%d-%m-%Y")
+	from datetime import datetime, date
+	import frappe
+
+	current_date = datetime.today().date()
 	existing_fy = frappe.get_all(
 		"Fiscal Year",
-		filters={ 
-			"year_start_date": ["<=", formatted_date],
-			"year_end_date": [">=", formatted_date],
-			"disabled": 0
-		},
-		fields=["name"]
+		filters={"disabled": 0},
+		fields=["name", "year_start_date", "year_end_date"]
 	)
+	updated_existing_fy = None
+	
+	for d in existing_fy:
+		start_date = d.year_start_date.date() if isinstance(d.year_start_date, datetime) else d.year_start_date
+		end_date = d.year_end_date.date() if isinstance(d.year_end_date, datetime) else d.year_end_date
+		if start_date <= current_date <= end_date:
+			updated_existing_fy = d.name
+			break
 
-	if existing_fy:
-		fiscal_year = frappe.get_doc("Fiscal Year",existing_fy[0].name)
+	is_company = False
+	if updated_existing_fy:
+		fiscal_year = frappe.get_doc("Fiscal Year", updated_existing_fy)
 		for years in fiscal_year.companies:
 			if years.company == company:
-				pass
-			else:
-				fiscal_year.append("companies", {"company": company})
-				fiscal_year.save()
+				is_company = True
+		if not is_company:
+			fiscal_year.append("companies", {"company": company})
+			fiscal_year.save()
 	else:
 		current_year = datetime.now().year
-		first_date = f"01-01-{current_year}"
-		last_date = f"31-12-{current_year}"
+		first_date = date(current_year, 1, 1)
+		last_date = date(current_year, 12, 31)
 		fiscal_year = frappe.new_doc("Fiscal Year")
-		fiscal_year.year = f"{current_year}"
+		fiscal_year.year = f"{current_year}-{company}"
 		fiscal_year.year_start_date = first_date
 		fiscal_year.year_end_date = last_date
-		fiscal_year.append('companies',{
-			'company':company
-		})
+		fiscal_year.append("companies", {"company": company})
 		fiscal_year.save()
 
 def get_company_or_supplier():
