@@ -2044,6 +2044,7 @@
    "label": "Payment Terms"
   }
  ],
+ "grid_page_length": 50,
  "icon": "fa fa-file-text",
  "idx": 181,
  "is_submittable": 1,
@@ -2054,7 +2055,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2025-01-14 11:38:30.446370",
+ "modified": "2025-03-17 19:32:31.809658",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",
@@ -2101,6 +2102,7 @@
  ],
  "quick_entry": 1,
  "search_fields": "posting_date, due_date, customer, base_grand_total, outstanding_amount",
+ "row_format": "Dynamic",
  "show_name_in_global_search": 1,
  "sort_field": "modified",
  "sort_order": "DESC",

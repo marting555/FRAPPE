@@ -187,6 +187,9 @@ def update_stock(ctx, out, doc=None):
 		and out.warehouse
 		and out.stock_qty > 0
 	):
+		if doc and isinstance(doc, dict):
+			doc = frappe._dict(doc)
+			 
 		kwargs = frappe._dict(
 			{
 				"item_code": ctx.item_code,
@@ -206,13 +209,23 @@ def update_stock(ctx, out, doc=None):
 				filter_batches(batches, doc)
 
 			for batch_no, batch_qty in batches.items():
+				rate = get_batch_based_item_price(
+					{"price_list": doc.get("selling_price_list"), "uom": out.uom, "batch_no": batch_no},
+					out.item_code,
+				)
+
 				if batch_qty >= qty:
 					out.update({"batch_no": batch_no, "actual_batch_qty": qty})
+					if rate:
+						out.update({"rate": rate, "price_list_rate": rate})
+
 					break
 				else:
 					qty -= batch_qty
 
 				out.update({"batch_no": batch_no, "actual_batch_qty": batch_qty})
+				if rate:
+					out.update({"rate": rate, "price_list_rate": rate})
 
 		if out.has_serial_no and out.has_batch_no and has_incorrect_serial_nos(ctx, out):
 			kwargs["batches"] = [ctx.get("batch_no")] if ctx.get("batch_no") else [out.get("batch_no")]
@@ -1040,7 +1053,11 @@ def get_batch_based_item_price(params, item_code) -> float:
 	if not item_price:
 		item_price = get_item_price(params, item_code, ignore_party=True, force_batch_no=True)
 
-	if item_price and item_price[0][2] == params.get("uom"):
+	if (
+ 		item_price
+ 		and item_price[0][2] == params.get("uom")
+ 		and not params.get("items", [{}])[0].get("is_free_item", 0)
+ 	):
 		return item_price[0][1]
 
 	return 0.0

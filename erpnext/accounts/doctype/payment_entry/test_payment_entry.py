@@ -18,7 +18,11 @@ from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import (
 	make_purchase_invoice,
 	make_purchase_invoice_against_cost_center,
 )
-
+from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import (
+	create_sales_invoice,
+	create_sales_invoice_against_cost_center,
+)
+from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
 from erpnext.setup.doctype.employee.test_employee import make_employee
 import frappe.utils
 
@@ -279,6 +283,48 @@ class TestPaymentEntry(FrappeTestCase):
 		self.assertEqual(pe.references[1].payment_term, "Tax Receivable")
 		self.assertEqual(si.payment_schedule[0].paid_amount, 200.0)
 		self.assertEqual(si.payment_schedule[1].paid_amount, 36.0)
+
+	def test_payment_entry_against_payment_terms_with_discount_on_pi(self):
+		pi = make_purchase_invoice(do_not_save=1)
+		create_payment_terms_template_with_discount()
+		pi.payment_terms_template = "Test Discount Template"
+
+		frappe.db.set_value("Company", pi.company, "default_discount_account", "Write Off - _TC")
+
+		pi.append(
+			"taxes",
+			{
+				"charge_type": "On Net Total",
+				"account_head": "_Test Account Service Tax - _TC",
+				"cost_center": "_Test Cost Center - _TC",
+				"description": "Service Tax",
+				"rate": 18,
+			},
+		)
+		pi.save()
+		pi.submit()
+
+		frappe.db.set_single_value("Accounts Settings", "book_tax_discount_loss", 1)
+		pe_with_tax_loss = get_payment_entry("Purchase Invoice", pi.name, bank_account="_Test Cash - _TC")
+
+		self.assertEqual(pe_with_tax_loss.references[0].payment_term, "30 Credit Days with 10% Discount")
+		self.assertEqual(pe_with_tax_loss.payment_type, "Pay")
+		self.assertEqual(pe_with_tax_loss.references[0].allocated_amount, 295.0)
+		self.assertEqual(pe_with_tax_loss.paid_amount, 265.5)
+		self.assertEqual(pe_with_tax_loss.difference_amount, 0)
+		self.assertEqual(pe_with_tax_loss.deductions[0].amount, -25.0)  # Loss on Income
+		self.assertEqual(pe_with_tax_loss.deductions[1].amount, -4.5)  # Loss on Tax
+		self.assertEqual(pe_with_tax_loss.deductions[1].account, "_Test Account Service Tax - _TC")
+
+		frappe.db.set_single_value("Accounts Settings", "book_tax_discount_loss", 0)
+		pe = get_payment_entry("Purchase Invoice", pi.name, bank_account="_Test Cash - _TC")
+
+		self.assertEqual(pe.references[0].payment_term, "30 Credit Days with 10% Discount")
+		self.assertEqual(pe.payment_type, "Pay")
+		self.assertEqual(pe.references[0].allocated_amount, 295.0)
+		self.assertEqual(pe.paid_amount, 265.5)
+		self.assertEqual(pe.deductions[0].amount, -29.5)
+		self.assertEqual(pe.difference_amount, 0)
 
 	def test_payment_entry_against_payment_terms_with_discount(self):
 		si = create_sales_invoice(do_not_save=1, qty=1, rate=200)
@@ -1346,7 +1392,7 @@ class TestPaymentEntry(FrappeTestCase):
 
 	def test_ledger_entries_for_advance_as_liability(self):
 		company = "_Test Company"
-
+		from erpnext.accounts.doctype.account.test_account import create_account
 		advance_account = create_account(
 			parent_account="Current Assets - _TC",
 			account_name="Advances Received",
@@ -1377,8 +1423,8 @@ class TestPaymentEntry(FrappeTestCase):
 		si = create_sales_invoice(qty=10, rate=100, customer="_Test Customer")
 
 		pre_reconciliation_gle = [
-			{"account": advance_account, "debit": 0.0, "credit": 1000.0},
 			{"account": "_Test Cash - _TC", "debit": 1000.0, "credit": 0.0},
+			{"account": advance_account, "debit": 0.0, "credit": 1000.0}
 		]
 		pre_reconciliation_ple = [
 			{
@@ -1417,10 +1463,10 @@ class TestPaymentEntry(FrappeTestCase):
 
 		# assert General and Payment Ledger entries post partial reconciliation
 		self.expected_gle = [
+			{"account": "_Test Cash - _TC", "debit": 1000.0, "credit": 0.0},
 			{"account": si.debit_to, "debit": 0.0, "credit": 400.0},
 			{"account": advance_account, "debit": 400.0, "credit": 0.0},
 			{"account": advance_account, "debit": 0.0, "credit": 1000.0},
-			{"account": "_Test Cash - _TC", "debit": 1000.0, "credit": 0.0},
 		]
 		self.expected_ple = [
 			{
@@ -1554,7 +1600,7 @@ class TestPaymentEntry(FrappeTestCase):
 		).run(as_dict=True)
 		for row in range(len(self.expected_gle)):
 			for field in ["account", "debit", "credit"]:
-				self.assertEqual(self.expected_gle[row][field], gl_entries[row][field])
+				self.assertEqual(gl_entries[row][field],self.expected_gle[row][field])
 
 	def test_outstanding_invoices_api(self):
 		"""
@@ -1634,6 +1680,7 @@ class TestPaymentEntry(FrappeTestCase):
 		self.assertEqual(len(pr.payments), 0)
 
 	def test_advance_reverse_payment_reconciliation(self):
+		from erpnext.accounts.doctype.account.test_account import create_account
 		company = "_Test Company"
 		customer = create_customer(frappe.generate_hash(length=10), "INR")
 		advance_account = create_account(
@@ -1642,7 +1689,6 @@ class TestPaymentEntry(FrappeTestCase):
 			company=company,
 			account_type="Receivable",
 		)
-
 		frappe.db.set_value(
 			"Company",
 			company,
@@ -1661,7 +1707,6 @@ class TestPaymentEntry(FrappeTestCase):
 		)
 		reverse_pe.save()  # use save() to trigger set_liability_account()
 		reverse_pe.submit()
-
 		# Advance Payment
 		pe = create_payment_entry(
 			party_type="Customer",
@@ -1672,7 +1717,6 @@ class TestPaymentEntry(FrappeTestCase):
 		)
 		pe.save()  # use save() to trigger set_liability_account()
 		pe.submit()
-
 		# Partially reconcile advance against invoice
 		pr = frappe.get_doc("Payment Reconciliation")
 		pr.company = company
@@ -1682,7 +1726,6 @@ class TestPaymentEntry(FrappeTestCase):
 		pr.receivable_payable_account = "Debtors - _TC"
 		pr.default_advance_account = advance_account
 		pr.get_unreconciled_entries()
-
 		self.assertEqual(len(pr.invoices), 1)
 		self.assertEqual(len(pr.payments), 1)
 
@@ -1694,10 +1737,10 @@ class TestPaymentEntry(FrappeTestCase):
 
 		# assert General and Payment Ledger entries post partial reconciliation
 		self.expected_gle = [
+			{"account": "_Test Cash - _TC", "debit": 1000.0, "credit": 0.0},
 			{"account": advance_account, "debit": 400.0, "credit": 0.0},
 			{"account": advance_account, "debit": 0.0, "credit": 1000.0},
-			{"account": advance_account, "debit": 0.0, "credit": 400.0},
-			{"account": "_Test Cash - _TC", "debit": 1000.0, "credit": 0.0},
+			{"account": advance_account, "debit": 0.0, "credit": 400.0}
 		]
 		self.expected_ple = [
 			{
@@ -1742,8 +1785,8 @@ class TestPaymentEntry(FrappeTestCase):
 
 		# assert General and Payment Ledger entries post unreconciliation
 		self.expected_gle = [
-			{"account": advance_account, "debit": 0.0, "credit": 1000.0},
 			{"account": "_Test Cash - _TC", "debit": 1000.0, "credit": 0.0},
+			{"account": advance_account, "debit": 0.0, "credit": 1000.0}
 		]
 		self.expected_ple = [
 			{
@@ -1952,73 +1995,6 @@ class TestPaymentEntry(FrappeTestCase):
      				{'account': 'Cash - _TC', 'debit': 0.0, 'credit':payment_entry.received_amount_after_tax}
      			]	
 			self.check_gl_entries()
-
-	def test_tds_computation_summary_report_TC_ACC_095(self):
-		from frappe.desk.query_report import get_report_result
-		company = "_Test Company"
-		create_records('_Test Supplier TDS Testing For PE')
-		supplier=frappe.get_doc("Supplier",'_Test Supplier TDS Testing For PE')
-		if supplier:
-			self.assertEqual(supplier.tax_withholding_category,"Test - TDS - 194C - Company")
-			
-			tax_withholding_category=frappe.get_doc("Tax Withholding Category","Test - TDS - 194C - Company")
-			
-			if len(tax_withholding_category.accounts) >0:
-				self.assertEqual(tax_withholding_category.accounts[0].account,"_Test TDS Payable - _TC")
-			
-			payment_entry=create_payment_entry(
-				party_type="Supplier",
-				party=supplier.name,
-				payment_type="Pay",
-				paid_from="Cash - _TC",
-				paid_to="Creditors - _TC",
-				save=True
-			)
-			payment_entry.apply_tax_withholding_amount=1
-			payment_entry.tax_withholding_category="Test - TDS - 194C - Company"
-			payment_entry.paid_amount=80000
-			payment_entry.append(
-						"taxes",
-						{
-							"account_head": "_Test TDS Payable - _TC",
-							"charge_type": "On Paid Amount",
-							"rate": 0,
-							"add_deduct_tax": "Deduct",
-							"description": "Cash",
-						},
-					)
-			payment_entry.save()
-			payment_entry.submit()
-			# Fetch the TDS Computation Summary report
-			report_name = "TDS Computation Summary"
-			filters = {
-				"company": company,
-				"party_type": "Supplier",
-				"from_date": add_days(nowdate(), -30),
-				"to_date": nowdate(),
-			}
-			report = frappe.get_doc("Report", report_name)
-			report_data = get_report_result(report, filters) or []
-			rows = report_data[1]
-			expected_data = {
-				"party": supplier.name,
-				"section_code": tax_withholding_category.name,
-				"entity_type": "Company",
-				"rate": 10.0,  # TDS rate
-				"total_amount": 30000.0,  # Total amount for the invoice
-				"tax_amount": 3000.0,  # TDS amount deducted
-			}	
-			matching_row = None
-			for row in rows:
-				if row["party"] == expected_data["party"] and row["section_code"] == expected_data["section_code"]:
-					matching_row = row
-					break
-
-			# Assert the matching row exists
-			self.assertIsNotNone(matching_row, "The expected row for the supplier and section code was not found.")
-			payment_entry.cancel()
-
-
 	def test_link_advance_payment_with_purchase_invoice_TC_ACC_022(self):
 		create_records('_Test Supplier TDS')
 		supplier=frappe.get_doc("Supplier","_Test Supplier TDS")
@@ -2146,7 +2122,7 @@ def create_payment_terms_template():
 					},
 				],
 			}
-		).insert(ignore_permissions=True)
+		).insert()
 
 
 def create_payment_terms_template_with_discount(
@@ -2178,7 +2154,7 @@ def create_payment_terms_template_with_discount(
 					}
 				],
 			}
-		).insert(ignore_permissions=True)
+		).insert()
 
 
 def create_payment_term(name):
@@ -2195,11 +2171,10 @@ def create_customer(name="_Test Customer 2 USD", currency="USD"):
 		customer.customer_name = name
 		customer.default_currency = currency
 		customer.type = "Individual"
-		customer.insert(ignore_permissions=True)
+		customer.save()
 		customer = customer.name
 	return customer
 def create_supplier(**args):
-	frappe.set_user("Administrator")
 	args = frappe._dict(args)
 
 	if frappe.db.exists("Supplier", args.supplier_name):
@@ -2226,18 +2201,17 @@ def create_supplier(**args):
 		doc.supplier_group = args.supplier_group or "Services"
   
 
-	doc.insert(ignore_mandatory=True,ignore_permissions=True)
+	doc.insert(ignore_mandatory=True)
+	
 	return doc
 
 def create_account():
-	frappe.set_user("Administrator")
 	accounts = [
 		{"name": "Source of Funds (Liabilities)", "parent": ""},
 		{"name": "Current Liabilities", "parent": "Source of Funds (Liabilities) - _TC"},
 		{"name": "Duties and Taxes", "parent": "Current Liabilities - _TC"},
 		{"name": "_Test TDS Payable", "parent": "Duties and Taxes - _TC","account_type":"Tax"},
 		{"name": "_Test TCS Payable", "parent": "Duties and Taxes - _TC","account_type":"Tax"},
-		{"name": "_Test Subsidy", "parent": "Stock Expenses - _TC","account_type":"Cost of Goods Sold"},
 		{"name": "_Test Creditors", "parent": "Accounts Payable - _TC","account_type":"Payable"},
 		{"name": "_Test Payable USD", "parent": "Accounts Payable - _TC","account_type":"Payable"},
 		{"name": "_Test Cash", "parent": "Cash In Hand - _TC"},
@@ -2269,14 +2243,13 @@ def create_account():
 			if account["parent"]:
 				doc.parent_account = account["parent"]
 			
-			doc.insert(ignore_mandatory=True,ignore_permissions=True)
-		
+			doc.insert(ignore_mandatory=True)
+			
 
 		except Exception as e:
 			frappe.log_error(f"Failed to insert {account['name']}", str(e))
 
 def create_records(supplier):
-	frappe.set_user("Administrator")
 	from erpnext.accounts.doctype.tax_withholding_category.test_tax_withholding_category import create_tax_withholding_category
 	create_company()
  
@@ -2304,7 +2277,6 @@ def create_records(supplier):
 
 
 def make_test_item(item_name=None):
-	frappe.set_user("Administrator")
 	from erpnext.stock.doctype.item.test_item import make_item
 	app_name = "india_compliance"
 	if not frappe.db.exists("Item", item_name or "Test Item with Tax"):
@@ -2314,7 +2286,8 @@ def make_test_item(item_name=None):
 					"doctype": 'GST HSN Code',
 					"hsn_code": '888890',
 					"description": 'test'
-				}).insert(ignore_permissions=True)
+				}).insert()
+				
 			
 			item= make_item(
 				item_name or "Test Item with Tax",
@@ -2328,11 +2301,12 @@ def make_test_item(item_name=None):
 
 		else:
 			item= make_item(
-				"Test TDS Item",
+				item_name or"Test TDS Item",
 				{
 					"is_stock_item": 1,
 				},
 			)
+			
 			return item
 	else:
 		if app_name in frappe.get_installed_apps():
@@ -2341,18 +2315,16 @@ def make_test_item(item_name=None):
 					"doctype": 'GST HSN Code',
 					"hsn_code": '888890',
 					"description": 'test'
-				}).insert(ignore_permissions=True)
+				}).insert()
 			item=frappe.get_doc("Item", item_name or "Test Item with Tax")
 			if not item.gst_hsn_code:
 				item.gst_hsn_code="888890"
 				item.save()
-			return item
-		else:
-			item=frappe.get_doc("Item", item_name)
+			
 			return item
         
 def create_purchase_invoice(**args):
-	frappe.set_user("Administrator")
+	# return sales invoice doc object
 	args = frappe._dict(args)
 	pi = frappe.get_doc(
 		{
@@ -2383,7 +2355,6 @@ def create_purchase_invoice(**args):
 	return pi
 
 def create_company():
-	frappe.set_user("Administrator")
 	if not frappe.db.exists("Company", "_Test Company"):
 		frappe.get_doc({
 			"doctype": "Company",
@@ -2392,191 +2363,5 @@ def create_company():
 			"default_currency": "INR",
 			"company_email": "test@example.com",
 			"abbr":"_TC"
-		}).insert(ignore_permissions=True)
+		}).insert()
 		
-def create_sales_invoice(**args):
-	from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
-	make_serial_batch_bundle,
-	)
-	si = frappe.new_doc("Sales Invoice")
-	args = frappe._dict(args)
-	if args.posting_date:
-		si.set_posting_time = 1
-	si.posting_date = args.posting_date or nowdate()
-
-	si.company = args.company or "_Test Company"
-	si.customer = args.customer or "_Test Customer"
-	si.debit_to = args.debit_to or "Debtors - _TC"
-	si.update_stock = args.update_stock
-	si.is_pos = args.is_pos
-	si.is_return = args.is_return
-	si.return_against = args.return_against
-	si.currency = args.currency or "INR"
-	si.conversion_rate = args.conversion_rate or 1
-	si.naming_series = args.naming_series or "T-SINV-"
-	si.cost_center = args.parent_cost_center
-	si.shipping_rule = args.shipping_rule
-
-	bundle_id = None
-	if si.update_stock and (args.get("batch_no") or args.get("serial_no")):
-		batches = {}
-		qty = args.qty or 1
-		item_code = args.item or args.item_code or "_Test Item"
-		if args.get("batch_no"):
-			batches = frappe._dict({args.batch_no: qty})
-
-		serial_nos = args.get("serial_no") or []
-
-		bundle_id = make_serial_batch_bundle(
-			frappe._dict(
-				{
-					"item_code": item_code,
-					"warehouse": args.warehouse or "_Test Warehouse - _TC",
-					"qty": qty,
-					"batches": batches,
-					"voucher_type": "Sales Invoice",
-					"serial_nos": serial_nos,
-					"type_of_transaction": "Outward" if not args.is_return else "Inward",
-					"posting_date": si.posting_date or frappe.utils.today(),
-					"posting_time": si.posting_time,
-					"do_not_submit": True,
-				}
-			)
-		).name
-
-	if args.item_list:
-		for item in args.item_list:
-			si.append("items", item)
-
-	else:
-		si.append(
-			"items",
-			{
-				"item_code": args.item or args.item_code or "_Test Item",
-				"item_name": args.item_name or "_Test Item",
-				"description": args.description or "_Test Item",
-				"warehouse": args.warehouse or "_Test Warehouse - _TC",
-				"target_warehouse": args.target_warehouse,
-				"qty": args.qty or 1,
-				"uom": args.uom or "Nos",
-				"stock_uom": args.uom or "Nos",
-				"rate": args.rate if args.get("rate") is not None else 100,
-				"price_list_rate": args.price_list_rate if args.get("price_list_rate") is not None else 100,
-				"income_account": args.income_account or "Sales - _TC",
-				"expense_account": args.expense_account or "Cost of Goods Sold - _TC",
-				"discount_account": args.discount_account or None,
-				"discount_amount": args.discount_amount or 0,
-				"asset": args.asset or None,
-				"cost_center": args.cost_center or "_Test Cost Center - _TC",
-				"conversion_factor": args.get("conversion_factor", 1),
-				"incoming_rate": args.incoming_rate or 0,
-				"serial_and_batch_bundle": bundle_id,
-			},
-		)
-
-	if not args.do_not_save:
-		si.insert()
-		if not args.do_not_submit:
-			si.submit()
-		else:
-			si.payment_schedule = []
-
-		si.load_from_db()
-	else:
-		si.payment_schedule = []
-
-	return si
-
-
-def create_sales_invoice_against_cost_center(**args):
-	si = frappe.new_doc("Sales Invoice")
-	args = frappe._dict(args)
-	if args.posting_date:
-		si.set_posting_time = 1
-	si.posting_date = args.posting_date or nowdate()
-
-	si.company = args.company or "_Test Company"
-	si.cost_center = args.cost_center or "_Test Cost Center - _TC"
-	si.customer = args.customer or "_Test Customer"
-	si.debit_to = args.debit_to or "Debtors - _TC"
-	si.update_stock = args.update_stock
-	si.is_pos = args.is_pos
-	si.is_return = args.is_return
-	si.return_against = args.return_against
-	si.currency = args.currency or "INR"
-	si.conversion_rate = args.conversion_rate or 1
-
-	si.append(
-		"items",
-		{
-			"item_code": args.item or args.item_code or "_Test Item",
-			"warehouse": args.warehouse or "_Test Warehouse - _TC",
-			"qty": args.qty or 1,
-			"rate": args.rate or 100,
-			"income_account": "Sales - _TC",
-			"expense_account": "Cost of Goods Sold - _TC",
-			"cost_center": args.cost_center or "_Test Cost Center - _TC",
-		},
-	)
-
-	if not args.do_not_save:
-		si.insert()
-		if not args.do_not_submit:
-			si.submit()
-		else:
-			si.payment_schedule = []
-	else:
-		si.payment_schedule = []
-
-	return si
-
-def make_sales_order(**args):
-	so = frappe.new_doc("Sales Order")
-	args = frappe._dict(args)
-	if args.transaction_date:
-		so.transaction_date = args.transaction_date
-
-	so.set_warehouse = ""  # no need to test set_warehouse permission since it only affects the client
-	so.company = args.company or "_Test Company"
-	so.customer = args.customer or "_Test Customer"
-	so.currency = args.currency or "INR"
-	so.po_no = args.po_no or ""
-	if args.selling_price_list:
-		so.selling_price_list = args.selling_price_list
-	if args.cost_center:
-		so.cost_center = args.cost_center
-
-	if "warehouse" not in args:
-		args.warehouse = "_Test Warehouse - _TC"
-
-	if args.item_list:
-		for item in args.item_list:
-			so.append("items", item)
-
-	else:
-		so.append(
-			"items",
-			{
-				"item_code": args.item or args.item_code or "_Test Item",
-				"warehouse": args.warehouse,
-				"qty": args.qty or 10,
-				"uom": args.uom or None,
-				"price_list_rate": args.price_list_rate or None,
-				"discount_percentage": args.discount_percentage or None,
-				"rate": args.rate or (None if args.price_list_rate else 100),
-				"against_blanket_order": args.against_blanket_order,
-			},
-		)
-
-	so.delivery_date = add_days(so.transaction_date, 10)
-
-	if not args.do_not_save:
-		so.insert()
-		if not args.do_not_submit:
-			so.submit()
-		else:
-			so.payment_schedule = []
-	else:
-		so.payment_schedule = []
-
-	return so

@@ -335,7 +335,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 			let d = locals[cdt][cdn];
 			return {
 				filters: {
-					docstatus: 1,
+					docstatus: ("<", 2),
 					inspection_type: inspection_type,
 					reference_name: doc.name,
 					item_code: d.item_code
@@ -1329,6 +1329,8 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 				() => this.calculate_stock_uom_rate(doc, cdt, cdn),
 				() => this.apply_pricing_rule(item, true)
 			]);
+		} else {
+			this.conversion_factor(doc, cdt, cdn, true)
 		}
 	}
 
@@ -1850,7 +1852,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 
 		const exist_items = items.map(row => { return {item_code: row.item_code, pricing_rules: row.pricing_rules};});
 
-		args.free_item_data.forEach(pr_row => {
+		args.free_item_data.forEach(async pr_row => {
 			let row_to_modify = {};
 
 			// If there are no free items, or if the current free item doesn't exist in the table, add it
@@ -1868,6 +1870,14 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 			for (let key in pr_row) {
 				row_to_modify[key] = pr_row[key];
 			}
+
+			if (this.frm.doc.hasOwnProperty("is_pos") && this.frm.doc.is_pos) {
+				let r = await frappe.db.get_value("POS Profile", this.frm.doc.pos_profile, "cost_center");
+				if (r.message.cost_center) {
+					row_to_modify["cost_center"] = r.message.cost_center;
+				}
+			}
+			
 			this.frm.script_manager.copy_from_first_row("items", row_to_modify, ["expense_account", "income_account"]);
 		});
 
@@ -2354,20 +2364,36 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 			primary_action_label: __("Create")
 		});
 
-		this.frm.doc.items.forEach(item => {
-			if (this.has_inspection_required(item)) {
-				let dialog_items = dialog.fields_dict.items;
-				dialog_items.df.data.push({
-					"item_code": item.item_code,
-					"item_name": item.item_name,
-					"qty": item.qty,
-					"description": item.description,
-					"serial_no": item.serial_no,
-					"batch_no": item.batch_no,
-					"sample_size": item.sample_quantity,
-					"child_row_reference": item.name,
+		frappe.call({
+			method: "erpnext.controllers.stock_controller.check_item_quality_inspection",
+			args: {
+				doctype: this.frm.doc.doctype,
+				items: this.frm.doc.items
+			},
+			freeze: true,
+			callback: function (r) {
+				r.message.forEach(item => {
+					if (me.has_inspection_required(item)) {
+						let dialog_items = dialog.fields_dict.items;
+						dialog_items.df.data.push({
+							"item_code": item.item_code,
+							"item_name": item.item_name,
+							"qty": item.qty,
+							"description": item.description,
+							"serial_no": item.serial_no,
+							"batch_no": item.batch_no,
+							"sample_size": item.sample_quantity,
+							"child_row_reference": item.name,
+						});
+						dialog_items.grid.refresh();
+					}
 				});
-				dialog_items.grid.refresh();
+				data = dialog.fields_dict.items.df.data;
+				if (!data.length) {
+					frappe.msgprint(__("All items in this document already have a linked Quality Inspection."));
+				} else {
+					dialog.show();
+				}
 			}
 		});
 
@@ -2446,6 +2472,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 				'item_code': item.item_code,
 				'valid_from': ["<=", doc.transaction_date || doc.bill_date || doc.posting_date],
 				'item_group': item.item_group,
+				"base_net_rate": item.base_net_rate,
 			}
 
 			if (doc.tax_category)

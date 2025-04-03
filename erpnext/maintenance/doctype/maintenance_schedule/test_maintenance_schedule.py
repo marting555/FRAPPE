@@ -6,13 +6,14 @@ import unittest
 import frappe
 from frappe.utils import format_date
 from frappe.utils.data import add_days, formatdate, today
+from frappe.tests.utils import if_app_installed
 
 from erpnext.maintenance.doctype.maintenance_schedule.maintenance_schedule import (
 	get_serial_nos_from_schedule,
 	make_maintenance_visit,
 )
 from erpnext.stock.doctype.item.test_item import create_item
-from erpnext.stock.doctype.stock_entry.test_stock_entry import make_serialized_item
+# from erpnext.stock.doctype.stock_entry.test_stock_entry import make_serialized_item
 
 # test_records = frappe.get_test_records('Maintenance Schedule')
 
@@ -123,6 +124,7 @@ class TestMaintenanceSchedule(unittest.TestCase):
 
 		frappe.db.rollback()
 
+	@if_app_installed("sales_commission")
 	def test_schedule_with_serials(self):
 		# Checks whether serials are automatically updated when changing in items table.
 		# Also checks if other fields trigger generate schdeule if changed in items table.
@@ -155,6 +157,7 @@ class TestMaintenanceSchedule(unittest.TestCase):
 
 
 def make_serial_item_with_serial(item_code):
+	from erpnext.stock.doctype.stock_entry.test_stock_entry import make_serialized_item
 	serial_item_doc = create_item(item_code, is_stock_item=1)
 	if not serial_item_doc.has_serial_no or not serial_item_doc.serial_no_series:
 		serial_item_doc.has_serial_no = 1

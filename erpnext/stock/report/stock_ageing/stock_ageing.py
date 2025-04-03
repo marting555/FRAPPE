@@ -7,7 +7,7 @@ from operator import itemgetter
 
 import frappe
 from frappe import _
-from frappe.utils import cint, date_diff, flt
+from frappe.utils import cint, date_diff, flt, get_datetime
 
 from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 
@@ -51,6 +51,11 @@ def format_report_data(filters: Filters, item_details: dict, to_date: str) -> li
 		latest_age = date_diff(to_date, fifo_queue[-1][1])
 		range_values = get_range_age(filters, fifo_queue, to_date, item_dict)
 
+		check_and_replace_valuations_if_moving_average(
+ 			range_values, details.valuation_method, details.valuation_rate
+ 		)
+ 
+
 		row = [details.name, details.item_name, details.description, details.item_group, details.brand]
 
 		if filters.get("show_warehouse_wise_stock"):
@@ -71,6 +76,13 @@ def format_report_data(filters: Filters, item_details: dict, to_date: str) -> li
 
 	return data
 
+def check_and_replace_valuations_if_moving_average(range_values, item_valuation_method, valuation_rate):
+ 	if item_valuation_method == "Moving Average" or (
+ 		not item_valuation_method
+ 		and frappe.db.get_single_value("Stock Settings", "valuation_method") == "Moving Average"
+ 	):
+ 		for i in range(0, len(range_values), 2):
+ 			range_values[i + 1] = range_values[i] * valuation_rate
 
 def get_average_age(fifo_queue: list, to_date: str) -> float:
 	batch_age = age_qty = total_qty = 0.0
@@ -267,7 +279,7 @@ class FIFOSlots:
 
 			self.__update_balances(d, key)
 
-		# Note that stock_ledger_entries is an iterator, you cannot reuse it like a list
+		# Note that stock_ledger_entries is an iterator, you can not reuse it like a list
 		del stock_ledger_entries
 
 		if not self.filters.get("show_warehouse_wise_stock"):
@@ -395,6 +407,7 @@ class FIFOSlots:
 			self.item_details[key]["total_qty"] += row.actual_qty
 
 		self.item_details[key]["has_serial_no"] = row.has_serial_no
+		self.item_details[key]["details"].valuation_rate = row.valuation_rate
 
 	def __aggregate_details_by_item(self, wh_wise_data: dict) -> dict:
 		"Aggregate Item-Wh wise data into single Item entry."
@@ -423,6 +436,7 @@ class FIFOSlots:
 	def __get_stock_ledger_entries(self) -> Iterator[dict]:
 		sle = frappe.qb.DocType("Stock Ledger Entry")
 		item = self.__get_item_query()  # used as derived table in sle query
+		to_date = get_datetime(self.filters.get("to_date") + " 23:59:59")
 
 		sle_query = (
 			frappe.qb.from_(sle)
@@ -435,8 +449,10 @@ class FIFOSlots:
 				item.description,
 				item.stock_uom,
 				item.has_serial_no,
+				item.valuation_method,
 				sle.actual_qty,
 				sle.stock_value_difference,
+				sle.valuation_rate,
 				sle.posting_date,
 				sle.voucher_type,
 				sle.voucher_no,
@@ -449,7 +465,7 @@ class FIFOSlots:
 			.where(
 				(sle.item_code == item.name)
 				& (sle.company == self.filters.get("company"))
-				& (sle.posting_date <= self.filters.get("to_date"))
+				& (sle.posting_datetime <= to_date)
 				& (sle.is_cancelled != 1)
 			)
 		)
@@ -466,8 +482,7 @@ class FIFOSlots:
 			if warehouses:
 				sle_query = sle_query.where(sle.warehouse.isin(warehouses))
 
-		sle_query = sle_query.orderby(sle.posting_date, sle.posting_time, sle.creation, sle.actual_qty)
-
+		sle_query = sle_query.orderby(sle.posting_datetime, sle.creation)
 		return sle_query.run(as_dict=True, as_iterator=True)
 
 	def __get_bundle_wise_serial_nos(self) -> dict:
@@ -504,7 +519,14 @@ class FIFOSlots:
 		item_table = frappe.qb.DocType("Item")
 
 		item = frappe.qb.from_("Item").select(
-			"name", "item_name", "description", "stock_uom", "brand", "item_group", "has_serial_no"
+			"name",
+ 			"item_name",
+ 			"description",
+ 			"stock_uom",
+ 			"brand",
+ 			"item_group",
+ 			"has_serial_no",
+ 			"valuation_method",
 		)
 
 		if self.filters.get("item_code"):

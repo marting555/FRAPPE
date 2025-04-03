@@ -10,6 +10,7 @@ from frappe.model.document import Document
 from frappe.model.mapper import get_mapped_doc
 from frappe.query_builder import Case
 from frappe.query_builder.functions import Sum
+from frappe.tests.utils import if_app_installed
 from frappe.utils import (
 	cint,
 	date_diff,
@@ -162,7 +163,7 @@ class WorkOrder(Document):
 		if self.source_warehouse:
 			self.set_warehouses()
 
-		validate_uom_is_integer(self, "stock_uom", ["qty", "produced_qty"])
+		validate_uom_is_integer(self, "stock_uom", ["required_qty"])
 
 		self.set_required_items(reset_only_qty=len(self.get("required_items")))
 
@@ -185,9 +186,11 @@ class WorkOrder(Document):
 	def validate_sales_order(self):
 		if self.sales_order:
 			self.check_sales_order_on_hold_or_close()
+			is_projects_installed = "projects" in frappe.get_installed_apps()
+			project_column = ", so.project" if is_projects_installed else ""
 			so = frappe.db.sql(
 				"""
-				select so.name, so_item.delivery_date, so.project
+				select so.name, so_item.delivery_date{0}
 				from `tabSales Order` so
 				inner join `tabSales Order Item` so_item on so_item.parent = so.name
 				left join `tabProduct Bundle Item` pk_item on so_item.item_code = pk_item.parent
@@ -195,7 +198,7 @@ class WorkOrder(Document):
 					and so.skip_delivery_note  = 0 and (
 					so_item.item_code=%s or
 					pk_item.item_code=%s )
-			""",
+			""".format(project_column),
 				(self.sales_order, self.production_item, self.production_item),
 				as_dict=1,
 			)
@@ -204,7 +207,7 @@ class WorkOrder(Document):
 				so = frappe.db.sql(
 					"""
 					select
-						so.name, so_item.delivery_date, so.project
+						so.name, so_item.delivery_date{0}
 					from
 						`tabSales Order` so, `tabSales Order Item` so_item, `tabPacked Item` packed_item
 					where so.name=%s
@@ -213,7 +216,7 @@ class WorkOrder(Document):
 						and so.skip_delivery_note = 0
 						and so_item.item_code = packed_item.parent_item
 						and so.docstatus = 1 and packed_item.item_code=%s
-				""",
+				""".format(project_column),
 					(self.sales_order, self.production_item),
 					as_dict=1,
 				)
@@ -1295,15 +1298,18 @@ def get_item_details(item, project=None, skip_bom_info=False, throw=True):
 			frappe.msgprint(msg, raise_exception=throw, indicator="yellow", alert=(not throw))
 
 			return res
-
+		
+	fields = ["allow_alternative_item", "transfer_material_against", "item_name"]
+	if "projects" in frappe.get_installed_apps():
+		fields.append("project")
 	bom_data = frappe.db.get_value(
 		"BOM",
 		res["bom_no"],
-		["project", "allow_alternative_item", "transfer_material_against", "item_name"],
+		fields,
 		as_dict=1,
 	)
-
-	res["project"] = project or bom_data.pop("project")
+	if "projects" in frappe.get_installed_apps():
+		res["project"] = project or bom_data.pop("project")
 	res.update(bom_data)
 	res.update(check_if_scrap_warehouse_mandatory(res["bom_no"]))
 
@@ -1428,7 +1434,8 @@ def make_stock_entry(work_order_id, purpose, qty=None, target_warehouse=None):
 
 	if purpose == "Material Transfer for Manufacture":
 		stock_entry.to_warehouse = wip_warehouse
-		stock_entry.project = work_order.project
+		if "projects" in frappe.get_installed_apps():
+			stock_entry.project = work_order.project
 	else:
 		stock_entry.from_warehouse = (
 			work_order.source_warehouse
@@ -1436,7 +1443,8 @@ def make_stock_entry(work_order_id, purpose, qty=None, target_warehouse=None):
 			else wip_warehouse
 		)
 		stock_entry.to_warehouse = work_order.fg_warehouse
-		stock_entry.project = work_order.project
+		if "projects" in frappe.get_installed_apps():
+			stock_entry.project = work_order.project
 
 	if purpose == "Disassemble":
 		stock_entry.from_warehouse = work_order.fg_warehouse
@@ -1522,7 +1530,9 @@ def close_work_order(work_order, status):
 	work_order = frappe.get_doc("Work Order", work_order)
 	if work_order.get("operations"):
 		job_cards = frappe.get_list(
-			"Job Card", filters={"work_order": work_order.name, "status": "Work In Progress"}, pluck="name"
+			"Job Card",
+			filters={"work_order": work_order.name, "status": "Work In Progress", "docstatus": 1},
+			pluck="name",
 		)
 
 		if job_cards:
@@ -1617,7 +1627,7 @@ def create_job_card(work_order, row, enable_capacity_planning=False, auto_create
 			"posting_date": nowdate(),
 			"for_quantity": row.job_card_qty or work_order.get("qty", 0),
 			"operation_id": row.get("name"),
-			"bom_no": work_order.bom_no,
+			"bom_no": row.get("bom"),
 			"project": work_order.project if "projects" in frappe.get_installed_apps() else "",
 			"company": work_order.company,
 			"sequence_id": row.get("sequence_id"),

@@ -171,7 +171,7 @@ class AccountsController(TransactionBase):
 			self.validate_qty_is_not_zero()
 
 		if (
-			self.doctype in ["Sales Invoice", "Purchase Invoice"]
+			self.doctype in ["Sales Invoice", "Purchase Invoice", "POS Invoice"]
 			and self.get("is_return")
 			and self.get("update_stock")
 		):
@@ -195,6 +195,14 @@ class AccountsController(TransactionBase):
 		self.set_incoming_rate()
 		self.init_internal_values()
 
+		# Need to set taxes based on taxes_and_charges template
+		# before calculating taxes and totals
+		if self.meta.get_field("taxes_and_charges"):
+			self.validate_enabled_taxes_and_charges()
+			self.validate_tax_account_company()
+ 
+		self.set_taxes_and_charges()
+
 		if self.meta.get_field("currency"):
 			self.calculate_taxes_and_totals()
 
@@ -204,10 +212,6 @@ class AccountsController(TransactionBase):
 			validate_return(self)
 
 		self.validate_all_documents_schedule()
-
-		if self.meta.get_field("taxes_and_charges"):
-			self.validate_enabled_taxes_and_charges()
-			self.validate_tax_account_company()
 
 		self.validate_party()
 		self.validate_currency()
@@ -252,8 +256,6 @@ class AccountsController(TransactionBase):
 
 			self.validate_deferred_income_expense_account()
 			self.set_inter_company_account()
-		
-		self.set_taxes_and_charges()
 
 		if self.doctype == "Purchase Invoice":
 			self.calculate_paid_amount()
@@ -270,6 +272,7 @@ class AccountsController(TransactionBase):
 		self.set_total_in_words()
 		self.set_default_letter_head()
 		self.validate_company_in_accounting_dimension()
+		self.validate_party_address_and_contact()
 
 	def set_default_letter_head(self):
 		if hasattr(self, "letter_head") and not self.letter_head:
@@ -438,6 +441,46 @@ class AccountsController(TransactionBase):
 							dimension, frappe.bold(dimension_value), self.company
 						)
 					)
+
+	def validate_party_address_and_contact(self):
+		party_type, party = self.get_party()
+
+		if not (party_type and party):
+			return
+
+		if party_type == "Customer":
+			billing_address, shipping_address = (
+				self.get("customer_address"),
+				self.get("shipping_address_name"),
+			)
+			self.validate_party_address(party, party_type, billing_address, shipping_address)
+		elif party_type == "Supplier":
+			billing_address = self.get("supplier_address")
+			self.validate_party_address(party, party_type, billing_address)
+
+		self.validate_party_contact(party, party_type)
+
+	def validate_party_address(self, party, party_type, billing_address, shipping_address=None):
+		if billing_address or shipping_address:
+			party_address = frappe.get_all(
+				"Dynamic Link",
+				{"link_doctype": party_type, "link_name": party, "parenttype": "Address"},
+				pluck="parent",
+			)
+			if billing_address and billing_address not in party_address:
+				frappe.throw(_("Billing Address does not belong to the {0}").format(party))
+			elif shipping_address and shipping_address not in party_address:
+				frappe.throw(_("Shipping Address does not belong to the {0}").format(party))
+
+	def validate_party_contact(self, party, party_type):
+		if self.get("contact_person"):
+			contact = frappe.get_all(
+				"Dynamic Link",
+				{"link_doctype": party_type, "link_name": party, "parenttype": "Contact"},
+				pluck="parent",
+			)
+			if self.contact_person and self.contact_person not in contact:
+				frappe.throw(_("Contact Person does not belong to the {0}").format(party))
 
 	def validate_return_against_account(self):
 		if self.doctype in ["Sales Invoice", "Purchase Invoice"] and self.is_return and self.return_against:
@@ -823,6 +866,13 @@ class AccountsController(TransactionBase):
 							):
 								item.set(fieldname, value)
 
+								if fieldname == "batch_no" and item.batch_no and not item.is_free_item:
+									if ret.get("rate"):
+										item.set("rate", ret.get("rate"))
+ 
+									if not item.get("price_list_rate") and ret.get("price_list_rate"):
+										item.set("price_list_rate", ret.get("price_list_rate"))
+
 							elif fieldname in ["cost_center", "conversion_factor"] and not item.get(
 								fieldname
 							):
@@ -1110,21 +1160,19 @@ class AccountsController(TransactionBase):
 			)
 
 		# Update details in transaction currency
-		gl_dict.update(
-			{
-				"transaction_currency": self.get("currency") or self.company_currency,
-				"transaction_exchange_rate": self.get("conversion_rate", 1),
-				"transaction_exchange_rate": item.get("exchange_rate", 1)
-				if self.doctype == "Journal Entry" and item
-				else self.get("conversion_rate", 1),
-				"debit_in_transaction_currency": self.get_value_in_transaction_currency(
-					account_currency, gl_dict, "debit"
-				),
-				"credit_in_transaction_currency": self.get_value_in_transaction_currency(
-					account_currency, gl_dict, "credit"
-				),
-			}
-		)
+		if self.doctype not in ["Purchase Invoice", "Sales Invoice", "Journal Entry", "Payment Entry"]:
+			gl_dict.update(
+				{
+					"transaction_currency": self.get("currency") or self.company_currency,
+					"transaction_exchange_rate": self.get("conversion_rate", 1),
+					"debit_in_transaction_currency": self.get_value_in_transaction_currency(
+						account_currency, gl_dict, "debit"
+					),
+					"credit_in_transaction_currency": self.get_value_in_transaction_currency(
+						account_currency, gl_dict, "credit"
+					),
+				}
+			)
 
 		if not args.get("against_voucher_type") and self.get("against_voucher_type"):
 			gl_dict.update({"against_voucher_type": self.get("against_voucher_type")})
@@ -1894,22 +1942,22 @@ class AccountsController(TransactionBase):
 				continue
 
 			ref_amt = flt(reference_details.get(item.get(item_ref_dn)), self.precision(based_on, item))
+			based_on_amt = flt(item.get(based_on))
 
 			if not ref_amt:
-				frappe.msgprint(
-					_("System will not check over billing since amount for Item {0} in {1} is zero").format(
-						item.item_code, ref_dt
-					),
-					title=_("Warning"),
-					indicator="orange",
-				)
+				if based_on_amt:  # Skip warning for free items
+					frappe.msgprint(
+						_(
+							"System will not check over billing since amount for Item {0} in {1} is zero"
+						).format(item.item_code, ref_dt),
+						title=_("Warning"),
+						indicator="orange",
+					)
 				continue
 
 			already_billed = self.get_billed_amount_for_item(item, item_ref_dn, based_on)
 
-			total_billed_amt = flt(
-				flt(already_billed) + flt(item.get(based_on)), self.precision(based_on, item)
-			)
+			total_billed_amt = flt(flt(already_billed) + based_on_amt, self.precision(based_on, item))
 
 			allowance, item_allowance, global_qty_allowance, global_amount_allowance = get_allowance_for(
 				item.item_code, item_allowance, global_qty_allowance, global_amount_allowance, "amount"
@@ -2310,6 +2358,9 @@ class AccountsController(TransactionBase):
 						base_grand_total * flt(d.invoice_portion) / 100, d.precision("base_payment_amount")
 					)
 					d.outstanding = d.payment_amount
+					d.base_outstanding = flt(
+ 						d.payment_amount * self.get("conversion_rate"), d.precision("base_outstanding")
+ 					)
 				elif not d.invoice_portion:
 					d.base_payment_amount = flt(
 						d.payment_amount * self.get("conversion_rate"), d.precision("base_payment_amount")
@@ -2628,12 +2679,17 @@ class AccountsController(TransactionBase):
 		default_currency = erpnext.get_company_currency(self.company)
 		if not default_currency:
 			throw(_("Please enter default currency in Company Master"))
-		if (
-			(self.currency == default_currency and flt(self.conversion_rate) != 1.00)
-			or not self.conversion_rate
-			or (self.currency != default_currency and flt(self.conversion_rate) == 1.00)
-		):
-			throw(_("Conversion rate cannot be 0 or 1"))
+
+		if not self.conversion_rate:
+			throw(_("Conversion rate cannot be 0"))
+
+		if self.currency == default_currency and flt(self.conversion_rate) != 1.00:
+			throw(_("Conversion rate must be 1.00 if document currency is same as company currency"))
+
+		if self.currency != default_currency and flt(self.conversion_rate) == 1.00:
+			frappe.msgprint(
+				_("Conversion rate is 1.00, but document currency is different from company currency")
+			)
 
 	def check_if_fields_updated(self, fields_to_check, child_tables):
 		# Check if any field affecting accounting entry is altered
@@ -2725,6 +2781,10 @@ class AccountsController(TransactionBase):
 			elif self.doctype == "Payment Entry":
 				self.make_advance_payment_ledger_for_payment()
 
+	def set_transaction_currency_and_rate_in_gl_map(self, gl_entries):
+		for x in gl_entries:
+			x["transaction_currency"] = self.currency
+			x["transaction_exchange_rate"] = self.get("conversion_rate") or 1
 
 @frappe.whitelist()
 def get_tax_rate(account_head):
@@ -3044,7 +3104,6 @@ def get_common_query(
 		.where(payment_entry.party == party)
 		.where(payment_entry.docstatus == 1)
 	)
-
 	field = "paid_from" if payment_type == "Receive" else "paid_to"
 	q = q.select((payment_entry[f"{field}_account_currency"]).as_("currency"))
 	q = q.select(payment_entry[field])
@@ -3053,19 +3112,16 @@ def get_common_query(
 		q = q.where(
 			account_condition
 			| (
-				(payment_entry[field] == field)
+				(payment_entry[field] == default_advance_account)
 				& (payment_entry.book_advance_payments_in_separate_party_account == 1)
 			)
 		)
-
 	else:
 		q = q.where(account_condition)
-
 	if payment_type == "Receive":
 		q = q.select((payment_entry.source_exchange_rate).as_("exchange_rate"))
 	else:
 		q = q.select((payment_entry.target_exchange_rate).as_("exchange_rate"))
-
 	if condition:
 		# conditions should be built as an array and passed as Criterion
 		common_filter_conditions = []
@@ -3101,7 +3157,6 @@ def get_common_query(
 
 	q = q.orderby(payment_entry.posting_date)
 	q = q.limit(limit) if limit else q
-
 	return q
 
 
@@ -3253,6 +3308,7 @@ def set_child_tax_template_and_map(item, child_item, parent_doc):
 		"posting_date": parent_doc.transaction_date,
 		"tax_category": parent_doc.get("tax_category"),
 		"company": parent_doc.get("company"),
+		"base_net_rate": item.get("base_net_rate"),
 	}
 
 	child_item.item_tax_template = _get_item_tax_template(args, item.taxes)
@@ -3627,6 +3683,9 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 
 		if d.get("schedule_date") and parent_doctype == "Purchase Order":
 			child_item.schedule_date = d.get("schedule_date")
+
+		if d.get("bom_no") and parent_doctype == "Sales Order":
+			child_item.bom_no = d.get("bom_no")
 
 		if flt(child_item.price_list_rate):
 			if flt(child_item.rate) > flt(child_item.price_list_rate):
