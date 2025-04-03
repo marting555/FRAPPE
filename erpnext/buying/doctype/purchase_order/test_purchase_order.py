@@ -2175,6 +2175,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertGreater(len(gl_entries), 0)
 
 	def test_po_and_pi_with_pricing_rule_with_TC_B_048(self):
+		from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import get_or_create_price_list
 		frappe.set_user("Administrator")
 		company = "_Test Company"
 		target_warehouse = "Stores - _TC"
@@ -2186,7 +2187,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		item_price_doc = frappe.get_doc({
 			"doctype": "Item Price",
-			"price_list": "Standard Buying",
+			"price_list": get_or_create_price_list(),
 			"item_code": item.item_code,
 			"price_list_rate": item_price
 		}).insert(ignore_if_duplicate=1)
@@ -2212,6 +2213,8 @@ class TestPurchaseOrder(FrappeTestCase):
 			"supplier": supplier,
 			"company": company,
 			"schedule_date":today(),
+			"currency": "INR",
+			"buying_price_list": get_or_create_price_list(),
 			"set_warehouse": target_warehouse,
 			"items": [
 				{
