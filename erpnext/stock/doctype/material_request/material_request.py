@@ -478,7 +478,7 @@ def make_request_for_quotation(source_name, target_doc=None):
 				"field_map": [
 					["name", "material_request_item"],
 					["parent", "material_request"],
-					["uom", "uom"],
+					["project", "project_name"],
 				],
 			},
 		},
@@ -818,7 +818,7 @@ def create_pick_list(source_name, target_doc=None):
 			},
 			"Material Request Item": {
 				"doctype": "Pick List Item",
-				"field_map": {"name": "material_request_item", "qty": "stock_qty"},
+				"field_map": {"name": "material_request_item", "stock_qty": "stock_qty"},
 			},
 		},
 		target_doc,

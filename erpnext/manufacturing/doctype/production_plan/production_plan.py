@@ -340,8 +340,9 @@ class ProductionPlan(Document):
 
 		for item in items:
 			item.pending_qty = (
-				flt(item.qty) - max(item.work_order_qty, item.delivered_qty, 0) * item.conversion_factor
-			)
+				flt(item.qty) - max(item.work_order_qty, item.delivered_qty, 0)
+			) * item.conversion_factor
+
 
 		pi = frappe.qb.DocType("Packed Item")
 
@@ -402,6 +403,7 @@ class ProductionPlan(Document):
 				mr_item.item_code,
 				mr_item.warehouse,
 				mr_item.description,
+				mr_item.bom_no,
 				((mr_item.qty - mr_item.ordered_qty) * mr_item.conversion_factor).as_("pending_qty"),
 			)
 			.distinct()
@@ -910,8 +912,16 @@ class ProductionPlan(Document):
 
 			bom_data = []
 
-			warehouse = (self.sub_assembly_warehouse) if self.skip_available_sub_assembly_item else None
-			get_sub_assembly_items(row.bom_no, bom_data, row.planned_qty, self.company, warehouse=warehouse)
+			get_sub_assembly_items(
+				row.bom_no,
+				bom_data,
+				row.planned_qty,
+				self.company,
+				warehouse=self.sub_assembly_warehouse,
+				skip_available_sub_assembly_item=self.skip_available_sub_assembly_item,
+			)
+
+
 			self.set_sub_assembly_items_based_on_level(row, bom_data, manufacturing_type)
 			sub_assembly_items_store.extend(bom_data)
 
@@ -1707,14 +1717,24 @@ def get_item_data(item_code):
 	}
 
 
-def get_sub_assembly_items(bom_no, bom_data, to_produce_qty, company, warehouse=None, indent=0):
+def get_sub_assembly_items(
+	bom_no,
+	bom_data,
+	to_produce_qty,
+	company,
+	warehouse=None,
+	indent=0,
+	skip_available_sub_assembly_item=False,
+):
+	
 	data = get_bom_children(parent=bom_no)
 	for d in data:
 		if d.expandable:
 			parent_item_code = frappe.get_cached_value("BOM", bom_no, "item")
 			stock_qty = (d.stock_qty / d.parent_bom_qty) * flt(to_produce_qty)
 
-			if warehouse:
+			bin_details = frappe._dict()
+			if skip_available_sub_assembly_item:
 				bin_details = get_bin_details(d, company, for_warehouse=warehouse)
 
 				for _bin_dict in bin_details:
@@ -1725,10 +1745,14 @@ def get_sub_assembly_items(bom_no, bom_data, to_produce_qty, company, warehouse=
 						else:
 							stock_qty = stock_qty - _bin_dict.projected_qty
 
+			elif warehouse:
+				bin_details = get_bin_details(d, company, for_warehouse=warehouse)
+
 			if stock_qty > 0:
 				bom_data.append(
 					frappe._dict(
 						{
+							"actual_qty": bin_details[0].get("actual_qty", 0) if bin_details else 0,
 							"parent_item_code": parent_item_code,
 							"description": d.description,
 							"production_item": d.item_code,
@@ -1746,7 +1770,13 @@ def get_sub_assembly_items(bom_no, bom_data, to_produce_qty, company, warehouse=
 
 				if d.value:
 					get_sub_assembly_items(
-						d.value, bom_data, stock_qty, company, warehouse, indent=indent + 1
+						d.value,
+						bom_data,
+						stock_qty,
+						company,
+						warehouse,
+						indent=indent + 1,
+						skip_available_sub_assembly_item=skip_available_sub_assembly_item,
 					)
 
 
@@ -1858,7 +1888,7 @@ def get_raw_materials_of_sub_assembly_items(
 			& (bom.name == bom_no)
 			& (item.is_stock_item.isin([0, 1]) if include_non_stock_items else item.is_stock_item == 1)
 		)
-		.groupby(bei.item_code, bei.stock_uom)
+		.groupby(bei.item_code, bei.stock_uom,item.name,bei.description,bei.bom_no,bei.source_warehouse,item_default.default_warehouse,item_uom.conversion_factor)
 	).run(as_dict=True)
 
 	for item in items:

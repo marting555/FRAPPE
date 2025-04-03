@@ -660,7 +660,7 @@ erpnext.utils.update_child_items = function (opts) {
 					method: "erpnext.stock.get_item_details.get_item_details",
 					args: {
 						doc: frm.doc,
-						ctx: {
+						args: {
 							item_code: this.value,
 							set_warehouse: frm.doc.set_warehouse,
 							customer: frm.doc.customer || frm.doc.party_name,
@@ -691,7 +691,7 @@ erpnext.utils.update_child_items = function (opts) {
 					},
 					callback: function (r) {
 						if (r.message) {
-							const { qty, price_list_rate: rate, uom, conversion_factor } = r.message;
+							const { qty, price_list_rate: rate, uom, conversion_factor, bom_no } = r.message;
 							const row = dialog.fields_dict.trans_items.df.data.find(
 								(doc) => doc.idx == me.doc.idx
 							);
@@ -701,6 +701,7 @@ erpnext.utils.update_child_items = function (opts) {
 									uom: me.doc.uom || uom,
 									qty: me.doc.qty || qty,
 									rate: me.doc.rate || rate,
+ 									bom_no: bom_no,
 								});
 								dialog.fields_dict.trans_items.grid.refresh();
 							}
