@@ -405,29 +405,37 @@ def create_json_gz_file(data, doc, file_name=None) -> str:
 	compressed_content = gzip.compress(encoded_content)
 
 	if not file_name:
-		json_filename = f"{scrub(doc.doctype)}-{scrub(doc.name)}.json.gz"
-		_file = frappe.get_doc(
-			{
-				"doctype": "File",
-				"file_name": json_filename,
-				"attached_to_doctype": doc.doctype,
-				"attached_to_name": doc.name,
-				"attached_to_field": "reposting_data_file",
-				"content": compressed_content,
-				"is_private": 1,
-			}
-		)
-		_file.save(ignore_permissions=True)
-
-		return _file.file_url
+		return create_file(doc, compressed_content)
+	
 	else:
 		file_doc = frappe.get_doc("File", file_name)
+		if "/frappe_s3_attachment." in file_doc.file_url:
+			file_doc.delete()
+			return create_file(doc, compressed_content)
+		
 		path = file_doc.get_full_path()
 
 		with open(path, "wb") as f:
 			f.write(compressed_content)
 
 		return doc.reposting_data_file
+	
+
+def create_file(doc, compressed_content):
+	json_filename = f"{scrub(doc.doctype)}-{scrub(doc.name)}.json.gz"
+	_file = frappe.get_doc(
+		{
+			"doctype": "File",
+			"file_name": json_filename,
+			"attached_to_doctype": doc.doctype,
+			"attached_to_name": doc.name,
+			"attached_to_field": "reposting_data_file",
+			"content": compressed_content,
+			"is_private": 1,
+		}
+	)
+	_file.save(ignore_permissions=True)
+	return _file.file_url
 
 
 def get_items_to_be_repost(voucher_type=None, voucher_no=None, doc=None, reposting_data=None):
@@ -567,11 +575,27 @@ class update_entries_after:
 		self.new_items_found = False
 		self.distinct_item_warehouses = args.get("distinct_item_warehouses", frappe._dict())
 		self.affected_transactions: set[tuple[str, str]] = set()
-		self.reserved_stock = flt(self.args.reserved_stock)
+		self.reserved_stock = self.get_reserved_stock()
 
 		self.data = frappe._dict()
 		self.initialize_previous_data(self.args)
 		self.build()
+
+	def get_reserved_stock(self):
+		sre = frappe.qb.DocType("Stock Reservation Entry")
+		posting_datetime = get_combine_datetime(self.args.posting_date, self.args.posting_time)
+		query = (
+			frappe.qb.from_(sre)
+			.select(Sum(sre.reserved_qty) - Sum(sre.delivered_qty))
+			.where(
+				(sre.item_code == self.item_code)
+				& (sre.warehouse == self.args.warehouse)
+				& (sre.docstatus == 1)
+				& (sre.creation <= posting_datetime)
+			)
+		).run()
+
+		return flt(query[0][0]) if query else 0.0
 
 	def set_precision(self):
 		self.flt_precision = cint(frappe.db.get_default("float_precision")) or 2
@@ -880,6 +904,10 @@ class update_entries_after:
 
 		if not sle.is_adjustment_entry or not self.args.get("sle_id"):
 			sle.stock_value_difference = stock_value_difference
+		elif sle.is_adjustment_entry and not self.args.get("sle_id"):
+			sle.stock_value_difference = get_stock_value_difference(
+				sle.item_code, sle.warehouse, sle.posting_date, sle.posting_time, sle.voucher_no
+			)
 
 		sle.doctype = "Stock Ledger Entry"
 		frappe.get_doc(sle).db_update()

@@ -81,16 +81,17 @@ def test_create_test_data():
 		)
 		item_pricing_rule.insert()
 	# create test item sales partner
-	if not frappe.db.exists("Sales Partner", "_Test Coupon Partner"):
-		sales_partner = frappe.get_doc(
-			{
-				"doctype": "Sales Partner",
-				"partner_name": "_Test Coupon Partner",
-				"commission_rate": 2,
-				"referral_code": "COPART",
-			}
-		)
-		sales_partner.insert()
+	if "Sales Commission" in frappe.get_installed_apps():
+		if not frappe.db.exists("Sales Partner", "_Test Coupon Partner"):
+			sales_partner = frappe.get_doc(
+				{
+					"doctype": "Sales Partner",
+					"partner_name": "_Test Coupon Partner",
+					"commission_rate": 2,
+					"referral_code": "COPART",
+				}
+			)
+			sales_partner.insert()
 	# create test item coupon code
 	if not frappe.db.exists("Coupon Code", "SAVE30"):
 		pricing_rule = frappe.db.get_value(
@@ -129,6 +130,7 @@ class TestCouponCode(unittest.TestCase):
 			rate=5000,
 			qty=1,
 			do_not_submit=True,
+			do_not_save=True,
 		)
 
 		self.assertEqual(so.items[0].rate, 5000)
