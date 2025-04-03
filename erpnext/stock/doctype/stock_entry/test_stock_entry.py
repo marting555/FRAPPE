@@ -4144,7 +4144,8 @@ class TestStockEntry(FrappeTestCase):
 			"has_serial_no": 1,
 			"serial_no_series": "Test-SABBMRP-Sno.#####",
 			"create_new_batch": 1,
-			"batch_number_series": "Test-SABBMRP-Bno.#####"
+			"batch_number_series": "Test-SABBMRP-Bno.#####",
+			"expense_account": "Stock Adjustment - _TC"
 		}
 		self.item_code = make_item("_Test Item134", item_fields).name
 		self.source_warehouse = create_warehouse("Stores-test", properties=None, company="_Test Company")
