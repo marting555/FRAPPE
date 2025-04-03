@@ -7471,7 +7471,7 @@ def get_active_fiscal_year():
 	from datetime import datetime
 	get_fiscal_year = frappe.db.get_value(
 		"Fiscal Year",
-		{"disabled": 0, "year_start_date": ["<", today()], "year_end_date": [">", today()]},
+		{"disabled": 0, "year_start_date": ["<=", today()], "year_end_date": [">=", today()]},
 		pluck="name",
 		order_by="creation ASC"
 	)
