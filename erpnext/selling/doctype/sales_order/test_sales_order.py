@@ -2279,8 +2279,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(si.status, "Unpaid", "Sales Invoice not created")
 		self.validate_gl_entries(si.name,25000)
   
+	@if_app_installed("india_compliance")
 	def test_sales_order_with_partial_advance_payment_TC_S_041(self):
 		make_item("_Test Item", {"is_stock_item": 1})
+		get_or_create_fiscal_year("_Test Company")
 		make_stock_entry(item_code="_Test Item", qty=100, rate=500, target="_Test Warehouse - _TC")
 		so = make_sales_order(cost_center='Main - _TC', selling_price_list='Standard Selling', qty=1, rate=5000, do_not_save=True)
 		so.save()
@@ -4027,9 +4029,11 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		si.reload()
 		self.assertEqual(si.outstanding_amount, 0)
 		self.assertEqual(si.status, "Paid")
- 
+	
+	@if_app_installed("india_compliance")
 	def test_sales_order_with_full_advance_payment_and_shipping_rule_TC_S_044(self):
 		make_item("_Test Item", {"is_stock_item": 1})
+		get_or_create_fiscal_year("_Test Company")
 		make_stock_entry(item_code="_Test Item", qty=100, rate=500, target="_Test Warehouse - _TC")
 		so = make_sales_order(
 			cost_center='Main - _TC', 
@@ -4070,8 +4074,10 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name,'account': 'Debtors - _TC'}, 'debit'), 5200)
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': si.name,'account': '_Test Account Shipping Charges - _TC'}, 'credit'), 200)
   
+	@if_app_installed("india_compliance")
 	def test_sales_order_with_partial_advance_payment_and_shipping_rule_TC_S_045(self):
 		make_item("_Test Item", {"is_stock_item": 1})
+		get_or_create_fiscal_year
 		make_stock_entry(item_code="_Test Item", qty=100, rate=500, target="_Test Warehouse - _TC")
 		so = make_sales_order(
 			cost_center='Main - _TC', 

@@ -6360,6 +6360,7 @@ class TestSalesInvoice(FrappeTestCase):
 				"doctype": "Sales Order",
 				"company": parent_company,
 				"customer": customer,
+				"currency":"INR",
 				"transaction_date": today(),
 				"set_warehouse": "Stores - TC-1",
 				"selling_price_list": price_list,
