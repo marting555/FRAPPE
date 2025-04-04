@@ -107,7 +107,7 @@ jobs:
         run: |
           bench --site test_site console <<EOF
           import frappe
-          company_name = frappe.db.get_value('Company', {'country': 'India'}, 'name')
+          company_name = frappe.db.get_list('Company')
           print("Company Name:", company_name)
           EOF
       - name: Run Tests
