@@ -103,7 +103,7 @@ jobs:
         run: |
           bench --site test_site console <<EOF
           import frappe
-          print("Current User:", frappe.session.user)
+          print("Current User:", frappe.get_user().name)
           EOF
       - name: Convert Test Results to CSV
         run: |
