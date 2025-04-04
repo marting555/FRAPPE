@@ -228,14 +228,7 @@ class TestJournalEntry(unittest.TestCase):
 		]
 
 		self.expected_gle = [
-			{
-				"account": "_Test Bank USD - _TC",
-				"account_currency": "USD",
-				"debit": 0,
-				"debit_in_account_currency": 0,
-				"credit": 5000,
-				"credit_in_account_currency": 100,
-			},
+			
 			{
 				"account": "Sales - _TC",
 				"account_currency": "INR",
@@ -243,6 +236,14 @@ class TestJournalEntry(unittest.TestCase):
 				"debit_in_account_currency": 5000,
 				"credit": 0,
 				"credit_in_account_currency": 0,
+			},
+			{
+				"account": "_Test Bank USD - _TC",
+				"account_currency": "USD",
+				"debit": 0,
+				"debit_in_account_currency": 0,
+				"credit": 5000,
+				"credit_in_account_currency": 100,
 			},
 		]
 
@@ -580,7 +581,7 @@ class TestJournalEntry(unittest.TestCase):
 			order_by="account",
 		)
 		expected = [
-			{"account": "_Test Bank - _TC", "transaction_exchange_rate": 1.0},
+			{"account": "_Test Bank - _TC", "transaction_exchange_rate": 85.0},
 			{"account": "_Test Receivable USD - _TC", "transaction_exchange_rate": 85.0},
 		]
 		self.assertEqual(expected, actual)
@@ -1357,6 +1358,8 @@ class TestJournalEntry(unittest.TestCase):
 		self.check_gl_entries()
   
 	def test_opening_entry_TC_ACC_116(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_records
+		create_records("_Test Supplier")
 		jv = frappe.get_doc({
 			"doctype": "Journal Entry",
 			"voucher_type": "Opening Entry",

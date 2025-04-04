@@ -156,7 +156,12 @@ class Batch(Document):
 			frappe.throw(_("The selected item cannot have Batch"))
 
 	def set_batchwise_valuation(self):
+		from erpnext.stock.utils import get_valuation_method
+
 		if self.is_new():
+			if get_valuation_method(self.item) == "Moving Average":
+				self.use_batchwise_valuation = 0
+				return
 			if frappe.db.get_single_value("Stock Settings", "do_not_use_batchwise_valuation"):
 				self.use_batchwise_valuation = 0
 				return
@@ -455,10 +460,13 @@ def get_available_batches(kwargs):
 
 	batches = get_auto_batch_nos(kwargs)
 	for batch in batches:
-		if batch.get("batch_no") not in batchwise_qty:
-			batchwise_qty[batch.get("batch_no")] = batch.get("qty")
+		key = batch.get("batch_no")
+		if kwargs.get("based_on_warehouse"):
+			key = (batch.get("batch_no"), batch.get("warehouse"))
+		if key not in batchwise_qty:
+			batchwise_qty[key] = batch.get("qty")
 		else:
-			batchwise_qty[batch.get("batch_no")] += batch.get("qty")
+			batchwise_qty[key] += batch.get("qty")
 
 	return batchwise_qty
 

@@ -10,24 +10,14 @@ from pypika import functions as fn
 
 from erpnext.stock.doctype.warehouse.warehouse import apply_warehouse_filter
 
-SLE_COUNT_LIMIT = 10_000
-
-
-def _estimate_table_row_count(doctype: str):
-	table = get_table_name(doctype)
-	row_count = frappe.db.sql(f"""
-        SELECT reltuples::BIGINT AS estimate
-        FROM pg_class
-        WHERE relname = '{table}';
-    """)
-	return cint(row_count[0][0]) if row_count else 0
+SLE_COUNT_LIMIT = 100_000
 
 
 def execute(filters=None):
 	if not filters:
 		filters = {}
 
-	sle_count = _estimate_table_row_count("Stock Ledger Entry")
+	sle_count = frappe.db.estimate_count("Stock Ledger Entry")
 	
 
 	if (
@@ -151,6 +141,8 @@ def get_stock_ledger_entries_for_batch_bundle(filters):
 	sle = frappe.qb.DocType("Stock Ledger Entry")
 	batch_package = frappe.qb.DocType("Serial and Batch Entry")
 
+	to_date = get_datetime(filters.to_date + " 23:59:59")
+
 	query = (
 		frappe.qb.from_(sle)
 		.inner_join(batch_package)
@@ -166,7 +158,7 @@ def get_stock_ledger_entries_for_batch_bundle(filters):
 			(sle.docstatus < 2)
 			& (sle.is_cancelled == 0)
 			& (sle.has_batch_no == 1)
-			& (sle.posting_date <= filters["to_date"])
+			& (sle.posting_datetime <= to_date)
 		)
 		.groupby(
 			sle.voucher_no,

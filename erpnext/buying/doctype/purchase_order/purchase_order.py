@@ -217,7 +217,9 @@ class PurchaseOrder(BuyingController):
 	def validate_with_previous_doc(self):
 		is_projects_installed = "projects" in frappe.get_installed_apps()
 		mri_compare_fields = [["item_code", "="]] if not is_projects_installed else [["project", "="], ["item_code", "="]]
-
+		sqi_compare_fields = [["item_code", "="], ["uom", "="], ["conversion_factor", "="]]
+		if is_projects_installed:
+			sqi_compare_fields.append(["project", "="])
 		if self.is_subcontracted and is_projects_installed:
 			mri_compare_fields = [["project", "="]]
 
@@ -229,12 +231,7 @@ class PurchaseOrder(BuyingController):
 				},
 				"Supplier Quotation Item": {
 					"ref_dn_field": "supplier_quotation_item",
-					"compare_fields": [
-						["project", "="],
-						["item_code", "="],
-						["uom", "="],
-						["conversion_factor", "="],
-					],
+					"compare_fields": sqi_compare_fields,
 					"is_child_table": True,
 				},
 				"Material Request": {
@@ -944,7 +941,7 @@ def get_mapped_subcontracting_order(source_name, target_doc=None):
 					"material_request_item": "material_request_item",
 				},
 				"field_no_map": ["qty", "fg_item_qty", "amount"],
-				"condition": lambda item: item.qty != item.sco_qty,
+				"condition": lambda item: item.qty != item.subcontracted_quantity,
 			},
 		},
 		target_doc,
