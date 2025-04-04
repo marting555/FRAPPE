@@ -110,6 +110,15 @@ jobs:
           echo "Tests completed, proceeding with next steps..."
         env:
           TYPE: server
+      - name: Fetch Company Name from Frappe DB
+        working-directory: /home/runner/frappe-bench
+        run: |
+          bench --site test_site console <<EOF
+          import frappe
+          company_name = frappe.db.get_value('Company', {'country': 'India'}, 'name')
+          print("Company Name:", company_name)
+          EOF
+
       - name: Convert Test Results to CSV
         run: |
           pip install xmltodict pandas
