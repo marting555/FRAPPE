@@ -1391,8 +1391,11 @@ class TestPaymentEntry(FrappeTestCase):
 		self.check_gl_entries()
 
 	def test_ledger_entries_for_advance_as_liability(self):
-		company = "_Test Company"
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import  get_or_create_fiscal_year
 		from erpnext.accounts.doctype.account.test_account import create_account
+		
+		company = "_Test Company"
+		get_or_create_fiscal_year(company)
 		advance_account = create_account(
 			parent_account="Current Assets - _TC",
 			account_name="Advances Received",
@@ -1516,11 +1519,13 @@ class TestPaymentEntry(FrappeTestCase):
 		from erpnext.buying.doctype.purchase_order.purchase_order import (
 			make_purchase_invoice as _make_purchase_invoice,
 		)
-		from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order, get_or_create_fiscal_year
+		from erpnext.accounts.doctype.account.test_account import create_account as _create_account
 
 		company = "_Test Company"
+		get_or_create_fiscal_year(company)
 
-		advance_account = create_account(
+		advance_account = _create_account(
 			parent_account="Current Liabilities - _TC",
 			account_name="Advances Paid",
 			company=company,
@@ -1681,7 +1686,10 @@ class TestPaymentEntry(FrappeTestCase):
 
 	def test_advance_reverse_payment_reconciliation(self):
 		from erpnext.accounts.doctype.account.test_account import create_account
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import  get_or_create_fiscal_year
+		
 		company = "_Test Company"
+		get_or_create_fiscal_year(company)
 		customer = create_customer(frappe.generate_hash(length=10), "INR")
 		advance_account = create_account(
 			parent_account="Current Liabilities - _TC",
@@ -1801,9 +1809,13 @@ class TestPaymentEntry(FrappeTestCase):
 		self.check_pl_entries()
 
 	def test_opening_flag_for_advance_as_liability(self):
+		from erpnext.accounts.doctype.account.test_account import create_account as _create_account
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import  get_or_create_fiscal_year
+		
 		company = "_Test Company"
+		get_or_create_fiscal_year(company)
 
-		advance_account = create_account(
+		advance_account = _create_account(
 			parent_account="Current Assets - _TC",
 			account_name="Advances Received",
 			company=company,
