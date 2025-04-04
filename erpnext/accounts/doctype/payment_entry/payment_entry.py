@@ -3122,6 +3122,81 @@ def get_payment_entry(
 	return pe
 
 
+@frappe.whitelist()
+def get_payment_entry_from_party(party_type, party, company=None, payment_type=None):
+	"""
+	Create a Payment Entry when initiated from the Customer or Supplier dashboard.
+	
+	This auto-populates party information when creating a new Payment Entry from
+	the dashboard, improving user experience by avoiding manual entry of party details.
+	"""
+	from erpnext.accounts.party import get_party_account
+	from erpnext.accounts.utils import get_account_currency
+	from frappe.utils import nowdate
+	
+	if not company:
+		company = frappe.defaults.get_user_default("Company")
+	
+	# Determine default payment type based on party type
+	if not payment_type:
+		if party_type == "Customer":
+			payment_type = "Receive"
+		else:
+			payment_type = "Pay"
+	
+	# Create a dummy document with minimal required fields
+	doc = frappe._dict({
+		"doctype": party_type,
+		"company": company,
+		party_type.lower(): party
+	})
+	
+	# Get party account
+	party_account = get_party_account(party_type, party, company)
+	party_account_currency = get_account_currency(party_account)
+	
+	# Create the Payment Entry
+	pe = frappe.new_doc("Payment Entry")
+	pe.payment_type = payment_type
+	pe.company = company
+	pe.posting_date = nowdate()
+	pe.party_type = party_type
+	pe.party = party
+	
+	# Set bank/cash account
+	bank = get_bank_cash_account(doc, None)
+	if party_type in ["Customer", "Supplier"] and not bank:
+		party_bank_account = get_party_bank_account(party_type, party)
+		if party_bank_account:
+			account = frappe.db.get_value("Bank Account", party_bank_account, "account")
+			bank = get_bank_cash_account(doc, account)
+	
+	# Set accounts based on payment type
+	if payment_type == "Receive":
+		pe.paid_from = party_account
+		pe.paid_from_account_currency = party_account_currency
+		if bank:
+			pe.paid_to = bank.account
+			pe.paid_to_account_currency = bank.account_currency
+	else:
+		if bank:
+			pe.paid_from = bank.account
+			pe.paid_from_account_currency = bank.account_currency
+		pe.paid_to = party_account
+		pe.paid_to_account_currency = party_account_currency
+	
+	# Set party bank account
+	bank_account = get_party_bank_account(party_type, party)
+	pe.set("party_bank_account", bank_account)
+	if bank_account:
+		pe.set_bank_account_data()
+	
+	pe.setup_party_account_field()
+	pe.set_missing_values()
+	
+	return pe
+
+
 def get_open_payment_requests_for_references(references=None):
 	"""
 	Fetch all unpaid Payment Requests for the references. \n

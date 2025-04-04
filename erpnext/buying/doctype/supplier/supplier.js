@@ -3,30 +3,36 @@
 
 frappe.ui.form.on("Supplier", {
 	setup: function (frm) {
-		frm.set_query("default_price_list", { buying: 1 });
-		if (frm.doc.__islocal == 1) {
-			frm.set_value("represents_company", "");
-		}
+		frm.custom_make_buttons = {
+			"Supplier Quotation": "Supplier Quotation",
+			"Purchase Order": "Purchase Order",
+			"Purchase Invoice": "Purchase Invoice",
+			"Purchase Receipt": "Purchase Receipt",
+		};
+
+		frm.set_query("default_price_list", function () {
+			return {
+				filters: { buying: 1 },
+			};
+		});
+
 		frm.set_query("account", "accounts", function (doc, cdt, cdn) {
-			let d = locals[cdt][cdn];
+			var d = locals[cdt][cdn];
 			return {
 				filters: {
-					account_type: "Payable",
-					root_type: "Liability",
-					company: d.company,
 					is_group: 0,
+					company: d.company,
 				},
 			};
 		});
 
 		frm.set_query("advance_account", "accounts", function (doc, cdt, cdn) {
-			let d = locals[cdt][cdn];
+			var d = locals[cdt][cdn];
 			return {
 				filters: {
-					account_type: "Payable",
-					root_type: "Asset",
-					company: d.company,
 					is_group: 0,
+					company: d.company,
+					account_type: "Payable",
 				},
 			};
 		});
@@ -67,15 +73,21 @@ frappe.ui.form.on("Supplier", {
 	},
 
 	refresh: function (frm) {
-		if (frappe.defaults.get_default("supp_master_name") != "Naming Series") {
-			frm.toggle_display("naming_series", false);
-		} else {
-			erpnext.toggle_naming_series();
-		}
+		frappe.dynamic_link = { doc: frm.doc, fieldname: "name", doctype: "Supplier" };
 
 		if (frm.doc.__islocal) {
 			hide_field(["address_html", "contact_html"]);
 			frappe.contacts.clear_address_and_contact(frm);
+			frm.add_custom_button(
+				__("Supplier Group"),
+				function () {
+					frappe.route_options = {
+						supplier: frm.doc.name,
+					};
+					frappe.set_route("List", "Supplier Group");
+				},
+				__("View")
+			);
 		} else {
 			unhide_field(["address_html", "contact_html"]);
 			frappe.contacts.render_address_and_contact(frm);
@@ -137,6 +149,27 @@ frappe.ui.form.on("Supplier", {
 					__("Actions")
 				);
 			}
+
+			frm.add_custom_button(
+				__("Payment Entry"),
+				function () {
+					frappe.call({
+						method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_payment_entry_from_party",
+						args: {
+							party_type: "Supplier",
+							party: frm.doc.name,
+							company: frm.doc.company
+						},
+						callback: function (r) {
+							if (r.message) {
+								const doc = frappe.model.sync(r.message)[0];
+								frappe.set_route("Form", doc.doctype, doc.name);
+							}
+						}
+					});
+				},
+				__("Create")
+			);
 
 			// indicators
 			erpnext.utils.set_party_dashboard_indicators(frm);
