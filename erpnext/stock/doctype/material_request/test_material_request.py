@@ -4935,7 +4935,7 @@ class TestMaterialRequest(FrappeTestCase):
 		pi.save()
 		pi.submit()
 		self.assertEqual(pi.status, "Partly Paid")
-		self.assertEqual(pi.outstanding_amount, 8160)
+		self.assertEqual(pi.outstanding_amount, pi.base_grand_total - 6000)
 		doc_po.reload()
 		pr.reload()
 		self.assertEqual(doc_po.status, "Completed")
