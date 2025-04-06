@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-03-30 09:35+0000\n"
-"PO-Revision-Date: 2025-04-03 17:10\n"
+"PO-Revision-Date: 2025-04-06 02:40\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Persian\n"
 "MIME-Version: 1.0\n"
@@ -839,13 +839,13 @@ msgstr ""
 #: erpnext/stock/report/stock_ledger_invariant_check/stock_ledger_invariant_check.py:213
 #: erpnext/stock/report/stock_ledger_variance/stock_ledger_variance.py:116
 msgid "A - B"
-msgstr ""
+msgstr "A - B"
 
 #: erpnext/stock/report/fifo_queue_vs_qty_after_transaction_comparison/fifo_queue_vs_qty_after_transaction_comparison.py:189
 #: erpnext/stock/report/stock_ledger_invariant_check/stock_ledger_invariant_check.py:228
 #: erpnext/stock/report/stock_ledger_variance/stock_ledger_variance.py:131
 msgid "A - C"
-msgstr ""
+msgstr "A - C"
 
 #: erpnext/selling/doctype/customer/customer.py:312
 msgid "A Customer Group exists with same name please change the Customer name or rename the Customer Group"
@@ -12123,7 +12123,7 @@ msgstr ""
 
 #: erpnext/controllers/accounts_controller.py:2717
 msgid "Conversion rate cannot be 0"
-msgstr ""
+msgstr "نرخ تبدیل نمی تواند 0 باشد"
 
 #: erpnext/controllers/accounts_controller.py:2724
 msgid "Conversion rate is 1.00, but document currency is different from company currency"
@@ -14497,7 +14497,7 @@ msgstr "چرخه/ثانیه"
 #: erpnext/stock/report/stock_ledger_invariant_check/stock_ledger_invariant_check.py:243
 #: erpnext/stock/report/stock_ledger_variance/stock_ledger_variance.py:146
 msgid "D - E"
-msgstr ""
+msgstr "D - E"
 
 #. Option for the 'Algorithm' (Select) field in DocType 'Bisect Accounting
 #. Statements'
@@ -21070,7 +21070,7 @@ msgstr "از تاریخ و تا به امروز در سال مالی مختلف 
 #: erpnext/selling/report/item_wise_sales_history/item_wise_sales_history.py:14
 #: erpnext/stock/report/reserved_stock/reserved_stock.py:29
 msgid "From Date cannot be greater than To Date"
-msgstr "From Date نمی‌تواند بزرگتر از To Date باشد"
+msgstr "از تاریخ نمی‌تواند بزرگتر از تا تاریخ باشد"
 
 #: erpnext/crm/report/sales_pipeline_analytics/sales_pipeline_analytics.py:26
 msgid "From Date is mandatory"
@@ -21084,7 +21084,7 @@ msgstr "از تاریخ اجباری است"
 #: erpnext/stock/report/batch_wise_balance_history/batch_wise_balance_history.py:34
 #: erpnext/stock/report/cogs_by_item_group/cogs_by_item_group.py:38
 msgid "From Date must be before To Date"
-msgstr "From Date باید قبل از To Date باشد"
+msgstr "از تاریخ باید قبل از تا تاریخ باشد"
 
 #: erpnext/accounts/report/trial_balance/trial_balance.py:66
 msgid "From Date should be within the Fiscal Year. Assuming From Date = {0}"
@@ -22875,12 +22875,12 @@ msgstr ""
 #: erpnext/stock/report/stock_ledger_invariant_check/stock_ledger_invariant_check.py:283
 #: erpnext/stock/report/stock_ledger_variance/stock_ledger_variance.py:186
 msgid "I - J"
-msgstr ""
+msgstr "I - J"
 
 #: erpnext/stock/report/stock_ledger_invariant_check/stock_ledger_invariant_check.py:293
 #: erpnext/stock/report/stock_ledger_variance/stock_ledger_variance.py:196
 msgid "I - K"
-msgstr ""
+msgstr "I - K"
 
 #. Label of the iban (Data) field in DocType 'Bank Account'
 #. Label of the iban (Data) field in DocType 'Bank Guarantee'
@@ -29226,7 +29226,7 @@ msgstr "تولید"
 #. Label of the semi_fg_bom (Link) field in DocType 'Job Card'
 #: erpnext/manufacturing/doctype/job_card/job_card.json
 msgid "Manufacturing BOM"
-msgstr ""
+msgstr "BOM تولید"
 
 #. Label of the manufacturing_date (Date) field in DocType 'Batch'
 #: erpnext/stock/doctype/batch/batch.json
@@ -29439,7 +29439,7 @@ msgstr "ماسک"
 
 #: erpnext/setup/setup_wizard/data/marketing_source.txt:7
 msgid "Mass Mailing"
-msgstr ""
+msgstr "ایمیل انبوه"
 
 #: erpnext/manufacturing/doctype/workstation/workstation_dashboard.py:8
 msgid "Master"
@@ -34361,7 +34361,7 @@ msgstr "بسته ها"
 #. Label of the sb_00 (Section Break) field in DocType 'Quality Procedure'
 #: erpnext/quality_management/doctype/quality_procedure/quality_procedure.json
 msgid "Parent"
-msgstr "والدین"
+msgstr "والد"
 
 #. Label of the parent_account (Link) field in DocType 'Account'
 #: erpnext/accounts/doctype/account/account.json
@@ -34370,12 +34370,12 @@ msgstr "حساب والد"
 
 #: erpnext/accounts/doctype/chart_of_accounts_importer/chart_of_accounts_importer.py:379
 msgid "Parent Account Missing"
-msgstr "حساب والدین جا افتاده است"
+msgstr "حساب والد جا افتاده است"
 
 #. Label of the parent_batch (Link) field in DocType 'Batch'
 #: erpnext/stock/doctype/batch/batch.json
 msgid "Parent Batch"
-msgstr "دسته والدین"
+msgstr "دسته والد"
 
 #. Label of the parent_company (Link) field in DocType 'Company'
 #: erpnext/setup/doctype/company/company.json
@@ -34394,7 +34394,7 @@ msgstr "مرکز هزینه والد"
 #. Label of the parent_customer_group (Link) field in DocType 'Customer Group'
 #: erpnext/setup/doctype/customer_group/customer_group.json
 msgid "Parent Customer Group"
-msgstr "گروه مشتریان والدین"
+msgstr "گروه مشتریان والد"
 
 #. Label of the parent_department (Link) field in DocType 'Department'
 #: erpnext/setup/doctype/department/department.json
@@ -36668,7 +36668,7 @@ msgstr "لطفا ابتدا شماره موبایل را وارد کنید"
 
 #: erpnext/accounts/doctype/cost_center/cost_center.py:45
 msgid "Please enter parent cost center"
-msgstr "لطفاً مرکز هزینه والدین را وارد کنید"
+msgstr "لطفاً مرکز هزینه والد را وارد کنید"
 
 #: erpnext/public/js/utils/barcode_scanner.js:165
 msgid "Please enter quantity for item {0}"
@@ -37284,7 +37284,7 @@ msgstr "لطفا ابتدا کد مورد را تنظیم کنید"
 
 #: erpnext/manufacturing/doctype/job_card/job_card.py:1438
 msgid "Please set the Target Warehouse in the Job Card"
-msgstr ""
+msgstr "لطفاً انبار هدف را در کارت کار تنظیم کنید"
 
 #: erpnext/manufacturing/doctype/job_card/job_card.py:1442
 msgid "Please set the WIP Warehouse in the Job Card"
@@ -43753,7 +43753,7 @@ msgstr "خرده فروشی و عمده فروشی"
 
 #: erpnext/setup/setup_wizard/data/sales_partner_type.txt:5
 msgid "Retailer"
-msgstr ""
+msgstr "خرده فروش"
 
 #. Label of the retain_sample (Check) field in DocType 'Item'
 #. Label of the retain_sample (Check) field in DocType 'Purchase Receipt Item'
@@ -44499,7 +44499,7 @@ msgstr "ردیف #{0}: برای {1}، فقط در صورتی می‌توانید
 
 #: erpnext/accounts/doctype/tax_withholding_category/tax_withholding_category.py:48
 msgid "Row #{0}: From Date cannot be before To Date"
-msgstr "ردیف #{0}: From Date نمی‌تواند قبل از To Date باشد"
+msgstr "ردیف #{0}: از تاریخ نمی‌تواند قبل از تا تاریخ باشد"
 
 #: erpnext/public/js/utils/barcode_scanner.js:394
 msgid "Row #{0}: Item added"
@@ -45994,7 +45994,7 @@ msgstr "ثبت نام فروش"
 
 #: erpnext/setup/setup_wizard/data/designation.txt:28
 msgid "Sales Representative"
-msgstr ""
+msgstr "نماینده فروش"
 
 #: erpnext/accounts/report/gross_profit/gross_profit.py:857
 #: erpnext/stock/doctype/delivery_note/delivery_note.js:218
@@ -46862,7 +46862,7 @@ msgstr ""
 
 #: erpnext/selling/doctype/quotation/quotation.js:328
 msgid "Select an item from each set to be used in the Sales Order."
-msgstr "از هر مجموعه یک مورد را برای استفاده در سفارش فروش انتخاب کنید."
+msgstr "از هر مجموعه یک آیتم را برای استفاده در سفارش فروش انتخاب کنید."
 
 #: erpnext/stock/doctype/item/item.js:620
 msgid "Select at least one value from each of the attributes."
@@ -47941,7 +47941,7 @@ msgstr ""
 
 #: erpnext/buying/doctype/request_for_quotation/request_for_quotation.py:263
 msgid "Set Password"
-msgstr "تنظیم رمز عبور"
+msgstr "تنظیم گذرواژه"
 
 #. Label of the set_posting_date (Check) field in DocType 'POS Opening Entry'
 #: erpnext/accounts/doctype/pos_opening_entry/pos_opening_entry.json
@@ -48015,7 +48015,7 @@ msgstr "نرخ ارزش گذاری را بر اساس انبار منبع تنظ
 
 #: erpnext/selling/doctype/sales_order/sales_order.js:237
 msgid "Set Warehouse"
-msgstr "مجموعه انبار"
+msgstr "تنظیم انبار"
 
 #: erpnext/crm/doctype/opportunity/opportunity_list.js:17
 #: erpnext/support/doctype/issue/issue_list.js:12
@@ -52546,7 +52546,7 @@ msgstr "اسناد مالی مالیات کسر شده"
 
 #: erpnext/accounts/report/tax_withholding_details/tax_withholding_details.py:339
 msgid "Tax Withholding"
-msgstr ""
+msgstr "کسر مالیات"
 
 #. Name of a DocType
 #: erpnext/accounts/doctype/tax_withholding_account/tax_withholding_account.json
@@ -54315,27 +54315,27 @@ msgstr "تا تاریخ"
 #: erpnext/controllers/accounts_controller.py:524
 #: erpnext/setup/doctype/holiday_list/holiday_list.py:112
 msgid "To Date cannot be before From Date"
-msgstr "To Date نمی‌تواند قبل از From Date باشد"
+msgstr "تا تاریخ نمی‌تواند قبل از از تاریخ باشد"
 
 #: erpnext/buying/report/purchase_order_analysis/purchase_order_analysis.py:38
 #: erpnext/buying/report/requested_items_to_order_and_receive/requested_items_to_order_and_receive.py:34
 #: erpnext/selling/report/sales_order_analysis/sales_order_analysis.py:39
 msgid "To Date cannot be before From Date."
-msgstr "To Date نمی‌تواند قبل از From Date باشد."
+msgstr "تا تاریخ نمی‌تواند قبل از از تاریخ باشد."
 
 #: erpnext/accounts/report/financial_statements.py:135
 msgid "To Date cannot be less than From Date"
-msgstr "To Date نمی‌تواند کمتر از From Date باشد"
+msgstr "تا تاریخ نمی‌تواند کمتر از از تاریخ باشد"
 
 #: erpnext/crm/report/sales_pipeline_analytics/sales_pipeline_analytics.py:29
 msgid "To Date is mandatory"
-msgstr ""
+msgstr "تا تاریخ اجباری است"
 
 #: erpnext/buying/report/subcontracted_item_to_be_received/subcontracted_item_to_be_received.py:11
 #: erpnext/buying/report/subcontracted_raw_materials_to_be_transferred/subcontracted_raw_materials_to_be_transferred.py:11
 #: erpnext/selling/page/sales_funnel/sales_funnel.py:15
 msgid "To Date must be greater than From Date"
-msgstr "To Date باید بزرگتر از From Date باشد"
+msgstr "تا تاریخ باید بزرگتر از از تاریخ باشد"
 
 #: erpnext/accounts/report/trial_balance/trial_balance.py:75
 msgid "To Date should be within the Fiscal Year. Assuming To Date = {0}"
@@ -59266,7 +59266,7 @@ msgstr "شرکت اشتباه"
 
 #: erpnext/setup/doctype/company/company.js:210
 msgid "Wrong Password"
-msgstr "رمز عبور اشتباه"
+msgstr "گذرواژه اشتباه"
 
 #: erpnext/accounts/doctype/chart_of_accounts_importer/chart_of_accounts_importer.py:55
 msgid "Wrong Template"
@@ -59969,7 +59969,7 @@ msgstr "واریانس"
 
 #: erpnext/manufacturing/doctype/bom_update_log/bom_updation_utils.py:41
 msgid "via BOM Update Tool"
-msgstr "از طریق BOM Update Tool"
+msgstr "از طریق BOM ابزار به روز رسانی"
 
 #: erpnext/accounts/doctype/budget/budget.py:276
 msgid "will be"
@@ -60196,7 +60196,7 @@ msgstr "{0} یک حساب بانکی شرکت نیست"
 
 #: erpnext/accounts/doctype/cost_center/cost_center.py:53
 msgid "{0} is not a group node. Please select a group node as parent cost center"
-msgstr "{0} یک گره گروهی نیست. لطفاً یک گره گروهی را به عنوان مرکز هزینه والدین انتخاب کنید"
+msgstr "{0} یک گره گروه نیست. لطفاً یک گره گروه را به عنوان مرکز هزینه والد انتخاب کنید"
 
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:440
 msgid "{0} is not a stock Item"
