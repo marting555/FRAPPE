@@ -1930,15 +1930,20 @@ class TestPaymentEntry(FrappeTestCase):
 		self.assertRaises(frappe.DoesNotExistError, frappe.get_doc, "Journal Entry", jv[0])
 
 	def test_apply_tax_withholding_category_TC_ACC_021(self):
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import validate_fiscal_year
 		from erpnext.accounts.doctype.tax_withholding_category.test_tax_withholding_category import create_tax_withholding_category
-		
+		create_company()
+		validate_fiscal_year('_Test Company')
 		create_account()
-  
+		company = frappe.get_doc("Company", "_Test Company")
+		if not company.default_advance_paid_account:
+				company.default_advance_paid_account = "Creditors - _TC"
+				company.save()
 		create_tax_withholding_category(
 		category_name="Test - TDS - 194C - Company",
 		rate=2,
-		from_date=frappe.utils.get_date_str('01-04-2024'),
-		to_date=frappe.utils.get_date_str('31-03-2025'),
+		from_date=frappe.utils.today(),
+		to_date=frappe.utils.add_years(frappe.utils.today(), 1),
 		account="_Test TDS Payable - _TC",
 		single_threshold=30000,
 		cumulative_threshold=100000,
@@ -1948,21 +1953,21 @@ class TestPaymentEntry(FrappeTestCase):
 		supplier = create_supplier(
 			supplier_name="_Test Supplier TDS",
 			company="_Test Company",
-			tax_withholding_category="Test - TDS - 194C - Company")
+			tax_withholding_category="Test - TDS - 194C - Company"
+   		)
 
-		
 		if not supplier.tax_withholding_category:
 				setattr(supplier,'tax_withholding_category',"Test - TDS - 194C - Company")
 
 		if supplier:
-	
+
 			self.assertEqual(supplier.tax_withholding_category,"Test - TDS - 194C - Company")
-			
+
 			tax_withholding_category=frappe.get_doc("Tax Withholding Category","Test - TDS - 194C - Company")
-			
+
 			if len(tax_withholding_category.accounts) >0:
 				self.assertEqual(tax_withholding_category.accounts[0].account,"_Test TDS Payable - _TC")
-			
+
 			payment_entry=create_payment_entry(
 				party_type="Supplier",
 				party=supplier.name,
@@ -1984,8 +1989,8 @@ class TestPaymentEntry(FrappeTestCase):
 							"description": "Cash",
 						},
 					)
-			
-			
+
+
 			payment_entry.save()
 			payment_entry.submit()
 			self.voucher_no = payment_entry.name
