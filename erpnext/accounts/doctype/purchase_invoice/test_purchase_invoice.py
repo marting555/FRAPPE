@@ -4,7 +4,7 @@
 
 import frappe
 from frappe.tests.utils import FrappeTestCase, change_settings, if_app_installed
-from frappe.utils import add_days, cint, flt, getdate, nowdate, today, get_year_start, get_year_ending
+from frappe.utils import add_days, cint, flt, getdate, nowdate, today, get_year_start, get_year_ending,get_quarter_start
 from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 import erpnext
 from erpnext.accounts.doctype.account.test_account import create_account, get_inventory_account
@@ -3017,7 +3017,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 	def test_tds_computation_summary_report_TC_ACC_094(self):
 		"""Test the TDS Computation Summary report for Purchase Invoice data."""
 		from frappe.desk.query_report import get_report_result
-
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
 		company = "_Test Company"
 		tds_account_args = {
 			"doctype": "Account",
@@ -3061,7 +3061,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		filters = {
 			"company": company,
 			"party_type": "Supplier",
-			"from_date": add_days(nowdate(), -30),
+			"from_date" : str(get_quarter_start(getdate(nowdate()))),
 			"to_date": nowdate(),
 		}
 		report = frappe.get_doc("Report", report_name)
