@@ -333,7 +333,12 @@ class POSInvoice(SalesInvoice):
 			"POS Opening Entry", filters={"pos_profile": self.pos_profile, "status": "Open", "docstatus": 1}
 		)
 		if len(opening_entries) == 0:
-			frappe.throw(_("No open POS Opening Entry found for POS Profile {0}").format(self.pos_profile))
+			frappe.throw(
+				title=_("POS Opening Entry Missing"),
+				msg=_("No open POS Opening Entry found for POS Profile {0}.").format(
+					frappe.bold(self.pos_profile)
+				),
+			)
 
 	def validate_stock_availablility(self):
 		if self.is_return:
