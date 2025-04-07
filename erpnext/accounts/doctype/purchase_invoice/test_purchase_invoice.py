@@ -1852,7 +1852,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			1,
 		)
 		pi = make_pi_from_pr(pr.name)
-		self.assertEqual(pi.payment_schedule[0].payment_amount, 2500)
+		self.assertEqual(pi.payment_schedule[0].payment_amount, 1000)
 
 		automatically_fetch_payment_terms(enable=0)
 		frappe.db.set_value(
