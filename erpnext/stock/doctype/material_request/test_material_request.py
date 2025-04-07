@@ -6467,6 +6467,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po = make_purchase_order(mr.name)
 		po.supplier = supplier
 		po.items[0].rate = 1000
+		po.currency = "INR"
 		po.insert()
 		po.submit()
 
