@@ -2202,11 +2202,10 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(bin.actual_qty, item_fields["opening_stock"])
 
 	def test_stock_reco_TC_SCK_127(self):
-		if not frappe.db.exists("Company", "_Test Company"):
-			company = frappe.new_doc("Company")
-			company.company_name = "_Test Company"
-			company.default_currency = "INR"
-			company.insert()
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		company = "_Test Company"
+		frappe.db.set_value("Company", company, "stock_adjustment_account", 'Stock Adjustment - _TC')
 
 		warehouse = frappe.db.get_all("Warehouse", filters={"company": "_Test Company"})
 		create_fiscal_with_company('_Test Company')
@@ -3665,9 +3664,9 @@ class TestStockEntry(FrappeTestCase):
 
 	def test_stock_manufacture_with_batch_serial_TC_SCK_142(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
-
-		company = "_Test Company"
 		create_company()
+		company = "_Test Company"
+		frappe.db.set_value("Company", company, "stock_adjustment_account", 'Stock Adjustment - _TC')
 		get_fiscal_year(company)
 		create_warehouse("_Test Warehouse Group - _TC", company=company)
 
@@ -3724,8 +3723,9 @@ class TestStockEntry(FrappeTestCase):
 	
 	def test_stock_manufacture_with_batch_serieal_TC_SCK_140(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
-		company = "_Test Company"
 		create_company()
+		company = "_Test Company"
+		frappe.db.set_value("Company", company, "stock_adjustment_account", 'Stock Adjustment - _TC')
 		get_fiscal_year(company)
 		create_warehouse("_Test Warehouse Group - _TC", company=company)
 
@@ -3896,8 +3896,9 @@ class TestStockEntry(FrappeTestCase):
 
 	def test_stock_manufacture_with_batch_serial_TC_SCK_141(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
-		company = "_Test Company"
 		create_company()
+		company = "_Test Company"
+		frappe.db.set_value("Company", company, "stock_adjustment_account", 'Stock Adjustment - _TC')
 		get_fiscal_year(company)
 		create_warehouse("_Test Warehouse Group - _TC", company=company)
 		if not frappe.db.exists("Company", company):
