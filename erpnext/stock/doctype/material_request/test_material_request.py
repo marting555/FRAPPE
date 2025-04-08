@@ -4796,7 +4796,7 @@ class TestMaterialRequest(FrappeTestCase):
 		company = get_or_create_data.get("company")
 		supplier = get_or_create_data.get("supplier")
 		customer = get_or_create_data.get("customer")
-		item = make_test_item("_Test Item")
+		item = make_test_item("_test_item_1")
 
 		mr_dict_list = {
 				"company" : company,
