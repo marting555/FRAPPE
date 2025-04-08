@@ -111,6 +111,12 @@ def filter_result_items(result, pos_profile):
 			return
 		result["items"] = [item for item in result.get("items") if item.get("item_group") in pos_item_groups]
 
+@frappe.whitelist()
+def get_parent_item_group():
+	# Using get_all to ignore user permission
+	item_group = frappe.get_all("Item Group", {"lft": 1, "is_group": 1}, pluck="name")
+	if item_group:
+		return item_group[0]
 
 @frappe.whitelist()
 def get_items(start, page_length, price_list, item_group, pos_profile, search_term=""):
@@ -200,11 +206,14 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 				"item_code": item.item_code,
 				"selling": True,
 				"valid_from": ["<=", current_date],
-				"valid_upto": ["in", [None, "", current_date]],
 			},
+			or_filters=[
+				["valid_upto","in",[None,""]],
+				["valid_upto",">=",current_date]
+			],
 			order_by="valid_from desc",
-			limit=1,
-		)
+			limit=1	
+			)
 
 		if not item_price:
 			result.append(item)
@@ -321,13 +330,13 @@ def get_past_order_list(search_term, status, limit=20):
 	invoice_list = []
 
 	if search_term and status:
-		invoices_by_customer = frappe.db.get_all(
+		invoices_by_customer = frappe.db.get_list(
 			"POS Invoice",
 			filters={"customer": ["like", f"%{search_term}%"], "status": status},
 			fields=fields,
 			page_length=limit,
 		)
-		invoices_by_name = frappe.db.get_all(
+		invoices_by_name = frappe.db.get_list(
 			"POS Invoice",
 			filters={"name": ["like", f"%{search_term}%"], "status": status},
 			fields=fields,
@@ -336,7 +345,7 @@ def get_past_order_list(search_term, status, limit=20):
 
 		invoice_list = invoices_by_customer + invoices_by_name
 	elif status:
-		invoice_list = frappe.db.get_all(
+		invoice_list = frappe.db.get_list(
 			"POS Invoice", filters={"status": status}, fields=fields, page_length=limit
 		)
 

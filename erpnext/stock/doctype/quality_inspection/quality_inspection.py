@@ -37,6 +37,7 @@ class QualityInspection(Document):
 		item_code: DF.Link
 		item_name: DF.Data | None
 		item_serial_no: DF.Link | None
+		letter_head: DF.Link | None
 		manual_inspection: DF.Check
 		naming_series: DF.Literal["MAT-QA-.YYYY.-"]
 		quality_inspection_template: DF.Link | None
@@ -168,6 +169,9 @@ class QualityInspection(Document):
 			child = self.append("readings", {})
 			child.update(d)
 			child.status = "Accepted"
+			child.parameter_group = frappe.get_value(
+ 				"Quality Inspection Parameter", d.specification, "parameter_group"
+ 			)
 
 	@frappe.whitelist()
 	def get_quality_inspection_template(self):

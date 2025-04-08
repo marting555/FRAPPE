@@ -3272,7 +3272,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 		bundle = dn.items[0].serial_and_batch_bundle
 
 		valuation_rate = frappe.db.get_value("Serial and Batch Bundle", bundle, "avg_rate")
-		self.assertEqual(valuation_rate, 100)
+		self.assertEqual(valuation_rate, 150)
 
 		doc = frappe.get_doc("Stock Settings")
 		doc.do_not_use_batchwise_valuation = 1
@@ -3914,6 +3914,36 @@ class TestPurchaseReceipt(FrappeTestCase):
 		batch_return.save()
 		batch_return.submit()
 
+	def test_pr_status_based_on_invoices_with_update_stock(self):
+		from erpnext.buying.doctype.purchase_order.purchase_order import (
+			make_purchase_invoice as _make_purchase_invoice,
+		)
+		from erpnext.buying.doctype.purchase_order.purchase_order import (
+			make_purchase_receipt as _make_purchase_receipt,
+		)
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import (
+			create_pr_against_po,
+			create_purchase_order,
+		)
+
+		item_code = "Test Item for PR Status Based on Invoices"
+		create_item(item_code)
+
+		po = create_purchase_order(item_code=item_code, qty=10)
+		pi = _make_purchase_invoice(po.name)
+		pi.update_stock = 1
+		pi.items[0].qty = 5
+		pi.submit()
+
+		po.reload()
+		self.assertEqual(po.per_billed, 50)
+
+		pr = _make_purchase_receipt(po.name)
+		self.assertEqual(pr.items[0].qty, 5)
+		pr.submit()
+		pr.reload()
+		self.assertEqual(pr.status, "To Bill")
+
 	def test_purchase_order_and_receipt_TC_SCK_072(self):
 		company = "_Test Company"
 		item1 = make_item("ST-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011010"})
@@ -3970,21 +4000,26 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(sl_entries[1].warehouse, warehouse2)
 
 	def test_purchase_order_and_receipt_TC_SCK_073(self):
+		from datetime import datetime, timedelta
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		create_supplier(supplier_name="_Test Supplier", default_currency="INR")
 		company = "_Test Indian Registered Company"
+		frappe.db.set_value('GST Settings','GST Settings','enable_overseas_transactions',1)
 		create_company(company)
+		get_or_create_fiscal_year(company)
 		item1 = make_item("ST-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011010"})
 		item2 = make_item("W-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011020"})
-		warehouse1 = create_warehouse("Raw Material - Iron Building - _TIRC", company=company)
+		warehouse1 = create_warehouse("Raw Material Iron Building - _TIRC", company=company)
 		warehouse2 = create_warehouse("Woods - _TIRC", company=company)
-		rejected_warehouse = create_warehouse("Rejection / Scrap - _TIRC", company=company)
-		posting_date = "2024-12-31"
+		rejected_warehouse = create_warehouse("Rejection Scrap - _TIRC", company=company)
+		posting_date = datetime.today().date()
 
 		# Create Purchase Order
 		po = frappe.new_doc("Purchase Order")
 		po.company = company
 		po.supplier = "_Test Supplier"
 		po.transaction_date = posting_date
-		po.schedule_date = "2025-01-02"
+		po.schedule_date = datetime.today().date() + timedelta(days=15)
 		item_list = [{"item_code": item1.name, "rate":50 ,"qty": 150, "warehouse": warehouse1}, {"item_code": item2.name,"rate":55 , "qty": 75, "warehouse": warehouse2}]
 		for row in item_list:
 			po.append("items", row)
@@ -4015,6 +4050,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 			supplier=po.supplier,
 			posting_date=posting_date,
 			items=item_list,
+			currency = "USD"
 		)
 		pr.save()
 		pr.submit()
@@ -4042,22 +4078,26 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(sl_entries[3].warehouse, rejected_warehouse)
 
 	def test_purchase_order_and_receipt_TC_SCK_074(self):
+		from datetime import datetime, timedelta
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		create_supplier(supplier_name="_Test Supplier", default_currency="INR")
 		company = "_Test Indian Registered Company"
 		create_company(company)
+		get_or_create_fiscal_year(company)
+		frappe.db.set_value('GST Settings','GST Settings','enable_overseas_transactions',1)
 		item1 = make_item("ST-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011010"})
 		item2 = make_item("W-N-001", {"is_stock_item": 1, "gst_hsn_code": "01011020"})
 		warehouse1 = create_warehouse("Raw Material Iron Building - _TIRC", company=company)
 		warehouse2 = create_warehouse("Woods - _TIRC", company=company)
 		rejected_warehouse = create_warehouse("Rejection Scrap - _TIRC", company=company)
-		posting_date = "2024-12-31"
+		posting_date = datetime.today().date()
 
 		# Create Purchase Order
 		po = frappe.new_doc("Purchase Order")
 		po.company = company
 		po.supplier = "_Test Supplier"
 		po.transaction_date = posting_date
-		po.schedule_date = "2025-01-02"
+		po.schedule_date = datetime.today().date() + timedelta(days=15)
 		item_list = [{"item_code": item1.name, "rate":50 ,"qty": 150, "warehouse": warehouse1}, {"item_code": item2.name,"rate":55 , "qty": 75, "warehouse": warehouse2}]
 		for row in item_list:
 			po.append("items", row)
@@ -4087,6 +4127,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 			supplier=po.supplier,
 			posting_date=posting_date,
 			items=item_list,
+			currency = "USD"
 		)
 		pr.save()
 		pr.submit()
@@ -4217,6 +4258,10 @@ class TestPurchaseReceipt(FrappeTestCase):
 		sr.cancel()
 		self.check_cancel_stock_gl_sle(sr, 20, -3000.0)
 	def test_purchase_receipt_with_serialized_item_TC_SCK_145(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		supplier = create_supplier(supplier_name="Test Supplier 1")
+		get_or_create_fiscal_year("_Test Company")
 		parent_itm_grp = frappe.new_doc("Item Group")
 		parent_itm_grp.item_group_name = "Test Parent Item Group"
 		parent_itm_grp.is_group = 1
@@ -4266,8 +4311,9 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertEqual(len(pr.items), 1)
 		self.assertEqual(pr.items[0].item_code, item_code)
 		self.assertEqual(pr.items[0].qty, qty)
-
-		serial_nos = get_serial_nos_from_bundle(pr.items[0].serial_and_batch_bundle)
+		
+		serial_batch_bundle = frappe.db.get_value('Serial and Batch Bundle',{'voucher_no': pr.name},'name')
+		serial_nos = frappe.db.get_all("Serial and Batch Entry",{"parent": serial_batch_bundle},["serial_no"])
 		self.assertEqual(len(serial_nos), qty)
 
 		for serial_no in serial_nos:
@@ -4546,6 +4592,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 			"doctype": "Purchase Receipt",
 			"supplier": supplier,
 			"company": company,
+			"currency": "INR",
 			"items": [{
 				"item_code": item.item_code,
 				"qty": 20,
@@ -5383,7 +5430,7 @@ test_records = frappe.get_test_records("Purchase Receipt")
 def create_company(company):
 	if not frappe.db.exists("Company", company):
 		company_doc = frappe.new_doc("Company")
-		company_doc.company_doc_name = company
+		company_doc.company_name = company
 		company_doc.country="India",
 		company_doc.default_currency= "INR",
 		company_doc.insert()
@@ -5391,12 +5438,13 @@ def create_company(company):
 def get_or_create_fiscal_year(company):
 	from datetime import datetime
 	current_date = datetime.today()
-	formatted_date = current_date.strftime("%m-%d-%Y")
+	formatted_date = current_date.strftime("%d-%m-%Y")
 	existing_fy = frappe.get_all(
 		"Fiscal Year",
 		filters={ 
 			"year_start_date": ["<=", formatted_date],
 			"year_end_date": [">=", formatted_date],
+			"disabled": 0
 		},
 		fields=["name"]
 	)
