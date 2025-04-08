@@ -8518,6 +8518,77 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(doc_po.total_qty, doc_pi.total_qty)
 		self.assertEqual(doc_po.grand_total, doc_pi.grand_total)
 
+	@change_settings("Accounts Settings", {"over_billing_allowance": 25})
+	@change_settings("Stock Settings", {"over_delivery_receipt_allowance": 25})
+	def test_purchase_order_and_PR_TC_SCK_181(self):
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		from datetime import datetime, timedelta
+		if not frappe.db.exists("Company", "_Test Company"):
+			company = frappe.new_doc("Company")
+			company.company_name = "_Test Company"
+			company.default_currency = "INR"
+			company.insert()
+		supplier = create_supplier(
+			supplier_name="_Test Supplier 1",
+			supplier_type="Company",
+		)
+		item_fields = {
+			"item_name": "_Test Book",
+			"is_stock_item": 1,
+			"valuation_rate": 100,
+		}
+		item = make_item("_Test Book", item_fields)
+		today = datetime.today().date()
+		schedule_date = today + timedelta(days=10)
+
+		purchase_order = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"supplier": supplier.name,
+			"schedule_date": schedule_date,
+			"company": "_Test Company",
+			"items": [{
+				"item_code": item.name,
+				"qty": 8,
+				"rate": 10,
+				"warehouse": create_warehouse("_Test Stores", company="_Test Company")
+			}]
+		})
+		purchase_order.insert()
+		purchase_order.submit()
+
+		purchase_order_item = purchase_order.items[0].name
+
+		# Create Purchase Receipt from Purchase Order
+		purchase_receipt = frappe.get_doc({
+			"doctype": "Purchase Receipt",
+			"supplier": supplier.name,
+			"company": "_Test Company",
+			"items": [{
+				"item_code": item.name,
+				"qty": 10,  # Over-billed qty (within 20% limit)
+				"rate": 10,
+				"warehouse": create_warehouse("_Test Stores", company="_Test Company"),
+				"purchase_order": purchase_order.name,
+				"so_detail": purchase_order_item
+			}]
+		})
+		purchase_receipt.insert()
+		purchase_receipt.submit()
+
+		# Check Stock Ledger
+		stock_ledger_entries = frappe.get_all(
+			"Stock Ledger Entry", 
+			filters={
+				"voucher_no": purchase_receipt.name
+			},
+			fields=[
+				"actual_qty",
+				"warehouse"
+			]
+		)
+
+		self.assertTrue(any(entry["actual_qty"] == 10 and entry["warehouse"] == "_Test Stores - _TC" for entry in stock_ledger_entries), "Stock Ledger did not update correctly")
+
 
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
