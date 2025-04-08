@@ -972,11 +972,12 @@ class TestWorkOrder(FrappeTestCase):
 			"Test RM Item 2 for Scrap Item Test",
 		]
 
-		job_cards = frappe.get_all(
-			"Job Card Time Log",
-			fields=["distinct parent as name", "docstatus"],
-			order_by="creation asc",
-		)
+		job_cards = frappe.db.sql("""
+			SELECT DISTINCT ON (parent) parent AS name, docstatus
+			FROM "tabJob Card Time Log"
+			ORDER BY parent, creation ASC
+		""", as_dict=True)
+
 
 		for job_card in job_cards:
 			if job_card.docstatus == 1:
