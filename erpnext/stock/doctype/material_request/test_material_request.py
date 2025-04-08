@@ -5102,14 +5102,12 @@ class TestMaterialRequest(FrappeTestCase):
 		return_pi.submit()
 		pr.reload()
 
-		#if account setup in company
-		credit_account = frappe.db.get_value("Company",return_pi.company,"stock_received_but_not_billed")
-		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': credit_account},'credit_in_transaction_currency')
-		self.assertEqual(gl_temp_credit, 500)
-		
-		debit_account = frappe.db.get_value("Company",return_pi.company,"default_payable_account")
-		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': debit_account},'debit_in_transaction_currency')
-		self.assertEqual(gl_stock_debit, 500)
+		self.voucher_no = return_pi.name
+		self.expected_gle = [
+			{'account': '_Test Account Cost for Goods Sold - _TC', 'debit': 0.0, 'credit': 500.0},
+			{'account': 'Creditors - _TC', 'debit': 500.0, 'credit': 0.0}
+		]
+		self.check_gl_entries()
 
 	def test_mr_po_pi_serial_TC_SCK_092(self):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
@@ -7890,6 +7888,22 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(sh_gle[0], sh_gle[1])
 			self.assertEqual(cogs_gle[0], cogs_gle[1])
 			self.assertEqual(current_bin_qty, bin_qty)
+
+	def check_gl_entries(self):
+		gle = frappe.qb.DocType("GL Entry")
+		gl_entries = (
+			frappe.qb.from_(gle)
+			.select(
+				gle.account,
+				gle.debit,
+				gle.credit,
+			)
+			.where((gle.voucher_no == self.voucher_no) & (gle.is_cancelled == 0))
+			.orderby(gle.account, gle.debit, gle.credit, order=frappe.qb.desc)
+		).run(as_dict=True)
+		for row in range(len(self.expected_gle)):
+			for field in ["account", "debit", "credit"]:
+				self.assertEqual(gl_entries[row][field],self.expected_gle[row][field])
 
 def get_in_transit_warehouse(company):
 	if not frappe.db.exists("Warehouse Type", "Transit"):
