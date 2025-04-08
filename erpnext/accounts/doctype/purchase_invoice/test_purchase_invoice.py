@@ -3279,9 +3279,13 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		self.assertEqual(pi_status, "Paid")
 
 	def test_partly_paid_of_pi_to_pr_to_pe_with_gst_TC_B_083(self):
-		frappe.set_user("Administrator")
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
-
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry,create_company
+		from erpnext.selling.doctype.sales_order.test_sales_order import get_or_create_fiscal_year
+		create_company()
+		warehouse = frappe.db.get_all('Warehouse',{'company':'_Test Company','is_group':0},['name'])
+		account = frappe.db.get_all('Account',{'company':'_Test Company'},['name'])
+		get_or_create_fiscal_year("_Test Company")
+		purchase_tax_category = frappe.db.get_value("Tax Category",{'title':"Test Tax Category 1"},"name")
 		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
 		purchase_tax.title = "TEST"
 		purchase_tax.company = "_Test Company"
@@ -3307,7 +3311,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			rate = 500,
 			supplier_warehouse = warehouse[0]['name'],
 			warehouse = warehouse[1]['name'],
-			expense_account = account[0]['name'],
+			expense_account = 'Cash - _TC',
 			uom = "Box",
 			cost_center = cost_center,
 			do_not_save = True
@@ -3336,7 +3340,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			payment_type="Pay",
 			party_type="Supplier",
 			party=f"_Test Supplier",
-			paid_to=paid_to_account,
+			paid_to='Creditors - _TC',
 			paid_from =paid_from_account,
 			paid_amount=pr.grand_total,
 		)
@@ -3669,21 +3673,23 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi.submit()
 
 	def test_pi_with_uploader_TC_B_092(self):
-		# Test Data
+		item_1 = create_item("_Test Item")
+		item_2 = create_item("_Test Item Home Desktop 200")
 		pi_data = {
 			"doctype": "Purchase Invoice",
 			"company": "_Test Company",
 			"supplier": "_Test Supplier",
 			"set_posting_time": 1,
-			"posting_date": "2025-01-10",
+			"posting_date": today(),
 			"update_stock": 1,
+			"currency": "INR",
 			"items": []
 		}
 
 		# Uploader Data
 		uploaded_data = [
-			{"item_code": "_Test Item", "warehouse": "_Test Warehouse 1 - _TC", "qty": 1, "rate": 2000},
-			{"item_code": "_Test Item Home Desktop 200", "warehouse": "_Test Warehouse 1 - _TC", "qty": 1, "rate": 1000},
+			{"item_code": item_1.item_code, "warehouse": "_Test Warehouse 1 - _TC", "qty": 1, "rate": 2000},
+			{"item_code": item_2.item_code, "warehouse": "_Test Warehouse 1 - _TC", "qty": 1, "rate": 1000},
 		]
 
 		# Simulating Upload Feature: Fill items table using uploaded data
@@ -3714,8 +3720,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		# Validate Stock Ledger
 		sle = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": pi_doc.name}, fields=["item_code", "actual_qty", "stock_value"])
 		self.assertEqual(len(sle), 2, "Stock Ledger should have entries for both items.")
-		self.assertEqual(sle[0]["item_code"], "Tissue", "Stock Ledger should contain Tissue.")
-		self.assertEqual(sle[1]["item_code"], "Book", "Stock Ledger should contain Book.")
+		self.assertEqual(sle[0]["item_code"], "_Test Item Home Desktop 200")
+		self.assertEqual(sle[1]["item_code"], "_Test Item")
 		self.assertEqual(sle[0]["actual_qty"], 1, "Quantity for Tissue should be 1.")
 		self.assertEqual(sle[1]["actual_qty"], 1, "Quantity for Book should be 1.")
 
