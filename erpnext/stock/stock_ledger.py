@@ -1193,16 +1193,26 @@ class update_entries_after:
 				exceptions[0]["voucher_no"],
 			) in frappe.local.flags.currently_saving:
 				msg = _("{0} units of {1} needed in {2} to complete this transaction.").format(
+<<<<<<< HEAD
 					abs(deficiency),
 					frappe.get_desk_link("Item", exceptions[0]["item_code"]),
+=======
+					frappe.bold(abs(deficiency)),
+					frappe.get_desk_link("Item", exceptions[0]["item_code"], show_title_with_name=True),
+>>>>>>> 86dee69c2f (fix: item code not showing in the error message)
 					frappe.get_desk_link("Warehouse", warehouse),
 				)
 			else:
 				msg = _(
 					"{0} units of {1} needed in {2} on {3} {4} for {5} to complete this transaction."
 				).format(
+<<<<<<< HEAD
 					abs(deficiency),
 					frappe.get_desk_link("Item", exceptions[0]["item_code"]),
+=======
+					frappe.bold(abs(deficiency)),
+					frappe.get_desk_link("Item", exceptions[0]["item_code"], show_title_with_name=True),
+>>>>>>> 86dee69c2f (fix: item code not showing in the error message)
 					frappe.get_desk_link("Warehouse", warehouse),
 					exceptions[0]["posting_date"],
 					exceptions[0]["posting_time"],
@@ -1664,7 +1674,7 @@ def validate_negative_qty_in_future_sle(args, allow_negative_stock=False):
 	if is_negative_with_precision(neg_sle):
 		message = _("{0} units of {1} needed in {2} on {3} {4} for {5} to complete this transaction.").format(
 			abs(neg_sle[0]["qty_after_transaction"]),
-			frappe.get_desk_link("Item", args.item_code),
+			frappe.get_desk_link("Item", args.item_code, show_title_with_name=True),
 			frappe.get_desk_link("Warehouse", args.warehouse),
 			neg_sle[0]["posting_date"],
 			neg_sle[0]["posting_time"],
@@ -1757,6 +1767,95 @@ def get_future_sle_with_negative_batch_qty(args):
 	)
 
 
+<<<<<<< HEAD
+=======
+def validate_reserved_stock(kwargs):
+	if kwargs.serial_no:
+		serial_nos = kwargs.serial_no.split("\n")
+		validate_reserved_serial_nos(kwargs.item_code, kwargs.warehouse, serial_nos)
+
+	elif kwargs.batch_no:
+		validate_reserved_batch_nos(kwargs.item_code, kwargs.warehouse, [kwargs.batch_no])
+
+	elif kwargs.serial_and_batch_bundle:
+		sbb_entries = frappe.db.get_all(
+			"Serial and Batch Entry",
+			{
+				"parenttype": "Serial and Batch Bundle",
+				"parent": kwargs.serial_and_batch_bundle,
+				"docstatus": 1,
+			},
+			["batch_no", "serial_no"],
+		)
+
+		if serial_nos := [entry.serial_no for entry in sbb_entries if entry.serial_no]:
+			validate_reserved_serial_nos(kwargs.item_code, kwargs.warehouse, serial_nos)
+		elif batch_nos := [entry.batch_no for entry in sbb_entries if entry.batch_no]:
+			validate_reserved_batch_nos(kwargs.item_code, kwargs.warehouse, batch_nos)
+
+	# Qty based validation for non-serial-batch items OR SRE with Reservation Based On Qty.
+	precision = cint(frappe.db.get_default("float_precision")) or 2
+	balance_qty = get_stock_balance(kwargs.item_code, kwargs.warehouse)
+
+	diff = flt(balance_qty - kwargs.get("reserved_stock", 0), precision)
+	if diff < 0 and abs(diff) > 0.0001:
+		msg = _("{0} units of {1} needed in {2} on {3} {4} to complete this transaction.").format(
+			abs(diff),
+			frappe.get_desk_link("Item", kwargs.item_code, show_title_with_name=True),
+			frappe.get_desk_link("Warehouse", kwargs.warehouse),
+			nowdate(),
+			nowtime(),
+		)
+		frappe.throw(msg, title=_("Reserved Stock"))
+
+
+def validate_reserved_serial_nos(item_code, warehouse, serial_nos):
+	if reserved_serial_nos_details := get_sre_reserved_serial_nos_details(item_code, warehouse, serial_nos):
+		if common_serial_nos := list(set(serial_nos).intersection(set(reserved_serial_nos_details.keys()))):
+			msg = _(
+				"Serial Nos are reserved in Stock Reservation Entries, you need to unreserve them before proceeding."
+			)
+			msg += "<br />"
+			msg += _("Example: Serial No {0} reserved in {1}.").format(
+				frappe.bold(common_serial_nos[0]),
+				frappe.get_desk_link(
+					"Stock Reservation Entry", reserved_serial_nos_details[common_serial_nos[0]]
+				),
+			)
+			frappe.throw(msg, title=_("Reserved Serial No."))
+
+
+def validate_reserved_batch_nos(item_code, warehouse, batch_nos):
+	if reserved_batches_map := get_sre_reserved_batch_nos_details(item_code, warehouse, batch_nos):
+		available_batches = get_available_batches(
+			frappe._dict(
+				{
+					"item_code": item_code,
+					"warehouse": warehouse,
+					"posting_date": nowdate(),
+					"posting_time": nowtime(),
+				}
+			)
+		)
+		available_batches_map = {row.batch_no: row.qty for row in available_batches}
+		precision = cint(frappe.db.get_default("float_precision")) or 2
+
+		for batch_no in batch_nos:
+			diff = flt(
+				available_batches_map.get(batch_no, 0) - reserved_batches_map.get(batch_no, 0), precision
+			)
+			if diff < 0 and abs(diff) > 0.0001:
+				msg = _("{0} units of {1} needed in {2} on {3} {4} to complete this transaction.").format(
+					abs(diff),
+					frappe.get_desk_link("Batch", batch_no),
+					frappe.get_desk_link("Warehouse", warehouse),
+					nowdate(),
+					nowtime(),
+				)
+				frappe.throw(msg, title=_("Reserved Stock for Batch"))
+
+
+>>>>>>> 86dee69c2f (fix: item code not showing in the error message)
 def is_negative_stock_allowed(*, item_code: str | None = None) -> bool:
 	if cint(frappe.db.get_single_value("Stock Settings", "allow_negative_stock", cache=True)):
 		return True
