@@ -264,7 +264,7 @@
  "idx": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2025-01-22 10:47:00.674163",
+ "modified": "2025-04-08 13:46:38.674163",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Warehouse",
@@ -321,5 +321,6 @@
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": [],
+ "title_field": "warehouse_name",
  "track_changes": 1
 }
