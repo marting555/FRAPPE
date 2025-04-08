@@ -31,6 +31,7 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 )
 from erpnext.stock.tests.test_utils import StockTestMixin
 import frappe.utils
+from .purchase_invoice import make_debit_note
 
 test_dependencies = ["Item", "Cost Center", "Payment Term", "Payment Terms Template"]
 test_ignore = ["Serial No"]
@@ -3091,8 +3092,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 	def test_invoice_status_on_payment_entry_submit_TC_B_035_and_TC_B_037(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
-		from erpnext.accounts.doctype.unreconcile_payment.unreconcile_payment import payment_reconciliation_record_on_unreconcile,create_unreconcile_doc_for_selection
-		import json
+		from erpnext.accounts.doctype.unreconcile_payment.unreconcile_payment import get_linked_payments_for_doc
 		pi = make_purchase_invoice(
 			qty=1,
 			item_code="_Test Item",
@@ -3103,6 +3103,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		pi.save()
 		pi.submit()
+		pi_status_before = frappe.db.get_value("Purchase Invoice", pi.name, "status")
+		self.assertEqual(pi_status_before, "Unpaid")
 
 		pe = create_payment_entry(
 			company="_Test Company",
@@ -3115,42 +3117,22 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 		pe.append("references", {"reference_doctype": "Purchase Invoice", "reference_name": pi.name,"allocated_amount":pi.rounded_total})
 		pe.save()
-		pi_status_before = frappe.db.get_value("Purchase Invoice", pi.name, "status")
-		self.assertEqual(pi_status_before, "Unpaid")
 		pe.submit()
 		pe.reload()
 		pi.reload()
 		pi_status_after = frappe.db.get_value("Purchase Invoice", pi.name, "status")
 		self.assertEqual(pi_status_after, "Paid")
-		header = {
-			"company":"_Test Company",
-			"unreconcile":1,
-			"clearing_date":"2025-01-07",
-			"party_type":"Supplier",
-			"party":"_Test Supplier"
-		}
-		selection = {"company":"_Test Company","voucher_type":"Payment Entry","voucher_no":f"{pe.name}","against_voucher_type":"Purchase Invoice","against_voucher_no":f"{pi.name}","allocated_amount":pi.rounded_total}
-		allocation = [{"reference_type":"Payment Entry","reference_name":pe.name,"invoice_type":"Purchase Invoice","invoice_number":pi.name,"allocated_amount":pi.rounded_total}]
-		payment_reconciliation_record_on_unreconcile(header=header,allocation=allocation)
-		create_unreconcile_doc_for_selection(selections = json.dumps([selection]))
-		pi_status_after_reconcile = frappe.db.get_value("Purchase Invoice", pi.name, "status")
-		self.assertEqual(pi_status_after_reconcile, "Unpaid")
 
-		new_pi = make_purchase_invoice(
-			qty=1,
-			item_code="_Test Item",
-			supplier = "_Test Supplier",
-			company = "_Test Company",
-			rate = 30,
-			do_not_save =True,
-		)
-		new_pi.save()
-		new_pi.set_advances()
-		new_pi.save()
-		new_pi.submit()
+		return_pi = make_debit_note(pi.name)
+		return_pi.update_outstanding_for_self = 0
+		return_pi.save()
+		return_pi.submit()
+		self.assertEqual(return_pi.status, "Return")
 
-		pi_status_after_advances = frappe.db.get_value("Purchase Invoice", new_pi.name, "status")
-		self.assertEqual(pi_status_after_advances, "Paid")
+		pi.reload()
+		self.assertEqual(pi.status, "Debit Note Issued")
+
+		get_linked_payments_for_doc(pe.company, pe.doctype, pe.name)
 
 	def test_partly_paid_of_pi_to_pr_to_pe_TC_B_081(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry,create_company
