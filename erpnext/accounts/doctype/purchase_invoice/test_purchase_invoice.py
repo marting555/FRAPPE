@@ -4,7 +4,7 @@
 
 import frappe
 from frappe.tests.utils import FrappeTestCase, change_settings, if_app_installed
-from frappe.utils import add_days, cint, flt, getdate, nowdate, today, get_year_start, get_year_ending
+from frappe.utils import add_days, cint, flt, getdate, nowdate, today, get_year_start, get_year_ending,get_quarter_start
 from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 import erpnext
 from erpnext.accounts.doctype.account.test_account import create_account, get_inventory_account
@@ -3021,7 +3021,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 	def test_tds_computation_summary_report_TC_ACC_094(self):
 		"""Test the TDS Computation Summary report for Purchase Invoice data."""
 		from frappe.desk.query_report import get_report_result
-
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
 		company = "_Test Company"
 		tds_account_args = {
 			"doctype": "Account",
@@ -3065,7 +3065,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		filters = {
 			"company": company,
 			"party_type": "Supplier",
-			"from_date": add_days(nowdate(), -30),
+			"from_date" : str(get_quarter_start(getdate(nowdate()))),
 			"to_date": nowdate(),
 		}
 		report = frappe.get_doc("Report", report_name)
@@ -3092,6 +3092,184 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		# Assert the matching row exists
 		self.assertIsNotNone(matching_row, "The expected row for the supplier and section code was not found.")
 		purchase_invoice.cancel()
+
+	def test_tds_computation_summary_report_TC_ACC_095(self):
+		from frappe.desk.query_report import get_report_result
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
+		company = "_Test Company"
+
+		# Create TDS account
+		tds_account_args = {
+			"doctype": "Account",
+			"account_name": "TDS Payable",
+			"account_type": "Tax",
+			"parent_account": frappe.db.get_value(
+				"Account", {"account_name": "Duties and Taxes", "company": company}
+			),
+			"company": company,
+		}
+		tds_account = create_account(**tds_account_args)
+
+		# Create Tax Withholding Category
+		tax_withholding_category = "Test - TDS - 194C - Company"
+		create_tax_witholding_category(tax_withholding_category, company, tds_account)
+		# Create Supplier with the TDS category
+		supplier = create_supplier(
+			supplier_name="_Test Supplier TDS PE",
+			tax_withholding_category=tax_withholding_category,
+		)
+
+		# Create Payment Entry with TDS
+		payment_entry = create_payment_entry(
+			party_type="Supplier",
+			party=supplier.name,
+			payment_type="Pay",
+			paid_from="Cash - _TC",
+			paid_to="Creditors - _TC",
+			save=True,
+		)
+		payment_entry.posting_date = nowdate()
+		payment_entry.apply_tax_withholding_amount = 1
+		payment_entry.tax_withholding_category = tax_withholding_category
+		payment_entry.paid_amount = 30000.0
+		payment_entry.append(
+			"taxes",
+			{
+				"account_head": "_Test TDS Payable - _TC",
+				"charge_type": "On Paid Amount",
+				"rate": 0,
+				"add_deduct_tax": "Deduct",
+				"description": "TDS Deduction",
+			},
+		)
+		payment_entry.save()
+		payment_entry.submit()
+
+		# Run the report
+		report_name = "TDS Computation Summary"
+		filters = {
+			"company": company,
+			"party_type": "Supplier",
+			"from_date": str(get_quarter_start(getdate(nowdate()))),
+			"to_date": nowdate(),
+		}
+		report = frappe.get_doc("Report", report_name)
+		report_data = get_report_result(report, filters) or []
+		rows = report_data[1]
+
+		# Expected values
+		expected_data = {
+			"party": supplier.name,
+			"section_code": tax_withholding_category,
+			"entity_type": "Company",
+			"rate": 10.0,
+			"total_amount": 30000.0,
+			"tax_amount": 3000.0,
+		}
+
+		# Find matching row
+		matching_row = None
+		for row in rows:
+			if row["party"] == expected_data["party"] and row["section_code"] == expected_data["section_code"]:
+				matching_row = row
+				break
+
+		# Assertions
+		self.assertIsNotNone(matching_row, "The expected row for the supplier and section code was not found.")
+		self.assertEqual(matching_row["rate"], expected_data["rate"])
+		self.assertEqual(matching_row["total_amount"], expected_data["total_amount"])
+		self.assertEqual(matching_row["tax_amount"], expected_data["tax_amount"])
+
+		# Cleanup
+		payment_entry.cancel()
+
+	def test_tds_computation_summary_report_TC_ACC_096(self):
+		from frappe.desk.query_report import get_report_result
+
+		company = "_Test Company"
+
+		# Create TDS account
+		tds_account_args = {
+			"doctype": "Account",
+			"account_name": "TDS Payable Journal",
+			"account_type": "Tax",
+			"parent_account": frappe.db.get_value(
+				"Account", {"account_name": "Duties and Taxes", "company": company}
+			),
+			"company": company,
+		}
+		tds_account = create_account(**tds_account_args)
+		# Create Tax Withholding Category
+		tax_withholding_category = "Test - TDS - 194H - Journal"
+		create_tax_witholding_category(tax_withholding_category, company, tds_account)
+
+		# Create Supplier with the TDS category
+		supplier = create_supplier(
+			supplier_name="_Test Supplier TDS JE",
+			tax_withholding_category=tax_withholding_category,
+		)
+
+		# Create Journal Entry with TDS
+		je = frappe.new_doc("Journal Entry")
+		je.voucher_type = "Journal Entry"
+		je.posting_date = nowdate()
+		je.company = company
+		je.tax_withholding_category = tax_withholding_category
+		je.apply_tax_withholding_amount = 1
+
+		je.append("accounts", {
+			"account": "Creditors - _TC",
+			"party_type": "Supplier",
+			"party": supplier.name,
+			"credit_in_account_currency": 10000.0,
+		})
+		je.append("accounts", {
+			"account": "Cash - _TC",
+			"debit_in_account_currency": 9000.0,
+		})
+		je.append("accounts", {
+			"account": tds_account,
+			"debit_in_account_currency": 1000.0,
+		})
+		je.save()
+		je.submit()
+
+		# Run the report
+		report_name = "TDS Computation Summary"
+		filters = {
+			"company": company,
+			"party_type": "Supplier",
+			"from_date": str(get_quarter_start(getdate(nowdate()))),
+			"to_date": nowdate(),
+		}
+		report = frappe.get_doc("Report", report_name)
+		report_data = get_report_result(report, filters) or []
+		rows = report_data[1]
+
+		# Expected values
+		expected_data = {
+			"party": supplier.name,
+			"section_code": tax_withholding_category,
+			"entity_type": "Company",
+			"rate": 10.0,
+			"total_amount": 10000.0,
+			"tax_amount": 500.0,
+		}
+
+		# Find matching row
+		matching_row = None
+		for row in rows:
+			if row["party"] == expected_data["party"] and row["section_code"] == expected_data["section_code"]:
+				matching_row = row
+				break
+
+		# Assertion
+		self.assertIsNotNone(
+			matching_row,
+			"The expected row for Journal Entry TDS was not found in the report. Check if Journal Entry data is included."
+		)
+
+		je.cancel()
 
 	def test_invoice_status_on_payment_entry_submit_TC_B_035_and_TC_B_037(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
