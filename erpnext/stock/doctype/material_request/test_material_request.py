@@ -3072,15 +3072,10 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_po_2pi_TC_SCK_083(self):
 		# MR =>  PO => 2PI
-		item_fields = {
-			"item_name" : "Testing-31",
-			"is_stock_item": 1,
-			"valuation_rate": 500
-		}
-		item = make_item("Testing-31", item_fields).name
+		item = make_test_item("_test_item_1")
 		mr_dict_list = [{
 				"company" : "_Test Company",
-				"item_code" : item,
+				"item_code" : item.item_code,
 				"warehouse" : "Stores - _TC",
 				"qty" : 10,
 				"rate" : 100,
