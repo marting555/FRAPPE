@@ -3566,6 +3566,7 @@ class TestWorkOrder(FrappeTestCase):
 			raw_materials=[item_raw],
 			rm_qty=10
 		)
+		make_stock_entry(item_code="Test raw material", qty=200, rate=500, target="Stores - _TC")
 
 		# Create a work order
 		wo_doc = make_wo_order_test_record(production_item=item_code, qty=10,do_not_submit=1)
@@ -3618,6 +3619,7 @@ class TestWorkOrder(FrappeTestCase):
 			raw_materials=[item_raw],
 			rm_qty=10
 		)
+		make_stock_entry(item_code="Test raw material", qty=200, rate=500, target="Stores - _TC")
 
 		# Create a work order
 		wo_doc = make_wo_order_test_record(production_item=item_code, qty=10,do_not_submit=1)
@@ -3683,6 +3685,7 @@ class TestWorkOrder(FrappeTestCase):
 			raw_materials=[item_raw],
 			rm_qty=10
 		)
+		make_stock_entry(item_code="Test raw material", qty=200, rate=500, target="Stores - _TC")
 
 		# Create a work order
 		wo_doc = make_wo_order_test_record(production_item=item_code, qty=10,do_not_submit=1)
@@ -3737,6 +3740,7 @@ class TestWorkOrder(FrappeTestCase):
 			rm_qty=10,
 			do_not_submit=True
 		)
+		make_stock_entry(item_code="Test raw material", qty=200, rate=500, target="Stores - _TC")
 		item_scrap = make_item("Test scrap material1")
 		frappe.db.set_value('Item',item_scrap.item_code,'valuation_rate',20)
 		bom_doc.append("scrap_items", {"item_code": item_scrap.item_code, "qty": 1})
@@ -3794,6 +3798,7 @@ class TestWorkOrder(FrappeTestCase):
 			rm_qty=10,
 			do_not_submit=True
 		)
+		make_stock_entry(item_code="Test raw material", qty=200, rate=500, target="Stores - _TC")
 		item_scrap = make_item("Test scrap material1")
 		frappe.db.set_value('Item',item_scrap.item_code,'valuation_rate',20)
 		bom_doc.append("scrap_items", {"item_code": item_scrap.item_code, "qty": 1})
@@ -3855,6 +3860,7 @@ class TestWorkOrder(FrappeTestCase):
 			rm_qty=10,
 			do_not_submit=True
 		)
+		make_stock_entry(item_code="Test raw material", qty=200, rate=500, target="Stores - _TC")
 		item_scrap = make_item("Test scrap material1")
 		frappe.db.set_value('Item',item_scrap.item_code,'valuation_rate',20)
 		bom_doc.append("scrap_items", {"item_code": item_scrap.item_code, "qty": 1})
