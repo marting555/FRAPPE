@@ -8082,17 +8082,17 @@ def create_mr_to_pi(**args):
 		source_name_pi = make_test_pi(source_name_pr)
 		return source_name_pi
 
-def create_company(company= None):
-	company = "_Test Company MR"
-	if not frappe.db.exists("Company", company):
+def create_company():
+	company_name = "_Test Company MR"
+	if not frappe.db.exists("Company", company_name):
 		company = frappe.new_doc("Company")
-		company.company_name = company
+		company.company_name = company_name
 		company.country="India",
 		company.default_currency= "INR",
 		company.chart_of_accounts= "Standard",
 		company = company.save()
 		company.load_from_db()
-	return company
+	return company_name
 		
 def create_fiscal_year(company=None):
 	today = date.today()
