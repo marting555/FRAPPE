@@ -178,7 +178,10 @@ class TestAccountsReceivable(AccountsTestMixin, FrappeTestCase):
 			"company": self.company,
 			"based_on_payment_terms": 1,
 			"report_date": today(),
-			"range": "30, 60, 90, 120",
+			"range1": 30,
+			"range2": 60,
+			"range3": 90,
+			"range4": 120,
 			"show_remarks": True,
 		}
 
@@ -210,7 +213,10 @@ class TestAccountsReceivable(AccountsTestMixin, FrappeTestCase):
 			"company": self.company,
 			"based_on_payment_terms": 1,
 			"report_date": today(),
-			"range": "30, 60, 90, 120",
+			"range1": 30,
+			"range2": 60,
+			"range3": 90,
+			"range4": 120,
 			"show_remarks": True,
 		}
 
