@@ -188,7 +188,7 @@ class QualityInspection(Document):
 	def on_update(self):
 		if (
 			frappe.db.get_single_value("Stock Settings", "action_if_quality_inspection_is_not_submitted")
-			== "Warn"
+			== "Stop"
 		):
 			self.update_qc_reference()
 
