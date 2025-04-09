@@ -531,8 +531,6 @@
   }
  ],
  "quick_entry": 1,
- "sort_field": "modified",
- "row_format": "Dynamic",
  "sort_field": "creation",
  "sort_order": "ASC",
  "states": [],
