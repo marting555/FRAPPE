@@ -168,8 +168,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi_doc = frappe.get_doc("Purchase Invoice", pi_doc.name)
 		pi_doc.load_from_db()
 		self.assertTrue(pi_doc.status, "Paid")
-
-		self.assertRaises(frappe.LinkExistsError, pi_doc.cancel)
+		pi_doc.cancel()
+		self.assertRaises(frappe.LinkExistsError, pi_doc.delete)
 		unlink_payment_on_cancel_of_invoice()
 
 	def test_purchase_invoice_for_blocked_supplier(self):
