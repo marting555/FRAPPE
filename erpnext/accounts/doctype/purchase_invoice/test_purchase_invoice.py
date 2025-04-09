@@ -4480,11 +4480,6 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		self.assertEqual(expected_gle[1], ['_Test Account Cost for Goods Sold - _TC', 0.0, 300.0, '2025-04-09'])
 		self.assertEqual(expected_gle[2], ['Stock In Hand - _TC', 1300.0, 0.0, '2025-04-09'])
 
-
-
-
-
-
 	def test_lcv_with_purchase_invoice_for_fixed_asset_item_TC_ACC_113(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			make_test_item
