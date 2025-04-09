@@ -51,22 +51,6 @@ frappe.ui.form.on("Bank Transaction", {
 		set_bank_statement_filter(frm);
 	},
 
-	setup: function (frm) {
-		frm.set_query("party_type", function () {
-			return {
-				filters: {
-					name: ["in", Object.keys(frappe.boot.party_account_types)],
-				},
-			};
-		});
-
-		frm.set_query("bank_account", function () {
-			return {
-				filters: { is_company_account: 1 },
-			};
-		});
-	},
-
 	get_payment_doctypes: function () {
 		// get payment doctypes from all the apps
 		return ["Payment Entry", "Journal Entry", "Sales Invoice", "Purchase Invoice", "Bank Transaction"];
