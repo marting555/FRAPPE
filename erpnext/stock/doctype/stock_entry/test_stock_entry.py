@@ -2298,7 +2298,12 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(stock_movements.get(self.item_code2.name), 2, "Brown Rice 5kg should be 2 Inward")
 
 	def create_stock_repack_via_bom(self):
-		frappe.db.set_value("Company", "_Test Company", "stock_adjustment_account", "Stock Adjustment - _TC")
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		company = "_Test Company"
+		frappe.db.set_value("Company", company, "stock_received_but_not_billed", 'Cost of Goods Sold - _TC')
+		frappe.db.set_value("Company", company, "stock_adjustment_account", "Stock Adjustment - _TC")
+		
 		t_warehouse = create_warehouse(
 			warehouse_name="_Test Target Warehouse",
 			properties={"parent_warehouse": "All Warehouses - _TC"},
