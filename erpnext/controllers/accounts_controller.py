@@ -1346,6 +1346,9 @@ class AccountsController(TransactionBase):
 			party_type, party, party_account, amount_field, order_doctype, order_list, include_unallocated
 		)
 
+		if (frappe.db.db_type == 'postgres') and (include_unallocated == True or False):
+			include_unallocated = "IS NOT NULL"
+
 		payment_entries = get_advance_payment_entries_for_regional(
 			party_type,
 			party,

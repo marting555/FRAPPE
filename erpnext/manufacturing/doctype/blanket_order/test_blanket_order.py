@@ -260,6 +260,13 @@ class TestBlanketOrder(FrappeTestCase):
 		get_or_create_fiscal_year('_Test Company')
 		bo = make_blanket_order(blanket_order_type="Selling",quantity=50,rate=1000)
 		so = make_order(bo.name)
+		make_stock_entry(
+			item_code=bo.items[0].item_code,
+			qty=50,
+			to_warehouse="_Test Warehouse - _TC", 
+			rate=1000,
+			purpose="Material Receipt"
+		)
 		so.delivery_date = add_days(nowdate(), 5)
 		so.submit()
 
