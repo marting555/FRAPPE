@@ -3995,6 +3995,49 @@ class TestStockEntry(FrappeTestCase):
 			if sle['item_code'] == item.item_code:
 				self.assertEqual(sle['actual_qty'], 150)
 
+	def test_stock_ageing_TC_SCK_227(self):
+		from erpnext.stock.report.stock_ageing.stock_ageing import execute
+		avail_qty = 30
+		company = "_Test Company"
+		item_c = []
+		q = []
+		range1 = []
+		range2 = []
+		create_company(company)
+		item_fields = {
+			"item_name": "_Test Item227",
+			"valuation_rate": 500,
+			"is_stock_item": 1
+		}
+		item = make_item("_Test Item227", item_fields)
+		se = make_stock_entry(item_code=item.name,purpose="Material Receipt", posting_date="01-12-2024",company=company,target=create_warehouse("Test Warehouse", company=company), qty=10)
+		se1 = make_stock_entry(item_code=item.name,purpose="Material Receipt", posting_date="01-01-2025",company=company,target=create_warehouse("Test Warehouse", company=company), qty=20)
+
+		filters = frappe._dict({  # Convert to allow dot notation
+		"company": "_Test Company",
+        "to_date": "2025-01-12",
+        "item_code": item.name,
+        "warehouse": create_warehouse("Test Warehouse", company=company),
+		"range": "30, 60, 90"
+    	})
+
+		columns, data, _, chart_data = execute(filters)
+		for i in data[0]:
+			item_c.append(data[0][0])
+			q.append(data[0][5])
+			range1.append(data[0][7])
+			range2.append(data[0][9])
+		item_c = set(item_c)
+		item_c = list(item_c)
+		range1 = set(range1)
+		range1 = list(range1)
+		range2 = set(range2)
+		range2 = list(range2)
+		self.assertTrue(filters["item_code"] == item_c[0], "Item tc failed")
+		self.assertTrue(range1[0] == 20)
+		self.assertTrue(range2[0] == 10)
+		self.assertTrue(q[0] == avail_qty)
+
 	def test_inactive_sales_items_TC_SCK_228(self):
 		from erpnext.accounts.report.inactive_sales_items.inactive_sales_items import execute
 		
