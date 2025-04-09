@@ -240,7 +240,7 @@ erpnext.accounts.unreconcile_payment = {
 									);
 									d.hide();
 								} else {
-									frappe.msgprint("No Selection");
+									frappe.msgprint(__("No Selection"));
 								}
 							},
 						});
