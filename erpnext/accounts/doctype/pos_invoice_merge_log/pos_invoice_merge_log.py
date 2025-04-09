@@ -306,7 +306,7 @@ class POSInvoiceMergeLog(Document):
 		dimension_values = frappe.db.get_value(
 			"POS Profile",
 			{"name": invoice.pos_profile},
-			[*accounting_dimensions_fields, "cost_center"],
+			[*accounting_dimensions_fields, "cost_center", "project"],
 			as_dict=1,
 		)
 		for dimension in accounting_dimensions:
@@ -330,7 +330,9 @@ class POSInvoiceMergeLog(Document):
 			"cost_center",
 			data[0].get("cost_center") if data[0].get("cost_center") else dimension_values.get("cost_center"),
 		)
-		invoice.set("project", data[0].get("project"))
+		invoice.set(
+			"project", data[0].get("project") if data[0].get("project") else dimension_values.get("project")
+		)
 
 		if self.merge_invoices_based_on == "Customer Group":
 			invoice.flags.ignore_pos_profile = True
