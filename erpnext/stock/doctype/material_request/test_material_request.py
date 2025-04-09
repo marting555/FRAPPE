@@ -1685,12 +1685,14 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_mr_to_partial_pi_TC_B_020(self):
 		# MR => 2RFQ => 1SQ => 2PO => 2PR => 2PI
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		get_company_supplier = create_data()
 		company = get_company_supplier.get("child_company")
 		customer = get_company_supplier.get("customer")
 		supplier = get_company_supplier.get("supplier")
 		target_warehouse = "Stores - TC-3"
 		item = make_test_item("_test_item")
+		get_or_create_fiscal_year("Test Company-3344")
 
 		args = frappe._dict()
 		args['mr'] = [{
@@ -2635,12 +2637,14 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_mr_to_partial_pr_TC_B_023(self):
 		# MR => 1RFQ => 2SQ => 2PO => 1PR => 1PI
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier as create_data
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		get_company_supplier = create_data()
 		company = get_company_supplier.get("child_company")
 		supplier = get_company_supplier.get("supplier")
 		customer = get_company_supplier.get("customer")
 		warehouse = "Stores - TC-3"
 		item = make_test_item("_test_item_partial_pr")
+		get_or_create_fiscal_year(company)
 		args = frappe._dict()
 		args['mr'] = [{
 			"company": company,
@@ -8080,7 +8084,13 @@ def make_test_pi(source_name, received_qty = None, item_dict = None, args = None
 	if args is not None:
 		args = frappe._dict(args)
 		doc_pi.update(args)
-	doc_pi.bill_no = "test_bill_1122"
+	
+	pi = frappe.db.get_all("Purchase Invoice", fields=["name"])
+	if pi:
+		bill_no = len(pi) + 1
+	else:
+		bill_no = 1
+	doc_pi.bill_no = f"test_bill_{bill_no}"
 	doc_pi.insert()
 	doc_pi.submit()
 	return doc_pi

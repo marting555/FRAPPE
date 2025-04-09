@@ -1422,6 +1422,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		supplier = get_company_supplier.get("supplier")
 		item = make_test_item("test_item")
 		warehouse = "Stores - TC-3"
+		get_or_create_fiscal_year(company)
 
 
 		po = frappe.get_doc({
@@ -1773,7 +1774,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		supplier = get_company_supplier.get("supplier")
 		item = make_test_item("test_item")
 		warehouse = "Stores - TC-3"
-
+		get_or_create_fiscal_year(company)
 		po = frappe.get_doc({
 			"doctype": "Purchase Order",
 			"supplier": supplier,
@@ -2077,10 +2078,13 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertTrue(stock_decrease_passed)
 
 	def test_pr_to_lcv_add_value_to_stock_TC_B_034(self):
-		frappe.set_user("Administrator")
-		frappe.db.set_value("Company", "_Test Company", {"enable_perpetual_inventory":1, "stock_received_but_not_billed": "_Test Account Excise Duty - _TC"})
+		frappe.db.set_value("Company", "_Test Company", {"enable_perpetual_inventory":1, "stock_received_but_not_billed": "Stock Adjustment - _TC"})
 		item = make_test_item("Testing-31")
+		create_supplier(supplier_name="_Test Supplier 1")
+		get_or_create_fiscal_year("_Test Company")
 		# Step 1: Create Purchase Receipt
+		company = "_Test Company"
+		supplier = "_Test Supplier 1"
 		doc_pr = frappe.get_doc({
 			"doctype": "Purchase Receipt",
 			"company": company,
@@ -2097,7 +2101,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		doc_pr.insert()
 		doc_pr.submit()
 		self.assertEqual(doc_pr.docstatus, 1)
-
+		account = frappe.db.get_value("Account", {"company": company}, "name")
 		doc_lcv = frappe.get_doc({
 			"doctype": "Landed Cost Voucher",
 			"company": company,
@@ -2111,7 +2115,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			],
 			"taxes": [
 				{
-					"expense_account": account.name,
+					"expense_account": account,
 					"amount": 500,
 					"description": "test_description"
 				}
@@ -2126,7 +2130,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"Stock Ledger Entry",
 			filters={
 				"voucher_no": doc_pr.name,
-				"warehouse": warehouse,
+				"warehouse": "Stores - _TC",
 				"item_code": item.item_code
 			},
 			fields=["valuation_rate"],
@@ -2584,7 +2588,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		supplier = get_company_supplier.get("supplier")
 		item = make_test_item("_test_item")
 		warehouse = "Stores - TC-3"
-
+		get_or_create_fiscal_year(company)
 		po_data = {
 			"company" : company,
 			"item_code" : item.item_code,
@@ -4216,6 +4220,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		company = get_data.get("company")
 		supplier = get_data.get("supplier")
 		item = make_test_item("_test_item_")
+		get_or_create_fiscal_year(company)
 		warehouse = "Stores - TC-5"
 		tax_category = "test_tax_withholding_category"
 		if not frappe.db.exists("Tax Withholding Category", tax_category):
@@ -4500,7 +4505,8 @@ class TestPurchaseOrder(FrappeTestCase):
 		supplier = get_company_supplier.get("supplier")
 		item = make_test_item("_test_item")
 		warehouse = "Stores - TC-3"
-
+		
+		get_or_create_fiscal_year(company)
 		remove_existing_shipping_rules()
 
 		shipping_rule = frappe.get_doc(
@@ -4534,6 +4540,16 @@ class TestPurchaseOrder(FrappeTestCase):
 			"reference_no" : "For Testing"
 		}
 
+		cash_account = frappe.db.get_value(
+			"Mode of Payment Account", {"parent": 'Cash', "company": company}, "default_account"
+		)
+		if not cash_account:
+			mop =  frappe.get_doc('Mode of Payment', 'Cash')
+			mop.append('accounts', {
+				'company': company,
+				'default_account': 'Cash - TC-3',
+			})
+			mop.save()
 		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, 6000, args )
 		
 		doc_pr = make_pr_for_po(doc_po.name)
@@ -4613,6 +4629,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		company = get_data.get("company")
 		supplier = get_data.get("supplier")
 		item = make_test_item("_test_item_")
+		get_or_create_fiscal_year(company)
 		po_data = {
 			"company" : company,
 			"item_code" :item.item_code,
@@ -4630,6 +4647,16 @@ class TestPurchaseOrder(FrappeTestCase):
 			"reference_no" : "For Testing"
 		}
 
+		cash_account = frappe.db.get_value(
+			"Mode of Payment Account", {"parent": 'Cash', "company": company}, "default_account"
+		)
+		if not cash_account:
+			mop =  frappe.get_doc('Mode of Payment', 'Cash')
+			mop.append('accounts', {
+				'company': company,
+				'default_account': 'Cash - TC-5',
+			})
+			mop.save()
 		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, 6000, args)
 		
 		doc_pr = make_pr_for_po(doc_po.name)
@@ -4726,7 +4753,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		company = get_data.get("company")
 		supplier = get_data.get("supplier")
 		item = make_test_item("_test_items_1")
-
+		get_or_create_fiscal_year(company)
 		po_data = {
 			"company" : company,
 			"item_code" : item.item_code,
@@ -4765,7 +4792,17 @@ class TestPurchaseOrder(FrappeTestCase):
 			"mode_of_payment" : "Cash",
 			"reference_no" : "For Testing"
 		}
-
+		cash_account = frappe.db.get_value(
+			"Mode of Payment Account", {"parent": 'Cash', "company": company}, "default_account"
+		)
+		if not cash_account:
+			mop =  frappe.get_doc('Mode of Payment', 'Cash')
+			mop.append('accounts', {
+				'company': company,
+				'default_account': 'Cash - TC-5',
+			})
+			mop.save()
+			
 		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, 6000, args)
 		
 		doc_pr = make_pr_for_po(doc_po.name)
@@ -7014,7 +7051,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		supplier = get_company_supplier.get("supplier")
 		item = make_test_item("test_item")
 		warehouse = "Stores - TC-3"
-
+		get_or_create_fiscal_year(company)
 		po = frappe.get_doc({
 			"doctype": "Purchase Order",
 			"supplier": supplier,
@@ -7037,9 +7074,13 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.items[0].rate, 1000)
 		self.assertEqual(po.total_taxes_and_charges, 1800)
 		self.assertEqual(po.grand_total, 11800)
-
+		pi = frappe.db.get_all("Purchase Invoice", fields=["name"])
+		if pi:
+			bill_no = len(pi) + 1
+		else:
+			bill_no = 1
 		pi_1 = make_pi_from_po(po.name)
-		pi_1.bill_no = "test_bill - 1122"
+		pi_1.bill_no =  f"test_bill_{bill_no}"
 		pi_1.items[0].qty = 3
 		pi_1.update_stock = 1
 		pi_1.insert()
@@ -8799,7 +8840,13 @@ def make_pi_against_pr(source_name, received_qty=0, item_dict_list = None, args 
 	if args:
 		args = frappe._dict(args)
 		doc_pi.update(args)
-	doc_pi.bill_no = "test_bill_1122"
+	
+	pi = frappe.db.get_all("Purchase Invoice", fields=["name"])
+	if pi:
+		bill_no = len(pi) + 1
+	else:
+		bill_no = 1
+	doc_pi.bill_no = f"test_bill_{bill_no}"
 	doc_pi.insert()
 	doc_pi.submit()
 	return doc_pi
