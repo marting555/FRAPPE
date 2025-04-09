@@ -244,7 +244,7 @@ frappe.ui.form.on("Item", {
 	page_name: frappe.utils.warn_page_name_change,
 
 	item_code: function (frm) {
-		if (!frm.doc.item_name) frm.set_value("item_name", frm.doc.item_code);
+		if (frm.is_new()) frm.set_value("item_name", frm.doc.item_code);
 	},
 
 	is_stock_item: function (frm) {
