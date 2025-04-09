@@ -240,8 +240,34 @@ class Quotation(SellingController):
 		if not opportunity:
 			opportunity = self.opportunity
 
+		if not opportunity:
+			return
+
 		opp = frappe.get_doc("Opportunity", opportunity)
 		opp.set_status(status=status, update=True)
+
+		if status == "Lost":
+			# Propagate lost reasons from Quotation to Opportunity
+
+			opp.lost_reasons = []
+
+			for reason_row in self.lost_reasons:
+				# Ensure the reason exists in Opportunity Lost Reason
+				if not frappe.db.exists("Opportunity Lost Reason", reason_row.lost_reason):
+					frappe.get_doc({
+						"doctype": "Opportunity Lost Reason",
+						"lost_reason": reason_row.lost_reason
+					}).insert(ignore_permissions=True)
+
+				opp.append("lost_reasons", {
+					"lost_reason": reason_row.lost_reason
+				})
+
+			if self.order_lost_reason:
+				opp.order_lost_reason = self.order_lost_reason
+
+			opp.save(ignore_permissions=True)
+
 
 	@frappe.whitelist()
 	def declare_enquiry_lost(self, lost_reasons_list, competitors, detailed_reason=None):
