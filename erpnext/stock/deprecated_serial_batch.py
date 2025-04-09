@@ -195,6 +195,7 @@ class DeprecatedBatchNoValuation:
 
 	@deprecated
 	def set_balance_value_for_non_batchwise_valuation_batches(self):
+		self.last_sle = self.get_last_sle_for_non_batch()
 		self.set_balance_value_from_sl_entries()
 		self.set_balance_value_from_bundle()
 
@@ -242,11 +243,11 @@ class DeprecatedBatchNoValuation:
 		for d in batch_data:
 			self.available_qty[d.batch_no] += flt(d.batch_qty)
 		
-		last_sle = self.get_last_sle_for_non_batch()
 		for d in batch_data:
 			if self.available_qty.get(d.batch_no):
-				self.non_batchwise_balance_value[d.batch_no] += flt(last_sle.stock_value)
-				self.non_batchwise_balance_qty[d.batch_no] += flt(last_sle.qty_after_transaction)
+				self.non_batchwise_balance_value[d.batch_no] += flt(self.last_sle.stock_value)
+				self.non_batchwise_balance_qty[d.batch_no] += flt(self.last_sle.qty_after_transaction)
+
 	def get_last_sle_for_non_batch(self):
 		from erpnext.stock.utils import get_combine_datetime
 		sle = frappe.qb.DocType("Stock Ledger Entry")
@@ -277,7 +278,6 @@ class DeprecatedBatchNoValuation:
 		if self.sle.name:
 			query = query.where(sle.name != self.sle.name)
 		data = query.run(as_dict=True)
-		return data[0] if data else {}
 	
 	@deprecated
 	def get_last_sle_for_sabb_no_batchwise_valuation(self):
@@ -325,6 +325,8 @@ class DeprecatedBatchNoValuation:
 			as_dict=1,
 		)
 		return sle if sle else {}
+
+		return data[0] if data else frappe._dict()
 
 	@deprecated
 	def set_balance_value_from_bundle(self) -> None:
@@ -374,9 +376,8 @@ class DeprecatedBatchNoValuation:
 		batch_data = query.run(as_dict=True)
 		for d in batch_data:
 			self.available_qty[d.batch_no] += flt(d.batch_qty)
-		last_sle = self.get_last_sle_for_sabb_no_batchwise_valuation()
-		if not last_sle:
+		if not self.last_sle:
 			return
 		for batch_no in self.available_qty:
-			self.non_batchwise_balance_value[batch_no] = flt(last_sle.stock_value)
-			self.non_batchwise_balance_qty[batch_no] = flt(last_sle.qty_after_transaction)
+			self.non_batchwise_balance_value[batch_no] = flt(self.last_sle.stock_value)
+			self.non_batchwise_balance_qty[batch_no] = flt(self.last_sle.qty_after_transaction)
