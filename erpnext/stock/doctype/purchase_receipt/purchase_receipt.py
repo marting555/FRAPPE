@@ -1147,10 +1147,10 @@ def update_billing_percentage(pr_doc, update_modified=True, adjust_incoming_rate
 	percent_billed = round(
 		100
 		* (
-			(total_billed_amount + (pi_landed_cost_amount * -1 if pi_landed_cost_amount < 0 else 1))
+			(total_billed_amount + (pi_landed_cost_amount * (-1 if pi_landed_cost_amount < 0 else 1)))
 			/ (total_amount or 1)
 		),
-		2,
+		6,
 	)
 	pr_doc.db_set("per_billed", percent_billed)
 
