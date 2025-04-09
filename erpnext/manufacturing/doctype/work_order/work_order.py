@@ -704,19 +704,22 @@ class WorkOrder(Document):
 		enable_capacity_planning = not cint(manufacturing_settings_doc.disable_capacity_planning)
 		plan_days = cint(manufacturing_settings_doc.capacity_planning_for_days) or 30
 
-		for index, row in enumerate(self.operations):
+		if self.operations:
+			self.reorder_operations_based_on_sequence_id()
+
+		for row in self.operations:
 			qty = self.qty
 			while qty > 0:
 				qty = split_qty_based_on_batch_size(self, row, qty)
 				if row.job_card_qty > 0:
-					self.prepare_data_for_job_card(row, index, plan_days, enable_capacity_planning)
+					self.prepare_data_for_job_card(row, plan_days, enable_capacity_planning)
 
 		planned_end_date = self.operations and self.operations[-1].planned_end_time
 		if planned_end_date:
 			self.db_set("planned_end_date", planned_end_date)
 
-	def prepare_data_for_job_card(self, row, index, plan_days, enable_capacity_planning):
-		self.set_operation_start_end_time(index, row)
+	def prepare_data_for_job_card(self, row, plan_days, enable_capacity_planning):
+		self.set_operation_start_end_time(row)
 
 		job_card_doc = create_job_card(
 			self, row, auto_create=True, enable_capacity_planning=enable_capacity_planning
@@ -741,15 +744,59 @@ class WorkOrder(Document):
 
 			row.db_update()
 
-	def set_operation_start_end_time(self, idx, row):
+	def reorder_operations_based_on_sequence_id(self):
+		"""Those operations which already have sequence ID from routing will be at the top
+		ordered by ascending and those without will be shifted to the bottom."""
+
+		operations = self.operations
+		self.operations = []
+		ops_with_sequence_id_sorted = []
+		ops_without_sequence_id = []
+
+		for op in operations:
+			if op.sequence_id:
+				ops_with_sequence_id_sorted.append(op)
+			else:
+				ops_without_sequence_id.append(op)
+
+		ops_with_sequence_id_sorted = sorted(ops_with_sequence_id_sorted, key=lambda op: op.sequence_id)
+		ops_without_sequence_id = sorted(ops_without_sequence_id, key=lambda op: op.idx)
+
+		for idx, op in enumerate(ops_with_sequence_id_sorted):
+			op.idx = idx + 1
+
+		last_idx = len(ops_with_sequence_id_sorted)
+		for idx, op in enumerate(ops_without_sequence_id):
+			op.idx = last_idx + idx + 1
+
+		for op in ops_with_sequence_id_sorted + ops_without_sequence_id:
+			self.operations.append(op)
+
+	def set_operation_start_end_time(self, row):
 		"""Set start and end time for given operation. If first operation, set start as
 		`planned_start_date`, else add time diff to end time of earlier operation."""
-		if idx == 0:
+		if row.idx == 1:
 			# first operation at planned_start date
 			row.planned_start_time = self.planned_start_date
+		elif self.operations[row.idx - 2].sequence_id:
+			if row.sequence_id and self.operations[row.idx - 2].sequence_id == row.sequence_id:
+				row.planned_start_time = self.operations[row.idx - 2].planned_start_time
+			else:
+				last_ops_with_same_sequence_ids = sorted(
+					[
+						op
+						for op in self.operations
+						if op.sequence_id == self.operations[row.idx - 2].sequence_id
+					],
+					key=lambda op: get_datetime(op.planned_end_time),
+				)
+				row.planned_start_time = (
+					get_datetime(last_ops_with_same_sequence_ids[-1].planned_end_time)
+					+ get_mins_between_operations()
+				)
 		else:
 			row.planned_start_time = (
-				get_datetime(self.operations[idx - 1].planned_end_time) + get_mins_between_operations()
+				get_datetime(self.operations[row.idx - 2].planned_end_time) + get_mins_between_operations()
 			)
 
 		row.planned_end_time = get_datetime(row.planned_start_time) + relativedelta(minutes=row.time_in_mins)

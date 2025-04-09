@@ -2,7 +2,7 @@
  "actions": [],
  "allow_import": 1,
  "autoname": "naming_series:",
- "creation": "2013-01-10 16:34:16",
+ "creation": "2025-04-09 12:09:40.634472",
  "doctype": "DocType",
  "document_type": "Setup",
  "engine": "InnoDB",
@@ -599,7 +599,7 @@
  "image_field": "image",
  "is_submittable": 1,
  "links": [],
- "modified": "2024-09-23 16:56:00.483027",
+ "modified": "2025-04-09 16:21:26.106260",
  "modified_by": "Administrator",
  "module": "Manufacturing",
  "name": "Work Order",
@@ -629,6 +629,7 @@
    "role": "Stock User"
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "creation",
  "sort_order": "ASC",
  "states": [],
