@@ -2235,3 +2235,11 @@ class TestAccountsController(IntegrationTestCase):
 		self.assertRaises(frappe.ValidationError, si.save)
 		si.contact_person = customer_contact.name
 		si.save()
+
+	def test_missing_item_code_in_item_table(self):
+		si = create_sales_invoice(do_not_save=True)
+		si.items[0].item_code = ""
+		self.assertRaises(frappe.ValidationError, si.save)
+
+		si.items[0].item_code = "_Test Item"
+		si.save()
