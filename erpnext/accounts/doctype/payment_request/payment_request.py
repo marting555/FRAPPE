@@ -4,7 +4,6 @@ import frappe
 from frappe import _, qb
 from frappe.model.document import Document
 from frappe.query_builder.functions import Abs, Sum
-from frappe.query_builder.functions import Sum
 from frappe.utils import flt, nowdate
 from frappe.utils.background_jobs import enqueue
 
@@ -21,6 +20,14 @@ from erpnext.accounts.party import get_party_account, get_party_bank_account
 from erpnext.accounts.utils import get_account_currency, get_currency_precision
 from erpnext.utilities import payment_app_import_guard
 
+ALLOWED_DOCTYPES_FOR_PAYMENT_REQUEST = [
+	"Sales Order",
+	"Purchase Order",
+	"Sales Invoice",
+	"Purchase Invoice",
+	"POS Invoice",
+	"Fees",
+]
 
 def _get_payment_gateway_controller(*args, **kwargs):
 	with payment_app_import_guard():
@@ -654,7 +661,6 @@ def get_amount(ref_doc, payment_account=None):
 	dt = ref_doc.doctype
 	if dt in ["Sales Order", "Purchase Order"]:
 		grand_total = flt(ref_doc.rounded_total) or flt(ref_doc.grand_total)
-		grand_total -= get_paid_amount_against_order(dt, ref_doc.name)
 	elif dt in ["Sales Invoice", "Purchase Invoice"]:
 		if not ref_doc.get("is_pos"):
 			if ref_doc.party_account_currency == ref_doc.currency:
@@ -680,8 +686,6 @@ def get_amount(ref_doc, payment_account=None):
 		return flt(grand_total, get_currency_precision())
 	else:
 		frappe.throw(_("Payment Entry is already created"))
-
-	return grand_total
 
 def get_irequest_status(payment_requests: None | list = None) -> list:
 	IR = frappe.qb.DocType("Integration Request")
@@ -1001,26 +1005,3 @@ def get_irequests_of_payment_request(doc: str | None = None) -> list:
 			},
 		)
 	return res
-
-def get_paid_amount_against_order(dt, dn):
-	pe_ref = frappe.qb.DocType("Payment Entry Reference")
-	if dt == "Sales Order":
-		inv_dt, inv_field = "Sales Invoice Item", "sales_order"
-	else:
-		inv_dt, inv_field = "Purchase Invoice Item", "purchase_order"
-	inv_item = frappe.qb.DocType(inv_dt)
-	return (
-		frappe.qb.from_(pe_ref)
-		.select(
-			Sum(pe_ref.allocated_amount),
-		)
-		.where(
-			(pe_ref.docstatus == 1)
-			& (
-				(pe_ref.reference_name == dn)
-				| pe_ref.reference_name.isin(
-					frappe.qb.from_(inv_item).select(inv_item.parent).where(inv_item[inv_field] == dn).distinct()
-				)
-			)
-		)
-	).run()[0][0] or 0
