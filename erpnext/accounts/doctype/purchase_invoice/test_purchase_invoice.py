@@ -4212,11 +4212,32 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		item = make_test_item("_Test GST Item")
 
 		gst_rates = [
+			{"rate": 5, "template": "GST 5%", "range": (500, 1000)},
+			{"rate": 12, "template": "GST 12%", "range": (1001, 10000)},
+			{"rate": 18, "template": "GST 18%", "range": (10001, 100000)}
+		]
+		for gst in gst_rates:
+			if not frappe.db.exists("Item Tax Template",{"name":gst.get("template")}):
+				frappe.get_doc(
+					{
+					"doctype":"Item Tax Template",
+					"title": gst.get("template"),
+					"company":"_Test Company",
+					"taxes":[
+						{
+							"tax_type":"Marketing Expenses - _TC",
+							"tax_rate":gst.get("rate")
+						}
+					]}
+					
+					).insert()
+		purchase_taxes_template = create_or_get_purchase_taxes_template("_Test Company")
+
+		gst_rates = [
 			{"rate": 5, "template": "GST 5% - _TC", "range": (500, 1000)},
 			{"rate": 12, "template": "GST 12% - _TC", "range": (1001, 10000)},
 			{"rate": 18, "template": "GST 18% - _TC", "range": (10001, 100000)}
 		]
-
 		if not item.taxes:
 			for gst in gst_rates:
 				item.append('taxes', {
@@ -4240,7 +4261,26 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				rate=rate.get('item_rate'),
 				do_not_submit=True
 			)
-			pi.taxes_and_charges="Input GST In-state - _TC"
+			taxes = [
+				{
+					"charge_type": "On Net Total",
+					"add_deduct_tax": "Add",
+					"category": "Total",
+					"rate": rate.get("total_tax")/2,
+					"account_head": purchase_taxes_template.get('sgst_account'),
+					"description": "SGST"
+				},
+				{
+					"charge_type": "On Net Total",
+					"add_deduct_tax": "Add",
+					"category": "Total",
+					"rate": rate.get("total_tax")/2,
+					"account_head": purchase_taxes_template.get('cgst_account'),
+					"description": "CGST"
+				}
+			]
+			for tax in taxes:
+				pi.append("taxes", tax)
 			pi.save()
 			total_tax=0.0
 			total_amount=0.0
@@ -4249,12 +4289,13 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				
 				if isinstance(item_wise_tax_detail, str):
 					item_wise_tax_detail = json.loads(item_wise_tax_detail)
-				
 				if "_Test GST Item" in item_wise_tax_detail:
 					total_tax += item_wise_tax_detail["_Test GST Item"][0]
 					total_amount += item_wise_tax_detail["_Test GST Item"][1]
 			self.assertEquals(total_tax,rate.get('total_tax'))
 			self.assertEquals(total_amount,rate.get('total_amount'))
+
+	
 	def test_direct_purchase_invoice_via_update_stock_TC_SCK_131(self):
 		# Create Purchase Invoice with Update Stock
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
@@ -5201,3 +5242,66 @@ def get_or_create_price_list(currency="INR"):
 	new_price_list.insert()
 
 	return new_price_list.name
+
+
+def create_or_get_purchase_taxes_template(company):
+	from erpnext.buying.doctype.purchase_order.test_purchase_order import create_new_account
+	sgst_account = "Input Tax SGST - _TC"
+	cgst_account = "Input Tax CGST - _TC"
+	purchase_template = "Input GST In-state - _TC"
+	tax_category = "In-State"
+	if not frappe.db.exists("Tax Category", tax_category):
+		tax_category = frappe.get_doc(
+			{
+				"doctype": "Tax Category",
+				"title": tax_category
+			}
+		).insert().name
+
+	if not frappe.db.exists("Account", sgst_account):
+		sgst_account = create_new_account(
+			account_name = "Input Tax SGST",
+			company = company,
+			parent_account = "Cash In Hand - _TC",
+			account_type = "Tax",
+		)
+
+	if not frappe.db.exists("Account", cgst_account):
+		cgst_account = create_new_account(
+			account_name = "Input Tax CGST",
+			company = company,
+			parent_account = "Cash In Hand - _TC",
+			account_type = "Tax",
+		)
+
+	if not frappe.db.exists("Purchase Taxes and Charges Template", purchase_template):
+		purchase_template = frappe.get_doc(
+			{
+				"doctype": "Purchase Taxes and Charges Template",
+				"title": "Input GST In-state",
+				"company": company,
+				"tax_category": tax_category,
+				"taxes": [
+					{
+						"charge_type": "On Net Total",
+						"add_deduct_tax": "Add",
+						"category": "Total",
+						"account_head": sgst_account,
+						"description": "SGST"
+					},
+					{
+						"charge_type": "On Net Total",
+						"add_deduct_tax": "Add",
+						"category": "Total",
+						"account_head": cgst_account,
+						"description": "CGST"
+					}
+				]
+			}
+		).insert().name
+
+	return {
+		"purchase_tax_template": purchase_template,
+		"sgst_account": sgst_account,
+		"cgst_account": cgst_account
+	}
