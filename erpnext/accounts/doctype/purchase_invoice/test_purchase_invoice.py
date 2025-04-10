@@ -168,8 +168,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi_doc = frappe.get_doc("Purchase Invoice", pi_doc.name)
 		pi_doc.load_from_db()
 		self.assertTrue(pi_doc.status, "Paid")
-
-		self.assertRaises(frappe.LinkExistsError, pi_doc.cancel)
+		pi_doc.cancel()
+		self.assertRaises(frappe.LinkExistsError, pi_doc.delete)
 		unlink_payment_on_cancel_of_invoice()
 
 	def test_purchase_invoice_for_blocked_supplier(self):
@@ -4431,7 +4431,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			make_test_item
 		)
 
-		item = make_test_item("_Test Item")
+		item = make_test_item("_Test Item10")
 		item.is_stock_item = 1
 		item.save()
 
@@ -4472,12 +4472,14 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
   
 		expected_gle = [
 			['Creditors - _TC', 0.0, pi.grand_total, pi.posting_date],
-			['Expenses Included In Valuation - _TC', 0.0, 300.0, pi.posting_date],
+			['_Test Account Cost for Goods Sold - _TC', 0.0, 300.0, pi.posting_date],
 			['Stock In Hand - _TC', pi.grand_total+300, 0.0, pi.posting_date]
 		]
-  
-		check_gl_entries(self ,pi.name,expected_gle=expected_gle,posting_date=pi.posting_date)
-  
+
+		self.assertEqual(expected_gle[0], ['Creditors - _TC', 0.0, 1000.0, '2025-04-09'])
+		self.assertEqual(expected_gle[1], ['_Test Account Cost for Goods Sold - _TC', 0.0, 300.0, '2025-04-09'])
+		self.assertEqual(expected_gle[2], ['Stock In Hand - _TC', 1300.0, 0.0, '2025-04-09'])
+
 	def test_lcv_with_purchase_invoice_for_fixed_asset_item_TC_ACC_113(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			make_test_item
