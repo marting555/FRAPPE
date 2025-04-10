@@ -1345,7 +1345,6 @@ class AccountsController(TransactionBase):
 		journal_entries = get_advance_journal_entries(
 			party_type, party, party_account, amount_field, order_doctype, order_list, include_unallocated
 		)
-
 		if (frappe.db.db_type == 'postgres') and (include_unallocated == True or False):
 			include_unallocated = "IS NOT NULL"
 
@@ -1356,7 +1355,9 @@ class AccountsController(TransactionBase):
 			order_doctype,
 			order_list,
 			default_advance_account,
-			include_unallocated,
+			include_unallocated
+			
+			
 		)
 
 		res = journal_entries + payment_entries
@@ -3004,7 +3005,7 @@ def get_advance_journal_entries(
 	if include_unallocated:
 		reference_or_condition.append(journal_acc.reference_name.isnull())
 		reference_or_condition.append(journal_acc.reference_name == "")
-
+	
 	if order_list:
 		reference_or_condition.append(
 			(journal_acc.reference_type == order_doctype) & ((journal_acc.reference_name).isin(order_list))
@@ -3014,7 +3015,6 @@ def get_advance_journal_entries(
 		q = q.where(Criterion.any(reference_or_condition))
 
 	q = q.orderby(journal_entry.posting_date)
-
 	journal_entries = q.run(as_dict=True)
 	return list(journal_entries)
 
@@ -3030,12 +3030,13 @@ def get_advance_payment_entries(
 	party_account,
 	order_doctype,
 	order_list=None,
-	include_unallocated=True,
 	default_advance_account=None,
+	include_unallocated=True,
 	against_all_orders=False,
 	limit=None,
 	condition=None,
 ):
+	
 	payment_entries = []
 	payment_entry = frappe.qb.DocType("Payment Entry")
 
