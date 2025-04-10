@@ -203,7 +203,7 @@ class AccountsController(TransactionBase):
 
 			if msg:
 				msg += " you can use {} tool to reconcile against {} later.".format(
-					get_link_to_form("Payment Reconciliation"),
+					get_link_to_form("Payment Reconciliation", "Payment Reconciliation"),
 					get_link_to_form(self.doctype, self.get("return_against")),
 				)
 				frappe.msgprint(_(msg))
