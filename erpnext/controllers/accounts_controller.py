@@ -830,6 +830,9 @@ class AccountsController(TransactionBase):
 			self.pricing_rules = []
 
 			for item in self.get("items"):
+				if not item.get("item_code") and self.is_opening == "No":
+					frappe.throw(_("Row #{0}: Please select Item Code first").format(item.idx))
+
 				if item.get("item_code"):
 					ctx: ItemDetailsCtx = ItemDetailsCtx(parent_dict.copy())
 					ctx.update(item.as_dict())
