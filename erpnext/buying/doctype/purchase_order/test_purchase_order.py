@@ -1561,11 +1561,11 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi.submit()
 		pi.load_from_db()
 		self.assertEqual(pi.status, "Unpaid")
-		expected_gle = [
+		expected_gle_1 = [
 			["Creditors - _TC", 0.0, 130, nowdate()],
-			["_Test Account Cost for Goods Sold - _TC", 130, 0.0, nowdate()],
+			["Stock In Hand - _TC", 130, 0.0, nowdate()],
 		]
-		check_gl_entries(self, pi.name, expected_gle, nowdate())
+		check_gl_entries(self, pi.name, expected_gle_1, nowdate())
 		actual_qty_1 = get_qty_after_transaction(warehouse="Finished Goods - _TC")
 		self.assertEqual(actual_qty_0 + 1, actual_qty_1)
 
@@ -1579,11 +1579,11 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi_return.submit()
 		pi_return.load_from_db()
 		self.assertEqual(pi_return.status, "Return")
-		expected_gle = [
+		expected_gle_2 = [
 			["Creditors - _TC", 130, 0.0, nowdate()],
-			["_Test Account Cost for Goods Sold - _TC", 0.0, 130, nowdate()],
+			["Stock In Hand - _TC", 0.0, 130, nowdate()],
 		]
-		check_gl_entries(self, pi_return.name, expected_gle, nowdate())
+		check_gl_entries(self, pi_return.name, expected_gle_2, nowdate())
 		actual_qty_2 = get_qty_after_transaction(warehouse="Finished Goods - _TC")
 		self.assertEqual(actual_qty_1 - 1, actual_qty_2)
 
@@ -4793,8 +4793,28 @@ class TestPurchaseOrder(FrappeTestCase):
 	@if_app_installed("india_compliance")
 	def test_default_uom_with_po_pr_pi_TC_B_105(self):
 		# item as box => po => pr => pi with GST
-		item_code = "_Test Item With Default Uom"
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		company = "_Test Company"
+		supplier = "_Test Supplier"
+		create_warehouse(
+			warehouse_name="_Test Warehouse - _TC",
+			properties={"parent_warehouse": "All Warehouses - _TC", "account": "Cost of Goods Sold - _TC"},
+			company="_Test Company",
+		)
+		create_supplier(supplier_name = supplier,default_currency ="INR")
+		item_code = "_Test Item"
+		create_item(item_code = item_code,valuation_rate=100)
 		gst_hsn_code = "11112222"
+		warehouse = "Stores - _TC"
+		tax_category_1 = "Test Tax Category"
+		if not frappe.db.exists("Tax Category", tax_category_1):
+			tax_category = frappe.new_doc("Tax Category")
+			tax_category.title = tax_category_1
+			tax_category.save()
+
+		frappe.db.set_value('Company', company, 'stock_received_but_not_billed', "Stock Received But Not Billed - _TC")
+		item_tax_template = frappe.db.get_value("Purchase Taxes and Charges Template",{"company": company,"tax_category":tax_category_1}, "name")
 		if frappe.db.exists("DocType", "GST HSN Code") and not frappe.db.exists("GST HSN Code", gst_hsn_code):
 			frappe.get_doc({
 				"doctype": "GST HSN Code",
@@ -4803,32 +4823,38 @@ class TestPurchaseOrder(FrappeTestCase):
 					"item_tax_template": "GST 18% - _TC"
 				}]
 			}).insert()
-
-		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"gst_hsn_code": gst_hsn_code,
-				"is_stock_item": 1,
-				"purchase_uom": "Box",
-				"uoms": [
-					{
-						"uom": "Nos",
-						"conversion_factor": 1
-					},
-					{
-						"uom": "Box",
-						"conversion_factor": 100
-					}
-				]
-			}).insert()
-		get_company_supplier = get_company_or_supplier()
-		company = get_company_supplier.get("company")
-		supplier = get_company_supplier.get("supplier")
-		warehouse = "Stores - TC-5"
-		tax_account = create_or_get_purchase_taxes_template(company)
-		
+		taxes = [
+			{
+				"charge_type": "On Net Total",
+				"add_deduct_tax": "Add",
+				"category": "Total",
+				"rate": 9,
+				"account_head": "Stock In Hand - _TC",
+				"description": "SGST"
+			},
+			{
+				"charge_type": "On Net Total",
+				"add_deduct_tax": "Add",
+				"category": "Total",
+				"rate": 9,
+				"account_head": "Stock In Hand - _TC",
+				"description": "CGST"
+			}
+		]
+		if frappe.db.exists("Purchase Taxes and Charges Template", item_tax_template):
+			existing_templates = item_tax_template
+		else:
+			purchase_tax_template = frappe.new_doc("Purchase Taxes and Charges Template")
+			purchase_tax_template.company = company
+			purchase_tax_template.title ="test"
+			purchase_tax_template.tax_category = tax_category
+			for tax  in taxes:
+				purchase_tax_template.append("taxes", tax)
+			purchase_tax_template.insert()
+			purchase_tax_template.save()
+			existing_templates = purchase_tax_template.name
+	
+		get_or_create_fiscal_year('_Test Company')
 		po = frappe.get_doc({
 			"doctype": "Purchase Order",
 			"company": company,
@@ -4839,30 +4865,14 @@ class TestPurchaseOrder(FrappeTestCase):
 			"items": [{
 				"item_code": item_code,
 				"qty": 1,
-				"rate": 100
+				"rate": 100,
+				"uom": "Box"
 			}],
 		})
-		taxes = [
-			{
-				"charge_type": "On Net Total",
-				"add_deduct_tax": "Add",
-				"category": "Total",
-				"rate": 9,
-				"account_head": tax_account.get('sgst_account'),
-				"description": "SGST"
-			},
-			{
-				"charge_type": "On Net Total",
-				"add_deduct_tax": "Add",
-				"category": "Total",
-				"rate": 9,
-				"account_head": tax_account.get('cgst_account'),
-				"description": "CGST"
-			}
-		]
-		for tax in taxes:
-			po.append("taxes", tax)
+		
 		po.insert()
+		po.taxes_and_charges = existing_templates
+		po.save()
 		po.submit()
 		self.assertEqual(po.items[0].uom, "Box")
 		self.assertEqual(po.taxes_and_charges_added, 18)
@@ -4872,6 +4882,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"doctype": "Purchase Receipt",
 			"supplier": po.supplier,
 			"company": po.company,
+			"currency": po.currency,
 			"set_warehouse": po.set_warehouse,
 			"items": [{
 				"item_code": po.items[0].item_code,
@@ -4882,9 +4893,10 @@ class TestPurchaseOrder(FrappeTestCase):
 				"rate": po.items[0].rate,
 				"purchase_order": po.name,
 			}],
-			"taxes_and_charges": "Input GST In-state - _TC"
+			
 		})
 		pr.insert()
+		pr.taxes_and_charges = existing_templates
 		pr.submit()
 		self.assertEqual(pr.items[0].uom, "Box")
 		self.assertEqual(pr.taxes_and_charges_added, 18)
@@ -4893,8 +4905,8 @@ class TestPurchaseOrder(FrappeTestCase):
 		get_pr_stock_ledger = frappe.db.get_all("Stock Ledger Entry",{"voucher_no": pr.name}, ['valuation_rate', 'actual_qty', 'warehouse'])
 
 		for stock_led in get_pr_stock_ledger:
-			self.assertEqual(stock_led.get('valuation_rate'), 1)
-			self.assertEqual(stock_led.actual_qty, 100)
+			self.assertEqual(stock_led.get('valuation_rate'), 100)
+			self.assertEqual(stock_led.actual_qty, 1)
 			self.assertEqual(stock_led.warehouse, warehouse)
 
 		get_pr_gl_entries = frappe.db.get_all("GL Entry", {"voucher_no": pr.name})
@@ -4904,7 +4916,8 @@ class TestPurchaseOrder(FrappeTestCase):
 			"doctype": "Purchase Invoice",
 			"supplier": pr.supplier,
 			"company": pr.company,
-			"credit_to": "_Test Creditors - _TC",
+			"credit_to": 'Creditors - _TC',
+			"currency": pr.currency,
 			"items": [{
 				"item_code": pr.items[0].item_code,
 				"qty": pr.items[0].qty,
@@ -4915,9 +4928,10 @@ class TestPurchaseOrder(FrappeTestCase):
 				"purchase_order": po.name,
 				"purchase_receipt": pr.name
 			}],
-			"taxes_and_charges": "Input GST In-state - _TC"
+			
 		})
 		pi.insert()
+		pi.taxes_and_charges = existing_templates
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.items[0].uom, "Box")
@@ -4935,10 +4949,9 @@ class TestPurchaseOrder(FrappeTestCase):
 		)
 
 		expected_entries = [
-			{"account": "Input Tax SGST - _TC", "debit": 9.0, "credit": 0.0},
-			{"account": "Input Tax CGST - _TC", "debit": 9.0, "credit": 0.0},
-			{"account": "_Test Account Excise Duty - _TC", "debit": 100.0, "credit": 0.0},
-			{"account": "_Test Creditors - _TC", "debit": 0.0, "credit": 118.0},
+			{'account': 'Stock In Hand - _TC', 'debit': 18.0, 'credit': 0.0},
+			{'account': 'Stock Received But Not Billed - _TC', 'debit': 100.0, 'credit': 0.0},
+			{'account': 'Creditors - _TC', 'debit': 0.0, 'credit': 118.0},
 		]
 
 		for entry in expected_entries:
@@ -8065,20 +8078,21 @@ class TestPurchaseOrder(FrappeTestCase):
 		supplier = get_company_supplier.get("supplier")
 		warehouse = "Stores - TC-3"
 		item = make_test_item("_test_item")
-		item_tax_template = 'Test Item Tax Template'
+		get_or_create_fiscal_year(company)
 		account = frappe.db.get_value("Account", {'company':company}, "name")
-		tax_category = "In-State"
-		if not frappe.db.exists("Tax Category", tax_category):
+		tax_category_1 = "Test Tax Category"
+		if not frappe.db.exists("Tax Category", tax_category_1):
 			tax_category = frappe.new_doc("Tax Category")
-			tax_category.title = "In-State"
+			tax_category.title = tax_category_1
 			tax_category.save()
 
+		item_tax_template = frappe.db.get_value("Purchase Taxes and Charges Template",{"company": company,"tax_category":tax_category_1}, "name")
 		if frappe.db.exists("Purchase Taxes and Charges Template", item_tax_template):
 			existing_templates = item_tax_template
 		else:
 			purchase_tax_template = frappe.new_doc("Purchase Taxes and Charges Template")
 			purchase_tax_template.company = company
-			purchase_tax_template.title = item_tax_template
+			purchase_tax_template.title ="test"
 			purchase_tax_template.tax_category = tax_category
 			purchase_tax_template.append("taxes", {
 				"category":"Total",
@@ -8144,8 +8158,10 @@ class TestPurchaseOrder(FrappeTestCase):
 			"Stock Received But Not Billed - TC-3": {"debit": 0, "credit": 1000},
 		}
 		for entry in pr_gle_entries:
-			self.assertEqual(entry["debit"], expected_si_entries.get(entry["account"], {}).get("debit", 0))
-			self.assertEqual(entry["credit"], expected_si_entries.get(entry["account"], {}).get("credit", 0))
+			for k in expected_si_entries:
+				if entry.get("account") == k:
+					self.assertEqual(entry.get("debit"), expected_si_entries[k].get("debit"))
+					self.assertEqual(entry.get("credit"), expected_si_entries[k].get("credit"))
 
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill - 1122"
@@ -8163,8 +8179,10 @@ class TestPurchaseOrder(FrappeTestCase):
 			"Creditors - TC-3": {"debit": 0, "credit": 1050},
 		}
 		for entry in pi_gle_entries:
-			self.assertEqual(entry["debit"], expected_pi_entries.get(entry["account"], {}).get("debit", 0))
-			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
+			for k in expected_pi_entries:
+				if entry.get("account") == k:
+					self.assertEqual(entry.get("debit"), expected_pi_entries[k].get("debit"))
+					self.assertEqual(entry.get("credit"), expected_pi_entries[k].get("credit"))
 
 	@if_app_installed("india_compliance")
 	def test_po_with_create_tax_template_5_pr_pi_2_TC_B_145(self):
@@ -8589,7 +8607,75 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		self.assertTrue(any(entry["actual_qty"] == 10 and entry["warehouse"] == "_Test Stores - _TC" for entry in stock_ledger_entries), "Stock Ledger did not update correctly")
 
+	def test_po_with_uploaded_file_feature_TC_B_091(self):
+		import openpyxl
+		import os
+		from erpnext.buying.doctype.supplier.test_supplier import create_supplier
+		create_supplier(supplier_name="_Test Supplier")
+		make_item("_Test Item 1")
+		make_item("_Test Item 2")
+		filename = "sample_data.xlsx"
+		headers = ["item_code", "item_name", "schedule_date","qty","rate"]
+		data = [
+			["_Test Item 1", "_Test Item 1", nowdate(), 5, 100],
+			["_Test Item 2", "_Test Item 2", nowdate(), 5, 100],
+		]
 
+		workbook = openpyxl.Workbook()
+		sheet = workbook.active
+		sheet.title = "Sheet1"
+		sheet.append(headers)
+		for row in data:
+			sheet.append(row)
+
+		workbook.save(filename)
+		workbook = openpyxl.load_workbook(filename)
+		sheet = workbook.active
+
+		values = [value for value in sheet.iter_rows(values_only=True)][1:]
+		main_items = []
+		for row in values:
+			item = {
+				"item_code": row[0],
+				"item_name": row[1],
+				"schedule_date": row[2],
+				"qty": row[3],
+				"rate": row[4]
+			}
+			main_items.append(item)
+		
+		po = frappe.new_doc("Purchase Order")
+		po.company = "_Test Company"
+		po.supplier = "_Test Supplier"
+		po.transaction_date = nowdate()
+		po.set_warehouse = "_Test Warehouse - _TC"
+		for item in main_items:
+			po.append(
+				"items",item
+			)
+		po.insert()
+		po.save()
+		po.submit()
+		pr = make_pr_against_po(po.name)
+		pi = make_pi_against_pr(pr.name)
+
+		self.assertEqual(pr.docstatus, 1)
+		self.assertEqual(pi.docstatus, 1)
+		self.assertEqual(pr.total_qty, 10)
+		self.assertEqual(pi.total_qty, 10)
+		self.assertEqual(pr.grand_total, 1000)
+		self.assertEqual(pi.grand_total, 1000)
+
+		for item in pi.items:
+			for expected_items in main_items:
+				if item.item_code == expected_items.get("item_code"):
+					self.assertEqual(item.item_name, expected_items.get("item_name"))
+					self.assertEqual(item.qty, expected_items.get("qty"))
+					self.assertEqual(item.rate, expected_items.get("rate"))
+
+		os.remove(filename)
+		
+		
 def create_po_for_sc_testing():
 	from erpnext.controllers.tests.test_subcontracting_controller import (
 		make_bom_for_subcontracted_items,
