@@ -712,7 +712,11 @@ class JobCard(Document):
 			if len(incomplete_logs) == 1:
 				frappe.throw(_("Row {0}: End Time is required for the Time Log").format(incomplete_logs[0]))
 			else:
-				frappe.throw(_("Rows {0}: End Time is required for the Time Logs").format(", ".join(str(idx) for idx in incomplete_logs)))
+				frappe.throw(
+					_("Rows {0}: End Time is required for the Time Logs").format(
+						", ".join(str(idx) for idx in incomplete_logs)
+					)
+				)
 
 		precision = self.precision("total_completed_qty")
 		total_completed_qty = flt(
