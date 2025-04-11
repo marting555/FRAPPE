@@ -5992,7 +5992,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		customer = create_customer("_Test Customer 1",currency = "INR")
 		make_item("_Test Item", {"is_stock_item": 1})
 		make_stock_entry(item_code="_Test Item", qty=100, rate=500, target="_Test Warehouse - _TC")
-		sales_order = make_sales_order(customer=customer,cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
+		sales_order = make_sales_order(customer=customer,cost_center='Main - _TC', selling_price_list='_Test Price List', do_not_save=True)
 		sales_order.delivery_date = nowdate()
 		if qty and rate:
 			for item in sales_order.items:
@@ -6031,7 +6031,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			customer="_Test Registered Customer",
 			warehouse="Stores - _TIRC",
 			cost_center="Main - _TIRC",
-			selling_price_list="Standard Selling",
+			selling_price_list='_Test Price List',
 			item_code=item_code,
 			qty=qty,
 			rate=rate,
