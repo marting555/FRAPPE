@@ -972,11 +972,22 @@ class TestWorkOrder(FrappeTestCase):
 			"Test RM Item 2 for Scrap Item Test",
 		]
 
-		job_cards = frappe.db.sql("""
-			SELECT DISTINCT ON (parent) parent AS name, docstatus
-			FROM "tabJob Card Time Log"
-			ORDER BY parent, creation ASC
-		""", as_dict=True)
+		JobCardTimeLog = frappe.qb.DocType("Job Card Time Log")
+
+		sub = (
+			frappe.qb.from_(JobCardTimeLog)
+			.select(JobCardTimeLog.parent, JobCardTimeLog.creation)
+			.orderby(JobCardTimeLog.creation)
+		).as_("sub")
+
+		job_cards = (
+			frappe.qb.from_(JobCardTimeLog)
+			.join(sub)
+			.on((JobCardTimeLog.parent == sub.parent) & (JobCardTimeLog.creation == sub.creation))
+			.select(JobCardTimeLog.parent.as_("name"), JobCardTimeLog.docstatus)
+		).run(as_dict=True)
+
+
 
 
 		for job_card in job_cards:
