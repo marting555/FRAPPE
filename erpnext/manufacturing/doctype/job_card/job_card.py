@@ -706,6 +706,14 @@ class JobCard(Document):
 				)
 			)
 
+		# Check for incomplete time logs
+		incomplete_logs = [log.idx for log in self.time_logs if log.from_time and not log.to_time]
+		if incomplete_logs:
+			if len(incomplete_logs) == 1:
+				frappe.throw(_("Row {0}: End Time is required for the Time Log").format(incomplete_logs[0]))
+			else:
+				frappe.throw(_("Rows {0}: End Time is required for the Time Logs").format(", ".join(str(idx) for idx in incomplete_logs)))
+
 		precision = self.precision("total_completed_qty")
 		total_completed_qty = flt(
 			flt(self.total_completed_qty, precision) + flt(self.process_loss_qty, precision)
