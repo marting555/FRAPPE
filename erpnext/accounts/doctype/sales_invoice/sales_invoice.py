@@ -13,8 +13,8 @@ from frappe.utils.data import comma_and
 import erpnext
 from erpnext.accounts.deferred_revenue import validate_service_stop_date
 from erpnext.accounts.doctype.loyalty_program.loyalty_program import (
-	get_loyalty_program_details_with_points,
-	validate_loyalty_points,
+    get_loyalty_program_details_with_points,
+    validate_loyalty_points,
 )
 from erpnext.accounts.doctype.pricing_rule.utils import (
 	update_coupon_code_count,
@@ -346,9 +346,73 @@ class SalesInvoice(SellingController):
 		self.reset_default_field_value("set_warehouse", "items", "warehouse")
 
 	def validate_accounts(self):
+		"""Validate accounts required for GL entries"""
+		
+		# 1. First validate basic accounts
 		self.validate_write_off_account()
 		self.validate_account_for_change_amount()
 		self.validate_income_account()
+
+		# 2. Validate GST accounts for inter-state internal transactions
+		if self.is_internal_customer:
+			# Fetch GST registration details
+			company_gstin = frappe.get_cached_value("Company", self.company, "gstin")
+			customer_address = frappe.db.get_value(
+				"Address", 
+				self.customer_address,
+				["gstin", "gst_state"],
+				as_dict=1
+			)
+			
+			if company_gstin and customer_address and customer_address.gstin:
+				company_state = company_gstin[:2]
+				customer_state = customer_address.gstin[:2]
+				
+				# Check if inter-state transaction
+				if company_state != customer_state:
+					# Get IGST account configured in GST Settings
+					gst_settings = frappe.get_cached_value(
+						"GST Settings",
+						self.company,
+						["igst_account", "igst_rate"], 
+						as_dict=1
+					)
+
+					if not gst_settings or not gst_settings.igst_account:
+						frappe.throw(_(
+							"IGST Account not configured for company {0}. "
+							"Please set it in GST Settings"
+						).format(self.company))
+
+					# Check if IGST account is already added in taxes
+					igst_applied = any(
+						tax.account_head == gst_settings.igst_account 
+						for tax in self.taxes 
+						if tax.charge_type == "On Net Total"
+					)
+
+					if not igst_applied:
+						# Calculate tax amount based on configured rate
+						igst_rate = flt(gst_settings.igst_rate or 18)
+						igst_amount = flt(
+							self.net_total * igst_rate / 100,
+							self.precision("tax_amount")
+						)
+						
+						# Add new IGST tax row
+						self.append("taxes", {
+							"charge_type": "On Net Total",
+							"account_head": gst_settings.igst_account,
+							"description": f"IGST @ {igst_rate}%",
+							"rate": igst_rate,
+							"tax_amount": igst_amount,
+							"total": self.net_total + igst_amount,
+							"base_tax_amount": igst_amount,
+							"cost_center": self.cost_center
+						})
+
+						# Recalculate totals
+						self.calculate_taxes_and_totals()
 
 	def validate_for_repost(self):
 		self.validate_write_off_account()
