@@ -704,8 +704,14 @@ class WorkOrder(Document):
 		enable_capacity_planning = not cint(manufacturing_settings_doc.disable_capacity_planning)
 		plan_days = cint(manufacturing_settings_doc.capacity_planning_for_days) or 30
 
-		if self.operations:
-			self.reorder_operations_based_on_sequence_id()
+		if all([op.sequence_id for op in self.operations]):
+			self.operations = sorted(self.operations, key=lambda op: op.sequence_id)
+			for idx, op in enumerate(self.operations):
+				op.idx = idx + 1
+		elif any([op.sequence_id for op in self.operations]):
+			frappe.throw(
+				_("If any single operation has a Sequence ID then all other operations must have one too.")
+			)
 
 		for row in self.operations:
 			qty = self.qty
@@ -744,34 +750,6 @@ class WorkOrder(Document):
 
 			row.db_update()
 
-	def reorder_operations_based_on_sequence_id(self):
-		"""Those operations which already have sequence ID from routing will be at the top
-		ordered by ascending and those without will be shifted to the bottom."""
-
-		operations = self.operations
-		self.operations = []
-		ops_with_sequence_id_sorted = []
-		ops_without_sequence_id = []
-
-		for op in operations:
-			if op.sequence_id:
-				ops_with_sequence_id_sorted.append(op)
-			else:
-				ops_without_sequence_id.append(op)
-
-		ops_with_sequence_id_sorted = sorted(ops_with_sequence_id_sorted, key=lambda op: op.sequence_id)
-		ops_without_sequence_id = sorted(ops_without_sequence_id, key=lambda op: op.idx)
-
-		for idx, op in enumerate(ops_with_sequence_id_sorted):
-			op.idx = idx + 1
-
-		last_idx = len(ops_with_sequence_id_sorted)
-		for idx, op in enumerate(ops_without_sequence_id):
-			op.idx = last_idx + idx + 1
-
-		for op in ops_with_sequence_id_sorted + ops_without_sequence_id:
-			self.operations.append(op)
-
 	def set_operation_start_end_time(self, row):
 		"""Set start and end time for given operation. If first operation, set start as
 		`planned_start_date`, else add time diff to end time of earlier operation."""
@@ -779,7 +757,7 @@ class WorkOrder(Document):
 			# first operation at planned_start date
 			row.planned_start_time = self.planned_start_date
 		elif self.operations[row.idx - 2].sequence_id:
-			if row.sequence_id and self.operations[row.idx - 2].sequence_id == row.sequence_id:
+			if self.operations[row.idx - 2].sequence_id == row.sequence_id:
 				row.planned_start_time = self.operations[row.idx - 2].planned_start_time
 			else:
 				last_ops_with_same_sequence_ids = sorted(

@@ -2856,9 +2856,9 @@ class TestWorkOrder(IntegrationTestCase):
 
 		operations = [
 			{"operation": "Test Operation A", "workstation": "Test Workstation A", "time_in_mins": 1},
-			{"operation": "Test Operation B", "workstation": "Test Workstation A", "time_in_mins": 2},
+			{"operation": "Test Operation B", "workstation": "Test Workstation A", "time_in_mins": 4},
 			{"operation": "Test Operation C", "workstation": "Test Workstation A", "time_in_mins": 3},
-			{"operation": "Test Operation D", "workstation": "Test Workstation A", "time_in_mins": 4},
+			{"operation": "Test Operation D", "workstation": "Test Workstation A", "time_in_mins": 2},
 		]
 		setup_operations(operations)
 		routing_doc = create_routing(routing_name="Testing Route", operations=operations)
@@ -2873,11 +2873,7 @@ class TestWorkOrder(IntegrationTestCase):
 			source_warehouse="_Test Warehouse 1 - _TC",
 			skip_transfer=1,
 			fg_warehouse="_Test Warehouse 2 - _TC",
-			do_not_save=True,
 		)
-
-		wo.operations[2].sequence_id = wo.operations[3].sequence_id = 0
-		wo.submit()
 
 		# Initial check
 		self.assertEqual(wo.operations[0].operation, "Test Operation A")
@@ -2889,7 +2885,7 @@ class TestWorkOrder(IntegrationTestCase):
 		wo.operations[3].sequence_id = 2
 		wo.submit()
 
-		# Test 2 : Sort line items in child table based on sequence ID and index
+		# Test 2 : Sort line items in child table based on sequence ID
 		self.assertEqual(wo.operations[0].operation, "Test Operation A")
 		self.assertEqual(wo.operations[1].operation, "Test Operation B")
 		self.assertEqual(wo.operations[2].operation, "Test Operation D")
@@ -2905,13 +2901,30 @@ class TestWorkOrder(IntegrationTestCase):
 		self.assertEqual(wo.operations[3].operation, "Test Operation D")
 
 		wo = frappe.copy_doc(wo)
-		wo.operations[0].sequence_id = 0
+		wo.operations[0].sequence_id = 3
 		wo.submit()
 
 		self.assertEqual(wo.operations[0].operation, "Test Operation C")
 		self.assertEqual(wo.operations[1].operation, "Test Operation B")
 		self.assertEqual(wo.operations[2].operation, "Test Operation D")
 		self.assertEqual(wo.operations[3].operation, "Test Operation A")
+
+		wo = frappe.copy_doc(wo)
+		wo.operations[1].sequence_id = 0
+
+		# Test 3 - Error should be thrown if any one operation does not have sequence id but others do
+		self.assertRaises(frappe.ValidationError, wo.submit)
+
+		workstation = frappe.get_doc("Workstation", "Test Workstation A")
+		workstation.production_capacity = 4
+		workstation.save()
+
+		wo = frappe.copy_doc(wo)
+		wo.operations[1].sequence_id = 2
+		wo.submit()
+
+		# Test 4 - If Sequence ID is same then planned start time for both operations should be same
+		self.assertEqual(wo.operations[1].planned_start_time, wo.operations[2].planned_start_time)
 
 
 def make_stock_in_entries_and_get_batches(rm_item, source_warehouse, wip_warehouse):
