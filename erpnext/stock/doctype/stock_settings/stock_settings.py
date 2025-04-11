@@ -65,6 +65,7 @@ class StockSettings(Document):
 		stock_frozen_upto_days: DF.Int
 		stock_uom: DF.Link | None
 		update_existing_price_list_rate: DF.Check
+		use_batchwise_valuation: DF.Check
 		use_naming_series: DF.Check
 		use_serial_batch_fields: DF.Check
 		valuation_method: DF.Literal["FIFO", "Moving Average", "LIFO"]
@@ -110,6 +111,9 @@ class StockSettings(Document):
 		self.validate_use_batch_wise_valuation()
 
 	def validate_use_batch_wise_valuation(self):
+		if self.use_batchwise_valuation:
+			self.do_not_use_batchwise_valuation = 0
+
 		if not self.do_not_use_batchwise_valuation:
 			return
 

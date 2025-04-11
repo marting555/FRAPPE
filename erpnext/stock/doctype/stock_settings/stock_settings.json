@@ -9,6 +9,7 @@
   "item_defaults_section",
   "item_naming_by",
   "valuation_method",
+  "use_batchwise_valuation",
   "item_group",
   "column_break_4",
   "default_warehouse",
@@ -464,6 +465,7 @@
    "description": "If enabled, the system will use the moving average valuation method to calculate the valuation rate for the batched items and will not consider the individual batch-wise incoming rate.",
    "fieldname": "do_not_use_batchwise_valuation",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "Do Not Use Batch-wise Valuation"
   },
   {
@@ -529,6 +531,13 @@
    "fieldname": "allow_to_make_quality_inspection_after_purchase_or_delivery",
    "fieldtype": "Check",
    "label": "Allow to Make Quality Inspection after Purchase / Delivery"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval: doc.valuation_method == \"Moving Average\"",
+   "fieldname": "use_batchwise_valuation",
+   "fieldtype": "Check",
+   "label": "Use Batch-wise Valuation"
   }
  ],
  "icon": "icon-cog",
@@ -536,7 +545,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-04-10 16:19:31.210007",
+ "modified": "2025-04-11 15:57:30.501279",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Settings",

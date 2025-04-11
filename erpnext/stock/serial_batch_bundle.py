@@ -692,7 +692,9 @@ class BatchNoValuation(DeprecatedBatchNoValuation):
 		self.batchwise_valuation_batches = []
 		self.non_batchwise_valuation_batches = []
 
-		if get_valuation_method(self.sle.item_code) == "Moving Average":
+		use_batch_wise_valuation = frappe.db.get_single_value("Stock Settings", "use_batchwise_valuation")
+
+		if get_valuation_method(self.sle.item_code) == "Moving Average" and not use_batch_wise_valuation:
 			self.non_batchwise_valuation_batches = self.batches
 			return
 
