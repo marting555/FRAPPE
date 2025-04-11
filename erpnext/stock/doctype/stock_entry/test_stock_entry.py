@@ -2775,7 +2775,8 @@ class TestStockEntry(FrappeTestCase):
 			"item_code": item_2,
 			"qty": 15,
 			"basic_rate": 150,
-			"t_warehouse": "_Test Warehouse - _TC"
+			"t_warehouse": "_Test Warehouse - _TC",
+			"expense_account": "Stock Adjustment - _TC",
 		})
 
 		semr.save()
@@ -2825,14 +2826,14 @@ class TestStockEntry(FrappeTestCase):
 
 		semr = make_stock_entry(
 			item_code=item_1, qty=15, rate=100, target="_Test Warehouse - _TC",
-			purpose="Material Receipt", do_not_save=True
+			purpose="Material Receipt", expense_account= "Stock Adjustment - _TC", do_not_save=True
 		)
 		semr.save()
 		semr.submit()
 
 		semt = make_stock_entry(
 			item_code=item_1, qty=10, rate=100, source="_Test Warehouse - _TC", target = "Stores - _TC",
-			purpose="Material Transfer", do_not_save=True
+			purpose="Material Transfer", expense_account= "Stock Adjustment - _TC", do_not_save=True
 		)
 		semt.save()
 		semt.submit()
@@ -2872,7 +2873,8 @@ class TestStockEntry(FrappeTestCase):
 			"item_code": item_2,
 			"qty": 15,
 			"basic_rate": 150,
-			"t_warehouse": "_Test Warehouse - _TC"
+			"t_warehouse": "_Test Warehouse - _TC",
+			"expense_account": "Stock Adjustment - _TC"
 		})
 
 		semr.save()
@@ -2888,7 +2890,8 @@ class TestStockEntry(FrappeTestCase):
 			"qty": 10,
 			"basic_rate": 150,
 			"t_warehouse": "Stores - _TC",
-			"s_warehouse": "_Test Warehouse - _TC"
+			"s_warehouse": "_Test Warehouse - _TC",
+			"expense_account": "Stock Adjustment - _TC"
 		})
 
 		semt.save()
@@ -2939,7 +2942,8 @@ class TestStockEntry(FrappeTestCase):
 			"item_code": item_2,
 			"qty": 15,
 			"basic_rate": 150,
-			"t_warehouse": "Stores - _TC"
+			"t_warehouse": "Stores - _TC",
+			"expense_account": "Stock Adjustment - _TC"
 		})
 
 		semr.save()
@@ -2989,12 +2993,12 @@ class TestStockEntry(FrappeTestCase):
 
 		semr = make_stock_entry(
 			item_code=item_1, qty=15, rate=100, target="_Test Warehouse - _TC",
-			purpose="Material Receipt"
+			purpose="Material Receipt", expense_account= "Stock Adjustment - _TC"
 		)
 
 		semt = make_stock_entry(
 			item_code=item_1, qty=10, rate=100, source="_Test Warehouse - _TC", target = "Stores - _TC",
-			purpose="Material Issue"
+			purpose="Material Issue", expense_account= "Stock Adjustment - _TC"
 		)
 
 		sle = frappe.get_all("Stock Ledger Entry", filters={"voucher_no": semt.name}, fields=["actual_qty", "item_code"])
@@ -3031,7 +3035,8 @@ class TestStockEntry(FrappeTestCase):
 			"item_code": item_2,
 			"qty": 15,
 			"basic_rate": 150,
-			"t_warehouse": "Stores - _TC"
+			"t_warehouse": "Stores - _TC",
+			"expense_account": "Stock Adjustment - _TC"
 		})
 
 		semr.save()
@@ -3682,6 +3687,7 @@ class TestStockEntry(FrappeTestCase):
 		se = make_stock_entry(
 			company=company_doc.name, 
 			purpose="Manufacture", 
+			expense_account= "Stock Adjustment - _TC",
 			do_not_submit=True,
 			do_not_save=True
 		)
@@ -3829,7 +3835,7 @@ class TestStockEntry(FrappeTestCase):
 		else:
 			company_doc = frappe.get_doc("Company", company) 
 		item = make_item("ADI-SH-W07", {'has_batch_no':1, "create_new_batch":1, "valuation_rate":100})
-		se = make_stock_entry(item_code=item.name,purpose="Manufacture", company=company_doc.name,target=create_warehouse("Test Warehouse"), qty=150, basic_rate=100,do_not_save=True)
+		se = make_stock_entry(item_code=item.name,purpose="Manufacture", company=company_doc.name,target=create_warehouse("Test Warehouse"), qty=150, basic_rate=100, expense_account= "Stock Adjustment - _TC",do_not_save=True)
 		se.items[0].is_finished_item = 1
 		se.save()
 		se.submit()
@@ -3867,10 +3873,10 @@ class TestStockEntry(FrappeTestCase):
 		}
 		item1 = make_item("_Test Item2271", item_fields1)
 		item2 = make_item("_Test Item2281", item_fields2)
-		se = make_stock_entry(item_code=item1.name,purpose="Material Receipt", posting_date="01-12-2024",company=company,target=create_warehouse("Test Warehouse", company=company), qty=15)
-		se1 = make_stock_entry(item_code=item1.name,purpose="Material Receipt", posting_date="01-01-2025",company=company,target=create_warehouse("Test Warehouse", company=company), qty=25)
-		se2 = make_stock_entry(item_code=item1.name,set_posting_time=1,purpose="Material Issue", posting_date="01-01-2025",company=company,source=create_warehouse("Test Warehouse", company=company), qty=10)
-		se3 = make_stock_entry(item_code=item1.name,purpose="Material Issue", posting_date="02-07-2025",company=company,source=create_warehouse("Test Warehouse", company=company), qty=20)
+		se = make_stock_entry(item_code=item1.name,purpose="Material Receipt", posting_date="2024-12-01",company=company,target=create_warehouse("Test Warehouse", company=company), qty=15, expense_account= "Stock Adjustment - _TC")
+		se1 = make_stock_entry(item_code=item1.name,purpose="Material Receipt", posting_date="2025-01-01",company=company,target=create_warehouse("Test Warehouse", company=company), qty=25, expense_account= "Stock Adjustment - _TC")
+		se2 = make_stock_entry(item_code=item1.name,set_posting_time=1,purpose="Material Issue", posting_date="2025-01-01",company=company,source=create_warehouse("Test Warehouse", company=company), qty=10, expense_account= "Stock Adjustment - _TC")
+		se3 = make_stock_entry(item_code=item1.name,purpose="Material Issue", posting_date="2025-07-02",company=company,source=create_warehouse("Test Warehouse", company=company), qty=20, expense_account= "Stock Adjustment - _TC")
 
 
 		filters = frappe._dict({  # Convert to allow dot notation
