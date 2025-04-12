@@ -207,6 +207,15 @@ erpnext.PointOfSale.Payment = class {
 			const doc = this.events.get_frm().doc;
 			const paid_amount = doc.paid_amount;
 			const items = doc.items;
+			const customer = doc.customer;
+			if (!customer) {
+				frappe.show_alert({
+					message: __("You cannot submit the order without customer."),
+					indicator: "orange",
+				});
+				frappe.utils.play_sound("error");
+				return;
+			}
 
 			if (!this.validate_reqd_invoice_fields()) {
 				return;
