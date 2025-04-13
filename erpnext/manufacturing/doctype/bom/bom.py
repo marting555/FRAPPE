@@ -444,12 +444,12 @@ class BOM(WebsiteGenerator):
 			"description": item and args["description"] or "",
 			"image": item and args["image"] or "",
 			"stock_uom": item and args["stock_uom"] or "",
-			"uom": item and args["stock_uom"] or "",
-			"conversion_factor": 1,
+			"uom": args["uom"] if args.get("uom") else item and args["stock_uom"] or "",
+			"conversion_factor": args["conversion_factor"] if args.get("conversion_factor") else 1,
 			"bom_no": args["bom_no"],
 			"rate": rate,
 			"qty": args.get("qty") or args.get("stock_qty") or 1,
-			"stock_qty": args.get("qty") or args.get("stock_qty") or 1,
+			"stock_qty": args.get("stock_qty") or args.get("qty") or 1,
 			"base_rate": flt(rate) * (flt(self.conversion_rate) or 1),
 			"include_item_in_manufacturing": cint(args.get("transfer_for_manufacture")),
 			"sourced_by_supplier": args.get("sourced_by_supplier", 0),
@@ -1433,6 +1433,64 @@ def add_operations_cost(stock_entry, work_order=None, expense_account=None):
 				},
 			)
 
+	def get_max_operation_quantity():
+		from frappe.query_builder.functions import Sum
+
+		table = frappe.qb.DocType("Job Card")
+		query = (
+			frappe.qb.from_(table)
+			.select(Sum(table.total_completed_qty).as_("qty"))
+			.where(
+				(table.docstatus == 1)
+				& (table.work_order == work_order.name)
+				& (table.is_corrective_job_card == 0)
+			)
+			.groupby(table.operation)
+		)
+		return min([d.qty for d in query.run(as_dict=True)], default=0)
+
+	def get_utilised_corrective_cost():
+		from frappe.query_builder.functions import Sum
+
+		table = frappe.qb.DocType("Stock Entry")
+		subquery = (
+			frappe.qb.from_(table)
+			.select(table.name)
+			.where(
+				(table.docstatus == 1)
+				& (table.work_order == work_order.name)
+				& (table.purpose == "Manufacture")
+			)
+		)
+		table = frappe.qb.DocType("Landed Cost Taxes and Charges")
+		query = (
+			frappe.qb.from_(table)
+			.select(Sum(table.amount).as_("amount"))
+			.where(table.parent.isin(subquery) & (table.has_corrective_cost == 1))
+		)
+		return query.run(as_dict=True)[0].amount or 0
+
+	if (
+		work_order
+		and work_order.corrective_operation_cost
+		and cint(
+			frappe.db.get_single_value(
+				"Manufacturing Settings", "add_corrective_operation_cost_in_finished_good_valuation"
+			)
+		)
+	):
+		max_qty = get_max_operation_quantity() - work_order.produced_qty
+		remaining_corrective_cost = work_order.corrective_operation_cost - get_utilised_corrective_cost()
+		stock_entry.append(
+			"additional_costs",
+			{
+				"expense_account": expense_account,
+				"description": "Corrective Operation Cost",
+				"has_corrective_cost": 1,
+				"amount": remaining_corrective_cost / max_qty * flt(stock_entry.fg_completed_qty),
+			},
+		)
+
 
 @frappe.whitelist()
 def get_bom_diff(bom1, bom2):
@@ -1500,16 +1558,8 @@ def item_query(doctype, txt, searchfield, start, page_len, filters):
 	fields = ["name", "item_name", "item_group", "description"]
 	fields.extend([field for field in searchfields if field not in ["name", "item_group", "description"]])
 
-	searchfields = searchfields + [
-		field
-		for field in [
-			searchfield or "name",
-			"item_code",
-			"item_group",
-			"item_name",
-		]
-		if field not in searchfields
-	]
+	if not searchfields:
+		searchfields = ["name"]
 
 	query_filters = {"disabled": 0, "ifnull(end_of_life, '3099-12-31')": (">", today())}
 

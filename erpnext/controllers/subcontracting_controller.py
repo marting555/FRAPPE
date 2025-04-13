@@ -104,10 +104,19 @@ class SubcontractingController(StockController):
 					)
 
 				if (
-					self.doctype not in "Subcontracting Receipt"
-					and item.qty
-					> flt(get_pending_sco_qty(self.purchase_order).get(item.purchase_order_item))
-					/ item.sc_conversion_factor
+					self.doctype == "Subcontracting Order" and not item.subcontracting_conversion_factor
+				):  # this condition will only be true if user has recently updated from develop branch
+					service_item_qty = frappe.get_value(
+						"Subcontracting Order Service Item",
+						filters={"purchase_order_item": item.purchase_order_item, "parent": self.name},
+						fieldname=["qty"],
+					)
+					item.subcontracting_conversion_factor = service_item_qty / item.qty
+
+				if self.doctype not in "Subcontracting Receipt" and item.qty > flt(
+					get_pending_subcontracted_quantity(self.purchase_order).get(item.purchase_order_item)
+					/ item.subcontracting_conversion_factor,
+					frappe.get_precision("Purchase Order Item", "qty"),
 				):
 					frappe.throw(
 						_(
@@ -542,7 +551,11 @@ class SubcontractingController(StockController):
 	def __get_batch_nos_for_bundle(self, qty, key):
 		available_batches = defaultdict(float)
 
+		precision = frappe.get_precision("Subcontracting Receipt Supplied Item", "consumed_qty")
 		for batch_no, batch_qty in self.available_materials[key]["batch_no"].items():
+			if flt(batch_qty, precision) <= 0:
+				continue
+
 			qty_to_consumed = 0
 			if qty > 0:
 				if batch_qty >= qty:
@@ -736,7 +749,9 @@ class SubcontractingController(StockController):
 			):
 				continue
 
-			if self.doctype == self.subcontract_data.order_doctype or self.backflush_based_on == "BOM":
+			if self.doctype == self.subcontract_data.order_doctype or (
+				self.backflush_based_on == "BOM" or self.is_return
+			):
 				for bom_item in self.__get_materials_from_bom(
 					row.item_code, row.bom, row.get("include_exploded_items")
 				):
@@ -1129,10 +1144,14 @@ def get_item_details(items):
 	return item_details
 
 
-def get_pending_sco_qty(po_name):
+def get_pending_subcontracted_quantity(po_name):
 	table = frappe.qb.DocType("Purchase Order Item")
-	query = frappe.qb.from_(table).select(table.name, table.qty, table.sco_qty).where(table.parent == po_name)
-	return {item.name: item.qty - item.sco_qty for item in query.run(as_dict=True)}
+	query = (
+		frappe.qb.from_(table)
+		.select(table.name, table.qty, table.subcontracted_quantity)
+		.where(table.parent == po_name)
+	)
+	return {item.name: item.qty - item.subcontracted_quantity for item in query.run(as_dict=True)}
 
 
 @frappe.whitelist()
@@ -1253,6 +1272,7 @@ def add_items_in_ste(ste_doc, row, qty, rm_details, rm_detail_field="sco_rm_deta
 			"item_code": row.item_details["rm_item_code"],
 			"subcontracted_item": row.item_details["main_item_code"],
 			"serial_no": "\n".join(row.serial_no) if row.serial_no else "",
+			"use_serial_batch_fields": 1,
 		}
 	)
 
@@ -1293,10 +1313,13 @@ def make_return_stock_entry_for_subcontract(
 		if not value.qty:
 			continue
 
+		if item_details := value.get("item_details"):
+			item_details["serial_and_batch_bundle"] = None
+
 		if value.batch_no:
 			for batch_no, qty in value.batch_no.items():
 				if qty > 0:
-					add_items_in_ste(ste_doc, value, value.qty, rm_details, rm_detail_field, batch_no)
+					add_items_in_ste(ste_doc, value, qty, rm_details, rm_detail_field, batch_no)
 		else:
 			add_items_in_ste(ste_doc, value, value.qty, rm_details, rm_detail_field)
 

@@ -38,8 +38,13 @@ erpnext.PointOfSale.ItemSelector = class {
 
 	async load_items_data() {
 		if (!this.item_group) {
-			const res = await frappe.db.get_value("Item Group", { lft: 1, is_group: 1 }, "name");
-			this.parent_item_group = res.message.name;
+			frappe.call({
+				method: "erpnext.selling.page.point_of_sale.point_of_sale.get_parent_item_group",
+				async: false,
+				callback: (r) => {
+					if (r.message) this.parent_item_group = r.message;
+				},
+			});
 		}
 		if (!this.price_list) {
 			const res = await frappe.db.get_value("POS Profile", this.pos_profile, "selling_price_list");
@@ -328,13 +333,16 @@ erpnext.PointOfSale.ItemSelector = class {
 	}
 
 	filter_items({ search_term = "" } = {}) {
+		const selling_price_list = this.events.get_frm().doc.selling_price_list;
+
 		if (search_term) {
 			search_term = search_term.toLowerCase();
 
 			// memoize
 			this.search_index = this.search_index || {};
-			if (this.search_index[search_term]) {
-				const items = this.search_index[search_term];
+			this.search_index[selling_price_list] = this.search_index[selling_price_list] || {};
+			if (this.search_index[selling_price_list][search_term]) {
+				const items = this.search_index[selling_price_list][search_term];
 				this.items = items;
 				this.render_item_list(items);
 				this.auto_add_item && this.items.length == 1 && this.add_filtered_item_to_cart();
@@ -346,7 +354,7 @@ erpnext.PointOfSale.ItemSelector = class {
 			// eslint-disable-next-line no-unused-vars
 			const { items, serial_no, batch_no, barcode } = message;
 			if (search_term && !barcode) {
-				this.search_index[search_term] = items;
+				this.search_index[selling_price_list][search_term] = items;
 			}
 			this.items = items;
 			this.render_item_list(items);

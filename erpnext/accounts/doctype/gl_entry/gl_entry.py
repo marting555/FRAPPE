@@ -7,13 +7,17 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.model.meta import get_field_precision
 from frappe.model.naming import set_name_from_naming_options
-from frappe.utils import flt, fmt_money
+from frappe.utils import flt, fmt_money, now
 
 import erpnext
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 	get_checks_for_pl_and_bs_accounts,
 )
-from erpnext.accounts.party import validate_party_frozen_disabled, validate_party_gle_currency
+from erpnext.accounts.party import (
+	validate_account_party_type,
+	validate_party_frozen_disabled,
+	validate_party_gle_currency,
+)
 from erpnext.accounts.utils import get_account_currency, get_fiscal_year
 from erpnext.exceptions import InvalidAccountCurrency
 
@@ -125,7 +129,7 @@ class GLEntry(Document):
 			if not self.get(k):
 				frappe.throw(_("{0} is required").format(_(self.meta.get_label(k))))
 
-		if not (self.party_type and self.party):
+		if not self.is_cancelled and not (self.party_type and self.party):
 			account_type = frappe.get_cached_value("Account", self.account, "account_type")
 			if account_type == "Receivable":
 				frappe.throw(
@@ -268,8 +272,12 @@ class GLEntry(Document):
 
 	def validate_party(self):
 		validate_party_frozen_disabled(self.party_type, self.party)
+		validate_account_party_type(self)
 
 	def validate_currency(self):
+		if self.is_cancelled:
+			return
+
 		company_currency = erpnext.get_company_currency(self.company)
 		account_currency = get_account_currency(self.account)
 
@@ -448,7 +456,7 @@ def rename_temporarily_named_docs(doctype):
 		set_name_from_naming_options(frappe.get_meta(doctype).autoname, doc)
 		newname = doc.name
 		frappe.db.sql(
-			f"UPDATE `tab{doctype}` SET name = %s, to_rename = 0 where name = %s",
-			(newname, oldname),
+			f"UPDATE `tab{doctype}` SET name = %s, to_rename = 0, modified = %s where name = %s",
+			(newname, now(), oldname),
 			auto_commit=True,
 		)

@@ -436,7 +436,7 @@ def scrap_asset(asset_name, scrap_date=None):
 
 	if asset.docstatus != 1:
 		frappe.throw(_("Asset {0} must be submitted").format(asset.name))
-	elif asset.status in ("Cancelled", "Sold", "Scrapped", "Capitalized", "Decapitalized"):
+	elif asset.status in ("Cancelled", "Sold", "Scrapped", "Capitalized"):
 		frappe.throw(_("Asset {0} cannot be scrapped, as it is already {1}").format(asset.name, asset.status))
 
 	today_date = getdate(today())
@@ -448,9 +448,9 @@ def scrap_asset(asset_name, scrap_date=None):
 	notes = _("This schedule was created when Asset {0} was scrapped.").format(
 		get_link_to_form(asset.doctype, asset.name)
 	)
-
-	depreciate_asset(asset, date, notes)
-	asset.reload()
+	if asset.status != "Fully Depreciated":
+		depreciate_asset(asset, date, notes)
+		asset.reload()
 
 	depreciation_series = frappe.get_cached_value("Company", asset.company, "series_for_depreciation_entry")
 

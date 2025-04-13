@@ -13,7 +13,13 @@ frappe.listview_settings["Material Request"] = {
 				return [__("Completed"), "green"];
 			}
 		} else if (doc.docstatus == 1 && flt(doc.per_ordered, precision) == 0) {
-			return [__("Pending"), "orange", "per_ordered,=,0"];
+			return [__("Pending"), "orange", "per_ordered,=,0|docstatus,=,1"];
+		} else if (
+			doc.docstatus == 1 &&
+			flt(doc.per_ordered, precision) < 100 &&
+			doc.material_request_type == "Material Transfer"
+		) {
+			return [__("Partially Received"), "yellow", "per_ordered,<,100"];
 		} else if (doc.docstatus == 1 && flt(doc.per_ordered, precision) < 100) {
 			return [__("Partially ordered"), "yellow", "per_ordered,<,100"];
 		} else if (doc.docstatus == 1 && flt(doc.per_ordered, precision) == 100) {

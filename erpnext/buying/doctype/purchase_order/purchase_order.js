@@ -367,7 +367,11 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 				}
 
 				if (is_drop_ship && doc.status != "Delivered") {
-					this.frm.add_custom_button(__("Delivered"), this.delivered_by_supplier, __("Status"));
+					this.frm.add_custom_button(
+						__("Delivered"),
+						this.delivered_by_supplier.bind(this),
+						__("Status")
+					);
 
 					this.frm.page.set_inner_btn_group_as_primary(__("Status"));
 				}
@@ -402,7 +406,7 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 									);
 								}
 							} else {
-								if (!doc.items.every((item) => item.qty == item.sco_qty)) {
+								if (!doc.items.every((item) => item.qty == item.subcontracted_quantity)) {
 									this.frm.add_custom_button(
 										__("Subcontracting Order"),
 										() => {
@@ -467,6 +471,16 @@ erpnext.buying.PurchaseOrderController = class PurchaseOrderController extends (
 		} else if (doc.docstatus === 0) {
 			this.frm.cscript.add_from_mappers();
 		}
+	}
+
+	onload() {
+		this.frm.set_query("supplier", function () {
+			return {
+				filters: {
+					is_transporter: 0,
+				},
+			};
+		});
 	}
 
 	get_items_from_open_material_requests() {

@@ -1,7 +1,8 @@
 erpnext.PointOfSale.PastOrderSummary = class {
-	constructor({ wrapper, events }) {
+	constructor({ wrapper, settings, events }) {
 		this.wrapper = wrapper;
 		this.events = events;
+		this.print_receipt_on_order_complete = settings.print_receipt_on_order_complete;
 
 		this.init_component();
 	}
@@ -23,7 +24,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 					<div class="abs-container">
 						<div class="upper-section"></div>
 						<div class="label">${__("Items")}</div>
-						<div class="items-container summary-container"></div>
+						<div class="items-container summary-container order-summary-container"></div>
 						<div class="label">${__("Totals")}</div>
 						<div class="totals-container summary-container"></div>
 						<div class="label">${__("Payments")}</div>
@@ -89,12 +90,18 @@ erpnext.PointOfSale.PastOrderSummary = class {
 				</div>`;
 	}
 
-	get_item_html(doc, item_data) {
+	async get_item_html(doc, item_data) {
+		const item_refund_data = doc.is_return || doc.docstatus === 0 ? "" : await get_returned_qty();
+
 		return `<div class="item-row-wrapper">
+				<div class="item-row-data">
 					<div class="item-name">${item_data.item_name}</div>
 					<div class="item-qty">${item_data.qty || 0} ${item_data.uom}</div>
 					<div class="item-rate-disc">${get_rate_discount_html()}</div>
-				</div>`;
+				</div>
+
+				${item_refund_data}
+		</div>`;
 
 		function get_rate_discount_html() {
 			if (item_data.rate && item_data.price_list_rate && item_data.rate !== item_data.price_list_rate) {
@@ -106,6 +113,25 @@ erpnext.PointOfSale.PastOrderSummary = class {
 					doc.currency
 				)}</div>`;
 			}
+		}
+
+		async function get_returned_qty() {
+			const r = await frappe.call({
+				method: "erpnext.controllers.sales_and_purchase_return.get_pos_invoice_item_returned_qty",
+				args: {
+					pos_invoice: doc.name,
+					customer: doc.customer,
+					item_row_name: item_data.name,
+				},
+			});
+
+			if (!r.message.qty) {
+				return "";
+			}
+
+			return `<div class="item-row-refund">
+				<strong>${r.message.qty}</strong> ${__("Returned")}
+			</div>`;
 		}
 	}
 
@@ -165,7 +191,16 @@ erpnext.PointOfSale.PastOrderSummary = class {
 	}
 
 	bind_events() {
-		this.$summary_container.on("click", ".return-btn", () => {
+		this.$summary_container.on("click", ".return-btn", async () => {
+			const r = await this.is_pos_invoice_returnable(this.doc.name);
+			if (!r) {
+				frappe.msgprint({
+					title: __("Invalid Return"),
+					indicator: "orange",
+					message: __("All the items have been already returned."),
+				});
+				return;
+			}
 			this.events.process_return(this.doc.name);
 			this.toggle_component(false);
 			this.$component.find(".no-summary-placeholder").css("display", "flex");
@@ -355,6 +390,10 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		const condition_btns_map = this.get_condition_btn_map(after_submission);
 
 		this.add_summary_btns(condition_btns_map);
+
+		if (after_submission && this.print_receipt_on_order_complete) {
+			this.print_receipt();
+		}
 	}
 
 	attach_document_info(doc) {
@@ -365,13 +404,13 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		});
 	}
 
-	attach_items_info(doc) {
+	async attach_items_info(doc) {
 		this.$items_container.html("");
-		doc.items.forEach((item) => {
-			const item_dom = this.get_item_html(doc, item);
+		for (const item of doc.items) {
+			const item_dom = await this.get_item_html(doc, item);
 			this.$items_container.append(item_dom);
 			this.set_dynamic_rate_header_width();
-		});
+		}
 	}
 
 	set_dynamic_rate_header_width() {
@@ -420,5 +459,15 @@ erpnext.PointOfSale.PastOrderSummary = class {
 
 	toggle_component(show) {
 		show ? this.$component.css("display", "flex") : this.$component.css("display", "none");
+	}
+
+	async is_pos_invoice_returnable(invoice) {
+		const r = await frappe.call({
+			method: "erpnext.controllers.sales_and_purchase_return.is_pos_invoice_returnable",
+			args: {
+				pos_invoice: invoice,
+			},
+		});
+		return r.message;
 	}
 };

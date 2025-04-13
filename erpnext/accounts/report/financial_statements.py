@@ -510,12 +510,16 @@ def get_accounting_entries(
 		.where(gl_entry.company == filters.company)
 	)
 
+	ignore_is_opening = frappe.db.get_single_value(
+		"Accounts Settings", "ignore_is_opening_check_for_reporting"
+	)
+
 	if doctype == "GL Entry":
 		query = query.select(gl_entry.posting_date, gl_entry.is_opening, gl_entry.fiscal_year)
 		query = query.where(gl_entry.is_cancelled == 0)
 		query = query.where(gl_entry.posting_date <= to_date)
 
-		if ignore_opening_entries:
+		if ignore_opening_entries and not ignore_is_opening:
 			query = query.where(gl_entry.is_opening == "No")
 	else:
 		query = query.select(gl_entry.closing_date.as_("posting_date"))
@@ -626,7 +630,7 @@ def get_cost_centers_with_children(cost_centers):
 def get_columns(periodicity, period_list, accumulated_values=1, company=None, cash_flow=False):
 	columns = [
 		{
-			"fieldname": "account",
+			"fieldname": "account" if not cash_flow else "section",
 			"label": _("Account") if not cash_flow else _("Section"),
 			"fieldtype": "Link",
 			"options": "Account",

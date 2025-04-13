@@ -1712,13 +1712,13 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 		wo.submit()
 		make_stock_entry(
 			item_code="_Test Item",
-			target="Work In Progress - _TC",
+			target="_Test Warehouse - _TC",
 			qty=4,
 			basic_rate=100,  # Stock RM
 		)
 		make_stock_entry(
 			item_code="_Test Item Home Desktop 100",  # Stock RM
-			target="Work In Progress - _TC",
+			target="_Test Warehouse - _TC",
 			qty=4,
 			basic_rate=100,
 		)
@@ -2185,6 +2185,45 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 		frappe.db.set_single_value("Stock Settings", "update_existing_price_list_rate", 0)
 		frappe.db.set_single_value("Stock Settings", "auto_insert_price_list_rate_if_missing", 0)
 
+	def test_delivery_note_rate_on_change_of_warehouse(self):
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+
+		item = make_item(
+			"_Test Batch Item for Delivery Note Rate",
+			{
+				"has_batch_no": 1,
+				"create_new_batch": 1,
+				"batch_number_series": "BH-SDDTBIFRM-.#####",
+			},
+		)
+
+		frappe.db.set_single_value("Stock Settings", "auto_insert_price_list_rate_if_missing", 1)
+		so = make_sales_order(
+			item_code=item.name, rate=27648.00, price_list_rate=27648.00, qty=1, do_not_submit=True
+		)
+
+		so.items[0].rate = 90
+		so.save()
+		self.assertTrue(so.items[0].discount_amount == 27558.0)
+		so.submit()
+
+		warehouse = create_warehouse("NW Warehouse FOR Rate", company=so.company)
+
+		make_stock_entry(
+			item_code=item.name,
+			qty=2,
+			target=warehouse,
+			basic_rate=100,
+			company=so.company,
+			use_serial_batch_fields=1,
+		)
+
+		dn = make_delivery_note(so.name)
+		dn.items[0].warehouse = warehouse
+		dn.save()
+
+		self.assertEqual(dn.items[0].rate, 90)
+
 	def test_credit_limit_on_so_reopning(self):
 		# set credit limit
 		company = "_Test Company"
@@ -2275,6 +2314,51 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 		self.assertEqual(dn.items[0].warehouse, self.warehouse_stores)
 		self.assertEqual(dn.items[1].qty, 3)
 		self.assertEqual(dn.items[1].warehouse, self.warehouse_finished_goods)
+
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+
+		warehouse = create_warehouse("Test Warehouse 1", company=self.company)
+
+		make_stock_entry(
+			item_code=self.item,
+			target=warehouse,
+			qty=5,
+			company=self.company,
+		)
+
+		so = frappe.new_doc("Sales Order")
+		so.reserve_stock = 1
+		so.company = self.company
+		so.customer = self.customer
+		so.transaction_date = today()
+		so.currency = "INR"
+		so.append(
+			"items",
+			{
+				"item_code": self.item,
+				"qty": 5,
+				"rate": 2000,
+				"warehouse": warehouse,
+				"delivery_date": today(),
+			},
+		)
+		so.submit()
+
+		sres = frappe.get_all(
+			"Stock Reservation Entry",
+			filters={"voucher_no": so.name},
+			fields=["name"],
+		)
+
+		self.assertEqual(len(sres), 1)
+		sre_doc = frappe.get_doc("Stock Reservation Entry", sres[0].name)
+		self.assertFalse(sre_doc.status == "Delivered")
+
+		si = make_sales_invoice(so.name)
+		si.update_stock = 1
+		si.submit()
+		sre_doc.reload()
+		self.assertTrue(sre_doc.status == "Delivered")
 
 
 def automatically_fetch_payment_terms(enable=1):

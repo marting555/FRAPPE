@@ -20,6 +20,10 @@ from erpnext.controllers.queries import item_query as _item_query
 from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
 
 
+class PartialPaymentValidationError(frappe.ValidationError):
+	pass
+
+
 class POSInvoice(SalesInvoice):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
@@ -161,7 +165,6 @@ class POSInvoice(SalesInvoice):
 		terms: DF.TextEditor | None
 		territory: DF.Link | None
 		timesheets: DF.Table[SalesInvoiceTimesheet]
-		title: DF.Data | None
 		to_date: DF.Date | None
 		total: DF.Currency
 		total_advance: DF.Currency
@@ -193,6 +196,7 @@ class POSInvoice(SalesInvoice):
 
 		# run on validate method of selling controller
 		super(SalesInvoice, self).validate()
+		self.validate_pos_opening_entry()
 		self.validate_auto_set_posting_time()
 		self.validate_mode_of_payment()
 		self.validate_uom_is_integer("stock_uom", "stock_qty")
@@ -211,6 +215,7 @@ class POSInvoice(SalesInvoice):
 		self.validate_payment_amount()
 		self.validate_loyalty_transaction()
 		self.validate_company_with_pos_company()
+		self.validate_full_payment()
 		if self.coupon_code:
 			from erpnext.accounts.doctype.pricing_rule.utils import validate_coupon_code
 
@@ -322,6 +327,18 @@ class POSInvoice(SalesInvoice):
 					return frappe.throw(
 						_("Payment related to {0} is not completed").format(pay.mode_of_payment)
 					)
+
+	def validate_pos_opening_entry(self):
+		opening_entries = frappe.get_list(
+			"POS Opening Entry", filters={"pos_profile": self.pos_profile, "status": "Open", "docstatus": 1}
+		)
+		if len(opening_entries) == 0:
+			frappe.throw(
+				title=_("POS Opening Entry Missing"),
+				msg=_("No open POS Opening Entry found for POS Profile {0}.").format(
+					frappe.bold(self.pos_profile)
+				),
+			)
 
 	def validate_stock_availablility(self):
 		if self.is_return:
@@ -484,6 +501,20 @@ class POSInvoice(SalesInvoice):
 
 		if self.redeem_loyalty_points and self.loyalty_program and self.loyalty_points:
 			validate_loyalty_points(self, self.loyalty_points)
+
+	def validate_full_payment(self):
+		invoice_total = flt(self.rounded_total) or flt(self.grand_total)
+
+		if self.docstatus == 1:
+			if self.is_return and self.paid_amount != invoice_total:
+				frappe.throw(
+					msg=_("Partial Payment in POS Invoice is not allowed."), exc=PartialPaymentValidationError
+				)
+
+			if self.paid_amount < invoice_total:
+				frappe.throw(
+					msg=_("Partial Payment in POS Invoice is not allowed."), exc=PartialPaymentValidationError
+				)
 
 	def set_status(self, update=False, status=None, update_modified=True):
 		if self.is_new():
