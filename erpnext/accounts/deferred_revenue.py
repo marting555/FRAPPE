@@ -19,6 +19,7 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 	get_accounting_dimensions,
 )
 from erpnext.accounts.utils import get_account_currency
+from erpnext.setup.utils import get_exchange_rate
 
 
 def validate_service_stop_date(doc):
@@ -378,7 +379,6 @@ def book_deferred_income_or_expense(doc, deferred_process, posting_date=None):
 					base_amount,
 					gl_posting_date,
 					project,
-					account_currency,
 					item.cost_center,
 					item,
 					deferred_process,
@@ -553,7 +553,6 @@ def book_revenue_via_journal_entry(
 	base_amount,
 	posting_date,
 	project,
-	account_currency,
 	cost_center,
 	item,
 	deferred_process=None,
@@ -567,37 +566,67 @@ def book_revenue_via_journal_entry(
 	journal_entry.company = doc.company
 	journal_entry.voucher_type = "Deferred Revenue" if doc.doctype == "Sales Invoice" else "Deferred Expense"
 	journal_entry.process_deferred_accounting = deferred_process
+
 	company_currency = frappe.get_cached_value("Company", doc.company, "default_currency")
 
-	account_currencies = frappe.get_all(
-		"Account", filters={"name": ["in", [debit_account, credit_account]]}, pluck="account_currency"
+	account_currency_map = frappe._dict(
+		frappe.get_all(
+			"Account",
+			filters={"name": ["in", [debit_account, credit_account]]},
+			fields=["name", "account_currency"],
+			as_list=True,
+		)
 	)
 
-	journal_entry.multi_currency = any(currency != company_currency for currency in account_currencies)
+	multi_currency = any(currency != company_currency for currency in account_currency_map.values())
+	journal_entry.multi_currency = multi_currency
 
-	debit_entry = {
-		"account": credit_account,
-		"credit": base_amount,
-		"credit_in_account_currency": amount,
-		"account_currency": account_currency,
-		"reference_name": doc.name,
-		"reference_type": doc.doctype,
-		"reference_detail_no": item.name,
-		"cost_center": cost_center,
-		"project": project,
-	}
+	if multi_currency:
+		# ignoring this because is is settings as 1 in exchange rate
+		journal_entry.flags.ignore_exchange_rate = True
 
-	credit_entry = {
-		"account": debit_account,
-		"debit": base_amount,
-		"debit_in_account_currency": amount,
-		"account_currency": account_currency,
-		"reference_name": doc.name,
-		"reference_type": doc.doctype,
-		"reference_detail_no": item.name,
-		"cost_center": cost_center,
-		"project": project,
-	}
+	def make_entry(account, amount_type):
+		account_currency = account_currency_map.get(account)
+		amount_in_ac = amount
+
+		entry = {
+			"account": account,
+			"account_currency": account_currency,
+			"reference_name": doc.name,
+			"reference_type": doc.doctype,
+			"reference_detail_no": item.name,
+			"cost_center": cost_center,
+			"project": project,
+		}
+
+		if multi_currency:
+			exchange_rate = get_exchange_rate(account_currency, company_currency, posting_date)
+
+			entry["exchange_rate"] = exchange_rate
+			amount_in_ac = amount / exchange_rate
+
+		if amount_type == "debit":
+			entry["debit"] = base_amount
+			entry["debit_in_account_currency"] = amount_in_ac
+		else:
+			entry["credit"] = base_amount
+			entry["credit_in_account_currency"] = amount_in_ac
+
+		return entry
+
+	# how will i handle the debit/credit difference error
+	credit_entry = make_entry(
+		credit_account,
+		amount_type="credit",
+	)
+
+	debit_entry = make_entry(
+		debit_account,
+		amount_type="debit",
+	)
+
+	# here the problem is that when i set exchange rate based on that value if upto 2 decimal
+	# so in comparision it is giving error
 
 	for dimension in get_accounting_dimensions():
 		debit_entry.update({dimension: item.get(dimension)})
