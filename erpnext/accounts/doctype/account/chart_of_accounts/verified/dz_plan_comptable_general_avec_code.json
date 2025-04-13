@@ -193,7 +193,7 @@
                 "Immobilisations corporelles en cours": {
                     "Terrains en cours": {
                         "account_number": "2322",
-                        "account_type": "Capital Work in Progress",
+                        "account_type": "Capital Work in Progress"
                     },
                     "Constructions en cours": {
                         "account_number": "2323",
@@ -292,8 +292,7 @@
             "Pertes de valeur sur immobilisations": {
                 "Pertes de valeur sur immobilisations incorporelles": {
                     "Pertes de valeur sur frais de développement immobilisables": {
-                        "account_number": "2903",
-                        
+                        "account_number": "2903" 
                     },
                     "Pertes de valeur sur logiciels informatiques et assimilés": {
                         "account_number": "2904"
