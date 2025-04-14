@@ -904,8 +904,8 @@ class TestJournalEntry(unittest.TestCase):
 		)
 		# Expected GL entries
 		expected_gl_entries = [
-			{"account": credit_account, "debit": 0, "credit": amount},
-			{"account": debit_account, "debit": amount, "credit": 0}
+			{"account": debit_account, "debit": amount, "credit": 0},
+			{"account": credit_account, "debit": 0, "credit": amount}
 		]
 
 		# Assertions
