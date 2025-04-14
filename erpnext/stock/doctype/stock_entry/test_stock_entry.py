@@ -2907,6 +2907,18 @@ class TestStockEntry(FrappeTestCase):
 
 	@change_settings("Stock Settings", {"default_warehouse": "_Test Warehouse - _TC"})
 	def test_item_creation_TC_SCK_118(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		company = "_Test Company"
+		frappe.db.set_value("Company", company, "stock_adjustment_account", 'Stock Adjustment - _TC')
+		
+		from erpnext.accounts.doctype.account.test_account import create_account
+		create_account(
+			account_name= "Stock Adjustment",
+			parent_account="Stock Expenses - _TC",
+			company="_Test Company",
+		)
+    
 		item_1 = create_item(item_code="_Test Item New", is_stock_item=1, opening_stock=15,valuation_rate=100)
 		stock = frappe.get_all("Stock Ledger Entry", filters={"item_code": item_1.name}, 
 							 fields=["warehouse", "actual_qty"])
