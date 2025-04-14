@@ -350,17 +350,6 @@
    "type": "Link"
   },
   {
-   "dependencies": "Serial No",
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Serial No Warranty Expiry",
-   "link_count": 0,
-   "link_to": "Serial No Warranty Expiry",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
    "hidden": 0,
    "is_query_report": 0,
    "label": "Tools",
