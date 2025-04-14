@@ -1272,7 +1272,11 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(pi.grand_total, po.grand_total)
 
 	def test_mr_pi_TC_B_002(self):
+		from erpnext.stock.doctype.item.test_item import make_item
 		# MR =>  PO => PR => PI
+		frappe.set_user("Administrator")
+		item = make_item("Testing-31")
+		
 		mr_dict_list = [{
 				"company" : "_Test Company",
 				"item_code" : "Testing-31",
@@ -1281,7 +1285,7 @@ class TestPurchaseOrder(FrappeTestCase):
 				"rate" : 100,
 			},
 		]
-
+		frappe.delete_doc
 		doc_mr = make_material_request(**mr_dict_list[0])
 		self.assertEqual(doc_mr.docstatus, 1)
 
@@ -3436,11 +3440,12 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.items[0].rate, 130)
 
 	def test_po_pr_pi_multiple_flow_TC_B_065(self):
-		
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 		# Scenario : PO=>2PR=>2PI
 		get_company_supplier = get_company_or_supplier()
 		company = get_company_supplier.get("company")
 		supplier = get_company_supplier.get("supplier")
+		warehouse = create_warehouse(warehouse_name="_Test warehouse - _PO", company=company)
 		item = make_test_item("_Test Item_1")
 		remove_existing_shipping_rules()
 
@@ -3456,26 +3461,18 @@ class TestPurchaseOrder(FrappeTestCase):
 				"shipping_amount": 200
 			}
 		).insert(ignore_if_duplicate=1)
-
-		po = frappe.get_doc({
-			"doctype": "Purchase Order",
-			"company": company,
-			"supplier": supplier,
-			"set_posting_time": 1,
-			"posting_date": "2025-01-15",
-			"required_by_date": "2025-01-20",
-			"shipping_rule": doc_shipping_rule.name,
-			"items": [
-				{
-					"item_code": item.item_code,
-					"warehouse": "_Test Warehouse 1 - _TC",
-					"qty": 4,
-					"rate": 3000
-				}
-			]
-		})
-		po.insert()
-		po.submit()
+		po_data = {
+			"company" : company,
+			"supplier":supplier,
+			"item_code" : item.item_code,
+			"warehouse" : warehouse,
+			"qty" : 4,
+			"rate" : 3000,
+			"shipping_rule" :doc_shipping_rule.name,
+		}
+		po = create_purchase_order(**po_data)
+		self.assertEqual(po.grand_total, 12200.0)
+		self.assertEqual(po.status, "To Receive and Bill")
 
 		self.assertEqual(po.grand_total, 12200, "Grand Total should include Shipping Rule (12000 + 200 = 12200).")
 		self.assertEqual(po.status, "To Receive and Bill", "PO status should be 'To Receive and Bill'.")
