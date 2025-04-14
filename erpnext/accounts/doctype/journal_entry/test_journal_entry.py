@@ -150,7 +150,7 @@ class TestJournalEntry(unittest.TestCase):
 			},
 		)
 
-		if account_bal == stock_bal:
+		if account_bal == stock_bal and (account_bal > 0 and stock_bal > 0):
 			self.assertRaises(StockAccountInvalidTransaction, jv.save)
 			frappe.db.rollback()
 		else:
