@@ -2189,11 +2189,10 @@ class TestStockEntry(FrappeTestCase):
 		self.assertEqual(bin.actual_qty, item_fields["opening_stock"])
 
 	def test_stock_reco_TC_SCK_127(self):
-		if not frappe.db.exists("Company", "_Test Company"):
-			company = frappe.new_doc("Company")
-			company.company_name = "_Test Company"
-			company.default_currency = "INR"
-			company.insert()
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		company = "_Test Company"
+		frappe.db.set_value("Company", company, "stock_adjustment_account", 'Stock Adjustment - _TC')
 
 		warehouse = frappe.db.get_all("Warehouse", filters={"company": "_Test Company"})
 		create_fiscal_with_company('_Test Company')
@@ -2908,6 +2907,18 @@ class TestStockEntry(FrappeTestCase):
 
 	@change_settings("Stock Settings", {"default_warehouse": "_Test Warehouse - _TC"})
 	def test_item_creation_TC_SCK_118(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
+		company = "_Test Company"
+		frappe.db.set_value("Company", company, "stock_adjustment_account", 'Stock Adjustment - _TC')
+		
+		from erpnext.accounts.doctype.account.test_account import create_account
+		create_account(
+			account_name= "Stock Adjustment",
+			parent_account="Stock Expenses - _TC",
+			company="_Test Company",
+		)
+    
 		item_1 = create_item(item_code="_Test Item New", is_stock_item=1, opening_stock=15,valuation_rate=100)
 		stock = frappe.get_all("Stock Ledger Entry", filters={"item_code": item_1.name}, 
 							 fields=["warehouse", "actual_qty"])
@@ -3599,7 +3610,13 @@ class TestStockEntry(FrappeTestCase):
 		)
 
 	def test_stock_manufacture_with_batch_serial_TC_SCK_142(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
 		company = "_Test Company"
+		frappe.db.set_value("Company", company, "stock_adjustment_account", 'Stock Adjustment - _TC')
+    
+		get_fiscal_year(company)
+		create_warehouse("_Test Warehouse Group - _TC", company=company
 		if not frappe.db.exists("Company", company):
 			company_doc = frappe.new_doc("Company")
 			company_doc.company_doc_name = company
@@ -3644,7 +3661,13 @@ class TestStockEntry(FrappeTestCase):
 				self.assertEqual(sle['actual_qty'], 50)
 	
 	def test_stock_manufacture_with_batch_serieal_TC_SCK_140(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
 		company = "_Test Company"
+		frappe.db.set_value("Company", company, "stock_adjustment_account", 'Stock Adjustment - _TC')
+		get_fiscal_year(company)
+		create_warehouse("_Test Warehouse Group - _TC", company=company)
+
 		if not frappe.db.exists("Company", company):
 			company_doc = frappe.new_doc("Company")
 			company_doc.company_doc_name = company
@@ -3766,7 +3789,13 @@ class TestStockEntry(FrappeTestCase):
 		self.check_stock_ledger_entries("Stock Entry", se_2.name, [[item.name, target_warehouse, 5], [item.name, source_warehouse, -5]])
 
 	def test_stock_manufacture_with_batch_serial_TC_SCK_141(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		create_company()
 		company = "_Test Company"
+		frappe.db.set_value("Company", company, "stock_adjustment_account", 'Stock Adjustment - _TC')
+		get_fiscal_year(company)
+		create_warehouse("_Test Warehouse Group - _TC", company=company)
+
 		if not frappe.db.exists("Company", company):
 			company_doc = frappe.new_doc("Company")
 			company_doc.company_name = company
