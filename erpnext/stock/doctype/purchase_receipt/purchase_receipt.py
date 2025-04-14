@@ -1141,17 +1141,13 @@ def update_billing_percentage(pr_doc, update_modified=True, adjust_incoming_rate
 				) * item.qty
 
 			adjusted_amt = flt(adjusted_amt * flt(pr_doc.conversion_rate), item.precision("amount"))
-			pi_landed_cost_amount += flt(adjusted_amt)
+			pi_landed_cost_amount += adjusted_amt
 			item.db_set("amount_difference_with_purchase_invoice", adjusted_amt, update_modified=False)
 
-	percent_billed = round(
-		100
-		* (
-			(total_billed_amount + (pi_landed_cost_amount * (-1 if pi_landed_cost_amount < 0 else 1)))
-			/ (total_amount or 1)
-		),
-		6,
-	)
+	if pi_landed_cost_amount < 0:
+		total_billed_amount += abs(pi_landed_cost_amount)
+
+	percent_billed = round(100 * (total_billed_amount / (total_amount or 1)), 6)
 	pr_doc.db_set("per_billed", percent_billed)
 
 	if update_modified:
