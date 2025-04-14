@@ -52,9 +52,6 @@
                 },
                 "account_number": "18"
             },
-            "(Disponible)": {
-                "account_number": "19"
-            },
             "account_number": "1"
         },
         "CLASSE 2 : IMMOBILISATIONS": {
@@ -225,12 +222,6 @@
                     "account_number": "238"
                 },
                 "account_number": "23"
-            },
-            "(Disponible)": {
-                "account_number": "24"
-            },
-            "(Disponible)": {
-                "account_number": "25"
             },
             "Participations et cr\u00e9ances rattach\u00e9es \u00e0 des participations": {
                 "account_number": "26"
@@ -1540,15 +1531,6 @@
                     "account_number": "542"
                 },
                 "account_number": "54"
-            },
-            "(Disponible)": {
-                "account_number": "55"
-            },
-            "(Disponible)": {
-                "account_number": "56"
-            },
-            "(Disponible)": {
-                "account_number": "57"
             },
             "Virements internes": {
                 "Virements de fonds": {
