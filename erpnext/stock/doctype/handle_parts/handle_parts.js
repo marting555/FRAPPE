@@ -5,89 +5,33 @@ frappe.ui.form.on("Handle Parts", {
     upload: async function (frm) {
         const uploadButton = document.querySelector('.frappe-control[data-fieldname="upload"] button[data-fieldname="upload"]');
         frm.page.set_indicator(__('Uploading. Please wait...'), 'orange');
+        if (!frm.doc.excel) {
+            frappe.msgprint({
+                title: __('Validation Error'),
+                message: __('Please select an Excel file to upload.'),
+                indicator: 'red',
+            });
+            frm.page.clear_indicator();
+            return;
+        }
+
         if (uploadButton) {
             uploadButton.disabled = true;
         }
+
         try {
-            if (!frm.doc.excel) {
-                frappe.msgprint({
-                    title: __('Validation Error'),
-                    message: __('Please select an Excel file to upload.'),
-                    indicator: 'red',
-                });
+            const fileResponse = await fetch(frm.doc.excel)
+            const file = await fileResponse.blob()
+            const fileBuffer = await file.arrayBuffer()
+            
+
+            const presignedUrl = await get_presigned_url(frm, file)
+            if (!presignedUrl) {
                 return;
             }
 
-            const data = await frappe.db.get_doc('Handle Parts Config');
-            if (!data || !data.date_time_url_created) {
-                frappe.msgprint({
-                    title: __('Validation Error'),
-                    message: __('The URL creation time is missing or invalid.'),
-                    indicator: 'red',
-                });
-                return;
-            }
-
-            const urlCreatedTime = frappe.datetime.str_to_obj(data.date_time_url_created);
-            const nowTime = frappe.datetime.now_datetime();
-
-            const timeDifferenceInSeconds = frappe.datetime.get_diff(nowTime, urlCreatedTime, 'seconds');
-            const timeDifferenceInHours = timeDifferenceInSeconds / 3600;
-
-            if (timeDifferenceInHours > 1) {
-                frappe.msgprint({
-                    title: __('Validation Error'),
-                    message: __('The URL creation time is more than 1 hour old. Please generate a new URL.'),
-                    indicator: 'red',
-                });
-                return;
-            }
-
-            if (!data.submit_file_url || !data.binary_data) {
-                let errorMessage = '';
-
-                if (!data.submit_file_url) {
-                    errorMessage += __('The file URL is missing.') + '<br>';
-                }
-                if (!data.binary_data) {
-                    errorMessage += __('The file has not finished uploading properly. Please wait and try again.') + '<br>';
-                }
-
-                frappe.msgprint({
-                    title: __('Validation Error'),
-                    message: errorMessage || __('File upload details are missing or incomplete.'),
-                    indicator: 'red',
-                });
-                return;
-            }
-
-
-            const response = await fetch(data.submit_file_url, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                },
-                body: Uint8Array.from(atob(data.binary_data), c => c.charCodeAt(0))
-            });
-
-            if (response.ok) {
-                frappe.msgprint({
-                    title: __('Success'),
-                    message: __('File uploaded successfully. The process will complete within 10 minutes, and you will be notified once it is done.'),
-                    indicator: 'green',
-                });
-                frm.set_value('excel', "");
-                frm.refresh_field('excel');
-                frappe.db.set_value('Handle Parts Config', 'Handle Parts Config', 'binary_data', '');
-            } else {
-                const errorText = await response.text();
-                console.error('Upload failed:', errorText);
-                frappe.msgprint({
-                    title: __('Error'),
-                    message: __('File upload failed: ') + errorText,
-                    indicator: 'red',
-                });
-            }
+            await upload_file(frm, fileBuffer, presignedUrl)
+            
         } catch (error) {
             console.error("Error in upload function:", error);
             frappe.msgprint({
@@ -105,8 +49,8 @@ frappe.ui.form.on("Handle Parts", {
     },
     product_bundle_errors: async function (frm) {
         frm.page.set_indicator(__('Searching and creating report. Please wait...'), 'orange');
-        const data = await frappe.db.get_doc('Handle Parts Config');
-        if (!data || !data.product_bundle_errors_url) {
+        const { aws_url } = await frappe.db.get_doc('Handle Parts Config');
+        if (!aws_url) {
             frappe.msgprint({
                 title: __('Validation Error'),
                 message: __('The URL for product bundle errors is missing or invalid.'),
@@ -115,7 +59,7 @@ frappe.ui.form.on("Handle Parts", {
             return;
         }
 
-        const response = await fetch(data.product_bundle_errors_url);
+        const response = await fetch(`${aws_url}/erpnext-excel/product-bundle-errors`);
         if (response.ok) {
             const errors = await response.json();
             if (!errors.length) {
@@ -155,8 +99,8 @@ frappe.ui.form.on("Handle Parts", {
     },
     parts_errors: async function (frm) {
         frm.page.set_indicator(__('Searching and creating report. Please wait...'), 'orange');
-        const data = await frappe.db.get_doc('Handle Parts Config');
-        if (!data || !data.parts_errors_url) {
+        const { aws_url } = await frappe.db.get_doc('Handle Parts Config');
+        if (!aws_url) {
             frappe.msgprint({
                 title: __('Validation Error'),
                 message: __('The URL for parts errors is missing or invalid.'),
@@ -165,7 +109,7 @@ frappe.ui.form.on("Handle Parts", {
             return;
         }
 
-        const response = await fetch(data.parts_errors_url);
+        const response = await fetch(`${aws_url}/erpnext-excel/parts-errors`);
         if (response.ok) {
             const errors = await response.json();
             if (!errors.length) {
@@ -216,8 +160,125 @@ frappe.ui.form.on("Handle Parts", {
         }
         window.location.href = data.excel_format_url;
         frm.page.clear_indicator();
-    }
+    },
+    compatibility_errors: function(frm) {
+        frm.page.set_indicator(__('Searching and creating report. Please wait...'), 'orange');
+        frappe.db.get_doc('Handle Parts Config').then(async config => {
+            if (!config.aws_url) {
+                frappe.msgprint({
+                    title: __('Validation Error'),
+                    message: __('The URL for compatibility errors is missing or invalid.'),
+                    indicator: 'red',
+                });
+                return;
+            }
 
+            try {
+                const response = await fetch(`${config.aws_url}/erpnext-excel/mongo-errors`);
+                if (response.ok) {
+                    const errors = await response.json();
+                    if (!errors.length) {
+                        frappe.msgprint({
+                            title: __('No Errors'),
+                            message: __('No compatibility errors found.'),
+                            indicator: 'green',
+                        });
+                        return;
+                    }
+
+                    const dialog = new frappe.ui.Dialog({
+                        title: __('Compatibility Errors'),
+                        fields: [
+                            {
+                                label: __('Errors'),
+                                fieldtype: 'HTML',
+                                fieldname: 'errors_list',
+                                options: generate_mongo_error_table(errors)
+                            }
+                        ]
+                    });
+
+                    dialog.$wrapper.modal({
+                        backdrop: "static",
+                        keyboard: false,
+                        size: "1024px"
+                    });
+
+                    dialog.show();
+                    dialog.$wrapper.find('.modal-dialog').css("width", "90%").css("max-width", "90%");
+                } else {
+                    throw new Error('Failed to fetch errors');
+                }
+            } catch (error) {
+                frappe.msgprint({
+                    title: __('Error'),
+                    message: __('Failed to fetch compatibility errors.'),
+                    indicator: 'red',
+                });
+            } finally {
+                frm.page.clear_indicator();
+            }
+        });
+    },
+    compatibility_errors: function(frm) {
+        frm.page.set_indicator(__('Searching and creating report. Please wait...'), 'orange');
+        frappe.db.get_doc('Handle Parts Config').then(async config => {
+            if (!config.aws_url) {
+                frappe.msgprint({
+                    title: __('Validation Error'),
+                    message: __('The URL for transmission compatibility errors is missing or invalid.'),
+                    indicator: 'red',
+                });
+                return;
+            }
+
+            try {
+                const response = await fetch(`${config.aws_url}/erpnext-excel/transmissions-errors`);
+                if (response.ok) {
+                    const errors = await response.json();
+                    if (!errors.length) {
+                        frappe.msgprint({
+                            title: __('No Errors'),
+                            message: __('No transmission errors found.'),
+                            indicator: 'green',
+                        });
+                        return;
+                    }
+
+                    const dialog = new frappe.ui.Dialog({
+                        title: __('Transmission Errors'),
+                        fields: [
+                            {
+                                label: __('Errors'),
+                                fieldtype: 'HTML',
+                                fieldname: 'errors_list',
+                                options: generate_transmission_error_table(errors)
+                            }
+                        ]
+                    });
+
+                    dialog.$wrapper.modal({
+                        backdrop: "static",
+                        keyboard: false,
+                        size: "1024px"
+                    });
+
+                    dialog.show();
+                    dialog.$wrapper.find('.modal-dialog').css("width", "90%").css("max-width", "90%");
+                } else {
+                    throw new Error('Failed to fetch errors');
+                }
+            } catch (error) {
+                frappe.msgprint({
+                    title: __('Error'),
+                    message: __('Failed to fetch transmission errors.'),
+                    indicator: 'red',
+                });
+            } finally {
+                frm.page.clear_indicator();
+            }
+        });
+    },
 });
 
 function generate_error_table(errors, createdAt) {
@@ -318,3 +379,150 @@ function generate_parts_error_table(errors, createdAt) {
     return table_html;
 }
 
+function generate_mongo_error_table(errors) {
+    let table_html = `
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Message</th>
+                    <th>Items</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    errors.forEach(error => {
+        const type_style = error.type === "missing_items" ? "background-color: #f8d7da; color: #721c24;" : "background-color: #fff3cd; color: #856404;";
+        const timestamp = new Date(error.timestamp).toLocaleString();
+
+        let items_html = '';
+        if (error.items && error.items.length) {
+            items_html = error.items.map(item => `<div>${item}</div>`).join('');
+        }
+
+        table_html += `
+            <tr>
+                <td style="${type_style}">${error.type}</td>
+                <td>${error.message || ''}</td>
+                <td>${items_html}</td>
+                <td>${timestamp}</td>
+            </tr>
+        `;
+    });
+
+    table_html += `
+            </tbody>
+        </table>
+    `;
+    return table_html;
+}
+
+function generate_transmission_error_table(errors) {
+    let table_html = `
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Message</th>
+                    <th>Items</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    errors.forEach(error => {
+        const type_style = error.type === "missing_items" ? "background-color: #f8d7da; color: #721c24;" : "background-color: #fff3cd; color: #856404;";
+        const timestamp = new Date(error.timestamp).toLocaleString();
+
+        let items_html = '';
+        if (error.items && error.items.length) {
+            items_html = error.items.map(item => `<div>${item}</div>`).join('');
+        }
+
+        table_html += `
+            <tr>
+                <td style="${type_style}">${error.type}</td>
+                <td>${error.message || ''}</td>
+                <td>${items_html}</td>
+                <td>${timestamp}</td>
+            </tr>
+        `;
+    });
+
+    table_html += `
+            </tbody>
+        </table>
+    `;
+    return table_html;
+}
+
+async function get_presigned_url(frm, file) {
+    const filename = frm.doc.excel.split('/').pop()
+    const { aws_url } = await frappe.db.get_doc('Handle Parts Config');
+
+    const action = {
+        "Item": "parts",
+        "Transmission Code Compatibility": "transmission_compatibility"
+    }
+
+    const presignedUrlResponse = await fetch(`${aws_url}/erpnext-excel/pre-signed-url`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            filename: filename,
+            contentType: file.type,
+            doctype: frm.doc.doctype,
+            action: action[frm.doc.module],
+            user_to_notify: frappe.session.user,
+            timeout: 5 // minutes
+        })
+    }).then(response => response.json())
+
+    if (!presignedUrlResponse || !presignedUrlResponse.url) {
+        frappe.msgprint({
+            title: __('Validation Error'),
+            message: __('Failed to generate pre-signed URL.'),
+            indicator: 'red',
+        });
+        frm.page.clear_indicator();
+        if (uploadButton) {
+            uploadButton.disabled = false;
+        }
+        return;
+    }
+    
+    return presignedUrlResponse.url
+}
+
+async function upload_file(frm, fileBuffer, presignedUrl) {
+    const uploadResponse = await fetch(presignedUrl, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        },
+        body: fileBuffer
+    });
+
+    if (uploadResponse.ok) {
+        frappe.msgprint({
+            title: __('Success'),
+            message: __('File uploaded successfully. The process will complete within 10 minutes, and you will be notified once it is done.'),
+            indicator: 'green',
+        });
+        frm.set_value('excel', "");
+        frm.refresh_field('excel');
+    } else {
+        const errorText = await uploadResponse.text();
+        console.error('Upload failed:', errorText);
+        frappe.msgprint({
+            title: __('Error'),
+            message: __('File upload failed: ') + errorText,
+            indicator: 'red',
+        });
+    }
+}
