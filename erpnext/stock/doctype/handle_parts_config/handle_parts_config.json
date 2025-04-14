@@ -5,64 +5,25 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "pre_signed_url",
-  "product_bundle_errors_url",
-  "parts_errors_url",
-  "date_time_url_created",
-  "excel_format_url",
-  "column_break_itdu",
-  "submit_file_url",
-  "binary_data"
+  "aws_url",
+  "excel_format_url"
  ],
  "fields": [
-  {
-   "fieldname": "pre_signed_url",
-   "fieldtype": "Data",
-   "label": "Pre Signed URL"
-  },
-  {
-   "fieldname": "product_bundle_errors_url",
-   "fieldtype": "Data",
-   "label": "Product Bundle Errors URL"
-  },
-  {
-   "fieldname": "submit_file_url",
-   "fieldtype": "Data",
-   "label": "Submit File URL (1 hours before expiration)",
-   "read_only": 1
-  },
-  {
-   "fieldname": "date_time_url_created",
-   "fieldtype": "Data",
-   "label": "Date Time URL was created",
-   "read_only": 1
-  },
-  {
-   "fieldname": "binary_data",
-   "fieldtype": "Data",
-   "hidden": 1,
-   "label": "Binary Data",
-   "read_only": 1
-  },
-  {
-   "fieldname": "column_break_itdu",
-   "fieldtype": "Column Break"
-  },
   {
    "fieldname": "excel_format_url",
    "fieldtype": "Data",
    "label": "Excel format URL"
   },
   {
-   "fieldname": "parts_errors_url",
+   "fieldname": "aws_url",
    "fieldtype": "Data",
-   "label": "Parts Errors URL"
+   "label": "aws url"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-01-23 23:32:12.029733",
+ "modified": "2025-04-08 22:25:30.385911",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Handle Parts Config",
