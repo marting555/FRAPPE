@@ -5257,6 +5257,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po.get("items")[0].item_code = item.item_code
 		po.get("items")[0].rate = 100
 		po.get("items")[0].qty = 1
+		po.currency = "INR"
 		po.insert()
 		po.submit()
 
@@ -5265,6 +5266,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po1.supplier = supplier
 		po1.get("items")[0].rate = 100
 		po1.get("items")[0].qty = 1
+		po1.currency = "INR"
 		po1.insert()
 		po1.submit()
 
@@ -5273,6 +5275,7 @@ class TestMaterialRequest(FrappeTestCase):
 		pr.set_warehouse = warehouse
 		pr.items[0].qty = 1
 		pr.items[0].serial_no = "01 - MR"
+		pr.currency = "INR"
 		pr.submit()
 
 		pr1 = create_purchase_invoice(po1.name)
@@ -5280,6 +5283,7 @@ class TestMaterialRequest(FrappeTestCase):
 		pr1.set_warehouse = warehouse
 		pr1.items[0].qty = 1
 		pr1.items[0].serial_no = "013 - MR"
+		pr1.currency = "INR"
 		pr1.submit()
 
 		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pr.name, 'account': pr.items[0].expense_account},'debit')
@@ -5535,6 +5539,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po.get("items")[0].item_code = item.item_code
 		po.get("items")[0].rate = 100
 		po.get("items")[0].qty = 1
+		po.currency = "INR"
 		po.insert()
 		po.submit()
 
@@ -5543,6 +5548,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po1.supplier = supplier
 		po1.get("items")[0].rate = 100
 		po1.get("items")[0].qty = 1
+		po1.currency = "INR"
 		po1.insert()
 		po1.submit()
 
@@ -5551,6 +5557,7 @@ class TestMaterialRequest(FrappeTestCase):
 		pi.set_warehouse = warehouse
 		pi.items[0].qty = 1
 		pi.items[0].serial_no = "01 - MR"
+		pi.currency = "INR"
 		pi.submit()
 
 		pi1 = create_purchase_invoice(po1.name)
@@ -5558,6 +5565,7 @@ class TestMaterialRequest(FrappeTestCase):
 		pi1.set_warehouse = warehouse
 		pi1.items[0].qty = 1
 		pi1.items[0].serial_no = "013 - MR"
+		pi1.currency = "INR"
 		pi1.submit()
 
 		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pi.name, 'account': pi.items[0].expense_account},'debit')
@@ -5850,6 +5858,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po.get("items")[0].item_code = item.item_code
 		po.get("items")[0].rate = 100
 		po.get("items")[0].qty = 1
+		po.currency = "INR"
 		po.insert()
 		po.submit()
 
@@ -5858,6 +5867,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po1.supplier = supplier
 		po1.get("items")[0].rate = 100
 		po1.get("items")[0].qty = 1
+		po1.currency = "INR"
 		po1.insert()
 		po1.submit()
 
@@ -5866,6 +5876,7 @@ class TestMaterialRequest(FrappeTestCase):
 		pi.set_warehouse = warehouse
 		pi.items[0].qty = 1
 		pi.items[0].serial_no = "01 - MR"
+		pi.currency = "INR"
 		pi.submit()
 
 		pi1 = create_purchase_invoice(po1.name)
@@ -5873,6 +5884,7 @@ class TestMaterialRequest(FrappeTestCase):
 		pi1.set_warehouse = warehouse
 		pi1.items[0].qty = 1
 		pi1.items[0].serial_no = "013 - MR"
+		pi1.currency = "INR"
 		pi1.submit()
 
 		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pi.name, 'account': pi.items[0].expense_account},'debit')
@@ -6158,6 +6170,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po.get("items")[0].item_code = item.item_code
 		po.get("items")[0].rate = 100
 		po.get("items")[0].qty = 1
+		po.currency = "INR"
 		po.insert()
 		po.submit()
 
@@ -6166,6 +6179,7 @@ class TestMaterialRequest(FrappeTestCase):
 		po1.supplier = supplier
 		po1.get("items")[0].rate = 100
 		po1.get("items")[0].qty = 1
+		po1.currency = "INR"
 		po1.insert()
 		po1.submit()
 
@@ -6174,6 +6188,7 @@ class TestMaterialRequest(FrappeTestCase):
 		pi.set_warehouse = warehouse
 		pi.items[0].qty = 1
 		pi.items[0].serial_no = "01 - MR"
+		pi.currency = "INR"
 		pi.submit()
 
 		pi1 = create_purchase_invoice(po1.name)
@@ -6181,6 +6196,7 @@ class TestMaterialRequest(FrappeTestCase):
 		pi1.set_warehouse = warehouse
 		pi1.items[0].qty = 1
 		pi1.items[0].serial_no = "013 - MR"
+		pi1.currency = "INR"
 		pi1.submit()
 
 		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':pi.name, 'account': pi.items[0].expense_account},'debit')

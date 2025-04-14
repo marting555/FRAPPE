@@ -42,6 +42,7 @@ class TestExchangeRateRevaluation(AccountsTestMixin, FrappeTestCase):
 		"""
 		Test Forex account balance and Journal creation post Revaluation
 		"""
+		frappe.db.set_value("Customer", self.customer, "default_currency", "USD")
 		si = create_sales_invoice(
 			item=self.item,
 			company=self.company,
