@@ -103,6 +103,27 @@ frappe.ui.form.on("Customer", {
 				},
 			};
 		});
+
+		frm.add_custom_button(
+			__("Payment Entry"),
+			function () {
+				frappe.call({
+					method: "erpnext.accounts.doctype.payment_entry.payment_entry.get_payment_entry_from_party",
+					args: {
+						party_type: "Customer",
+						party: frm.doc.name,
+						company: frm.doc.company
+					},
+					callback: function (r) {
+						if (r.message) {
+							const doc = frappe.model.sync(r.message)[0];
+							frappe.set_route("Form", doc.doctype, doc.name);
+						}
+					}
+				});
+			},
+			__("Create")
+		);
 	},
 	customer_primary_address: function (frm) {
 		if (frm.doc.customer_primary_address) {
