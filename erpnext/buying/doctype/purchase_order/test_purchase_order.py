@@ -3415,7 +3415,6 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.items[0].rate, 130)
 
 	def test_po_pr_pi_multiple_flow_TC_B_065(self):
-		
 		# Scenario : PO=>2PR=>2PI
 		get_company_supplier = get_company_or_supplier()
 		company = get_company_supplier.get("company")
