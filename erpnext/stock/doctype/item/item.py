@@ -212,7 +212,7 @@ class Item(Document):
 		self.validate_auto_reorder_enabled_in_stock_settings()
 		self.cant_change()
 		self.validate_item_tax_net_rate_range()
-		self.validate_design()
+		# self.validate_design()
 
 		if not self.is_new():
 			self.old_item_group = frappe.db.get_value(self.doctype, self.name, "item_group")
