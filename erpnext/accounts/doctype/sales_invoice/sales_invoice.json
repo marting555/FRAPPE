@@ -27,6 +27,7 @@
   "is_pos",
   "pos_profile",
   "is_consolidated",
+  "imported_from_external",
   "is_return",
   "return_against",
   "update_billed_amount_in_sales_order",
@@ -2214,15 +2215,22 @@
    "label": "Licence plate"
   },
   {
-    "fieldname": "quotation_template",
-    "fieldtype": "Link",
-    "label": "Quotation Template",
-    "options": "Quotation Templates",
-    "print_hide": 1,
-    "in_list_view": 1,
-    "in_preview": 1,
-    "in_standard_filter": 1
-   }
+   "fieldname": "quotation_template",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Quotation Template",
+   "options": "Quotation Templates",
+   "print_hide": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "imported_from_external",
+   "fieldtype": "Check",
+   "label": "Imported From External",
+   "read_only": 1
+  }
  ],
  "icon": "fa fa-file-text",
  "idx": 181,
@@ -2234,7 +2242,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2024-07-16 17:32:11.735764",
+ "modified": "2025-04-15 17:19:19.354447",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",
