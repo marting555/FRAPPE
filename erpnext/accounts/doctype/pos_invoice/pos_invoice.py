@@ -407,6 +407,26 @@ class POSInvoice(SalesInvoice):
 		if self.redeem_loyalty_points and self.loyalty_program and self.loyalty_points:
 			validate_loyalty_points(self, self.loyalty_points)
 
+<<<<<<< HEAD
+=======
+	def validate_full_payment(self):
+		invoice_total = flt(self.rounded_total) or flt(self.grand_total)
+		is_partial_payment_allowed = frappe.db.get_value(
+			"POS Profile", self.pos_profile, "allow_partial_payment"
+		)
+
+		if self.docstatus == 1 and not is_partial_payment_allowed:
+			if self.is_return and self.paid_amount != invoice_total:
+				frappe.throw(
+					msg=_("Partial Payment in POS Invoice is not allowed."), exc=PartialPaymentValidationError
+				)
+
+			if self.paid_amount < invoice_total:
+				frappe.throw(
+					msg=_("Partial Payment in POS Invoice is not allowed."), exc=PartialPaymentValidationError
+				)
+
+>>>>>>> a944853b56 (fix: configuration to accept partial payment in pos invoice (#47052))
 	def set_status(self, update=False, status=None, update_modified=True):
 		if self.is_new():
 			if self.get("amended_from"):
