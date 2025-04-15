@@ -3071,6 +3071,7 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(gl_stock_debit, 1000)
 
 	def test_mr_po_2pi_TC_SCK_083(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		# MR =>  PO => 2PI
 		item = make_test_item("_test_item_1")
 		mr_dict_list = [{
