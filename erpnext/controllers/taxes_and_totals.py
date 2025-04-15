@@ -54,6 +54,8 @@ class calculate_taxes_and_totals:
 		self.discount_amount_applied = False
 		self._calculate()
 
+		self.calculate_shipping_charges()
+
 		if self.doc.meta.get_field("discount_amount"):
 			self.set_discount_amount()
 			self.apply_discount_amount()
@@ -64,8 +66,6 @@ class calculate_taxes_and_totals:
 			self.doc.base_grand_total -= self.doc.base_discount_amount
 			self.doc.rounding_adjustment = self.doc.base_rounding_adjustment = 0.0
 			self.set_rounded_total()
-
-		self.calculate_shipping_charges()
 
 		if self.doc.doctype in ["Sales Invoice", "Purchase Invoice"]:
 			self.calculate_total_advance()
