@@ -1757,6 +1757,25 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 		sales_order.save()
 		self.assertEqual(sales_order.taxes[0].tax_amount, 0)
 
+	def test_sales_order_with_discount_and_shipping_rule(self):
+		from erpnext.accounts.doctype.shipping_rule.test_shipping_rule import create_shipping_rule
+
+		shipping_rule = create_shipping_rule(
+			shipping_rule_type="Selling", shipping_rule_name="Shipping Rule - Combined Test"
+		)
+		sales_order = make_sales_order(do_not_save=True)
+		sales_order.shipping_rule = shipping_rule.name
+		sales_order.additional_discount_percentage = 10
+
+		sales_order.items[0].qty = 2
+		sales_order.save()
+
+		item_total = sales_order.items[0].rate * 2
+		shipping = sales_order.taxes[0].tax_amount
+		expected_total = (item_total + shipping) * 0.9
+
+		self.assertAlmostEqual(sales_order.grand_total, expected_total, places=2)
+
 	def test_sales_order_partial_advance_payment(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			create_payment_entry,
