@@ -25,6 +25,7 @@ test_records = frappe.get_test_records("Customer")
 
 class TestCustomer(FrappeTestCase):
 	def setUp(self):
+		frappe.set_user("Administrator")
 		if not frappe.get_value("Item", "_Test Item"):
 			make_test_records("Item")
 
