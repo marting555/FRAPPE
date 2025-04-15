@@ -15,17 +15,18 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 
 class POSProfile(Document):
 	# begin: auto-generated types
+	# ruff: noqa
+
 	# This code is auto-generated. Do not modify anything in this block.
 
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
 		from erpnext.accounts.doctype.pos_customer_group.pos_customer_group import POSCustomerGroup
 		from erpnext.accounts.doctype.pos_item_group.pos_item_group import POSItemGroup
 		from erpnext.accounts.doctype.pos_payment_method.pos_payment_method import POSPaymentMethod
 		from erpnext.accounts.doctype.pos_profile_user.pos_profile_user import POSProfileUser
+		from frappe.types import DF
 
 		account_for_change_amount: DF.Link | None
 		allow_discount_change: DF.Check
@@ -43,6 +44,7 @@ class POSProfile(Document):
 		disable_grand_total_to_default_mop: DF.Check
 		disable_rounded_total: DF.Check
 		disabled: DF.Check
+		enable_numpad_for_payments: DF.Check
 		expense_account: DF.Link | None
 		hide_images: DF.Check
 		hide_unavailable_items: DF.Check
@@ -68,6 +70,7 @@ class POSProfile(Document):
 		write_off_account: DF.Link
 		write_off_cost_center: DF.Link
 		write_off_limit: DF.Currency
+	# ruff: noqa
 	# end: auto-generated types
 
 	def validate(self):

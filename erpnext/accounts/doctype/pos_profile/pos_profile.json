@@ -26,6 +26,7 @@
   "auto_add_item_to_cart",
   "validate_stock_on_save",
   "print_receipt_on_order_complete",
+  "enable_numpad_for_payments",
   "column_break_16",
   "update_stock",
   "ignore_pricing_rule",
@@ -415,6 +416,12 @@
    "oldfieldname": "cost_center",
    "oldfieldtype": "Link",
    "options": "Project"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_numpad_for_payments",
+   "fieldtype": "Check",
+   "label": "Enable Numpad for Payments"
   }
  ],
  "grid_page_length": 50,
@@ -443,7 +450,7 @@
    "link_fieldname": "pos_profile"
   }
  ],
- "modified": "2025-04-09 11:35:13.779613",
+ "modified": "2025-04-15 14:45:21.005940",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "POS Profile",

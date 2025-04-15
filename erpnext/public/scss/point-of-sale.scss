@@ -776,6 +776,7 @@
 
 		.submit-order-btn {
 			@extend .primary-action;
+			margin-top: 0%;
 			background-color: var(--btn-primary);
 			color: var(--neutral);
 		}
@@ -799,7 +800,7 @@
 					padding-right: var(--padding-sm);
 					margin-right: var(--margin-sm);
 					min-height: 15rem;
-					overflow-x: scroll;
+					overflow-y: scroll;
 					height: calc(100vh - 350px);
 
 					> .payment-mode-wrapper {
@@ -885,21 +886,42 @@
 						.invoice-fields {
 							overflow-y: scroll;
 							height: 100%;
+							padding-left: var(--padding-sm);
 							padding-right: var(--padding-sm);
+							min-height: 15rem;
+							height: calc(100vh - 350px);
 						}
 					}
 
-					> .number-pad {
+					.number-pad {
+						position: absolute;
+						z-index: 4;
+						right: 0px;
 						flex: 1;
 						display: flex;
-						justify-content: flex-end;
 						align-items: flex-end;
+						opacity: 0;
+						transform: translateX(100px);
+						transition: all 0.6s ease-out;
+
+						&.scroll-in {
+							opacity: 1;
+							transform: translateX(0px);
+						}
+
+						&.scroll-out {
+							opacity: 0;
+							transform: translateX(100px);
+						}
 
 						.numpad-container {
 							display: grid;
 							grid-template-columns: repeat(3, minmax(0, 1fr));
 							gap: var(--margin-md);
 							margin-bottom: var(--margin-md);
+							background-color: var(--fg-color);
+							border-radius: var(--border-radius-md);
+							padding: var(--padding-sm);
 
 							> .numpad-btn {
 								@extend .pointer-no-select;
@@ -908,7 +930,7 @@
 								align-items: center;
 								justify-content: center;
 								padding: var(--padding-md);
-								box-shadow: var(--shadow-sm);
+								box-shadow: var(--shadow-base);
 							}
 						}
 					}
