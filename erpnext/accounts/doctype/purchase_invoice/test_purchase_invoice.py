@@ -4398,6 +4398,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		import random
         # Ensure supplier exists
+		frappe.set_user("Administrator")
 		if not frappe.db.exists("Company", "_Test Company"):
 			company = frappe.new_doc("Company")
 			company.company_name = "_Test Company"
