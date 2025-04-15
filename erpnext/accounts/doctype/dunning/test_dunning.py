@@ -1,9 +1,17 @@
 # Copyright (c) 2020, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
+<<<<<<< HEAD
 
 import unittest
 
 import frappe
+=======
+import json
+
+import frappe
+from frappe.model import mapper
+from frappe.tests import IntegrationTestCase, UnitTestCase
+>>>>>>> 3b613c44a6 (chore: added test for `Fetch Overdue Payments` in dunning)
 from frappe.utils import add_days, nowdate, today
 
 from erpnext.accounts.doctype.dunning.dunning import calculate_interest_and_amount
@@ -76,8 +84,88 @@ class TestDunning(unittest.TestCase):
 		pe.target_exchange_rate = 1
 		pe.insert()
 		pe.submit()
+<<<<<<< HEAD
 		si_doc = frappe.get_doc("Sales Invoice", dunning.sales_invoice)
 		self.assertEqual(si_doc.outstanding_amount, 0)
+=======
+
+		for overdue_payment in dunning.overdue_payments:
+			outstanding_amount = frappe.get_value(
+				"Sales Invoice", overdue_payment.sales_invoice, "outstanding_amount"
+			)
+			self.assertEqual(outstanding_amount, 0)
+
+		dunning.reload()
+		self.assertEqual(dunning.status, "Resolved")
+
+	def test_fetch_overdue_payments(self):
+		"""
+		Create SI with overdue payment. Check if overdue payment is fetched in Dunning.
+		"""
+		si1 = create_sales_invoice_against_cost_center(
+			posting_date=add_days(today(), -1 * 6),
+			qty=1,
+			rate=100,
+		)
+
+		si2 = create_sales_invoice_against_cost_center(
+			posting_date=add_days(today(), -1 * 6),
+			qty=1,
+			rate=300,
+		)
+
+		dunning = create_dunning_from_sales_invoice(si1.name)
+		dunning.overdue_payments = []
+
+		method = "erpnext.accounts.doctype.sales_invoice.sales_invoice.create_dunning"
+		updated_dunning = mapper.map_docs(method, json.dumps([si1.name, si2.name]), dunning)
+
+		self.assertEqual(len(updated_dunning.overdue_payments), 2)
+
+		self.assertEqual(updated_dunning.overdue_payments[0].sales_invoice, si1.name)
+		self.assertEqual(updated_dunning.overdue_payments[0].outstanding, si1.outstanding_amount)
+
+		self.assertEqual(updated_dunning.overdue_payments[1].sales_invoice, si2.name)
+		self.assertEqual(updated_dunning.overdue_payments[1].outstanding, si2.outstanding_amount)
+
+	def test_dunning_and_payment_against_partially_due_invoice(self):
+		"""
+		Create SI with first installment overdue. Check impact of Dunning and Payment Entry.
+		"""
+		create_payment_terms_template_for_dunning()
+		sales_invoice = create_sales_invoice_against_cost_center(
+			posting_date=add_days(today(), -1 * 6),
+			qty=1,
+			rate=100,
+			do_not_submit=True,
+		)
+		sales_invoice.payment_terms_template = "_Test 50-50 for Dunning"
+		sales_invoice.submit()
+		dunning = create_dunning_from_sales_invoice(sales_invoice.name)
+
+		self.assertEqual(len(dunning.overdue_payments), 1)
+		self.assertEqual(dunning.overdue_payments[0].payment_term, "_Test Payment Term 1 for Dunning")
+
+		dunning.submit()
+		pe = get_payment_entry("Dunning", dunning.name)
+		pe.reference_no, pe.reference_date = "2", nowdate()
+		pe.insert()
+		pe.submit()
+		sales_invoice.load_from_db()
+		dunning.load_from_db()
+
+		self.assertEqual(sales_invoice.status, "Partly Paid")
+		self.assertEqual(sales_invoice.payment_schedule[0].outstanding, 0)
+		self.assertEqual(dunning.status, "Resolved")
+
+		# Test impact on cancellation of PE
+		pe.cancel()
+		sales_invoice.reload()
+		dunning.reload()
+
+		self.assertEqual(sales_invoice.status, "Overdue")
+		self.assertEqual(dunning.status, "Unresolved")
+>>>>>>> 3b613c44a6 (chore: added test for `Fetch Overdue Payments` in dunning)
 
 
 def create_dunning():
