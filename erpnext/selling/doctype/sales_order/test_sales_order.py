@@ -4774,7 +4774,17 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(qty_change_return, 1)	
   
 	def test_sales_order_for_stock_reservation_with_returns_and_note_TC_S_068(self):
-		si = self.test_sales_order_for_stock_reservation_with_returns_TC_S_064()
+		dn, si = self.test_sales_order_for_stock_reservation_TC_S_063()
+  
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_return
+		sr = make_sales_return(dn.name)
+		sr.save()
+		sr.submit()
+  
+		self.assertEqual(sr.status, "To Bill", "Sales Return not created")
+  
+		qty_change_return = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': sr.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change_return, 1)
   
 		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_sales_return as make_credit_note
 		cn = make_credit_note(si.name)
