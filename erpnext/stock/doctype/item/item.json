@@ -2,7 +2,7 @@
  "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
- "autoname": "field:item_code",
+ "autoname": "format:IT{YY}{######}",
  "creation": "2013-05-03 10:45:46",
  "description": "A Product or a Service that is bought, sold or kept in stock.",
  "doctype": "DocType",
@@ -11,12 +11,12 @@
  "engine": "InnoDB",
  "field_order": [
   "details",
+  "item_group",
+  "design",
   "naming_series",
   "item_code",
   "item_name",
-  "item_group",
   "stock_uom",
-  "design",
   "column_break0",
   "disabled",
   "allow_alternative_item",
@@ -129,6 +129,8 @@
   },
   {
    "bold": 1,
+   "fetch_from": "design.design_code",
+   "fetch_if_empty": 1,
    "fieldname": "item_code",
    "fieldtype": "Data",
    "in_global_search": 1,
@@ -168,6 +170,7 @@
    "in_preview": 1,
    "in_standard_filter": 1,
    "label": "Item Group",
+   "link_filters": "[[\"Item Group\",\"is_group\",\"=\",0]]",
    "oldfieldname": "item_group",
    "oldfieldtype": "Link",
    "options": "Item Group",
@@ -206,7 +209,7 @@
   {
    "allow_in_quick_entry": 1,
    "bold": 1,
-   "default": "1",
+   "default": "0",
    "depends_on": "eval:!doc.is_fixed_asset",
    "fieldname": "is_stock_item",
    "fieldtype": "Check",
@@ -215,7 +218,7 @@
    "oldfieldtype": "Select"
   },
   {
-   "default": "1",
+   "default": "0",
    "depends_on": "eval:!doc.is_fixed_asset",
    "fieldname": "include_item_in_manufacturing",
    "fieldtype": "Check",
@@ -233,6 +236,7 @@
    "depends_on": "is_stock_item",
    "fieldname": "valuation_rate",
    "fieldtype": "Currency",
+   "hidden": 1,
    "label": "Valuation Rate"
   },
   {
@@ -247,6 +251,7 @@
    "default": "0",
    "fieldname": "is_fixed_asset",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "Is Fixed Asset",
    "set_only_once": 1
   },
@@ -275,7 +280,6 @@
    "print_hide": 1
   },
   {
-   "collapsible": 1,
    "fieldname": "section_break_11",
    "fieldtype": "Section Break",
    "label": "Description"
@@ -283,6 +287,7 @@
   {
    "fieldname": "brand",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Brand",
    "oldfieldname": "brand",
    "oldfieldtype": "Link",
@@ -397,6 +402,7 @@
    "collapsible": 1,
    "fieldname": "unit_of_measure_conversion",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Units of Measure"
   },
   {
@@ -639,6 +645,7 @@
    "collapsible": 1,
    "fieldname": "sales_details",
    "fieldtype": "Tab Break",
+   "hidden": 1,
    "label": "Sales",
    "oldfieldtype": "Section Break",
    "options": "fa fa-tag"
@@ -710,6 +717,7 @@
    "collapsible_depends_on": "taxes",
    "fieldname": "item_tax_section_break",
    "fieldtype": "Tab Break",
+   "hidden": 1,
    "label": "Tax",
    "oldfieldtype": "Section Break",
    "options": "fa fa-money"
@@ -749,6 +757,7 @@
    "depends_on": "is_stock_item",
    "fieldname": "manufacturing",
    "fieldtype": "Tab Break",
+   "hidden": 1,
    "label": "Manufacturing",
    "oldfieldtype": "Section Break",
    "options": "fa fa-cogs"
@@ -854,11 +863,13 @@
   {
    "fieldname": "purchasing_tab",
    "fieldtype": "Tab Break",
+   "hidden": 1,
    "label": "Purchasing"
   },
   {
    "fieldname": "quality_tab",
    "fieldtype": "Tab Break",
+   "hidden": 1,
    "label": "Quality"
   },
   {
@@ -878,6 +889,7 @@
    "depends_on": "eval:!doc.is_fixed_asset",
    "fieldname": "accounting",
    "fieldtype": "Tab Break",
+   "hidden": 1,
    "label": "Accounting"
   },
   {
@@ -906,11 +918,11 @@
  "image_field": "image",
  "links": [],
  "make_attachments_public": 1,
- "modified": "2025-04-15 12:30:37.918600",
+ "modified": "2025-04-16 11:17:20.348969",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
- "naming_rule": "By fieldname",
+ "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [
   {

@@ -15,6 +15,6 @@ class Design(Document):
 		from frappe.types import DF
 
 		description: DF.Data | None
-		design_code: DF.Data | None
+		design_code: DF.Data
 	# end: auto-generated types
 	pass

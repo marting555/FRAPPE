@@ -2,7 +2,7 @@
  "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
- "autoname": "field:item_group_name",
+ "autoname": "format:GR{#####}",
  "creation": "2013-03-28 10:35:29",
  "description": "An Item Group is a way to classify items based on types.",
  "doctype": "DocType",
@@ -15,6 +15,8 @@
   "is_group",
   "image",
   "column_break_5",
+  "is_stock_group",
+  "has_variants",
   "defaults",
   "item_group_defaults",
   "sec_break_taxes",
@@ -74,6 +76,7 @@
   {
    "fieldname": "defaults",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Defaults"
   },
   {
@@ -85,6 +88,7 @@
   {
    "fieldname": "sec_break_taxes",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Item Tax"
   },
   {
@@ -127,6 +131,18 @@
    "options": "Item Group",
    "print_hide": 1,
    "report_hide": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_stock_group",
+   "fieldtype": "Check",
+   "label": "Stock Maintain"
+  },
+  {
+   "default": "0",
+   "fieldname": "has_variants",
+   "fieldtype": "Check",
+   "label": "Has Variants"
   }
  ],
  "icon": "fa fa-sitemap",
@@ -135,11 +151,11 @@
  "is_tree": 1,
  "links": [],
  "max_attachments": 3,
- "modified": "2025-04-15 12:11:20.138408",
+ "modified": "2025-04-16 12:16:47.821568",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Item Group",
- "naming_rule": "By fieldname",
+ "naming_rule": "Expression",
  "nsm_parent_field": "parent_item_group",
  "owner": "Administrator",
  "permissions": [
@@ -203,9 +219,11 @@
   }
  ],
  "row_format": "Dynamic",
- "search_fields": "parent_item_group",
  "show_name_in_global_search": 1,
+ "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "item_group_name",
+ "translated_doctype": 1
 }
