@@ -5671,20 +5671,12 @@ class TestMaterialRequest(FrappeTestCase):
 		mr.insert()
 		mr.submit()
 
-		po = frappe.get_doc({
-			"doctype": "Purchase Order",
-			"supplier": supplier,
-			"schedule_date": today(),
-			"company": mr.company,
-			"set_warehouse": warehouse,
-			"items": [{
-				"item_code": mr.items[0].item_code,
-				"qty": mr.items[0].qty,
-				"rate": 1000,
-				"material_request": mr.name
-			}]
-		})
+		po = make_purchase_order(mr.name)
+		po.supplier = supplier
 		po.insert()
+		po.currency = "INR"
+		po.items[0].rate = 1000
+		po.save()
 		po.submit()
 
 		pr = frappe.get_doc({
@@ -5766,20 +5758,12 @@ class TestMaterialRequest(FrappeTestCase):
 		mr.insert()
 		mr.submit()
 
-		po = frappe.get_doc({
-			"doctype": "Purchase Order",
-			"supplier": supplier,
-			"schedule_date": today(),
-			"company": company,
-			"set_warehouse": warehouse,
-			"items": [{
-				"item_code": mr.items[0].item_code,
-				"qty": mr.items[0].qty,
-				"rate": 1000,
-				"material_request": mr.name
-			}]
-		})
+		po = make_purchase_order(mr.name)
+		po.supplier= supplier
 		po.insert()
+		po.currency = "INR"
+		po.items[0].rate = 1000
+		po.save()
 		po.submit()
 
 		pr1 = frappe.get_doc({
