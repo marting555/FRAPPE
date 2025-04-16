@@ -268,6 +268,7 @@ class TestBlanketOrder(FrappeTestCase):
 			purpose="Material Receipt"
 		)
 		so.delivery_date = add_days(nowdate(), 5)
+		so.currency = "INR"
 		so.submit()
 
 		bo.reload()
