@@ -4398,7 +4398,6 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		import random
         # Ensure supplier exists
-		frappe.set_user("Administrator")
 		if not frappe.db.exists("Company", "_Test Company"):
 			company = frappe.new_doc("Company")
 			company.company_name = "_Test Company"
@@ -4411,7 +4410,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 
 		if not frappe.db.exists("Supplier", supplier.supplier_name):
-			supplier.insert()
+			supplier.insert(ignore_permissions=True)
 
         # Ensure Item exists with rate rules
 		it_fields = {
