@@ -590,6 +590,12 @@ class TestPaymentReconciliation(FrappeTestCase):
 		self.assertEqual(si.outstanding_amount, 0, "Sales Invoice outstanding amount should be 0")
 		self.assertEqual(si.status, "Paid", "Sales Invoice status should be marked as Paid")
 
+	@change_settings(
+		"Accounts Settings",
+		{
+			"unlink_payment_on_cancellation_of_invoice": 1,
+		},
+	)
 	def test_payment_adjustment_after_invoice_cancellation_TC_ACC_013(self):
 		si1 = self.create_sales_invoice(qty=1, rate=500)  # Total = 500
 		pe = self.create_payment_entry(amount=500)  # Full payment

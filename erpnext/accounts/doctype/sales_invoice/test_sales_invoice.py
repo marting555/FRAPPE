@@ -43,7 +43,6 @@ from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_inter_comp
 class TestSalesInvoice(FrappeTestCase):
 	def setUp(self):
 		from erpnext.stock.doctype.stock_ledger_entry.test_stock_ledger_entry import create_items
-
 		create_items(["_Test Internal Transfer Item"], uoms=[{"uom": "Box", "conversion_factor": 10}])
 		create_internal_parties()
 		setup_accounts()
@@ -7233,6 +7232,7 @@ def create_company_and_supplier():
 				"company_name": parent_company,
 				"abbr": "TC-1",
 				"default_currency": "INR",
+				"country":"India",
 				"is_group": 1,
 				"gstin": "27AAAAP0267H2ZN",
 				"gst_category": "Registered Regular"
@@ -7250,6 +7250,7 @@ def create_company_and_supplier():
 				"company_name": child_company,
 				"abbr": "TC-3",
 				"default_currency": "INR",
+				"country":"India",
 				"gstin": "27AABCT1296R1ZN",
 				"gst_category": "Registered Regular",
 				"parent_company": parent_company
