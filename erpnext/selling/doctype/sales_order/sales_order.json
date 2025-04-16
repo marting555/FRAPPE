@@ -568,6 +568,7 @@
   {
    "fieldname": "sec_warehouse",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "hide_border": 1,
    "hide_days": 1,
    "hide_seconds": 1,
@@ -708,6 +709,7 @@
   {
    "fieldname": "taxes_section",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Taxes",
@@ -742,6 +744,7 @@
   {
    "fieldname": "section_break_40",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "hide_border": 1,
    "hide_days": 1,
    "hide_seconds": 1
@@ -789,6 +792,7 @@
   {
    "fieldname": "section_break_43",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1
   },
@@ -850,7 +854,6 @@
    "read_only": 1
   },
   {
-   "collapsible": 1,
    "fieldname": "section_break_48",
    "fieldtype": "Section Break",
    "hide_days": 1,
@@ -1549,6 +1552,7 @@
    "collapsible": 1,
    "fieldname": "accounting_dimensions_section",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Accounting Dimensions"
   },
   {
@@ -1655,7 +1659,7 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-02-06 16:02:20.320877",
+ "modified": "2025-04-16 16:41:45.550296",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
@@ -1724,6 +1728,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "search_fields": "status,transaction_date,customer,customer_name, territory,order_type,company",
  "show_name_in_global_search": 1,
  "sort_field": "modified",

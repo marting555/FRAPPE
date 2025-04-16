@@ -134,7 +134,7 @@
    "fieldname": "item_code",
    "fieldtype": "Data",
    "in_global_search": 1,
-   "label": "Item Code",
+   "label": "M\u00e3 S\u1ea3n Ph\u1ea9m",
    "oldfieldname": "item_code",
    "oldfieldtype": "Data",
    "reqd": 1,
@@ -158,7 +158,7 @@
    "fieldname": "item_name",
    "fieldtype": "Data",
    "in_global_search": 1,
-   "label": "Item Name",
+   "label": "T\u00ean S\u1ea3n Ph\u1ea9m",
    "oldfieldname": "item_name",
    "oldfieldtype": "Data",
    "search_index": 1
@@ -169,7 +169,7 @@
    "in_list_view": 1,
    "in_preview": 1,
    "in_standard_filter": 1,
-   "label": "Item Group",
+   "label": "Nh\u00f3m S\u1ea3n Ph\u1ea9m",
    "link_filters": "[[\"Item Group\",\"is_group\",\"=\",0]]",
    "oldfieldname": "item_group",
    "oldfieldtype": "Link",
@@ -181,7 +181,7 @@
    "fieldname": "stock_uom",
    "fieldtype": "Link",
    "ignore_user_permissions": 1,
-   "label": "Default Unit of Measure",
+   "label": "\u0110\u01a1n V\u1ecb T\u00ednh",
    "oldfieldname": "stock_uom",
    "oldfieldtype": "Link",
    "options": "UOM",
@@ -213,7 +213,7 @@
    "depends_on": "eval:!doc.is_fixed_asset",
    "fieldname": "is_stock_item",
    "fieldtype": "Check",
-   "label": "Maintain Stock",
+   "label": "C\u00f3 Qu\u1ea3n L\u00fd T\u1ed3n",
    "oldfieldname": "is_stock_item",
    "oldfieldtype": "Select"
   },
@@ -244,7 +244,7 @@
    "depends_on": "eval:doc.__islocal",
    "fieldname": "standard_rate",
    "fieldtype": "Currency",
-   "label": "Standard Selling Rate"
+   "label": "Gi\u00e1 B\u00e1n Ti\u00eau Chu\u1ea9n"
   },
   {
    "allow_in_quick_entry": 1,
@@ -282,7 +282,7 @@
   {
    "fieldname": "section_break_11",
    "fieldtype": "Section Break",
-   "label": "Description"
+   "label": "M\u00f4 T\u1ea3"
   },
   {
    "fieldname": "brand",
@@ -298,7 +298,7 @@
    "fieldname": "description",
    "fieldtype": "Text Editor",
    "in_preview": 1,
-   "label": "Description",
+   "label": "M\u00f4 T\u1ea3",
    "oldfieldname": "description",
    "oldfieldtype": "Text"
   },
@@ -319,7 +319,7 @@
    "depends_on": "is_stock_item",
    "fieldname": "inventory_section",
    "fieldtype": "Tab Break",
-   "label": "Inventory",
+   "label": "Qu\u1ea3n L\u00fd T\u1ed3n Kho",
    "oldfieldtype": "Section Break",
    "options": "fa fa-truck"
   },
@@ -415,12 +415,11 @@
    "options": "UOM Conversion Detail"
   },
   {
-   "collapsible": 1,
    "collapsible_depends_on": "eval:doc.has_batch_no || doc.has_serial_no",
    "depends_on": "eval:doc.is_stock_item",
    "fieldname": "serial_nos_and_batches",
    "fieldtype": "Section Break",
-   "label": "Serial Nos and Batches"
+   "label": "Serial V\u00e0 L\u00f4"
   },
   {
    "default": "0",
@@ -481,7 +480,7 @@
    "depends_on": "eval:doc.is_stock_item",
    "fieldname": "has_serial_no",
    "fieldtype": "Check",
-   "label": "Has Serial No",
+   "label": "C\u00f3 Serial",
    "oldfieldname": "has_serial_no",
    "oldfieldtype": "Select"
   },
@@ -498,16 +497,15 @@
    "depends_on": "eval:!doc.is_fixed_asset",
    "fieldname": "variants_section",
    "fieldtype": "Tab Break",
-   "label": "Variants"
+   "label": "Bi\u1ebfn Th\u1ec3"
   },
   {
    "default": "0",
    "depends_on": "eval:!doc.variant_of",
-   "description": "If this item has variants, then it cannot be selected in sales orders etc.",
    "fieldname": "has_variants",
    "fieldtype": "Check",
    "in_standard_filter": 1,
-   "label": "Has Variants"
+   "label": "C\u00f3 Bi\u1ebfn Th\u1ec3"
   },
   {
    "default": "Item Attribute",
@@ -806,6 +804,7 @@
    "depends_on": "eval:!doc.__islocal && !doc.is_fixed_asset",
    "fieldname": "over_delivery_receipt_allowance",
    "fieldtype": "Float",
+   "hidden": 1,
    "label": "Over Delivery/Receipt Allowance (%)",
    "oldfieldname": "tolerance",
    "oldfieldtype": "Currency"
@@ -814,6 +813,7 @@
    "depends_on": "eval:!doc.__islocal && !doc.is_fixed_asset",
    "fieldname": "over_billing_allowance",
    "fieldtype": "Float",
+   "hidden": 1,
    "label": "Over Billing Allowance (%)"
   },
   {
@@ -858,6 +858,7 @@
   {
    "fieldname": "inventory_settings_section",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Inventory Settings"
   },
   {
@@ -875,7 +876,7 @@
   {
    "fieldname": "details",
    "fieldtype": "Tab Break",
-   "label": "Details",
+   "label": "Chi Ti\u1ebft",
    "oldfieldtype": "Section Break",
    "options": "fa fa-flag"
   },
@@ -909,7 +910,7 @@
   {
    "fieldname": "design",
    "fieldtype": "Link",
-   "label": "Design",
+   "label": "M\u00e3 Thi\u1ebft K\u1ebf",
    "options": "Design"
   }
  ],
@@ -918,7 +919,7 @@
  "image_field": "image",
  "links": [],
  "make_attachments_public": 1,
- "modified": "2025-04-16 11:17:20.348969",
+ "modified": "2025-04-16 18:43:29.842734",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",

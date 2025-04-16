@@ -403,4 +403,6 @@ erpnext.patches.v15_0.rename_sla_fields #2025-03-12
 erpnext.patches.v15_0.set_purchase_receipt_row_item_to_capitalization_stock_item
 erpnext.patches.v15_0.update_payment_schedule_fields_in_invoices
 
-erpnext.seeds.item_attribute.delete_default_docs # 2025-04-16
+erpnext.seeds.item_attribute.delete_default_docs #  2025-04-16
+
+erpnext.seeds.item_group.create_item_groups # 2025-04-16
