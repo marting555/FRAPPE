@@ -4459,6 +4459,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 	@if_app_installed("india_compliance")
 	def test_sales_order_creating_si_with_product_bundle_and_gst_rule_TC_S_059(self):
 		create_test_warehouse(name= "Stores - _TIRC", warehouse_name="Stores", company="_Test Indian Registered Company")
+		get_or_create_fiscal_year("_Test Indian Registered Company")
 		make_item("_Test Item", {"is_stock_item": 1})
 		product_bundle = make_item("_Test Product Bundle", {"is_stock_item": 0})
 		make_item("_Test Bundle Item 1", {"is_stock_item": 1})
@@ -4688,6 +4689,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 	@if_app_installed("india_compliance")
 	@change_settings("Stock Settings", {"enable_stock_reservation": 1})
 	def test_sales_order_for_stock_reservation_with_gst_TC_S_065(self):
+		get_or_create_fiscal_year("_Test Indian Registered Company")
 		create_test_warehouse(name= "Stores - _TIRC", warehouse_name="Stores", company="_Test Indian Registered Company")
 
 		if not frappe.db.exists("Company", "_Test Indian Registered Company"):
@@ -6009,6 +6011,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 	def create_and_submit_sales_order_with_gst(self, item_code, qty=None, rate=None):
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_registered_company
+		get_or_create_fiscal_year("_Test Indian Registered Company")
 		create_registered_company()
 		create_test_warehouse(name= "Stores - _TIRC", warehouse_name="Stores", company="_Test Indian Registered Company")
 		make_item("_Test Item", {"is_stock_item": 1})
