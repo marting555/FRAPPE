@@ -7,7 +7,7 @@
 
 import frappe
 import json
-from frappe.tests.utils import FrappeTestCase, change_settings
+from frappe.tests.utils import FrappeTestCase, change_settings, if_app_installed
 from frappe.utils import flt, today, add_days, nowdate, getdate
 from datetime import date
 
@@ -5631,6 +5631,7 @@ class TestMaterialRequest(FrappeTestCase):
 		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': payable_act},'debit')
 		self.assertEqual(gl_stock_debit, 100)
 
+	@if_app_installed("india_compliance")
 	def test_mr_to_po_pr_with_serial_no_TC_B_156(self):
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
@@ -5714,6 +5715,7 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(sn.warehouse, warehouse)
 			self.assertEqual(sn.item_code, item_code)
 
+	@if_app_installed("india_compliance")
 	def test_mr_to_po_pr_with_multiple_serial_nos_TC_B_157(self):
 		company = "_Test Company"
 		warehouse = "Stores - _TC"

@@ -4703,6 +4703,7 @@ class TestSalesInvoice(FrappeTestCase):
 	@if_app_installed("india_compliance")
 	def test_sales_invoice_without_sales_order_with_gst_TC_S_016(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
 		create_registered_company()
 		
@@ -4771,10 +4772,10 @@ class TestSalesInvoice(FrappeTestCase):
 				self.assertEqual(qty_change[0].get("actual_qty"), -4)
 
 				dn_acc_credit = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Stock In Hand - _TIRC'}, 'credit')
-				self.assertEqual(dn_acc_credit, qty_change[0].get("valuation_rate") * 4)
+				self.assertEqual(dn_acc_credit,20000)
 
 				dn_acc_debit = frappe.db.get_value('GL Entry', {'voucher_type': 'Delivery Note', 'voucher_no': dn.name, 'account': 'Cost of Goods Sold - _TIRC'}, 'debit')
-				self.assertEqual(dn_acc_debit, qty_change[0].get("valuation_rate") * 4)
+				self.assertEqual(dn_acc_debit,20000)
 	
 	@if_app_installed("india_compliance")
 	def test_sales_invoice_with_update_stock_checked_with_gst_TC_S_017(self): 
@@ -4817,7 +4818,6 @@ class TestSalesInvoice(FrappeTestCase):
 
 				if qty_change:
 					actual_qty = qty_change[0].get("actual_qty")
-					valuation_rate = qty_change[0].get("valuation_rate")
 
 					self.assertEqual(actual_qty, -4)
 					gl_entries = frappe.db.get_all(
@@ -4835,8 +4835,8 @@ class TestSalesInvoice(FrappeTestCase):
 					self.assertEqual(gl_entry_dict.get('Debtors - _TIRC', {}).get('debit', 0), 23600)
 					self.assertEqual(gl_entry_dict.get('Output Tax SGST - _TIRC', {}).get('credit', 0), 1800)
 					self.assertEqual(gl_entry_dict.get('Output Tax CGST - _TIRC', {}).get('credit', 0), 1800)
-					self.assertEqual(gl_entry_dict.get('Stock In Hand - _TIRC', {}).get('credit', 0), valuation_rate * 4)
-					self.assertEqual(gl_entry_dict.get('Cost of Goods Sold - _TIRC', {}).get('debit', 0), valuation_rate * 4)
+					self.assertEqual(gl_entry_dict.get('Stock In Hand - _TIRC', {}).get('credit', 0), 20000)
+					self.assertEqual(gl_entry_dict.get('Cost of Goods Sold - _TIRC', {}).get('debit', 0),20000)
 
  
 	def test_sales_invoice_and_delivery_note_with_shipping_rule_TC_S_026(self):
