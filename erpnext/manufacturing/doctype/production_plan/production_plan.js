@@ -16,6 +16,9 @@ frappe.ui.form.on("Production Plan", {
 			"Work Order": "Work Order / Subcontract PO",
 			"Material Request": "Material Request",
 		};
+
+		frm.set_df_property("sub_assembly_items", "cannot_delete_rows", true);
+		frm.set_df_property("mr_items", "cannot_delete_rows", true);
 	},
 
 	setup_queries(frm) {
@@ -140,10 +143,10 @@ frappe.ui.form.on("Production Plan", {
 					);
 				}
 			}
-		}
 
-		if (frm.doc.status !== "Closed") {
-			frm.page.set_inner_btn_group_as_primary(__("Create"));
+			if (frm.doc.status !== "Closed") {
+				frm.page.set_inner_btn_group_as_primary(__("Create"));
+			}
 		}
 		frm.trigger("material_requirement");
 
