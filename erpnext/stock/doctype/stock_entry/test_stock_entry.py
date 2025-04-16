@@ -3959,6 +3959,8 @@ class TestStockEntry(FrappeTestCase):
 		company = "_Test Company"
 		frappe.db.set_value("Company", company, "stock_adjustment_account", 'Stock Adjustment - _TC')
 		item_1 = make_item("_Test Item 1",properties = {'valuation_rate':100})
+		item_1.valuation_rate = 100
+		item_1.save()
 		get_or_create_fiscal_year('_Test Company')
 		warehouse_1 = create_warehouse("_Test warehouse PO", company=company)
 		se_1 = make_stock_entry(item_code=item_1.name, target=warehouse_1, qty=10, purpose="Material Receipt", company=company)
