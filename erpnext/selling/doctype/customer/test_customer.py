@@ -25,7 +25,6 @@ test_records = frappe.get_test_records("Customer")
 
 class TestCustomer(FrappeTestCase):
 	def setUp(self):
-		frappe.set_user("Administrator")
 		if not frappe.get_value("Item", "_Test Item"):
 			make_test_records("Item")
 
@@ -438,7 +437,7 @@ def create_internal_customer(customer_name=None, represents_company=None, allowe
 
 		customer.append("companies", {"company": allowed_to_interact_with})
 
-		customer.insert()
+		customer.insert(ignore_permissions=True)
 		customer_name = customer.name
 	else:
 		customer_name = frappe.db.get_value("Customer", customer_name)
