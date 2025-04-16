@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-04-13 09:36+0000\n"
-"PO-Revision-Date: 2025-04-14 04:11\n"
+"PO-Revision-Date: 2025-04-16 04:45\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: German\n"
 "MIME-Version: 1.0\n"
@@ -20862,7 +20862,7 @@ msgstr ""
 #: erpnext/public/js/controllers/transaction.js:1084
 msgctxt "Clear payment terms template and/or payment schedule when due date is changed"
 msgid "For the new {0} to take effect, would you like to clear the current {1}?"
-msgstr ""
+msgstr "Möchten Sie die aktuellen Werte für {1} löschen, damit das neue {0} wirksam wird?"
 
 #: erpnext/controllers/stock_controller.py:302
 msgid "For the {0}, no stock is available for the return in the warehouse {1}."
