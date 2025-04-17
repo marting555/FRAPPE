@@ -3748,13 +3748,16 @@ class TestStockEntry(FrappeTestCase):
 
 		item = make_item("ADI-SH-W11", {"valuation_rate": 100, "has_serial_no": 1, "serial_no_series": "SNO-.####", "valuation_rate": 100, "has_batch_no": 1, "create_new_batch": 0, "is_stock_item": 1})
 
-		batch = frappe.get_doc({
-			"doctype": "Batch",
-			"item": item.name,
-			"batch_id": "BATCH-001", 
-			"manufacturing_date": frappe.utils.nowdate()
-		})
-		batch.insert()
+		if not frappe.db.exists("Batch", "BATCH-001"):
+			batch = frappe.get_doc({
+				"doctype": "Batch",
+				"item": item.name,
+				"batch_id": "BATCH-001", 
+				"manufacturing_date": frappe.utils.nowdate()
+			})
+			batch.insert()
+		else: 
+			batch = frappe.get_doc("Batch", "BATCH-001")
 
 		serial_nos = generate_serial_nos(item_code=item.name, qty=150)
 		se = make_stock_entry(
