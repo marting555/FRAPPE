@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-04-13 09:36+0000\n"
-"PO-Revision-Date: 2025-04-16 04:45\n"
+"PO-Revision-Date: 2025-04-17 05:27\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Portuguese\n"
 "MIME-Version: 1.0\n"
@@ -30488,7 +30488,7 @@ msgstr ""
 #: erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.json
 #: erpnext/support/doctype/warranty_claim/warranty_claim.json
 msgid "Mobile No"
-msgstr ""
+msgstr "Nr. de Telemóvel"
 
 #: erpnext/public/js/utils/contact_address_quick_entry.js:66
 msgid "Mobile Number"
