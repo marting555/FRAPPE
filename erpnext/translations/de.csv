@@ -8339,6 +8339,7 @@ Please set a Company,Bitte legen Sie eine Firma fest,
 "Sorry, this coupon code's validity has expired",Die Gültigkeit dieses Gutscheincodes ist leider abgelaufen,
 "Sorry, this coupon code is no longer valid",Dieser Gutscheincode ist leider nicht mehr gültig,
 For the 'Apply Rule On Other' condition the field {0} is mandatory,Für die Bedingung &#39;Regel auf andere anwenden&#39; ist das Feld {0} obligatorisch,
+"For the new {0} to take effect, would you like to clear the current {1}?","Möchten sie die/den aktuelle(n) {1} entfernen, damit das neue {0} angewendet wird?",Clear payment terms template and/or payment schedule when due date is changed
 {1} Not in Stock,{1} Nicht auf Lager,
 Only {0} in Stock for item {1},Nur {0} auf Lager für Artikel {1},
 Please enter a coupon code,Bitte geben Sie einen Gutscheincode ein,
