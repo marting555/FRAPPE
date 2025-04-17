@@ -1521,9 +1521,8 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 	#Verify Impact on Balance Sheet Reports
 	def test_create_stock_reco_match_balance_sheet(self):
 		from erpnext.accounts.utils import get_balance_on
-
+		frappe.db.set_value("Item", "Book", "has_serial_no", 1)
 		pre_stock_in_hand = get_balance_on(account="Stock In Hand - _TC")
-
 		sr = frappe.new_doc("Stock Reconciliation")
 		sr.purpose = "Opening Stock"
 		sr.posting_date = "2024-04-01"
@@ -1534,7 +1533,7 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 		sr.append(
             "items",
             {
-                "item_code": "Book",
+                "item_code": "_Test Serialized Item With Series",
                 "warehouse": "_Test Warehouse - _TC",
                 "qty": 14,
                 "valuation_rate": 120,
