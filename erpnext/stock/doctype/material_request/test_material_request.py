@@ -2575,13 +2575,23 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_to_partial_pr_TC_B_023(self):
 		# MR => 1RFQ => 2SQ => 2PO => 1PR => 1PI
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
+		create_company()
+		get_or_create_fiscal_year("_Test Company")
+		create_customer("_Test Customer")
+		make_item(item_code="Testing-31")
 		args = frappe._dict()
+		cost_center =frappe.db.get_value("Cost Center", {"company": "_Test Company"}, "name")
+		create_supplier(supplier_name = "_Test Supplier")
 		args['mr'] = [{
 			"company": "_Test Company",
 			"item_code": "Testing-31",
 			"warehouse": "Stores - _TC",
 			"qty": 20,
 			"rate": 100,
+			"uom": "Box",
+			"cost_center": cost_center,
 		}]
 		args['sq'] = [10, 10]
 		total_po_qty = sum(args['sq'])
@@ -7471,7 +7481,6 @@ def make_test_pi(source_name, received_qty = None, item_dict = None, args = None
 	if args is not None:
 		args = frappe._dict(args)
 		doc_pi.update(args)
-
 	doc_pi.insert()
 	doc_pi.submit()
 	return doc_pi

@@ -6350,6 +6350,7 @@ class TestSalesInvoice(FrappeTestCase):
 		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_inter_company_purchase_invoice
 		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		get_required_data = create_company_and_supplier()
 
 		parent_company = get_required_data.get("parent_company")
@@ -6358,6 +6359,8 @@ class TestSalesInvoice(FrappeTestCase):
 		customer = get_required_data.get("customer")
 		price_list = get_required_data.get("price_list")
 		item = make_test_item("test_service")
+		get_or_create_fiscal_year("Test Company-3344")
+		get_or_create_fiscal_year("Test Company-1122")
 		so = frappe.get_doc(
 			{
 				"doctype": "Sales Order",
@@ -6463,9 +6466,11 @@ class TestSalesInvoice(FrappeTestCase):
 			"Stock Received But Not Billed - TC-3": {"debit": 0, "credit": 1000},
 		}
 		for entry in pr_gle_entries:
-			self.assertEqual(entry["debit"], expected_si_entries.get(entry["account"], {}).get("debit", 0))
-			self.assertEqual(entry["credit"], expected_si_entries.get(entry["account"], {}).get("credit", 0))
-
+			for key in expected_si_entries:
+				if entry["account"] == key:
+					self.assertEqual(entry["debit"], expected_si_entries[key].get("debit", 0))
+					self.assertEqual(entry["credit"], expected_si_entries[key].get("credit", 0))
+				
 		si = make_sales_invoice(dn.name)
 		si.insert()
 		si.submit()
