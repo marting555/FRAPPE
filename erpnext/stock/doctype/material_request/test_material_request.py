@@ -5836,7 +5836,7 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_mr_to_po_pi_with_serial_nos_TC_B_158(self):
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
-		supplier = "_Test Supplier 1"
+		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		item_code = "_Test Item With Serial No"
 		quantity = 3
 		gst_hsn_code = "11112222"
@@ -5865,6 +5865,7 @@ class TestMaterialRequest(FrappeTestCase):
 			"doctype": "Material Request",
 			"material_request_type": "Purchase",
 			"transaction_date": today(),
+			"schedule_date": today(),
 			"company": company,
 			"items": [{
 				"item_code": item_code,
@@ -5896,6 +5897,7 @@ class TestMaterialRequest(FrappeTestCase):
 			"supplier": po.supplier,
 			"posting_date": today(),
 			"company": company,
+			"currency": "INR",
 			"update_stock": 1,
 			"items": [{
 				"item_code": po.items[0].item_code,
