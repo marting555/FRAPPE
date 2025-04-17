@@ -4137,6 +4137,8 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(sle.qty_after_transaction, 2)
 
 	def test_create_po_pr_return_pr_TC_SCK_178(self):
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		create_company()
 		get_or_create_fiscal_year('_Test Company PO')
 		supplier = create_supplier(supplier_name="_Test Supplier PO")

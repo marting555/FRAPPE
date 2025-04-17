@@ -4788,6 +4788,8 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(creditors_credit, 1000)
 
 	def test_create_material_req_to_2po_to_pi_serial_TC_SCK_096(self):
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		create_company()
 		create_fiscal_year()
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
@@ -5023,6 +5025,8 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(gl_stock_debit, 100)
 
 	def test_create_mr_to_2po_to_1pi_serial_cancel_TC_SCK_099(self):
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		create_company()
 		create_fiscal_year()
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
@@ -5308,6 +5312,8 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(gl_stock_debit, 100)
 
 	def test_create_mr_to_2po_to_1pi_serial_return_TC_SCK_111(self):
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		create_company()
 		create_fiscal_year()
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
@@ -5573,6 +5579,8 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(gl_stock_debit, 100)
 
 	def test_create_mr_to_2po_to_1pi_sr_prtl_ret_TC_SCK_115(self):
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		create_company()
 		create_fiscal_year()
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
