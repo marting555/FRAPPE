@@ -2428,7 +2428,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 	def test_purchase_invoice_payment_and_cancel_invoice_TC_ACC_019(self):
 		"""Test payment against Purchase Invoices with advance adjustment."""
-
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		today = nowdate()
 		# Step 1: Create and Submit the First Purchase Invoice
 		first_purchase_invoice = make_purchase_invoice(
@@ -2527,6 +2528,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		
 	def test_tax_withholding_with_supplier_TC_ACC_023(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (create_records as records_for_pi,create_purchase_invoice,make_test_item)
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		records_for_pi('_Test Supplier TDS')
 		supplier=frappe.get_doc("Supplier","_Test Supplier TDS")
 		if supplier:
@@ -2890,7 +2893,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			make_test_item,
 		)
 		from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
-
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		records_for_pi('_Test Supplier')
 
 		supplier = frappe.get_doc('Supplier', '_Test Supplier')
@@ -2942,8 +2946,9 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			create_purchase_invoice,
 			make_test_item,
 		)
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
-
+		get_or_create_fiscal_year("_Test Company")
 		records_for_pi('_Test Supplier')
 
 		supplier = frappe.get_doc('Supplier', '_Test Supplier')
@@ -3663,6 +3668,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 	def test_standalone_pi_is_fully_paid_TC_B_088(self):
 		frappe.set_user("Administrator")
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
 		purchase_tax.title = "TEST"
 		purchase_tax.company = "_Test Company"
@@ -3703,6 +3710,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 	
 	def test_standalone_pi_is_partly_paid_TC_B_090(self):
 		frappe.set_user("Administrator")
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		purchase_tax = frappe.new_doc("Purchase Taxes and Charges Template")
 		purchase_tax.title = "TEST"
 		purchase_tax.company = "_Test Company"
@@ -3742,6 +3751,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		self.assertEqual(pi_status, "Partly Paid")
 
 	def test_pi_with_additional_discount_TC_B_054(self):
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		pi_data = {
 			"company" : "_Test Company",
 			"item_code" : "_Test Item",
@@ -3782,6 +3793,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		self.assertEqual(pi_total, 10080) 
 
 	def test_pi_with_additional_discount_TC_B_060(self):
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		# Scenario : PI [With Additional Discount on Grand Total][StandAlone]	
 		pi_data = {
 			"company" : "_Test Company",
@@ -3825,7 +3838,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 	@if_app_installed("india_compliance")
 	def test_pi_standalone_pi_with_deferred_expense_TC_B_095(self):
 		gst_hsn_code = "11112222"
-	
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
 			gst_hsn_doc = frappe.new_doc("GST HSN Code")
 			gst_hsn_doc.hsn_code = gst_hsn_code
@@ -4090,6 +4104,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			make_test_item
 		)
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		update_repost_settings()
 		company = "_Test Company"
 		item=make_test_item("_Test Item")
@@ -4126,6 +4142,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		from erpnext.buying.doctype.purchase_order.purchase_order import (
 			make_purchase_invoice as make_pi_from_po,
 		)
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		account_setting=frappe.get_doc("Accounts Settings")
 		account_setting.db_set("over_billing_allowance", 10)
 		account_setting.save()
@@ -4360,7 +4378,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 	def test_supplier_invoice_number_uniqueness_validation_TC_ACC_136(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
-
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		account_setting=frappe.get_doc("Accounts Settings")
 		account_setting.check_supplier_invoice_uniqueness=1
 		account_setting.save()
@@ -4597,6 +4616,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			make_test_item
 		)
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		if not frappe.db.exists("Payment Term","_Test Discount Term"):
 			pt = frappe.get_doc({
 				"doctype":"Payment Term",
@@ -4645,6 +4666,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			make_test_item
 		)
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		if not frappe.db.exists("Payment Term","_Test partially Discount Term"):
 			pt = frappe.get_doc({
 				"doctype":"Payment Term",		
@@ -4696,7 +4719,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 	def test_stop_pi_creation_when_value_exceeds_budget_TC_ACC_133(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		from erpnext.accounts.utils import get_fiscal_year
-		
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		year = get_fiscal_year(date=nowdate(), company="_Test Company")[0]
 		company = frappe.get_doc("Company","_Test Company")
 		if company.stock_received_but_not_billed !="Cost of Goods Sold - _TC":
@@ -4752,7 +4776,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 	def test_warn_pi_creation_when_value_exceeds_budget_TC_ACC_145(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		from erpnext.accounts.utils import get_fiscal_year
-		
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		get_or_create_fiscal_year("_Test Company")
 		year = get_fiscal_year(date=nowdate(), company="_Test Company")[0]
 		company = frappe.get_doc("Company","_Test Company")
 		if company.stock_received_but_not_billed !="Cost of Goods Sold - _TC":
