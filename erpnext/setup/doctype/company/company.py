@@ -290,26 +290,6 @@ class Company(NestedSet):
 			{"warehouse_name": _("Finished Goods"), "is_group": 0},
 			{"warehouse_name": _("Goods In Transit"), "is_group": 0, "warehouse_type": "Transit"},
 		]:
-<<<<<<< HEAD
-			if not frappe.db.exists("Warehouse", "{} - {}".format(wh_detail["warehouse_name"], self.abbr)):
-				warehouse = frappe.get_doc(
-					{
-						"doctype": "Warehouse",
-						"warehouse_name": wh_detail["warehouse_name"],
-						"is_group": wh_detail["is_group"],
-						"company": self.name,
-						"parent_warehouse": "{} - {}".format(_("All Warehouses"), self.abbr)
-						if not wh_detail["is_group"]
-						else "",
-						"warehouse_type": wh_detail["warehouse_type"]
-						if "warehouse_type" in wh_detail
-						else None,
-					}
-				)
-				warehouse.flags.ignore_permissions = True
-				warehouse.flags.ignore_mandatory = True
-				warehouse.insert()
-=======
 			if frappe.db.exists(
 				"Warehouse",
 				{
@@ -335,7 +315,6 @@ class Company(NestedSet):
 
 			if wh_detail["is_group"]:
 				parent_warehouse = warehouse.name
->>>>>>> e945b4cc06 (fix: create default warehouse (#47125))
 
 	def create_default_accounts(self):
 		from erpnext.accounts.doctype.account.chart_of_accounts.chart_of_accounts import create_charts
