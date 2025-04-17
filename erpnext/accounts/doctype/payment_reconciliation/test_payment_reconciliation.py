@@ -141,7 +141,7 @@ class TestPaymentReconciliation(FrappeTestCase):
 				acc.company = self.company
 				acc.account_currency = x.account_currency
 				acc.account_type = x.account_type
-				acc.insert()
+				acc.insert(ignore_permissions=True)
 			else:
 				name = frappe.db.get_value(
 					"Account",

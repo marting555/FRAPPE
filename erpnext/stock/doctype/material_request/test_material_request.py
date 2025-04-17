@@ -4418,7 +4418,7 @@ class TestMaterialRequest(FrappeTestCase):
 		acc.company = "_Test Company"
 		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
 		if not account_name:
-			account_name = acc.insert()
+			account_name = acc.insert(ignore_permissions=True)
 
 		doc_mr = make_material_request(**po_data)
 		doc_mr.append("taxes", {
@@ -4781,7 +4781,7 @@ class TestMaterialRequest(FrappeTestCase):
 		serial_numbers2 = ["SN006", "SN007","SN008", "SN009","SN010"]
 		pi.items[0].serial_no = "\n".join(serial_numbers1)
 		pi.items[1].serial_no = "\n".join(serial_numbers2)
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		
@@ -4841,7 +4841,7 @@ class TestMaterialRequest(FrappeTestCase):
 		pi.update_stock = 1
 		pi.items[0].serial_no = "SN-001"
 		pi.items[1].serial_no = "SN-002"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 
@@ -5926,7 +5926,7 @@ class TestMaterialRequest(FrappeTestCase):
 				"rate": po.items[0].rate
 			}]
 		})
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		serial_numbers = [f"test_item_00{i}" for i in range(1, quantity + 1)]
 		pi.items[0].serial_no = "\n".join(serial_numbers)
 		pi.save()

@@ -169,7 +169,7 @@ class TestSalesInvoice(FrappeTestCase):
 		pe.source_exchange_rate = 1
 		pe.target_exchange_rate = 1
 		pe.paid_amount = si.outstanding_amount
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		unlink_payment_on_cancel_of_invoice(0)
@@ -875,7 +875,7 @@ class TestSalesInvoice(FrappeTestCase):
 		pe.target_exchange_rate = 1
 		pe.paid_amount = si.outstanding_amount
 		pe.cost_center = cca.main_cost_center
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		# cancel cost center allocation
@@ -1212,7 +1212,7 @@ class TestSalesInvoice(FrappeTestCase):
 				"paid_to_account_currency": si.currency, "source_exchange_rate": 1, "target_exchange_rate": 1,
 				"paid_amount": si.grand_total
 			})
-			pe.insert()
+			pe.insert(ignore_permissions=True)
 			pe.submit()
 			payment_entries.append(pe)
 
@@ -2165,7 +2165,7 @@ class TestSalesInvoice(FrappeTestCase):
 				"allocated_amount": 300,
 			},
 		)
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		sales_order.reload()
@@ -2570,7 +2570,7 @@ class TestSalesInvoice(FrappeTestCase):
 		pe.source_exchange_rate = 1
 		pe.target_exchange_rate = 1
 		pe.paid_amount = si.grand_total * -1
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		si_doc = frappe.get_doc("Sales Invoice", si.name)
@@ -6243,7 +6243,7 @@ class TestSalesInvoice(FrappeTestCase):
 		pi = make_inter_company_purchase_invoice(si.name)
 		pi.bill_no = "test bill"
 		pi.taxes_and_charges =  "Input GST In-state - TC-3"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.company, child_company)
 		self.assertEqual(pi.supplier, supplier)
@@ -6535,7 +6535,7 @@ class TestSalesInvoice(FrappeTestCase):
 		pi = make_inter_company_purchase_invoice(si.name)
 		pi.bill_no = "test bill"
 		pi.taxes_and_charges =  "Input GST In-state - TC-3"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		self.assertEqual(pi.docstatus, 1)
@@ -7116,7 +7116,7 @@ def create_internal_supplier(supplier_name, represents_company, allowed_to_inter
 		)
 
 		supplier.append("companies", {"company": allowed_to_interact_with})
-		supplier.insert()
+		supplier.insert(ignore_permissions=True)
 		supplier_name = supplier.name
 	else:
 		supplier_name = frappe.db.exists("Supplier", supplier_name)
