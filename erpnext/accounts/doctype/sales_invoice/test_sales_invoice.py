@@ -43,7 +43,6 @@ from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_inter_comp
 class TestSalesInvoice(FrappeTestCase):
 	def setUp(self):
 		from erpnext.stock.doctype.stock_ledger_entry.test_stock_ledger_entry import create_items
-
 		create_items(["_Test Internal Transfer Item"], uoms=[{"uom": "Box", "conversion_factor": 10}])
 		create_internal_parties()
 		setup_accounts()
@@ -5596,6 +5595,7 @@ class TestSalesInvoice(FrappeTestCase):
 		check_gl_entries(self, si.name, expected_gl_entries, si.posting_date)
   
 	def test_create_sales_invoice_for_common_party_TC_ACC_124(self):
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import validate_fiscal_year
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			make_test_item,
 			create_supplier,
@@ -5603,6 +5603,7 @@ class TestSalesInvoice(FrappeTestCase):
 			create_purchase_invoice
 		)
 		from erpnext.accounts.doctype.party_link.party_link import create_party_link
+		validate_fiscal_year('_Test Company')
 		create_account()
 		account_setting = frappe.get_doc('Accounts Settings')
 		account_setting.enable_common_party_accounting = True
@@ -7255,6 +7256,7 @@ def create_company_and_supplier():
 				"company_name": parent_company,
 				"abbr": "TC-1",
 				"default_currency": "INR",
+				"country":"India",
 				"is_group": 1,
 				"gstin": "27AAAAP0267H2ZN",
 				"gst_category": "Registered Regular"
@@ -7272,6 +7274,7 @@ def create_company_and_supplier():
 				"company_name": child_company,
 				"abbr": "TC-3",
 				"default_currency": "INR",
+				"country":"India",
 				"gstin": "27AABCT1296R1ZN",
 				"gst_category": "Registered Regular",
 				"parent_company": parent_company
