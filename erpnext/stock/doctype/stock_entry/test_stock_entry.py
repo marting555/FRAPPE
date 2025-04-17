@@ -444,6 +444,15 @@ class TestStockEntry(FrappeTestCase):
 		self.assertFalse(gl_entries)
 
 	def test_repack_with_additional_costs(self):
+		from erpnext.stock.doctype.item.test_item import create_item
+		create_item("_Test Item")
+		create_item("_Test Item Home Desktop 100")
+		test_records = frappe.get_test_records("Company")
+		test_records = test_records[2:]
+		for rec in test_records:
+			if not frappe.db.exists("Company", rec.get("company_name")):
+				rec["doctype"] = "Company"
+				frappe.get_doc(rec).insert()
 		company = frappe.db.get_value("Warehouse", "Stores - TCP1", "company")
 		create_fiscal_with_company(company)
 		make_stock_entry(
