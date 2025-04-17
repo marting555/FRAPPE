@@ -5510,7 +5510,7 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_mr_to_2po_to_2pi_sr_partail_return_TC_SCK_114(self):
 		create_company()
 		create_fiscal_year()
-		supplier = create_supplier(supplier_name="_Test Supplier MR")
+		supplier = create_supplier(supplier_name="_Test Supplier MR",default_currency="INR")
 		warehouse = create_warehouse("_Test warehouse PO", company="_Test Company MR")
 		item = item_create("_Test MR")
 		cost_center = frappe.db.get_value("Company","_Test Company MR","cost_center")
