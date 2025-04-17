@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-04-13 09:36+0000\n"
-"PO-Revision-Date: 2025-04-14 04:11\n"
+"PO-Revision-Date: 2025-04-17 05:27\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Persian\n"
 "MIME-Version: 1.0\n"
@@ -4931,7 +4931,7 @@ msgstr "هنگام ایجاد درخواست‌های مواد بر اساس س�
 
 #: erpnext/buying/report/supplier_quotation_comparison/supplier_quotation_comparison.html:124
 msgid "Analysis Chart"
-msgstr ""
+msgstr "نمودار تحلیل"
 
 #: erpnext/setup/setup_wizard/data/designation.txt:4
 msgid "Analyst"
@@ -10356,7 +10356,7 @@ msgstr "متن پایانی"
 
 #: erpnext/accounts/report/general_ledger/general_ledger.html:135
 msgid "Closing [Opening + Total] "
-msgstr ""
+msgstr "اختتامیه [افتتاحیه + کل] "
 
 #. Label of the code (Data) field in DocType 'Incoterm'
 #: erpnext/edi/doctype/code_list/code_list_import.js:172
