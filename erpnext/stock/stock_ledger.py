@@ -1546,7 +1546,7 @@ class update_entries_after:
 					"{0} units of {1} needed in {2} on {3} {4} for {5} to complete this transaction."
 				).format(
 					frappe.bold(abs(deficiency)),
-					frappe.get_desk_link("Item", exceptions[0]["item_code"]),
+					frappe.get_desk_link("Item", exceptions[0]["item_code"], show_title_with_name=True),
 					frappe.get_desk_link("Warehouse", warehouse),
 					exceptions[0]["posting_date"],
 					exceptions[0]["posting_time"],
