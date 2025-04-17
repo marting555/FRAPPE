@@ -288,3 +288,8 @@ def get_serial_nos_for_outward(kwargs):
 		return []
 
 	return [d.serial_no for d in serial_nos]
+
+def get_serial_nos_from_serial_and_batch_bundle(serial_and_batch_bundle):
+	table = frappe.qb.DocType("Serial and Batch Entry")
+	query = frappe.qb.from_(table).select(table.serial_no).where(table.parent == serial_and_batch_bundle)
+	return [item[0] for item in query.run(as_list=True)]
