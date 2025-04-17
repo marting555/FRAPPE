@@ -4459,6 +4459,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 	@if_app_installed("india_compliance")
 	def test_sales_order_creating_si_with_product_bundle_and_gst_rule_TC_S_059(self):
 		create_test_warehouse(name= "Stores - _TIRC", warehouse_name="Stores", company="_Test Indian Registered Company")
+		get_or_create_fiscal_year("_Test Indian Registered Company")
 		make_item("_Test Item", {"is_stock_item": 1})
 		product_bundle = make_item("_Test Product Bundle", {"is_stock_item": 0})
 		make_item("_Test Bundle Item 1", {"is_stock_item": 1})
@@ -4688,6 +4689,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 	@if_app_installed("india_compliance")
 	@change_settings("Stock Settings", {"enable_stock_reservation": 1})
 	def test_sales_order_for_stock_reservation_with_gst_TC_S_065(self):
+		get_or_create_fiscal_year("_Test Indian Registered Company")
 		create_test_warehouse(name= "Stores - _TIRC", warehouse_name="Stores", company="_Test Indian Registered Company")
 
 		if not frappe.db.exists("Company", "_Test Indian Registered Company"):
@@ -4774,7 +4776,17 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(qty_change_return, 1)	
   
 	def test_sales_order_for_stock_reservation_with_returns_and_note_TC_S_068(self):
-		si = self.test_sales_order_for_stock_reservation_with_returns_TC_S_064()
+		dn, si = self.test_sales_order_for_stock_reservation_TC_S_063()
+  
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_return
+		sr = make_sales_return(dn.name)
+		sr.save()
+		sr.submit()
+  
+		self.assertEqual(sr.status, "To Bill", "Sales Return not created")
+  
+		qty_change_return = frappe.db.get_value('Stock Ledger Entry', {'item_code': '_Test Item', 'voucher_no': sr.name, 'warehouse': '_Test Warehouse - _TC'}, 'actual_qty')
+		self.assertEqual(qty_change_return, 1)
   
 		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_sales_return as make_credit_note
 		cn = make_credit_note(si.name)
@@ -5992,7 +6004,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		customer = create_customer("_Test Customer 1",currency = "INR")
 		make_item("_Test Item", {"is_stock_item": 1})
 		make_stock_entry(item_code="_Test Item", qty=100, rate=500, target="_Test Warehouse - _TC")
-		sales_order = make_sales_order(customer=customer,cost_center='Main - _TC', selling_price_list='Standard Selling', do_not_save=True)
+		sales_order = make_sales_order(customer=customer,cost_center='Main - _TC', selling_price_list='_Test Price List', do_not_save=True)
 		sales_order.delivery_date = nowdate()
 		if qty and rate:
 			for item in sales_order.items:
@@ -6009,6 +6021,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 
 	def create_and_submit_sales_order_with_gst(self, item_code, qty=None, rate=None):
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_registered_company
+		get_or_create_fiscal_year("_Test Indian Registered Company")
 		create_registered_company()
 		create_test_warehouse(name= "Stores - _TIRC", warehouse_name="Stores", company="_Test Indian Registered Company")
 		make_item("_Test Item", {"is_stock_item": 1})
@@ -6031,7 +6044,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			customer="_Test Registered Customer",
 			warehouse="Stores - _TIRC",
 			cost_center="Main - _TIRC",
-			selling_price_list="Standard Selling",
+			selling_price_list='_Test Price List',
 			item_code=item_code,
 			qty=qty,
 			rate=rate,

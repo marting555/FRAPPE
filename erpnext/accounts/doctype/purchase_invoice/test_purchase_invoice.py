@@ -4410,7 +4410,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 
 		if not frappe.db.exists("Supplier", supplier.supplier_name):
-			supplier.insert()
+			supplier.insert(ignore_permissions=True)
 
         # Ensure Item exists with rate rules
 		it_fields = {
