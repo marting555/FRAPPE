@@ -64,7 +64,6 @@
   "naming_series_prefix",
   "stock_reservation_tab",
   "enable_stock_reservation",
-  "auto_reserve_stock",
   "column_break_rx3e",
   "allow_partial_reservation",
   "auto_reserve_stock_for_sales_order_on_purchase",
