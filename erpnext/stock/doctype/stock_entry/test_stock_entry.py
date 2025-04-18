@@ -3975,12 +3975,12 @@ class TestStockEntry(FrappeTestCase):
 				self.assertEqual(sle['actual_qty'], 50)
 
 	def test_create_two_stock_entries_TC_SCK_230(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
-		create_company()
-		company = "_Test Company"
-		frappe.db.set_value("Company", company, "stock_adjustment_account", 'Stock Adjustment - _TC')
+		company = create_company_se()
+		frappe.db.set_value("Company", company, "stock_adjustment_account", 'Stock Adjustment - _CS')
 		item_1 = make_item("_Test Item 1",properties = {'valuation_rate':100})
-		get_or_create_fiscal_year('_Test Company')
+		item_1.valuation_rate = 100
+		item_1.save()
+		get_or_create_fiscal_year('_Test Company SE')
 		warehouse_1 = create_warehouse("_Test warehouse PO", company=company)
 		se_1 = make_stock_entry(item_code=item_1.name, target=warehouse_1, qty=10, purpose="Material Receipt", company=company)
 		self.assertEqual(se_1.items[0].item_code, item_1.name)
@@ -4592,3 +4592,16 @@ def get_or_create_fiscal_year(company):
 		fiscal_year.year_end_date = last_date
 		fiscal_year.append("companies", {"company": company})
 		fiscal_year.save()
+
+def create_company_se():
+	company_name = "_Test Company SE"
+	if not frappe.db.exists("Company", company_name):
+		company = frappe.new_doc("Company")
+		company.company_name = company_name
+		company.country="India",
+		company.default_currency= "INR",
+		company.create_chart_of_accounts_based_on= "Standard Template",
+		company.chart_of_accounts= "Standard",
+		company = company.save()
+		company.load_from_db()
+	return company_name
