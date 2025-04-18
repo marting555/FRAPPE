@@ -7,7 +7,7 @@
 
 import frappe
 import json
-from frappe.tests.utils import FrappeTestCase, change_settings
+from frappe.tests.utils import FrappeTestCase, change_settings, if_app_installed
 from frappe.utils import flt, today, add_days, nowdate, getdate
 from datetime import date
 
@@ -2575,13 +2575,23 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_mr_to_partial_pr_TC_B_023(self):
 		# MR => 1RFQ => 2SQ => 2PO => 1PR => 1PI
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company,create_customer
+		create_company()
+		get_or_create_fiscal_year("_Test Company")
+		create_customer("_Test Customer")
+		make_item(item_code="Testing-31")
 		args = frappe._dict()
+		cost_center =frappe.db.get_value("Cost Center", {"company": "_Test Company"}, "name")
+		create_supplier(supplier_name = "_Test Supplier")
 		args['mr'] = [{
 			"company": "_Test Company",
 			"item_code": "Testing-31",
 			"warehouse": "Stores - _TC",
 			"qty": 20,
 			"rate": 100,
+			"uom": "Box",
+			"cost_center": cost_center,
 		}]
 		args['sq'] = [10, 10]
 		total_po_qty = sum(args['sq'])
@@ -4408,7 +4418,7 @@ class TestMaterialRequest(FrappeTestCase):
 		acc.company = "_Test Company"
 		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
 		if not account_name:
-			account_name = acc.insert()
+			account_name = acc.insert(ignore_permissions=True)
 
 		doc_mr = make_material_request(**po_data)
 		doc_mr.append("taxes", {
@@ -4774,7 +4784,7 @@ class TestMaterialRequest(FrappeTestCase):
 		serial_numbers2 = ["SN006", "SN007","SN008", "SN009","SN010"]
 		pi.items[0].serial_no = "\n".join(serial_numbers1)
 		pi.items[1].serial_no = "\n".join(serial_numbers2)
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		
@@ -4833,7 +4843,7 @@ class TestMaterialRequest(FrappeTestCase):
 		pi.update_stock = 1
 		pi.items[0].serial_no = "SN-001"
 		pi.items[1].serial_no = "SN-002"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 
@@ -5649,6 +5659,7 @@ class TestMaterialRequest(FrappeTestCase):
 		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': payable_act},'debit')
 		self.assertEqual(gl_stock_debit, 100)
 
+	@if_app_installed("india_compliance")
 	def test_mr_to_po_pr_with_serial_no_TC_B_156(self):
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
@@ -5732,6 +5743,7 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(sn.warehouse, warehouse)
 			self.assertEqual(sn.item_code, item_code)
 
+	@if_app_installed("india_compliance")
 	def test_mr_to_po_pr_with_multiple_serial_nos_TC_B_157(self):
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
@@ -5854,7 +5866,7 @@ class TestMaterialRequest(FrappeTestCase):
 	def test_mr_to_po_pi_with_serial_nos_TC_B_158(self):
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
-		supplier = "_Test Supplier 1"
+		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		item_code = "_Test Item With Serial No"
 		quantity = 3
 		gst_hsn_code = "11112222"
@@ -5883,6 +5895,7 @@ class TestMaterialRequest(FrappeTestCase):
 			"doctype": "Material Request",
 			"material_request_type": "Purchase",
 			"transaction_date": today(),
+			"schedule_date": today(),
 			"company": company,
 			"items": [{
 				"item_code": item_code,
@@ -5914,6 +5927,7 @@ class TestMaterialRequest(FrappeTestCase):
 			"supplier": po.supplier,
 			"posting_date": today(),
 			"company": company,
+			"currency": "INR",
 			"update_stock": 1,
 			"items": [{
 				"item_code": po.items[0].item_code,
@@ -5922,7 +5936,7 @@ class TestMaterialRequest(FrappeTestCase):
 				"rate": po.items[0].rate
 			}]
 		})
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		serial_numbers = [f"test_item_00{i}" for i in range(1, quantity + 1)]
 		pi.items[0].serial_no = "\n".join(serial_numbers)
 		pi.save()
@@ -7489,7 +7503,6 @@ def make_test_pi(source_name, received_qty = None, item_dict = None, args = None
 	if args is not None:
 		args = frappe._dict(args)
 		doc_pi.update(args)
-
 	doc_pi.insert()
 	doc_pi.submit()
 	return doc_pi

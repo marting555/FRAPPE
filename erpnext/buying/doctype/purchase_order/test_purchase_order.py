@@ -113,7 +113,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi = make_pi_from_po(po.name)
 		pi.update_stock = 1
 		pi.items[0].qty = 12
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		self.assertEqual(get_ordered_qty(), existing_ordered_qty)
@@ -744,7 +744,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertTrue(po.get("payment_schedule"))
 
 		pi = make_pi_from_po(po.name)
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		self.assertTrue(pi.get("payment_schedule"))
 
 	@change_settings("Accounts Settings", {"unlink_advance_payment_on_cancelation_of_order": 1})
@@ -932,7 +932,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi = make_purchase_invoice(qty=10, rate=100, do_not_save=1)
 		pi.items[0].purchase_order = po.name
 		pi.items[0].po_detail = po.items[0].name
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 
 		# self.assertEqual(po.payment_terms_template, pi.payment_terms_template)
 		compare_payment_schedules(self, po, pi)
@@ -1184,7 +1184,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		# Create a Purchase Order and Fully Bill it
 		po = create_purchase_order()
 		pi = make_pi_from_po(po.name)
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		# Debit Note - 50% Qty & enable updating PO billed amount
@@ -1265,7 +1265,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill_1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.items[0].qty, po.items[0].qty)
@@ -1423,6 +1423,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		supplier = get_company_supplier.get("supplier")
 		item = make_test_item("test_item")
 		warehouse = "Stores - TC-3"
+		get_or_create_fiscal_year(company)
 
 
 		po = frappe.get_doc({
@@ -1774,7 +1775,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		supplier = get_company_supplier.get("supplier")
 		item = make_test_item("test_item")
 		warehouse = "Stores - TC-3"
-
+		get_or_create_fiscal_year(company)
 		po = frappe.get_doc({
 			"doctype": "Purchase Order",
 			"supplier": supplier,
@@ -1798,7 +1799,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi = make_pi_from_po(po.name)
 		pi.update_stock = 1
 		pi.bill_no = "test_bill"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		pe = get_payment_entry(pi.doctype, pi.name)
@@ -2078,10 +2079,14 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertTrue(stock_decrease_passed)
 
 	def test_pr_to_lcv_add_value_to_stock_TC_B_034(self):
-		frappe.set_user("Administrator")
-		frappe.db.set_value("Company", "_Test Company", {"enable_perpetual_inventory":1, "stock_received_but_not_billed": "_Test Account Excise Duty - _TC"})
+		frappe.db.set_value("Company", "_Test Company", {"enable_perpetual_inventory":1, "stock_received_but_not_billed": "Stock Adjustment - _TC"})
 		item = make_test_item("Testing-31")
+		create_supplier(supplier_name="_Test Supplier 1")
+		create_supplier(supplier_name="_Test Supplier")
+		get_or_create_fiscal_year("_Test Company")
 		# Step 1: Create Purchase Receipt
+		company = "_Test Company"
+		supplier = "_Test Supplier 1"
 		doc_pr = frappe.get_doc({
 			"doctype": "Purchase Receipt",
 			"company": "_Test Company",
@@ -2098,7 +2103,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		doc_pr.insert()
 		doc_pr.submit()
 		self.assertEqual(doc_pr.docstatus, 1)
-
+		account = frappe.db.get_value("Account", {"company": company,'account_type':'Tax'}, "name")
 		doc_lcv = frappe.get_doc({
 			"doctype": "Landed Cost Voucher",
 			"company": "_Test Company",
@@ -2112,7 +2117,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			],
 			"taxes": [
 				{
-					"expense_account": "Cash - _TC",
+					"expense_account": account,
 					"amount": 500,
 					"description": "test_description"
 				}
@@ -2204,7 +2209,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.items[0].discount_percentage, 10)
 
 		pi = make_pi_from_po(po.name)
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		self.assertEqual(len(pi.items), 1)
@@ -2585,7 +2590,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		supplier = get_company_supplier.get("supplier")
 		item = make_test_item("_test_item")
 		warehouse = "Stores - TC-3"
-
+		get_or_create_fiscal_year(company)
 		po_data = {
 			"company" : company,
 			"item_code" : item.item_code,
@@ -2667,7 +2672,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		acc.company = "_Test Company"
 		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
 		if not account_name:
-			account_name = acc.insert()
+			account_name = acc.insert(ignore_permissions=True)
 
 		doc_po = create_purchase_order(**po_data)
 		doc_po.append("taxes", {
@@ -2715,7 +2720,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		acc.company = "_Test Company"
 		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
 		if not account_name:
-			account_name = acc.insert()
+			account_name = acc.insert(ignore_permissions=True)
 
 		doc_po = create_purchase_order(**po_data)
 		doc_po.append("taxes", {
@@ -2763,7 +2768,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		acc.company = "_Test Company"
 		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
 		if not account_name:
-			account_name = acc.insert()
+			account_name = acc.insert(ignore_permissions=True)
 
 		doc_po = create_purchase_order(**po_data)
 		doc_po.append("taxes", {
@@ -2811,7 +2816,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		acc.company = "_Test Company"
 		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
 		if not account_name:
-			account_name = acc.insert()
+			account_name = acc.insert(ignore_permissions=True)
 
 		doc_po = create_purchase_order(**po_data)
 		doc_po.append("taxes", {
@@ -2859,7 +2864,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		acc.company = "_Test Company"
 		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
 		if not account_name:
-			account_name = acc.insert()
+			account_name = acc.insert(ignore_permissions=True)
 
 		doc_po = create_purchase_order(**po_data)
 		doc_po.append("taxes", {
@@ -2899,7 +2904,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			]
 		})
 		pi.bill_no = "test_bill_1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		self.assertEqual(len(pi.items), 1)
 		self.assertEqual(pi.items[0].rate, item_price)
 		self.assertEqual(pi.net_total, item_price)
@@ -3044,7 +3049,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		acc.company = company.name
 		account_name_cess = frappe.db.exists("Account", {"account_name": "Environmental Cess a/c", "company": company.name})
 		if not account_name_cess:
-			account_name_cess = acc.insert()
+			account_name_cess = acc.insert(ignore_permissions=True)
 		
 		acc = frappe.new_doc("Account")
 		acc.account_name = "Input Tax CGST"
@@ -3052,7 +3057,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		acc.company = company.name
 		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax CGST","company": company.name })
 		if not account_name:
-			account_name = acc.insert()
+			account_name = acc.insert(ignore_permissions=True)
 		
 		acc = frappe.new_doc("Account")
 		acc.account_name = "Input Tax SGST"
@@ -3060,7 +3065,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		acc.company = company.name
 		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax SGST","company": company.name })
 		if not account_name:
-			account_name = acc.insert()
+			account_name = acc.insert(ignore_permissions=True)
 
 		taxes = create_taxes_interstate()
 		taxes.append({
@@ -3602,7 +3607,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		pi = make_pi_from_po(po.name)
 		pi.bill_no = "test_bill_1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		item = frappe.get_doc('Item', item.item_code)
 		pi.items[0].enable_deferred_expense = item.enable_deferred_expense
 		pi.save()
@@ -4177,6 +4182,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		company = get_data.get("company")
 		supplier = get_data.get("supplier")
 		item = make_test_item("_test_item_")
+		get_or_create_fiscal_year(company)
 		warehouse = "Stores - TC-5"
 		tax_category = "test_tax_withholding_category"
 		if not frappe.db.exists("Tax Withholding Category", tax_category):
@@ -4233,7 +4239,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		pi = make_pi_from_po(po.name)
 		pi.bill_no = "test_bill_1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		self.assertEqual(pi.taxes[0].tax_amount, 20)
@@ -4359,7 +4365,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi.bill_no = "test_bill_1122"
 		pi.taxes_and_charges = ""
 		pi.taxes = []
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 
@@ -4419,7 +4425,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		# pe = make_payment_entry(po.doctype, po.name, po.grand_total, args )
 		pe = get_payment_entry(po.doctype, po.name)
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 		
 		pr = make_pr_for_po(po.name)
@@ -4447,7 +4453,8 @@ class TestPurchaseOrder(FrappeTestCase):
 		supplier = get_company_supplier.get("supplier")
 		item = make_test_item("_test_item")
 		warehouse = "Stores - TC-3"
-
+		
+		get_or_create_fiscal_year(company)
 		remove_existing_shipping_rules()
 
 		shipping_rule = frappe.get_doc(
@@ -4481,6 +4488,16 @@ class TestPurchaseOrder(FrappeTestCase):
 			"reference_no" : "For Testing"
 		}
 
+		cash_account = frappe.db.get_value(
+			"Mode of Payment Account", {"parent": 'Cash', "company": company}, "default_account"
+		)
+		if not cash_account:
+			mop =  frappe.get_doc('Mode of Payment', 'Cash')
+			mop.append('accounts', {
+				'company': company,
+				'default_account': 'Cash - TC-3',
+			})
+			mop.save()
 		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, 6000, args )
 		
 		doc_pr = make_pr_for_po(doc_po.name)
@@ -4560,6 +4577,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		company = get_data.get("company")
 		supplier = get_data.get("supplier")
 		item = make_test_item("_test_item_")
+		get_or_create_fiscal_year(company)
 		po_data = {
 			"company" : company,
 			"item_code" :item.item_code,
@@ -4577,6 +4595,16 @@ class TestPurchaseOrder(FrappeTestCase):
 			"reference_no" : "For Testing"
 		}
 
+		cash_account = frappe.db.get_value(
+			"Mode of Payment Account", {"parent": 'Cash', "company": company}, "default_account"
+		)
+		if not cash_account:
+			mop =  frappe.get_doc('Mode of Payment', 'Cash')
+			mop.append('accounts', {
+				'company': company,
+				'default_account': 'Cash - TC-5',
+			})
+			mop.save()
 		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, 6000, args)
 		
 		doc_pr = make_pr_for_po(doc_po.name)
@@ -4615,7 +4643,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		acc.company = company
 		account_name = frappe.db.exists("Account", {"account_name": acc.account_name, "company": company})
 		if not account_name:
-			account_name = acc.insert()
+			account_name = acc.insert(ignore_permissions=True)
 
 		po_data = {
 			"company" : company,
@@ -4673,7 +4701,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		company = get_data.get("company")
 		supplier = get_data.get("supplier")
 		item = make_test_item("_test_items_1")
-
+		get_or_create_fiscal_year(company)
 		po_data = {
 			"company" : company,
 			"item_code" : item.item_code,
@@ -4690,7 +4718,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		acc.company = company
 		account_name = frappe.db.exists("Account", {"account_name" : acc.account_name, "company": company})
 		if not account_name:
-			account_name = acc.insert()
+			account_name = acc.insert(ignore_permissions=True)
 
 		doc_po = create_purchase_order(**po_data)
 		doc_po.append(
@@ -4712,7 +4740,17 @@ class TestPurchaseOrder(FrappeTestCase):
 			"mode_of_payment" : "Cash",
 			"reference_no" : "For Testing"
 		}
-
+		cash_account = frappe.db.get_value(
+			"Mode of Payment Account", {"parent": 'Cash', "company": company}, "default_account"
+		)
+		if not cash_account:
+			mop =  frappe.get_doc('Mode of Payment', 'Cash')
+			mop.append('accounts', {
+				'company': company,
+				'default_account': 'Cash - TC-5',
+			})
+			mop.save()
+			
 		doc_pe = make_payment_entry(doc_po.doctype, doc_po.name, 6000, args)
 		
 		doc_pr = make_pr_for_po(doc_po.name)
@@ -4877,7 +4915,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			}],
 			
 		})
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.taxes_and_charges = existing_templates
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
@@ -4960,14 +4998,14 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill_1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.taxes_and_charges_added, 500)
 		self.assertEqual(pi.grand_total, 1500)
 
 		pe = get_payment_entry(pi.doctype, pi.name)
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 		self.assertEqual(pe.docstatus, 1)
 		gl_entries_pr = frappe.get_all("GL Entry", filters={
@@ -5060,7 +5098,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill_1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.taxes_and_charges_added, 500)
@@ -5073,7 +5111,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertTrue(gl_entries_pi)	
 
 		pe = get_payment_entry(pi.doctype, pi.name)
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 		self.assertEqual(pe.docstatus, 1)
 
@@ -5145,14 +5183,14 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill_1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.taxes_and_charges_added, 250)
 		self.assertEqual(pi.grand_total, 1250)
 
 		pe = get_payment_entry(pi.doctype, pi.name)
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 		self.assertEqual(pe.docstatus, 1)
 
@@ -5222,14 +5260,14 @@ class TestPurchaseOrder(FrappeTestCase):
 		# Create Purchase Invoice from Purchase Receipt
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill_1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.taxes_and_charges_added, 680)
 		self.assertEqual(pi.grand_total, 1680)
 
 		pe = get_payment_entry(pi.doctype, pi.name)
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 		self.assertEqual(pe.docstatus, 1)
 		gl_entries_pr = frappe.get_all("GL Entry", filters={
@@ -5327,7 +5365,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill_1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.taxes_and_charges_added, 680)
@@ -5340,7 +5378,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertTrue(gl_entries_pi)	
 
 		pe = get_payment_entry(pi.doctype, pi.name)
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 		self.assertEqual(pe.docstatus, 1)
 
@@ -5416,14 +5454,14 @@ class TestPurchaseOrder(FrappeTestCase):
 		# Create Purchase Invoice from Purchase Receipt
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill_1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.taxes_and_charges_added, 430)
 		self.assertEqual(pi.grand_total, 1430)
 
 		pe = get_payment_entry(pi.doctype, pi.name)
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 		self.assertEqual(pe.docstatus, 1)
 
@@ -5717,7 +5755,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi.bill_no = "test_bill - 1122"
 		pi.taxes_and_charges = ""
 		pi.taxes = []
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.items[0].rate, 115)
@@ -5798,7 +5836,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi.bill_no = "test_bill_1122"
 		pi.taxes_and_charges = ""
 		pi.taxes = []
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		# Validate PI submission
@@ -5879,7 +5917,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi.bill_no = "test_bill_1122"
 		pi.taxes_and_charges = ""
 		pi.taxes = []
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.items[0].rate, 117)
@@ -5956,7 +5994,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi.bill_no = "test_bill_1122"
 		pi.taxes_and_charges = ""
 		pi.taxes = []
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.items[0].rate, 180)
@@ -6054,7 +6092,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill - 1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		self.assertEqual(pi.docstatus, 1)
@@ -6063,7 +6101,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(pi.base_grand_total, 534019.91)
 
 		pe = get_payment_entry(pi.doctype, pi.name)
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 		self.assertEqual(pe.docstatus, 1)
 		gl_entries_pr = frappe.get_all("GL Entry", filters={
@@ -6182,7 +6220,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		frappe.db.set_value("Supplier", supplier, "default_currency", "AUD")
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill - 1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		self.assertEqual(pi.docstatus, 1)
@@ -6191,7 +6229,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(pi.base_grand_total, 1159.87)
 
 		pe = get_payment_entry(pi.doctype, pi.name)
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 		self.assertEqual(pe.docstatus, 1)
 		gl_entries_pr = frappe.get_all("GL Entry", filters={
@@ -6304,7 +6342,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		# Create Purchase Invoice from Purchase Receipt
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill - 1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.taxes_and_charges_added, 2.25)
@@ -6312,7 +6350,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(pi.base_grand_total,  1616.57)
 
 		pe = get_payment_entry(pi.doctype, pi.name)
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 		self.assertEqual(pe.docstatus, 1)
 		gl_entries_pr = frappe.get_all("GL Entry", filters={
@@ -6419,7 +6457,7 @@ class TestPurchaseOrder(FrappeTestCase):
 				}
 			],
 		})
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.total, 1400)
@@ -6609,7 +6647,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi.bill_no = "test_bill_1122"
 		pi.taxes_and_charges = ""
 		pi.taxes = []
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.items[0].rate, 90)
@@ -6685,7 +6723,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi.bill_no = "test_bill_1122"
 		pi.taxes_and_charges = ""
 		pi.taxes = []
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.items[0].rate, 90)
@@ -6761,7 +6799,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi.bill_no = "test_bill_1122"
 		pi.taxes_and_charges = ""
 		pi.taxes = []
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.items[0].rate, 160)
@@ -6909,7 +6947,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		supplier = get_company_supplier.get("supplier")
 		item = make_test_item("test_item")
 		warehouse = "Stores - TC-3"
-
+		get_or_create_fiscal_year(company)
 		po = frappe.get_doc({
 			"doctype": "Purchase Order",
 			"supplier": supplier,
@@ -6932,9 +6970,13 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.items[0].rate, 1000)
 		self.assertEqual(po.total_taxes_and_charges, 1800)
 		self.assertEqual(po.grand_total, 11800)
-
+		pi = frappe.db.get_all("Purchase Invoice", fields=["name"])
+		if pi:
+			bill_no = len(pi) + 1
+		else:
+			bill_no = 1
 		pi_1 = make_pi_from_po(po.name)
-		pi_1.bill_no = "test_bill - 1122"
+		pi_1.bill_no =  f"test_bill_{bill_no}"
 		pi_1.items[0].qty = 3
 		pi_1.update_stock = 1
 		pi_1.insert()
@@ -7060,7 +7102,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill - 1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.total_taxes_and_charges, 1800)
@@ -7357,7 +7399,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill - 1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.total_taxes_and_charges, 2390)
@@ -7487,7 +7529,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill - 1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.total_taxes_and_charges, 2280)
@@ -7707,7 +7749,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill - 1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.total_taxes_and_charges, 1700)
@@ -7817,7 +7859,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill - 1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.total_taxes_and_charges, 500)
@@ -7936,7 +7978,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill - 1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.total_taxes_and_charges, 280)
@@ -8047,7 +8089,7 @@ class TestPurchaseOrder(FrappeTestCase):
 
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill - 1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.docstatus, 1)
 		self.assertEqual(pi.total_taxes_and_charges, 50)
@@ -8675,7 +8717,13 @@ def make_pi_against_pr(source_name, received_qty=0, item_dict_list = None, args 
 	if args:
 		args = frappe._dict(args)
 		doc_pi.update(args)
-	doc_pi.bill_no = "test_bill_1122"
+	
+	pi = frappe.db.get_all("Purchase Invoice", fields=["name"])
+	if pi:
+		bill_no = len(pi) + 1
+	else:
+		bill_no = 1
+	doc_pi.bill_no = f"test_bill_{bill_no}"
 	doc_pi.insert()
 	doc_pi.submit()
 	return doc_pi
@@ -8721,7 +8769,7 @@ def create_taxes_interstate():
 		acc.company = "_Test Company"
 		account_name_cgst = frappe.db.exists("Account", {"account_name" : "Input Tax CGST","company": "_Test Company" })
 		if not account_name_cgst:
-			account_name_cgst = acc.insert()
+			account_name_cgst = acc.insert(ignore_permissions=True)
 
 		
 		acc = frappe.new_doc("Account")
@@ -8730,7 +8778,7 @@ def create_taxes_interstate():
 		acc.company = "_Test Company"
 		account_name_sgst = frappe.db.exists("Account", {"account_name" : "Input Tax SGST","company": "_Test Company" })
 		if not account_name_sgst:
-			account_name_sgst = acc.insert()
+			account_name_sgst = acc.insert(ignore_permissions=True)
 		
 		return [
 			{
