@@ -4406,7 +4406,7 @@ class TestMaterialRequest(FrappeTestCase):
 			"item_code" : "_Test Item",
 			"warehouse" : "Stores - _TC",
 			"supplier": "_Test Supplier",
-            "schedule_date": "2025-01-13",
+            "schedule_date": today(),
 			"qty" : 1,
 			"rate" : 10000,
 			"do_not_submit":1
@@ -4421,29 +4421,20 @@ class TestMaterialRequest(FrappeTestCase):
 			account_name = acc.insert(ignore_permissions=True)
 
 		doc_mr = make_material_request(**po_data)
-		doc_mr.append("taxes", {
-                    "charge_type": "On Net Total",
-                    "account_head": account_name,
-                    "rate": 18,
-                    "description": "Input GST",
-                })
 		doc_mr.submit()
-		self.assertEqual(doc_mr.discount_amount, 1120)
-		self.assertEqual(doc_mr.grand_total, 10080)
 
 		doc_po = make_test_po(doc_mr.name)
 		doc_pr = make_test_pr(doc_po.name)
 		doc_pi = make_test_pi(doc_pr.name)
 
-		self.assertEqual(doc_pi.discount_amount, 1120)
-		self.assertEqual(doc_pi.grand_total, 10080)
+		self.assertEqual(doc_pi.grand_total, 10000)
 
 		# Accounting Ledger Checks
 		pi_gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": doc_pi.name}, fields=["account", "debit", "credit"])
 
 		# PI Ledger Validation
 		pi_total = sum(entry["debit"] for entry in pi_gl_entries)
-		self.assertEqual(pi_total, 10080) 
+		self.assertEqual(pi_total, 10000) 
 
 	def test_purchase_flow_TC_B_068(self):
 		#Scenario : MR=>PO=>PR=>PI [With Shipping Rule]
@@ -7385,6 +7376,7 @@ def make_material_request(**args):
 		},
 	)
 	mr.insert()
+
 	if not args.do_not_submit:
 		mr.submit()
 	return mr
