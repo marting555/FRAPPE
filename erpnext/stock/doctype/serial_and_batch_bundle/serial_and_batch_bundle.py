@@ -326,6 +326,7 @@ class SerialandBatchBundle(Document):
 
 				row.incoming_rate = flt(valuation_rate)
 				row.stock_value_difference = flt(row.qty) * flt(row.incoming_rate)
+
 				if save:
 					row.db_set(
 						{
@@ -333,6 +334,7 @@ class SerialandBatchBundle(Document):
 							"stock_value_difference": row.stock_value_difference,
 						}
 					)
+
 		elif self.type_of_transaction == "Inward":
 			self.set_incoming_rate_for_inward_transaction(row, save)
 
