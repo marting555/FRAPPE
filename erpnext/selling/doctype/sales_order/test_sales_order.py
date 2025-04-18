@@ -5604,7 +5604,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(purchase_orders[0].status, "Delivered")
 
 		pi = make_pi_from_po(purchase_orders[0].name)
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
@@ -5665,7 +5665,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(purchase_orders[0].status, "Delivered")
 
 		pi = make_pi_from_po(purchase_orders[0].name)
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		gl_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
