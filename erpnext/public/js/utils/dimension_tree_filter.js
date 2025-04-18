@@ -15,15 +15,36 @@ erpnext.accounts.dimensions = {
 				with_cost_center_and_project: true,
 			},
 			callback: function (r) {
-				me.accounting_dimensions = r.message[0];
+				const [accounting_dimensions, company_wise_dimension] = r.message;
+
+				me.update_accounting_dimensions_if_set(frm, company_wise_dimension);
 				// Ignoring "Project" as it is already handled specifically in Sales Order and Delivery Note
-				me.accounting_dimensions = me.accounting_dimensions.filter((x) => {
+				me.accounting_dimensions = accounting_dimensions.filter((x) => {
 					return x.document_type != "Project";
 				});
-				me.default_dimensions = r.message[1];
+				me.default_dimensions = company_wise_dimension;
 				me.setup_filters(frm, doctype);
 				me.update_dimension(frm, doctype);
 			},
+		});
+	},
+
+	update_accounting_dimensions_if_set(frm, company_wise_dimension) {
+		// If the document is created from a mapped_doc, accounting dimensions might already be set.
+		// We update default dimensions only if at least one is set in the form.
+		const company = frm.doc.company;
+		const default_company_dimensions = company_wise_dimension[company];
+
+		if (!default_company_dimensions) return;
+
+		const dimension_keys = Object.keys(default_company_dimensions);
+		const is_any_dimension_set = dimension_keys.some((key) => frm.doc[key]);
+
+		if (!is_any_dimension_set) return;
+
+		// Update the default dimensions with the values from the form
+		dimension_keys.forEach((key) => {
+			default_company_dimensions[key] = frm.doc[key];
 		});
 	},
 
