@@ -2179,6 +2179,152 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		so2.save().submit()
 
 		self.assertRaises(frappe.ValidationError, so1.update_status, "Draft")
+
+	@IntegrationTestCase.change_settings("Stock Settings", {"enable_stock_reservation": True})
+	def test_warehouse_mapping_based_on_stock_reservation(self):
+		self.create_company(company_name="Glass Ceiling", abbr="GC")
+		self.create_item("Lamy Safari 2", True, self.warehouse_stores, self.company, 2000)
+		self.create_customer()
+		self.clear_old_entries()
+
+		so = frappe.new_doc("Sales Order")
+		so.company = self.company
+		so.customer = self.customer
+		so.transaction_date = today()
+		so.append(
+			"items",
+			{
+				"item_code": self.item,
+				"qty": 10,
+				"rate": 2000,
+				"warehouse": self.warehouse_stores,
+				"delivery_date": today(),
+			},
+		)
+		so.submit()
+
+		# Create stock
+		se = frappe.get_doc(
+			{
+				"doctype": "Stock Entry",
+				"company": self.company,
+				"stock_entry_type": "Material Receipt",
+				"posting_date": today(),
+				"items": [
+					{"item_code": self.item, "t_warehouse": self.warehouse_stores, "qty": 5},
+					{"item_code": self.item, "t_warehouse": self.warehouse_finished_goods, "qty": 5},
+				],
+			}
+		)
+		se.submit()
+
+		# Reserve stock on 2 different warehouses
+		itm = so.items[0]
+		so.create_stock_reservation_entries(
+			[
+				{
+					"sales_order_item": itm.name,
+					"item_code": itm.item_code,
+					"warehouse": self.warehouse_stores,
+					"qty_to_reserve": 2,
+				}
+			]
+		)
+		so.create_stock_reservation_entries(
+			[
+				{
+					"sales_order_item": itm.name,
+					"item_code": itm.item_code,
+					"warehouse": self.warehouse_finished_goods,
+					"qty_to_reserve": 3,
+				}
+			]
+		)
+
+		# Delivery note should auto-select warehouse based on reservation
+		dn = make_delivery_note(so.name, kwargs={"for_reserved_stock": True})
+		self.assertEqual(2, len(dn.items))
+		self.assertEqual(dn.items[0].qty, 2)
+		self.assertEqual(dn.items[0].warehouse, self.warehouse_stores)
+		self.assertEqual(dn.items[1].qty, 3)
+		self.assertEqual(dn.items[1].warehouse, self.warehouse_finished_goods)
+
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+
+		warehouse = create_warehouse("Test Warehouse 1", company=self.company)
+
+		make_stock_entry(
+			item_code=self.item,
+			target=warehouse,
+			qty=5,
+			company=self.company,
+		)
+
+		so = frappe.new_doc("Sales Order")
+		so.reserve_stock = 1
+		so.company = self.company
+		so.customer = self.customer
+		so.transaction_date = today()
+		so.currency = "INR"
+		so.append(
+			"items",
+			{
+				"item_code": self.item,
+				"qty": 5,
+				"rate": 2000,
+				"warehouse": warehouse,
+				"delivery_date": today(),
+			},
+		)
+		so.submit()
+
+		sres = frappe.get_all(
+			"Stock Reservation Entry",
+			filters={"voucher_no": so.name},
+			fields=["name"],
+		)
+
+		self.assertEqual(len(sres), 1)
+		sre_doc = frappe.get_doc("Stock Reservation Entry", sres[0].name)
+		self.assertFalse(sre_doc.status == "Delivered")
+
+		si = make_sales_invoice(so.name)
+		si.update_stock = 1
+		si.submit()
+		sre_doc.reload()
+		self.assertTrue(sre_doc.status == "Delivered")
+
+	def test_item_tax_transfer_from_sales_to_purchase(self):
+		from erpnext.selling.doctype.sales_order.sales_order import make_purchase_order
+
+		item_tax = frappe.new_doc("Item Tax Template")
+		item_tax.title = "Test Item Tax Template"
+		item_tax.company = "_Test Company"
+		item_tax.append("taxes", {"tax_type": "_Test Account Service Tax - _TC", "tax_rate": 2})
+		item_tax.save()
+
+		item_group = frappe.get_doc("Item Group", "_Test Item Group")
+		item_group.append("taxes", {"item_tax_template": "Test Item Tax Template - _TC"})
+		item_group.save()
+
+		so = make_sales_order(item_code="_Test Item", qty=1, do_not_submit=1)
+		so.append(
+			"taxes",
+			{
+				"account_head": "_Test Account Service Tax - _TC",
+				"charge_type": "On Net Total",
+				"description": "TDS",
+				"doctype": "Sales Taxes and Charges",
+				"rate": 2,
+			},
+		)
+		so.submit()
+
+		po = make_purchase_order(so.name, selected_items=so.items)
+		po.supplier = "_Test Supplier"
+		po.items[0].rate = 100
+		po.submit()
+		self.assertEqual(po.taxes[0].tax_amount, 2)
 	
 	def test_sales_order_discount_on_total(self):
 		make_item_price()
