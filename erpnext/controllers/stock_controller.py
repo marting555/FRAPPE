@@ -1777,6 +1777,7 @@ def create_item_wise_repost_entries(
 		repost_entry.based_on = "Item and Warehouse"
 
 		repost_entry.item_code = sle.item_code
+		repost_entry.company = sle.company
 		repost_entry.warehouse = sle.warehouse
 		repost_entry.posting_date = sle.posting_date
 		repost_entry.posting_time = sle.posting_time
