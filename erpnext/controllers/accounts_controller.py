@@ -2474,10 +2474,10 @@ class AccountsController(TransactionBase):
 		self.payment_terms_template = po_or_so.payment_terms_template
 
 		for schedule in po_or_so.payment_schedule:
-			payment_term = frappe.get_doc("Payment Term", schedule.payment_term)
+			payment_term = frappe.get_doc("Payment Term", schedule.payment_term) if schedule.payment_term else None
 			payment_schedule = {
 				"payment_term": schedule.payment_term,
-				"due_date": get_due_date(payment_term, due_date),
+				"due_date": get_due_date(payment_term, due_date) if payment_term else schedule.due_date,
 				"invoice_portion": schedule.invoice_portion,
 				"mode_of_payment": schedule.mode_of_payment,
 				"description": schedule.description,
