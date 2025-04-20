@@ -1,6 +1,6 @@
 import frappe
 from frappe import qb
-from frappe.tests import IntegrationTestCase
+from frappe.tests.utils import FrappeTestCase
 from frappe.utils import add_days, flt, getdate, today
 
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
@@ -9,7 +9,7 @@ from erpnext.accounts.report.customer_ledger_summary.customer_ledger_summary imp
 from erpnext.accounts.test.accounts_mixin import AccountsTestMixin
 
 
-class TestCustomerLedgerSummary(AccountsTestMixin, IntegrationTestCase):
+class TestCustomerLedgerSummary(FrappeTestCase, AccountsTestMixin):
 	def setUp(self):
 		self.create_company()
 		self.create_customer()
