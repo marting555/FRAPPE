@@ -25,7 +25,7 @@ class PartyLedgerSummaryReport:
 		self.filters.party_type = args.get("party_type")
 		self.party_naming_by = frappe.db.get_value(args.get("naming_by")[0], None, args.get("naming_by")[1])
 
-		self.get_paty_details()
+		self.get_party_details()
 
 		if not self.parties:
 			return [], []
@@ -80,7 +80,7 @@ class PartyLedgerSummaryReport:
 
 		return conditions
 
-	def get_paty_details(self):
+	def get_party_details(self):
 		"""
 		Additional Columns for 'User Permission' based access control
 		"""
