@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-04-13 09:36+0000\n"
-"PO-Revision-Date: 2025-04-16 04:45\n"
+"PO-Revision-Date: 2025-04-20 05:45\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: German\n"
 "MIME-Version: 1.0\n"
@@ -1813,7 +1813,7 @@ msgstr "Filter für Buchhaltungsdimension"
 #: erpnext/subcontracting/doctype/subcontracting_order_item/subcontracting_order_item.json
 #: erpnext/subcontracting/doctype/subcontracting_receipt_item/subcontracting_receipt_item.json
 msgid "Accounting Dimensions"
-msgstr "Abrechnungsdimensionen"
+msgstr "Buchhaltungsdimension"
 
 #. Label of the accounting_dimensions_section (Section Break) field in DocType
 #. 'Purchase Invoice'
@@ -5023,7 +5023,7 @@ msgstr "Beim Erstellen von Materialanfragen basierend auf der Nachbestellstufe i
 
 #: erpnext/buying/report/supplier_quotation_comparison/supplier_quotation_comparison.html:124
 msgid "Analysis Chart"
-msgstr ""
+msgstr "Analysediagramm"
 
 #: erpnext/setup/setup_wizard/data/designation.txt:4
 msgid "Analyst"
@@ -6671,7 +6671,7 @@ msgstr "verfügbare Anzahl"
 #. Name of a report
 #: erpnext/stock/report/available_serial_no/available_serial_no.json
 msgid "Available Serial No"
-msgstr ""
+msgstr "Verfügbare Seriennummer"
 
 #: erpnext/selling/report/customer_wise_item_price/customer_wise_item_price.py:38
 msgid "Available Stock"
@@ -27040,7 +27040,7 @@ msgstr "Artikelpreis wurde auf Null aktualisiert, da „Nullbewertung zulassen�
 #. Label of the finished_good (Link) field in DocType 'Job Card'
 #: erpnext/manufacturing/doctype/job_card/job_card.json
 msgid "Item to Manufacture"
-msgstr ""
+msgstr "Zu fertigender Artikel"
 
 #. Description of the 'Item' (Link) field in DocType 'BOM'
 #: erpnext/manufacturing/doctype/bom/bom.json
@@ -29375,7 +29375,7 @@ msgstr "Fertigung"
 #. Label of the semi_fg_bom (Link) field in DocType 'Job Card'
 #: erpnext/manufacturing/doctype/job_card/job_card.json
 msgid "Manufacturing BOM"
-msgstr ""
+msgstr "Fertigungsstückliste"
 
 #. Label of the manufacturing_date (Date) field in DocType 'Batch'
 #: erpnext/stock/doctype/batch/batch.json
@@ -31164,7 +31164,7 @@ msgstr "Nummernkreis und Preisvorgaben"
 
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py:90
 msgid "Naming Series is mandatory"
-msgstr ""
+msgstr "Nummernkreis ist obligatorisch"
 
 #. Name of a UOM
 #: erpnext/setup/setup_wizard/data/uom_data.json
@@ -31349,7 +31349,7 @@ msgstr "Nettogewinn (-verlust"
 #. Label of the gross_purchase_amount (Currency) field in DocType 'Asset'
 #: erpnext/assets/doctype/asset/asset.json
 msgid "Net Purchase Amount"
-msgstr ""
+msgstr "Netto-Kaufbetrag"
 
 #. Label of the net_rate (Currency) field in DocType 'POS Invoice Item'
 #. Label of the net_rate (Currency) field in DocType 'Purchase Invoice Item'
@@ -31850,7 +31850,7 @@ msgstr "Keine Anmerkungen"
 
 #: erpnext/public/js/utils/unreconcile.js:147
 msgid "No Selection"
-msgstr ""
+msgstr "Keine Auswahl"
 
 #: erpnext/controllers/sales_and_purchase_return.py:906
 msgid "No Serial / Batches are available for return"
@@ -32017,7 +32017,7 @@ msgstr "Anzahl der Besuche"
 
 #: erpnext/accounts/doctype/pos_invoice/pos_invoice.py:338
 msgid "No open POS Opening Entry found for POS Profile {0}."
-msgstr ""
+msgstr "Kein offener POS-Eröffnungseintrag für das POS-Profil {0} gefunden."
 
 #: erpnext/public/js/templates/crm_activities.html:104
 msgid "No open event"
@@ -33090,7 +33090,7 @@ msgstr "Anfangsmenge"
 
 #: erpnext/accounts/doctype/opening_invoice_creation_tool/opening_invoice_creation_tool.js:33
 msgid "Opening Sales Invoices have been created."
-msgstr ""
+msgstr "Eröffnungsrechnungen wurden erstellt."
 
 #. Label of the opening_stock (Float) field in DocType 'Item'
 #. Option for the 'Purpose' (Select) field in DocType 'Stock Reconciliation'
@@ -33788,7 +33788,7 @@ msgstr "Ausstehend"
 #. Label of the base_outstanding (Currency) field in DocType 'Payment Schedule'
 #: erpnext/accounts/doctype/payment_schedule/payment_schedule.json
 msgid "Outstanding (Company Currency)"
-msgstr ""
+msgstr "Ausstehend (Unternehmenswährung)"
 
 #. Label of the outstanding_amount (Float) field in DocType 'Cashier Closing'
 #. Label of the outstanding_amount (Currency) field in DocType 'Discounted
@@ -36866,7 +36866,7 @@ msgstr "Bitte geben Sie zuerst die Telefonnummer ein"
 
 #: erpnext/controllers/buying_controller.py:972
 msgid "Please enter the {schedule_date}."
-msgstr ""
+msgstr "Bitte geben Sie das {schedule_date} ein."
 
 #: erpnext/public/js/setup_wizard.js:86
 msgid "Please enter valid Financial Year Start and End Dates"
@@ -44965,7 +44965,7 @@ msgstr "Zeile {idx}: {field_label} ist obligatorisch."
 
 #: erpnext/controllers/buying_controller.py:494
 msgid "Row #{idx}: {field_label} is not allowed in Purchase Return."
-msgstr ""
+msgstr "Zeile #{idx}: {field_label} ist in der Kaufrückgabe nicht erlaubt."
 
 #: erpnext/controllers/buying_controller.py:227
 msgid "Row #{idx}: {from_warehouse_field} and {to_warehouse_field} cannot be same."
@@ -45372,7 +45372,7 @@ msgstr "Zeile {1}: Menge ({0}) darf kein Bruch sein. Deaktivieren Sie dazu &#39;
 
 #: erpnext/controllers/buying_controller.py:828
 msgid "Row {idx}: Asset Naming Series is mandatory for the auto creation of assets for item {item_code}."
-msgstr ""
+msgstr "Zeile {idx}: Der Nummernkreis des Vermögensgegenstandes ist obligatorisch für die automatische Erstellung von Vermögenswerten für den Artikel {item_code}."
 
 #: erpnext/accounts/doctype/invoice_discounting/invoice_discounting.py:84
 msgid "Row({0}): Outstanding Amount cannot be greater than actual Outstanding Amount {1} in {2}"
@@ -46127,7 +46127,7 @@ msgstr "Verkäufer"
 
 #: erpnext/controllers/selling_controller.py:204
 msgid "Sales Person <b>{0}</b> is disabled."
-msgstr ""
+msgstr "Verkäufer <b>{0}</b> ist deaktiviert."
 
 #. Name of a report
 #: erpnext/selling/report/sales_person_commission_summary/sales_person_commission_summary.json
@@ -49230,7 +49230,7 @@ msgstr "Quellwechselkurs"
 #. Label of the source_fieldname (Data) field in DocType 'Inventory Dimension'
 #: erpnext/stock/doctype/inventory_dimension/inventory_dimension.json
 msgid "Source Fieldname"
-msgstr ""
+msgstr "Quellfeldname"
 
 #. Label of the source_location (Link) field in DocType 'Asset Movement Item'
 #: erpnext/assets/doctype/asset_movement_item/asset_movement_item.json
@@ -49287,7 +49287,7 @@ msgstr "Adresse des Quelllagers"
 #. Label of the source_warehouse_address (Link) field in DocType 'Stock Entry'
 #: erpnext/stock/doctype/stock_entry/stock_entry.json
 msgid "Source Warehouse Address Link"
-msgstr ""
+msgstr "Link zur Quelllageradresse"
 
 #: erpnext/stock/doctype/stock_reservation_entry/stock_reservation_entry.py:1050
 msgid "Source Warehouse is mandatory for the Item {0}."
@@ -56024,7 +56024,7 @@ msgstr "Übertragene Menge"
 #. Label of the transferred_qty (Float) field in DocType 'Job Card'
 #: erpnext/manufacturing/doctype/job_card/job_card.json
 msgid "Transferred Raw Materials"
-msgstr ""
+msgstr "Übertragenes Rohmaterial"
 
 #: erpnext/assets/doctype/asset_movement/asset_movement.py:78
 msgid "Transferring cannot be done to an Employee. Please enter location where Asset {0} has to be transferred"
@@ -56707,7 +56707,7 @@ msgstr "Nicht abgestimmter Betrag"
 #. Reconciliation'
 #: erpnext/accounts/doctype/payment_reconciliation/payment_reconciliation.json
 msgid "Unreconciled Entries"
-msgstr ""
+msgstr "Nicht abgeglichene Einträge"
 
 #: erpnext/manufacturing/doctype/work_order/work_order.js:824
 #: erpnext/selling/doctype/sales_order/sales_order.js:81
