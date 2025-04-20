@@ -23,7 +23,6 @@ class PartyLedgerSummaryReport:
 			frappe.throw(_("From Date must be before To Date"))
 
 		self.filters.party_type = args.get("party_type")
-		self.party_naming_by = frappe.db.get_value(args.get("naming_by")[0], None, args.get("naming_by")[1])
 
 		self.get_party_details()
 
@@ -277,30 +276,31 @@ class PartyLedgerSummaryReport:
 		return out
 
 	def get_gl_entries(self):
-		conditions = self.prepare_conditions()
-		join = join_field = ""
-		if self.filters.party_type == "Customer":
-			join_field = ", p.customer_name as party_name"
-			join = "left join `tabCustomer` p on gle.party = p.name"
-		elif self.filters.party_type == "Supplier":
-			join_field = ", p.supplier_name as party_name"
-			join = "left join `tabSupplier` p on gle.party = p.name"
-
-		self.gl_entries = frappe.db.sql(
-			f"""
-			select
-				gle.posting_date, gle.party, gle.voucher_type, gle.voucher_no, gle.against_voucher_type,
-				gle.against_voucher, gle.debit, gle.credit, gle.is_opening {join_field}
-			from `tabGL Entry` gle
-			{join}
-			where
-				gle.docstatus < 2 and gle.is_cancelled = 0 and gle.party_type=%(party_type)s and ifnull(gle.party, '') != ''
-				and gle.posting_date <= %(to_date)s {conditions}
-			order by gle.posting_date
-		""",
-			self.filters,
-			as_dict=True,
+		gle = qb.DocType("GL Entry")
+		query = (
+			qb.from_(gle)
+			.select(
+				gle.posting_date,
+				gle.party,
+				gle.voucher_type,
+				gle.voucher_no,
+				gle.debit,
+				gle.credit,
+				gle.is_opening,
+			)
+			.where(
+				(gle.docstatus < 2)
+				& (gle.is_cancelled == 0)
+				& (gle.party_type == self.filters.party_type)
+				& (IfNull(gle.party, "") != "")
+				& (gle.posting_date <= self.filters.to_date)
+				& (gle.party.isin(self.parties))
+			)
 		)
+
+		query = self.prepare_conditions(query)
+
+		self.gl_entries = query.run(as_dict=True)
 
 	def prepare_conditions(self, query):
 		gle = qb.DocType("GL Entry")
