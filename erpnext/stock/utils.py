@@ -28,33 +28,35 @@ class PendingRepostingError(frappe.ValidationError):
 	pass
 
 
-def get_stock_value_from_bin(warehouse=None, item_code=None):
-	values = {}
-	conditions = ""
-	if warehouse:
-		conditions += """ and `tabBin`.warehouse in (
-						select w2.name from `tabWarehouse` w1
-						join `tabWarehouse` w2 on
-						w1.name = %(warehouse)s
-						and w2.lft between w1.lft and w1.rgt
-						) """
+# Abstraction for data repository
+class BinRepository:
+    def get_bin_data(self, warehouse, item_code):
+        raise NotImplementedError
 
-		values["warehouse"] = warehouse
+# Implementation of the repository
+class SqlBinRepository(BinRepository):
+    def get_bin_data(self, warehouse, item_code):
+        return frappe.db.sql("""
+            SELECT actual_qty, stock_value
+            FROM `tabBin`
+            WHERE warehouse=%s AND item_code=%s
+        """, (warehouse, item_code))
 
-	if item_code:
-		conditions += " and `tabBin`.item_code = %(item_code)s"
+# Function to process and format data
+def get_stock_value_from_bin(repository, warehouse=None, item_code=None):
+    bin_data = repository.get_bin_data(warehouse, item_code)
+    values = {}
+    
+    if bin_data:
+        values['actual_qty'] = bin_data[0][0]
+        values['stock_value'] = bin_data[0][1]
 
-		values["item_code"] = item_code
+    return values
 
-	query = (
-		"""select sum(stock_value) from `tabBin`, `tabItem` where 1 = 1
-		and `tabItem`.name = `tabBin`.item_code and ifnull(`tabItem`.disabled, 0) = 0 %s"""
-		% conditions
-	)
+# Usage
+repository = SqlBinRepository()
+values = get_stock_value_from_bin(repository, warehouse='Main Warehouse', item_code='ITEM001')
 
-	stock_value = frappe.db.sql(query, values)
-
-	return stock_value
 
 
 def get_stock_value_on(
