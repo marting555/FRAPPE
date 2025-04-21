@@ -92,7 +92,7 @@ class StockReconciliation(StockController):
 		dimensions = get_inventory_dimensions()
 		for dimension in dimensions:
 			for row in self.items:
-				if not row.batch_no and row.current_qty and row.get(dimension.get("fieldname")):
+				if not row.batch_no and row.current_qty and row.get(dimension.get("source_fieldname")):
 					frappe.throw(
 						_(
 							"Row #{0}: You cannot use the inventory dimension '{1}' in Stock Reconciliation to modify the quantity or valuation rate. Stock reconciliation with inventory dimensions is intended solely for performing opening entries."
@@ -336,6 +336,7 @@ class StockReconciliation(StockController):
 				posting_date=self.posting_date,
 				posting_time=self.posting_time,
 				for_stock_levels=True,
+				consider_negative_batches=True,
 			)
 
 			total_current_qty += current_qty
@@ -1101,6 +1102,7 @@ class StockReconciliation(StockController):
 					posting_time=doc.posting_time,
 					ignore_voucher_nos=[doc.voucher_no],
 					for_stock_levels=True,
+					consider_negative_batches=True,
 				)
 				or 0
 			) * -1
