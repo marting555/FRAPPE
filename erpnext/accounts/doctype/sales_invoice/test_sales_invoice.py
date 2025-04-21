@@ -44,8 +44,8 @@ class TestSalesInvoice(FrappeTestCase):
 	def setUp(self):
 		from erpnext.stock.doctype.stock_ledger_entry.test_stock_ledger_entry import create_items
 		create_items(["_Test Internal Transfer Item"], uoms=[{"uom": "Box", "conversion_factor": 10}])
-		create_internal_parties()
-		setup_accounts()
+		# create_internal_parties()
+		# setup_accounts()
 		frappe.db.set_single_value("Accounts Settings", "acc_frozen_upto", None)
 
 	def tearDown(self):
@@ -4720,16 +4720,19 @@ class TestSalesInvoice(FrappeTestCase):
 	def test_sales_invoice_without_sales_order_with_gst_TC_S_016(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 
 		create_registered_company()
-		
+		get_or_create_fiscal_year("_Test Indian Registered Company")
 		if not frappe.db.exists("Warehouse", "Stores - _TIRC"):
 			create_warehouse("Stores - _TIRC", company="_Test Indian Registered Company")
-
+		create_item(item_code = "_Test Item",company="_Test Indian Registered Company",warehouse="Stores - _TIRC")
 		setting = frappe.get_doc("Selling Settings")
 		setting.so_required = 'No'
 		setting.save()
-
+		item = frappe.get_doc("Item", "_Test Item")
+		item.is_stock_item = 1
+		item.save()
 		self.assertEqual(setting.so_required, 'No')
 		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="Stores - _TIRC")
 
@@ -4797,16 +4800,21 @@ class TestSalesInvoice(FrappeTestCase):
 	def test_sales_invoice_with_update_stock_checked_with_gst_TC_S_017(self): 
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		create_registered_company()
-
+		
+		create_item(item_code = "_Test Item",company="_Test Indian Registered Company",warehouse="Stores - _TIRC")
 		if not frappe.db.exists("Warehouse", "Stores - _TIRC"):
 			create_warehouse("Stores - _TIRC", company="_Test Indian Registered Company")
-
+		get_or_create_fiscal_year("_Test Indian Registered Company")
+		
 		company = frappe.get_all("Company", {"name": "_Test Indian Registered Company"}, ["gstin", "gst_category"])
 		customer = frappe.get_all("Customer", {"name": "_Test Registered Customer"}, ["gstin", "gst_category"])
 		company_add = frappe.get_all("Address", {"name": "_Test Indian Registered Company-Billing"}, ["name", "gstin", "gst_category"])
 		customer_add = frappe.get_all("Address", {"name": "_Test Registered Customer-Billing"}, ["name", "gstin", "gst_category"])
-
+		item = frappe.get_doc("Item", "_Test Item")
+		item.is_stock_item = 1
+		item.save()
 		make_stock_entry(item_code="_Test Item", qty=10, rate=5000, target="Stores - _TIRC")
   
 		if company[0].get("gst_category") == "Registered Regular" and customer[0].get("gst_category") == "Registered Regular" and customer[0].get("gstin") and customer[0].get("gstin"):
