@@ -108,7 +108,7 @@ erpnext.PointOfSale.ItemSelector = class {
 							<img
 								onerror="cur_pos.item_selector.handle_broken_image(this)"
 								class="item-img" src="${item_image}"
-								alt="${frappe.get_abbr(item.item_name)}"
+								alt="${item.item_name}"
 							>
 						</div>`;
 			} else {
