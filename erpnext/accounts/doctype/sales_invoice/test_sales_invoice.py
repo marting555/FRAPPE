@@ -7285,9 +7285,12 @@ def create_company_and_supplier():
 			}
 		).insert()
 
-		set_parent_company_fiscal_year = frappe.get_doc("Fiscal Year", fiscal_year)
-		set_parent_company_fiscal_year.append("companies",{"company": parent_company})
-		set_parent_company_fiscal_year.save()
+	fiscal_year_doc = frappe.get_doc("Fiscal Year", fiscal_year)
+	linked_companies = {d.company for d in fiscal_year_doc.companies}
+
+	if parent_company not in linked_companies:
+		fiscal_year_doc.append("companies", {"company": parent_company})
+		fiscal_year_doc.save()
 
 	if not frappe.db.exists("Company", child_company):
 		frappe.get_doc(
@@ -7303,9 +7306,9 @@ def create_company_and_supplier():
 			}
 		).insert()
 
-		set_child_company_fiscal_year = frappe.get_doc("Fiscal Year", fiscal_year)
-		set_child_company_fiscal_year.append("companies",{"company": child_company})
-		set_child_company_fiscal_year.save()
+	if child_company not in linked_companies:
+		fiscal_year_doc.append("companies", {"company": child_company})
+		fiscal_year_doc.save()
 
 
 	if not frappe.db.exists("Price List", price_list):
