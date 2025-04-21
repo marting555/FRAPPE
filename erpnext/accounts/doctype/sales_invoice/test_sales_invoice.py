@@ -44,8 +44,8 @@ class TestSalesInvoice(FrappeTestCase):
 	def setUp(self):
 		from erpnext.stock.doctype.stock_ledger_entry.test_stock_ledger_entry import create_items
 		create_items(["_Test Internal Transfer Item"], uoms=[{"uom": "Box", "conversion_factor": 10}])
-		# create_internal_parties()
-		# setup_accounts()
+		create_internal_parties()
+		setup_accounts()
 		frappe.db.set_single_value("Accounts Settings", "acc_frozen_upto", None)
 
 	def tearDown(self):
