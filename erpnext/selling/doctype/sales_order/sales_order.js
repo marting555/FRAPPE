@@ -84,6 +84,7 @@ frappe.ui.form.on("Sales Order", {
 		}, __('Get Items From'));
 	},
 
+<<<<<<< HEAD
 	// When multiple companies are set up. in case company name is changed set default company address
 	company: function (frm) {
 		if (frm.doc.company) {
@@ -108,6 +109,11 @@ frappe.ui.form.on("Sales Order", {
 	onload: function(frm) {
 		if (!frm.doc.transaction_date){
 			frm.set_value('transaction_date', frappe.datetime.get_today())
+=======
+	onload: function (frm) {
+		if (!frm.doc.transaction_date) {
+			frm.set_value("transaction_date", frappe.datetime.get_today());
+>>>>>>> a31075692c (fix: set default company address in Sales Doctype on change of company)
 		}
 		erpnext.queries.setup_queries(frm, "Warehouse", function() {
 			return {

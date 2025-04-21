@@ -727,6 +727,7 @@ frappe.ui.form.on('Sales Invoice', {
 			}
 		};
 	},
+<<<<<<< HEAD
 	// When multiple companies are set up. in case company name is changed set default company address
 	company: function(frm){
 		if (frm.doc.company) {
@@ -747,6 +748,9 @@ frappe.ui.form.on('Sales Invoice', {
 	},
 
 	onload: function(frm) {
+=======
+	onload: function (frm) {
+>>>>>>> a31075692c (fix: set default company address in Sales Doctype on change of company)
 		frm.redemption_conversion_factor = null;
 	},
 
