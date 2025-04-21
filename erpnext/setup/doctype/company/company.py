@@ -707,6 +707,11 @@ class Company(NestedSet):
 		):
 			frappe.flags.parent_company_changed = True
 
+	def before_insert(self):
+		from erpnext.accounts.doctype.gl_entry.gl_entry import add_company_indexes
+
+		add_company_indexes()
+
 
 def get_name_with_abbr(name, company):
 	company_abbr = frappe.get_cached_value("Company", company, "abbr")

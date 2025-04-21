@@ -242,8 +242,7 @@
    "label": "Company",
    "oldfieldname": "company",
    "oldfieldtype": "Link",
-   "options": "Company",
-   "search_index": 1
+   "options": "Company"
   },
   {
    "fieldname": "finance_book",
@@ -358,7 +357,7 @@
  "idx": 1,
  "in_create": 1,
  "links": [],
- "modified": "2025-04-21 22:03:45.548936",
+ "modified": "2025-04-21 22:10:25.844576",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "GL Entry",
