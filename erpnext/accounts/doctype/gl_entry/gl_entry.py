@@ -438,7 +438,6 @@ def update_against_account(voucher_type, voucher_no):
 
 
 def on_doctype_update():
-	frappe.db.add_index("GL Entry", ["party_type", "party"])
 	add_company_indexes()
 
 
