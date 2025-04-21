@@ -4258,6 +4258,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 		sr.cancel()
 		self.check_cancel_stock_gl_sle(sr, 20, -3000.0)
 	def test_purchase_receipt_with_serialized_item_TC_SCK_145(self):
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
 		create_company()
 		supplier = create_supplier(supplier_name="Test Supplier 1")
@@ -4969,6 +4970,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 
 		# Create Purchase Receipt
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		create_company()
 		create_warehouse(
 			warehouse_name="_Test Warehouse 1 - _TC",
@@ -5048,6 +5050,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 
 	def test_stock_ledger_report_TC_SCK_225(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		create_company()
 		item = []
 		warehouse = []
@@ -5091,6 +5094,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 
 	def test_stock_ledger_report_TC_SCK_226(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		create_company()
 		item = []
 		warehouse = []
