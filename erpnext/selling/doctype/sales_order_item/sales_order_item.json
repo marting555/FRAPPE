@@ -15,6 +15,12 @@
   "col_break1",
   "delivery_date",
   "item_name",
+  "section_break_apec",
+  "sku",
+  "barcode",
+  "column_break_uaul",
+  "haravan_variant_id",
+  "haravan_product_id",
   "section_break_5",
   "description",
   "item_group",
@@ -120,12 +126,11 @@
    "fieldtype": "Link",
    "in_global_search": 1,
    "in_list_view": 1,
-   "label": "Item Code",
+   "label": "M\u00e3 S\u1ea3n Ph\u1ea9m",
    "oldfieldname": "item_code",
    "oldfieldtype": "Link",
    "options": "Item",
    "print_width": "150px",
-   "reqd": 1,
    "width": "150px"
   },
   {
@@ -150,7 +155,7 @@
    "fieldname": "item_name",
    "fieldtype": "Data",
    "in_global_search": 1,
-   "label": "Item Name",
+   "label": "T\u00ean S\u1ea3n Ph\u1ea9m",
    "oldfieldname": "item_name",
    "oldfieldtype": "Data",
    "print_hide": 1,
@@ -180,7 +185,7 @@
    "fieldname": "delivery_date",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "Delivery Date",
+   "label": "Ng\u00e0y Giao H\u00e0ng",
    "no_copy": 1,
    "print_hide": 1
   },
@@ -201,17 +206,18 @@
   {
    "fieldname": "quantity_and_rate",
    "fieldtype": "Section Break",
-   "label": "Quantity and Rate"
+   "label": "S\u1ed1 L\u01b0\u1ee3ng & Gi\u00e1"
   },
   {
    "columns": 1,
    "fieldname": "qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Quantity",
+   "label": "S\u1ed1 L\u01b0\u1ee3ng",
    "non_negative": 1,
    "oldfieldname": "qty",
    "oldfieldtype": "Currency",
+   "precision": "0",
    "print_width": "100px",
    "reqd": 1,
    "width": "100px"
@@ -233,6 +239,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "Nos",
    "fieldname": "uom",
    "fieldtype": "Link",
    "label": "UOM",
@@ -262,15 +269,15 @@
    "fieldtype": "Section Break"
   },
   {
+   "default": "0",
    "fieldname": "price_list_rate",
    "fieldtype": "Currency",
-   "label": "Price List Rate",
+   "label": "Gi\u00e1 S\u1ea3n Ph\u1ea9m",
    "oldfieldname": "ref_rate",
    "oldfieldtype": "Currency",
    "options": "currency",
    "print_hide": 1,
    "print_width": "70px",
-   "read_only": 1,
    "width": "70px"
   },
   {
@@ -358,7 +365,7 @@
    "fieldname": "rate",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "Rate",
+   "label": "Gi\u00e1 B\u00e1n",
    "oldfieldname": "export_rate",
    "oldfieldtype": "Currency",
    "options": "currency",
@@ -370,7 +377,7 @@
    "fieldname": "amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "Amount",
+   "label": "T\u1ed5ng",
    "oldfieldname": "export_amount",
    "oldfieldtype": "Currency",
    "options": "currency",
@@ -689,7 +696,8 @@
   },
   {
    "fieldname": "section_break_63",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "hidden": 1
   },
   {
    "fieldname": "item_tax_template",
@@ -959,18 +967,47 @@
    "label": "Project",
    "options": "Project",
    "search_index": 1
+  },
+  {
+   "fieldname": "sku",
+   "fieldtype": "Data",
+   "label": "SKU"
+  },
+  {
+   "fieldname": "barcode",
+   "fieldtype": "Data",
+   "label": "Barcode"
+  },
+  {
+   "fieldname": "section_break_apec",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_uaul",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "haravan_variant_id",
+   "fieldtype": "Int",
+   "label": "Haravan Variant ID"
+  },
+  {
+   "fieldname": "haravan_product_id",
+   "fieldtype": "Int",
+   "label": "Haravan Product ID"
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-02-28 09:45:43.934947",
+ "modified": "2025-04-17 23:48:48.346116",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order Item",
  "naming_rule": "Random",
  "owner": "Administrator",
  "permissions": [],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],

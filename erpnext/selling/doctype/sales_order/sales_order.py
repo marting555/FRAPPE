@@ -77,11 +77,13 @@ class SalesOrder(SellingController):
 		base_total_taxes_and_charges: DF.Currency
 		billing_status: DF.Literal["Not Billed", "Fully Billed", "Partly Billed", "Closed"]
 		campaign: DF.Link | None
+		cancelled_status: DF.Data | None
 		commission_rate: DF.Float
 		company: DF.Link
 		company_address: DF.Link | None
 		company_address_display: DF.SmallText | None
 		company_contact_person: DF.Link | None
+		confirmed_status: DF.Data | None
 		contact_display: DF.SmallText | None
 		contact_email: DF.Data | None
 		contact_mobile: DF.SmallText | None
@@ -101,9 +103,13 @@ class SalesOrder(SellingController):
 		discount_amount: DF.Currency
 		dispatch_address: DF.SmallText | None
 		dispatch_address_name: DF.Link | None
+		financial_status: DF.Data | None
 		from_date: DF.Date | None
+		fulfillment_status: DF.Data | None
 		grand_total: DF.Currency
 		group_same_items: DF.Check
+		haravan_order_id: DF.Int
+		haravan_ref_order_id: DF.Int
 		ignore_pricing_rule: DF.Check
 		in_words: DF.Data | None
 		incoterm: DF.Link | None
@@ -117,7 +123,8 @@ class SalesOrder(SellingController):
 		named_place: DF.Data | None
 		naming_series: DF.Literal["SAL-ORD-.YYYY.-"]
 		net_total: DF.Currency
-		order_type: DF.Literal["", "Sales", "Maintenance", "Shopping Cart"]
+		order_number: DF.Data | None
+		order_type: DF.Literal["Sales", "Maintenance", "Shopping Cart"]
 		other_charges_calculation: DF.TextEditor | None
 		packed_items: DF.Table[PackedItem]
 		party_account_currency: DF.Link | None
@@ -147,6 +154,7 @@ class SalesOrder(SellingController):
 		shipping_rule: DF.Link | None
 		skip_delivery_note: DF.Check
 		source: DF.Link | None
+		source_name: DF.Data | None
 		status: DF.Literal["", "Draft", "On Hold", "To Deliver and Bill", "To Bill", "To Deliver", "Completed", "Cancelled", "Closed"]
 		tax_category: DF.Link | None
 		tax_id: DF.Data | None

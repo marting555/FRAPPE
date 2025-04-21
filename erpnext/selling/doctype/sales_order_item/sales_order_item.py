@@ -19,6 +19,7 @@ class SalesOrderItem(Document):
 		additional_notes: DF.Text | None
 		against_blanket_order: DF.Check
 		amount: DF.Currency
+		barcode: DF.Data | None
 		base_amount: DF.Currency
 		base_net_amount: DF.Currency
 		base_net_rate: DF.Currency
@@ -43,10 +44,12 @@ class SalesOrderItem(Document):
 		ensure_delivery_based_on_produced_serial_no: DF.Check
 		grant_commission: DF.Check
 		gross_profit: DF.Currency
+		haravan_product_id: DF.Int
+		haravan_variant_id: DF.Int
 		image: DF.Attach | None
 		is_free_item: DF.Check
 		is_stock_item: DF.Check
-		item_code: DF.Link
+		item_code: DF.Link | None
 		item_group: DF.Link | None
 		item_name: DF.Data
 		item_tax_rate: DF.Code | None
@@ -79,6 +82,7 @@ class SalesOrderItem(Document):
 		rate_with_margin: DF.Currency
 		reserve_stock: DF.Check
 		returned_qty: DF.Float
+		sku: DF.Data | None
 		stock_qty: DF.Float
 		stock_reserved_qty: DF.Float
 		stock_uom: DF.Link | None

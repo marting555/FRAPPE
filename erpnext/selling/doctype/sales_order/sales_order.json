@@ -9,6 +9,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "chi_ti\u1ebft_tab",
   "customer_section",
   "column_break0",
   "title",
@@ -19,12 +20,15 @@
   "order_type",
   "column_break_7",
   "transaction_date",
+  "skip_delivery_note",
   "delivery_date",
   "column_break1",
+  "order_number",
+  "financial_status",
+  "cancelled_status",
   "po_no",
   "po_date",
   "company",
-  "skip_delivery_note",
   "amended_from",
   "accounting_dimensions_section",
   "cost_center",
@@ -164,6 +168,13 @@
   "inter_company_order_reference",
   "campaign",
   "party_account_currency",
+  "haravan_tab",
+  "confirmed_status",
+  "haravan_order_id",
+  "haravan_ref_order_id",
+  "column_break_phue",
+  "fulfillment_status",
+  "source_name",
   "connections_tab"
  ],
  "fields": [
@@ -216,7 +227,7 @@
    "hide_seconds": 1,
    "in_global_search": 1,
    "in_standard_filter": 1,
-   "label": "Customer",
+   "label": "Kh\u00e1ch H\u00e0ng",
    "oldfieldname": "customer",
    "oldfieldtype": "Link",
    "options": "Customer",
@@ -241,10 +252,10 @@
    "fieldtype": "Select",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Order Type",
+   "label": "Lo\u1ea1i \u0110\u01a1n H\u00e0ng",
    "oldfieldname": "order_type",
    "oldfieldtype": "Select",
-   "options": "\nSales\nMaintenance\nShopping Cart",
+   "options": "Sales\nMaintenance\nShopping Cart",
    "print_hide": 1,
    "reqd": 1
   },
@@ -294,7 +305,7 @@
    "hide_days": 1,
    "hide_seconds": 1,
    "in_standard_filter": 1,
-   "label": "Date",
+   "label": "Ng\u00e0y",
    "no_copy": 1,
    "oldfieldname": "transaction_date",
    "oldfieldtype": "Date",
@@ -310,13 +321,14 @@
    "hide_days": 1,
    "hide_seconds": 1,
    "in_list_view": 1,
-   "label": "Delivery Date",
+   "label": "Ng\u00e0y Giao H\u00e0ng",
    "no_copy": 1
   },
   {
    "allow_on_submit": 1,
    "fieldname": "po_no",
    "fieldtype": "Data",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Customer's Purchase Order",
@@ -353,7 +365,7 @@
    "fieldtype": "Tab Break",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Address & Contact",
+   "label": "\u0110\u1ecba Ch\u1ec9 & Li\u00ean H\u1ec7",
    "options": "fa fa-bullhorn"
   },
   {
@@ -362,7 +374,7 @@
    "fieldtype": "Link",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Customer Address",
+   "label": "\u0110\u1ecba Ch\u1ec9 Kh\u00e1ch H\u00e0ng",
    "options": "Address",
    "print_hide": 1
   },
@@ -372,7 +384,7 @@
    "fieldtype": "Small Text",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Address",
+   "label": "\u0110\u1ecba Ch\u1ec9",
    "read_only": 1
   },
   {
@@ -380,7 +392,7 @@
    "fieldtype": "Link",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Contact Person",
+   "label": "Ng\u01b0\u1eddi Li\u00ean H\u1ec7",
    "options": "Contact",
    "print_hide": 1
   },
@@ -390,7 +402,7 @@
    "hide_days": 1,
    "hide_seconds": 1,
    "in_global_search": 1,
-   "label": "Contact",
+   "label": "Li\u00ean H\u1ec7",
    "read_only": 1
   },
   {
@@ -398,7 +410,7 @@
    "fieldtype": "Small Text",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Mobile No",
+   "label": "S\u1ed1 \u0110i\u1ec7n Tho\u1ea1i",
    "options": "Phone",
    "read_only": 1
   },
@@ -408,7 +420,7 @@
    "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Contact Email",
+   "label": "Email",
    "options": "Email",
    "print_hide": 1,
    "read_only": 1
@@ -432,6 +444,7 @@
   {
    "fieldname": "col_break46",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Company Address",
@@ -443,7 +456,7 @@
    "fieldtype": "Link",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Shipping Address Name",
+   "label": "T\u00ean \u0110\u1ecba Ch\u1ec9 Giao h\u00e0ng",
    "options": "Address",
    "print_hide": 1
   },
@@ -453,7 +466,7 @@
    "fieldtype": "Small Text",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Shipping Address",
+   "label": "\u0110\u1ecba Ch\u1ec9 Giao H\u00e0ng",
    "print_hide": 1,
    "read_only": 1
   },
@@ -463,16 +476,17 @@
    "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Customer Group",
+   "label": "Nh\u00f3m Kh\u00e1ch H\u00e0ng",
    "options": "Customer Group",
    "print_hide": 1
   },
   {
    "fieldname": "territory",
    "fieldtype": "Link",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Territory",
+   "label": "Khu V\u1ef1c",
    "options": "Territory",
    "print_hide": 1
   },
@@ -482,7 +496,7 @@
    "fieldtype": "Section Break",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Currency and Price List",
+   "label": "\u0110\u01a1n V\u1ecb Ti\u1ec1n T\u1ec7 v\u00e0 B\u1ea3ng Gi\u00e1",
    "options": "fa fa-tag",
    "print_hide": 1
   },
@@ -606,7 +620,7 @@
    "fieldtype": "Table",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Items",
+   "label": "Chi Ti\u1ebft \u0110\u01a1n H\u00e0ng",
    "oldfieldname": "sales_order_details",
    "oldfieldtype": "Table",
    "options": "Sales Order Item",
@@ -645,7 +659,7 @@
    "fieldtype": "Float",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Total Quantity",
+   "label": "T\u1ed5ng S\u1ed1 L\u01b0\u1ee3ng",
    "read_only": 1
   },
   {
@@ -682,7 +696,7 @@
    "fieldtype": "Currency",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Total",
+   "label": "T\u1ed5ng Gi\u00e1 Tr\u1ecb S\u1ea3n Ph\u1ea9m",
    "options": "currency",
    "read_only": 1
   },
@@ -691,7 +705,7 @@
    "fieldtype": "Currency",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Net Total",
+   "label": "T\u1ed5ng Gi\u00e1 Sau Gi\u1ea3m",
    "options": "currency",
    "print_hide": 1,
    "read_only": 1
@@ -858,14 +872,14 @@
    "fieldtype": "Section Break",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Additional Discount"
+   "label": "Gi\u1ea3m Gi\u00e1"
   },
   {
    "fieldname": "coupon_code",
    "fieldtype": "Link",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Coupon Code",
+   "label": "M\u00e3 Gi\u1ea3m Gi\u00e1",
    "options": "Coupon Code"
   },
   {
@@ -899,7 +913,7 @@
    "fieldtype": "Float",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Additional Discount Percentage",
+   "label": "Ph\u1ea7n Tr\u0103m Gi\u1ea3m Gi\u00e1 (%)",
    "print_hide": 1
   },
   {
@@ -907,7 +921,7 @@
    "fieldtype": "Currency",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Additional Discount Amount",
+   "label": "S\u1ed1 Ti\u1ec1n Gi\u1ea3m Gi\u00e1",
    "options": "currency",
    "print_hide": 1
   },
@@ -916,7 +930,7 @@
    "fieldtype": "Section Break",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Totals",
+   "label": "T\u1ed5ng",
    "oldfieldtype": "Section Break",
    "options": "fa fa-money",
    "print_hide": 1
@@ -989,7 +1003,7 @@
    "hide_days": 1,
    "hide_seconds": 1,
    "in_list_view": 1,
-   "label": "Grand Total",
+   "label": "T\u1ed5ng C\u1ed9ng",
    "oldfieldname": "grand_total_export",
    "oldfieldtype": "Currency",
    "options": "currency",
@@ -1000,6 +1014,7 @@
    "depends_on": "eval:!doc.disable_rounded_total",
    "fieldname": "rounding_adjustment",
    "fieldtype": "Currency",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Rounding Adjustment",
@@ -1015,7 +1030,7 @@
    "fieldtype": "Currency",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Rounded Total",
+   "label": "L\u00e0m Tr\u00f2n",
    "oldfieldname": "rounded_total_export",
    "oldfieldtype": "Currency",
    "options": "currency",
@@ -1037,6 +1052,7 @@
   {
    "fieldname": "advance_paid",
    "fieldtype": "Currency",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Advance Paid",
@@ -1073,14 +1089,14 @@
    "fieldtype": "Tab Break",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Terms"
+   "label": "\u0110i\u1ec1u Kho\u1ea3n Thanh To\u00e1n"
   },
   {
    "fieldname": "payment_terms_template",
    "fieldtype": "Link",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Payment Terms Template",
+   "label": "M\u1eabu \u0110i\u1ec1u Kho\u1ea3n Thanh To\u00e1n",
    "options": "Payment Terms Template",
    "print_hide": 1
   },
@@ -1089,7 +1105,7 @@
    "fieldtype": "Table",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Payment Schedule",
+   "label": "L\u1ecbch thanh to\u00e1n",
    "no_copy": 1,
    "options": "Payment Schedule",
    "print_hide": 1
@@ -1098,6 +1114,7 @@
    "collapsible_depends_on": "terms",
    "fieldname": "terms_section_break",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Terms & Conditions",
@@ -1131,7 +1148,7 @@
    "fieldtype": "Tab Break",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "More Info",
+   "label": "Th\u00f4ng Tin Th\u00eam",
    "oldfieldtype": "Section Break",
    "options": "fa fa-file-text",
    "print_hide": 1
@@ -1195,6 +1212,7 @@
    "collapsible": 1,
    "fieldname": "printing_details",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Print Settings"
@@ -1254,7 +1272,6 @@
    "print_hide": 1
   },
   {
-   "collapsible": 1,
    "fieldname": "section_break_78",
    "fieldtype": "Section Break",
    "hide_days": 1,
@@ -1349,12 +1366,14 @@
    "collapsible_depends_on": "commission_rate",
    "fieldname": "sales_team_section_break",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Commission",
    "oldfieldtype": "Section Break",
    "options": "fa fa-group",
-   "print_hide": 1
+   "print_hide": 1,
+   "report_hide": 1
   },
   {
    "fieldname": "sales_partner",
@@ -1401,13 +1420,12 @@
    "print_hide": 1
   },
   {
-   "collapsible": 1,
    "collapsible_depends_on": "sales_team",
    "fieldname": "section_break1",
    "fieldtype": "Section Break",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Sales Team",
+   "label": "Chia Doanh S\u1ed1",
    "print_hide": 1
   },
   {
@@ -1416,7 +1434,6 @@
    "fieldtype": "Table",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Sales Team",
    "oldfieldname": "sales_team",
    "oldfieldtype": "Table",
    "options": "Sales Team",
@@ -1427,6 +1444,7 @@
    "collapsible": 1,
    "fieldname": "subscription_section",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Auto Repeat",
@@ -1480,7 +1498,7 @@
    "fieldtype": "Data",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Phone",
+   "label": "\u0110i\u1ec7n Tho\u1ea1i",
    "options": "Phone",
    "read_only": 1
   },
@@ -1488,7 +1506,6 @@
    "default": "0",
    "fieldname": "skip_delivery_note",
    "fieldtype": "Check",
-   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Skip Delivery Note",
@@ -1522,6 +1539,7 @@
    "allow_on_submit": 1,
    "fieldname": "dispatch_address_name",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Dispatch Address Name",
    "options": "Address",
    "print_hide": 1
@@ -1586,7 +1604,7 @@
   {
    "fieldname": "payment_terms_section",
    "fieldtype": "Section Break",
-   "label": "Payment Terms"
+   "label": "\u0110i\u1ec1u kho\u1ea3n thanh to\u00e1n"
   },
   {
    "fieldname": "column_break_116",
@@ -1600,11 +1618,12 @@
   {
    "fieldname": "shipping_address_column",
    "fieldtype": "Section Break",
-   "label": "Shipping Address"
+   "label": "\u0110\u1ecba Ch\u1ec9 Giao H\u00e0ng"
   },
   {
    "fieldname": "column_break_93",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "hidden": 1
   },
   {
    "fieldname": "column_break_84",
@@ -1618,6 +1637,7 @@
    "collapsible": 1,
    "fieldname": "additional_info_section",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Additional Info"
   },
   {
@@ -1653,13 +1673,67 @@
    "label": "Company Contact Person",
    "options": "Contact",
    "print_hide": 1
+  },
+  {
+   "fieldname": "chi_ti\u1ebft_tab",
+   "fieldtype": "Tab Break",
+   "label": "Chi Ti\u1ebft"
+  },
+  {
+   "fieldname": "haravan_tab",
+   "fieldtype": "Tab Break",
+   "label": "Haravan"
+  },
+  {
+   "fieldname": "cancelled_status",
+   "fieldtype": "Data",
+   "label": "Tr\u1ea1ng Th\u00e1i Hu\u1ef7 \u0110\u01a1n"
+  },
+  {
+   "fieldname": "column_break_phue",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "confirmed_status",
+   "fieldtype": "Data",
+   "label": "Tr\u1ea1ng Th\u00e1i X\u00e1c Nh\u1eadn"
+  },
+  {
+   "fieldname": "order_number",
+   "fieldtype": "Data",
+   "label": "M\u00e3 \u0110\u01a1n H\u00e0ng Haravan"
+  },
+  {
+   "fieldname": "financial_status",
+   "fieldtype": "Data",
+   "label": "Trang Th\u00e1i Thanh To\u00e1n"
+  },
+  {
+   "fieldname": "fulfillment_status",
+   "fieldtype": "Data",
+   "label": "Tr\u1ea1ng Th\u00e1i Ho\u00e0n Th\u00e0nh"
+  },
+  {
+   "fieldname": "source_name",
+   "fieldtype": "Data",
+   "label": "T\u00ean Ngu\u1ed3n \u0110\u01a1n H\u00e0ng"
+  },
+  {
+   "fieldname": "haravan_order_id",
+   "fieldtype": "Int",
+   "label": "Haravan Order ID"
+  },
+  {
+   "fieldname": "haravan_ref_order_id",
+   "fieldtype": "Int",
+   "label": "Haravan Ref Order ID"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-04-16 16:41:45.550296",
+ "modified": "2025-04-17 21:27:11.895084",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
