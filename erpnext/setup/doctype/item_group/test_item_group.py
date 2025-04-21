@@ -17,51 +17,9 @@ from frappe.utils.nestedset import (
 test_records = frappe.get_test_records("Item Group")
 
 class TestItem(unittest.TestCase):
-
 	def setUp(self):
-		self.insert_dependencies()
-
-		for doc in test_records:
-			if not frappe.db.exists("Item Group", doc["item_group_name"]):
-				frappe.get_doc(doc).insert()
-
-	def insert_dependencies(self):
-		if not frappe.db.exists("Company", "_Test Company"):
-			frappe.get_doc({
-				"doctype": "Company",
-				"company_name": "_Test Company",
-				"abbr": "_TC",
-				"default_currency": "INR"
-			}).insert()
-
-		if not frappe.db.exists("Cost Center", "_Test Cost Center 2 - _TC"):
-			frappe.get_doc({
-				"doctype": "Cost Center",
-				"cost_center_name": "_Test Cost Center 2",
-				"company": "_Test Company",
-				"is_group": 0,
-			}).insert()
-
-		if not frappe.db.exists("Warehouse", "_Test Warehouse - _TC"):
-			frappe.get_doc({
-				"doctype": "Warehouse",
-				"warehouse_name": "_Test Warehouse",
-				"company": "_Test Company",
-				"is_group": 0,
-			}).insert()
-
-		if not frappe.db.exists("Item Tax Template", "_Test Account Excise Duty @ 10 - _TC"):
-			frappe.get_doc({
-				"doctype": "Item Tax Template",
-				"title": "_Test Account Excise Duty @ 10",
-				"company": "_Test Company",
-				"taxes": [
-					{
-						"tax_type": "Excise Duty",
-						"tax_rate": 10
-					}
-				]
-			}).insert()
+		frappe.set_user("Administrator")
+		self.create_test_item_groups()
 
 	def test_basic_tree(self, records=None):
 		min_lft = 1
@@ -280,3 +238,119 @@ class TestItem(unittest.TestCase):
 			"_Test Item Group B - 3",
 			merge=True,
 		)
+
+
+	def create_test_item_groups(self):
+		data = [
+			{
+				"doctype": "Item Group",
+				"is_group": 0,
+				"item_group_name": "_Test Item Group",
+				"parent_item_group": "All Item Groups",
+				"item_group_defaults": [{
+					"company": "_Test Company",
+					"buying_cost_center": "_Test Cost Center 2 - _TC",
+					"selling_cost_center": "_Test Cost Center 2 - _TC",
+					"default_warehouse": "_Test Warehouse - _TC"
+				}]
+			},
+			{
+				"doctype": "Item Group",
+				"is_group": 0,
+				"item_group_name": "_Test Item Group Desktops",
+				"parent_item_group": "All Item Groups"
+			},
+			{
+				"doctype": "Item Group",
+				"is_group": 1,
+				"item_group_name": "_Test Item Group A",
+				"parent_item_group": "All Item Groups"
+			},
+			{
+				"doctype": "Item Group",
+				"is_group": 1,
+				"item_group_name": "_Test Item Group B",
+				"parent_item_group": "All Item Groups"
+			},
+			{
+				"doctype": "Item Group",
+				"is_group": 1,
+				"item_group_name": "_Test Item Group B - 1",
+				"parent_item_group": "_Test Item Group B"
+			},
+			{
+				"doctype": "Item Group",
+				"is_group": 1,
+				"item_group_name": "_Test Item Group B - 2",
+				"parent_item_group": "_Test Item Group B"
+			},
+			{
+				"doctype": "Item Group",
+				"is_group": 0,
+				"item_group_name": "_Test Item Group B - 3",
+				"parent_item_group": "_Test Item Group B"
+			},
+			{
+				"doctype": "Item Group",
+				"is_group": 1,
+				"item_group_name": "_Test Item Group C",
+				"parent_item_group": "All Item Groups"
+			},
+			{
+				"doctype": "Item Group",
+				"is_group": 1,
+				"item_group_name": "_Test Item Group C - 1",
+				"parent_item_group": "_Test Item Group C"
+			},
+			{
+				"doctype": "Item Group",
+				"is_group": 1,
+				"item_group_name": "_Test Item Group C - 2",
+				"parent_item_group": "_Test Item Group C"
+			},
+			{
+				"doctype": "Item Group",
+				"is_group": 1,
+				"item_group_name": "_Test Item Group D",
+				"parent_item_group": "All Item Groups"
+			},
+			{
+				"doctype": "Item Group",
+				"is_group": 1,
+				"item_group_name": "_Test Item Group Tax Parent",
+				"parent_item_group": "All Item Groups",
+				"taxes": [
+					{
+						"doctype": "Item Tax",
+						"parentfield": "taxes",
+						"item_tax_template": "_Test Account Excise Duty @ 10 - _TC",
+						"tax_category": ""
+					},
+					{
+						"doctype": "Item Tax",
+						"parentfield": "taxes",
+						"item_tax_template": "_Test Account Excise Duty @ 12 - _TC",
+						"tax_category": "_Test Tax Category 1"
+					}
+				]
+			},
+			{
+				"doctype": "Item Group",
+				"is_group": 0,
+				"item_group_name": "_Test Item Group Tax Child Override",
+				"parent_item_group": "_Test Item Group Tax Parent",
+				"taxes": [
+					{
+						"doctype": "Item Tax",
+						"parentfield": "taxes",
+						"item_tax_template": "_Test Account Excise Duty @ 15 - _TC",
+						"tax_category": ""
+					}
+				]
+			}
+		]
+
+		for d in data:
+			if not frappe.db.exists("Item Group", d["item_group_name"]):
+				doc = frappe.get_doc(d)
+				doc.insert()
