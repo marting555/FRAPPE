@@ -3697,7 +3697,6 @@ class TestWorkOrder(FrappeTestCase):
 			raw_materials=[item_raw],
 			rm_qty=10
 		)
-		make_stock_entry(item_code="Test raw material", qty=200, rate=500, target="Stores - _TC")
 
 		# Create a work order
 		wo_doc = make_wo_order_test_record(production_item=item_code, qty=10,do_not_submit=1)
