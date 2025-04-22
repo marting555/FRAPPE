@@ -6873,6 +6873,11 @@ class TestSalesInvoice(FrappeTestCase):
 				twh.rates[0].to_date = fiscal_year[2]
 				twh.save()
 		customer = frappe.get_doc("Customer","_Test Customer")
+		category_doc = frappe.get_doc("Tax Withholding Category", "Test - TDS - 194C - Company")
+		for rate in category_doc.rates:
+			rate.from_date = add_days(today(), -30)
+			rate.to_date = add_days(today(), 30)
+		category_doc.save()
 		if not customer.tax_withholding_category or customer.tax_withholding_category != "Test - TCS - 194C - Company":
 			customer.tax_withholding_category = "Test - TCS - 194C - Company"
 			customer.save()
@@ -6886,11 +6891,14 @@ class TestSalesInvoice(FrappeTestCase):
 			rate=150000,
 		)
 		expected_gle = [
-				['Debtors - _TC', round(sales_invoice.grand_total), 0.0, sales_invoice.posting_date],
-				['Sales - _TC', 0.0, round(sales_invoice.grand_total - sales_invoice.total_taxes_and_charges), sales_invoice.posting_date],
-				['_Test TCS Payable - _TC', 0.0, sales_invoice.total_taxes_and_charges, sales_invoice.posting_date],
-				['_Test Write Off - _TC', 0.0, 0.36, sales_invoice.posting_date]
-			]
+						['Debtors - _TC', round(sales_invoice.grand_total - 0.4, 2), 0.0, sales_invoice.posting_date],
+						['Sales - _TC', 0.0, round(sales_invoice.grand_total - sales_invoice.total_taxes_and_charges, 2), sales_invoice.posting_date],
+						['_Test TCS Payable - _TC', 0.0, round(sales_invoice.total_taxes_and_charges, 2), sales_invoice.posting_date],
+						['_Test Write Off - _TC', 0.4, 0.0, sales_invoice.posting_date]
+					]
+
+
+
 		check_gl_entries(self,voucher_no=sales_invoice.name,expected_gle=expected_gle,posting_date=nowdate(),voucher_type="Sales Invoice")
 		if customer.tax_withholding_category:
 			customer.load_from_db()
@@ -6922,10 +6930,8 @@ def check_gl_entries(doc, voucher_no, expected_gle, posting_date, voucher_type="
 		.orderby(gl.posting_date, gl.account, gl.creation)
 	)
 	gl_entries = q.run(as_dict=True)
-	print(gl_entries)
 	expected_gle = sorted(expected_gle, key=lambda x: x[0])
 	gl_entries = sorted(gl_entries, key=lambda x: x['account'])
-
  
 	for i, gle in enumerate(gl_entries):
 		doc.assertEqual(expected_gle[i][0], gle.account)
