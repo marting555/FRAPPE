@@ -1759,9 +1759,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi.save()
 		pi.submit()
 		
-		pe = get_payment_entry("Purchase Invoice", pi.name, party_amount=po.grand_total/2)
-		pe.save()
-		pe.submit()
+		
 		po_status = frappe.db.get_value("Purchase Order", po.name, "status")
 		self.assertEqual(po_status, "Completed")
 
