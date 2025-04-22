@@ -168,8 +168,7 @@
    "label": "Lo\u1ea1i Kh\u00e1ch H\u00e0ng",
    "oldfieldname": "customer_type",
    "oldfieldtype": "Select",
-   "options": "Company\nIndividual\nPartnership",
-   "reqd": 1
+   "options": "Company\nIndividual\nPartnership"
   },
   {
    "fieldname": "default_bank_account",
@@ -254,6 +253,7 @@
    "label": "L\u00e0 Nh\u00e2n Vi\u00ean Jemmia"
   },
   {
+   "default": "ABC",
    "depends_on": "is_internal_customer",
    "fieldname": "represents_company",
    "fieldtype": "Link",
@@ -795,11 +795,7 @@
    "link_fieldname": "party"
   }
  ],
-<<<<<<< HEAD
  "modified": "2025-04-21 20:05:46.494939",
-=======
- "modified": "2025-04-22 09:22:18.400690",
->>>>>>> db472efd8b (setup sales order)
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
