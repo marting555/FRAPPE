@@ -795,7 +795,11 @@
    "link_fieldname": "party"
   }
  ],
+<<<<<<< HEAD
  "modified": "2025-04-21 20:05:46.494939",
+=======
+ "modified": "2025-04-22 09:22:18.400690",
+>>>>>>> 275cd1c7be (pull code)
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
@@ -881,10 +885,6 @@
  "sort_order": "DESC",
  "states": [],
  "title_field": "customer_name",
-<<<<<<< HEAD
- "track_changes": 1
-=======
  "track_changes": 1,
  "translated_doctype": 1
->>>>>>> db472efd8b (setup sales order)
 }
