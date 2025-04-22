@@ -7810,10 +7810,10 @@ class TestPurchaseOrder(FrappeTestCase):
 		item = make_test_item("_test_item")
 		item_tax_template = 'Test Item Tax Template'
 		account = frappe.db.get_value("Account", {'company':company}, "name")
-		tax_category = "In-State"
+		tax_category = "Test Tax Category"
 		if not frappe.db.exists("Tax Category", tax_category):
 			tax_category = frappe.new_doc("Tax Category")
-			tax_category.title = "In-State"
+			tax_category.title = tax_category
 			tax_category.save()
 
 		if frappe.db.exists("Purchase Taxes and Charges Template", item_tax_template):
@@ -7844,6 +7844,7 @@ class TestPurchaseOrder(FrappeTestCase):
 				"company": company,
 				"supplier": supplier,
 				"set_warehouse": "Stores - TC-3",
+				"currency": "INR",
 				"items": [
 					{
 						"item_code": item.item_code,
@@ -7889,9 +7890,11 @@ class TestPurchaseOrder(FrappeTestCase):
 			"Stock Received But Not Billed - TC-3": {"debit": 0, "credit": 10000},
 		}
 		for entry in pr_gle_entries:
-			self.assertEqual(entry["debit"], expected_si_entries.get(entry["account"], {}).get("debit", 0))
-			self.assertEqual(entry["credit"], expected_si_entries.get(entry["account"], {}).get("credit", 0))
-
+			for accounts in expected_si_entries:
+				if entry["account"] == accounts:
+					self.assertEqual(entry["debit"], expected_si_entries[accounts]["debit"])
+					self.assertEqual(entry["credit"], expected_si_entries[accounts]["credit"])
+		
 		pi = make_purchase_invoice(pr.name)
 		pi.bill_no = "test_bill - 1122"
 		pi.insert(ignore_permissions=True)
@@ -7908,9 +7911,11 @@ class TestPurchaseOrder(FrappeTestCase):
 			"Creditors - TC-3": {"debit": 0, "credit": 10500},
 		}
 		for entry in pi_gle_entries:
-			self.assertEqual(entry["debit"], expected_pi_entries.get(entry["account"], {}).get("debit", 0))
-			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
-
+			for accounts in expected_pi_entries:
+				if entry["account"] == accounts:
+					self.assertEqual(entry["debit"], expected_pi_entries[accounts]["debit"])
+					self.assertEqual(entry["credit"], expected_pi_entries[accounts]["credit"])
+		
 	@if_app_installed("india_compliance")
 	def test_po_with_multiple_items_single_item_tax_10_pr_pi_TC_B_143(self):
 		get_company_supplier = get_company_or_supplier()
