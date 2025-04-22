@@ -21,6 +21,11 @@ from erpnext.controllers.accounts_controller import (
 from erpnext.stock.get_item_details import _get_item_tax_template, get_item_tax_map
 from erpnext.utilities.regional import temporary_flag
 
+<<<<<<< HEAD
+=======
+ItemWiseTaxDetail = frappe._dict
+
+>>>>>>> 551639da7b (chore: remove previously added logger calls)
 
 class calculate_taxes_and_totals:
 	def __init__(self, doc: Document):
@@ -393,9 +398,12 @@ class calculate_taxes_and_totals:
 		for n, item in enumerate(self._items):
 			item_tax_map = self._load_item_tax_rate(item.item_tax_rate)
 <<<<<<< HEAD
+<<<<<<< HEAD
 			for i, tax in enumerate(self.doc.get("taxes")):
 =======
 			logger.debug(f" Item {n}: {item.item_code}" + (f" - {item_tax_map}" if item_tax_map else ""))
+=======
+>>>>>>> 551639da7b (chore: remove previously added logger calls)
 			for i, tax in enumerate(doc.taxes):
 >>>>>>> 5741458c94 (fix: get total without rounding off tax amounts for distributing discount)
 				# tax_amount represents the amount of tax for the current step
@@ -436,6 +444,7 @@ class calculate_taxes_and_totals:
 					)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 				# set precision in the last item iteration
 				if n == len(self._items) - 1:
 					self.round_off_totals(tax)
@@ -462,6 +471,8 @@ class calculate_taxes_and_totals:
 					f"  net_amount: {current_net_amount:<20} tax_amount: {current_tax_amount:<20} - {tax.description}"
 				)
 
+=======
+>>>>>>> 551639da7b (chore: remove previously added logger calls)
 		discount_amount_applied = self.discount_amount_applied
 		if doc.apply_discount_on == "Grand Total" and (
 			discount_amount_applied or doc.discount_amount or doc.additional_discount_percentage
