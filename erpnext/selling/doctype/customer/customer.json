@@ -27,6 +27,15 @@
   "prospect_name",
   "account_manager",
   "image",
+  "organization_section",
+  "company_name",
+  "no_of_employees",
+  "column_break_rwpe",
+  "industry",
+  "market_segment",
+  "column_break_czdq",
+  "tax_number",
+  "ceo_name",
   "advanced_information_selection",
   "birth_date",
   "first_channel",
@@ -36,6 +45,7 @@
   "customer_website",
   "column_break_bjiq",
   "customer_journey",
+  "customer_rank",
   "defaults_tab",
   "default_currency",
   "default_bank_account",
@@ -46,8 +56,6 @@
   "column_break_70",
   "companies",
   "more_info",
-  "market_segment",
-  "industry",
   "customer_pos_id",
   "website",
   "language",
@@ -408,14 +416,14 @@
   {
    "fieldname": "market_segment",
    "fieldtype": "Link",
-   "label": "Market Segment",
+   "label": "Ph\u00e2n Kh\u00fac Th\u1ecb Tr\u01b0\u1eddng",
    "options": "Market Segment"
   },
   {
    "fieldname": "industry",
    "fieldtype": "Link",
-   "label": "Industry",
-   "options": "Industry Type"
+   "label": "L\u0129nh V\u1ef1c Kinh Doanh",
+   "options": "Market Segment"
   },
   {
    "default": "0",
@@ -641,10 +649,11 @@
    "options": "\n\n    <p>Danh S\u00e1ch Li\u00ean H\u1ec7</p>\n\n"
   },
   {
+   "default": "C\u00e1 Nh\u00e2n",
    "fieldname": "_customer_type",
    "fieldtype": "Select",
    "label": "Lo\u1ea1i Kh\u00e1ch H\u00e0ng",
-   "options": "C\u00e1 Nh\u00e2n\nC\u00f4ng Ty"
+   "options": "C\u00e1 Nh\u00e2n\nDoanh Nghi\u1ec7p"
   },
   {
    "fieldname": "advanced_information_selection",
@@ -734,6 +743,45 @@
    "fieldname": "customer_journey",
    "fieldtype": "Small Text",
    "label": "H\u00e0nh Tr\u00ecnh Kh\u00e1ch H\u00e0ng"
+  },
+  {
+   "fieldname": "customer_rank",
+   "fieldtype": "Select",
+   "label": "H\u1ea1ng Kh\u00e1ch H\u00e0ng"
+  },
+  {
+   "depends_on": "eval:doc._customer_type==\"Doanh Nghi\u1ec7p\"",
+   "fieldname": "organization_section",
+   "fieldtype": "Section Break",
+   "label": "Th\u00f4ng Tin Doanh Nghi\u1ec7p"
+  },
+  {
+   "fieldname": "company_name",
+   "fieldtype": "Data",
+   "label": "T\u00ean Doanh Nghi\u1ec7p"
+  },
+  {
+   "fieldname": "no_of_employees",
+   "fieldtype": "Data",
+   "label": "Quy M\u00f4"
+  },
+  {
+   "fieldname": "column_break_rwpe",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_czdq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tax_number",
+   "fieldtype": "Data",
+   "label": "M\u00e3 S\u1ed1 Thu\u1ebf"
+  },
+  {
+   "fieldname": "ceo_name",
+   "fieldtype": "Data",
+   "label": "Ch\u1ee7 Doanh Nghi\u1ec7p"
   }
  ],
  "icon": "fa fa-user",
@@ -747,7 +795,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-04-21 19:52:32.462896",
+ "modified": "2025-04-21 20:05:46.494939",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",

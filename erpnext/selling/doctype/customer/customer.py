@@ -37,7 +37,7 @@ class Customer(TransactionBase):
 		from erpnext.utilities.doctype.portal_user.portal_user import PortalUser
 		from frappe.types import DF
 
-		_customer_type: DF.Literal["C\u00e1 Nh\u00e2n", "C\u00f4ng Ty"]
+		_customer_type: DF.Literal["C\u00e1 Nh\u00e2n", "Doanh Nghi\u1ec7p"]
 		account_manager: DF.Link | None
 		account_number: DF.Data | None
 		accounts: DF.Table[PartyAccount]
@@ -47,7 +47,9 @@ class Customer(TransactionBase):
 		bank_province: DF.Literal["H\u1ed3 Ch\u00ed Minh", "H\u00e0 N\u1ed9i", "\u0110\u00e0 N\u1eb5ng", "C\u1ea7n Th\u01a1"]
 		bank_ward: DF.Literal[None]
 		birth_date: DF.Date | None
+		ceo_name: DF.Data | None
 		companies: DF.Table[AllowedToTransactWith]
+		company_name: DF.Data | None
 		credit_limits: DF.Table[CustomerCreditLimit]
 		customer_details: DF.Text | None
 		customer_group: DF.Link | None
@@ -56,6 +58,7 @@ class Customer(TransactionBase):
 		customer_pos_id: DF.Data | None
 		customer_primary_address: DF.Link | None
 		customer_primary_contact: DF.Link | None
+		customer_rank: DF.Literal[None]
 		customer_type: DF.Literal["Company", "Individual", "Partnership"]
 		customer_website: DF.Data | None
 		date_of_issuance: DF.Date | None
@@ -80,6 +83,7 @@ class Customer(TransactionBase):
 		market_segment: DF.Link | None
 		mobile_no: DF.ReadOnly | None
 		naming_series: DF.Literal["CUST-.YYYY.-"]
+		no_of_employees: DF.Data | None
 		opportunity_name: DF.Link | None
 		payment_terms: DF.Link | None
 		personal_id: DF.Data | None
@@ -95,6 +99,7 @@ class Customer(TransactionBase):
 		so_required: DF.Check
 		tax_category: DF.Link | None
 		tax_id: DF.Data | None
+		tax_number: DF.Data | None
 		tax_withholding_category: DF.Link | None
 		territory: DF.Link | None
 		website: DF.Data | None
