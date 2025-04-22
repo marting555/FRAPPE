@@ -983,12 +983,13 @@ class TestPaymentEntry(FrappeTestCase):
 
 
 	def test_gl_of_multi_currency_payment_transaction(self):
+		from erpnext.accounts.doctype.account.test_account import create_account as _create_account
 		from erpnext.setup.doctype.currency_exchange.test_currency_exchange import (
 			save_new_records,
 			test_records,
 		)
 		save_new_records(test_records)
-		paid_from = create_account(
+		paid_from = _create_account(
 			parent_account="Current Liabilities - _TC",
 			account_name="_Test Cash USD",
 			company="_Test Company",
