@@ -56,6 +56,7 @@ class SalesOrder(SellingController):
 		from erpnext.accounts.doctype.pricing_rule_detail.pricing_rule_detail import PricingRuleDetail
 		from erpnext.accounts.doctype.sales_taxes_and_charges.sales_taxes_and_charges import SalesTaxesandCharges
 		from erpnext.selling.doctype.sales_order_item.sales_order_item import SalesOrderItem
+		from erpnext.selling.doctype.sales_order_promotion.sales_order_promotion import SalesOrderPromotion
 		from erpnext.selling.doctype.sales_team.sales_team import SalesTeam
 		from erpnext.stock.doctype.packed_item.packed_item import PackedItem
 		from frappe.types import DF
@@ -148,6 +149,7 @@ class SalesOrder(SellingController):
 		pricing_rules: DF.Table[PricingRuleDetail]
 		product_category: DF.Literal["", "Nh\u1eabn Nam KCTN Nguy\u00ean Chi\u1ebfc", "Nh\u1eabn Nam Moiss Nguy\u00ean Chi\u1ebfc", "Nh\u1eabn Nam Tr\u01a1n", "Nh\u1eabn Nam KCTN", "Nh\u1eabn N\u1eef", "Nh\u1eabn N\u1eef KCTN", "Nh\u1eabn C\u01b0\u1edbi", "Nh\u1eabn C\u01b0\u1edbi - Vi\u00ean KCTN", "Nh\u1eabn C\u01b0\u1edbi N\u1eef", "Nh\u1eabn C\u01b0\u1edbi N\u1eef Nguy\u00ean Chi\u1ebfc"]
 		project: DF.Link | None
+		promotions: DF.TableMultiSelect[SalesOrderPromotion]
 		reorder_date: DF.Datetime | None
 		represents_company: DF.Link | None
 		reserve_stock: DF.Check

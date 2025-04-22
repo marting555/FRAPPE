@@ -42,6 +42,14 @@ class SalesOrderItem(Document):
 		discount_amount: DF.Currency
 		discount_percentage: DF.Percent
 		ensure_delivery_based_on_produced_serial_no: DF.Check
+		g0: DF.Link | None
+		g1: DF.Link | None
+		g2: DF.Link | None
+		g3: DF.Link | None
+		g4: DF.Link | None
+		g5: DF.Link | None
+		g6: DF.Link | None
+		g7: DF.Link | None
 		grant_commission: DF.Check
 		gross_profit: DF.Currency
 		haravan_product_id: DF.Int
@@ -83,6 +91,8 @@ class SalesOrderItem(Document):
 		rate_with_margin: DF.Currency
 		reserve_stock: DF.Check
 		returned_qty: DF.Float
+		serial: DF.Link | None
+		serial_numbers: DF.Text | None
 		sku: DF.Data | None
 		stock_qty: DF.Float
 		stock_reserved_qty: DF.Float

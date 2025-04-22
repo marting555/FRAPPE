@@ -566,6 +566,38 @@ frappe.ui.form.on("Sales Order Item", {
 			erpnext.utils.copy_value_in_all_rows(frm.doc, cdt, cdn, "items", "delivery_date");
 		}
 	},
+	
+	serial: function(frm, cdt, cdn) {
+		var row = locals[cdt][cdn];
+		if (row.serial) {
+			// Fetch the title field of the linked serial document
+			frappe.db.get_value('Serial', row.serial, 'serial_number', (r) => {
+				if (r && r.serial_number) {
+					const serialTitle = r.serial_number;
+					const serialNumbersList = row.serial_numbers ? row.serial_numbers.split('\n') : [];
+					
+					// Check if the serial number is already in the list
+					if (!serialNumbersList.includes(serialTitle)) {
+						if (row.serial_numbers) {
+							// Append the new serial title to the existing serial_numbers, separated by newline
+							row.serial_numbers += `\n${serialTitle}`;
+						} else {
+							// Initialize serial_numbers with the new serial title
+							row.serial_numbers = serialTitle;
+						}
+					}
+
+					// Remove consecutive newlines
+					row.serial_numbers = row.serial_numbers.replace(/\n+/g, '\n').trim();
+					
+					// Clear the row.serial field
+					row.serial = null;
+					// Refresh the fields to show the updated values
+					frm.refresh_field('items');
+				}
+			});
+		}
+	}
 });
 
 erpnext.selling.SalesOrderController = class SalesOrderController extends erpnext.selling.SellingController {

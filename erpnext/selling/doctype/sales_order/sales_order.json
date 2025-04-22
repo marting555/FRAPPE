@@ -90,6 +90,8 @@
   "in_words",
   "advance_paid",
   "disable_rounded_total",
+  "ch\u01b0\u01a1ng_tr\u00ecnh_khuy\u1ebfn_m\u00e3i_\u0111\u01a1n_h\u00e0ng_section",
+  "promotions",
   "section_break_48",
   "apply_discount_on",
   "base_discount_amount",
@@ -1833,13 +1835,24 @@
   {
    "fieldname": "column_break_quav",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ch\u01b0\u01a1ng_tr\u00ecnh_khuy\u1ebfn_m\u00e3i_\u0111\u01a1n_h\u00e0ng_section",
+   "fieldtype": "Section Break",
+   "label": "Ch\u01b0\u01a1ng Tr\u00ecnh Khuy\u1ebfn M\u00e3i \u0110\u01a1n H\u00e0ng"
+  },
+  {
+   "fieldname": "promotions",
+   "fieldtype": "Table MultiSelect",
+   "label": "Ch\u01b0\u01a1ng Tr\u00ecnh Khuy\u1ebfn M\u00e3i",
+   "options": "Sales Order Promotion"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-04-21 22:08:56.157767",
+ "modified": "2025-04-22 13:40:57.130689",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
