@@ -6040,7 +6040,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			customer="_Test Registered Customer",
 			warehouse="Stores - _TIRC",
 			cost_center="Main - _TIRC",
-			selling_price_list='_Test Price List',
+			currency="INR",
 			item_code=item_code,
 			qty=qty,
 			rate=rate,
