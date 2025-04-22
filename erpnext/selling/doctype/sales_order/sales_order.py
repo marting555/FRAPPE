@@ -66,6 +66,7 @@ class SalesOrder(SellingController):
 		amended_from: DF.Link | None
 		amount_eligible_for_commission: DF.Currency
 		apply_discount_on: DF.Literal["", "Grand Total", "Net Total"]
+		assigned_location_at: DF.Datetime | None
 		auto_repeat: DF.Link | None
 		base_discount_amount: DF.Currency
 		base_grand_total: DF.Currency
@@ -77,13 +78,14 @@ class SalesOrder(SellingController):
 		base_total_taxes_and_charges: DF.Currency
 		billing_status: DF.Literal["Not Billed", "Fully Billed", "Partly Billed", "Closed"]
 		campaign: DF.Link | None
-		cancelled_status: DF.Data | None
+		cancelled_date: DF.Datetime | None
+		cancelled_status: DF.Literal["", "\u0110\u00e3 Hu\u1ef7", "Ch\u01b0a Hu\u1ef7"]
 		commission_rate: DF.Float
 		company: DF.Link
 		company_address: DF.Link | None
 		company_address_display: DF.SmallText | None
 		company_contact_person: DF.Link | None
-		confirmed_status: DF.Data | None
+		confirmed_status: DF.Literal["", "\u0110\u00e3 X\u00e1c Nh\u1eadn", "Ch\u01b0a X\u00e1c Nh\u1eadn"]
 		contact_display: DF.SmallText | None
 		contact_email: DF.Data | None
 		contact_mobile: DF.SmallText | None
@@ -92,6 +94,7 @@ class SalesOrder(SellingController):
 		conversion_rate: DF.Float
 		cost_center: DF.Link | None
 		coupon_code: DF.Link | None
+		creator_id: DF.Data | None
 		currency: DF.Link
 		customer: DF.Link
 		customer_address: DF.Link | None
@@ -103,17 +106,22 @@ class SalesOrder(SellingController):
 		discount_amount: DF.Currency
 		dispatch_address: DF.SmallText | None
 		dispatch_address_name: DF.Link | None
-		financial_status: DF.Data | None
+		expected_delivery_date: DF.Datetime | None
+		financial_status: DF.Literal["", "\u0110\u00e3 Thanh To\u00e1n", "\u0110\u00e3 Thanh To\u00e1n M\u1ed9t Ph\u1ea7n", "\u0110\u00e3 Ho\u00e0n Ti\u1ec1n", "Ch\u1edd X\u1eed L\u00fd"]
 		from_date: DF.Date | None
-		fulfillment_status: DF.Data | None
+		fulfillment_status: DF.Literal["", "Ch\u01b0a Giao H\u00e0ng", "\u0110\u00e3 Giao H\u00e0ng"]
 		grand_total: DF.Currency
 		group_same_items: DF.Check
+		haravan_created_at: DF.Datetime | None
 		haravan_order_id: DF.Int
+		haravan_order_link: DF.Data | None
 		haravan_ref_order_id: DF.Int
 		ignore_pricing_rule: DF.Check
 		in_words: DF.Data | None
 		incoterm: DF.Link | None
 		inter_company_order_reference: DF.Link | None
+		invoice_date: DF.Datetime | None
+		invoice_location: DF.Literal["", "72 Nguy\u1ec5n C\u01b0 Trinh, P. Ph\u1ea1m Ng\u0169 L\u00e3o, Qu\u1eadn 1, TP. H\u1ed3 Ch\u00ed Minh", "63 Kim M\u00e3, Ba \u0110\u00ecnh, H\u00e0 N\u1ed9i", "209, \u0110 30 Th\u00e1ng 4, Xu\u00e2n Khanh, Ninh Ki\u1ec1u, C\u1ea7n Th\u01a1"]
 		is_internal_customer: DF.Check
 		items: DF.Table[SalesOrderItem]
 		language: DF.Data | None
@@ -138,7 +146,9 @@ class SalesOrder(SellingController):
 		po_no: DF.Data | None
 		price_list_currency: DF.Link
 		pricing_rules: DF.Table[PricingRuleDetail]
+		product_category: DF.Literal["", "Nh\u1eabn Nam KCTN Nguy\u00ean Chi\u1ebfc", "Nh\u1eabn Nam Moiss Nguy\u00ean Chi\u1ebfc", "Nh\u1eabn Nam Tr\u01a1n", "Nh\u1eabn Nam KCTN", "Nh\u1eabn N\u1eef", "Nh\u1eabn N\u1eef KCTN", "Nh\u1eabn C\u01b0\u1edbi", "Nh\u1eabn C\u01b0\u1edbi - Vi\u00ean KCTN", "Nh\u1eabn C\u01b0\u1edbi N\u1eef", "Nh\u1eabn C\u01b0\u1edbi N\u1eef Nguy\u00ean Chi\u1ebfc"]
 		project: DF.Link | None
+		reorder_date: DF.Datetime | None
 		represents_company: DF.Link | None
 		reserve_stock: DF.Check
 		rounded_total: DF.Currency

@@ -78,7 +78,7 @@
    "fieldname": "incentives",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "Th\u01b0\u1edfng khuy\u1ebfn kh\u00edch",
+   "label": "Th\u01b0\u1edfng Khuy\u1ebfn Kh\u00edch",
    "oldfieldname": "incentives",
    "oldfieldtype": "Currency",
    "options": "Company:company:default_currency"
@@ -87,7 +87,7 @@
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-04-17 14:31:24.437864",
+ "modified": "2025-04-21 22:00:45.239117",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Team",

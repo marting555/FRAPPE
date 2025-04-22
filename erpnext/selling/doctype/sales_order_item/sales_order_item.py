@@ -71,6 +71,7 @@ class SalesOrderItem(Document):
 		price_list_rate: DF.Currency
 		pricing_rules: DF.SmallText | None
 		produced_qty: DF.Float
+		product_details: DF.Data | None
 		production_plan_qty: DF.Float
 		project: DF.Link | None
 		projected_qty: DF.Float
@@ -93,6 +94,7 @@ class SalesOrderItem(Document):
 		transaction_date: DF.Date | None
 		uom: DF.Link
 		valuation_rate: DF.Currency
+		variant_title: DF.Data | None
 		warehouse: DF.Link | None
 		weight_per_unit: DF.Float
 		weight_uom: DF.Link | None
