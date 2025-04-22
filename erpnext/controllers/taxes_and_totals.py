@@ -21,11 +21,6 @@ from erpnext.controllers.accounts_controller import (
 from erpnext.stock.get_item_details import _get_item_tax_template, get_item_tax_map
 from erpnext.utilities.regional import temporary_flag
 
-<<<<<<< HEAD
-=======
-ItemWiseTaxDetail = frappe._dict
-
->>>>>>> 551639da7b (chore: remove previously added logger calls)
 
 class calculate_taxes_and_totals:
 	def __init__(self, doc: Document):
@@ -397,15 +392,7 @@ class calculate_taxes_and_totals:
 
 		for n, item in enumerate(self._items):
 			item_tax_map = self._load_item_tax_rate(item.item_tax_rate)
-<<<<<<< HEAD
-<<<<<<< HEAD
-			for i, tax in enumerate(self.doc.get("taxes")):
-=======
-			logger.debug(f" Item {n}: {item.item_code}" + (f" - {item_tax_map}" if item_tax_map else ""))
-=======
->>>>>>> 551639da7b (chore: remove previously added logger calls)
 			for i, tax in enumerate(doc.taxes):
->>>>>>> 5741458c94 (fix: get total without rounding off tax amounts for distributing discount)
 				# tax_amount represents the amount of tax for the current step
 				current_tax_amount = self.get_current_tax_amount(item, tax, item_tax_map)
 				if frappe.flags.round_row_wise_tax:
@@ -443,36 +430,6 @@ class calculate_taxes_and_totals:
 						doc.taxes[i - 1].grand_total_for_current_item + current_tax_amount
 					)
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-				# set precision in the last item iteration
-				if n == len(self._items) - 1:
-					self.round_off_totals(tax)
-					self._set_in_company_currency(tax, ["tax_amount", "tax_amount_after_discount_amount"])
-
-					self.round_off_base_values(tax)
-					self.set_cumulative_total(i, tax)
-
-					self._set_in_company_currency(tax, ["total"])
-
-					# adjust Discount Amount loss in last tax iteration
-					if (
-						i == (len(self.doc.get("taxes")) - 1)
-						and self.discount_amount_applied
-						and self.doc.discount_amount
-						and self.doc.apply_discount_on == "Grand Total"
-					):
-						self.grand_total_diff = flt(
-							self.doc.grand_total - flt(self.doc.discount_amount) - tax.total,
-							self.doc.precision("rounding_adjustment"),
-						)
-=======
-				logger.debug(
-					f"  net_amount: {current_net_amount:<20} tax_amount: {current_tax_amount:<20} - {tax.description}"
-				)
-
-=======
->>>>>>> 551639da7b (chore: remove previously added logger calls)
 		discount_amount_applied = self.discount_amount_applied
 		if doc.apply_discount_on == "Grand Total" and (
 			discount_amount_applied or doc.discount_amount or doc.additional_discount_percentage
@@ -497,15 +454,12 @@ class calculate_taxes_and_totals:
 
 		for i, tax in enumerate(doc.taxes):
 			self.round_off_totals(tax)
-			self._set_in_company_currency(
-				tax, ["tax_amount", "tax_amount_after_discount_amount", "net_amount"]
-			)
+			self._set_in_company_currency(tax, ["tax_amount", "tax_amount_after_discount_amount"])
 
 			self.round_off_base_values(tax)
 			self.set_cumulative_total(i, tax)
 
 			self._set_in_company_currency(tax, ["total"])
->>>>>>> 5741458c94 (fix: get total without rounding off tax amounts for distributing discount)
 
 	def get_tax_amount_if_for_valuation_or_deduction(self, tax_amount, tax):
 		# if just for valuation, do not add the tax amount in total
