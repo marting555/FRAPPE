@@ -2531,6 +2531,11 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		get_or_create_fiscal_year("_Test Company")
 		records_for_pi('_Test Supplier TDS')
+		category_doc = frappe.get_doc("Tax Withholding Category", "Test - TDS - 194C - Company")
+		for rate in category_doc.rates:
+			rate.from_date = add_days(today(), -30)
+			rate.to_date = add_days(today(), 30)
+		category_doc.save()
 		supplier=frappe.get_doc("Supplier","_Test Supplier TDS")
 		if supplier:
 			self.assertEqual(supplier.tax_withholding_category,"Test - TDS - 194C - Company")
@@ -2557,7 +2562,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 					"against_voucher": pi.name
 				},
 				{
-					"account": "Stock Received But Not Billed - _TC",
+					"account": "_Test Account Excise Duty - _TC",
 					"debit": 90000.0,
 					"credit": 0.0,
 					"against_voucher": None
