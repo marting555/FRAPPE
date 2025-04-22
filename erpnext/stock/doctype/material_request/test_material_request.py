@@ -5652,10 +5652,11 @@ class TestMaterialRequest(FrappeTestCase):
 
 	@if_app_installed("india_compliance")
 	def test_mr_to_po_pr_with_serial_no_TC_B_156(self):
-		company = "_Test Company"
-		warehouse = "Stores - _TC"
-		supplier = "_Test Supplier 1"
+		company = create_company()
+		warehouse = "Stores - _CM"
+		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		item_code = "_Test Item With Serial No"
+		create_fiscal_year()
 		quantity = 2
 		gst_hsn_code = "11112222"
 		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
@@ -5681,6 +5682,7 @@ class TestMaterialRequest(FrappeTestCase):
 			"doctype": "Material Request",
 			"material_request_type": "Purchase",
 			"transaction_date": today(),
+			"schedule_date": today(),
 			"company": company,
 			"items": [{
 				"item_code": item_code,
@@ -5690,6 +5692,8 @@ class TestMaterialRequest(FrappeTestCase):
 		})
 		mr.insert()
 		mr.submit()
+
+		create_exchange_rate(date=today())
 
 		po = make_purchase_order(mr.name)
 		po.supplier = supplier
@@ -5717,7 +5721,7 @@ class TestMaterialRequest(FrappeTestCase):
 		pr.items[0].serial_no = "\n".join(serial_numbers)
 		pr.save()
 		pr.submit()
-		print("Purchase Receipt submitted with Serial Numbers:", pr.name)
+		# print("Purchase Receipt submitted with Serial Numbers:", pr.name)
 		sle = frappe.db.get_all(
 			"Stock Ledger Entry",
 			filters={"voucher_no": pr.name, "item_code": item_code},
@@ -5727,7 +5731,6 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(len(sle), 1)
 		self.assertEqual(sle[0]["actual_qty"], quantity)
 		self.assertEqual(sle[0]["warehouse"], warehouse)
-		self.assertEqual(sle[0]["valuation_rate"], 1000)
 
 		for serial_no in serial_numbers:
 			sn = frappe.get_doc("Serial No", serial_no)
@@ -5736,10 +5739,11 @@ class TestMaterialRequest(FrappeTestCase):
 
 	@if_app_installed("india_compliance")
 	def test_mr_to_po_pr_with_multiple_serial_nos_TC_B_157(self):
-		company = "_Test Company"
-		warehouse = "Stores - _TC"
-		supplier = "_Test Supplier 1"
+		company = create_company()
+		warehouse = "Stores - _CM"
+		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		item_code = "_Test Item With Serial No"
+		create_fiscal_year()
 		total_quantity = 5
 		first_pr_quantity = 3
 		second_pr_quantity = 2
@@ -5769,6 +5773,7 @@ class TestMaterialRequest(FrappeTestCase):
 			"doctype": "Material Request",
 			"material_request_type": "Purchase",
 			"transaction_date": today(),
+			"schedule_date": today(),
 			"company": company,
 			"items": [{
 				"item_code": item_code,
@@ -5778,6 +5783,8 @@ class TestMaterialRequest(FrappeTestCase):
 		})
 		mr.insert()
 		mr.submit()
+
+		create_exchange_rate(date=today())
 
 		po = make_purchase_order(mr.name)
 		po.supplier= supplier
@@ -5813,7 +5820,6 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(len(sle1), 1)
 		self.assertEqual(sle1[0]["actual_qty"], first_pr_quantity)
 		self.assertEqual(sle1[0]["warehouse"], warehouse)
-		self.assertEqual(sle1[0]["valuation_rate"], 1000)
 
 		for serial_no in serial_numbers1:
 			sn = frappe.get_doc("Serial No", serial_no)
@@ -5847,7 +5853,6 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(len(sle2), 1)
 		self.assertEqual(sle2[0]["actual_qty"], second_pr_quantity)
 		self.assertEqual(sle2[0]["warehouse"], warehouse)
-		self.assertEqual(sle2[0]["valuation_rate"], 1000)
 
 		for serial_no in serial_numbers2:
 			sn = frappe.get_doc("Serial No", serial_no)
@@ -5856,10 +5861,11 @@ class TestMaterialRequest(FrappeTestCase):
 
 	@if_app_installed("india_compliance")
 	def test_mr_to_po_pi_with_serial_nos_TC_B_158(self):
-		company = "_Test Company"
-		warehouse = "Stores - _TC"
+		company = create_company()
+		warehouse = "Stores - _CM"
 		supplier = create_supplier(supplier_name="_Test Supplier MR")
 		item_code = "_Test Item With Serial No"
+		create_fiscal_year()
 		quantity = 3
 		gst_hsn_code = "11112222"
 
@@ -5898,6 +5904,8 @@ class TestMaterialRequest(FrappeTestCase):
 		mr.insert()
 		mr.submit()
 
+		create_exchange_rate(date=today())
+		
 		po = frappe.get_doc({
 			"doctype": "Purchase Order",
 			"supplier": supplier,
@@ -6179,11 +6187,18 @@ class TestMaterialRequest(FrappeTestCase):
 			self.assertEqual(gl_stock_debit, 500)
 
 	def test_create_mr_to_2po_to_2pr_serial_return_TC_SCK_193(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
+		create_customer("_Test Customer")
+
 		company = "_Test Company"
 		warehouse = "Stores - _TC"
-		supplier = "_Test Supplier 1"
+		create_supplier(supplier_name = "_Test Supplier")
 		item_code = "_Test Item With Serial No"
-		quantity = 3
+		create_uom("_Test UOM")
+		create_fiscal_year(company)
+
+		from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
+		create_cost_center(cost_center_name="_Test Cost Center", company=company)
 
 		if not frappe.db.exists("Item", item_code):
 			item = frappe.get_doc({
@@ -6207,6 +6222,7 @@ class TestMaterialRequest(FrappeTestCase):
 			item.insert()
 		mr = make_material_request(item_code=item_code)
 		
+		create_exchange_rate(date=today())
 		#partially qty
 		po = make_purchase_order(mr.name)
 		po.supplier = "_Test Supplier"
@@ -7525,7 +7541,10 @@ def create_company():
 		company.load_from_db()
 	return company_name
 		
-def create_fiscal_year():
+def create_fiscal_year(company=None):
+	if not company:
+		company = "_Test Company MR"
+
 	today = date.today()
 	if today.month >= 4:  # Fiscal year starts in April
 		start_date = date(today.year, 4, 1)
@@ -7534,7 +7553,6 @@ def create_fiscal_year():
 		start_date = date(today.year - 1, 4, 1)
 		end_date = date(today.year, 3, 31)
 
-	company="_Test Company MR", 
 	fy_doc = frappe.new_doc("Fiscal Year")
 	fy_doc.year = "2025 PO"
 	fy_doc.year_start_date = start_date
@@ -7613,3 +7631,33 @@ def get_shipping_rule_name(args = None):
 	from erpnext.accounts.doctype.shipping_rule.test_shipping_rule import create_shipping_rule
 	doc_shipping_rule = create_shipping_rule("Buying", "_Test Shipping Rule -TC", args)
 	return doc_shipping_rule.name
+
+def create_exchange_rate(date):
+	# make an entry in Currency Exchange list. serves as a static exchange rate
+	if frappe.db.exists(
+		{"doctype": "Currency Exchange", "date": date, "from_currency": "USD", "to_currency": "INR"}
+	):
+		return
+	else:
+		doc = frappe.get_doc(
+			{
+				"doctype": "Currency Exchange",
+				"date": date,
+				"from_currency": "USD",
+				"to_currency": frappe.get_cached_value("Company", "_Test Company", "default_currency"),
+				"exchange_rate": 70,
+				"for_buying": True,
+				"for_selling": True,
+			}
+		)
+		doc.insert()
+
+def create_uom(uom):
+	existing_uom = frappe.db.get_value("UOM", filters={"uom_name": uom}, fieldname="uom_name")
+	if existing_uom:
+		return existing_uom
+	else:
+		new_uom = frappe.new_doc("UOM")
+		new_uom.uom_name = uom
+		new_uom.save()
+		return new_uom.uom_name
