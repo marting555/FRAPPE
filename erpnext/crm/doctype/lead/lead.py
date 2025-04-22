@@ -24,21 +24,37 @@ class Lead(SellingController, CRMNote):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
+		from erpnext.crm.doctype.crm_note.crm_note import CRMNote
+		from erpnext.crm.doctype.lead_channel.lead_channel import LeadChannel
+		from erpnext.crm.doctype.lead_diamond.lead_diamond import LeadDiamond
+		from erpnext.crm.doctype.lead_product_item.lead_product_item import LeadProductItem
 		from frappe.types import DF
 
-		from erpnext.crm.doctype.crm_note.crm_note import CRMNote
-
+		account_number: DF.Data | None
+		address: DF.Data | None
 		annual_revenue: DF.Currency
+		bank_branch: DF.Literal[None]
+		bank_district: DF.Literal[None]
+		bank_name: DF.Literal["Agribank", "ACB", "BIDV", "Vietcombank", "VietinBank", "Techcombank", "Sacombank", "MB Bank", "Eximbank", "VPBank", "SHB", "NamABank", "B\u1eafc \u00c1 Bank", "OceanBank", "TPBank"]
+		bank_province: DF.Literal[None]
+		bank_ward: DF.Literal[None]
+		birth_date: DF.Date | None
 		blog_subscriber: DF.Check
+		budget_lead: DF.Link | None
 		campaign_name: DF.Link | None
+		ceo_name: DF.Data | None
+		chọn_lead_trùng: DF.Link | None
 		city: DF.Data | None
 		company: DF.Link | None
 		company_name: DF.Data | None
-		country: DF.Link | None
 		customer: DF.Link | None
+		date_of_issuance: DF.Date | None
+		demand_notes: DF.SmallText | None
 		disabled: DF.Check
 		email_id: DF.Data | None
+		expected_delivery_date: DF.Date | None
 		fax: DF.Data | None
+		first_channel: DF.Link | None
 		first_name: DF.Data | None
 		gender: DF.Link | None
 		image: DF.AttachImage | None
@@ -48,14 +64,21 @@ class Lead(SellingController, CRMNote):
 		last_name: DF.Data | None
 		lead_name: DF.Data | None
 		lead_owner: DF.Link | None
+		lead_received_date: DF.Datetime | None
 		market_segment: DF.Link | None
 		middle_name: DF.Data | None
 		mobile_no: DF.Data | None
 		naming_series: DF.Literal["CRM-LEAD-.YYYY.-"]
 		no_of_employees: DF.Literal["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"]
 		notes: DF.Table[CRMNote]
+		personal_id: DF.Data | None
+		personal_tax_id: DF.Data | None
 		phone: DF.Data | None
 		phone_ext: DF.Data | None
+		place_of_issuance: DF.Literal["B\u1ed9 C\u00f4ng An", "C\u1ee5c C\u1ea3nh s\u00e1t QLHC v\u1ec1 TTXH", "C\u1ee5c C\u1ea3nh s\u00e1t \u0111\u0103ng k\u00fd, qu\u1ea3n l\u00fd c\u01b0 tr\u00fa v\u00e0 d\u1eef li\u1ec7u qu\u1ed1c gia v\u1ec1 d\u00e2n c\u01b0"]
+		preferred_diamond: DF.Table[LeadDiamond]
+		preferred_product_type: DF.TableMultiSelect[LeadProductItem]
+		purpose_lead: DF.Link | None
 		qualification_status: DF.Literal["Unqualified", "In Process", "Qualified"]
 		qualified_by: DF.Link | None
 		qualified_on: DF.Date | None
@@ -63,20 +86,12 @@ class Lead(SellingController, CRMNote):
 		salutation: DF.Link | None
 		source: DF.Link | None
 		state: DF.Data | None
-		status: DF.Literal[
-			"Lead",
-			"Open",
-			"Replied",
-			"Opportunity",
-			"Quotation",
-			"Lost Quotation",
-			"Interested",
-			"Converted",
-			"Do Not Contact",
-		]
+		status: DF.Literal["Lead", "Open", "Replied", "Opportunity", "Quotation", "Lost Quotation", "Interested", "Converted", "Do Not Contact"]
+		table_uzxd: DF.Table[LeadChannel]
+		tax_number: DF.Data | None
 		territory: DF.Link | None
 		title: DF.Data | None
-		type: DF.Literal["", "Client", "Channel Partner", "Consultant"]
+		type: DF.Literal["C\u00e1 Nh\u00e2n", "Doanh Nghi\u1ec7p"]
 		unsubscribed: DF.Check
 		website: DF.Data | None
 		whatsapp_no: DF.Data | None
@@ -173,6 +188,36 @@ class Lead(SellingController, CRMNote):
 
 			if self.is_new() or not self.image:
 				self.image = has_gravatar(self.email_id)
+
+	
+	# def check_phone_number_is_unique(self):
+	# 	if self.mobile_no:
+	# 		# Validate phone number is unique
+	# 		if not frappe.db.get_single_value("CRM Settings", "allow_lead_duplication_based_on_phone_numbers"):
+	# 			duplicate_leads = frappe.get_all(
+	# 				"Lead", filters={"mobile_no": self.mobile_no, "name": ["!=", self.name]}
+	# 			)
+	# 			duplicate_leads = [
+	# 				frappe.bold(get_link_to_form("Lead", lead.name)) for lead in duplicate_leads
+	# 			]
+
+	# 			if duplicate_leads:
+	# 				frappe.throw(
+	# 					_("Phone Number must be unique, it is already used in {0}").format(
+	# 						comma_and(duplicate_leads)
+	# 					),
+	# 					frappe.DuplicateEntryError,
+	# 				)
+
+	# def validate_phone_number(self):
+	# 	if self.mobile_no:
+	# 		# Add any specific validation for phone number format if needed
+	# 		if not self.flags.ignore_phone_validation:
+	# 			# Example: Check if the phone number is valid (you can customize this)
+	# 			if len(self.mobile_no) < 10:  # Example condition
+	# 				frappe.throw(_("Phone number must be at least 10 digits long."))
+
+
 
 	def link_to_contact(self):
 		# update contact links

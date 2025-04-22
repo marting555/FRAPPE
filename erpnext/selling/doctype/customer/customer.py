@@ -30,29 +30,35 @@ class Customer(TransactionBase):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from frappe.types import DF
-
-		from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import (
-			AllowedToTransactWith,
-		)
+		from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import AllowedToTransactWith
 		from erpnext.accounts.doctype.party_account.party_account import PartyAccount
-		from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import (
-			CustomerCreditLimit,
-		)
+		from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import CustomerCreditLimit
 		from erpnext.selling.doctype.sales_team.sales_team import SalesTeam
 		from erpnext.utilities.doctype.portal_user.portal_user import PortalUser
+		from frappe.types import DF
 
+		_customer_type: DF.Literal["C\u00e1 Nh\u00e2n", "C\u00f4ng Ty"]
 		account_manager: DF.Link | None
+		account_number: DF.Data | None
 		accounts: DF.Table[PartyAccount]
+		bank_branch: DF.Literal["B\u1eafc", "Trung Nam"]
+		bank_district: DF.Literal["qu\u1eadn 1", "qu\u1eadn 2", "qu\u1eadn 3", "qu\u1eadn 4"]
+		bank_name: DF.Literal["Agribank", "ACB", "BIDV", "Vietcombank", "VietinBank", "Techcombank", "Sacombank", "MB Bank", "Eximbank", "VPBank", "SHB", "NamABank", "B\u1eafc \u00c1 Bank", "OceanBank", "TPBank"]
+		bank_province: DF.Literal["H\u1ed3 Ch\u00ed Minh", "H\u00e0 N\u1ed9i", "\u0110\u00e0 N\u1eb5ng", "C\u1ea7n Th\u01a1"]
+		bank_ward: DF.Literal[None]
+		birth_date: DF.Date | None
 		companies: DF.Table[AllowedToTransactWith]
 		credit_limits: DF.Table[CustomerCreditLimit]
 		customer_details: DF.Text | None
 		customer_group: DF.Link | None
+		customer_journey: DF.SmallText | None
 		customer_name: DF.Data
 		customer_pos_id: DF.Data | None
 		customer_primary_address: DF.Link | None
 		customer_primary_contact: DF.Link | None
 		customer_type: DF.Literal["Company", "Individual", "Partnership"]
+		customer_website: DF.Data | None
+		date_of_issuance: DF.Date | None
 		default_bank_account: DF.Link | None
 		default_commission_rate: DF.Float
 		default_currency: DF.Link | None
@@ -61,6 +67,7 @@ class Customer(TransactionBase):
 		disabled: DF.Check
 		dn_required: DF.Check
 		email_id: DF.ReadOnly | None
+		first_channel: DF.Literal["FB - Jemmia Diamond", "FB - Jemmia Diamond - H\u00e0 N\u1ed9i", "FT - Kh\u00e1ch v\u00e3ng lai", "GG-Zalo OA", "GG - Google", "FB - Jemmia Love Jewelry", "TT - Ki\u1ec7t H\u1ed9t Xo\u00e0n", "GG - Youtube KHX", "GG-Mail CSKH", "GG - Website", "FT - Kh\u00e1ch \u0111\u01b0\u1ee3c gi\u1edbi thi\u1ec7u qua Referral", "FB - Ki\u1ebft H\u00f4t Xo\u00e0n", "GG - Hotline 333", "FT - Tiktok c\u00e1 nh\u00e2n c\u1ee7a sale", "FT - Kh\u00e1ch sales t\u01b0 t\u00ecm", "FT - Nh\u00e2n vi\u00ean mua h\u00e0ng", "Tiktok c\u1ee7a kh\u00e1ch", "TT - Hotline 11119", "IG - Jemmia Diamond", "FB - Jemmia Review", "Kh\u00e1ch v\u00e3ng lai xem FB", "Kh\u00e1ch v\u00e3ng lai xem Web", "GG - Chatbot", "IG - Jemmia Love Jewelry"]
 		gender: DF.Link | None
 		image: DF.AttachImage | None
 		industry: DF.Link | None
@@ -75,6 +82,10 @@ class Customer(TransactionBase):
 		naming_series: DF.Literal["CUST-.YYYY.-"]
 		opportunity_name: DF.Link | None
 		payment_terms: DF.Link | None
+		personal_id: DF.Data | None
+		personal_tax_id: DF.Data | None
+		phone: DF.ReadOnly | None
+		place_of_issuance: DF.Literal["B\u1ed9 C\u00f4ng An", "C\u1ee5c C\u1ea3nh s\u00e1t QLHC v\u1ec1 TTXH", "C\u1ee5c C\u1ea3nh s\u00e1t \u0111\u0103ng k\u00fd, qu\u1ea3n l\u00fd c\u01b0 tr\u00fa v\u00e0 d\u1eef li\u1ec7u qu\u1ed1c gia v\u1ec1 d\u00e2n c\u01b0"]
 		portal_users: DF.Table[PortalUser]
 		primary_address: DF.Text | None
 		prospect_name: DF.Link | None
