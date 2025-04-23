@@ -4957,7 +4957,7 @@ class TestSalesInvoice(FrappeTestCase):
 			}).insert()
 		
 		# Set default accounts for test company
-		frappe.db.set_value("Company", "_Test Company", {
+		frappe.set_value("Company", "_Test Company", {
 			"default_receivable_account": "Debtors - _TC",
 			"default_income_account": "Sales - _TC",
 			"default_expense_account": "Cost of Goods Sold - _TC",
@@ -4981,9 +4981,9 @@ class TestSalesInvoice(FrappeTestCase):
 				"account": "_Test Account Shipping Charges - _TC"
 			}).insert()
 		else:
-			frappe.db.set_value("Shipping Rule", "_Test Shipping Rule", "account", "Shipping Charges - _TC")
+			frappe.set_value("Shipping Rule", "_Test Shipping Rule", "account", "Shipping Charges - _TC")
 
-		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
+		frappe.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
 		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=10, rate=4000)
 
 		sales_invoice = create_sales_invoice(
@@ -5033,8 +5033,6 @@ class TestSalesInvoice(FrappeTestCase):
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		get_or_create_fiscal_year("_Test Company")
-		# Enable perpetual inventory and set up accounts
-		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
 		
 		# Create or get inventory account if not exists
 		if not frappe.db.exists("Account", "Stock In Hand - _TC"):
@@ -5048,11 +5046,12 @@ class TestSalesInvoice(FrappeTestCase):
 			}).insert()
 		
 		# Set default accounts for test company
-		frappe.db.set_value("Company", "_Test Company", {
+		frappe.set_value("Company", "_Test Company", {
 			"default_receivable_account": "Debtors - _TC",
 			"default_income_account": "Sales - _TC",
 			"default_expense_account": "Cost of Goods Sold - _TC",
-			"default_inventory_account": "Stock In Hand - _TC"
+			"default_inventory_account": "Stock In Hand - _TC",
+			"enable_perpetual_inventory":1
 		})
 
 		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=10, rate=1000)
@@ -5168,14 +5167,14 @@ class TestSalesInvoice(FrappeTestCase):
 				}).insert()
 
 		# Set default accounts for test company
-		frappe.db.set_value("Company", "_Test Company", {
+		frappe.set_value("Company", "_Test Company", {
 			"default_receivable_account": "Debtors - _TC",
 			"default_income_account": "Sales - _TC",
 			"default_expense_account": "Cost of Goods Sold - _TC",
-			"default_inventory_account": "Stock In Hand - _TC"
+			"default_inventory_account": "Stock In Hand - _TC",
+			"enable_perpetual_inventory":1
 		})
 
-		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
 		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=10, rate=2500)
 
 		sales_invoice = create_sales_invoice(
@@ -6752,7 +6751,6 @@ class TestSalesInvoice(FrappeTestCase):
 					do_not_submit=True
 			)
 			si.submit()
-			frappe.db.commit()
 			self.assertEqual(si.total_commission,500)
 			self.assertEqual(si.commission_rate,5)
 			self.assertEqual(si.amount_eligible_for_commission,10000)
@@ -6930,7 +6928,7 @@ def check_gl_entries(doc, voucher_no, expected_gle, posting_date, voucher_type="
 		.orderby(gl.posting_date, gl.account, gl.creation)
 	)
 	gl_entries = q.run(as_dict=True)
-	print(gl_entries)
+
 	expected_gle = sorted(expected_gle, key=lambda x: x[0])
 	gl_entries = sorted(gl_entries, key=lambda x: x['account'])
 
