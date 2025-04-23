@@ -2299,7 +2299,7 @@ def make_test_item(item_name=None):
 					"doctype": 'GST HSN Code',
 					"hsn_code": '888890',
 					"description": 'test'
-				}).insert()
+				}).insert(ignore_permissions=True)
 				
 			
 			item= make_item(
