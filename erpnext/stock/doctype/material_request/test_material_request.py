@@ -2573,6 +2573,8 @@ class TestMaterialRequest(FrappeTestCase):
 			gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':return_pr1.name, 'account': 'Stock In Hand - _TC'},'credit')
 			self.assertEqual(gl_stock_debit, 500)
 
+	@change_settings("Stock Settings", {"over_delivery_receipt_allowance": 100})
+	@change_settings("Accounts Settings", {"over_billing_allowance": 100})
 	def test_mr_to_partial_pr_TC_B_023(self):
 		# MR => 1RFQ => 2SQ => 2PO => 1PR => 1PI
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
@@ -5997,8 +5999,10 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertEqual(doc_po.status, 'Completed')
 		self.assertEqual(doc_pi.status, 'Paid')
 
+	@change_settings("Global Defaults", {"default_currency": "INR"})
 	def test_mr_to_pi_with_partial_PE_TC_B_077(self):
 		# MR =>  PO => [Partial]PE => PR => PI [PE with oustanding amount]
+		make_item(item_code="Testing-31")
 		mr_dict_list = {
 				"company" : "_Test Company",
 				"item_code" : "Testing-31",
