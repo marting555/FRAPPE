@@ -2450,7 +2450,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		payment_entry.reference_no = f"Test-{first_purchase_invoice.name}"
 		payment_entry.reference_date = today
 		payment_entry.paid_amount = first_purchase_invoice.grand_total
-		payment_entry.insert()
+		payment_entry.insert(ignore_permissions=True)
 		payment_entry.submit()
 
 		# Step 3: Validate Outstanding Amount for the First Purchase Invoice
@@ -2531,6 +2531,11 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		get_or_create_fiscal_year("_Test Company")
 		records_for_pi('_Test Supplier TDS')
+		category_doc = frappe.get_doc("Tax Withholding Category", "Test - TDS - 194C - Company")
+		for rate in category_doc.rates:
+			rate.from_date = add_days(today(), -30)
+			rate.to_date = add_days(today(), 30)
+		category_doc.save()
 		supplier=frappe.get_doc("Supplier","_Test Supplier TDS")
 		if supplier:
 			self.assertEqual(supplier.tax_withholding_category,"Test - TDS - 194C - Company")
@@ -2557,7 +2562,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 					"against_voucher": pi.name
 				},
 				{
-					"account": "Stock Received But Not Billed - _TC",
+					"account": "_Test Account Excise Duty - _TC",
 					"debit": 90000.0,
 					"credit": 0.0,
 					"against_voucher": None
@@ -3408,7 +3413,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				]
 			}
 		)
-		si.insert()
+		si.insert(ignore_permissions=True)
 		si.submit()
 		self.assertEqual(si.company, parent_company)
 		self.assertEqual(si.customer, customer)
@@ -3635,7 +3640,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				"discount_percentage": 10,
 				"selling": 0,
 				"buying": 1
-			}).insert()
+			}).insert(ignore_permissions=True)
 
 		pi = frappe.get_doc({
 			"doctype": "Purchase Invoice",
@@ -3843,7 +3848,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
 			gst_hsn_doc = frappe.new_doc("GST HSN Code")
 			gst_hsn_doc.hsn_code = gst_hsn_code
-			gst_hsn_doc.insert()
+			gst_hsn_doc.insert(ignore_permissions=True)
 
 		if not frappe.db.exists("Item", "_Test Item"):
 			item = frappe.new_doc("Item")
@@ -3852,7 +3857,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			item.item_group = "All Item Groups"
 			item.enable_deferred_expense = 1
 			item.no_of_months_exp = 12
-			item.insert()
+			item.insert(ignore_permissions=True)
 		else:
 			item = frappe.get_doc("Item", "_Test Item")
 			item.gst_hsn_code = gst_hsn_code
@@ -4053,7 +4058,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				}
 			]
 		})
-		tax_category.insert(ignore_if_duplicate=1)
+		tax_category.insert(ignore_if_duplicate=1, ignore_permissions=True)
 
 		frappe.db.set_value("Supplier", supplier, "tax_withholding_category", tax_category.name)
 		pi = frappe.get_doc({
@@ -4123,7 +4128,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				"voucher_type":"Purchase Invoice",
 				"voucher_no":pi.name
 			}]
-		}).insert()
+		}).insert(ignore_permissions=True)
 		ral.submit()
 		pi.items[0].expense_account="_Test Account Stock Adjustment - _TC"
 		pi.db_update()
@@ -4248,7 +4253,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 						}
 					]}
 					
-					).insert()
+					).insert(ignore_permissions=True)
 		purchase_taxes_template = create_or_get_purchase_taxes_template("_Test Company")
 
 		gst_rates = [
@@ -4569,7 +4574,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
   
 		pi.items[0].asset_location = "Test Location"
   
-		pi.insert(ignore_permissions=True)(ignore_permissions=True).submit()
+		pi.insert(ignore_permissions=True).submit()
 		asset = frappe.get_value("Asset", {"company": "_Test Company",'item_code':item.name,'asset_category':"Test_Category"}, "name")
 		if asset:
 			asset_doc=frappe.get_doc("Asset",asset)
@@ -4627,7 +4632,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				"discount_type":"Percentage",
 				"due_date_based_on":"Day(s) after invoice date",	
 				"discount":10
-			}).insert()
+			}).insert(ignore_permissions=True)
 
 		pt = frappe.get_doc("Payment Term","_Test Discount Term")
 		
@@ -5243,7 +5248,7 @@ def create_ldc(supplier):
             'rate': 1,
             'certificate_limit': 40000,
             'pan_no': 'HYRDG4553R'
-        }).insert()
+        }).insert(ignore_permissions=True)
         
         return doc
     else:
