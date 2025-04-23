@@ -8844,7 +8844,7 @@ def create_new_account(account_name,company,parent_account, account_type = None,
 					"tax_rate": tax_rate
 				}
 			)
-			account.insert(ignore_if_duplicate=1)
+			account.insert(ignore_if_duplicate=1, ignore_permissions=True)
 			return account.name
 
 		else:

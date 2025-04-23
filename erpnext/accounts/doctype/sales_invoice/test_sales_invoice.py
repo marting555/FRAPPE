@@ -7018,7 +7018,7 @@ def create_sales_invoice(**args):
 			},
 		)
 	if not args.do_not_save:
-		si.insert()
+		si.insert(ignore_permissions=True)
 		if not args.do_not_submit:
 			si.submit()
 		else:
@@ -7347,7 +7347,7 @@ def create_company_and_supplier():
 				"gstin": "27AAAAP0267H2ZN",
 				"gst_category": "Registered Regular"
 			}
-		).insert()
+		).insert(ignore_permissions=True)
 
 	fiscal_year_doc = frappe.get_doc("Fiscal Year", fiscal_year)
 	linked_companies = {d.company for d in fiscal_year_doc.companies}
@@ -7368,7 +7368,7 @@ def create_company_and_supplier():
 				"gst_category": "Registered Regular",
 				"parent_company": parent_company
 			}
-		).insert()
+		).insert(ignore_permissions=True)
 
 	if child_company not in linked_companies:
 		fiscal_year_doc.append("companies", {"company": child_company})
@@ -7389,7 +7389,7 @@ def create_company_and_supplier():
 					}
 				]
 			}
-		).insert()
+		).insert(ignore_permissions=True)
 
 	if not frappe.db.exists("Supplier", supplier):
 		frappe.get_doc(
@@ -7407,7 +7407,7 @@ def create_company_and_supplier():
 					}
 				]
 			}
-		).insert()
+		).insert(ignore_permissions=True)
 
 		frappe.get_doc(
 			{
@@ -7434,7 +7434,7 @@ def create_company_and_supplier():
 					}
 				]
 			}
-		).insert()
+		).insert(ignore_permissions=True)
 
 	if not frappe.db.exists("Customer", customer):
 		frappe.get_doc(
@@ -7452,7 +7452,7 @@ def create_company_and_supplier():
 					}
 				]
 			}
-		).insert()
+		).insert(ignore_permissions=True)
 
 		frappe.get_doc(
 			{
@@ -7479,7 +7479,7 @@ def create_company_and_supplier():
 					}
 				]
 			}
-		).insert()
+		).insert(ignore_permissions=True)
 
 	create_test_tax_data()
 
