@@ -275,8 +275,6 @@ frappe.ui.form.on("Project", {
 				'Confirm Payment Method',
 				'Confirm Payment Type and Proceed');
 		});
-
-
 		}
 
 		if (!await erpnext.utils.isWorkshopViewer(this.frm)) {
@@ -293,8 +291,8 @@ frappe.ui.form.on("Project", {
 			const sidebar = $(".layout-side-section");
 			if (sidebar.is(':visible')) {
 				sidebar.hide();
-
-
+			}
+		}
 		if (!frm.previous_status) {
 			frm.previous_status = frm.doc.status
 		}
