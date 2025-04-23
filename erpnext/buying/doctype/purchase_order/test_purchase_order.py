@@ -6987,6 +6987,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"company": company,
 			"schedule_date": today(),
 			"set_warehouse": warehouse,
+			"currency": "INR",
 			"items": [
 				{
 					"item_code": item.item_code,
@@ -7012,6 +7013,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi_1.bill_no =  f"test_bill_{bill_no}"
 		pi_1.items[0].qty = 3
 		pi_1.update_stock = 1
+		pi_1.currency = "INR"
 		pi_1.insert()
 		pi_1.submit()
 
@@ -7037,6 +7039,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		pi_2 = make_pi_from_po(po.name)
 		pi_2.update_stock = 1
 		pi_2.bill_no = "test_bill - 1122"
+		pi_2.currency = "INR"
 		pi_2.save()
 		pi_2.submit()
 
@@ -8844,7 +8847,7 @@ def create_new_account(account_name,company,parent_account, account_type = None,
 					"tax_rate": tax_rate
 				}
 			)
-			account.insert(ignore_if_duplicate=1)
+			account.insert(ignore_if_duplicate=1, ignore_permissions=True)
 			return account.name
 
 		else:
