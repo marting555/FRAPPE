@@ -114,167 +114,8 @@ frappe.ui.form.on("Project", {
 					quotation_to: 'Customer'
 				});
 			})
-			frm.add_custom_button(__("View Customer Details"), async () => {
-				const customer = await frappe.db.get_doc('Customer', frm.doc.customer)
-				const linked_contacts_and_addresses = await frappe.db.get_list(
-					"Address",
-					{
-						filters: [
-							["disabled", "=", 0],
-							["address_type", "in", ["Billing", "Shipping"]],
-							["Dynamic Link", "link_doctype", "=", "Customer"],
-							["Dynamic Link", "link_name", "=", `${frm.doc.customer}`],
-							["Dynamic Link", "parenttype", "=", "Address"]
-						],
-						fields: ["address_line1", "address_line2", "country", "city", "pincode", "state", "address_type"]
-					}
-				);
-
-
-				let billingAddress = null;
-				let shippingAddress = null;
-
-				// Find the first Billing and Shipping address
-				for (let address of linked_contacts_and_addresses) {
-					if (address.address_type === 'Billing' && !billingAddress) {
-						billingAddress = address;
-					} else if (address.address_type === 'Shipping' && !shippingAddress) {
-						shippingAddress = address;
-					}
-
-					// Exit the loop if both addresses are found
-					if (billingAddress && shippingAddress) {
-						break;
-					}
-				}
-
-				let addresses_info = '';
-				if (billingAddress) {
-					addresses_info += `
-						<br><b>Address Type: Billing</b><br>
-						Address Line 1: ${billingAddress.address_line1}<br>
-						Address Line 2: ${billingAddress.address_line2 || 'N/A'}<br>
-						Country: ${billingAddress.country}<br>
-						City: ${billingAddress.city}<br>
-						Postal Code: ${billingAddress.pincode || 'N/A'}<br>
-						State/Province: ${billingAddress.state}<br>
-					`;
-				}
-
-				if (shippingAddress) {
-					addresses_info += `
-						<br><b>Address Type: Shipping</b><br>
-						Address Line 1: ${shippingAddress.address_line1}<br>
-						Address Line 2: ${shippingAddress.address_line2 || 'N/A'}<br>
-						Country: ${shippingAddress.country}<br>
-						City: ${shippingAddress.city}<br>
-						Postal Code: ${shippingAddress.pincode || 'N/A'}<br>
-						State/Province: ${shippingAddress.state}<br>
-					`;
-				}
-
-				frappe.msgprint({
-					title: __('Customer Information'),
-					indicator: 'green',
-					message: __(
-						`Name: ${customer.name || 'No name provided'}<br>` +
-						`Phone: ${customer.phone_number || customer.mobile_no || 'No phone number provided'}<br>` +
-						`Email: ${customer.email_id || 'No email provided'}<br><br>` +
-						`Addresses: ${addresses_info || 'No addresses found'}`
-					)
-				});
-			})
-			frm.add_custom_button("Validate Bank Transfer Payment", async () => {
-				if (frm.doc.status === "Invoice paid" || frm.doc.status === "Completed" || frm.doc.status === "Cancelled") {
-						frappe.msgprint('The project is already paid, completed, or cancelled');
-						return;
-				}
-				frappe.prompt([
-						{
-								label: 'Select Payment Type',
-								fieldname: 'confirm_method',
-								fieldtype: 'Select',
-								options: ['workshop', 'loan car'],
-								reqd: 1,
-								description: `
-									<ul style="color: #d14343; padding-left: 20px;">
-											<li>Approved quotations will be marked as paid.</li>
-											<li>An invoice will be generated.</li>
-											<li>The invoice will be sent to the customer.</li>
-											<li>The project status will be updated to "Invoice Paid".</li>
-											<li>This action can <span style="font-weight: bold;">NOT</span> be undone.</li>
-									</ul>
-							`
-						}
-				],
-				async (values) => {
-						frappe.confirm(
-								"Are you sure you want to mark approved quotations as paid? By confirming, you acknowledge that the payment has been verified in the company's account.",
-								async () => {
-										try {
-												const response = await frappe.call({
-														method: "frappe.desk.reportview.get_list",
-														args: {
-																doctype: "Quotation",
-																filters: [["project_name", "=", frm.doc.name], ["status", "=", "Approved"]],
-																fields: ["name", "grand_total"]
-														}
-												});
-
-												if (response.message && response.message.length > 0) {
-														const quotations = response.message;
-														const totalAmount = quotations.reduce((sum, q) => sum + q.grand_total, 0);
-														const { aws_url, confirm_payment_webhook } = await frappe.db.get_doc('Rest Config');
-														if (!aws_url || !confirm_payment_webhook) {
-																frappe.msgprint('AWS URL or Confirm Payment Webhook not found');
-																return;
-														}
-
-														const paymentData = {
-																confirm_payment_webhook: confirm_payment_webhook,
-																selected_method: values.confirm_method,
-																name: frm.doc.name,
-																payment_gateway: "manual",
-																total: totalAmount
-														};
-
-														const apiResponse = await fetch(`${aws_url}manual-confirm-payment`, {
-																method: 'POST',
-																headers: {
-																		'Content-Type': 'application/json',
-																},
-																body: JSON.stringify(paymentData)
-														});
-
-														if (apiResponse.ok) {
-																frappe.msgprint({
-																		title: 'Success',
-																		indicator: 'green',
-																		message: 'Payment confirmed successfully'
-																});
-																frm.reload_doc();
-														} else {
-																throw new Error('API call failed');
-														}
-												} else {
-														frappe.msgprint('No quotations found for this project');
-												}
-										} catch (error) {
-												frappe.msgprint({
-														title: 'Error',
-														indicator: 'red',
-														message: 'An error occurred while processing the payment: ' + error.message
-												});
-										}
-								},
-								() => {
-										frappe.msgprint('Payment action cancelled');
-								}
-						);
-				},
-				'Confirm Payment Method',
-				'Confirm Payment Type and Proceed');
-		});
+			viewCustomerDetails(frm);
+			validateBankTransferPayment(frm);
 		}
 
 		if (!await erpnext.utils.isWorkshopViewer(this.frm)) {
@@ -1172,4 +1013,171 @@ async function insertLoanCarButton(frm) {
 		frappe.open_in_new_tab = true
 		frappe.set_route('Form', 'Loan car', loan_car[0].name)
 	})
+}
+
+function viewCustomerDetails(frm) {
+	frm.add_custom_button(__("View Customer Details"), async () => {
+		const customer = await frappe.db.get_doc('Customer', frm.doc.customer)
+		const linked_contacts_and_addresses = await frappe.db.get_list(
+			"Address",
+			{
+				filters: [
+					["disabled", "=", 0],
+					["address_type", "in", ["Billing", "Shipping"]],
+					["Dynamic Link", "link_doctype", "=", "Customer"],
+					["Dynamic Link", "link_name", "=", `${frm.doc.customer}`],
+					["Dynamic Link", "parenttype", "=", "Address"]
+				],
+				fields: ["address_line1", "address_line2", "country", "city", "pincode", "state", "address_type"]
+			}
+		);
+
+
+		let billingAddress = null;
+		let shippingAddress = null;
+
+		// Find the first Billing and Shipping address
+		for (let address of linked_contacts_and_addresses) {
+			if (address.address_type === 'Billing' && !billingAddress) {
+				billingAddress = address;
+			} else if (address.address_type === 'Shipping' && !shippingAddress) {
+				shippingAddress = address;
+			}
+
+			// Exit the loop if both addresses are found
+			if (billingAddress && shippingAddress) {
+				break;
+			}
+		}
+
+		let addresses_info = '';
+		if (billingAddress) {
+			addresses_info += `
+						<br><b>Address Type: Billing</b><br>
+						Address Line 1: ${billingAddress.address_line1}<br>
+						Address Line 2: ${billingAddress.address_line2 || 'N/A'}<br>
+						Country: ${billingAddress.country}<br>
+						City: ${billingAddress.city}<br>
+						Postal Code: ${billingAddress.pincode || 'N/A'}<br>
+						State/Province: ${billingAddress.state}<br>
+					`;
+		}
+
+		if (shippingAddress) {
+			addresses_info += `
+						<br><b>Address Type: Shipping</b><br>
+						Address Line 1: ${shippingAddress.address_line1}<br>
+						Address Line 2: ${shippingAddress.address_line2 || 'N/A'}<br>
+						Country: ${shippingAddress.country}<br>
+						City: ${shippingAddress.city}<br>
+						Postal Code: ${shippingAddress.pincode || 'N/A'}<br>
+						State/Province: ${shippingAddress.state}<br>
+					`;
+		}
+
+		frappe.msgprint({
+			title: __('Customer Information'),
+			indicator: 'green',
+			message: __(
+				`Name: ${customer.name || 'No name provided'}<br>` +
+				`Phone: ${customer.phone_number || customer.mobile_no || 'No phone number provided'}<br>` +
+				`Email: ${customer.email_id || 'No email provided'}<br><br>` +
+				`Addresses: ${addresses_info || 'No addresses found'}`
+			)
+		});
+	})
+}
+
+function validateBankTransferPayment(frm) {
+	frm.add_custom_button("Validate Bank Transfer Payment", async () => {
+		if (frm.doc.status === "Invoice paid" || frm.doc.status === "Completed" || frm.doc.status === "Cancelled") {
+			frappe.msgprint('The project is already paid, completed, or cancelled');
+			return;
+		}
+		frappe.prompt([
+				{
+					label: 'Select Payment Type',
+					fieldname: 'confirm_method',
+					fieldtype: 'Select',
+					options: ['workshop', 'loan car'],
+					reqd: 1,
+					description: `
+									<ul style="color: #d14343; padding-left: 20px;">
+											<li>Approved quotations will be marked as paid.</li>
+											<li>An invoice will be generated.</li>
+											<li>The invoice will be sent to the customer.</li>
+											<li>The project status will be updated to "Invoice Paid".</li>
+											<li>This action can <span style="font-weight: bold;">NOT</span> be undone.</li>
+									</ul>
+							`
+				}
+			],
+			async (values) => {
+				frappe.confirm(
+					"Are you sure you want to mark approved quotations as paid? By confirming, you acknowledge that the payment has been verified in the company's account.",
+					async () => {
+						try {
+							const response = await frappe.call({
+								method: "frappe.desk.reportview.get_list",
+								args: {
+									doctype: "Quotation",
+									filters: [["project_name", "=", frm.doc.name], ["status", "=", "Approved"]],
+									fields: ["name", "grand_total"]
+								}
+							});
+
+							if (response.message && response.message.length > 0) {
+								const quotations = response.message;
+								const totalAmount = quotations.reduce((sum, q) => sum + q.grand_total, 0);
+								const { aws_url, confirm_payment_webhook } = await frappe.db.get_doc('Rest Config');
+								if (!aws_url || !confirm_payment_webhook) {
+									frappe.msgprint('AWS URL or Confirm Payment Webhook not found');
+									return;
+								}
+
+								const paymentData = {
+									confirm_payment_webhook: confirm_payment_webhook,
+									selected_method: values.confirm_method,
+									name: frm.doc.name,
+									payment_gateway: "manual",
+									total: totalAmount
+								};
+
+								const apiResponse = await fetch(`${aws_url}manual-confirm-payment`, {
+									method: 'POST',
+									headers: {
+										'Content-Type': 'application/json',
+									},
+									body: JSON.stringify(paymentData)
+								});
+
+								if (apiResponse.ok) {
+									frappe.msgprint({
+										title: 'Success',
+										indicator: 'green',
+										message: 'Payment confirmed successfully'
+									});
+									frm.reload_doc();
+								} else {
+									throw new Error('API call failed');
+								}
+							} else {
+								frappe.msgprint('No quotations found for this project');
+							}
+						} catch (error) {
+							frappe.msgprint({
+								title: 'Error',
+								indicator: 'red',
+								message: 'An error occurred while processing the payment: ' + error.message
+							});
+						}
+					},
+					() => {
+						frappe.msgprint('Payment action cancelled');
+					}
+				);
+			},
+			'Confirm Payment Method',
+			'Confirm Payment Type and Proceed');
+	});
 }
