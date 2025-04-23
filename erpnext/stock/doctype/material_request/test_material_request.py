@@ -10,7 +10,7 @@ import json
 from frappe.tests.utils import FrappeTestCase, change_settings, if_app_installed
 from frappe.utils import flt, today, add_days, nowdate, getdate
 from datetime import date
-
+from erpnext.stock.doctype.material_request.material_request import make_purchase_order_based_on_supplier
 from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.stock.doctype.material_request.material_request import (
 	make_in_transit_stock_entry,
@@ -3125,6 +3125,43 @@ class TestMaterialRequest(FrappeTestCase):
 		make_payment_entry(pi.doctype, pi.name, pi.outstanding_amount, args)
 		pi.reload()
 		self.assertEqual(pi.status, "Paid")
+
+	def test_fetching_item_from_open_mr_TC_B_096(self):
+		#Scenario :Fetching Items from Open Material Requests
+		item = create_item("_Test Item")
+		supplier = create_supplier(supplier_name="_Test Supplier")
+		company = "_Test Company"
+		if not frappe.db.exists("Company", company):
+			company = frappe.new_doc("Company")
+			company.company_name = company
+			company.country="India",
+			company.default_currency= "INR",
+			company.save()
+		else:
+			company = frappe.get_doc("Company", company) 
+		frappe.db.set_value("Item Default", {"parent": item.item_code, "company": company.name}, "default_supplier", supplier.name)
+		mr_dict_list = {
+				"company" : company.name,
+				"purpose":"Purchase",
+				"item_code" : item.item_code,
+				"warehouse" : create_warehouse("Stores - _TC", company=company.name),
+				"qty" : 1,
+				"rate" : 100,
+			}
+		mr = make_material_request(**mr_dict_list)
+		po = make_purchase_order_based_on_supplier(source_name=mr.name, args={"supplier":supplier.name})
+		po.warehouse = "Stores - _TC"
+		po.items[0].rate = 100 if po.items[0].item_code == item.item_code else 0
+		po.save()
+		po.submit()
+		self.assertEqual(po.items[0].material_request, mr.name)
+		mr.reload()
+		self.assertEqual(mr.status, "Ordered")
+		pr = make_test_pr(po.name)
+		self.assertEqual(pr.items[0].material_request, mr.name)
+		self.assertEqual(pr.items[0].purchase_order, po.name)
+		mr.reload()
+		self.assertEqual(mr.status, "Received")	
 
 	def test_mr_po_pi_TC_SCK_082(self):
 		# MR =>  PO => PI
