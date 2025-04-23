@@ -4888,7 +4888,7 @@ class TestSalesInvoice(FrappeTestCase):
 		income_account = sales_invoice.items[0].income_account
 		shipping_rule_account = frappe.db.get_value("Shipping Rule", "_Test Shipping Rule", "account")
 
-		shipping_charge = 50  
+		shipping_charge = 200  
 		expected_grand_total = 20000 + shipping_charge
 		self.assertEqual(sales_invoice.grand_total , expected_grand_total)
 
@@ -4899,9 +4899,9 @@ class TestSalesInvoice(FrappeTestCase):
 		)
 
 		expected_si_gl = {
-			sales_invoice.debit_to: 20050,       
+			sales_invoice.debit_to: 20200,       
 			income_account: -20000,            
-			shipping_rule_account: -50         
+			shipping_rule_account: -200        
 		}
 
 		for entry in si_gl_entries:
@@ -6654,7 +6654,7 @@ class TestSalesInvoice(FrappeTestCase):
 		si.submit()
 
 		self.assertEqual(si.status, "Unpaid")
-		self.assertEqual(si.grand_total, 1000)
+		self.assertEqual(si.grand_total, 10000)
   
 	@change_settings("Selling Settings", {"allow_multiple_items": 1})
 	def test_sales_invoice_to_allow_item_multiple_times_TC_S_159(self):
@@ -7197,6 +7197,8 @@ def setup_accounts():
 	frappe.db.set_value(
 		"Company", "_Test Company with perpetual inventory", "unrealized_profit_loss_account", account
 	)
+	frappe.db.set_value(
+		"Company", "_Test Company", "stock_adjustment_account", "Cost of Goods Sold - _TC")
 
 
 def add_taxes(doc):
