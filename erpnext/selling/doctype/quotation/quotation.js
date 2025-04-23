@@ -35,11 +35,13 @@ frappe.ui.form.on("Quotation", {
 				},
 			};
 		});
+		frm.set_value('selling_price_list', "Retail");
 	},
 
 	refresh: function (frm) {
 		frm.trigger("set_label");
 		frm.trigger("set_dynamic_field_label");
+		frm.set_value('selling_price_list', "Retail");
 
 		let sbb_field = frm.get_docfield("packed_items", "serial_and_batch_bundle");
 		if (sbb_field) {
@@ -51,6 +53,9 @@ frappe.ui.form.on("Quotation", {
 				};
 			};
 		}
+
+		insertResendQuotationApprovalButton(frm);
+		frm.trigger("set_custom_buttons");
 	},
 
 	quotation_to: function (frm) {
@@ -73,6 +78,25 @@ erpnext.selling.QuotationController = class QuotationController extends erpnext.
 		// TODO: think of better way to do this
 		// this.frm.trigger("disable_customer_if_creating_from_opportunity");
 	}
+	quotation_template() {
+		if (this.frm.doc.quotation_template) {
+			frappe.db.get_doc("Quotation Templates", this.frm.doc.quotation_template).then((doc) => {
+				const items = doc.items.map((item) => {
+					return {
+						item_code: item.item_code,
+						item_name: item.item_name,
+						description: item.description,
+						qty: item.qty,
+						rate: item.rate,
+						amount: item.rate * item.qty
+					};
+				});
+				this.frm.set_value('items', items);
+				this.apply_price_list();
+			})
+		}
+	}
+
 	party_name() {
 		var me = this;
 		erpnext.utils.get_party_details(this.frm, null, null, function () {
@@ -400,3 +424,440 @@ frappe.ui.form.on("Quotation Item", "stock_balance", function (frm, cdt, cdn) {
 	frappe.route_options = { item_code: d.item_code };
 	frappe.set_route("query-report", "Stock Balance");
 });
+
+//---------------------------------- Quotation on item code change and qty change
+frappe.ui.form.on('Quotation Item', {
+	item_code: function (frm, cdt, cdn) {
+		const row = locals[cdt][cdn];
+		if (row.is_product_bundle) {
+			initializeLocalStorage(row);
+			storeOriginalQuantities(row);
+			const exist = validateItemsNotExist(frm, row.item_code, row);
+			if (exist) {
+				frappe.msgprint(__("Product bundle {0} already exists in the quotation. Please remove it before adding a new item.", [row.item_code]));
+				return;
+			}
+			const confirmItems = [];
+			let concatenatedDescription = '';
+			processProductBundle(frm, row, confirmItems, concatenatedDescription);
+		}
+	},
+
+	qty: function (frm, cdt, cdn) {
+		const row = locals[cdt][cdn];
+		if (row.qty < 0) {
+			row.qty = Math.abs(row.qty);
+			refreshQuotationFields(frm);
+		}
+		if (row.is_product_bundle) {
+			const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
+			const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
+			if (!originalQuantities) return;
+			updateSubItemQuantities(frm, row, originalQuantities);
+		}
+	},
+	discount_percentage: function (frm, cdt, cdn) {
+		const row = locals[cdt][cdn];
+		const rate = row.base_price_list_rate;
+
+		if (rate <= 0) return
+
+		const discount_percentage = row.discount_percentage;
+		const discount_amount = Number(((rate * discount_percentage) / 100).toFixed(2));
+
+		row.rate = rate - discount_amount;
+		row.discount_percentage = discount_percentage;
+		row.discount_amount = discount_amount
+
+		const allItems = frm.doc.items.map(item => {
+			if (item.item_code === row.item_code) {
+				item.discount_percentage = discount_percentage;
+				item.discount_amount = discount_amount;
+			}
+			return item;
+		});
+		frm.set_value('items', allItems);
+		refreshQuotationFields(frm);
+	},
+});
+
+function validateItemsNotExist(frm, item_code, current_row) {
+	return frm.doc.items.some(item => {
+		return item.item_code === item_code && item.is_product_bundle && item.name !== current_row.name;
+	});
+}
+
+
+function initializeLocalStorage(row) {
+	const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
+	if (!localStorage.getItem(storage_name)) {
+		localStorage.setItem(storage_name, JSON.stringify({}));
+	}
+}
+
+function storeOriginalQuantities(row) {
+	const storage_name = `Quotation:OriginalQuantities:${row.item_code}`;
+	const originalQuantities = JSON.parse(localStorage.getItem(storage_name));
+	originalQuantities[row.item_code] = {
+		qty: row.qty,
+		rate: row.rate,
+		product_bundle_items: row.product_bundle_items.map(bundleItem => ({
+			item_code: bundleItem.item_code,
+			qty: bundleItem.qty,
+			sub_items: bundleItem.sub_items.map(subItem => ({
+				item_code: subItem.item_code,
+				qty: subItem.qty
+			}))
+		}))
+	};
+	localStorage.setItem(storage_name, JSON.stringify(originalQuantities));
+}
+
+function processProductBundle(frm, row, confirmItems, concatenatedDescription) {
+	row.product_bundle_items.forEach(bundleItem => {
+		const visibleDescriptions = row.product_bundle_items
+			.filter(item => item.description_visible)
+			.map(item => item.description || '');
+
+		concatenatedDescription = visibleDescriptions.join(', ').trim();
+
+		bundleItem.sub_items.forEach(subItem => {
+			subItem.qty *= bundleItem.qty;
+
+			if (subItem.options === "Recommended additional") {
+				confirmItems.push({ ...subItem, _parent: subItem._product_bundle });
+			} else {
+				addSubItemToQuotation(frm, subItem, row);
+			}
+		});
+	});
+
+	updateRowDescription(frm, row, concatenatedDescription);
+	showDialog(frm, row, confirmItems);
+}
+
+function addSubItemToQuotation(frm, subItem, row) {
+	frm.add_child('items', {
+		item_name: subItem.item_code,
+		item_code: subItem.item_code,
+		description: subItem.description,
+		weight_per_unit: row.weight_per_unit,
+		qty: subItem.qty,
+		rate: subItem.price,
+		uom: row.uom,
+		stock_uom: row.stock_uom,
+		_parent: row.item_code,
+		parentfield: "items",
+		parenttype: "Quotation"
+	});
+}
+
+function updateRowDescription(frm, row, concatenatedDescription) {
+	setTimeout(() => {
+		row.description = concatenatedDescription;
+		const allItems = frm.doc.items.map(item => updateItemRate(item, row));
+		frm.set_value('items', allItems);
+		refreshQuotationFields(frm);
+	}, 1000);
+}
+
+function updateItemRate(item, row) {
+	if (item.name === row.name) {
+		item.description = row.description;
+	}
+	item.rate = item.product_bundle_items?.reduce((total, bundleItem) =>
+		total + (bundleItem.qty * bundleItem.price), 0) || item.rate || 0;
+
+	return item;
+}
+
+function showDialog(frm, row, confirmItems) {
+	const dialog = new frappe.ui.Dialog({
+		title: __(row.item_code),
+		fields: createDialogFields(row, confirmItems),
+		primary_action_label: __("Add Items"),
+		secondary_action_label: __("Cancel"),
+		primary_action(values) {
+			addSelectedItemsToQuotation(frm, values, confirmItems, row);
+			dialog.hide();
+		},
+		secondary_action() {
+			dialog.hide();
+		}
+	});
+
+	dialog.$wrapper.modal({
+		backdrop: "static",
+		keyboard: false,
+		size: "1024px"
+	});
+	dialog.show();
+	dialog.$wrapper.find('.modal-dialog').css("max-width", "1024px").css("width", "1024px");
+}
+
+function createDialogFields(row, confirmItems) {
+	const tableOptions = createSummaryTable(row);
+	const fields = [{
+		fieldtype: 'HTML',
+		fieldname: 'summary_table',
+		options: tableOptions
+	}];
+	confirmItems.forEach(item => {
+		fields.push({
+			label: item.item_code,
+			fieldname: item.item_code,
+			fieldtype: 'Check',
+			default: 0
+		});
+	});
+	return fields;
+}
+
+function createSummaryTable(row) {
+	const tableHeader = `
+        <thead>
+            <tr>
+                <th>${__("Quantity")}</th>
+                <th>${__("Item Code")}</th>
+                <th>${__("Description")}</th>
+                <th>${__("Rate (EUR)")}</th>
+                <th>${__("Amount (EUR)")}</th>
+            </tr>
+        </thead>
+    `;
+	const tableBody = row.product_bundle_items.map(bundleItem => createBundleItemRow(bundleItem)).join('');
+
+	const totalRow = `
+        <tr>
+            <td colspan="4"><strong>${__("Total")}</strong></td>
+            <td><strong>${format_currency(calculateTotal(row))}</strong></td>
+        </tr>
+    `;
+
+	return `<table class="table table-bordered">${tableHeader}<tbody>${tableBody}${totalRow}</tbody></table>
+            <p><strong>${__("Recommended Additional Items")}:</strong></p>`;
+}
+
+function createBundleItemRow(bundleItem) {
+	const bundleAmount = bundleItem.qty * bundleItem.price;
+	let rows = `
+        <tr>
+            <td>${bundleItem.qty}</td>
+            <td>${bundleItem.item_code}</td>
+            <td>${bundleItem.description}</td>
+            <td>${format_currency(bundleItem.price)}</td>
+            <td>${format_currency(bundleAmount)}</td>
+        </tr>
+    `;
+	rows += bundleItem.sub_items
+		.filter(subItem => subItem.options !== "Recommended additional")
+		.map(subItem => createSubItemRow(bundleItem, subItem)).join('');
+	return rows;
+}
+
+function createSubItemRow(bundleItem, subItem) {
+	const subItemAmount = subItem.qty * subItem.price;
+	return `
+        <tr>
+            <td>${subItem.qty}</td>
+            <td>${subItem.item_code}</td>
+            <td>${subItem.description}</td>
+            <td>${format_currency(subItem.price)}</td>
+            <td>${format_currency(subItemAmount)}</td>
+        </tr>
+    `;
+}
+
+function calculateTotal(row) {
+	return row.product_bundle_items.reduce((total, bundleItem) => {
+		const bundleSubtotal = bundleItem.qty * (bundleItem.price || 0);
+		const subItemsTotal = bundleItem.sub_items
+			.filter(subItem => subItem.options !== "Recommended additional")
+			.reduce((subTotal, subItem) => {
+				return subTotal + (subItem.qty * (subItem.price || 0));
+			}, 0);
+		return total + bundleSubtotal + subItemsTotal;
+	}, 0);
+}
+
+function addSelectedItemsToQuotation(frm, values, confirmItems, row) {
+	confirmItems.forEach(item => {
+		if (values[item.item_code]) {
+			frm.add_child('items', {
+				item_name: item.item_code,
+				item_code: item.item_code,
+				description: item.description,
+				qty: item.qty,
+				rate: item.price,
+				uom: row.uom,
+				stock_uom: row.stock_uom,
+				parent: row.parent,
+				_parent: item._parent,
+				_product_bundle: item._product_bundle,
+				parentfield: "items",
+				parenttype: "Quotation",
+				weight_per_unit: row.weight_per_unit
+			});
+		}
+	});
+
+	refreshQuotationFields(frm);
+}
+
+function updateSubItemQuantities(frm, row, originalQuantities) {
+	const storage = originalQuantities[row.item_code];
+	const nuevaQtyProductBundle = row.qty;
+	frm.doc.items.forEach(item => {
+		if (item._parent === row.item_code) {
+			storage.product_bundle_items.forEach(bundleItem => {
+				bundleItem.sub_items.forEach(subItem => {
+					if (subItem.item_code === item.item_code) {
+						const updatedQty = (subItem.qty * bundleItem.qty) * nuevaQtyProductBundle;
+						frappe.model.set_value(item.doctype, item.name, 'qty', updatedQty);
+					}
+				});
+			});
+		}
+	});
+	refreshQuotationFields(frm);
+}
+
+//---------------------------------- Quotation on selling price list change
+frappe.ui.form.on('Quotation', {
+	selling_price_list: function (frm) {
+		if (!frm.doc.items.length || (frm.doc.items.length > 0 && !frm.doc.items[0].item_code)) {
+			return;
+		}
+
+		const itemCodesToSend = collectItemCodes(frm);
+
+		const newSellingPriceList = frm.doc.selling_price_list;
+		frappe.call({
+			method: "erpnext.stock.get_item_details.get_item_product_bundle_template",
+			args: {
+				args: {
+					item_codes: itemCodesToSend,
+					selling_price_list: newSellingPriceList
+				}
+			},
+			callback: function (r) {
+				if (r.message) {
+					updateItemRates(frm, r.message);
+				}
+			}
+		});
+	}
+});
+
+function collectItemCodes(frm) {
+	const itemCodesToSend = [];
+
+	frm.doc.items.forEach(item => {
+		if (item.is_product_bundle) {
+			item.product_bundle_items.forEach(bundleItem => {
+				if (bundleItem.description_visible) {
+					itemCodesToSend.push(bundleItem.item_code);
+					bundleItem.sub_items.forEach(subItem => {
+						if (!frm.doc.items.some(docItem => docItem.item_code === subItem.item_code)) {
+							itemCodesToSend.push(subItem.item_code);
+						}
+					});
+				}
+			});
+		} else {
+			itemCodesToSend.push(item.item_code);
+		}
+	});
+
+	return itemCodesToSend;
+}
+
+function updateItemRates(frm, updatedPrices) {
+	frm.doc.items.forEach(item => {
+		if (item.is_product_bundle) {
+			let newRate = 0;
+
+			item.product_bundle_items.forEach(bundleItem => {
+				if (updatedPrices[bundleItem.item_code]) {
+					bundleItem.price = updatedPrices[bundleItem.item_code];
+					if (bundleItem.description_visible) {
+						newRate += bundleItem.qty * bundleItem.price;
+					}
+				}
+
+				bundleItem.sub_items.forEach(subItem => {
+					if (!frm.doc.items.some(docItem => docItem.item_code === subItem.item_code) && updatedPrices[subItem.item_code]) {
+						subItem.price = updatedPrices[subItem.item_code];
+						newRate += subItem.qty * subItem.price;
+					}
+				});
+			});
+
+			item.rate = newRate;
+		} else if (updatedPrices[item.item_code]) {
+			item.rate = updatedPrices[item.item_code];
+		}
+	});
+
+	refreshQuotationFields(frm);
+}
+
+function refreshQuotationFields(frm) {
+	frm.refresh_field('items');
+	frm.trigger('calculate_taxes_and_totals');
+	frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+}
+
+async function insertResendQuotationApprovalButton(frm) {
+	if (!["Approved", "Ordered"].includes(frm.doc.status)) {
+		frm.add_custom_button(__('Resend Approve Message'), () => {
+			var d = new frappe.ui.Dialog({
+				title: __("The message and quotation attached will be sent to the client for approval"),
+				fields: [],
+				primary_action_label: __("Send"),
+				primary_action: async function () {
+					const { aws_url } = await frappe.db.get_doc('Queue Settings')
+					console.log({ aws_url })
+					const url = `${aws_url}quotation/created`;
+					const obj = {
+						"party_name": frm.doc.party_name,
+						"customer_name": frm.doc.customer_name,
+						"doctype": "Quotation",
+						"name": frm.doc.name,
+						"grand_total": frm.doc.grand_total
+					};
+					console.log(obj);
+
+					fetch(url, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify(obj)
+					})
+						.then(() => {
+							frappe.show_alert({
+								message: __('Message sent'),
+								indicator: 'green'
+							}, 10);
+						})
+						.catch((error) => {
+							frappe.show_alert({
+								message: __('An error occurred while sending the message'),
+								indicator: 'red'
+							}, 10);
+							console.error('Error:', error);
+						});
+
+					d.hide();
+				},
+				secondary_action_label: __("Cancel"),
+				secondary_action: function () {
+					d.hide();
+				}
+			});
+
+			d.show();
+		});
+	}
+}

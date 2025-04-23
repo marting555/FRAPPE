@@ -9,6 +9,7 @@ import frappe
 from frappe import _, throw
 from frappe.model.document import Document
 from frappe.utils import formatdate, getdate, today
+from frappe.integrations.utils import make_post_request
 
 
 class OverlapError(frappe.ValidationError):
@@ -39,11 +40,39 @@ class HolidayList(Document):
 		]
 	# end: auto-generated types
 
+	def before_save(self):
+		config = frappe.get_single("Whatsapp Config")
+		aws_url = config.aws_url
+		old_rows = set()
+		if self.get_doc_before_save():
+			old_rows = {str(row.holiday_date) for row in self.get_doc_before_save().get("holidays")}
+
+		new_rows = {str(row.holiday_date) for row in self.get("holidays")}
+
+		added_rows = new_rows - old_rows
+		deleted_rows = old_rows - new_rows
+
+		if added_rows:
+			for row in added_rows:
+				self.switch_holiday_status(row, aws_url)
+
+		if deleted_rows:
+			for row in deleted_rows:
+				self.switch_holiday_status(row, aws_url)
+
 	def validate(self):
 		self.validate_days()
 		self.total_holidays = len(self.holidays)
 		self.validate_duplicate_date()
 		self.sort_holidays()
+
+	def switch_holiday_status(self, date: str, aws_url: str):
+		url = f"{aws_url}/appointments/fixed-appointments"
+		make_post_request(
+			url,
+			headers={"Content-Type": "application/json"},
+			data=json.dumps({"date":date}),
+		)
 
 	@frappe.whitelist()
 	def get_weekly_off_dates(self):

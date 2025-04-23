@@ -4,6 +4,7 @@
 
 import json
 
+from erpnext.stock.product_bundle_template import ProductBundleTemplate
 import frappe
 from frappe import _, throw
 from frappe.model import child_table_fields, default_fields
@@ -23,6 +24,7 @@ from erpnext.setup.utils import get_exchange_rate
 from erpnext.stock.doctype.item.item import get_item_defaults, get_uom_conv_factor
 from erpnext.stock.doctype.item_manufacturer.item_manufacturer import get_item_manufacturer_part_no
 from erpnext.stock.doctype.price_list.price_list import get_price_list_details
+
 
 sales_doctypes = ["Quotation", "Sales Order", "Delivery Note", "Sales Invoice", "POS Invoice"]
 purchase_doctypes = [
@@ -57,7 +59,6 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 	        "set_warehouse": ""
 	}
 	"""
-
 	args = process_args(args)
 	for_validate = process_string_args(for_validate)
 	overwrite_warehouse = process_string_args(overwrite_warehouse)
@@ -134,6 +135,20 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 		out.amount = flt(args.qty) * flt(out.rate)
 
 	out = remove_standard_fields(out)
+
+	if out.get("is_product_bundle"):
+		searcher = (
+				ProductBundleTemplate()
+				.set_item_code(args.item_code)
+				.set_price_list(args.price_list)
+				.validate()
+				.searchProductBundle()
+			)
+		if searcher is not None:
+			out.product_bundle_items = searcher["subitems_list"]
+		else:
+			out.product_bundle_items = []
+
 	return out
 
 
@@ -146,8 +161,8 @@ def remove_standard_fields(details):
 def set_valuation_rate(out, args):
 	if frappe.db.exists("Product Bundle", {"name": args.item_code, "disabled": 0}, cache=True):
 		valuation_rate = 0.0
+		rate = 0.0
 		bundled_items = frappe.get_doc("Product Bundle", args.item_code)
-
 		for bundle_item in bundled_items.items:
 			valuation_rate += flt(
 				get_valuation_rate(bundle_item.item_code, args.company, out.get("warehouse")).get(
@@ -155,9 +170,8 @@ def set_valuation_rate(out, args):
 				)
 				* bundle_item.qty
 			)
-
-		out.update({"valuation_rate": valuation_rate})
-
+			rate += bundle_item.rate * bundle_item.qty
+		out.update({"valuation_rate": valuation_rate, "is_product_bundle": True})
 	else:
 		out.update(get_valuation_rate(args.item_code, args.company, out.get("warehouse")))
 
@@ -889,6 +903,42 @@ def get_default_supplier(args, item, item_group, brand):
 
 
 def get_price_list_rate(args, item_doc, out=None):
+	"""
+    :param args: {
+        "item_code": str,
+        "barcode": str or None,
+        "batch_no": str or None,
+        "warehouse": str,
+        "customer": str,
+        "currency": str,
+        "update_stock": int,
+        "conversion_rate": float,
+        "price_list": str,
+        "price_list_currency": str,
+        "plc_conversion_rate": float,
+        "company": str,
+        "is_pos": int,
+        "is_return": int,
+        "ignore_pricing_rule": int,
+        "doctype": str,
+        "name": str,
+        "qty": int,
+        "net_rate": float,
+        "stock_qty": float,
+        "conversion_factor": float,
+        "weight_per_unit": float,
+        "uom": str,
+        "weight_uom": str,
+        "manufacturer": str or None,
+        "stock_uom": str,
+        "pos_profile": str,
+        "cost_center": str,
+        "tax_category": str,
+        "child_docname": str,
+        "transaction_type": str,
+        "transaction_date": str,
+    }
+    """
 	if out is None:
 		out = frappe._dict()
 
@@ -905,7 +955,6 @@ def get_price_list_rate(args, item_doc, out=None):
 			validate_conversion_rate(args, meta)
 
 		price_list_rate = get_price_list_rate_for(args, item_doc.name)
-
 		# variant
 		if price_list_rate is None and item_doc.variant_of:
 			price_list_rate = get_price_list_rate_for(args, item_doc.variant_of)
@@ -1357,7 +1406,6 @@ def apply_price_list(args, as_doc=False, doc=None):
 	        }
 	"""
 	args = process_args(args)
-
 	parent = get_price_list_currency_and_exchange_rate(args)
 	args.update(parent)
 
@@ -1374,7 +1422,7 @@ def apply_price_list(args, as_doc=False, doc=None):
 			children.append(item_details)
 
 	if as_doc:
-		args.price_list_currency = (parent.price_list_currency,)
+		args.price_list_currency = (parent.price_list_currency)
 		args.plc_conversion_rate = parent.plc_conversion_rate
 		if args.get("items"):
 			for i, item in enumerate(args.get("items")):
@@ -1392,7 +1440,6 @@ def apply_price_list_on_item(args, doc=None):
 	item_doc = frappe.db.get_value("Item", args.item_code, ["name", "variant_of"], as_dict=1)
 	item_details = get_price_list_rate(args, item_doc)
 	item_details.update(get_pricing_rule_for_item(args, doc=doc))
-
 	return item_details
 
 
@@ -1542,3 +1589,25 @@ def get_blanket_order_details(args):
 		blanket_order_details = blanket_order_details[0] if blanket_order_details else ""
 
 	return blanket_order_details
+
+@frappe.whitelist()
+def get_item_product_bundle_template(args):
+
+    if isinstance(args, str):
+        import json
+        args = json.loads(args)
+
+    item_codes = args.get("item_codes", [])
+    selling_price_list = args.get("selling_price_list", "")
+
+    searcher = ProductBundleTemplate().set_price_list(selling_price_list)
+    item_prices = {}
+
+    for item_code in item_codes:
+        searcher.set_item_code(item_code)
+        item_details = frappe.get_doc("Item", item_code)
+        item_price = searcher.get_item_price(item_details)
+        item_prices[item_code] = item_price
+
+    return item_prices
+

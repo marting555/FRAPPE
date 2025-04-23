@@ -99,6 +99,7 @@
   {
    "fieldname": "income_account",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Default Income Account",
    "options": "Account"
   },

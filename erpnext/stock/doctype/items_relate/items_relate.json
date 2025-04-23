@@ -1,0 +1,60 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-05-29 21:20:38.347686",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "options",
+  "qty",
+  "tvs_pn",
+  "rate"
+ ],
+ "fields": [
+  {
+   "default": "1",
+   "fieldname": "qty",
+   "fieldtype": "Data",
+   "label": "Qty"
+  },
+  {
+   "fieldname": "options",
+   "fieldtype": "Select",
+   "label": "Options",
+   "options": "\nRequired additional parts\nRecommended additional"
+  },
+  {
+   "fetch_from": "item_code.tvs_pn",
+   "fieldname": "tvs_pn",
+   "fieldtype": "Data",
+   "label": "TVS PN"
+  },
+  {
+   "fetch_from": "item_code.valuation_rate",
+   "fieldname": "rate",
+   "fieldtype": "Data",
+   "label": "Rate"
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item Code",
+   "options": "Item"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-10-18 20:26:09.789990",
+ "modified_by": "Administrator",
+ "module": "Stock",
+ "name": "Items Relate",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

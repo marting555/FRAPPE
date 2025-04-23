@@ -11,7 +11,7 @@ from frappe.utils import flt
 def execute(filters=None):
 	if not filters:
 		filters = {}
-
+	filters = {}
 	columns = get_columns(filters)
 	item_map = get_item_details(filters)
 	pl = get_price_list()

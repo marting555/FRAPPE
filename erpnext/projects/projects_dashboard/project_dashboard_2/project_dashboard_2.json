@@ -1,0 +1,37 @@
+{
+ "cards": [
+  {
+   "card": "Card One"
+  },
+  {
+   "card": "Quotations"
+  },
+  {
+   "card": "En Fila"
+  },
+  {
+   "card": "Diagnostico Remoto"
+  },
+  {
+   "card": "Pruebas"
+  }
+ ],
+ "charts": [
+  {
+   "chart": "Project Dashboard chart",
+   "width": "Full"
+  }
+ ],
+ "creation": "2024-05-09 18:23:07.393456",
+ "dashboard_name": "Project Dashboard 2",
+ "docstatus": 0,
+ "doctype": "Dashboard",
+ "idx": 1,
+ "is_default": 1,
+ "is_standard": 1,
+ "modified": "2024-05-09 20:37:54.590829",
+ "modified_by": "Administrator",
+ "module": "Projects",
+ "name": "Project Dashboard 2",
+ "owner": "Administrator"
+}

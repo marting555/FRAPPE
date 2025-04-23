@@ -658,6 +658,7 @@ cur_frm.set_query("asset", "items", function (doc, cdt, cdn) {
 
 frappe.ui.form.on("Sales Invoice", {
 	setup: function (frm) {
+		frm.set_value('selling_price_list', "Retail");
 		frm.add_fetch("customer", "tax_id", "tax_id");
 		frm.add_fetch("payment_term", "invoice_portion", "invoice_portion");
 		frm.add_fetch("payment_term", "description", "description");
@@ -1075,6 +1076,39 @@ frappe.ui.form.on("Sales Invoice", {
 		if (frm.doc.is_debit_note) {
 			frm.set_df_property("return_against", "label", __("Adjustment Against"));
 		}
+		if (frm.fields_dict && frm.fields_dict.quotation_template.$input) {
+			frm.fields_dict.quotation_template.$input.on('awesomplete-select', function (e) {
+				const selected_value = e.originalEvent.text.value;
+				frappe.call({
+					method: "frappe.desk.form.load.getdoc",
+					args: {
+						doctype: "Quotation Templates",
+						name: selected_value,
+						fields: ["*"]
+					},
+					callback: function (r) {
+						if (r && r.docs && r.docs.length > 0) {
+							const template_details = r.docs[0];
+							const items = template_details.items.map((item) => {
+								return {
+									uom: item.uom ?? "Nos",
+									income_account: template_details.income_account ?? "Stripe - T",
+									item_code: item.item_code,
+									item_name: item.item_name,
+									description: item.description,
+									qty: item.qty,
+									rate: item.rate,
+									amount: item.rate * item.qty
+								};
+							});
+							frm.set_value('items', items);
+						} else {
+							console.log('No template found with the selected name.');
+						}
+					}
+				});
+			});
+		}
 	},
 });
 
@@ -1129,3 +1163,20 @@ var select_loyalty_program = function (frm, loyalty_programs) {
 
 	dialog.show();
 };
+
+frappe.ui.form.on("Sales Invoice Item", {
+	qty: function (frm, cdt, cdn) {
+		let row = locals[cdt][cdn];
+		if (row.qty < 0) {
+			row.qty = Math.abs(row.qty);
+		}
+		frm.refresh_field("items");
+		refreshSalesInvoicesFields(frm);
+	}
+});
+
+function refreshSalesInvoicesFields(frm) {
+	frm.trigger("calculate_taxes_and_totals");
+	frm.refresh_fields(['rate', 'total', 'grand_total', 'net_total']);
+}
+

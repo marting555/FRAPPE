@@ -15,13 +15,20 @@
   "quotation_to",
   "party_name",
   "customer_name",
+  "notes",
   "column_break_7",
+  "project_name",
   "transaction_date",
-  "valid_till",
+  "plate",
+  "mileage",
+  "description_title",
+  "auto_approve",
   "column_break1",
+  "status",
   "order_type",
   "company",
   "amended_from",
+  "valid_till",
   "currency_and_price_list",
   "currency",
   "conversion_rate",
@@ -30,8 +37,11 @@
   "price_list_currency",
   "plc_conversion_rate",
   "ignore_pricing_rule",
-  "items_section",
+  "section_break_auje",
+  "column_break_ijzh",
   "scan_barcode",
+  "quotation_template",
+  "items_section",
   "items",
   "sec_break23",
   "total_qty",
@@ -122,7 +132,6 @@
   "column_break_117",
   "order_lost_reason",
   "additional_info_section",
-  "status",
   "customer_group",
   "territory",
   "column_break_108",
@@ -175,7 +184,14 @@
    "reqd": 1
   },
   {
+   "fieldname": "notes",
+   "fieldtype": "Text Editor",
+   "in_list_view": 1,
+   "label": "Notes"
+  },
+  {
    "bold": 1,
+   "fetch_from": "project_name.customer",
    "fieldname": "party_name",
    "fieldtype": "Dynamic Link",
    "in_global_search": 1,
@@ -189,6 +205,7 @@
   },
   {
    "bold": 1,
+   "fetch_from": "project_name.customer",
    "fieldname": "customer_name",
    "fieldtype": "Data",
    "hidden": 1,
@@ -420,7 +437,8 @@
    "fieldtype": "Section Break",
    "hide_border": 1,
    "oldfieldtype": "Section Break",
-   "options": "fa fa-shopping-cart"
+   "options": "fa fa-shopping-cart",
+   "width": "100%"
   },
   {
    "allow_bulk_edit": 1,
@@ -893,6 +911,7 @@
    "width": "50%"
   },
   {
+   "allow_on_submit": 1,
    "default": "Draft",
    "fieldname": "status",
    "fieldtype": "Select",
@@ -901,9 +920,8 @@
    "no_copy": 1,
    "oldfieldname": "status",
    "oldfieldtype": "Select",
-   "options": "Draft\nOpen\nReplied\nPartially Ordered\nOrdered\nLost\nCancelled\nExpired",
+   "options": "Draft\nOpen\nApproved\nDeclined\nReplied\nPartially Ordered\nOrdered\nLost\nCancelled\nExpired",
    "print_hide": 1,
-   "read_only": 1,
    "reqd": 1
   },
   {
@@ -1064,7 +1082,8 @@
    "fieldname": "incoterm",
    "fieldtype": "Link",
    "label": "Incoterm",
-   "options": "Incoterm"
+   "options": "Incoterm",
+   "search_index": 1
   },
   {
    "depends_on": "incoterm",
@@ -1084,6 +1103,73 @@
    "label": "Company Contact Person",
    "options": "Contact",
    "print_hide": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fetch_from": "project_name.client_mileage_state",
+   "fieldname": "mileage",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Mileage"
+  },
+  {
+   "allow_on_submit": 1,
+   "fetch_from": "project_name.plate",
+   "fetch_if_empty": 1,
+   "fieldname": "plate",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Licence plate"
+  },
+  {
+   "default": "0",
+   "fieldname": "auto_approve",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Don't wait for acceptance"
+  },
+  {
+   "fetch_from": "project_name.description_title",
+   "fieldname": "description_title",
+   "fieldtype": "Data",
+   "ignore_user_permissions": 1,
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Description Title"
+  },
+  {
+   "fieldname": "quotation_template",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Quotation Template",
+   "options": "Quotation Templates",
+   "print_hide": 1
+  },
+  {
+   "fieldname": "project_name",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Project name",
+   "options": "Project"
+  },
+  {
+   "fieldname": "section_break_auje",
+   "fieldtype": "Section Break",
+   "label": "asd"
+  },
+  {
+   "fieldname": "column_break_ijzh",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-shopping-cart",
@@ -1187,5 +1273,6 @@
  "sort_order": "DESC",
  "states": [],
  "timeline_field": "party_name",
- "title_field": "title"
+ "title_field": "title",
+ "track_changes": 1
 }

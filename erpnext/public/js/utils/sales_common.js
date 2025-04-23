@@ -184,6 +184,7 @@ erpnext.sales_common = {
 
 			discount_percentage(doc, cdt, cdn) {
 				var item = frappe.get_doc(cdt, cdn);
+				if (!item) return
 				item.discount_amount = 0.0;
 				this.apply_discount_on_item(doc, cdt, cdn, "discount_percentage");
 			}
@@ -194,6 +195,7 @@ erpnext.sales_common = {
 				}
 
 				var item = frappe.get_doc(cdt, cdn);
+				if (!item) return
 				item.discount_percentage = 0.0;
 				this.apply_discount_on_item(doc, cdt, cdn, "discount_amount");
 			}

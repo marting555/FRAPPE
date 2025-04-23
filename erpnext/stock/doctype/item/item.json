@@ -16,25 +16,48 @@
   "item_name",
   "item_group",
   "stock_uom",
+  "qty_unit_measure",
+  "oe_ref",
+  "item_category",
+  "sub_category_name",
+  "condition",
+  "brand",
+  "supplier",
+  "required",
+  "tvs_pn",
+  "oe_pn",
+  "oem_pn",
   "column_break0",
-  "disabled",
-  "allow_alternative_item",
-  "is_stock_item",
-  "has_variants",
   "opening_stock",
   "valuation_rate",
   "standard_rate",
-  "is_fixed_asset",
-  "auto_create_assets",
-  "is_grouped_asset",
+  "purchase_pn",
+  "purchase_info",
+  "ean",
+  "location",
+  "over_billing_allowance",
   "asset_category",
   "asset_naming_series",
   "over_delivery_receipt_allowance",
-  "over_billing_allowance",
+  "alternatives",
+  "disabled",
+  "is_stock_item",
+  "has_variants",
+  "auto_create_assets",
+  "is_fixed_asset",
+  "is_grouped_asset",
+  "allow_alternative_item",
   "image",
+  "sub_items_list",
+  "subitems_list",
+  "transmission_code_compatibility_section",
+  "transmission_code_list",
   "section_break_11",
   "description",
-  "brand",
+  "interna_external_notes",
+  "internal_notes",
+  "column_break_usnh",
+  "external_notes",
   "unit_of_measure_conversion",
   "uoms",
   "dashboard_tab",
@@ -130,7 +153,12 @@
    "bold": 1,
    "fieldname": "item_code",
    "fieldtype": "Data",
+   "ignore_user_permissions": 1,
+   "in_filter": 1,
    "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Item Code",
    "oldfieldname": "item_code",
    "oldfieldtype": "Data",
@@ -154,7 +182,12 @@
    "bold": 1,
    "fieldname": "item_name",
    "fieldtype": "Data",
+   "ignore_user_permissions": 1,
+   "in_filter": 1,
    "in_global_search": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Item Name",
    "oldfieldname": "item_name",
    "oldfieldtype": "Data",
@@ -229,7 +262,7 @@
    "depends_on": "is_stock_item",
    "fieldname": "valuation_rate",
    "fieldtype": "Currency",
-   "label": "Valuation Rate"
+   "label": "Retail price"
   },
   {
    "bold": 1,
@@ -283,7 +316,8 @@
    "oldfieldname": "brand",
    "oldfieldtype": "Link",
    "options": "Brand",
-   "print_hide": 1
+   "print_hide": 1,
+   "reqd": 1
   },
   {
    "fieldname": "description",
@@ -882,6 +916,155 @@
    "fieldname": "deferred_accounting_section",
    "fieldtype": "Section Break",
    "label": "Deferred Accounting"
+  },
+  {
+   "fieldname": "oe_ref",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "OE Ref"
+  },
+  {
+   "fieldname": "item_category",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Category",
+   "options": "Item Category",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sub_category_name",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Sub category name",
+   "options": "Item SubCategory",
+   "reqd": 1
+  },
+  {
+   "fieldname": "tvs_pn",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "TVS PN"
+  },
+  {
+   "default": "NEW",
+   "fieldname": "condition",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Condition",
+   "options": "NEW\nREBUILD\nCOMBO",
+   "reqd": 1
+  },
+  {
+   "fieldname": "oe_pn",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "OE PN"
+  },
+  {
+   "fieldname": "oem_pn",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "OEM PN"
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Supplier",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "purchase_pn",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Purchase PN"
+  },
+  {
+   "fieldname": "purchase_info",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Purchase info"
+  },
+  {
+   "fieldname": "alternatives",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "alternatives"
+  },
+  {
+   "fieldname": "ean",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "EAN"
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Link",
+   "label": "Location",
+   "options": "Location"
+  },
+  {
+   "default": "0",
+   "fieldname": "required",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Required?"
+  },
+  {
+   "fieldname": "sub_items_list",
+   "fieldtype": "Section Break",
+   "label": "Sub Items"
+  },
+  {
+   "fieldname": "subitems_list",
+   "fieldtype": "Table",
+   "label": "Items list",
+   "options": "Items Relate"
+  },
+  {
+   "fieldname": "qty_unit_measure",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Qty unit of measure"
+  },
+  {
+   "columns": 2,
+   "fieldname": "interna_external_notes",
+   "fieldtype": "Section Break",
+   "label": "Internal and external notes"
+  },
+  {
+   "fieldname": "internal_notes",
+   "fieldtype": "Text Editor",
+   "label": "Internal notes"
+  },
+  {
+   "fieldname": "external_notes",
+   "fieldtype": "Text Editor",
+   "label": "External notes"
+  },
+  {
+   "fieldname": "column_break_usnh",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "transmission_code_compatibility_section",
+   "fieldtype": "Section Break",
+   "label": "Transmission Code Compatibility"
+  },
+  {
+   "fieldname": "transmission_code_list",
+   "fieldtype": "Table",
+   "label": "transmission code list",
+   "options": "Transmission code compatibility"
   }
  ],
  "icon": "fa fa-tag",

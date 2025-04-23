@@ -102,6 +102,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 			# set territory, customer_group, sales person etc
 			self.set_party_details(d)
+			self.party_total[d.party].update({"party_type": d.party_type})
 
 	def init_party_total(self, row):
 		default_dict = {
@@ -134,6 +135,9 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 
 		if self.filters.sales_partner:
 			self.party_total[row.party]["default_sales_partner"] = row.get("default_sales_partner", "")
+
+		if self.filters.sales_partner:
+			self.party_total[row.party]["default_sales_partner"] = row.get("default_sales_partner")
 
 	def get_columns(self):
 		self.columns = []

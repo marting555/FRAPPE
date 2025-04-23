@@ -6,19 +6,23 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "qty",
   "item_code",
+  "description",
+  "rate",
+  "amount",
   "customer_item_code",
+  "tvs_pn",
   "col_break1",
   "item_name",
+  "order_notes",
   "section_break_5",
-  "description",
   "item_group",
   "brand",
   "image_section",
   "image",
   "image_view",
   "quantity_and_rate",
-  "qty",
   "stock_uom",
   "col_break2",
   "uom",
@@ -41,9 +45,7 @@
   "distributed_discount_amount",
   "base_rate_with_margin",
   "section_break1",
-  "rate",
   "net_rate",
-  "amount",
   "net_amount",
   "item_tax_template",
   "col_break3",
@@ -81,16 +83,32 @@
   "shopping_cart_section",
   "additional_notes",
   "section_break_61",
-  "page_break"
+  "page_break",
+  "is_installed"
  ],
  "fields": [
   {
    "bold": 1,
-   "columns": 4,
+   "columns": 1,
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Quantity",
+   "oldfieldname": "qty",
+   "oldfieldtype": "Currency",
+   "print_width": "100px",
+   "reqd": 1,
+   "width": "100px"
+  },
+  {
+   "bold": 1,
+   "columns": 3,
    "fieldname": "item_code",
    "fieldtype": "Link",
    "in_global_search": 1,
    "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Item Code",
    "oldfieldname": "item_code",
    "oldfieldtype": "Link",
@@ -98,6 +116,43 @@
    "print_width": "150px",
    "search_index": 1,
    "width": "150px"
+  },
+  {
+   "columns": 2,
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "in_list_view": 1,
+   "label": "Description",
+   "oldfieldname": "description",
+   "oldfieldtype": "Small Text",
+   "print_width": "300px",
+   "width": "300px"
+  },
+  {
+   "bold": 1,
+   "columns": 1,
+   "fieldname": "rate",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Rate",
+   "oldfieldname": "export_rate",
+   "oldfieldtype": "Currency",
+   "options": "currency",
+   "print_width": "100px",
+   "width": "100px"
+  },
+  {
+   "columns": 1,
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount",
+   "oldfieldname": "export_amount",
+   "oldfieldtype": "Currency",
+   "options": "currency",
+   "print_width": "100px",
+   "read_only": 1,
+   "width": "100px"
   },
   {
    "fieldname": "customer_item_code",
@@ -158,19 +213,6 @@
    "label": "Quantity and Rate"
   },
   {
-   "bold": 1,
-   "columns": 2,
-   "fieldname": "qty",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Quantity",
-   "oldfieldname": "qty",
-   "oldfieldtype": "Currency",
-   "print_width": "100px",
-   "reqd": 1,
-   "width": "100px"
-  },
-  {
    "fieldname": "stock_uom",
    "fieldtype": "Link",
    "label": "Stock UOM",
@@ -190,16 +232,14 @@
    "fieldname": "uom",
    "fieldtype": "Link",
    "label": "UOM",
-   "options": "UOM",
-   "reqd": 1
+   "options": "UOM"
   },
   {
    "fieldname": "conversion_factor",
    "fieldtype": "Float",
    "label": "UOM Conversion Factor",
    "print_hide": 1,
-   "read_only": 1,
-   "reqd": 1
+   "read_only": 1
   },
   {
    "fieldname": "stock_qty",
@@ -304,38 +344,12 @@
    "fieldtype": "Section Break"
   },
   {
-   "bold": 1,
-   "columns": 2,
-   "fieldname": "rate",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Rate",
-   "oldfieldname": "export_rate",
-   "oldfieldtype": "Currency",
-   "options": "currency",
-   "print_width": "100px",
-   "width": "100px"
-  },
-  {
    "fieldname": "net_rate",
    "fieldtype": "Currency",
    "label": "Net Rate",
    "options": "currency",
    "print_hide": 1,
    "read_only": 1
-  },
-  {
-   "columns": 2,
-   "fieldname": "amount",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Amount",
-   "oldfieldname": "export_amount",
-   "oldfieldtype": "Currency",
-   "options": "currency",
-   "print_width": "100px",
-   "read_only": 1,
-   "width": "100px"
   },
   {
    "fieldname": "net_amount",
@@ -403,6 +417,15 @@
    "label": "Is Free Item",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "is_installed",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is installed",
+   "print_hide": 1
   },
   {
    "collapsible": 1,
@@ -559,12 +582,11 @@
   {
    "fieldname": "brand",
    "fieldtype": "Link",
-   "hidden": 1,
+   "in_preview": 1,
    "label": "Brand",
    "oldfieldname": "brand",
    "oldfieldtype": "Link",
    "options": "Brand",
-   "print_hide": 1,
    "print_width": "150px",
    "read_only": 1,
    "width": "150px"
@@ -693,6 +715,22 @@
    "print_hide": 1,
    "read_only": 1,
    "report_hide": 1
+  },
+  {
+   "fetch_from": "item_code.tvs_pn",
+   "fieldname": "tvs_pn",
+   "fieldtype": "Data",
+   "label": "TVS PN"
+  },
+  {
+   "columns": 2,
+   "fieldname": "order_notes",
+   "fieldtype": "Text Editor",
+   "in_list_view": 1,
+   "label": "Order Notes",
+   "print_hide": 1,
+   "print_width": "300px",
+   "width": "300px"
   }
  ],
  "idx": 1,

@@ -34,6 +34,7 @@ import "./utils/sales_common.js";
 import "./controllers/buying.js";
 import "./utils/demo.js";
 import "./financial_statements.js";
+import "./web_components_container.js"
 import "./sales_trends_filters.js";
 import "./purchase_trends_filters.js";
 

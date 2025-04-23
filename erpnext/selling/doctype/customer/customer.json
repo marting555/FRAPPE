@@ -16,6 +16,9 @@
   "customer_name",
   "customer_type",
   "customer_group",
+  "phone_number",
+  "is_phone_number_verified",
+  "is_dealer_verified",
   "column_break0",
   "territory",
   "gender",
@@ -185,6 +188,31 @@
    "search_index": 1
   },
   {
+    "fieldname": "phone_number",
+    "label": "Phone number",
+    "fieldtype": "Data",
+    "in_list_view": 1,
+    "reqd": 1,
+    "in_standard_filter": 1,
+    "in_filter": 1
+  },
+  {
+    "default": "0",
+    "fieldname": "is_phone_number_verified",
+    "fieldtype": "Check",
+    "label": "Is phone number verified",
+    "in_standard_filter": 1,
+    "in_list_view": 1
+   },
+   {
+    "default": "0",
+    "fieldname": "is_dealer_verified",
+    "fieldtype": "Check",
+    "label": "Is dealer verified",
+    "in_standard_filter": 1,
+    "in_list_view": 1
+   },
+  {
    "fieldname": "territory",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -207,11 +235,11 @@
    "options": "Tax Category"
   },
   {
-   "default": "0",
-   "fieldname": "disabled",
-   "fieldtype": "Check",
-   "label": "Disabled"
-  },
+    "default": "0",
+    "fieldname": "disabled",
+    "fieldtype": "Check",
+    "label": "Disabled"
+   },
   {
    "default": "0",
    "fieldname": "is_internal_customer",

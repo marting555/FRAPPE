@@ -761,9 +761,19 @@
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Core Charge",
+   "link_count": 0,
+   "link_to": "Core Charge",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2023-07-04 14:38:14.988756",
+ "modified": "2024-06-07 21:26:37.060250",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock",
@@ -847,6 +857,12 @@
    "label": "Dashboard",
    "link_to": "Stock",
    "type": "Dashboard"
+  },
+  {
+   "doc_view": "",
+   "label": "Core Charge",
+   "link_to": "Core Charge",
+   "type": "DocType"
   }
  ],
  "title": "Stock"

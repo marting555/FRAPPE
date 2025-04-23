@@ -1,0 +1,65 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-10-21 18:10:05.589495",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "product_bundle_template_name",
+  "category",
+  "description",
+  "product_bundle_template_items"
+ ],
+ "fields": [
+  {
+   "fieldname": "product_bundle_template_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "product_bundle_template_items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "Product Bundle Template Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Data",
+   "label": "Category"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "label": "Description"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-11-06 19:16:27.391947",
+ "modified_by": "Administrator",
+ "module": "Selling",
+ "name": "Product Bundle Template",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

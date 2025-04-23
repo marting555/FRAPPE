@@ -157,6 +157,16 @@ class Quotation(SellingController):
 			if not row.is_alternative and row.name in items_with_alternatives:
 				row.has_alternative_item = 1
 
+	def set_has_alternative_item(self):
+		"""Mark 'Has Alternative Item' for rows."""
+		if not any(row.is_alternative for row in self.get("items")):
+			return
+
+		items_with_alternatives = self.get_rows_with_alternatives()
+		for row in self.get("items"):
+			if not row.is_alternative and row.name in items_with_alternatives:
+				row.has_alternative_item = 1
+
 	def get_ordered_status(self):
 		status = "Open"
 		ordered_items = frappe._dict(
@@ -323,7 +333,6 @@ class Quotation(SellingController):
 
 def get_list_context(context=None):
 	from erpnext.controllers.website_list_for_contact import get_list_context
-
 	list_context = get_list_context(context)
 	list_context.update(
 		{

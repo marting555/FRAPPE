@@ -1,0 +1,44 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-11-25 20:27:45.103686",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "workload",
+  "type_of_job",
+  "message"
+ ],
+ "fields": [
+  {
+   "default": "0",
+   "fieldname": "workload",
+   "fieldtype": "Check",
+   "label": "workload"
+  },
+  {
+   "fieldname": "type_of_job",
+   "fieldtype": "Select",
+   "label": "type of job",
+   "options": "Diagnose\nReparatie\nOliewissel\nOverig\nSoftware\nParts"
+  },
+  {
+   "fieldname": "message",
+   "fieldtype": "Text",
+   "label": "message"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-11-25 20:30:30.122955",
+ "modified_by": "Administrator",
+ "module": "Projects",
+ "name": "Job Workload Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

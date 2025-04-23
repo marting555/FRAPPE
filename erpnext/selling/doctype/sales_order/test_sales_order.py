@@ -1327,6 +1327,33 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		so.reload()
 		self.assertEqual(so.advance_paid, 0)
 
+	@change_settings("Accounts Settings", {"unlink_advance_payment_on_cancelation_of_order": 1})
+	def test_advance_paid_upon_payment_cancellation(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
+
+		so = make_sales_order()
+
+		pe = get_payment_entry("Sales Order", so.name, bank_account="_Test Bank - _TC")
+		pe.reference_no = "1"
+		pe.reference_date = nowdate()
+		pe.paid_from_account_currency = so.currency
+		pe.paid_to_account_currency = so.currency
+		pe.source_exchange_rate = 1
+		pe.target_exchange_rate = 1
+		pe.paid_amount = so.grand_total
+		pe.save(ignore_permissions=True)
+		pe.submit()
+		so.reload()
+
+		self.assertEqual(so.advance_paid, so.base_grand_total)
+
+		# cancel advance payment
+		pe.reload()
+		pe.cancel()
+
+		so.reload()
+		self.assertEqual(so.advance_paid, 0)
+
 	def test_cancel_sales_order_after_cancel_payment_entry(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
 

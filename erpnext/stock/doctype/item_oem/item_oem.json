@@ -1,0 +1,37 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-05-27 17:48:36.325741",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "oem",
+  "brand"
+ ],
+ "fields": [
+  {
+   "fieldname": "oem",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "OEM"
+  },
+  {
+   "fieldname": "brand",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Brand"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-05-27 17:49:34.098362",
+ "modified_by": "Administrator",
+ "module": "Stock",
+ "name": "Item OEM",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
