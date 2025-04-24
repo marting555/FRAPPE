@@ -253,7 +253,6 @@
    "label": "L\u00e0 Nh\u00e2n Vi\u00ean Jemmia"
   },
   {
-   "default": "ABC",
    "depends_on": "is_internal_customer",
    "fieldname": "represents_company",
    "fieldtype": "Link",

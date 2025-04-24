@@ -55,6 +55,13 @@
   "reserve_stock",
   "items_section",
   "items",
+  "section_break_48",
+  "apply_discount_on",
+  "base_discount_amount",
+  "coupon_code",
+  "column_break_50",
+  "additional_discount_percentage",
+  "discount_amount",
   "section_break_31",
   "total_qty",
   "total_net_weight",
@@ -92,13 +99,6 @@
   "disable_rounded_total",
   "ch\u01b0\u01a1ng_tr\u00ecnh_khuy\u1ebfn_m\u00e3i_\u0111\u01a1n_h\u00e0ng_section",
   "promotions",
-  "section_break_48",
-  "apply_discount_on",
-  "base_discount_amount",
-  "coupon_code",
-  "column_break_50",
-  "additional_discount_percentage",
-  "discount_amount",
   "sec_tax_breakup",
   "other_charges_calculation",
   "packing_list",
@@ -257,6 +257,7 @@
    "fetch_from": "customer.customer_name",
    "fieldname": "customer_name",
    "fieldtype": "Data",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "in_global_search": 1,
@@ -1115,7 +1116,6 @@
    "label": "\u0110i\u1ec1u Kho\u1ea3n & Thanh To\u00e1n"
   },
   {
-   "default": "Sales Order",
    "fieldname": "payment_terms_template",
    "fieldtype": "Link",
    "hide_days": 1,
@@ -1632,7 +1632,7 @@
   {
    "fieldname": "payment_terms_section",
    "fieldtype": "Section Break",
-   "label": "\u0110i\u1ec1u kho\u1ea3n thanh to\u00e1n"
+   "label": "Thanh To\u00e1n"
   },
   {
    "fieldname": "column_break_116",
@@ -1711,7 +1711,7 @@
   {
    "fieldname": "haravan_tab",
    "fieldtype": "Tab Break",
-   "label": "Haravan"
+   "label": "System"
   },
   {
    "fieldname": "cancelled_status",
@@ -1825,8 +1825,7 @@
   },
   {
    "fieldname": "section_break_uceh",
-   "fieldtype": "Section Break",
-   "label": "Th\u00f4ng Tin Haravan"
+   "fieldtype": "Section Break"
   },
   {
    "fieldname": "column_break_dqxa",
@@ -1852,7 +1851,7 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-04-22 13:40:57.130689",
+ "modified": "2025-04-24 14:08:45.916384",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
