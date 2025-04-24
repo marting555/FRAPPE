@@ -88,7 +88,7 @@ class Employee(NestedSet):
 		if not self.has_value_changed("user_id") and not self.has_value_changed("create_user_permission"):
 			return
 
-		if not has_permission("User Permission", ptype="write"):
+		if not has_permission("User Permission", ptype="write", raise_exception=False):
 			return
 
 		employee_user_permission_exists = frappe.db.exists(
