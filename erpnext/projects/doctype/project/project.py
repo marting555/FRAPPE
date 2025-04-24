@@ -82,7 +82,6 @@ class Project(Document):
 				self.status_modified = get_datetime()
 
 			if self.status in self.done_status:
-				print('reset project')
 				self.queue_position = 0
 
 
@@ -284,7 +283,7 @@ class Project(Document):
 		if self.status == "Cancelled":
 			return
 
-		self.status = "Completed" if self.percent_complete == 100 else "Open"
+		self.status = "Completed" if self.percent_complete == 100 else self.status
 
 	def update_costing(self):
 		from frappe.query_builder.functions import Max, Min, Sum
