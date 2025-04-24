@@ -90,12 +90,12 @@ class ItemPrice(Document):
 		query = (
 			frappe.qb.from_(item_price)
 			.select(item_price.price_list_rate)
-			.where(
-				(item_price.item_code == self.item_code)
-				& (item_price.price_list == self.price_list)
-				& (item_price.name != self.name)
-			)
+			.where((item_price.item_code == self.item_code) & (item_price.price_list == self.price_list))
 		)
+
+		if not (frappe.flags.in_import and self.is_new()):
+			query = query.where(item_price.name != self.name)
+
 		data_fields = (
 			"uom",
 			"valid_from",
