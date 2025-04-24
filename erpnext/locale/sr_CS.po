@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-04-20 09:34+0000\n"
-"PO-Revision-Date: 2025-04-23 05:39\n"
+"PO-Revision-Date: 2025-04-24 06:03\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Serbian (Latin)\n"
 "MIME-Version: 1.0\n"
@@ -13483,7 +13483,7 @@ msgstr "Potražuje u valuti kompanije"
 #: erpnext/selling/doctype/customer/customer.py:548
 #: erpnext/selling/doctype/customer/customer.py:603
 msgid "Credit limit has been crossed for customer {0} ({1}/{2})"
-msgstr "Ograničenje potraživanja premašeno za kupca {0} ({1}/{2})"
+msgstr "Ograničenje potraživanja premašeno za klijenta {0} ({1}/{2})"
 
 #: erpnext/selling/doctype/customer/customer.py:341
 msgid "Credit limit is already defined for the Company {0}"
