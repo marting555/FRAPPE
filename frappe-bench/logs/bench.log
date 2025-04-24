@@ -1,0 +1,48 @@
+2025-04-24 09:52:37,115 DEBUG cd frappe-bench && python3 -m venv env
+2025-04-24 09:52:41,339 DEBUG cd frappe-bench && /home/aina/Documents/Evaluation/erpnext/frappe-bench/env/bin/python -m pip install --quiet --upgrade pip
+2025-04-24 09:52:44,058 DEBUG cd frappe-bench && /home/aina/Documents/Evaluation/erpnext/frappe-bench/env/bin/python -m pip install --quiet wheel
+2025-04-24 09:52:46,091 LOG Getting frappe
+2025-04-24 09:52:46,091 DEBUG cd frappe-bench/apps && git clone https://github.com/frappe/frappe.git  --depth 1 --origin upstream
+2025-04-24 09:53:22,970 LOG Installing frappe
+2025-04-24 09:53:22,970 DEBUG cd /home/aina/Documents/Evaluation/erpnext/frappe-bench && /home/aina/Documents/Evaluation/erpnext/frappe-bench/env/bin/python -m pip install --quiet --upgrade -e /home/aina/Documents/Evaluation/erpnext/frappe-bench/apps/frappe 
+2025-04-24 09:54:45,256 DEBUG cd /home/aina/Documents/Evaluation/erpnext/frappe-bench/apps/frappe && yarn install --check-files
+2025-04-24 09:54:53,034 DEBUG cd frappe-bench && bench build
+2025-04-24 09:54:53,198 INFO /home/aina/.local/bin/bench build
+2025-04-24 09:55:25,938 LOG setting up backups
+2025-04-24 09:55:25,943 LOG backups were set up
+2025-04-24 09:55:25,943 INFO Bench frappe-bench initialized
+2025-04-24 09:55:52,081 INFO /home/aina/.local/bin/bench start
+2025-04-24 09:55:52,517 INFO /home/aina/.local/bin/bench worker
+2025-04-24 09:55:52,543 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-04-24 09:55:52,581 INFO /home/aina/.local/bin/bench schedule
+2025-04-24 09:55:52,589 INFO /home/aina/.local/bin/bench watch
+2025-04-24 09:56:27,240 INFO /home/aina/.local/bin/bench new-site erpnext.localhost
+2025-04-24 09:57:40,998 INFO /home/aina/.local/bin/bench get-app https://github.com/frappe/erpnext
+2025-04-24 09:57:41,009 LOG Getting erpnext
+2025-04-24 09:57:41,010 DEBUG cd ./apps && git clone https://github.com/frappe/erpnext  --depth 1 --origin upstream
+2025-04-24 09:58:06,802 LOG Installing erpnext
+2025-04-24 09:58:06,803 DEBUG cd /home/aina/Documents/Evaluation/erpnext/frappe-bench && /home/aina/Documents/Evaluation/erpnext/frappe-bench/env/bin/python -m pip install --quiet --upgrade -e /home/aina/Documents/Evaluation/erpnext/frappe-bench/apps/erpnext 
+2025-04-24 09:58:18,984 DEBUG cd /home/aina/Documents/Evaluation/erpnext/frappe-bench/apps/erpnext && yarn install --check-files
+2025-04-24 09:58:19,507 DEBUG bench build --app erpnext
+2025-04-24 09:58:19,670 INFO /home/aina/.local/bin/bench build --app erpnext
+2025-04-24 09:59:02,727 INFO /home/aina/.local/bin/bench --site erpnext.localhost install-app erpnext
+2025-04-24 10:00:29,424 INFO /home/aina/.local/bin/bench start
+2025-04-24 10:00:29,864 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-04-24 10:00:29,927 INFO /home/aina/.local/bin/bench watch
+2025-04-24 10:00:29,935 INFO /home/aina/.local/bin/bench schedule
+2025-04-24 10:00:30,080 INFO /home/aina/.local/bin/bench worker
+2025-04-24 10:00:44,189 INFO /home/aina/.local/bin/bench --site erpnext.localhost install-app erpnext
+2025-04-24 10:01:08,161 INFO /home/aina/.local/bin/bench --site erpnext.localhost install-app erpnext
+2025-04-24 10:02:21,224 INFO /home/aina/.local/bin/bench --site erpnext.localhost drop-site
+2025-04-24 10:02:51,315 INFO /home/aina/.local/bin/bench drop-site erpnext.localhost
+2025-04-24 10:03:16,615 INFO /home/aina/.local/bin/bench new-site erpnext.localhost
+2025-04-24 10:04:16,193 INFO /home/aina/.local/bin/bench get-app https://github.com/frappe/erpnext
+2025-04-24 10:04:21,955 INFO App moved from apps/erpnext to archived/apps/erpnext-2025-04-24
+2025-04-24 10:04:21,963 LOG Getting erpnext
+2025-04-24 10:04:21,964 DEBUG cd ./apps && git clone https://github.com/frappe/erpnext  --depth 1 --origin upstream
+2025-04-24 10:04:51,539 LOG Installing erpnext
+2025-04-24 10:04:51,540 DEBUG cd /home/aina/Documents/Evaluation/erpnext/frappe-bench && /home/aina/Documents/Evaluation/erpnext/frappe-bench/env/bin/python -m pip install --quiet --upgrade -e /home/aina/Documents/Evaluation/erpnext/frappe-bench/apps/erpnext 
+2025-04-24 10:04:56,320 DEBUG cd /home/aina/Documents/Evaluation/erpnext/frappe-bench/apps/erpnext && yarn install --check-files
+2025-04-24 10:04:57,152 DEBUG bench build --app erpnext
+2025-04-24 10:04:57,412 INFO /home/aina/.local/bin/bench build --app erpnext
+2025-04-24 10:05:56,868 INFO /home/aina/.local/bin/bench --site erpnext.localhost install-app erpnext
