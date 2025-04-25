@@ -295,7 +295,6 @@ class TestPOSClosingEntry(IntegrationTestCase):
 		test_user, pos_profile = init_user_and_profile()
 		# Deleting all opening entry
 		frappe.db.sql("delete from `tabPOS Opening Entry`")
-		frappe.db.commit()
 
 		with self.change_settings("Accounts Settings", {"use_sales_invoice_in_pos": 1}):
 			opening_entry = create_opening_entry(pos_profile, test_user.name)

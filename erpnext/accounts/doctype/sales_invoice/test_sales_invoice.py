@@ -4389,7 +4389,6 @@ class TestSalesInvoice(IntegrationTestCase):
 	def test_pos_sales_invoice_creation_during_pos_invoice_mode(self):
 		# Deleting all opening entry
 		frappe.db.sql("delete from `tabPOS Opening Entry`")
-		frappe.db.commit()
 
 		with self.change_settings("Accounts Settings", {"use_sales_invoice_in_pos": 0}):
 			pos_profile = make_pos_profile()
