@@ -93,6 +93,9 @@ class AccountsSettings(Document):
 		if old_doc.acc_frozen_upto != self.acc_frozen_upto:
 			self.validate_pending_reposts()
 
+		if old_doc.use_sales_invoice_in_pos != self.use_sales_invoice_in_pos:
+			self.validate_invoice_mode_switch_in_pos()
+
 		if clear_cache:
 			frappe.clear_cache()
 
@@ -136,3 +139,15 @@ class AccountsSettings(Document):
 		if self.has_value_changed("reconciliation_queue_size"):
 			if cint(self.reconciliation_queue_size) < 5 or cint(self.reconciliation_queue_size) > 100:
 				frappe.throw(_("Queue Size should be between 5 and 100"))
+
+	def validate_invoice_mode_switch_in_pos(self):
+		pos_opening_entries_count = frappe.db.count(
+			"POS Opening Entry", filters={"docstatus": 1, "status": "Open"}
+		)
+		if pos_opening_entries_count:
+			frappe.throw(
+				_("{0} can be enabled/disabled after all the POS Opening Entries are closed.").format(
+					frappe.bold(_("Use Sales Invoice"))
+				),
+				title=_("Switch Invoice Mode Error"),
+			)
