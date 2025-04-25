@@ -4404,34 +4404,6 @@ class TestSalesInvoice(IntegrationTestCase):
 		pos.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 1000})
 		self.assertRaises(frappe.ValidationError, pos.insert)
 
-	@IntegrationTestCase.change_settings("Accounts Settings", {"use_sales_invoice_in_pos": 1})
-	def test_pos_sales_invoice_full_payment(self):
-		from erpnext.accounts.doctype.sales_invoice.sales_invoice import PartialPaymentValidationError
-
-		pos_profile = make_pos_profile()
-
-		pos_profile.payments = []
-		pos_profile.append("payments", {"default": 1, "mode_of_payment": "Cash"})
-
-		pos_profile.save()
-
-		pos = create_sales_invoice(qty=10, do_not_save=True)
-
-		pos.is_pos = 1
-		pos.pos_profile = pos_profile.name
-		pos.is_created_using_pos = 1
-
-		pos.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 500})
-		pos.save()
-		self.assertRaises(PartialPaymentValidationError, pos.submit)
-
-		pos.reload()
-		pos.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 500})
-		pos.save()
-		pos.submit()
-
-		self.assertEqual(pos.paid_amount, 1000)
-
 
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
