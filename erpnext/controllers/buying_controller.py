@@ -92,7 +92,7 @@ class BuyingController(SubcontractingController):
 				return
 
 			for item in self.get("items"):
-				if item.get(field) and bundle_ids.get(item.get(field)):
+				if item.get(field) and not item.serial_and_batch_bundle and bundle_ids.get(item.get(field)):
 					item.serial_and_batch_bundle = self.make_package_for_transfer(
 						bundle_ids.get(item.get(field)),
 						item.from_warehouse,
@@ -100,6 +100,28 @@ class BuyingController(SubcontractingController):
 						do_not_submit=True,
 						qty=item.qty,
 					)
+				elif item.serial_and_batch_bundle:
+					sabb_total_qty, has_batch_no, has_serial_no = frappe.get_list(
+						"Serial and Batch Bundle",
+						filters={"name": item.serial_and_batch_bundle},
+						fields=["total_qty", "has_batch_no", "has_serial_no"],
+						as_list=True,
+					)[0]
+					len_entries = frappe.get_list(
+						"Serial and Batch Entry",
+						filters={"parent": item.serial_and_batch_bundle},
+						fields=["count(*) as len"],
+						pluck="len",
+					)[0]
+					if (
+						len_entries == 1
+						and item.qty < abs(sabb_total_qty)
+						and has_batch_no
+						and not has_serial_no
+					):
+						sabb = frappe.get_doc("Serial and Batch Bundle", item.serial_and_batch_bundle)
+						sabb.entries[0].qty = item.qty
+						sabb.save()
 
 	def set_rate_for_standalone_debit_note(self):
 		if self.get("is_return") and self.get("update_stock") and not self.return_against:
