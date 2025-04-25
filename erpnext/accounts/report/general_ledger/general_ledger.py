@@ -599,11 +599,8 @@ def get_columns(filters):
 	if filters.get("presentation_currency"):
 		currency = filters["presentation_currency"]
 	else:
-		if filters.get("company"):
-			currency = get_company_currency(filters["company"])
-		else:
-			company = get_default_company()
-			currency = get_company_currency(company)
+		company = filters.get("company") or get_default_company()
+		currency = get_company_currency(company)
 
 	columns = [
 		{
