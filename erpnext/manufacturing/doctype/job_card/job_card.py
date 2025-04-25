@@ -420,6 +420,7 @@ class JobCard(Document):
 				& (jctl.employee == employee)
 				& (jc.docstatus < 1)
 				& (jc.name != self.name)
+				& (jc.status == "Work In Progress")
 			)
 		)
 
