@@ -2188,6 +2188,7 @@ def create_customer(name="_Test Customer 2 USD", currency="USD"):
 		customer.save()
 		customer = customer.name
 	return customer
+
 def create_supplier(**args):
 	args = frappe._dict(args)
 
@@ -2215,7 +2216,7 @@ def create_supplier(**args):
 		doc.supplier_group = args.supplier_group or "Services"
   
 
-	doc.insert(ignore_mandatory=True)
+	doc.insert(ignore_mandatory=True, ignore_permissions=True)
 	
 	return doc
 

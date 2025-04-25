@@ -7371,7 +7371,7 @@ def create_company_and_supplier():
 
 	if parent_company not in linked_companies:
 		fiscal_year_doc.append("companies", {"company": parent_company})
-		fiscal_year_doc.save()
+		fiscal_year_doc.save(ignore_permissions=True)
 
 	if not frappe.db.exists("Company", child_company):
 		frappe.get_doc(
@@ -7389,7 +7389,7 @@ def create_company_and_supplier():
 
 	if child_company not in linked_companies:
 		fiscal_year_doc.append("companies", {"company": child_company})
-		fiscal_year_doc.save()
+		fiscal_year_doc.save(ignore_permissions=True)
 
 
 	if not frappe.db.exists("Price List", price_list):
