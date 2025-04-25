@@ -2582,12 +2582,14 @@ class TestPurchaseOrder(FrappeTestCase):
 		frappe.db.rollback()
 
 	def test_po_with_pricing_rule_TC_B_047(self):
+		from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import get_or_create_price_list
 		# Scenario : PO => Pricing Rule => PR 
 		get_company_supplier = create_data()
 		company = get_company_supplier.get("child_company")
 		supplier = get_company_supplier.get("supplier")
 		item = make_test_item("_test_item")
 		warehouse = "Stores - TC-3"
+		price_list = get_or_create_price_list()
 		get_or_create_fiscal_year(company)
 		po_data = {
 			"company" : company,
@@ -2596,6 +2598,8 @@ class TestPurchaseOrder(FrappeTestCase):
 			"supplier": supplier,
 			"schedule_date": today(),
 			"qty" : 1,
+			"currency":"INR",
+			"buying_price_list": price_list,
 		}
 
 		pricing_rule_record = {
@@ -2618,7 +2622,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"valid_from": today(),
 			"rate_or_discount": "Discount Percentage",
 			"discount_percentage": 10,
-			"price_list": "Standard Buying",
+			"price_list": price_list,
 			"company" : company,
 
 		}
@@ -2629,7 +2633,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		frappe.get_doc(
 			{
 				"doctype": "Item Price",
-				"price_list": "Standard Buying",
+				"price_list": price_list,
 				"item_code": item.item_code,
 				"price_list_rate": 130,
 			}
@@ -9184,6 +9188,7 @@ def create_purchase_order(**args):
 	po.additional_discount_percentage = args.additional_discount_percentage or None
 	po.discount_amount = args.discount_amount or None
 	po.shipping_rule = args.shipping_rule or None
+	po.buying_price_list = args.buying_price_list or "Standard Buying"
 
 	if args.rm_items:
 		for row in args.rm_items:
