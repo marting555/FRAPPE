@@ -78,6 +78,7 @@ class SalesOrder(SellingController):
 		base_total: DF.Currency
 		base_total_taxes_and_charges: DF.Currency
 		billing_status: DF.Literal["Not Billed", "Fully Billed", "Partly Billed", "Closed"]
+		birth_date: DF.Date | None
 		campaign: DF.Link | None
 		cancelled_date: DF.Datetime | None
 		cancelled_status: DF.Literal["", "\u0110\u00e3 Hu\u1ef7", "Ch\u01b0a Hu\u1ef7"]
@@ -101,6 +102,8 @@ class SalesOrder(SellingController):
 		customer_address: DF.Link | None
 		customer_group: DF.Link | None
 		customer_name: DF.Data | None
+		customer_personal_id: DF.Data | None
+		date_of_issuance: DF.Date | None
 		delivery_date: DF.Date | None
 		delivery_status: DF.Literal["Not Delivered", "Fully Delivered", "Partly Delivered", "Closed", "Not Applicable"]
 		disable_rounded_total: DF.Check
@@ -111,6 +114,7 @@ class SalesOrder(SellingController):
 		financial_status: DF.Literal["", "\u0110\u00e3 Thanh To\u00e1n", "\u0110\u00e3 Thanh To\u00e1n M\u1ed9t Ph\u1ea7n", "\u0110\u00e3 Ho\u00e0n Ti\u1ec1n", "Ch\u1edd X\u1eed L\u00fd"]
 		from_date: DF.Date | None
 		fulfillment_status: DF.Literal["", "Ch\u01b0a Giao H\u00e0ng", "\u0110\u00e3 Giao H\u00e0ng"]
+		gender: DF.Data | None
 		grand_total: DF.Currency
 		group_same_items: DF.Check
 		haravan_created_at: DF.Datetime | None
@@ -142,6 +146,7 @@ class SalesOrder(SellingController):
 		per_billed: DF.Percent
 		per_delivered: DF.Percent
 		per_picked: DF.Percent
+		place_of_issuance: DF.Data | None
 		plc_conversion_rate: DF.Float
 		po_date: DF.Date | None
 		po_no: DF.Data | None

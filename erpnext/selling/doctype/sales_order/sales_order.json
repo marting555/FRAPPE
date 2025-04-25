@@ -15,7 +15,6 @@
   "title",
   "naming_series",
   "customer",
-  "customer_name",
   "tax_id",
   "column_break1",
   "order_type",
@@ -106,23 +105,35 @@
   "pricing_rule_details",
   "pricing_rules",
   "contact_info",
-  "billing_address_column",
-  "customer_address",
-  "address_display",
-  "customer_group",
-  "territory",
-  "column_break_84",
+  "address_contact_section",
+  "th\u00f4ng_tin_li\u00ean_h\u1ec7",
   "contact_person",
   "contact_display",
   "contact_phone",
   "contact_mobile",
   "contact_email",
-  "shipping_address_column",
+  "column_break_biok",
+  "\u0111\u1ecba_ch\u1ec9_m\u1eb7c_\u0111\u1ecbnh",
+  "customer_address",
+  "address_display",
+  "customer_group",
+  "territory",
+  "\u0111\u1ecba_ch\u1ec9_giao_h\u00e0ng",
   "shipping_address_name",
   "shipping_address",
+  "shipping_address_column",
+  "column_break_xnxx",
   "column_break_93",
   "dispatch_address_name",
   "dispatch_address",
+  "th\u00f4ng_tin_c\u00e1_nh\u00e2n_section",
+  "customer_name",
+  "birth_date",
+  "gender",
+  "column_break_xpik",
+  "customer_personal_id",
+  "place_of_issuance",
+  "date_of_issuance",
   "col_break46",
   "company_address",
   "company_address_display",
@@ -261,7 +272,7 @@
    "hide_days": 1,
    "hide_seconds": 1,
    "in_global_search": 1,
-   "label": "Customer Name",
+   "label": "H\u1ecd T\u00ean Kh\u00e1ch H\u00e0ng",
    "read_only": 1
   },
   {
@@ -384,7 +395,7 @@
    "fieldtype": "Tab Break",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "\u0110\u1ecba Ch\u1ec9 & Li\u00ean H\u1ec7",
+   "label": "Th\u00f4ng Tin Ho\u00e1 \u0110\u01a1n",
    "options": "fa fa-bullhorn"
   },
   {
@@ -1639,22 +1650,12 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "billing_address_column",
-   "fieldtype": "Section Break",
-   "label": "Billing Address"
-  },
-  {
    "fieldname": "shipping_address_column",
    "fieldtype": "Section Break",
    "label": "\u0110\u1ecba Ch\u1ec9 Giao H\u00e0ng"
   },
   {
    "fieldname": "column_break_93",
-   "fieldtype": "Column Break",
-   "hidden": 1
-  },
-  {
-   "fieldname": "column_break_84",
    "fieldtype": "Column Break",
    "hidden": 1
   },
@@ -1845,13 +1846,80 @@
    "fieldtype": "Table MultiSelect",
    "label": "Ch\u01b0\u01a1ng Tr\u00ecnh Khuy\u1ebfn M\u00e3i",
    "options": "Sales Order Promotion"
+  },
+  {
+   "fetch_from": "customer.personal_id",
+   "fieldname": "customer_personal_id",
+   "fieldtype": "Data",
+   "label": "CMND/CCCD"
+  },
+  {
+   "fieldname": "column_break_xpik",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "customer.place_of_issuance",
+   "fieldname": "place_of_issuance",
+   "fieldtype": "Data",
+   "label": "N\u01a1i C\u1ea5p"
+  },
+  {
+   "fetch_from": "customer.date_of_issuance",
+   "fieldname": "date_of_issuance",
+   "fieldtype": "Date",
+   "label": "Ng\u00e0y C\u1ea5p"
+  },
+  {
+   "fetch_from": "customer.birth_date",
+   "fieldname": "birth_date",
+   "fieldtype": "Date",
+   "label": "Ng\u00e0y Sinh"
+  },
+  {
+   "fetch_from": "customer.gender",
+   "fieldname": "gender",
+   "fieldtype": "Data",
+   "label": "Gi\u1edbi T\u00ednh"
+  },
+  {
+   "fieldname": "th\u00f4ng_tin_c\u00e1_nh\u00e2n_section",
+   "fieldtype": "Section Break",
+   "label": "Th\u00f4ng Tin C\u00e1 Nh\u00e2n"
+  },
+  {
+   "fieldname": "address_contact_section",
+   "fieldtype": "Section Break",
+   "label": "\u0110\u1ecba Ch\u1ec9 & Li\u00ean H\u1ec7"
+  },
+  {
+   "fieldname": "th\u00f4ng_tin_li\u00ean_h\u1ec7",
+   "fieldtype": "Heading",
+   "label": "Th\u00f4ng Tin Li\u00ean H\u1ec7"
+  },
+  {
+   "fieldname": "column_break_biok",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "\u0111\u1ecba_ch\u1ec9_m\u1eb7c_\u0111\u1ecbnh",
+   "fieldtype": "Heading",
+   "label": "\u0110\u1ecba Ch\u1ec9 M\u1eb7c \u0110\u1ecbnh"
+  },
+  {
+   "fieldname": "\u0111\u1ecba_ch\u1ec9_giao_h\u00e0ng",
+   "fieldtype": "Heading",
+   "label": "\u0110\u1ecba Ch\u1ec9 Giao H\u00e0ng"
+  },
+  {
+   "fieldname": "column_break_xnxx",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-04-24 14:08:45.916384",
+ "modified": "2025-04-25 10:00:44.115324",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
