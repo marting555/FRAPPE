@@ -37,15 +37,13 @@ class Customer(TransactionBase):
 		from erpnext.utilities.doctype.portal_user.portal_user import PortalUser
 		from frappe.types import DF
 
-		_customer_type: DF.Literal["C\u00e1 Nh\u00e2n", "Doanh Nghi\u1ec7p"]
+		_customer_type: DF.Literal["C\u00e1 Nh\u00e2n", "Doanh Nghi\u1ec7p", "Nh\u00e2n Vi\u00ean Jemmia"]
 		account_manager: DF.Link | None
 		account_number: DF.Data | None
 		accounts: DF.Table[PartyAccount]
+		bank_account_name: DF.Data | None
 		bank_branch: DF.Literal["B\u1eafc", "Trung Nam"]
-		bank_district: DF.Literal["qu\u1eadn 1", "qu\u1eadn 2", "qu\u1eadn 3", "qu\u1eadn 4"]
 		bank_name: DF.Literal["Agribank", "ACB", "BIDV", "Vietcombank", "VietinBank", "Techcombank", "Sacombank", "MB Bank", "Eximbank", "VPBank", "SHB", "NamABank", "B\u1eafc \u00c1 Bank", "OceanBank", "TPBank"]
-		bank_province: DF.Literal["H\u1ed3 Ch\u00ed Minh", "H\u00e0 N\u1ed9i", "\u0110\u00e0 N\u1eb5ng", "C\u1ea7n Th\u01a1"]
-		bank_ward: DF.Literal[None]
 		birth_date: DF.Date | None
 		ceo_name: DF.Data | None
 		companies: DF.Table[AllowedToTransactWith]
@@ -58,7 +56,7 @@ class Customer(TransactionBase):
 		customer_pos_id: DF.Data | None
 		customer_primary_address: DF.Link | None
 		customer_primary_contact: DF.Link | None
-		customer_rank: DF.Literal[None]
+		customer_rank: DF.Literal["Ch\u01b0a c\u00f3 h\u1ea1ng", "Silver", "Gold", "Platinum"]
 		customer_type: DF.Literal["Company", "Individual", "Partnership"]
 		customer_website: DF.Data | None
 		date_of_issuance: DF.Date | None
@@ -74,6 +72,7 @@ class Customer(TransactionBase):
 		gender: DF.Link | None
 		image: DF.AttachImage | None
 		industry: DF.Link | None
+		invoice_type: DF.Literal["C\u00e1 Nh\u00e2n", "Doanh Nghi\u1ec7p"]
 		is_frozen: DF.Check
 		is_internal_customer: DF.Check
 		language: DF.Link | None
@@ -86,6 +85,8 @@ class Customer(TransactionBase):
 		no_of_employees: DF.Data | None
 		opportunity_name: DF.Link | None
 		payment_terms: DF.Link | None
+		person_name: DF.Data | None
+		personal_document_type: DF.Literal["CCCD", "CMND", "H\u1ed9 Chi\u1ebfu", "Passpoard"]
 		personal_id: DF.Data | None
 		personal_tax_id: DF.Data | None
 		phone: DF.ReadOnly | None
@@ -102,6 +103,9 @@ class Customer(TransactionBase):
 		tax_number: DF.Data | None
 		tax_withholding_category: DF.Link | None
 		territory: DF.Link | None
+		vat_address: DF.Data | None
+		vat_email: DF.Data | None
+		vat_name: DF.Data | None
 		website: DF.Data | None
 	# end: auto-generated types
 

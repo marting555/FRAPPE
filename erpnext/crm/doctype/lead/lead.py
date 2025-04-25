@@ -86,7 +86,7 @@ class Lead(SellingController, CRMNote):
 		salutation: DF.Link | None
 		source: DF.Link | None
 		state: DF.Data | None
-		status: DF.Literal["Lead", "Open", "Replied", "Opportunity", "Quotation", "Lost Quotation", "Interested", "Converted", "Do Not Contact"]
+		status: DF.Literal["Lead", "Open", "Replied", "Opportunity", "Quotation", "Lost Quotation", "Interested", "Converted", "Do Not Contact", "Spam"]
 		table_uzxd: DF.Table[LeadChannel]
 		tax_number: DF.Data | None
 		territory: DF.Link | None
@@ -109,6 +109,8 @@ class Lead(SellingController, CRMNote):
 		self.set_title()
 		self.set_status()
 		self.check_email_id_is_unique()
+		self.check_phone_is_unique()
+		#self.validate_phone_number()
 		self.validate_email_id()
 
 	def before_insert(self):
@@ -188,6 +190,31 @@ class Lead(SellingController, CRMNote):
 
 			if self.is_new() or not self.image:
 				self.image = has_gravatar(self.email_id)
+
+	def check_phone_is_unique(self):
+		if self.phone:
+			# Validate phone number is unique
+			duplicate_leads = frappe.get_all(
+				"Lead", filters={"phone": self.phone, "name": ["!=", self.name]}
+			)
+			duplicate_leads = [
+				frappe.bold(get_link_to_form("Lead", lead.name)) for lead in duplicate_leads
+			]
+			if duplicate_leads:
+				frappe.throw(
+					_("Phone Number must be unique, it is already used in {0}").format(
+						comma_and(duplicate_leads)
+					),
+					frappe.DuplicateEntryError,
+				)
+
+	def validate_phone_number(self):
+		if self.phone:
+			# Add any specific validation for phone number format if needed
+			if not self.flags.ignore_phone_validation:
+				# Example: Check if the phone number is valid (you can customize this)
+				if len(self.phone) < 10:  # Example condition
+					frappe.throw(_("Phone number must be at least 10 digits long."))
 
 	
 	# def check_phone_number_is_unique(self):

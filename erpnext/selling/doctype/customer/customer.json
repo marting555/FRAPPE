@@ -15,18 +15,25 @@
   "naming_series",
   "salutation",
   "customer_name",
-  "_customer_type",
   "customer_type",
   "customer_group",
+  "column_break_eofp",
+  "_customer_type",
   "is_internal_customer",
+  "customer_rank",
   "column_break0",
-  "territory",
-  "gender",
+  "account_manager",
   "lead_name",
   "opportunity_name",
+  "territory",
   "prospect_name",
-  "account_manager",
+  "address_section",
+  "customer_primary_address",
+  "primary_address",
   "image",
+  "column_break_aqyz",
+  "address_list",
+  "address_html",
   "organization_section",
   "company_name",
   "no_of_employees",
@@ -37,15 +44,20 @@
   "tax_number",
   "ceo_name",
   "advanced_information_selection",
+  "personal_document_type",
+  "gender",
   "birth_date",
-  "first_channel",
+  "column_break_bjiq",
   "personal_id",
   "place_of_issuance",
+  "column_break_akie",
+  "person_name",
   "date_of_issuance",
+  "orther_section",
+  "first_channel",
   "customer_website",
-  "column_break_bjiq",
+  "column_break_ioxt",
   "customer_journey",
-  "customer_rank",
   "defaults_tab",
   "default_currency",
   "default_bank_account",
@@ -64,28 +76,32 @@
   "contact_and_address_tab",
   "primary_address_and_contact_detail",
   "column_break_26",
-  "customer_primary_address",
-  "primary_address",
   "column_break_nwor",
   "customer_primary_contact",
   "mobile_no",
   "email_id",
   "phone",
   "address_contacts",
-  "address_list",
-  "address_html",
+  "column_break_cgqq",
   "column_break1",
   "contact_list",
   "contact_html",
   "accounting_tab",
+  "vat_infor_section",
+  "invoice_type",
+  "vat_email",
+  "column_break_waqk",
+  "vat_name",
+  "vat_address",
+  "column_break_ikkg",
   "personal_tax_id",
+  "bank_section",
   "bank_name",
   "bank_branch",
+  "column_break_kufu",
   "account_number",
-  "column_break_waqk",
-  "bank_province",
-  "bank_district",
-  "bank_ward",
+  "column_break_kqch",
+  "bank_account_name",
   "credit_limit_section",
   "payment_terms",
   "credit_limits",
@@ -121,7 +137,6 @@
   {
    "fieldname": "basic_info",
    "fieldtype": "Section Break",
-   "label": "Th\u00f4ng Tin C\u01a1 B\u1ea3n",
    "oldfieldtype": "Section Break",
    "options": "fa fa-user"
   },
@@ -138,6 +153,7 @@
    "fieldname": "salutation",
    "fieldtype": "Link",
    "label": "X\u01b0ng H\u00f4",
+   "link_filters": "[[\"Salutation\",\"name\",\"in\",[\"B\u00e1c\",\"Ch\u00fa\",\"C\u00f4\",\"Ch\u1ecb\",\"Anh\",\"B\u00e0\",\"\u00d4ng\"]]]",
    "options": "Salutation"
   },
   {
@@ -145,7 +161,7 @@
    "fieldname": "customer_name",
    "fieldtype": "Data",
    "in_global_search": 1,
-   "label": "T\u00ean Kh\u00e1ch H\u00e0ng",
+   "label": "H\u1ecd V\u00e0 T\u00ean",
    "no_copy": 1,
    "oldfieldname": "customer_name",
    "oldfieldtype": "Data",
@@ -208,6 +224,7 @@
   {
    "fieldname": "customer_group",
    "fieldtype": "Link",
+   "hidden": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Nh\u00f3m Kh\u00e1ch H\u00e0ng",
@@ -250,6 +267,7 @@
    "default": "0",
    "fieldname": "is_internal_customer",
    "fieldtype": "Check",
+   "hidden": 1,
    "label": "L\u00e0 Nh\u00e2n Vi\u00ean Jemmia"
   },
   {
@@ -356,7 +374,7 @@
   {
    "fieldname": "customer_primary_address",
    "fieldtype": "Link",
-   "label": "Ch\u1ecdn \u0110\u1ecba Ch\u1ec9 Ch\u00ednh",
+   "label": "Ch\u1ecdn \u0110\u1ecba Ch\u1ec9 M\u1eb7c \u0110\u1ecbnh",
    "options": "Address"
   },
   {
@@ -518,7 +536,7 @@
   {
    "fieldname": "contact_and_address_tab",
    "fieldtype": "Tab Break",
-   "label": "\u0110\u1ecba Ch\u1ec9 & Li\u00ean H\u1ec7"
+   "label": "Ngu\u1ed3n"
   },
   {
    "fieldname": "defaults_tab",
@@ -652,12 +670,12 @@
    "fieldname": "_customer_type",
    "fieldtype": "Select",
    "label": "Lo\u1ea1i Kh\u00e1ch H\u00e0ng",
-   "options": "C\u00e1 Nh\u00e2n\nDoanh Nghi\u1ec7p"
+   "options": "C\u00e1 Nh\u00e2n\nDoanh Nghi\u1ec7p\nNh\u00e2n Vi\u00ean Jemmia"
   },
   {
    "fieldname": "advanced_information_selection",
    "fieldtype": "Section Break",
-   "label": "Th\u00f4ng Tin N\u00e2ng Cao"
+   "label": "Th\u00f4ng Tin H\u00f3a \u0110\u01a1n"
   },
   {
    "fieldname": "birth_date",
@@ -673,7 +691,7 @@
   {
    "fieldname": "personal_id",
    "fieldtype": "Data",
-   "label": "CMND/CCCD"
+   "label": "M\u00e3 S\u1ed1"
   },
   {
    "fieldname": "place_of_issuance",
@@ -718,23 +736,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "bank_province",
-   "fieldtype": "Select",
-   "label": "T\u1ec9nh/TP Ng\u00e2n H\u00e0ng",
-   "options": "H\u1ed3 Ch\u00ed Minh\nH\u00e0 N\u1ed9i\n\u0110\u00e0 N\u1eb5ng\nC\u1ea7n Th\u01a1"
-  },
-  {
-   "fieldname": "bank_district",
-   "fieldtype": "Select",
-   "label": "Ch\u1ecdn Qu\u1eadn/Huy\u1ec7n",
-   "options": "qu\u1eadn 1\nqu\u1eadn 2\nqu\u1eadn 3\nqu\u1eadn 4"
-  },
-  {
-   "fieldname": "bank_ward",
-   "fieldtype": "Select",
-   "label": "Ch\u1ecdn X\u00e3/Ph\u01b0\u1eddng"
-  },
-  {
    "fieldname": "column_break_bjiq",
    "fieldtype": "Column Break"
   },
@@ -746,7 +747,8 @@
   {
    "fieldname": "customer_rank",
    "fieldtype": "Select",
-   "label": "H\u1ea1ng Kh\u00e1ch H\u00e0ng"
+   "label": "H\u1ea1ng Kh\u00e1ch H\u00e0ng",
+   "options": "Ch\u01b0a c\u00f3 h\u1ea1ng\nSilver\nGold\nPlatinum"
   },
   {
    "depends_on": "eval:doc._customer_type==\"Doanh Nghi\u1ec7p\"",
@@ -781,6 +783,96 @@
    "fieldname": "ceo_name",
    "fieldtype": "Data",
    "label": "Ch\u1ee7 Doanh Nghi\u1ec7p"
+  },
+  {
+   "fieldname": "column_break_eofp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "personal_document_type",
+   "fieldtype": "Select",
+   "label": "Lo\u1ea1i Gi\u1ea7y T\u1edd C\u00e1 Nh\u00e2n",
+   "options": "CCCD\nCMND\nH\u1ed9 Chi\u1ebfu\nPasspoard"
+  },
+  {
+   "fieldname": "column_break_akie",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "orther_section",
+   "fieldtype": "Section Break",
+   "label": "Th\u00f4ng Tin Kh\u00e1c"
+  },
+  {
+   "fieldname": "person_name",
+   "fieldtype": "Data",
+   "label": "H\u1ecd V\u00e0 T\u00ean"
+  },
+  {
+   "fieldname": "column_break_ioxt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "invoice_type",
+   "fieldtype": "Select",
+   "label": "Lo\u1ea1i",
+   "options": "C\u00e1 Nh\u00e2n\nDoanh Nghi\u1ec7p"
+  },
+  {
+   "fieldname": "vat_infor_section",
+   "fieldtype": "Section Break",
+   "label": "Th\u00f4ng Tin Xu\u1ea5t VAT"
+  },
+  {
+   "fieldname": "column_break_ikkg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "bank_section",
+   "fieldtype": "Section Break",
+   "label": "T\u00e0i Kho\u1ea3n Ng\u00e2n H\u00e0ng"
+  },
+  {
+   "fieldname": "vat_name",
+   "fieldtype": "Data",
+   "label": "T\u00ean"
+  },
+  {
+   "fieldname": "vat_email",
+   "fieldtype": "Data",
+   "label": "Email"
+  },
+  {
+   "description": "V\u00ed d\u1ee5: 123 \u0111\u01b0\u1eddng ABC, P.1, Q.2, TP HCM",
+   "fieldname": "vat_address",
+   "fieldtype": "Data",
+   "label": "\u0110\u1ecba Ch\u1ec9"
+  },
+  {
+   "fieldname": "column_break_kufu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_kqch",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "bank_account_name",
+   "fieldtype": "Data",
+   "label": "T\u00ean T\u00e0i Kho\u1ea3n"
+  },
+  {
+   "fieldname": "address_section",
+   "fieldtype": "Section Break",
+   "label": "Th\u00f4ng Tin \u0110\u1ecba Ch\u1ec9"
+  },
+  {
+   "fieldname": "column_break_aqyz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_cgqq",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-user",
@@ -794,7 +886,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-04-22 09:22:18.400690",
+ "modified": "2025-04-24 02:36:03.242604",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",

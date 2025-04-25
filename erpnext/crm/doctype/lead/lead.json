@@ -34,12 +34,13 @@
   "lead_received_date",
   "customer_demand_section",
   "purpose_lead",
-  "budget_lead",
-  "preferred_product_type",
-  "column_break_ugod",
   "expected_delivery_date",
-  "preferred_diamond",
+  "column_break_ugod",
+  "budget_lead",
   "demand_notes",
+  "column_break_wsdb",
+  "preferred_product_type",
+  "preferred_diamond",
   "organization_section",
   "company_name",
   "no_of_employees",
@@ -137,8 +138,6 @@
   {
    "fieldname": "company_name",
    "fieldtype": "Data",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "T\u00ean Doanh Nghi\u1ec7p",
    "mandatory_depends_on": "eval: !(doc.first_name)",
    "oldfieldname": "company_name",
@@ -178,7 +177,7 @@
    "no_copy": 1,
    "oldfieldname": "status",
    "oldfieldtype": "Select",
-   "options": "Lead\nOpen\nReplied\nOpportunity\nQuotation\nLost Quotation\nInterested\nConverted\nDo Not Contact",
+   "options": "Lead\nOpen\nReplied\nOpportunity\nQuotation\nLost Quotation\nInterested\nConverted\nDo Not Contact\nSpam",
    "reqd": 1,
    "search_index": 1
   },
@@ -187,6 +186,7 @@
    "fieldname": "salutation",
    "fieldtype": "Link",
    "label": "X\u01b0ng H\u00f4",
+   "link_filters": "[[\"Salutation\",\"name\",\"in\",[\"B\u00e1c\",\"Ch\u00fa\",\"C\u00f4\",\"Ch\u1ecb\",\"Anh\",\"B\u00e0\",\"\u00d4ng\"]]]",
    "options": "Salutation"
   },
   {
@@ -199,6 +199,8 @@
   {
    "fieldname": "source",
    "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Ngu\u1ed3n Lead",
    "oldfieldname": "source",
    "oldfieldtype": "Select",
@@ -250,6 +252,8 @@
   {
    "fieldname": "phone",
    "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "S\u1ed1 \u0110i\u1ec7n Tho\u1ea1i",
    "oldfieldname": "contact_no",
    "oldfieldtype": "Data",
@@ -350,7 +354,7 @@
    "fieldname": "title",
    "fieldtype": "Data",
    "hidden": 1,
-   "label": "Title",
+   "label": "T\u00ean Lead",
    "print_hide": 1,
    "read_only": 1
   },
@@ -461,8 +465,6 @@
    "fieldname": "job_title",
    "fieldtype": "Data",
    "hidden": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Job Title"
   },
   {
@@ -543,6 +545,7 @@
   {
    "fieldname": "dashboard_tab",
    "fieldtype": "Tab Break",
+   "hidden": 1,
    "label": "Connections",
    "show_dashboard": 1
   },
@@ -703,7 +706,7 @@
   {
    "fieldname": "preferred_product_type",
    "fieldtype": "Table MultiSelect",
-   "label": "Danh M\u1ee5c S\u1ea3n Ph\u1ea9m",
+   "label": "S\u1ea3n Ph\u1ea9m",
    "options": "Lead Product Item"
   },
   {
@@ -731,14 +734,18 @@
   {
    "fieldname": "expected_delivery_date",
    "fieldtype": "Date",
-   "label": "Ng\u00e0y Mong Mu\u1ed1n Nh\u1eadn H\u00e0ng"
+   "label": "Ng\u00e0y Mua H\u00e0ng (d\u1ef1 ki\u1ebfn)"
+  },
+  {
+   "fieldname": "column_break_wsdb",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-user",
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-04-21 19:29:49.445063",
+ "modified": "2025-04-23 23:54:45.073671",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",
