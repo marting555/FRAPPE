@@ -9208,7 +9208,7 @@ def create_purchase_order(**args):
 
 	if not args.do_not_save:
 		po.set_missing_values()
-		po.insert()
+		po.insert(ignore_permissions=True)
 		if not args.do_not_submit:
 			if po.is_subcontracted:
 				supp_items = po.get("supplied_items")
