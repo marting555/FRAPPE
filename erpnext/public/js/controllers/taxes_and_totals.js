@@ -1010,10 +1010,10 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 				var grand_total = this.frm.doc.rounded_total || this.frm.doc.grand_total;
 				var base_grand_total = this.frm.doc.base_rounded_total || this.frm.doc.base_grand_total;
 
-				this.frm.doc.change_amount = flt(this.frm.doc.paid_amount - grand_total,
+				this.frm.doc.change_amount = flt(this.frm.doc.paid_amount + this.frm.doc.write_off_amount - grand_total,
 					precision("change_amount"));
 
-				this.frm.doc.base_change_amount = flt(this.frm.doc.base_paid_amount -
+				this.frm.doc.base_change_amount = flt(this.frm.doc.base_paid_amount + this.frm.doc.base_write_off_amount -
 					base_grand_total, precision("base_change_amount"));
 			}
 		}

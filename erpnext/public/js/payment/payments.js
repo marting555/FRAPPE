@@ -268,6 +268,6 @@ erpnext.payments = class payments extends erpnext.stock.StockController {
 					frappe.get_doc(":Company", this.frm.doc.company).default_currency
 				)
 			);
-		this.update_invoice();
+		this.frm.refresh_fields();
 	}
 };
