@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-04-20 09:34+0000\n"
-"PO-Revision-Date: 2025-04-24 06:03\n"
+"PO-Revision-Date: 2025-04-25 06:00\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Serbian (Latin)\n"
 "MIME-Version: 1.0\n"
@@ -15407,7 +15407,7 @@ msgstr "Podrazumevani proizvođač stavki"
 #. Label of the default_letter_head (Link) field in DocType 'Company'
 #: erpnext/setup/doctype/company/company.json
 msgid "Default Letter Head"
-msgstr "Podrazumevano zaglavlje pisma"
+msgstr "Podrazumevano zaglavlje"
 
 #. Label of the default_manufacturer_part_no (Data) field in DocType 'Item'
 #: erpnext/stock/doctype/item/item.json
@@ -16151,7 +16151,7 @@ msgstr "Demo podaci obrisani"
 #: erpnext/setup/doctype/employee_internal_work_history/employee_internal_work_history.json
 #: erpnext/setup/doctype/sales_person/sales_person.json
 msgid "Department"
-msgstr "Odsek"
+msgstr "Odeljenje"
 
 #: erpnext/setup/setup_wizard/data/industry_type.txt:18
 msgid "Department Stores"
@@ -28260,7 +28260,7 @@ msgstr "Manje od iznosa"
 #: erpnext/subcontracting/doctype/subcontracting_order/subcontracting_order.json
 #: erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.json
 msgid "Letter Head"
-msgstr "Zaglavlje pisma"
+msgstr "Zaglavlje"
 
 #. Description of the 'Body Text' (Text Editor) field in DocType 'Dunning
 #. Letter Text'
