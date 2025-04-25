@@ -92,12 +92,13 @@ class BuyingController(SubcontractingController):
 				return
 
 			for item in self.get("items"):
-				if item.get(field) and not item.serial_and_batch_bundle and bundle_ids.get(item.get(field)):
+				if item.get(field) and bundle_ids.get(item.get(field)):
 					item.serial_and_batch_bundle = self.make_package_for_transfer(
 						bundle_ids.get(item.get(field)),
 						item.from_warehouse,
 						type_of_transaction="Outward",
 						do_not_submit=True,
+						qty=item.qty,
 					)
 
 	def set_rate_for_standalone_debit_note(self):
