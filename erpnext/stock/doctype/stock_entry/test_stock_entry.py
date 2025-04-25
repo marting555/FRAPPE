@@ -3855,7 +3855,18 @@ class TestStockEntry(FrappeTestCase):
 		else:
 			company_doc = frappe.get_doc("Company", company)
 
-		item = make_item("ADI-SH-W11", {"valuation_rate": 100, "has_serial_no": 1, "serial_no_series": "SNO-.####"})
+		item = make_item("ADI-SH-W11", {"valuation_rate": 100, "has_serial_no": 1, "serial_no_series": "SNO-.####", "valuation_rate": 100, "has_batch_no": 1, "create_new_batch": 0, "is_stock_item": 1})
+
+		if not frappe.db.exists("Batch", "BATCH-001"):
+			batch = frappe.get_doc({
+				"doctype": "Batch",
+				"item": item.name,
+				"batch_id": "BATCH-001", 
+				"manufacturing_date": frappe.utils.nowdate()
+			})
+			batch.insert()
+		else: 
+			batch = frappe.get_doc("Batch", "BATCH-001")
 
 		serial_nos = generate_serial_nos(item_code=item.name, qty=150)
 		se = make_stock_entry(
@@ -3870,6 +3881,7 @@ class TestStockEntry(FrappeTestCase):
 
 		se.items[0].is_finished_item = 1
 		se.items[0].serial_no = "\n".join(serial_nos)  # Assign serial numbers
+		se.items[0].batch_no = batch.name
 		se.save()
 		se.submit()
 		self.assertEqual(se.purpose, "Manufacture")
@@ -4063,20 +4075,26 @@ class TestStockEntry(FrappeTestCase):
 				self.assertEqual(sle['actual_qty'], 50)
 
 	def test_create_two_stock_entries_TC_SCK_230(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_company
-		create_company()
-		company = "_Test Company"
-		frappe.db.set_value("Company", company, "stock_adjustment_account", 'Stock Adjustment - _TC')
-		item_1 = make_item("_Test Item 1",properties = {'valuation_rate':100})
-		get_or_create_fiscal_year('_Test Company')
+		company = create_company_se()
+		frappe.db.set_value("Company", company, "stock_adjustment_account", 'Stock Adjustment - _CS')
+		item_1 = make_item("_Test Item 1")
+		get_or_create_fiscal_year('_Test Company SE')
 		warehouse_1 = create_warehouse("_Test warehouse PO", company=company)
-		se_1 = make_stock_entry(item_code=item_1.name, target=warehouse_1, qty=10, purpose="Material Receipt", company=company)
+		se_1 = make_stock_entry(item_code=item_1.name, target=warehouse_1, qty=10, purpose="Material Receipt", company=company,do_not_save=True)
+		se_1.save()
+		se_1.items[0].allow_zero_valuation_rate = 1
+		se_1.save()
+		se_1.submit()
 		self.assertEqual(se_1.items[0].item_code, item_1.name)
 		self.assertEqual(se_1.items[0].qty, 10)
 		self.check_stock_ledger_entries("Stock Entry", se_1.name, [[item_1.name, warehouse_1, 10]])
-		item_2 = make_item("_Test Item",properties = {'valuation_rate':100})
+		item_2 = make_item("_Test Item")
 		warehouse_2 = create_warehouse("Stores", company=company)
-		se_2 = make_stock_entry(item_code=item_2.name, target=warehouse_2, qty=20, purpose="Material Receipt", company=company)
+		se_2 = make_stock_entry(item_code=item_2.name, target=warehouse_2, qty=20, purpose="Material Receipt", company=company,do_not_save=True)
+		se_2.save()
+		se_2.items[0].allow_zero_valuation_rate = 1
+		se_2.save()
+		se_2.submit()
 		self.assertEqual(se_2.items[0].item_code, item_2.name)
 		self.assertEqual(se_2.items[0].qty, 20)
 		self.check_stock_ledger_entries("Stock Entry", se_2.name, [[item_2.name, warehouse_2, 20]])
@@ -4604,7 +4622,7 @@ def create_fiscal_with_company(company):
 	if existing_fiscal_years != []:
 		for fiscal_years in existing_fiscal_years:
 			fy_doc = frappe.get_doc("Fiscal Year",fiscal_years.get("name"))
-			if not frappe.db.exists("Fiscal Year Company", {"company": company}):
+			if not frappe.db.exists("Fiscal Year Company", {"company": company, "parent":fy_doc.name}):
 				fy_doc.append("companies", {"company": company})
 				fy_doc.save()
 	else:
@@ -4680,3 +4698,16 @@ def get_or_create_fiscal_year(company):
 		fiscal_year.year_end_date = last_date
 		fiscal_year.append("companies", {"company": company})
 		fiscal_year.save()
+
+def create_company_se():
+	company_name = "_Test Company SE"
+	if not frappe.db.exists("Company", company_name):
+		company = frappe.new_doc("Company")
+		company.company_name = company_name
+		company.country="India",
+		company.default_currency= "INR",
+		company.create_chart_of_accounts_based_on= "Standard Template",
+		company.chart_of_accounts= "Standard",
+		company = company.save()
+		company.load_from_db()
+	return company_name

@@ -141,7 +141,7 @@ class TestPaymentReconciliation(FrappeTestCase):
 				acc.company = self.company
 				acc.account_currency = x.account_currency
 				acc.account_type = x.account_type
-				acc.insert()
+				acc.insert(ignore_permissions=True)
 			else:
 				name = frappe.db.get_value(
 					"Account",
@@ -1696,7 +1696,7 @@ class TestPaymentReconciliation(FrappeTestCase):
 				}
 			]
 		})
-		pe.insert().submit()
+		pe.insert(ignore_permissions=True).submit()
 
 		# Step 3: Perform Payment Reconciliation
 		pr = frappe.get_doc("Payment Reconciliation")
@@ -1784,7 +1784,7 @@ class TestPaymentReconciliation(FrappeTestCase):
 				}
 			]
 		})
-		pe.insert().submit()
+		pe.insert(ignore_permissions=True).submit()
 
 		# Step 3: Perform Payment Reconciliation
 		pr = frappe.get_doc("Payment Reconciliation")
@@ -1876,7 +1876,7 @@ class TestPaymentReconciliation(FrappeTestCase):
 				}
 			]
 		})
-		pe.insert().submit()
+		pe.insert(ignore_permissions=True).submit()
 
 		# Step 4: Perform Payment Reconciliation
 		pr = frappe.get_doc("Payment Reconciliation")

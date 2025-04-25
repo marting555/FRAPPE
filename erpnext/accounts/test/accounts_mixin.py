@@ -116,7 +116,7 @@ class AccountsTestMixin:
 			acc.company = self.company
 			acc.account_currency = "USD"
 			acc.account_type = "Receivable"
-			acc.insert()
+			acc.insert(ignore_permissions=True)
 		else:
 			name = frappe.db.get_value(
 				"Account",
@@ -138,7 +138,7 @@ class AccountsTestMixin:
 			acc.company = self.company
 			acc.account_currency = "USD"
 			acc.account_type = "Payable"
-			acc.insert()
+			acc.insert(ignore_permissions=True)
 		else:
 			name = frappe.db.get_value(
 				"Account",

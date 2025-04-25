@@ -92,7 +92,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		# Create a Purchase Invoice with update_stock=True
 		pi = make_purchase_invoice(po.name)
 		pi.update_stock = True
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		# Check if the received quantity is updated in Material Request
@@ -103,7 +103,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		frappe.db.set_value("Company", "_Test Company", "round_off_account", "Round Off - _TC")
 		pi = frappe.copy_doc(test_records[0])
 		self.assertTrue(not cint(erpnext.is_perpetual_inventory_enabled(pi.company)))
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		expected_gl_entries = {
@@ -143,7 +143,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 	def test_terms_added_after_save(self):
 		pi = frappe.copy_doc(test_records[1])
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		self.assertTrue(pi.payment_schedule)
 		self.assertEqual(pi.payment_schedule[0].due_date, pi.due_date)
 
@@ -304,7 +304,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		for d in pi.items:
 			d.purchase_receipt = pr.name
 
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		pi.load_from_db()
 
@@ -352,7 +352,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi = create_purchase_invoice(pr.name)
 		pi.conversion_rate = 80
 
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		# Get exchnage gain and loss account
@@ -370,13 +370,13 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 	def test_purchase_invoice_change_naming_series(self):
 		pi = frappe.copy_doc(test_records[1])
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.naming_series = "TEST-"
 
 		self.assertRaises(frappe.CannotChangeConstantError, pi.save)
 
 		pi = frappe.copy_doc(test_records[0])
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.load_from_db()
 
 		self.assertTrue(pi.status, "Draft")
@@ -422,7 +422,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 	def test_purchase_invoice_calculation(self):
 		pi = frappe.copy_doc(test_records[0])
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.load_from_db()
 
 		expected_values = [
@@ -477,7 +477,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				"remarks": jv.remark,
 			},
 		)
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 
 		self.assertEqual(pi.outstanding_amount, 1212.30)
 
@@ -532,7 +532,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				"remarks": jv.remark,
 			},
 		)
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 
 		pi.update(
 			{
@@ -930,7 +930,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				"remarks": jv.remark,
 			},
 		)
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		pi.load_from_db()
 
@@ -965,7 +965,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				"paid_to": "_Test Payable - _TC",
 			}
 		)
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		pi = frappe.copy_doc(test_records[0])
@@ -981,7 +981,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				"remarks": pe.remarks,
 			},
 		)
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		pi.load_from_db()
@@ -1007,7 +1007,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi = frappe.copy_doc(test_records[0])
 
 		pi.shipping_rule = shipping_rule.name
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.save()
 
 		self.assertEqual(pi.net_total, 1250)
@@ -1020,7 +1020,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		self.assertFalse(pi.get("payment_schedule"))
 
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 
 		self.assertTrue(pi.get("payment_schedule"))
 
@@ -1053,7 +1053,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pe.source_exchange_rate = 1
 		pe.target_exchange_rate = 1
 		pe.paid_amount = pi.grand_total * -1
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		pi_doc = frappe.get_doc("Purchase Invoice", pi.name)
@@ -2450,7 +2450,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		payment_entry.reference_no = f"Test-{first_purchase_invoice.name}"
 		payment_entry.reference_date = today
 		payment_entry.paid_amount = first_purchase_invoice.grand_total
-		payment_entry.insert()
+		payment_entry.insert(ignore_permissions=True)
 		payment_entry.submit()
 
 		# Step 3: Validate Outstanding Amount for the First Purchase Invoice
@@ -2531,6 +2531,11 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		get_or_create_fiscal_year("_Test Company")
 		records_for_pi('_Test Supplier TDS')
+		category_doc = frappe.get_doc("Tax Withholding Category", "Test - TDS - 194C - Company")
+		for rate in category_doc.rates:
+			rate.from_date = add_days(today(), -30)
+			rate.to_date = add_days(today(), 30)
+		category_doc.save()
 		supplier=frappe.get_doc("Supplier","_Test Supplier TDS")
 		if supplier:
 			self.assertEqual(supplier.tax_withholding_category,"Test - TDS - 194C - Company")
@@ -2557,7 +2562,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 					"against_voucher": pi.name
 				},
 				{
-					"account": "Stock Received But Not Billed - _TC",
+					"account": "_Test Account Excise Duty - _TC",
 					"debit": 90000.0,
 					"credit": 0.0,
 					"against_voucher": None
@@ -2593,7 +2598,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				"target_exchange_rate": 1,
 				"paid_amount": pi.grand_total
 			})
-			pe.insert()
+			pe.insert(ignore_permissions=True)
 			pe.submit()
 			payment_entries.append(pe)
 
@@ -2907,7 +2912,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				rate=5000,
 				item_code=item.name,
 			)
-			pi.save()
+			pi.save(ignore_permissions=True)
 			pi.submit()
 
 			pr = make_payment_request(
@@ -2922,7 +2927,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			pe=pr.create_payment_entry(submit=False)
 			pe.payment_type= "Pay"
 			pe.paid_from = "Cash - _TC"
-			pe.save()
+			pe.save(ignore_permissions=True)
 			pe.submit()
 			pr.load_from_db()
 			self.assertEqual(pr.status, "Paid")
@@ -2940,6 +2945,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			)
 			pi.load_from_db()
 			self.assertEqual(pi.status, "Paid")
+			
 	def test_multi_payment_request_for_purchase_invoice_TC_ACC_036(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			create_records as records_for_pi,
@@ -3408,7 +3414,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				]
 			}
 		)
-		si.insert()
+		si.insert(ignore_permissions=True)
 		si.submit()
 		self.assertEqual(si.company, parent_company)
 		self.assertEqual(si.customer, customer)
@@ -3417,7 +3423,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		self.assertEqual(si.total, 1000)
 		pi = make_inter_company_purchase_invoice(si.name)
 		pi.bill_no = "test bill"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 		self.assertEqual(pi.company, child_company)
 		self.assertEqual(pi.supplier, supplier)
@@ -3488,7 +3494,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			"description":"GST"
 		})
 
-		purchase_tax.save()
+		purchase_tax.save(ignore_permissions=True)
 		pi = make_purchase_invoice(
 			qty=1,
 			item_code="_Test Item",
@@ -3505,7 +3511,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		)
 		
 		pi.taxes_and_charges = purchase_tax.name
-		pi.save()
+		pi.save(ignore_permissions=True)
 		pi.submit()
 
 		pr = frappe.new_doc('Payment Request')
@@ -3516,7 +3522,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pr.reference_name = pi.name
 		pr.grand_total = 250
 
-		pr.save()
+		pr.save(ignore_permissions=True)
 		pr.submit()
 
 		paid_from_account = frappe.db.get_value('Account',{'company':'_Test Company','account_type' : ['in',['Bank' ,'Cash']],'is_group':0},['name'])
@@ -3531,7 +3537,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			paid_amount=pr.grand_total,
 		)
 		pe.append("references", {"reference_doctype": "Purchase Invoice", "reference_name": pi.name,"allocated_amount":pr.grand_total})
-		pe.save()
+		pe.save(ignore_permissions=True)
 		pe.submit()
 
 		pi_status = frappe.db.get_value("Purchase Invoice", pi.name, "status")
@@ -3609,7 +3615,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		item = make_test_item("test_item_ignore_rule")
 		item.is_purchase_item = 1
 		item.is_sales_item = 0
-		item.save()
+		item.save(ignore_permissions=True)
 
 		if not frappe.db.exists("Item Price", {"item_code": item.item_code, "price_list": "Standard Buying"}):
 			frappe.get_doc({
@@ -3635,7 +3641,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				"discount_percentage": 10,
 				"selling": 0,
 				"buying": 1
-			}).insert()
+			}).insert(ignore_permissions=True)
 
 		pi = frappe.get_doc({
 			"doctype": "Purchase Invoice",
@@ -3654,12 +3660,12 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			]
 		})
 		pi.bill_no = "test_bill_1122"
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		self.assertEqual(len(pi.items), 1)
 		self.assertEqual(pi.items[0].rate, 117)
 		self.assertEqual(pi.items[0].discount_percentage, 10)
 		pi.ignore_pricing_rule = 1
-		pi.save()
+		pi.save(ignore_permissions=True)
 		self.assertEqual(pi.items[0].rate, 130)
 		self.assertEqual(pi.items[0].discount_percentage, 0)
 		pi.submit()
@@ -3772,7 +3778,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		acc.company = "_Test Company"
 		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
 		if not account_name:
-			account_name = acc.insert()
+			account_name = acc.insert(ignore_permissions=True)
 
 		doc_pi = make_purchase_invoice(**pi_data)
 		doc_pi.append("taxes", {
@@ -3815,7 +3821,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		acc.company = "_Test Company"
 		account_name = frappe.db.exists("Account", {"account_name" : "Input Tax IGST","company": "_Test Company" })
 		if not account_name:
-			account_name = acc.insert()
+			account_name = acc.insert(ignore_permissions=True)
 
 		doc_pi = make_purchase_invoice(**pi_data)
 		doc_pi.append("taxes", {
@@ -3843,7 +3849,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
 			gst_hsn_doc = frappe.new_doc("GST HSN Code")
 			gst_hsn_doc.hsn_code = gst_hsn_code
-			gst_hsn_doc.insert()
+			gst_hsn_doc.insert(ignore_permissions=True)
 
 		if not frappe.db.exists("Item", "_Test Item"):
 			item = frappe.new_doc("Item")
@@ -3852,13 +3858,13 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			item.item_group = "All Item Groups"
 			item.enable_deferred_expense = 1
 			item.no_of_months_exp = 12
-			item.insert()
+			item.insert(ignore_permissions=True)
 		else:
 			item = frappe.get_doc("Item", "_Test Item")
 			item.gst_hsn_code = gst_hsn_code
 			item.enable_deferred_expense = 1
 			item.no_of_months_exp = 12
-			item.save()
+			item.save(ignore_permissions=True)
 		pi = make_purchase_invoice(item_code=item.item_code, qty=1, rate=100, do_not_submit=True)
 		if pi.items:
 			setattr(pi.items[0], 'enable_deferred_expense', 1)
@@ -3975,7 +3981,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			item=make_test_item(item_name=item)
 			item.enable_deferred_expense=1
 			item.no_of_months_exp=12
-			item.save()
+			item.save(ignore_permissions=True)
 			
 		pi = make_purchase_invoice(
 			qty=1,
@@ -4053,7 +4059,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				}
 			]
 		})
-		tax_category.insert(ignore_if_duplicate=1)
+		tax_category.insert(ignore_if_duplicate=1, ignore_permissions=True)
 
 		frappe.db.set_value("Supplier", supplier, "tax_withholding_category", tax_category.name)
 		pi = frappe.get_doc({
@@ -4075,7 +4081,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		pi.taxes_and_charges = ""
 		pi.taxes = []
 		pi.tax_withholding_category = tax_category.name
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		pi.submit()
 
 		self.assertEqual(pi.taxes[0].tax_amount, 20)
@@ -4123,7 +4129,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				"voucher_type":"Purchase Invoice",
 				"voucher_no":pi.name
 			}]
-		}).insert()
+		}).insert(ignore_permissions=True)
 		ral.submit()
 		pi.items[0].expense_account="_Test Account Stock Adjustment - _TC"
 		pi.db_update()
@@ -4146,7 +4152,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		get_or_create_fiscal_year("_Test Company")
 		account_setting=frappe.get_doc("Accounts Settings")
 		account_setting.db_set("over_billing_allowance", 10)
-		account_setting.save()
+		account_setting.save(ignore_permissions=True)
 		buying_setting=frappe.get_doc("Buying Settings")
 		buying_setting.db_set("maintain_same_rate", 0)
 		company = "_Test Company"
@@ -4164,7 +4170,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		try:
 			pi=make_pi_from_po(po.name)
 			pi.items[0].rate=1200
-			pi.save()
+			pi.save(ignore_permissions=True)
 			pi.submit()
 		except Exception as e:
 			error_msg = str(e)
@@ -4248,7 +4254,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 						}
 					]}
 					
-					).insert()
+					).insert(ignore_permissions=True)
 		purchase_taxes_template = create_or_get_purchase_taxes_template("_Test Company")
 
 		gst_rates = [
@@ -4447,7 +4453,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				"price_list": "Standard Buying",
 				"item_code": item,
 				"price_list_rate": 5000
-			}).insert()
+			}).insert(ignore_permissions=True)
 		
 	def test_purchase_invoice_discount(self):
 		if not frappe.db.exists("Pricing Rule", {"title": "Boat Earpods - Monica Discount", "disable": 0}):
@@ -4493,7 +4499,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 		item = make_test_item("_Test Item10")
 		item.is_stock_item = 1
-		item.save()
+		item.save(ignore_permissions=True)
 
 		pi = make_purchase_invoice(
 			supplier="_Test Supplier",
@@ -4527,7 +4533,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			"account_currency":"INR",
 			"description":"test"
 		})
-		lvc.save()
+		lvc.save(ignore_permissions=True)
 		lvc.submit()
   
 		expected_gle = [
@@ -4627,7 +4633,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 				"discount_type":"Percentage",
 				"due_date_based_on":"Day(s) after invoice date",	
 				"discount":10
-			}).insert()
+			}).insert(ignore_permissions=True)
 
 		pt = frappe.get_doc("Payment Term","_Test Discount Term")
 		
@@ -4650,11 +4656,11 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			"payment_amount":pi.grand_total,
 			"discount_date":add_days(nowdate(),1),
 		})
-		pi.insert().submit()
+		pi.insert(ignore_permissions=True).submit()
 		pe = get_payment_entry(pi.doctype,pi.name,bank_account="Cash - _TC",reference_date=nowdate())
 		pe.reference_no = "1"
 		pe.deductions[0].account="_Test Account Discount - _TC"
-		pe.save().submit()
+		pe.save(ignore_permissions=True).submit()
 		expected_gle =[
 			['Cash - _TC', 0.0,(pi.grand_total-pi.grand_total * 0.1), nowdate()],
 			['Creditors - _TC',  pi.grand_total,0.0, nowdate()],
@@ -4701,7 +4707,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			"discount_date":add_days(nowdate(),1),
 		})
   
-		pi.insert().submit()
+		pi.insert(ignore_permissions=True).submit()
 		pe = get_payment_entry(pi.doctype,pi.name,bank_account="Cash - _TC",reference_date=nowdate())
 		pe.reference_no = "1"
 		pe.deductions[0].account="_Test Account Discount - _TC"
@@ -5114,7 +5120,7 @@ def make_purchase_invoice(**args):
 			pi.append("taxes", tax)
 
 	if not args.do_not_save:
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		if not args.do_not_submit:
 			pi.submit()
 	return pi
@@ -5189,7 +5195,7 @@ def make_purchase_invoice_against_cost_center(**args):
 		},
 	)
 	if not args.do_not_save:
-		pi.insert()
+		pi.insert(ignore_permissions=True)
 		if not args.do_not_submit:
 			pi.submit()
 	return pi
@@ -5243,7 +5249,7 @@ def create_ldc(supplier):
             'rate': 1,
             'certificate_limit': 40000,
             'pan_no': 'HYRDG4553R'
-        }).insert()
+        }).insert(ignore_permissions=True)
         
         return doc
     else:

@@ -1036,7 +1036,7 @@ class TestPOSInvoice(unittest.TestCase):
 		before_lp_details = get_loyalty_program_details_with_points(
 			"_Test Customer", loyalty_program="Test Single Loyalty"
 		)
-		inv = create_pos_invoice(rate=10000, do_not_save=1)
+		inv = create_pos_invoice(rate=9000, do_not_save=1)
 		inv.redeem_loyalty_points = 1
 		inv.loyalty_points = before_lp_details.loyalty_points
 		inv.loyalty_redemption_account ="Cash - _TC"

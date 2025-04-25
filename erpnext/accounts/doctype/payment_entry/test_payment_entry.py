@@ -48,7 +48,7 @@ class TestPaymentEntry(FrappeTestCase):
 		so = make_sales_order()
 		pe = get_payment_entry("Sales Order", so.name, bank_account="_Test Cash - _TC")
 		pe.paid_from = "Debtors - _TC"
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		self.assertEqual(pe.paid_to_account_type, "Cash")
@@ -76,7 +76,7 @@ class TestPaymentEntry(FrappeTestCase):
 		pe = get_payment_entry("Sales Order", so.name)
 		pe.source_exchange_rate = 55
 		pe.received_amount = 5500
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		# there should be no difference amount
@@ -181,7 +181,7 @@ class TestPaymentEntry(FrappeTestCase):
 		pe.reference_no = "1"
 		pe.reference_date = "2016-01-01"
 		pe.source_exchange_rate = 50
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		expected_gle = dict(
@@ -213,7 +213,7 @@ class TestPaymentEntry(FrappeTestCase):
 		pe.reference_no = "1"
 		pe.reference_date = "2016-01-01"
 		pe.source_exchange_rate = 50
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		expected_gle = dict(
@@ -241,7 +241,7 @@ class TestPaymentEntry(FrappeTestCase):
 		pe.reference_no = "1"
 		pe.reference_date = "2016-01-01"
 		pe.source_exchange_rate = 50
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		outstanding_amount, status = frappe.db.get_value(
@@ -475,7 +475,7 @@ class TestPaymentEntry(FrappeTestCase):
 		self.assertEqual(pe.deductions[0].account, "Write Off - _TC")
 		self.assertEqual(pe.difference_amount, 0.0)
 
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		expected_gle = dict(
@@ -529,7 +529,7 @@ class TestPaymentEntry(FrappeTestCase):
 		pe.deductions[-1].account = "_Test Exchange Gain/Loss - _TC"
 		pe.deductions[-1].cost_center = "_Test Cost Center - _TC"
 
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		self.assertEqual(pe.difference_amount, 0.0)
@@ -561,7 +561,7 @@ class TestPaymentEntry(FrappeTestCase):
 		pe.reference_no = "1"
 		pe.reference_date = "2016-01-01"
 		pe.source_exchange_rate = 50
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		self.assertEqual(pe.paid_from_account_type, "Bank")
@@ -597,7 +597,7 @@ class TestPaymentEntry(FrappeTestCase):
 		pe.deductions[0].account = "_Test Exchange Gain/Loss - _TC"
 		pe.deductions[0].cost_center = "_Test Cost Center - _TC"
 
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		expected_gle = dict(
@@ -694,7 +694,7 @@ class TestPaymentEntry(FrappeTestCase):
 		pe.deductions[0].account = "_Test Exchange Gain/Loss - _TC"
 		pe.deductions[0].cost_center = "_Test Cost Center - _TC"
 
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		expected_gle = dict(
@@ -814,7 +814,7 @@ class TestPaymentEntry(FrappeTestCase):
 		pe.reference_no = "1"
 		pe.reference_date = "2016-01-01"
 		pe.received_amount = pe.paid_amount = 110
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 
 		self.assertEqual(pe.unallocated_amount, 10)
 
@@ -892,7 +892,7 @@ class TestPaymentEntry(FrappeTestCase):
 		pe.reference_date = nowdate()
 		pe.paid_to = "_Test Bank - _TC"
 		pe.paid_amount = si.grand_total
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		expected_values = {
@@ -929,7 +929,7 @@ class TestPaymentEntry(FrappeTestCase):
 		pe.reference_date = nowdate()
 		pe.paid_from = "_Test Bank - _TC"
 		pe.paid_amount = pi.grand_total
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		expected_values = {
@@ -969,7 +969,7 @@ class TestPaymentEntry(FrappeTestCase):
 		pe.reference_date = nowdate()
 		pe.paid_to = "_Test Bank - _TC"
 		pe.paid_amount = si.grand_total
-		pe.insert()
+		pe.insert(ignore_permissions=True)
 		pe.submit()
 
 		expected_account_balance = account_balance + si.grand_total
@@ -987,12 +987,13 @@ class TestPaymentEntry(FrappeTestCase):
 
 
 	def test_gl_of_multi_currency_payment_transaction(self):
+		from erpnext.accounts.doctype.account.test_account import create_account as _create_account
 		from erpnext.setup.doctype.currency_exchange.test_currency_exchange import (
 			save_new_records,
 			test_records,
 		)
 		save_new_records(test_records)
-		paid_from = create_account(
+		paid_from = _create_account(
 			parent_account="Current Liabilities - _TC",
 			account_name="_Test Cash USD",
 			company="_Test Company",
@@ -2191,6 +2192,7 @@ def create_customer(name="_Test Customer 2 USD", currency="USD"):
 		customer.save()
 		customer = customer.name
 	return customer
+
 def create_supplier(**args):
 	args = frappe._dict(args)
 
@@ -2218,7 +2220,7 @@ def create_supplier(**args):
 		doc.supplier_group = args.supplier_group or "Services"
   
 
-	doc.insert(ignore_mandatory=True)
+	doc.insert(ignore_mandatory=True, ignore_permissions=True)
 	
 	return doc
 
@@ -2303,7 +2305,7 @@ def make_test_item(item_name=None):
 					"doctype": 'GST HSN Code',
 					"hsn_code": '888890',
 					"description": 'test'
-				}).insert()
+				}).insert(ignore_permissions=True)
 				
 			
 			item= make_item(
@@ -2371,14 +2373,20 @@ def create_purchase_invoice(**args):
 	pi.save()
 	return pi
 
-def create_company():
+def create_company(
+    company_name="_Test Company", 
+    country="India", 
+    currency="INR",
+    abbr="_TC"
+    ):
 	if not frappe.db.exists("Company", "_Test Company"):
 		frappe.get_doc({
 			"doctype": "Company",
-			"company_name": "_Test Company",
+			"company_name": company_name,
 			"company_type": "Company",
-			"default_currency": "INR",
+			"default_currency": currency,
+			"country": country,
 			"company_email": "test@example.com",
-			"abbr":"_TC"
+			"abbr": abbr
 		}).insert()
 		
