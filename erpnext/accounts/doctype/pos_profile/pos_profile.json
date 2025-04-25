@@ -11,6 +11,8 @@
   "country",
   "disabled",
   "column_break_9",
+  "select_doc_for_series",
+  "prefix",
   "warehouse",
   "campaign",
   "company_address",
@@ -375,6 +377,18 @@
    "fieldname": "disable_rounded_total",
    "fieldtype": "Check",
    "label": "Disable Rounded Total"
+  },
+  {
+   "fieldname": "select_doc_for_series",
+   "fieldtype": "Select",
+   "label": "Select Transaction",
+   "reqd": 1
+  },
+  {
+   "fieldname": "prefix",
+   "fieldtype": "Select",
+   "label": "Prefix",
+   "reqd": 1
   }
  ],
  "icon": "icon-cog",
@@ -402,7 +416,7 @@
    "link_fieldname": "pos_profile"
   }
  ],
- "modified": "2022-08-10 12:57:06.241439",
+ "modified": "2025-04-25 11:05:55.980634",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "POS Profile",

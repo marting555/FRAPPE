@@ -4,6 +4,40 @@
 {% include "erpnext/public/js/controllers/accounts.js" %}
 
 frappe.ui.form.on('POS Profile', {
+	onload: function(frm) {
+        frm.events.get_transactions(frm);
+    },
+
+    get_transactions: function(frm) {
+        frappe.call({
+            method: "get_transactions_and_prefixes",
+			doc: frm.doc,
+            callback: function(r) {
+                frm.set_df_property("select_doc_for_series", "options", r.message.transactions);
+            }
+        });
+    },
+
+    get_prefix: function(frm) {
+        frappe.call({
+            method: "get_prefix",
+			doc: frm.doc,
+            callback: function(r) {
+                frm.set_df_property("prefix", "options", r.message.prefix);
+            }
+        });
+    },
+
+    select_doc_for_series: function(frm) {
+        frappe.call({
+            method: "get_prefix",
+			doc: frm.doc,
+            callback: function(r) {
+                frm.set_df_property("prefix", "options", r.message.prefix);
+            }
+        });
+    },
+
 	setup: function(frm) {
 		frm.set_query("selling_price_list", function() {
 			return { filters: { selling: 1 } };
