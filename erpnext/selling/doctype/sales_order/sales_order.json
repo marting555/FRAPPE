@@ -60,15 +60,15 @@
   "coupon_code",
   "column_break_50",
   "additional_discount_percentage",
-  "discount_amount",
   "section_break_31",
   "total_qty",
-  "total_net_weight",
+  "total",
+  "discount_amount",
   "column_break_33",
   "base_total",
   "base_net_total",
   "column_break_33a",
-  "total",
+  "total_net_weight",
   "net_total",
   "taxes_section",
   "tax_category",
@@ -84,13 +84,15 @@
   "base_total_taxes_and_charges",
   "column_break_46",
   "total_taxes_and_charges",
+  "section_break_dizn",
+  "grand_total",
+  "column_break_tbte",
   "totals",
   "base_grand_total",
   "base_rounding_adjustment",
   "base_rounded_total",
   "base_in_words",
   "column_break3",
-  "grand_total",
   "rounding_adjustment",
   "rounded_total",
   "in_words",
@@ -689,7 +691,7 @@
    "fieldtype": "Float",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "T\u1ed5ng S\u1ed1 L\u01b0\u1ee3ng",
+   "label": "S\u1ed1 L\u01b0\u1ee3ng S\u1ea3n Ph\u1ea9m",
    "read_only": 1
   },
   {
@@ -726,7 +728,7 @@
    "fieldtype": "Currency",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "T\u1ed5ng Gi\u00e1 Tr\u1ecb S\u1ea3n Ph\u1ea9m",
+   "label": "T\u1ed5ng Ti\u1ec1n H\u00e0ng",
    "options": "currency",
    "read_only": 1
   },
@@ -737,8 +739,7 @@
    "hide_seconds": 1,
    "label": "T\u1ed5ng Gi\u00e1 Sau Gi\u1ea3m",
    "options": "currency",
-   "print_hide": 1,
-   "read_only": 1
+   "print_hide": 1
   },
   {
    "depends_on": "total_net_weight",
@@ -921,7 +922,8 @@
    "hide_seconds": 1,
    "label": "Apply Additional Discount On",
    "options": "\nGrand Total\nNet Total",
-   "print_hide": 1
+   "print_hide": 1,
+   "read_only": 1
   },
   {
    "fieldname": "base_discount_amount",
@@ -949,11 +951,12 @@
    "print_hide": 1
   },
   {
+   "default": "0",
    "fieldname": "discount_amount",
    "fieldtype": "Currency",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "S\u1ed1 Ti\u1ec1n Gi\u1ea3m Gi\u00e1",
+   "label": "Gi\u1ea3m Gi\u00e1",
    "options": "currency",
    "print_hide": 1
   },
@@ -1024,6 +1027,7 @@
   {
    "fieldname": "column_break3",
    "fieldtype": "Column Break",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "oldfieldtype": "Column Break",
@@ -1036,7 +1040,7 @@
    "hide_days": 1,
    "hide_seconds": 1,
    "in_list_view": 1,
-   "label": "T\u1ed5ng C\u1ed9ng",
+   "label": "T\u1ed5ng Gi\u00e1 Tr\u1ecb \u0110\u01a1n H\u00e0ng",
    "oldfieldname": "grand_total_export",
    "oldfieldtype": "Currency",
    "options": "currency",
@@ -1913,13 +1917,21 @@
   {
    "fieldname": "column_break_xnxx",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_dizn",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_tbte",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-04-25 10:00:44.115324",
+ "modified": "2025-04-25 11:57:50.895302",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
