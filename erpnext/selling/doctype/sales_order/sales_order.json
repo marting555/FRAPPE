@@ -61,15 +61,21 @@
   "column_break_50",
   "additional_discount_percentage",
   "section_break_31",
+  "column_break_33a",
+  "promotions",
+  "product_category",
+  "column_break_bscz",
   "total_qty",
   "total",
   "discount_amount",
+  "grand_total",
+  "section_break_ownx",
   "column_break_33",
   "base_total",
   "base_net_total",
-  "column_break_33a",
   "total_net_weight",
   "net_total",
+  "column_break_wwye",
   "taxes_section",
   "tax_category",
   "taxes_and_charges",
@@ -84,9 +90,6 @@
   "base_total_taxes_and_charges",
   "column_break_46",
   "total_taxes_and_charges",
-  "section_break_dizn",
-  "grand_total",
-  "column_break_tbte",
   "totals",
   "base_grand_total",
   "base_rounding_adjustment",
@@ -98,8 +101,6 @@
   "in_words",
   "advance_paid",
   "disable_rounded_total",
-  "ch\u01b0\u01a1ng_tr\u00ecnh_khuy\u1ebfn_m\u00e3i_\u0111\u01a1n_h\u00e0ng_section",
-  "promotions",
   "sec_tax_breakup",
   "other_charges_calculation",
   "packing_list",
@@ -114,6 +115,8 @@
   "contact_phone",
   "contact_mobile",
   "contact_email",
+  "invoice_location",
+  "invoice_date",
   "column_break_biok",
   "\u0111\u1ecba_ch\u1ec9_m\u1eb7c_\u0111\u1ecbnh",
   "customer_address",
@@ -142,12 +145,6 @@
   "column_break_92",
   "company_contact_person",
   "more_info",
-  "th\u00f4ng_tin_ho\u00e1_\u0111\u01a1n_section",
-  "invoice_location",
-  "product_category",
-  "column_break_quav",
-  "invoice_date",
-  "expected_delivery_date",
   "section_break_78",
   "status",
   "delivery_status",
@@ -918,6 +915,7 @@
    "default": "Grand Total",
    "fieldname": "apply_discount_on",
    "fieldtype": "Select",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Apply Additional Discount On",
@@ -1536,6 +1534,7 @@
   {
    "fieldname": "contact_phone",
    "fieldtype": "Data",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "\u0110i\u1ec7n Tho\u1ea1i",
@@ -1777,11 +1776,6 @@
    "label": "Th\u1eddi Gian Giao H\u00e0ng"
   },
   {
-   "fieldname": "expected_delivery_date",
-   "fieldtype": "Datetime",
-   "label": "Ng\u00e0y D\u1ef1 Ki\u1ebfn Giao H\u00e0ng"
-  },
-  {
    "fieldname": "creator_id",
    "fieldtype": "Data",
    "label": "Ng\u01b0\u1eddi t\u1ea1o"
@@ -1824,26 +1818,12 @@
    "label": "Ng\u00e0y Hu\u1ef7 \u0110\u01a1n H\u00e0ng "
   },
   {
-   "fieldname": "th\u00f4ng_tin_ho\u00e1_\u0111\u01a1n_section",
-   "fieldtype": "Section Break",
-   "label": "Th\u00f4ng Tin Ho\u00e1 \u0110\u01a1n"
-  },
-  {
    "fieldname": "section_break_uceh",
    "fieldtype": "Section Break"
   },
   {
    "fieldname": "column_break_dqxa",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_quav",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "ch\u01b0\u01a1ng_tr\u00ecnh_khuy\u1ebfn_m\u00e3i_\u0111\u01a1n_h\u00e0ng_section",
-   "fieldtype": "Section Break",
-   "label": "Ch\u01b0\u01a1ng Tr\u00ecnh Khuy\u1ebfn M\u00e3i \u0110\u01a1n H\u00e0ng"
   },
   {
    "fieldname": "promotions",
@@ -1919,11 +1899,15 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "section_break_dizn",
+   "fieldname": "column_break_bscz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_ownx",
    "fieldtype": "Section Break"
   },
   {
-   "fieldname": "column_break_tbte",
+   "fieldname": "column_break_wwye",
    "fieldtype": "Column Break"
   }
  ],
@@ -1931,7 +1915,7 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-04-25 11:57:50.895302",
+ "modified": "2025-04-25 12:31:17.442486",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

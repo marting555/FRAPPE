@@ -110,7 +110,6 @@ class SalesOrder(SellingController):
 		discount_amount: DF.Currency
 		dispatch_address: DF.SmallText | None
 		dispatch_address_name: DF.Link | None
-		expected_delivery_date: DF.Datetime | None
 		financial_status: DF.Literal["", "\u0110\u00e3 Thanh To\u00e1n", "\u0110\u00e3 Thanh To\u00e1n M\u1ed9t Ph\u1ea7n", "\u0110\u00e3 Ho\u00e0n Ti\u1ec1n", "Ch\u1edd X\u1eed L\u00fd"]
 		from_date: DF.Date | None
 		fulfillment_status: DF.Literal["", "Ch\u01b0a Giao H\u00e0ng", "\u0110\u00e3 Giao H\u00e0ng"]
