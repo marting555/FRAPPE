@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-04-20 09:34+0000\n"
-"PO-Revision-Date: 2025-04-21 05:44\n"
+"PO-Revision-Date: 2025-04-25 06:00\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Chinese Simplified\n"
 "MIME-Version: 1.0\n"
@@ -21929,12 +21929,12 @@ msgstr "从采购收货单获取物料"
 #. Label of the transfer_materials (Button) field in DocType 'Production Plan'
 #: erpnext/manufacturing/doctype/production_plan/production_plan.json
 msgid "Get Items for Purchase / Transfer"
-msgstr ""
+msgstr "获取需采购/调拨的物料"
 
 #. Label of the get_items_for_mr (Button) field in DocType 'Production Plan'
 #: erpnext/manufacturing/doctype/production_plan/production_plan.json
 msgid "Get Items for Purchase Only"
-msgstr ""
+msgstr "仅获取需采购的物料"
 
 #: erpnext/stock/doctype/material_request/material_request.js:310
 #: erpnext/stock/doctype/stock_entry/stock_entry.js:656
@@ -23256,7 +23256,9 @@ msgstr "若启用，系统将仅允许在物料主数据中设置了换算率的
 msgid "If enabled, the system will consider items with a shortfall in quantity. \n"
 "<br>\n"
 "Qty = Reqd Qty (BOM) - <a href=\"https://docs.frappe.io/erpnext/user/manual/en/projected-quantity\">Projected Qty</a>"
-msgstr ""
+msgstr "若启用，系统将考量库存短缺的物料。\n"
+"<br>\n"
+"数量 = 需求数量（物料清单） - <a href=\"https://docs.frappe.io/erpnext/user/manual/en/projected-quantity\">预计数量</a>"
 
 #. Description of the 'Do Not Use Batch-wise Valuation' (Check) field in
 #. DocType 'Stock Settings'
@@ -23279,7 +23281,7 @@ msgstr "若物料为另一物料的变型，描述、图片、价格、税率等
 #. DocType 'Production Plan'
 #: erpnext/manufacturing/doctype/production_plan/production_plan.json
 msgid "If items in stock, proceed with Material Transfer or Purchase."
-msgstr ""
+msgstr "若物料库存充足，请执行物料调拨或采购操作。"
 
 #. Description of the 'Role Allowed to Create/Edit Back-dated Transactions'
 #. (Link) field in DocType 'Stock Settings'
@@ -49087,7 +49089,7 @@ msgstr "尺寸"
 #. 'Production Plan'
 #: erpnext/manufacturing/doctype/production_plan/production_plan.json
 msgid "Skip Available Raw Materials"
-msgstr ""
+msgstr "跳过可用原材料"
 
 #. Label of the skip_available_sub_assembly_item (Check) field in DocType
 #. 'Production Plan'
