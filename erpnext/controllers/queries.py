@@ -465,6 +465,7 @@ def get_batches_from_stock_ledger_entries(searchfields, title_field, txt, filter
 			stock_ledger_entry.batch_no,
 			batch_table[title_field],
 			Sum(stock_ledger_entry.actual_qty).as_("qty"),
+			batch_table.stock_uom,
 		)
 		.where(stock_ledger_entry.is_cancelled == 0)
 		.where(
@@ -519,6 +520,7 @@ def get_batches_from_serial_and_batch_bundle(searchfields, title_field, txt, fil
 			bundle.batch_no,
 			batch_table[title_field],
 			Sum(bundle.qty).as_("qty"),
+			batch_table.stock_uom,
 		)
 		.where(stock_ledger_entry.is_cancelled == 0)
 		.where(
