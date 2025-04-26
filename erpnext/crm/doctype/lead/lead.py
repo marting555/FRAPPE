@@ -327,6 +327,7 @@ class Lead(SellingController, CRMNote):
 				"first_name": self.first_name or self.lead_name,
 				"last_name": self.last_name,
 				"salutation": self.salutation,
+				"source": self.source,
 				"gender": self.gender,
 				"designation": self.job_title,
 				"company_name": self.company_name,

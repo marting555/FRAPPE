@@ -86,7 +86,7 @@ class Customer(TransactionBase):
 		opportunity_name: DF.Link | None
 		payment_terms: DF.Link | None
 		person_name: DF.Data | None
-		personal_document_type: DF.Literal["CCCD", "CMND", "H\u1ed9 Chi\u1ebfu", "Passpoard"]
+		personal_document_type: DF.Literal["CCCD", "CMND", "H\u1ed9 Chi\u1ebfu", "Passpost"]
 		personal_id: DF.Data | None
 		personal_tax_id: DF.Data | None
 		phone: DF.ReadOnly | None
