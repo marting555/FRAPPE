@@ -67,7 +67,6 @@ class SalesOrder(SellingController):
 		amended_from: DF.Link | None
 		amount_eligible_for_commission: DF.Currency
 		apply_discount_on: DF.Literal["", "Grand Total", "Net Total"]
-		assigned_location_at: DF.Datetime | None
 		auto_repeat: DF.Link | None
 		base_discount_amount: DF.Currency
 		base_grand_total: DF.Currency
@@ -80,14 +79,12 @@ class SalesOrder(SellingController):
 		billing_status: DF.Literal["Not Billed", "Fully Billed", "Partly Billed", "Closed"]
 		birth_date: DF.Date | None
 		campaign: DF.Link | None
-		cancelled_date: DF.Datetime | None
 		cancelled_status: DF.Literal["", "\u0110\u00e3 Hu\u1ef7", "Ch\u01b0a Hu\u1ef7"]
 		commission_rate: DF.Float
 		company: DF.Link
 		company_address: DF.Link | None
 		company_address_display: DF.SmallText | None
 		company_contact_person: DF.Link | None
-		confirmed_status: DF.Literal["", "\u0110\u00e3 X\u00e1c Nh\u1eadn", "Ch\u01b0a X\u00e1c Nh\u1eadn"]
 		contact_display: DF.SmallText | None
 		contact_email: DF.Data | None
 		contact_mobile: DF.SmallText | None
@@ -96,7 +93,6 @@ class SalesOrder(SellingController):
 		conversion_rate: DF.Float
 		cost_center: DF.Link | None
 		coupon_code: DF.Link | None
-		creator_id: DF.Data | None
 		currency: DF.Link
 		customer: DF.Link
 		customer_address: DF.Link | None
@@ -118,7 +114,6 @@ class SalesOrder(SellingController):
 		group_same_items: DF.Check
 		haravan_created_at: DF.Datetime | None
 		haravan_order_id: DF.Int
-		haravan_order_link: DF.Data | None
 		haravan_ref_order_id: DF.Int
 		ignore_pricing_rule: DF.Check
 		in_words: DF.Data | None
@@ -154,7 +149,6 @@ class SalesOrder(SellingController):
 		product_category: DF.Literal["", "Nh\u1eabn Nam KCTN Nguy\u00ean Chi\u1ebfc", "Nh\u1eabn Nam Moiss Nguy\u00ean Chi\u1ebfc", "Nh\u1eabn Nam Tr\u01a1n", "Nh\u1eabn Nam KCTN", "Nh\u1eabn N\u1eef", "Nh\u1eabn N\u1eef KCTN", "Nh\u1eabn C\u01b0\u1edbi", "Nh\u1eabn C\u01b0\u1edbi - Vi\u00ean KCTN", "Nh\u1eabn C\u01b0\u1edbi N\u1eef", "Nh\u1eabn C\u01b0\u1edbi N\u1eef Nguy\u00ean Chi\u1ebfc"]
 		project: DF.Link | None
 		promotions: DF.TableMultiSelect[SalesOrderPromotion]
-		reorder_date: DF.Datetime | None
 		represents_company: DF.Link | None
 		reserve_stock: DF.Check
 		rounded_total: DF.Currency
