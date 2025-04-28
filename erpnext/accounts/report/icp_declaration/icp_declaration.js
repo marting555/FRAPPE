@@ -56,6 +56,33 @@ frappe.query_reports["ICP Declaration"] = {
 				rows_data = report.data.filter(row => 
 					!row.is_total_row && row["Customer Name"] !== "Total"
 				);
+				
+				// Calcular totales
+				let net_amount_total = 0;
+				let vat_total = 0;
+				
+				rows_data.forEach(row => {
+					net_amount_total += flt(row["Net Amount"]) || 0;
+					vat_total += flt(row["Total VAT"]) || 0;
+				});
+				
+				// Agregar una fila vacía para crear espacio
+				let empty_row = {};
+				for (let col of report.get_columns_for_print()) {
+					empty_row[col.fieldname] = "";
+				}
+				empty_row.is_empty_row = true;
+				rows_data.push(empty_row);
+				
+				// Agregar fila de totales
+				let total_data = {};
+				total_data["Customer Name"] = __("Total");
+				total_data["VAT Identification Number"] = "";
+				total_data["Net Amount"] = net_amount_total;
+				total_data["Total VAT"] = vat_total;
+				total_data["Invoice Type"] = "";
+				total_data.is_total_row = true;
+				rows_data.push(total_data);
 			}
 			
 			// Generar el PDF usando frappe.render_grid
@@ -67,7 +94,27 @@ frappe.query_reports["ICP Declaration"] = {
 					columns: report.get_columns_for_print(),
 					data: rows_data,
 					can_use_smaller_font: 1,
-					report: true
+					report: true,
+					// Función personalizada para formatear filas
+					row_formatter: function(row, data) {
+						if (data.is_empty_row) {
+							row.css({
+								'height': '20px',
+								'border-left': 'none',
+								'border-right': 'none'
+							});
+							row.find('td').css({
+								'border-left': 'none',
+								'border-right': 'none'
+							});
+						}
+						if (data.is_total_row) {
+							row.css({
+								'background-color': '#f9f9f9',
+								'font-weight': 'bold'
+							});
+						}
+					}
 				});
 			});
 		});
