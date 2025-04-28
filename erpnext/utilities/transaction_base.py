@@ -296,12 +296,13 @@ class TransactionBase(StatusUpdater):
 		item_details = self.fetch_item_details(item_obj)
 
 		self.set_fetched_values(item_obj, item_details)
-		self.set_item_rate_and_discounts(item_obj, item_details)
-		self.add_taxes_from_item_template(item_obj, item_details)
-		self.add_free_item(item_obj, item_details)
-		self.handle_internal_parties(item_obj, item_details)
-		self.conversion_factor(item_obj, item_details)
-		self.calculate_taxes_and_totals()
+		if self.doctype != "Request for Quotation":
+			self.set_item_rate_and_discounts(item_obj, item_details)
+			self.add_taxes_from_item_template(item_obj, item_details)
+			self.add_free_item(item_obj, item_details)
+			self.handle_internal_parties(item_obj, item_details)
+			self.conversion_factor(item_obj, item_details)
+			self.calculate_taxes_and_totals()
 
 	def set_fetched_values(self, item_obj: object, item_details: dict) -> None:
 		for k, v in item_details.items():
