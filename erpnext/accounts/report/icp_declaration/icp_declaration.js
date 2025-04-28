@@ -121,21 +121,25 @@ frappe.query_reports["ICP Declaration"] = {
 		
 		// Agregar botón para exportar a Excel
 		report.page.add_inner_button(__('Export to Excel'), function() {
+			// Método simplificado para exportar a Excel
 			const filters = report.get_values();
 			
-			// Crear URL para descargar Excel
-			const excel_params = {
+			// Crear los argumentos para la exportación
+			const args = {
+				cmd: 'frappe.desk.query_report.export_query',
 				report_name: 'ICP Declaration',
-				filters: JSON.stringify(filters),
 				file_format_type: 'Excel',
-				is_tree: false,
-				include_indentation: 0
+				filters: JSON.stringify(filters),
+				// Asegurarse de que visible_idx sea un array vacío en lugar de null
+				visible_idx: JSON.stringify([]),
+				include_indentation: 0,
+				// Agregar parámetros adicionales para CSV si es necesario
+				csv_delimiter: ',',
+				csv_quoting: '"'
 			};
 			
-			const url = '/api/method/frappe.desk.query_report.export_query?' + 
-				$.param(excel_params);
-			
-			window.open(url);
+			// Abrir la URL para descargar el archivo
+			open_url_post(frappe.request.url, args);
 		});
 	}
 };
