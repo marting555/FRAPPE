@@ -31,7 +31,6 @@
         </thead>
         <tbody>
             {% for row in data %}
-            {% if not row.is_total_row and row["Customer Name"] != "Total" %}
             <tr>
                 {% for col in columns %}
                 <td class="{% if col.fieldtype == 'Currency' %}text-right{% endif %}">
@@ -43,44 +42,24 @@
                 </td>
                 {% endfor %}
             </tr>
-            {% endif %}
             {% endfor %}
         </tbody>
+        {% if data|length %}
+        <tfoot>
+            <tr class="total-row">
+                <th>{{ __("Total") }}</th>
+                <th></th>
+                <th class="text-right">
+                    {{ frappe.format(data.reduce(function(sum, row) { return sum + row["Net Amount"]; }, 0), {fieldtype: "Currency"}) }}
+                </th>
+                <th class="text-right">
+                    {{ frappe.format(data.reduce(function(sum, row) { return sum + row["Total VAT"]; }, 0), {fieldtype: "Currency"}) }}
+                </th>
+                <th></th>
+            </tr>
+        </tfoot>
+        {% endif %}
     </table>
-    
-    <!-- Sección de totales separada -->
-    {% if data|length %}
-    <div class="totals-section">
-        <div class="row">
-            <div class="col-xs-8 text-right">
-                <strong>{{ __("Total Net Amount") }}:</strong>
-            </div>
-            <div class="col-xs-4 text-right">
-                {% set total_net = 0 %}
-                {% for row in data %}
-                {% if not row.is_total_row and row["Customer Name"] != "Total" %}
-                {% set total_net = total_net + row["Net Amount"]|float %}
-                {% endif %}
-                {% endfor %}
-                <strong>{{ frappe.format(total_net, {fieldtype: "Currency"}) }}</strong>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-xs-8 text-right">
-                <strong>{{ __("Total VAT") }}:</strong>
-            </div>
-            <div class="col-xs-4 text-right">
-                {% set total_vat = 0 %}
-                {% for row in data %}
-                {% if not row.is_total_row and row["Customer Name"] != "Total" %}
-                {% set total_vat = total_vat + row["Total VAT"]|float %}
-                {% endif %}
-                {% endfor %}
-                <strong>{{ frappe.format(total_vat, {fieldtype: "Currency"}) }}</strong>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 </div>
 
 <style>
@@ -132,15 +111,12 @@
         text-align: right;
     }
     
-    .totals-section {
-        margin-top: 20px;
-        padding: 15px;
+    .total-row {
         background-color: #f9f9f9;
-        border-top: 2px solid #ddd;
     }
     
-    .totals-section .row {
-        margin-bottom: 8px;
+    .total-row th {
+        font-weight: bold;
     }
     
     /* Estilos específicos para PDF */
@@ -160,7 +136,7 @@
             print-color-adjust: exact;
         }
         
-        .totals-section {
+        .total-row {
             background-color: #f5f5f5 !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;

@@ -47,17 +47,14 @@ frappe.query_reports["ICP Declaration"] = {
 				frappe.datetime.str_to_user(filters.from_date) + " - " + 
 				frappe.datetime.str_to_user(filters.to_date);
 			
-			// Usar directamente los datos del reporte - solo filas de datos, sin totales
+			// Usar directamente los datos del reporte
 			let rows_data = [];
 			
 			// Verificar si hay datos disponibles
 			if (report.data && report.data.length) {
-				// Filtrar para incluir solo filas de datos (no totales)
-				rows_data = report.data.filter(row => 
-					!row.is_total_row && row["Customer Name"] !== "Total"
-				);
+				rows_data = report.data.slice();
 				
-				// Calcular totales para mostrarlos por separado
+				// Calcular totales
 				let net_amount_total = 0;
 				let vat_total = 0;
 				
@@ -66,134 +63,30 @@ frappe.query_reports["ICP Declaration"] = {
 					vat_total += flt(row["Total VAT"]) || 0;
 				});
 				
-				// Crear un objeto de columnas personalizado para el PDF
-				const columns = report.get_columns_for_print();
+				// Agregar fila de totales
+				let total_data = {};
+				total_data["Customer Name"] = __("Total");
+				total_data["VAT Identification Number"] = "";
+				total_data["Net Amount"] = net_amount_total;
+				total_data["Total VAT"] = vat_total;
+				total_data["Invoice Type"] = "";
+				total_data.is_total_row = true;
 				
-				// Generar el PDF con una estructura personalizada
-				frappe.ui.get_print_settings(false, (print_settings) => {
-					// Crear un contenedor para el reporte
-					const $reportContainer = $('<div class="icp-declaration-pdf">');
-					
-					// Añadir encabezado
-					$reportContainer.append(`
-						<div class="pdf-header">
-							<h2>${title}</h2>
-							<p>${__("Company")}: ${filters.company}</p>
-						</div>
-					`);
-					
-					// Crear tabla de datos
-					const $table = $('<table class="table table-bordered">').appendTo($reportContainer);
-					
-					// Añadir encabezados de columna
-					const $thead = $('<thead>').appendTo($table);
-					const $headerRow = $('<tr>').appendTo($thead);
-					
-					columns.forEach(col => {
-						const $th = $(`<th class="${col.fieldtype === 'Currency' ? 'text-right' : ''}">${col.label}</th>`);
-						$headerRow.append($th);
-					});
-					
-					// Añadir filas de datos
-					const $tbody = $('<tbody>').appendTo($table);
-					
-					rows_data.forEach(row => {
-						const $tr = $('<tr>').appendTo($tbody);
-						
-						columns.forEach(col => {
-							const fieldname = col.fieldname;
-							let value = row[fieldname];
-							
-							if (col.fieldtype === 'Currency') {
-								value = format_currency(value, frappe.defaults.get_default("currency"));
-								$tr.append(`<td class="text-right">${value}</td>`);
-							} else {
-								$tr.append(`<td>${value || ''}</td>`);
-							}
-						});
-					});
-					
-					// Añadir sección de totales separada y elegante
-					$reportContainer.append(`
-						<div class="totals-section">
-							<div class="totals-row">
-								<div class="totals-label">${__("Total Net Amount")}:</div>
-								<div class="totals-value">${format_currency(net_amount_total, frappe.defaults.get_default("currency"))}</div>
-							</div>
-							<div class="totals-row">
-								<div class="totals-label">${__("Total VAT")}:</div>
-								<div class="totals-value">${format_currency(vat_total, frappe.defaults.get_default("currency"))}</div>
-							</div>
-						</div>
-					`);
-					
-					// Añadir estilos CSS
-					$reportContainer.append(`
-						<style>
-							.icp-declaration-pdf {
-								font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-								padding: 15px;
-							}
-							.pdf-header {
-								margin-bottom: 20px;
-								text-align: center;
-							}
-							.pdf-header h2 {
-								margin-bottom: 5px;
-							}
-							table {
-								width: 100%;
-								border-collapse: collapse;
-								margin-bottom: 30px;
-							}
-							th, td {
-								padding: 8px;
-								border: 1px solid #ddd;
-							}
-							th {
-								background-color: #f2f2f2;
-								font-weight: bold;
-							}
-							.text-right {
-								text-align: right;
-							}
-							.totals-section {
-								margin-top: 20px;
-								padding: 15px;
-								background-color: #f9f9f9;
-								border-top: 2px solid #ddd;
-								border-bottom: 2px solid #ddd;
-							}
-							.totals-row {
-								display: flex;
-								justify-content: space-between;
-								margin-bottom: 8px;
-								padding: 5px 15px;
-							}
-							.totals-label {
-								font-weight: bold;
-								font-size: 14px;
-							}
-							.totals-value {
-								font-weight: bold;
-								font-size: 14px;
-							}
-						</style>
-					`);
-					
-					// Generar el PDF con el contenido personalizado
-					frappe.render_pdf(
-						$reportContainer.prop('outerHTML'), 
-						{
-							title: title,
-							orientation: 'landscape',
-							print_settings: print_settings
-						}
-					);
-				});
-			} else {
-				frappe.msgprint(__("No data to generate PDF"));
+				rows_data.push(total_data);
 			}
+			
+			// Generar el PDF usando frappe.render_grid
+			frappe.ui.get_print_settings(false, (print_settings) => {
+				frappe.render_grid({
+					title: title,
+					subtitle: __("Company") + ": " + filters.company,
+					print_settings: print_settings,
+					columns: report.get_columns_for_print(),
+					data: rows_data,
+					can_use_smaller_font: 1,
+					report: true
+				});
+			});
 		});
 		
 		// Agregar botón para exportar a Excel
