@@ -5,6 +5,8 @@ import typing
 import frappe
 from frappe import _
 from frappe.model.document import Document
+import erpnext
+from frappe.utils import cstr
 
 
 class ItemVariantSettings(Document):
@@ -68,3 +70,55 @@ class ItemVariantSettings(Document):
 				frappe.throw(
 					_("Cannot set the field <b>{0}</b> for copying in variants").format(d.field_name)
 				)
+    
+    
+@frappe.whitelist()
+@erpnext.sanitize_autocomplete_input
+def get_item_fields(existing_fields):
+	allow_fields = []
+	field_label_map = {}
+
+	exclude_field_types = [
+		"HTML", "Section Break", "Column Break", "Button", "Read Only", "Tab Break"
+	]
+
+	exclude_fields = set(existing_fields or [])
+	exclude_fields.update(
+		[
+			"naming_series",
+			"item_code",
+			"item_name",
+			"published_in_website",
+			"standard_rate",
+			"opening_stock",
+			"image",
+			"variant_of",
+			"valuation_rate",
+			"barcodes",
+			"has_variants",
+			"attributes",
+		]
+    )
+
+	item_meta = frappe.get_meta("Item")
+
+	for field in item_meta.fields:
+		field_label_map[field.fieldname] = _(cstr(field.label)) + f" ({field.fieldname})"
+
+		if (
+			field.fieldtype not in exclude_field_types and
+			not field.no_copy and
+			field.fieldname not in exclude_fields
+		):
+			allow_fields.append({
+				"label": field_label_map[field.fieldname],
+				"value": field.fieldname,
+			})
+
+	if not allow_fields:
+		allow_fields.append({
+			"label": _("No additional fields available"),
+			"value": "",
+		})
+
+	return allow_fields

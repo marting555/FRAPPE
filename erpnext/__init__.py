@@ -3,8 +3,10 @@ import inspect
 from typing import TypeVar
 
 import frappe
+import json
 from frappe.model.document import Document
 from frappe.utils.user import is_website_user
+from frappe.utils import cstr
 
 __version__ = "16.0.0-dev"
 
@@ -193,3 +195,19 @@ def normalize_ctx_input(T: type) -> callable:
 		return wrapper
 
 	return decorator
+
+
+def sanitize_autocomplete_input(fn):
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        fn_args = fn.__code__.co_varnames[:fn.__code__.co_argcount]
+        kwargs.update(dict(zip(fn_args, args)))
+
+        if len(fn_args):
+            if fn_args[0] in kwargs and isinstance(kwargs[fn_args[0]], str):
+                try:
+                    kwargs[fn_args[0]] = json.loads(kwargs[fn_args[0]])
+                except json.JSONDecodeError:
+                    kwargs[fn_args[0]] = cstr(kwargs[fn_args[0]])
+        return fn(**kwargs)
+    return wrapper
