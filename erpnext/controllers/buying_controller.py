@@ -102,6 +102,7 @@ class BuyingController(SubcontractingController):
 					)
 				elif (
 					not self.is_new()
+					and item.serial_and_batch_bundle
 					and next(
 						(
 							old_item
@@ -110,7 +111,6 @@ class BuyingController(SubcontractingController):
 						),
 						None,
 					)
-					and item.serial_and_batch_bundle
 					and len(
 						sabe := frappe.get_all(
 							"Serial and Batch Entry",
@@ -120,13 +120,7 @@ class BuyingController(SubcontractingController):
 					)
 					== 1
 				):
-					dn_item_qty = frappe.get_value("Delivery Note Item", item.delivery_note_item, "qty")
-					frappe.set_value(
-						"Serial and Batch Entry",
-						sabe[0],
-						"qty",
-						item.qty if item.qty < dn_item_qty else dn_item_qty,
-					)
+					frappe.set_value("Serial and Batch Entry", sabe[0], "qty", item.qty)
 
 	def set_rate_for_standalone_debit_note(self):
 		if self.get("is_return") and self.get("update_stock") and not self.return_against:
