@@ -268,17 +268,12 @@ class LandedCostVoucher(Document):
 				)
 				docs = frappe.db.get_all(
 					"Asset",
-<<<<<<< HEAD
-					filters={receipt_document_type: item.receipt_document, "item_code": item.item_code},
-					fields=["name", "docstatus"],
-=======
 					filters={
 						receipt_document_type: item.receipt_document,
 						"item_code": item.item_code,
 						"docstatus": ["!=", 2],
 					},
 					fields=["name", "docstatus", "asset_quantity"],
->>>>>>> eae08bc619 (fix: update quantity validation using asset quantity field instead of… (#46731))
 				)
 
 				total_asset_qty = sum((cint(d.asset_quantity)) for d in docs)
