@@ -16,13 +16,13 @@ class JobCardTimeLog(Document):
 
 		completed_qty: DF.Float
 		employee: DF.Link | None
-		from_time: DF.Datetime | None
+		from_time: DF.Datetime
 		operation: DF.Link | None
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data
 		time_in_mins: DF.Float
-		to_time: DF.Datetime | None
+		to_time: DF.Datetime
 	# end: auto-generated types
 
 	pass
