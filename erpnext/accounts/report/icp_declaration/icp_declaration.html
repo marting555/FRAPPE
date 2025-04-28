@@ -1,0 +1,74 @@
+<div class="icp-declaration-report">
+    <h2>{{ __("ICP Declaration") }}</h2>
+    <p class="text-muted">{{ __("EU Sales List for Intrastat Reporting") }}</p>
+    
+    <div class="report-summary">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="summary-item">
+                    <span class="summary-label">{{ __("Company") }}:</span>
+                    <span class="summary-value">{{ filters.company }}</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="summary-item">
+                    <span class="summary-label">{{ __("Period") }}:</span>
+                    <span class="summary-value">{{ frappe.format(filters.from_date, {fieldtype: "Date"}) }} - {{ frappe.format(filters.to_date, {fieldtype: "Date"}) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <hr>
+    
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                {% for col in columns %}
+                <th>{{ col.label }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+            <tr>
+                {% for col in columns %}
+                <td>
+                    {% if col.fieldtype == "Currency" %}
+                    <span class="text-right">{{ frappe.format(row[col.fieldname], {fieldtype: "Currency"}) }}</span>
+                    {% else %}
+                    {{ row[col.fieldname] }}
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .icp-declaration-report {
+        padding: 15px;
+    }
+    
+    .report-summary {
+        background-color: #f8f9fa;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+    }
+    
+    .summary-item {
+        margin-bottom: 10px;
+    }
+    
+    .summary-label {
+        font-weight: bold;
+        margin-right: 5px;
+    }
+    
+    .summary-value {
+        font-weight: normal;
+    }
+</style>
