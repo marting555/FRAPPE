@@ -498,6 +498,7 @@ class TestStockEntry(FrappeTestCase):
 		repack.submit()
 
 		stock_in_hand_account = get_inventory_account(repack.company, repack.get("items")[1].t_warehouse)
+		stock_adjust_account = frappe.get_cached_value("Company", company, "stock_adjustment_account")
 		rm_stock_value_diff = abs(
 			frappe.db.get_value(
 				"Stock Ledger Entry",
@@ -526,9 +527,10 @@ class TestStockEntry(FrappeTestCase):
 			"Stock Entry",
 			repack.name,
 			sorted(
-				[[stock_in_hand_account, 1200, 0.0], ["Expenses Included In Valuation - TCP1", 0.0, 1200.0]]
+				[[stock_in_hand_account, 1200, 0.0],[stock_adjust_account, 1200, 0.0],[stock_adjust_account, 0.0, 1200], ["Expenses Included In Valuation - TCP1", 0.0, 1200.0]]
 			),
 		)
+
 
 	def check_stock_ledger_entries(self, voucher_type, voucher_no, expected_sle):
 		expected_sle.sort(key=lambda x: x[1])
