@@ -117,6 +117,8 @@ class Timesheet(Document):
 					indicator="orange",
 					alert=True,
 				)
+		else:
+			args.billing_hours = 0
 
 	def set_status(self):
 		self.status = {"0": "Draft", "1": "Submitted", "2": "Cancelled"}[str(self.docstatus or 0)]
