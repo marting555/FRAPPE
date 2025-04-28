@@ -4,9 +4,12 @@
 
 import frappe
 <<<<<<< HEAD
+<<<<<<< HEAD
 from frappe.tests.utils import FrappeTestCase
 =======
 import frappe.utils
+=======
+>>>>>>> 9e640341fd (fix: remove unused import)
 from frappe.tests import IntegrationTestCase, UnitTestCase
 from frappe.utils import add_days, today
 
