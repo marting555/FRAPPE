@@ -757,6 +757,23 @@ class SalesOrder(SellingController):
 		)
 
 
+	def cancel_sales_order(self):
+		self.docstatus = 2
+
+	def before_save(self):
+		"""
+			If order from Haravan is cancel, cancle the current order too
+		"""
+		if self.cancelled_status == "Đã Huỷ":
+			self.cancel_sales_order()
+
+	def before_insert(self):
+		"""
+			If order from Haravan is cancel, cancle the current order too
+		"""
+		if self.cancelled_status == "Đã Huỷ":
+			self.cancel_sales_order()
+
 def get_unreserved_qty(item: object, reserved_qty_details: dict) -> float:
 	"""Returns the unreserved quantity for the Sales Order Item."""
 

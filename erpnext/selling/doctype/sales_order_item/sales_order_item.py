@@ -52,7 +52,6 @@ class SalesOrderItem(Document):
 		g7: DF.Link | None
 		grant_commission: DF.Check
 		gross_profit: DF.Currency
-		haravan_product_id: DF.Int
 		haravan_variant_id: DF.Int
 		image: DF.Attach | None
 		is_free_item: DF.Check

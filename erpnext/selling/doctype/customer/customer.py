@@ -42,8 +42,8 @@ class Customer(TransactionBase):
 		account_number: DF.Data | None
 		accounts: DF.Table[PartyAccount]
 		bank_account_name: DF.Data | None
-		bank_branch: DF.Literal["B\u1eafc", "Trung Nam"]
-		bank_name: DF.Literal["Agribank", "ACB", "BIDV", "Vietcombank", "VietinBank", "Techcombank", "Sacombank", "MB Bank", "Eximbank", "VPBank", "SHB", "NamABank", "B\u1eafc \u00c1 Bank", "OceanBank", "TPBank"]
+		bank_branch: DF.Literal["", "B\u1eafc", "Trung Nam"]
+		bank_name: DF.Literal["", "Agribank", "ACB", "BIDV", "Vietcombank", "VietinBank", "Techcombank", "Sacombank", "MB Bank", "Eximbank", "VPBank", "SHB", "NamABank", "B\u1eafc \u00c1 Bank", "OceanBank", "TPBank"]
 		birth_date: DF.Date | None
 		ceo_name: DF.Data | None
 		companies: DF.Table[AllowedToTransactWith]
@@ -85,12 +85,11 @@ class Customer(TransactionBase):
 		no_of_employees: DF.Data | None
 		opportunity_name: DF.Link | None
 		payment_terms: DF.Link | None
-		person_name: DF.Data | None
-		personal_document_type: DF.Literal["CCCD", "CMND", "H\u1ed9 Chi\u1ebfu", "Passpoard"]
+		personal_document_type: DF.Literal["", "CCCD", "CMND", "H\u1ed9 Chi\u1ebfu", "Passpoard"]
 		personal_id: DF.Data | None
 		personal_tax_id: DF.Data | None
 		phone: DF.ReadOnly | None
-		place_of_issuance: DF.Literal["B\u1ed9 C\u00f4ng An", "C\u1ee5c C\u1ea3nh s\u00e1t QLHC v\u1ec1 TTXH", "C\u1ee5c C\u1ea3nh s\u00e1t \u0111\u0103ng k\u00fd, qu\u1ea3n l\u00fd c\u01b0 tr\u00fa v\u00e0 d\u1eef li\u1ec7u qu\u1ed1c gia v\u1ec1 d\u00e2n c\u01b0"]
+		place_of_issuance: DF.Literal["", "B\u1ed9 C\u00f4ng An", "C\u1ee5c C\u1ea3nh s\u00e1t QLHC v\u1ec1 TTXH", "C\u1ee5c C\u1ea3nh s\u00e1t \u0111\u0103ng k\u00fd, qu\u1ea3n l\u00fd c\u01b0 tr\u00fa v\u00e0 d\u1eef li\u1ec7u qu\u1ed1c gia v\u1ec1 d\u00e2n c\u01b0"]
 		portal_users: DF.Table[PortalUser]
 		primary_address: DF.Text | None
 		prospect_name: DF.Link | None
