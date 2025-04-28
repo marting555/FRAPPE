@@ -14,6 +14,7 @@
   "medium",
   "start_time",
   "end_time",
+  "uuid",
   "column_break_4",
   "type",
   "customer",
@@ -21,6 +22,30 @@
   "duration",
   "recording_url",
   "recording_html",
+  "stringeex_selections",
+  "answer_time",
+  "stop_time",
+  "callee",
+  "first_answer_time",
+  "to_alias",
+  "created",
+  "from_number",
+  "to_number",
+  "participants",
+  "from_user_id",
+  "amount",
+  "record_path",
+  "column_break_gztc",
+  "answer_duration",
+  "from_internal",
+  "to_internal",
+  "recorded",
+  "video_call",
+  "column_break_jmdj",
+  "project_id",
+  "project_name",
+  "account_id",
+  "object_type",
   "section_break_11",
   "type_of_call",
   "summary",
@@ -32,7 +57,6 @@
    "fieldname": "id",
    "fieldtype": "Data",
    "label": "ID",
-   "read_only": 1,
    "unique": 1
   },
   {
@@ -118,7 +142,7 @@
   {
    "fieldname": "start_time",
    "fieldtype": "Datetime",
-   "label": "Start Time",
+   "label": "Th\u1eddi Gian B\u1eaft \u0110\u1ea7u",
    "read_only": 1
   },
   {
@@ -159,11 +183,138 @@
    "label": "Call Received By",
    "options": "Employee",
    "read_only": 1
+  },
+  {
+   "fieldname": "uuid",
+   "fieldtype": "Data",
+   "label": "uuid"
+  },
+  {
+   "fieldname": "stringeex_selections",
+   "fieldtype": "Section Break",
+   "label": "StringeeX "
+  },
+  {
+   "fieldname": "answer_time",
+   "fieldtype": "Datetime",
+   "label": "Th\u1eddi Gian Tr\u1ea3 L\u1eddi"
+  },
+  {
+   "fieldname": "stop_time",
+   "fieldtype": "Datetime",
+   "label": "Th\u1eddi Gian K\u1ebft Th\u00fac"
+  },
+  {
+   "fieldname": "callee",
+   "fieldtype": "Data",
+   "label": "Ng\u01b0\u1eddi Nh\u1eadn Cu\u1ed9c G\u1ecdi"
+  },
+  {
+   "fieldname": "first_answer_time",
+   "fieldtype": "Datetime",
+   "label": "Th\u1eddi Gian Tr\u1ea3 L\u1eddi \u0110\u1ea7u Ti\u00ean"
+  },
+  {
+   "fieldname": "to_alias",
+   "fieldtype": "Data",
+   "label": "T\u00ean Hi\u1ec3n Th\u1ecb Ng\u01b0\u1eddi Nh\u1eadn"
+  },
+  {
+   "fieldname": "column_break_gztc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "answer_duration",
+   "fieldtype": "Int",
+   "label": "Th\u1eddi L\u01b0\u1ee3ng Tr\u1ea3 L\u1eddi (gi\u00e2y)"
+  },
+  {
+   "default": "0",
+   "fieldname": "from_internal",
+   "fieldtype": "Check",
+   "label": "G\u1ecdi T\u1eeb N\u1ed9i B\u1ed9"
+  },
+  {
+   "default": "0",
+   "fieldname": "to_internal",
+   "fieldtype": "Check",
+   "label": "G\u1ecdi \u0110\u1ebfn N\u1ed9i B\u1ed9"
+  },
+  {
+   "default": "0",
+   "fieldname": "recorded",
+   "fieldtype": "Check",
+   "label": "\u0110\u00e3 Ghi \u00c2m"
+  },
+  {
+   "default": "0",
+   "fieldname": "video_call",
+   "fieldtype": "Check",
+   "label": "Cu\u1ed9c G\u1ecdi Video"
+  },
+  {
+   "fieldname": "column_break_jmdj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "project_id",
+   "fieldtype": "Data",
+   "label": "ID D\u1ef1 \u00c1n"
+  },
+  {
+   "fieldname": "project_name",
+   "fieldtype": "Data",
+   "label": "T\u00ean D\u1ef1 \u00c1n"
+  },
+  {
+   "fieldname": "account_id",
+   "fieldtype": "Data",
+   "label": "ID T\u00e0i Kho\u1ea3n"
+  },
+  {
+   "fieldname": "object_type",
+   "fieldtype": "Data",
+   "label": "Lo\u1ea1i \u0110\u1ed1i T\u01b0\u1ee3ng"
+  },
+  {
+   "fieldname": "created",
+   "fieldtype": "Datetime",
+   "label": "Th\u1eddi Gian T\u1ea1o"
+  },
+  {
+   "fieldname": "from_number",
+   "fieldtype": "Data",
+   "label": "S\u1ed1 G\u1ecdi \u0110\u1ebfn"
+  },
+  {
+   "fieldname": "to_number",
+   "fieldtype": "Data",
+   "label": "S\u1ed1 \u0110\u01b0\u1ee3c G\u1ecdi"
+  },
+  {
+   "fieldname": "participants",
+   "fieldtype": "Data",
+   "label": "Danh S\u00e1ch Ng\u01b0\u1eddi Tham Gia"
+  },
+  {
+   "fieldname": "from_user_id",
+   "fieldtype": "Data",
+   "label": "ID Ng\u01b0\u1eddi G\u1ecdi"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Chi Ph\u00ed Cu\u1ed9c G\u00f2i"
+  },
+  {
+   "fieldname": "record_path",
+   "fieldtype": "Data",
+   "label": "\u0110\u01b0\u1eddng D\u1eabn Ghi \u00c2m"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-25 01:36:46.508067",
+ "modified": "2025-04-27 21:11:00.744402",
  "modified_by": "Administrator",
  "module": "Telephony",
  "name": "Call Log",

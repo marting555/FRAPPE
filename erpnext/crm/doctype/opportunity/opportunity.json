@@ -29,12 +29,13 @@
   "expected_closing",
   "customer_demand_sections",
   "purpose_lead",
+  "expected_delivery_date",
+  "column_break_pfyx",
   "budget_lead",
   "preferred_product_type",
-  "column_break_pfyx",
-  "expected_delivery_date",
-  "preferred_diamond",
   "demand_notes",
+  "column_break_rirs",
+  "preferred_diamond",
   "organization_details_section",
   "no_of_employees",
   "annual_revenue",
@@ -674,7 +675,7 @@
   {
    "fieldname": "preferred_product_type",
    "fieldtype": "Table MultiSelect",
-   "label": "Danh M\u1ee5c S\u1ea3n Ph\u1ea9m",
+   "label": "S\u1ea3n Ph\u1ea9m",
    "options": "Lead Product Item"
   },
   {
@@ -690,18 +691,23 @@
   {
    "fieldname": "demand_notes",
    "fieldtype": "Small Text",
+   "hidden": 1,
    "label": "Th\u00f4ng Tin Th\u00eam"
   },
   {
    "fieldname": "expected_delivery_date",
    "fieldtype": "Date",
    "label": "Ng\u00e0y mong \u0111\u1ee3i nh\u1eadn h\u00e0ng"
+  },
+  {
+   "fieldname": "column_break_rirs",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-info-sign",
  "idx": 195,
  "links": [],
- "modified": "2025-04-24 00:14:41.916370",
+ "modified": "2025-04-27 22:34:43.117629",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Opportunity",

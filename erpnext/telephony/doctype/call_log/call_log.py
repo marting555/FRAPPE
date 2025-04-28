@@ -25,21 +25,43 @@ class CallLog(Document):
 		from frappe.core.doctype.dynamic_link.dynamic_link import DynamicLink
 		from frappe.types import DF
 
+		account_id: DF.Data | None
+		amount: DF.Currency
+		answer_duration: DF.Int
+		answer_time: DF.Datetime | None
 		call_received_by: DF.Link | None
+		callee: DF.Data | None
+		created: DF.Datetime | None
 		customer: DF.Link | None
 		duration: DF.Duration | None
 		employee_user_id: DF.Link | None
 		end_time: DF.Datetime | None
+		first_answer_time: DF.Datetime | None
+		from_internal: DF.Check
+		from_number: DF.Data | None
+		from_user_id: DF.Data | None
 		id: DF.Data | None
 		links: DF.Table[DynamicLink]
 		medium: DF.Data | None
+		object_type: DF.Data | None
+		participants: DF.Data | None
+		project_id: DF.Data | None
+		project_name: DF.Data | None
+		record_path: DF.Data | None
+		recorded: DF.Check
 		recording_url: DF.Data | None
 		start_time: DF.Datetime | None
 		status: DF.Literal["Ringing", "In Progress", "Completed", "Failed", "Busy", "No Answer", "Queued", "Canceled"]
+		stop_time: DF.Datetime | None
 		summary: DF.SmallText | None
 		to: DF.Data | None
+		to_alias: DF.Data | None
+		to_internal: DF.Check
+		to_number: DF.Data | None
 		type: DF.Literal["Incoming", "Outgoing"]
 		type_of_call: DF.Link | None
+		uuid: DF.Data | None
+		video_call: DF.Check
 	# end: auto-generated types
 
 	def validate(self):

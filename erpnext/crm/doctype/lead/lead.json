@@ -37,9 +37,9 @@
   "expected_delivery_date",
   "column_break_ugod",
   "budget_lead",
+  "preferred_product_type",
   "demand_notes",
   "column_break_wsdb",
-  "preferred_product_type",
   "preferred_diamond",
   "organization_section",
   "company_name",
@@ -517,7 +517,6 @@
   {
    "fieldname": "notes",
    "fieldtype": "Table",
-   "hidden": 1,
    "label": "Notes",
    "no_copy": 1,
    "options": "CRM Note"
@@ -718,12 +717,12 @@
   {
    "fieldname": "ghi_ch\u00fa_tab",
    "fieldtype": "Tab Break",
-   "hidden": 1,
    "label": "Ghi Ch\u00fa"
   },
   {
    "fieldname": "demand_notes",
    "fieldtype": "Small Text",
+   "hidden": 1,
    "label": "Th\u00f4ng Tin Th\u00eam"
   },
   {
@@ -745,7 +744,7 @@
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-04-24 22:00:56.662665",
+ "modified": "2025-04-27 22:31:11.542199",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",
