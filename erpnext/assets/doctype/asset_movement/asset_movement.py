@@ -152,9 +152,15 @@ class AssetMovement(Document):
 				""",
 				args,
 			)
-			if latest_movement_entry:
-				current_location = latest_movement_entry[0][0]
-				current_employee = latest_movement_entry[0][1]
+			if not latest_movement_entry:
+				frappe.throw(
+					_(
+						"Asset {0} has only one movement record. Please create another movement before deleting this one to maintain asset tracking."
+					).format(d.asset)
+				)
+
+			current_location = latest_movement_entry[0][0]
+			current_employee = latest_movement_entry[0][1]
 
 			frappe.db.set_value("Asset", d.asset, "location", current_location, update_modified=False)
 			frappe.db.set_value("Asset", d.asset, "custodian", current_employee, update_modified=False)
