@@ -38,6 +38,51 @@ frappe.query_reports["ICP Declaration"] = {
 	},
 	
 	onload: function(report) {
+		// Aplicar estilos para que la tabla ocupe el 100% del ancho
+		setTimeout(function() {
+			// Seleccionar la tabla de datos y aplicar estilos
+			$('.datatable').css({
+				'width': '100%',
+				'max-width': '100%'
+			});
+			
+			// Ajustar el contenedor de la tabla
+			$('.dt-scrollable').css({
+				'width': '100%',
+				'max-width': '100%'
+			});
+			
+			// Ajustar el contenedor principal del reporte
+			$('.report-wrapper').css({
+				'width': '100%',
+				'max-width': '100%'
+			});
+			
+			// Asegurar que la tabla de encabezados también tenga ancho completo
+			$('.dt-header').css({
+				'width': '100%',
+				'max-width': '100%'
+			});
+			
+			// Forzar recálculo del ancho de las columnas
+			if (report.datatable) {
+				report.datatable.refresh();
+			}
+		}, 500);
+		
+		// Configurar ajuste de tabla cuando cambie el tamaño de la ventana
+		$(window).on('resize', function() {
+			if (report.datatable) {
+				report.datatable.refresh();
+				
+				// Reajustar anchos
+				$('.datatable, .dt-scrollable, .report-wrapper, .dt-header').css({
+					'width': '100%',
+					'max-width': '100%'
+				});
+			}
+		});
+		
 		report.page.add_inner_button(__('Download PDF'), function() {
 			// Obtener los filtros actuales del reporte
 			const filters = report.get_values();
@@ -141,5 +186,35 @@ frappe.query_reports["ICP Declaration"] = {
 			// Abrir la URL para descargar el archivo
 			open_url_post(frappe.request.url, args);
 		});
+	},
+	
+	// Configuración para la tabla de datos
+	get_datatable_options: function(options) {
+		// Modificar opciones de la tabla de datos
+		options.layout = 'fluid'; // Cambiar de 'fixed' a 'fluid'
+		options.cellHeight = 40; // Aumentar altura de celdas para mejor visualización
+		
+		// Asegurar que la tabla ocupe todo el ancho disponible
+		options.dynamicRowHeight = false;
+		
+		return options;
+	},
+	
+	// Función que se ejecuta después de renderizar la tabla
+	after_datatable_render: function(datatable) {
+		// Aplicar estilos adicionales a la tabla después de renderizarla
+		$('.datatable').css({
+			'width': '100%',
+			'max-width': '100%'
+		});
+		
+		// Ajustar el contenedor de la tabla
+		$('.dt-scrollable').css({
+			'width': '100%',
+			'max-width': '100%'
+		});
+		
+		// Forzar un recálculo del ancho
+		datatable.refresh();
 	}
 };
