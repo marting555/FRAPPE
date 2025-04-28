@@ -100,8 +100,7 @@ class BuyingController(SubcontractingController):
 						do_not_submit=True,
 						qty=item.qty,
 					)
-
-				if (
+				elif (
 					not self.is_new()
 					and next(
 						(
