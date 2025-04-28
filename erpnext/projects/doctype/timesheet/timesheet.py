@@ -512,7 +512,7 @@ def get_timesheets_list(doctype, txt, filters, limit_start, limit_page_length=20
 		sales_invoices = [
 			d.name for d in frappe.get_all("Sales Invoice", filters={"customer": customer})
 		] or [None]
-		projects = [d.name for d in frappe.get_all("Project", filters={"customer": customer})]
+		projects = [d.name for d in frappe.get_all("Project", filters={"customer": customer})] or [None]
 		# Return timesheet related data to web portal.
 		timesheets = frappe.db.sql(
 			f"""
