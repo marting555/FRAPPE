@@ -52,27 +52,10 @@ frappe.query_reports["ICP Declaration"] = {
 			
 			// Verificar si hay datos disponibles
 			if (report.data && report.data.length) {
-				rows_data = report.data.slice();
-				
-				// Calcular totales
-				let net_amount_total = 0;
-				let vat_total = 0;
-				
-				rows_data.forEach(row => {
-					net_amount_total += flt(row["Net Amount"]) || 0;
-					vat_total += flt(row["Total VAT"]) || 0;
-				});
-				
-				// Agregar fila de totales
-				let total_data = {};
-				total_data["Customer Name"] = __("Total");
-				total_data["VAT Identification Number"] = "";
-				total_data["Net Amount"] = net_amount_total;
-				total_data["Total VAT"] = vat_total;
-				total_data["Invoice Type"] = "";
-				total_data.is_total_row = true;
-				
-				rows_data.push(total_data);
+				// Filtrar para incluir solo filas de datos (no totales)
+				rows_data = report.data.filter(row => 
+					!row.is_total_row && row["Customer Name"] !== "Total"
+				);
 			}
 			
 			// Generar el PDF usando frappe.render_grid
