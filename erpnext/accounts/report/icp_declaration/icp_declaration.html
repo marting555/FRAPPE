@@ -21,11 +21,11 @@
     
     <hr>
     
-    <table class="table table-bordered">
+    <table class="table table-bordered icp-table">
         <thead>
             <tr>
                 {% for col in columns %}
-                <th>{{ col.label }}</th>
+                <th class="{% if col.fieldtype == 'Currency' %}text-right{% endif %}">{{ col.label }}</th>
                 {% endfor %}
             </tr>
         </thead>
@@ -33,9 +33,9 @@
             {% for row in data %}
             <tr>
                 {% for col in columns %}
-                <td>
+                <td class="{% if col.fieldtype == 'Currency' %}text-right{% endif %}">
                     {% if col.fieldtype == "Currency" %}
-                    <span class="text-right">{{ frappe.format(row[col.fieldname], {fieldtype: "Currency"}) }}</span>
+                    <span>{{ frappe.format(row[col.fieldname], {fieldtype: "Currency"}) }}</span>
                     {% else %}
                     {{ row[col.fieldname] }}
                     {% endif %}
@@ -44,12 +44,29 @@
             </tr>
             {% endfor %}
         </tbody>
+        {% if data|length %}
+        <tfoot>
+            <tr class="total-row">
+                <th>{{ __("Total") }}</th>
+                <th></th>
+                <th class="text-right">
+                    {{ frappe.format(data.reduce(function(sum, row) { return sum + row["Net Amount"]; }, 0), {fieldtype: "Currency"}) }}
+                </th>
+                <th class="text-right">
+                    {{ frappe.format(data.reduce(function(sum, row) { return sum + row["Total VAT"]; }, 0), {fieldtype: "Currency"}) }}
+                </th>
+                <th></th>
+            </tr>
+        </tfoot>
+        {% endif %}
     </table>
 </div>
 
 <style>
+    /* Estilos para la visualización web */
     .icp-declaration-report {
         padding: 15px;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
     
     .report-summary {
@@ -70,5 +87,59 @@
     
     .summary-value {
         font-weight: normal;
+    }
+    
+    .icp-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+    
+    .icp-table th {
+        background-color: #f2f2f2;
+        padding: 10px;
+        border: 1px solid #ddd;
+        font-weight: bold;
+    }
+    
+    .icp-table td {
+        padding: 8px 10px;
+        border: 1px solid #ddd;
+    }
+    
+    .icp-table .text-right {
+        text-align: right;
+    }
+    
+    .total-row {
+        background-color: #f9f9f9;
+    }
+    
+    .total-row th {
+        font-weight: bold;
+    }
+    
+    /* Estilos específicos para PDF */
+    @media print {
+        .icp-declaration-report {
+            padding: 0;
+        }
+        
+        .report-summary {
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+        
+        .icp-table th {
+            background-color: #eee !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .total-row {
+            background-color: #f5f5f5 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
     }
 </style>
