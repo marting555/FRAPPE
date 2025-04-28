@@ -82,7 +82,6 @@ class Project(Document):
 				self.status_modified = get_datetime()
 
 			if self.status in self.done_status:
-				print('reset project')
 				self.queue_position = 0
 
 
