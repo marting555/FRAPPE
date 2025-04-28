@@ -16,11 +16,13 @@ erpnext.utils.CRMActivities = class CRMActivities {
 			// remove frappe-control class to avoid absolute position for action-btn
 			$(this.all_activities_wrapper).removeClass("frappe-control");
 			// hide new event button
-			$(".timeline-actions").find(".btn-default").hide();
+			this.frm.timeline.timeline_actions_wrapper.find(".btn-default").hide();
 			// hide new comment box
-			$(".comment-box").hide();
+			this.frm.comment_box.$wrapper.hide();
 			// show only communications by default
-			$($(".timeline-content").find(".nav-link")[0]).tab("show");
+			$(this.frm.timeline.timeline_actions_wrapper.find(".timeline-content").find(".nav-link")[0]).tab(
+				"show"
+			);
 		}
 
 		// open activities
