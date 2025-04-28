@@ -1,0 +1,3 @@
+2025-04-28 09:43:25,234 ERROR frappe New Exception collected in error log
+Site: erpnext.localhost
+Form Dict: {'cmd': 'erpnext.erpnext.init_data.data_init.data_init.get_modules'}
