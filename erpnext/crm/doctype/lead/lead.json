@@ -78,6 +78,7 @@
   "other_info_tab",
   "campaign_name",
   "company",
+  "pancake_data",
   "column_break_22",
   "language",
   "image",
@@ -161,7 +162,7 @@
    "default": "__user",
    "fieldname": "lead_owner",
    "fieldtype": "Link",
-   "label": "Nh\u00e2n Vi\u00ean Ph\u1ee5 Tr\u00e1ch",
+   "label": "Ph\u1ee5 Tr\u00e1ch",
    "oldfieldname": "lead_owner",
    "oldfieldtype": "Link",
    "options": "User",
@@ -680,7 +681,7 @@
   {
    "fieldname": "personal_tax_id",
    "fieldtype": "Data",
-   "label": "M\u00e3 S\u1ed1 Thu\u1ebf"
+   "label": "S\u1ed1 CCCD/H\u1ed9 Chi\u1ebfu"
   },
   {
    "fieldname": "column_break_bwya",
@@ -738,13 +739,19 @@
   {
    "fieldname": "column_break_wsdb",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pancake_data",
+   "fieldtype": "JSON",
+   "hidden": 1,
+   "label": "pancake_data"
   }
  ],
  "icon": "fa fa-user",
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-04-27 22:31:11.542199",
+ "modified": "2025-04-28 19:34:56.411287",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",

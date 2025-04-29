@@ -28,9 +28,9 @@ class CallLog(Document):
 		account_id: DF.Data | None
 		amount: DF.Currency
 		answer_duration: DF.Int
+		answer_duration_minutes: DF.Int
 		answer_time: DF.Datetime | None
 		call_received_by: DF.Link | None
-		callee: DF.Data | None
 		created: DF.Datetime | None
 		customer: DF.Link | None
 		duration: DF.Duration | None
@@ -44,12 +44,11 @@ class CallLog(Document):
 		links: DF.Table[DynamicLink]
 		medium: DF.Data | None
 		object_type: DF.Data | None
-		participants: DF.Data | None
 		project_id: DF.Data | None
 		project_name: DF.Data | None
 		record_path: DF.Data | None
 		recorded: DF.Check
-		recording_url: DF.Data | None
+		recording_url: DF.Text | None
 		start_time: DF.Datetime | None
 		status: DF.Literal["Ringing", "In Progress", "Completed", "Failed", "Busy", "No Answer", "Queued", "Canceled"]
 		stop_time: DF.Datetime | None

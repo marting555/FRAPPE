@@ -198,6 +198,7 @@
   {
    "fieldname": "expected_closing",
    "fieldtype": "Date",
+   "hidden": 1,
    "label": "Ng\u00e0y D\u1ef1 Ki\u1ec7n \u0110\u00f3ng C\u01a1 H\u1ed9i",
    "no_copy": 1
   },
@@ -521,7 +522,7 @@
   {
    "fieldname": "opportunity_owner",
    "fieldtype": "Link",
-   "label": "Nh\u00e2n S\u1ef1 Ph\u1ee5 Tr\u00e1ch",
+   "label": "Ph\u1ee5 Tr\u00e1ch",
    "options": "User"
   },
   {
@@ -707,7 +708,7 @@
  "icon": "fa fa-info-sign",
  "idx": 195,
  "links": [],
- "modified": "2025-04-27 22:34:43.117629",
+ "modified": "2025-04-28 00:33:44.585552",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Opportunity",

@@ -218,7 +218,7 @@
   {
    "fieldname": "account_manager",
    "fieldtype": "Link",
-   "label": "Nh\u00e2n Vi\u00ean Ph\u1ee5 Tr\u00e1ch",
+   "label": "Ph\u1ee5 Tr\u00e1ch",
    "options": "User"
   },
   {
@@ -350,6 +350,7 @@
   {
    "fieldname": "customer_primary_contact",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Ch\u1ecdn Li\u00ean H\u1ec7 Ch\u00ednh",
    "options": "Contact"
   },
@@ -357,6 +358,7 @@
    "fetch_from": "customer_primary_contact.mobile_no",
    "fieldname": "mobile_no",
    "fieldtype": "Read Only",
+   "hidden": 1,
    "label": "Mobile No",
    "options": "Mobile"
   },
@@ -364,6 +366,7 @@
    "fetch_from": "customer_primary_contact.email_id",
    "fieldname": "email_id",
    "fieldtype": "Read Only",
+   "hidden": 1,
    "label": "Email",
    "options": "Email"
   },
@@ -651,6 +654,7 @@
    "fetch_from": "customer_primary_contact.phone",
    "fieldname": "phone",
    "fieldtype": "Read Only",
+   "hidden": 1,
    "label": "S\u1ed1 \u0110i\u1ec7n Tho\u1ea1i"
   },
   {
@@ -691,7 +695,7 @@
   {
    "fieldname": "personal_id",
    "fieldtype": "Data",
-   "label": "M\u00e3 S\u1ed1"
+   "label": "S\u1ed1 CCCD/H\u1ed9 Chi\u1ebfu"
   },
   {
    "fieldname": "place_of_issuance",
@@ -886,7 +890,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-04-24 23:55:03.052834",
+ "modified": "2025-04-28 00:33:15.866806",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
