@@ -2506,10 +2506,12 @@ class TestPurchaseOrder(FrappeTestCase):
 
 	def test_po_with_pricing_rule_TC_B_046(self):
 		# Scenario : PO => Pricing Rule => PR => PI
+		from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import get_or_create_price_list
 		get_data = get_company_or_supplier()
 		company = get_data.get("company")
 		supplier = get_data.get("supplier")
 		item = make_test_item("_test_item_2")
+		price_list = get_or_create_price_list()
 
 		po_data = {
 			"company" : company,
@@ -2518,6 +2520,8 @@ class TestPurchaseOrder(FrappeTestCase):
 			"supplier": supplier,
 			"schedule_date": today(),
 			"qty" : 1,
+			"currency":"INR",
+			"buying_price_list": price_list,
 		}
 
 		pricing_rule_record = {
@@ -2540,7 +2544,7 @@ class TestPurchaseOrder(FrappeTestCase):
 			"valid_from": today(),
 			"rate_or_discount": "Discount Percentage",
 			"discount_percentage": 10,
-			"price_list": "Standard Buying",
+			"price_list": price_list,
 			"company" : company,
 
 		}
@@ -2551,7 +2555,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		frappe.get_doc(
 			{
 				"doctype": "Item Price",
-				"price_list": "Standard Buying",
+				"price_list": price_list,
 				"item_code": item.item_code,
 				"price_list_rate": 130
 			}
