@@ -4,10 +4,7 @@
 
 import frappe
 from frappe.tests.utils import FrappeTestCase
-from frappe.tests import IntegrationTestCase, UnitTestCase
 from frappe.utils import add_days, today
-
-from erpnext.controllers.accounts_controller import InvalidQtyError
 
 
 class TestPurchaseOrder(FrappeTestCase):
