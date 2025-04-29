@@ -79,6 +79,7 @@
   "campaign_name",
   "company",
   "pancake_data",
+  "stringeex_data",
   "column_break_22",
   "language",
   "image",
@@ -745,13 +746,19 @@
    "fieldtype": "JSON",
    "hidden": 1,
    "label": "pancake_data"
+  },
+  {
+   "fieldname": "stringeex_data",
+   "fieldtype": "JSON",
+   "hidden": 1,
+   "label": "stringeex_data"
   }
  ],
  "icon": "fa fa-user",
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-04-28 19:34:56.411287",
+ "modified": "2025-04-28 19:40:26.645184",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",
