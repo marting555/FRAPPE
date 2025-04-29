@@ -1194,16 +1194,16 @@ class update_entries_after:
 			) in frappe.local.flags.currently_saving:
 				msg = _("{0} units of {1} needed in {2} to complete this transaction.").format(
 					abs(deficiency),
-					frappe.get_desk_link("Item", exceptions[0]["item_code"]),
-					frappe.get_desk_link("Warehouse", warehouse),
+					frappe.get_desk_link("Item", exceptions[0]["item_code"], show_title_with_name=True),
+					frappe.get_desk_link("Warehouse", warehouse, show_title_with_name=True),
 				)
 			else:
 				msg = _(
 					"{0} units of {1} needed in {2} on {3} {4} for {5} to complete this transaction."
 				).format(
 					abs(deficiency),
-					frappe.get_desk_link("Item", exceptions[0]["item_code"]),
-					frappe.get_desk_link("Warehouse", warehouse),
+					frappe.get_desk_link("Item", exceptions[0]["item_code"], show_title_with_name=True),
+					frappe.get_desk_link("Warehouse", warehouse, show_title_with_name=True),
 					exceptions[0]["posting_date"],
 					exceptions[0]["posting_time"],
 					frappe.get_desk_link(exceptions[0]["voucher_type"], exceptions[0]["voucher_no"]),
@@ -1664,8 +1664,8 @@ def validate_negative_qty_in_future_sle(args, allow_negative_stock=False):
 	if is_negative_with_precision(neg_sle):
 		message = _("{0} units of {1} needed in {2} on {3} {4} for {5} to complete this transaction.").format(
 			abs(neg_sle[0]["qty_after_transaction"]),
-			frappe.get_desk_link("Item", args.item_code),
-			frappe.get_desk_link("Warehouse", args.warehouse),
+			frappe.get_desk_link("Item", args.item_code, show_title_with_name=True),
+			frappe.get_desk_link("Warehouse", args.warehouse, show_title_with_name=True),
 			neg_sle[0]["posting_date"],
 			neg_sle[0]["posting_time"],
 			frappe.get_desk_link(neg_sle[0]["voucher_type"], neg_sle[0]["voucher_no"]),
