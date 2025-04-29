@@ -357,9 +357,31 @@ class Lead(SellingController, CRMNote):
 
 		if self.mobile_no:
 			contact.append("phone_nos", {"phone": self.mobile_no, "is_primary_mobile_no": 1})
-
-		contact.insert(ignore_permissions=True)
-		contact.reload()  # load changes by hooks on contact
+        
+		try:
+			contact.insert(
+				ignore_permissions=True,
+				raise_direct_exception=True,
+			)
+			contact.reload()
+			return contact
+		except frappe.LinkValidationError as e:
+			new_lead_source = frappe.new_doc("Lead Source")
+			new_lead_source.update({
+				"source_name": self.source,
+			})
+			new_lead_source.insert(ignore_permissions=True)
+			new_lead_source.reload()
+			contact.insert(
+				ignore_permissions=True,
+				raise_direct_exception=True
+			)
+			contact.reload()
+			return contact
+		except Exception as e:
+			frappe.log_error(f"Failed to create contact for lead {self.name}: {str(e)}", 
+				"Contact Creation Error")
+			frappe.throw(_("Failed to create contact. Please check error log for details."))		
 
 		return contact
 
