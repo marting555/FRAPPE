@@ -1417,6 +1417,7 @@ def add_operations_cost(stock_entry, work_order=None, expense_account=None):
 				"expense_account": expense_account,
 				"description": _("Operating Cost as per Work Order / BOM"),
 				"amount": operating_cost_per_unit * flt(stock_entry.fg_completed_qty),
+				"has_operating_cost": 1,
 			},
 		)
 

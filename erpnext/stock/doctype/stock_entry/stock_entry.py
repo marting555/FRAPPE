@@ -6,6 +6,8 @@ import json
 from collections import defaultdict
 
 import frappe
+import frappe.query_builder
+import frappe.query_builder.functions
 from frappe import _
 from frappe.model.mapper import get_mapped_doc
 from frappe.query_builder.functions import Sum
@@ -3028,7 +3030,40 @@ def get_operating_cost_per_unit(work_order=None, bom_no=None):
 
 		for d in work_order.get("operations"):
 			if flt(d.completed_qty):
-				operating_cost_per_unit += flt(d.actual_operating_cost) / flt(d.completed_qty)
+				qty = cost = [None]
+				if frappe.db.has_column("Landed Cost Taxes and Charges", "has_operating_cost"):
+					table = frappe.qb.DocType("Stock Entry")
+					query = (
+						frappe.qb.from_(table)
+						.select(Sum(table.fg_completed_qty).as_("produced_qty"))
+						.where(
+							(table.docstatus == 1)
+							& (table.work_order == work_order.name)
+							& (table.purpose == "Manufacture")
+							& (table.bom_no == bom_no)
+						)
+					)
+					qty = query.run(pluck="produced_qty")
+
+					child_table = frappe.qb.DocType("Landed Cost Taxes and Charges")
+					query = (
+						frappe.qb.from_(child_table)
+						.join(table)
+						.on(child_table.parent == table.name)
+						.select(Sum(child_table.amount).as_("consumed_cost"))
+						.where(
+							(table.docstatus == 1)
+							& (table.work_order == work_order.name)
+							& (table.purpose == "Manufacture")
+							& (table.bom_no == bom_no)
+							& (child_table.has_operating_cost == 1)
+						)
+					)
+					cost = query.run(pluck="consumed_cost")
+
+				operating_cost_per_unit += flt(d.actual_operating_cost - (cost[0] or 0)) / flt(
+					d.completed_qty - (qty[0] or 0)
+				)
 			elif work_order.qty:
 				operating_cost_per_unit += flt(d.planned_operating_cost) / flt(work_order.qty)
 
