@@ -82,14 +82,10 @@ def prepare_data(supplier_quotation_data, filters):
 	group_wise_map = defaultdict(list)
 	supplier_qty_price_map = {}
 
-<<<<<<< HEAD
-	group_by_field = "supplier_name" if filters.get("group_by") == "Group by Supplier" else "item_code"
-	company_currency = frappe.db.get_default("currency")
-=======
 	group_by_field = (
 		"supplier_name" if filters.get("categorize_by") == "Categorize by Supplier" else "item_code"
 	)
->>>>>>> 13a84e7f82 (fix: renaming group by fieldname and value in reports (#47352))
+	company_currency = frappe.db.get_default("currency")
 	float_precision = cint(frappe.db.get_default("float_precision")) or 2
 
 	for data in supplier_quotation_data:
