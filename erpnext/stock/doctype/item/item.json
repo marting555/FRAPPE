@@ -68,7 +68,7 @@
   "variant_based_on",
   "attributes",
   "accounting",
-  "deferred_accounting_section",
+  "default_accounting_section",
   "enable_deferred_expense",
   "no_of_months_exp",
   "column_break_9s9o",
@@ -879,9 +879,9 @@
   },
   {
    "collapsible": 1,
-   "fieldname": "deferred_accounting_section",
+   "fieldname": "default_accounting_section",
    "fieldtype": "Section Break",
-   "label": "Deferred Accounting"
+   "label": "Default Accounting"
   }
  ],
  "icon": "fa fa-tag",
