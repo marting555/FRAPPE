@@ -26,14 +26,19 @@ def fetch_vat_data(filters):
     to_date = filters.get("to_date", "2100-12-31")
     company = filters.get("company", "")
 
+    # Use format strings with named placeholders to avoid % formatting issues
     query = """
         SELECT
-            SUM(CASE WHEN si.tax_category LIKE '%21%' THEN si.base_net_total ELSE 0 END) AS domestic_high_rate,
-            SUM(CASE WHEN si.tax_category LIKE '%9%' THEN si.base_net_total ELSE 0 END) AS domestic_low_rate,
-            SUM(CASE WHEN si.tax_category LIKE '%tarief%' AND si.tax_category NOT LIKE '%0%' AND si.tax_category NOT LIKE '%21%' AND si.tax_category NOT LIKE '%9%' THEN si.base_net_total ELSE 0 END) AS domestic_other_rates,
-            SUM(CASE WHEN si.tax_category LIKE '%0%' THEN si.base_net_total ELSE 0 END) AS domestic_zero_rate,
-            SUM(CASE WHEN si.incoterm IS NOT NULL AND si.incoterm LIKE '%export%' THEN si.base_net_total ELSE 0 END) AS exports_outside_EU,
-            SUM(CASE WHEN si.tax_category LIKE '%EU%' THEN si.base_net_total ELSE 0 END) AS intra_EU_sales,
+            SUM(CASE WHEN si.tax_category LIKE CONCAT('%%', '21', '%%') THEN si.base_net_total ELSE 0 END) AS domestic_high_rate,
+            SUM(CASE WHEN si.tax_category LIKE CONCAT('%%', '9', '%%') THEN si.base_net_total ELSE 0 END) AS domestic_low_rate,
+            SUM(CASE WHEN si.tax_category LIKE CONCAT('%%', 'tarief', '%%') 
+                AND si.tax_category NOT LIKE CONCAT('%%', '0', '%%') 
+                AND si.tax_category NOT LIKE CONCAT('%%', '21', '%%') 
+                AND si.tax_category NOT LIKE CONCAT('%%', '9', '%%') 
+                THEN si.base_net_total ELSE 0 END) AS domestic_other_rates,
+            SUM(CASE WHEN si.tax_category LIKE CONCAT('%%', '0', '%%') THEN si.base_net_total ELSE 0 END) AS domestic_zero_rate,
+            SUM(CASE WHEN si.incoterm IS NOT NULL AND si.incoterm LIKE CONCAT('%%', 'export', '%%') THEN si.base_net_total ELSE 0 END) AS exports_outside_EU,
+            SUM(CASE WHEN si.tax_category LIKE CONCAT('%%', 'EU', '%%') THEN si.base_net_total ELSE 0 END) AS intra_EU_sales,
             SUM(pi.base_total_taxes_and_charges) AS input_tax,
             SUM(si.base_total_taxes_and_charges) AS output_tax_due,
             SUM(si.base_total_taxes_and_charges) - SUM(pi.base_total_taxes_and_charges) AS net_payable_or_refundable
