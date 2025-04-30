@@ -11,10 +11,10 @@ def execute(filters=None):
     """
     if not filters:
         filters = {}
-        
+
     columns = get_columns()
     data = fetch_vat_data(filters)
-    
+
     return columns, data
 
 
@@ -22,52 +22,30 @@ def fetch_vat_data(filters):
     """
     Fetch sales and purchase invoice data for VAT declaration
     """
-    # Default date range if not provided
     from_date = filters.get("from_date", "1900-01-01")
     to_date = filters.get("to_date", "2100-12-31")
     company = filters.get("company", "")
-    
-    # Query to fetch VAT declaration data
+
     query = """
         SELECT
-            -- Rubric 1a: Domestic sales with high VAT rate (21%)
-            SUM(CASE WHEN si.tax_category LIKE '%%21%%' THEN si.base_net_total ELSE 0 END) AS domestic_high_rate,
-
-            -- Rubric 1b: Domestic sales with low VAT rate (9%)
-            SUM(CASE WHEN si.tax_category LIKE '%%9%%' THEN si.base_net_total ELSE 0 END) AS domestic_low_rate,
-
-            -- Rubric 1c: Other VAT rates, excluding 0%, 9%, and 21%
-            SUM(CASE WHEN si.tax_category LIKE '%%tarief%%' AND si.tax_category NOT LIKE '%%0%%' AND si.tax_category NOT LIKE '%%21%%' AND si.tax_category NOT LIKE '%%9%%' THEN si.base_net_total ELSE 0 END) AS domestic_other_rates,
-
-            -- Rubric 2: Sales taxed at 0% or not subject to VAT
-            SUM(CASE WHEN si.tax_category LIKE '%%0%%' THEN si.base_net_total ELSE 0 END) AS domestic_zero_rate,
-
-            -- Rubric 3b: Exports outside the EU
-            SUM(CASE WHEN si.incoterm IS NOT NULL AND si.incoterm LIKE '%%export%%' THEN si.base_net_total ELSE 0 END) AS exports_outside_EU,
-
-            -- Rubric 3c: Intra-EU sales
-            SUM(CASE WHEN si.tax_category LIKE '%%EU%%' THEN si.base_net_total ELSE 0 END) AS intra_EU_sales,
-
-            -- Rubrics 4a + 4b + 4c: Input VAT from purchases
+            SUM(CASE WHEN si.tax_category LIKE '%21%' THEN si.base_net_total ELSE 0 END) AS domestic_high_rate,
+            SUM(CASE WHEN si.tax_category LIKE '%9%' THEN si.base_net_total ELSE 0 END) AS domestic_low_rate,
+            SUM(CASE WHEN si.tax_category LIKE '%tarief%' AND si.tax_category NOT LIKE '%0%' AND si.tax_category NOT LIKE '%21%' AND si.tax_category NOT LIKE '%9%' THEN si.base_net_total ELSE 0 END) AS domestic_other_rates,
+            SUM(CASE WHEN si.tax_category LIKE '%0%' THEN si.base_net_total ELSE 0 END) AS domestic_zero_rate,
+            SUM(CASE WHEN si.incoterm IS NOT NULL AND si.incoterm LIKE '%export%' THEN si.base_net_total ELSE 0 END) AS exports_outside_EU,
+            SUM(CASE WHEN si.tax_category LIKE '%EU%' THEN si.base_net_total ELSE 0 END) AS intra_EU_sales,
             SUM(pi.base_total_taxes_and_charges) AS input_tax,
-
-            -- Rubric 5a: Total output VAT payable
             SUM(si.base_total_taxes_and_charges) AS output_tax_due,
-
-            -- Rubric 5c: Subtotal (output VAT - input VAT)
             SUM(si.base_total_taxes_and_charges) - SUM(pi.base_total_taxes_and_charges) AS net_payable_or_refundable
-        FROM
-            `tabSales Invoice` si
-        LEFT JOIN
-            `tabPurchase Invoice` pi
+        FROM `tabSales Invoice` si
+        LEFT JOIN `tabPurchase Invoice` pi
             ON pi.posting_date BETWEEN %(from_date)s AND %(to_date)s
-        WHERE
-            si.posting_date BETWEEN %(from_date)s AND %(to_date)s
+        WHERE si.posting_date BETWEEN %(from_date)s AND %(to_date)s
             AND si.docstatus = 1
             AND (pi.docstatus = 1 OR pi.docstatus IS NULL)
             AND si.company = %(company)s
     """
-    
+
     result = frappe.db.sql(
         query,
         {
@@ -77,67 +55,59 @@ def fetch_vat_data(filters):
         },
         as_dict=1
     )
-    
-    # Format the data for display
+
     formatted_data = []
     if result and len(result) > 0:
         vat_data = result[0]
-        
-        # Create rows for each VAT category
-        formatted_data.append({
-            "rubric": "1a",
-            "description": _("Domestic sales with high VAT rate (21%)"),
-            "amount": vat_data.get("domestic_high_rate", 0)
-        })
-        
-        formatted_data.append({
-            "rubric": "1b",
-            "description": _("Domestic sales with low VAT rate (9%)"),
-            "amount": vat_data.get("domestic_low_rate", 0)
-        })
-        
-        formatted_data.append({
-            "rubric": "1c",
-            "description": _("Other VAT rates"),
-            "amount": vat_data.get("domestic_other_rates", 0)
-        })
-        
-        formatted_data.append({
-            "rubric": "2",
-            "description": _("Sales taxed at 0% or not subject to VAT"),
-            "amount": vat_data.get("domestic_zero_rate", 0)
-        })
-        
-        formatted_data.append({
-            "rubric": "3b",
-            "description": _("Exports outside the EU"),
-            "amount": vat_data.get("exports_outside_EU", 0)
-        })
-        
-        formatted_data.append({
-            "rubric": "3c",
-            "description": _("Intra-EU sales"),
-            "amount": vat_data.get("intra_EU_sales", 0)
-        })
-        
-        formatted_data.append({
-            "rubric": "4",
-            "description": _("Input VAT from purchases"),
-            "amount": vat_data.get("input_tax", 0)
-        })
-        
-        formatted_data.append({
-            "rubric": "5a",
-            "description": _("Total output VAT payable"),
-            "amount": vat_data.get("output_tax_due", 0)
-        })
-        
-        formatted_data.append({
-            "rubric": "5c",
-            "description": _("Subtotal (output VAT - input VAT)"),
-            "amount": vat_data.get("net_payable_or_refundable", 0)
-        })
-    
+
+        formatted_data.extend([
+            {
+                "rubric": "1a",
+                "description": _("Domestic sales with high VAT rate (21%)"),
+                "amount": vat_data.get("domestic_high_rate", 0)
+            },
+            {
+                "rubric": "1b",
+                "description": _("Domestic sales with low VAT rate (9%)"),
+                "amount": vat_data.get("domestic_low_rate", 0)
+            },
+            {
+                "rubric": "1c",
+                "description": _("Other VAT rates"),
+                "amount": vat_data.get("domestic_other_rates", 0)
+            },
+            {
+                "rubric": "2",
+                "description": _("Sales taxed at 0% or not subject to VAT"),
+                "amount": vat_data.get("domestic_zero_rate", 0)
+            },
+            {
+                "rubric": "3b",
+                "description": _("Exports outside the EU"),
+                "amount": vat_data.get("exports_outside_EU", 0)
+            },
+            {
+                "rubric": "3c",
+                "description": _("Intra-EU sales"),
+                "amount": vat_data.get("intra_EU_sales", 0)
+            },
+            {
+                "rubric": "4",
+                "description": _("Input VAT from purchases"),
+                "amount": vat_data.get("input_tax", 0)
+            },
+            {
+                "rubric": "5a",
+                "description": _("Total output VAT payable"),
+                "amount": vat_data.get("output_tax_due", 0)
+            },
+            {
+                "rubric": "5c",
+                "description": _("Subtotal (output VAT - input VAT)"),
+                "amount": vat_data.get("net_payable_or_refundable", 0)
+            }
+        ])
+
     return formatted_data
 
 
@@ -145,7 +115,7 @@ def get_columns():
     """
     Define the columns for the VAT declaration report
     """
-    columns = [
+    return [
         {
             "fieldname": "rubric",
             "label": _("Rubric"),
@@ -165,5 +135,3 @@ def get_columns():
             "width": 150
         }
     ]
-    
-    return columns
