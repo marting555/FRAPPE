@@ -1,0 +1,217 @@
+<div class="vat-declaration-report" style="width: 100%;">
+    <h2>{{ __("VAT Declaration") }}</h2>
+    <p class="text-muted">{{ __("Value Added Tax Report") }}</p>
+    
+    <div class="report-summary" style="width: 100%;">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="summary-item">
+                    <span class="summary-label">{{ __("Company") }}:</span>
+                    <span class="summary-value">{{ filters.company }}</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="summary-item">
+                    <span class="summary-label">{{ __("Period") }}:</span>
+                    <span class="summary-value">{{ frappe.format(filters.from_date, {fieldtype: "Date"}) }} - {{ frappe.format(filters.to_date, {fieldtype: "Date"}) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <hr>
+    
+    <div class="table-responsive" style="width: 100%;">
+        <table class="table table-bordered vat-table" style="width: 100% !important; table-layout: fixed;">
+            <thead>
+                <tr>
+                    {% for col in columns %}
+                    <th class="{% if col.fieldtype == 'Currency' %}text-right{% endif %}">{{ col.label }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                {% if not row.is_total_row and row.rubric != "Total" %}
+                <tr {% if row.rubric == "5c" %}class="subtotal-row"{% endif %}>
+                    {% for col in columns %}
+                    <td class="{% if col.fieldtype == 'Currency' %}text-right{% endif %}">
+                        {% if col.fieldtype == "Currency" %}
+                        <span {% if row.rubric == "5c" %}class="{% if row[col.fieldname] >= 0 %}text-danger{% else %}text-success{% endif %}"{% endif %}>
+                            {{ frappe.format(row[col.fieldname], {fieldtype: "Currency"}) }}
+                        </span>
+                        {% else %}
+                        {{ row[col.fieldname] }}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+            {% if data|length %}
+            <tfoot>
+                <!-- Empty row to create space between data and totals -->
+                <tr class="empty-row">
+                    {% for col in columns %}
+                    <td>&nbsp;</td>
+                    {% endfor %}
+                </tr>
+                <tr class="total-row">
+                    <th>{{ __("Total") }}</th>
+                    <th>{{ __("VAT Payable/Refundable") }}</th>
+                    <th class="text-right">
+                        {% set total_amount = 0 %}
+                        {% for row in data %}
+                        {% if row.rubric == "5c" %}
+                        {% set total_amount = row.amount %}
+                        {% endif %}
+                        {% endfor %}
+                        <span class="{% if total_amount >= 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ frappe.format(total_amount, {fieldtype: "Currency"}) }}
+                        </span>
+                    </th>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+
+<style>
+    /* Styles for web display */
+    .vat-declaration-report {
+        padding: 15px;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        width: 100%;
+    }
+    
+    .report-summary {
+        background-color: #f8f9fa;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+        width: 100%;
+    }
+    
+    .summary-item {
+        margin-bottom: 10px;
+    }
+    
+    .summary-label {
+        font-weight: bold;
+        margin-right: 5px;
+    }
+    
+    .summary-value {
+        font-weight: normal;
+    }
+    
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+    }
+    
+    .vat-table {
+        width: 100% !important;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        table-layout: fixed;
+    }
+    
+    .vat-table th {
+        background-color: #f2f2f2;
+        padding: 10px;
+        border: 1px solid #ddd;
+        font-weight: bold;
+    }
+    
+    .vat-table td {
+        padding: 8px 10px;
+        border: 1px solid #ddd;
+    }
+    
+    .vat-table .text-right {
+        text-align: right;
+    }
+    
+    .empty-row td {
+        border-left-color: transparent;
+        border-right-color: transparent;
+        height: 20px;
+    }
+    
+    .total-row {
+        background-color: #f9f9f9;
+    }
+    
+    .total-row th {
+        font-weight: bold;
+    }
+    
+    .subtotal-row {
+        background-color: #f9f9f9;
+        font-weight: bold;
+    }
+    
+    .text-danger {
+        color: #dc3545;
+    }
+    
+    .text-success {
+        color: #28a745;
+    }
+    
+    /* Specific styles for PDF */
+    @media print {
+        .vat-declaration-report {
+            padding: 0;
+            width: 100%;
+        }
+        
+        .report-summary {
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        
+        .table-responsive {
+            width: 100%;
+        }
+        
+        .vat-table {
+            width: 100% !important;
+            table-layout: fixed;
+        }
+        
+        .vat-table th {
+            background-color: #eee !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .empty-row td {
+            border-left-color: transparent !important;
+            border-right-color: transparent !important;
+            height: 20px;
+        }
+        
+        .total-row, .subtotal-row {
+            background-color: #f5f5f5 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .text-danger {
+            color: #dc3545 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .text-success {
+            color: #28a745 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+    }
+</style>
