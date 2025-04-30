@@ -4,16 +4,26 @@
 import frappe
 from frappe import _
 from frappe.utils import getdate
-from datetime import timedelta
+from datetime import timedelta, date
 
 def execute(filters=None):
     if not filters:
         filters = {}
 
-    # Campos adicionales para impresión PDF / HTML
-    filters["from_date_str"] = getdate(filters["from_date"]).strftime('%d-%m-%Y')
-    filters["to_date_str"] = getdate(filters["to_date"]).strftime('%d-%m-%Y')
-    filters["due_date"] = (getdate(filters["to_date"]) + timedelta(days=30)).strftime('%d-%m-%Y')
+    # Default date range to last month if not provided
+    today = date.today()
+    first_day_current = date(today.year, today.month, 1)
+    last_day_last_month = first_day_current - timedelta(days=1)
+    first_day_last_month = date(last_day_last_month.year, last_day_last_month.month, 1)
+    from_date = filters.get("from_date") or first_day_last_month.strftime('%Y-%m-%d')
+    to_date = filters.get("to_date") or last_day_last_month.strftime('%Y-%m-%d')
+    # set filters for consistency
+    filters["from_date"] = from_date
+    filters["to_date"] = to_date
+
+    filters["from_date_str"] = getdate(from_date).strftime('%d-%m-%Y')
+    filters["to_date_str"] = getdate(to_date).strftime('%d-%m-%Y')
+    filters["due_date"] = (getdate(to_date) + timedelta(days=30)).strftime('%d-%m-%Y')
     filters["aangiftenummer"] = "823862021B014300"
     filters["rsin"] = "823862021"
     filters["naam"] = "FISCALE EENHEID R.M. LOGMANS BEHEER B.V. EN TVS ENGINEERING B.V. C.S."
