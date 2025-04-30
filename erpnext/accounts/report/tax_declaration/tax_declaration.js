@@ -1,7 +1,8 @@
 // Copyright (c) 2025, Frappe Technologies Pvt. Ltd. and contributors
 // For license information, please see license.txt
 
-frappe.query_reports["TAX Declaration"] = {
+// Definir el reporte con ambos nombres para compatibilidad
+frappe.query_reports["Tax Declaration"] = frappe.query_reports["TAX Declaration"] = {
 	filters: [
 		{
 			fieldname: "company",
@@ -309,7 +310,7 @@ frappe.query_reports["TAX Declaration"] = {
 			// Create arguments for export
 			const args = {
 				cmd: 'frappe.desk.query_report.export_query',
-				report_name: 'TAX Declaration',
+				report_name: 'Tax Declaration',
 				file_format_type: 'Excel',
 				filters: JSON.stringify(filters),
 				// Ensure visible_idx is an empty array instead of null
