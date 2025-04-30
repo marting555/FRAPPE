@@ -373,34 +373,17 @@ def get_data_with_opening_closing(filters, account_details, accounting_dimension
 			# acc
 			if acc_dict.entries:
 				# opening
-<<<<<<< HEAD
 				data.append({})
-				if filters.get("group_by") != "Group by Voucher":
-=======
-				data.append({"debit_in_transaction_currency": None, "credit_in_transaction_currency": None})
-				if (not filters.get("categorize_by") and not filters.get("voucher_no")) or (
-					filters.get("categorize_by") and filters.get("categorize_by") != "Categorize by Voucher"
-				):
->>>>>>> 13a84e7f82 (fix: renaming group by fieldname and value in reports (#47352))
+				if filters.get("categorize_by") != "Categorize by Voucher":
 					data.append(acc_dict.totals.opening)
 
 				data += acc_dict.entries
 
 				# totals
-<<<<<<< HEAD
 				data.append(acc_dict.totals.total)
 
 				# closing
-				if filters.get("group_by") != "Group by Voucher":
-=======
-				if filters.get("categorize_by") or not filters.voucher_no:
-					data.append(acc_dict.totals.total)
-
-				# closing
-				if (not filters.get("categorize_by") and not filters.get("voucher_no")) or (
-					filters.get("categorize_by") and filters.get("categorize_by") != "Categorize by Voucher"
-				):
->>>>>>> 13a84e7f82 (fix: renaming group by fieldname and value in reports (#47352))
+				if filters.get("categorize_by") != "Categorize by Voucher":
 					data.append(acc_dict.totals.closing)
 		data.append({})
 	else:
