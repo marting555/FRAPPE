@@ -1,0 +1,95 @@
+<div class="tax-declaration-report" style="width: 100%;">
+    <h2 style="margin-bottom: 0;">BTW-aangifte</h2>
+    <p class="text-muted">BTW-aangifte via WE-ID portaal</p>
+
+    <table style="width: 100%; margin-top: 10px; font-size: 13px; border-collapse: collapse;">
+        <tr><td><strong>Naam</strong></td><td>Fiscale Eenheid R.M. Logmans Beheer B.V. en TVS Engineering B.V. C.S.</td></tr>
+        <tr><td><strong>RSIN/fiscaalnummer/BSN</strong></td><td>823862021</td></tr>
+        <tr><td><strong>Aangiftenummer</strong></td><td>823862021B014300</td></tr>
+        <tr><td><strong>Tijdvak</strong></td><td>{{ frappe.format(filters.from_date, {fieldtype: "Date"}) }} t/m {{ frappe.format(filters.to_date, {fieldtype: "Date"}) }}</td></tr>
+        <tr><td><strong>Uiterste inzend- en betaaldatum</strong></td><td>31-01-2025</td></tr>
+        <tr><td><strong>Hebt u dit tijdvak iets aan te geven?</strong></td><td>Ja</td></tr>
+        <tr><td><strong>Achternaam en voorletter(s)</strong></td><td>Logmans JCA</td></tr>
+        <tr><td><strong>Telefoonnummer</strong></td><td>0645921347</td></tr>
+    </table>
+
+    <br>
+    <h4>Rubriek 1: Prestaties binnenland</h4>
+    <table class="tax-table">
+        <thead>
+            <tr><th>Omschrijving</th><th>Omzet</th><th>Btw</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>1a. Leveringen/diensten belast met hoog tarief</td><td class="text-right">{{ frappe.format(data[0].amount, {fieldtype: "Currency"}) }}</td><td class="text-right">{{ frappe.format(data[13].amount, {fieldtype: "Currency"}) }}</td></tr>
+            <tr><td>1e. Leveringen/diensten belast met 0% of niet bij u belast</td><td class="text-right">{{ frappe.format(data[4].amount, {fieldtype: "Currency"}) }}</td><td class="text-right">&euro;&nbsp;0.00</td></tr>
+        </tbody>
+    </table>
+
+    <br>
+    <h4>Rubriek 3: Prestaties naar of in het buitenland</h4>
+    <table class="tax-table">
+        <thead><tr><th>Omschrijving</th><th>Omzet</th></tr></thead>
+        <tbody>
+            <tr><td>3a. Leveringen naar landen buiten de EU (uitvoer)</td><td class="text-right">{{ frappe.format(data[6].amount, {fieldtype: "Currency"}) }}</td></tr>
+            <tr><td>3b. Leveringen naar of diensten in landen binnen de EU</td><td class="text-right">{{ frappe.format(data[7].amount, {fieldtype: "Currency"}) }}</td></tr>
+        </tbody>
+    </table>
+
+    <br>
+    <h4>Rubriek 4: Prestaties vanuit het buitenland aan u verricht</h4>
+    <table class="tax-table">
+        <thead><tr><th>Omschrijving</th><th>Omzet</th><th>Btw</th></tr></thead>
+        <tbody>
+            <tr><td>4a. Leveringen/diensten uit landen buiten de EU</td><td class="text-right">{{ frappe.format(data[9].amount, {fieldtype: "Currency"}) }}</td><td class="text-right">&euro;&nbsp;1.055</td></tr>
+            <tr><td>4b. Leveringen/diensten uit landen binnen de EU</td><td class="text-right">{{ frappe.format(data[10].amount, {fieldtype: "Currency"}) }}</td><td class="text-right">&euro;&nbsp;78.796</td></tr>
+        </tbody>
+    </table>
+
+    <br>
+    <h4>Rubriek 5: Voorbelasting en eindtotaal</h4>
+    <table class="tax-table">
+        <thead><tr><th>Omschrijving</th><th>Btw</th></tr></thead>
+        <tbody>
+            <tr><td>5a. Verschuldigde btw</td><td class="text-right">{{ frappe.format(data[13].amount, {fieldtype: "Currency"}) }}</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<style>
+.tax-declaration-report {
+    padding: 15px;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 13px;
+}
+
+.tax-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.tax-table th, .tax-table td {
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+    text-align: left;
+}
+
+.tax-table th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+}
+
+.tax-table .text-right {
+    text-align: right;
+}
+
+@media print {
+    .tax-table th, .tax-table td {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    .tax-table th {
+        background-color: #eee !important;
+    }
+}
+</style>
