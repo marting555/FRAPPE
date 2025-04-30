@@ -237,7 +237,19 @@ class PurchaseInvoice(BuyingController):
 				"source_field": "amount",
 				"percent_join_field": "purchase_order",
 				"overflow_type": "billing",
-			}
+			},
+			{
+				"source_dt": "Purchase Invoice Item",
+				"target_dt": "Purchase Receipt Item",
+				"join_field": "pr_detail",
+				"target_field": "billed_amt",
+				"target_parent_dt": "Purchase Receipt",
+				"target_parent_field": "per_billed",
+				"target_ref_field": "amount",
+				"source_field": "amount",
+				"percent_join_field": "purchase_receipt",
+				"overflow_type": "billing",
+			},
 		]
 
 	def onload(self):
