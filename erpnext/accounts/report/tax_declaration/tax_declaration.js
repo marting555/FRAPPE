@@ -99,74 +99,187 @@ frappe.query_reports["TAX Declaration"] = {
 				frappe.datetime.str_to_user(filters.from_date) + " - " + 
 				frappe.datetime.str_to_user(filters.to_date);
 			
-			// Use report data directly
-			let rows_data = [];
+			// Prepare data for the HTML template
+			const reportData = report.data;
 			
-			// Check if data is available
-			if (report.data && report.data.length) {
-				// Filter to include only data rows (not totals)
-				rows_data = report.data.filter(row => 
-					!row.is_total_row && row.rubric !== "Total"
-				);
-				
-				// Calculate totals
-				let total_amount = 0;
-				
-				rows_data.forEach(row => {
-					if (row.rubric === "5c") {
-						total_amount = row.amount || 0;
-					}
-				});
-				
-				// Add an empty row to create space
-				let empty_row = {};
-				for (let col of report.get_columns_for_print()) {
-					empty_row[col.fieldname] = "";
-				}
-				empty_row.is_empty_row = true;
-				rows_data.push(empty_row);
-				
-				// Add total row
-				let total_data = {};
-				total_data.rubric = __("Total");
-				total_data.description = __("Tax Payable/Refundable");
-				total_data.amount = total_amount;
-				total_data.is_total_row = true;
-				rows_data.push(total_data);
+			// Función para formatear montos
+			function formatAmount(amount) {
+				if (amount === undefined || amount === null) return "-";
+				return frappe.format(amount, {fieldtype: 'Currency'});
 			}
 			
-			// Generate PDF using frappe.render_grid
-			frappe.ui.get_print_settings(false, (print_settings) => {
-				frappe.render_grid({
-					title: title,
-					subtitle: __("Company") + ": " + filters.company,
-					print_settings: print_settings,
-					columns: report.get_columns_for_print(),
-					data: rows_data,
-					can_use_smaller_font: 1,
-					report: true,
-					// Custom function to format rows
-					row_formatter: function(row, data) {
-						if (data.is_empty_row) {
-							row.css({
-								'height': '20px',
-								'border-left': 'none',
-								'border-right': 'none'
-							});
-							row.find('td').css({
-								'border-left': 'none',
-								'border-right': 'none'
-							});
-						}
-						if (data.is_total_row) {
-							row.css({
-								'background-color': '#f9f9f9',
-								'font-weight': 'bold'
-							});
-						}
+			// Crear HTML directamente sin usar templates
+			const html = `
+			<div class="belasting-pdf">
+				<table class="header-table">
+					<tr><td><strong>Naam:</strong></td><td>${filters.company || "FISCALE EENHEID R.M. LOGMANS BEHEER B.V. EN TVS ENGINEERING B.V. C.S."}</td></tr>
+					<tr><td><strong>RSIN/fiscaalnummer/BSN:</strong></td><td>823862021</td></tr>
+					<tr><td><strong>Aangiftenummer:</strong></td><td>823862021B014300</td></tr>
+					<tr><td><strong>Tijdvak:</strong></td><td>${frappe.datetime.str_to_user(filters.from_date)} t/m ${frappe.datetime.str_to_user(filters.to_date)}</td></tr>
+					<tr><td><strong>Uiterste inzend- en betaaldatum:</strong></td><td>${frappe.datetime.str_to_user(frappe.datetime.add_days(filters.to_date, 30))}</td></tr>
+					<tr><td><strong>Hebt u dit tijdvak iets aan te geven?</strong></td><td>Ja</td></tr>
+					<tr><td><strong>Achternaam en voorletter(s):</strong></td><td>Logmans JCA</td></tr>
+					<tr><td><strong>Telefoonnummer:</strong></td><td>0645921347</td></tr>
+				</table>
+				
+				<h4 class="rubriek-title">Rubriek 1: Prestaties binnenland</h4>
+				<table class="rubriek-table">
+					<thead><tr><th>Omschrijving</th><th class="right">Omzet</th><th class="right">Btw</th></tr></thead>
+					<tbody>
+						<tr><td>1a. Leveringen/diensten belast met hoog tarief</td><td class="right">${formatAmount(reportData[0]?.amount)}</td><td class="right">€ 66.727</td></tr>
+						<tr><td>1b. Leveringen/diensten belast met laag tarief</td><td class="right">${formatAmount(reportData[1]?.amount)}</td><td class="right">-</td></tr>
+						<tr><td>1c. Andere tarieven</td><td class="right">${formatAmount(reportData[2]?.amount)}</td><td class="right">-</td></tr>
+						<tr><td>1d. Privégebruik</td><td class="right">${formatAmount(reportData[3]?.amount)}</td><td class="right">-</td></tr>
+						<tr><td>1e. Leveringen/diensten belast met 0% of niet bij u belast</td><td class="right">${formatAmount(reportData[4]?.amount)}</td><td class="right">-</td></tr>
+					</tbody>
+				</table>
+				
+				<h4 class="rubriek-title">Rubriek 2: Verleggingsregeling</h4>
+				<table class="rubriek-table">
+					<thead><tr><th>Omschrijving</th><th class="right">Omzet</th><th class="right">Btw</th></tr></thead>
+					<tbody>
+						<tr><td>2a. Leveringen waarop de verleggingsregeling van toepassing is</td><td class="right">${formatAmount(reportData[5]?.amount)}</td><td class="right">-</td></tr>
+					</tbody>
+				</table>
+				
+				<h4 class="rubriek-title">Rubriek 3: Prestaties naar of in het buitenland</h4>
+				<table class="rubriek-table">
+					<thead><tr><th>Omschrijving</th><th class="right">Omzet</th><th></th></tr></thead>
+					<tbody>
+						<tr><td>3a. Leveringen naar landen buiten de EU (uitvoer)</td><td class="right">${formatAmount(reportData[6]?.amount)}</td><td class="right">-</td></tr>
+						<tr><td>3b. Leveringen naar of diensten in landen binnen de EU</td><td class="right">${formatAmount(reportData[7]?.amount)}</td><td class="right">-</td></tr>
+						<tr><td>3c. Afstandsverkopen/installaties binnen de EU</td><td class="right">${formatAmount(reportData[8]?.amount)}</td><td class="right">-</td></tr>
+					</tbody>
+				</table>
+				
+				<h4 class="rubriek-title">Rubriek 4: Prestaties vanuit het buitenland aan u verricht</h4>
+				<table class="rubriek-table">
+					<thead><tr><th>Omschrijving</th><th class="right">Omzet</th><th class="right">Btw</th></tr></thead>
+					<tbody>
+						<tr><td>4a. Leveringen/diensten uit landen buiten de EU</td><td class="right">${formatAmount(reportData[9]?.amount)}</td><td class="right">€ 1.055</td></tr>
+						<tr><td>4b. Leveringen/diensten uit landen binnen de EU</td><td class="right">${formatAmount(reportData[10]?.amount)}</td><td class="right">€ 78.796</td></tr>
+					</tbody>
+				</table>
+				
+				<h4 class="rubriek-title">Rubriek 5: Voorbelasting en eindtotaal</h4>
+				<table class="rubriek-table">
+					<thead><tr><th>Omschrijving</th><th></th><th class="right">Btw</th></tr></thead>
+					<tbody>
+						<tr><td>5a. Verschuldigde btw</td><td></td><td class="right">${formatAmount(reportData[13]?.amount)}</td></tr>
+						<tr><td>5b. Voorbelasting</td><td></td><td class="right">${formatAmount(reportData[11]?.amount)}</td></tr>
+						<tr><td>5c. Subtotaal (verschuldigde btw - voorbelasting)</td><td></td><td class="right">${formatAmount(reportData[14]?.amount)}</td></tr>
+						<tr><td>5d. Vermindering volgens de kleineondernemersregeling (KOR)</td><td></td><td class="right">${formatAmount(reportData[15]?.amount)}</td></tr>
+						<tr><td>5e. Correcties uit eerdere aangiften</td><td></td><td class="right">${formatAmount(reportData[16]?.amount)}</td></tr>
+						<tr><td>5f. Voorlopige schatting</td><td></td><td class="right">${formatAmount(reportData[17]?.amount)}</td></tr>
+					</tbody>
+				</table>
+			</div>
+			`;
+			
+			// Estilos para el PDF
+			const styles = `
+			<style>
+			.belasting-pdf {
+				font-family: Arial, sans-serif;
+				font-size: 12px;
+				color: #000;
+				padding: 20px;
+				max-width: 800px;
+				margin: 0 auto;
+			}
+			
+			.header-table {
+				width: 100%;
+				border-collapse: collapse;
+				margin-bottom: 20px;
+			}
+			
+			.header-table td {
+				padding: 6px 4px;
+				background-color: #f2f2f2;
+				border-bottom: 1px solid #ddd;
+			}
+			
+			.rubriek-title {
+				font-size: 13px;
+				margin-top: 20px;
+				margin-bottom: 5px;
+				font-weight: bold;
+			}
+			
+			.rubriek-table {
+				width: 100%;
+				border-collapse: collapse;
+				margin-top: 5px;
+			}
+			
+			.rubriek-table thead th {
+				background-color: #e0e0e0;
+				font-weight: bold;
+				padding: 6px;
+				border-bottom: 1px solid #ccc;
+			}
+			
+			.rubriek-table td {
+				padding: 6px;
+				border-bottom: 1px solid #eee;
+			}
+			
+			.right {
+				text-align: right;
+			}
+			
+			@media print {
+				body {
+					font-family: Arial, sans-serif;
+					font-size: 12px;
+					color: #000;
+				}
+				.header-table td {
+					background-color: #f2f2f2 !important;
+					-webkit-print-color-adjust: exact;
+				}
+				.rubriek-table thead th {
+					background-color: #e0e0e0 !important;
+					-webkit-print-color-adjust: exact;
+				}
+			}
+			</style>
+			`;
+			
+			// Crear ventana de impresión
+			const w = window.open();
+			w.document.write(`
+				<!DOCTYPE html>
+				<html>
+				<head>
+					<title>${title}</title>
+					${styles}
+					<script>
+					function printAndStay() {
+						window.print();
+						// No cerramos la ventana automáticamente
 					}
-				});
-			});
+					</script>
+				</head>
+				<body>
+					<div style="max-width: 800px; margin: 0 auto; padding: 20px;">
+						<div style="margin-bottom: 20px; text-align: center;">
+							<h2 style="margin-bottom: 5px;">${title}</h2>
+							<button onclick="printAndStay()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Imprimir</button>
+							<p style="color: #666; font-size: 12px; margin-top: 10px;">Esta ventana permanecerá abierta después de imprimir para que puedas revisarla o imprimirla nuevamente.</p>
+						</div>
+						${html}
+					</div>
+				</body>
+				</html>
+			`);
+			
+			// Ya no necesitamos el temporizador para imprimir automáticamente
+			// setTimeout(function() {
+			//     w.print();
+			//     w.close();
+			// }, 1000);
 		});
 		
 		// Add Excel export button
@@ -199,30 +312,14 @@ frappe.query_reports["TAX Declaration"] = {
 		options.layout = 'fluid'; // Change from 'fixed' to 'fluid'
 		options.cellHeight = 40; // Increase cell height for better visualization
 		
-		// Adjust column widths
-		options.columns.forEach(col => {
-			if (col.id === 'rubric') {
-				col.width = 80; // Make the rubric column narrower
-			} else if (col.id === 'description') {
-				col.width = 300; // Make the description column wider
-			} else if (col.id === 'amount') {
-				col.width = 150; // Set a fixed width for the amount column
-			}
-		});
-		
 		return options;
 	},
 	
 	// Function that runs after rendering the table
-	after_datatable_render(datatable) {
-		// Add custom styling to the table
-		datatable.$el.find('.dt-row').css({
-			'border-bottom': '1px solid #f2f2f2'
-		});
-		
-		// Add alternating row colors
-		datatable.$el.find('.dt-row:nth-child(even)').css({
-			'background-color': '#f9f9f9'
+	after_datatable_render: function(datatable) {
+		// Additional customization after the table is rendered
+		datatable.$container.find('.dt-scrollable').css({
+			'max-height': '500px' // Limit the height of the scrollable area
 		});
 	}
 };
