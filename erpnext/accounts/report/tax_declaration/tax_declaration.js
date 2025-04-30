@@ -229,6 +229,7 @@ frappe.query_reports["TAX Declaration"] = {
 				text-align: right;
 			}
 			
+			/* Ocultar elementos durante la impresión */
 			@media print {
 				body {
 					font-family: Arial, sans-serif;
@@ -243,43 +244,51 @@ frappe.query_reports["TAX Declaration"] = {
 					background-color: #e0e0e0 !important;
 					-webkit-print-color-adjust: exact;
 				}
+				.no-print {
+					display: none !important;
+				}
 			}
 			</style>
 			`;
 			
 			// Crear ventana de impresión
-			const w = window.open();
-			w.document.write(`
+			const w = window.open('', '_blank');
+			
+			// Contenido HTML para la ventana
+			const htmlContent = `
 				<!DOCTYPE html>
 				<html>
 				<head>
 					<title>${title}</title>
 					${styles}
-					<script>
-					function printAndStay() {
-						window.print();
-						// No cerramos la ventana automáticamente
-					}
-					</script>
 				</head>
 				<body>
 					<div style="max-width: 800px; margin: 0 auto; padding: 20px;">
-						<div style="margin-bottom: 20px; text-align: center;">
+						<div class="no-print" style="margin-bottom: 20px; text-align: center;">
 							<h2 style="margin-bottom: 5px;">${title}</h2>
-							<button onclick="printAndStay()" style="padding: 8px 15px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Imprimir</button>
-							<p style="color: #666; font-size: 12px; margin-top: 10px;">Esta ventana permanecerá abierta después de imprimir para que puedas revisarla o imprimirla nuevamente.</p>
+							<button id="printButton" style="padding: 8px 15px; background-color: black; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Print</button>
+							<p style="color: #666; font-size: 12px; margin-top: 10px;">This window will remain open after printing so you can review it or print it again.</p>
 						</div>
 						${html}
 					</div>
 				</body>
 				</html>
-			`);
+			`;
 			
-			// Ya no necesitamos el temporizador para imprimir automáticamente
-			// setTimeout(function() {
-			//     w.print();
-			//     w.close();
-			// }, 1000);
+			// Escribir el contenido en la ventana
+			w.document.open();
+			w.document.write(htmlContent);
+			w.document.close();
+			
+			// Agregar el evento de impresión después de que el documento esté completamente cargado
+			w.onload = function() {
+				const printButton = w.document.getElementById('printButton');
+				if (printButton) {
+					printButton.addEventListener('click', function() {
+						w.print();
+					});
+				}
+			};
 		});
 		
 		// Add Excel export button
