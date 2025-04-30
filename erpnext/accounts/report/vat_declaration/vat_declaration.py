@@ -66,9 +66,13 @@ def fetch_vat_data(filters):
         {"rubric": "3c", "description": _("Distance/installation sales within EU"), "amount": vat.distance_sales_EU},
         {"rubric": "4a", "description": _("Services from outside the EU"), "amount": vat.services_outside_EU},
         {"rubric": "4b", "description": _("Services from within the EU"), "amount": vat.services_EU},
-        {"rubric": "4", "description": _("Input VAT from purchases"), "amount": vat.input_tax},
+        {"rubric": "5b", "description": _("Input VAT from purchases"), "amount": vat.input_tax},
         {"rubric": "5a", "description": _("Total output VAT payable"), "amount": vat.output_tax_due},
-        {"rubric": "5c", "description": _("Subtotal (output VAT - input VAT)"), "amount": vat.net_payable_or_refundable}
+        {"rubric": "5c", "description": _("Subtotal (output VAT - input VAT)"), "amount": vat.net_payable_or_refundable},
+        {"rubric": "5d", "description": _("Small business scheme deduction (KOR)"), "amount": 0.0},
+        {"rubric": "5e", "description": _("Correction(s) from previous declarations"), "amount": 0.0},
+        {"rubric": "5f", "description": _("Estimated for this declaration"), "amount": 0.0},
+        {"rubric": "Total", "description": _("VAT Payable/Refundable"), "amount": vat.net_payable_or_refundable}
     ]
 
 def get_columns():
