@@ -951,6 +951,7 @@ def get_party_shipping_address(doctype: str, name: str) -> str | None:
 	else:
 		return None
 
+
 def get_partywise_advanced_payment_amount(
 	party_type, posting_date=None, future_payment=0, company=None, party=None
 ):
