@@ -741,6 +741,7 @@ class PurchaseInvoice(BuyingController):
 		super().on_submit()
 
 		self.check_prev_docstatus()
+		self.validate_over_billing()
 
 		if self.is_return and not self.update_billed_amount_in_purchase_order:
 			# NOTE status updating bypassed for is_return
@@ -1794,6 +1795,28 @@ class PurchaseInvoice(BuyingController):
 			update_billing_percentage(
 				pr_doc, update_modified=update_modified, adjust_incoming_rate=adjust_incoming_rate
 			)
+
+	def validate_over_billing(self):
+		if frappe.db.get_single_value("Buying Settings", "set_landed_cost_based_on_purchase_invoice_rate"):
+			return
+
+		over_billing_allowance = frappe.db.get_single_value("Accounts Settings", "over_billing_allowance")
+		pr_details_billed_amt = self.get_pr_details_billed_amt()
+
+		for d in self.get("items"):
+			if d.pr_detail:
+				amt_in_pr_item = frappe.get_value("Purchase Receipt Item", d.pr_detail, "amount")
+
+				if flt(pr_details_billed_amt.get(d.pr_detail)) > amt_in_pr_item:
+					per_over_billed = (
+						flt(flt(pr_details_billed_amt.get(d.pr_detail)) / amt_in_pr_item, 2) * 100
+					) - 100
+					if per_over_billed > over_billing_allowance:
+						frappe.throw(
+							_("Row #{0}: Over Billing Allowance exceeded for Item {1} by {2}%").format(
+								d.idx, frappe.bold(d.item_code), per_over_billed - over_billing_allowance
+							)
+						)
 
 	def get_pr_details_billed_amt(self):
 		# Get billed amount based on purchase receipt item reference (pr_detail) in purchase invoice
