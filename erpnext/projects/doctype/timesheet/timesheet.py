@@ -531,12 +531,16 @@ def get_timesheets_list(doctype, txt, filters, limit_start, limit_page_length=20
 			.offset(limit_start)
 		)
 
+		conditions = []
 		if sales_invoices:
-			query = query.where(
-				(table.sales_invoice.isin(sales_invoices)) | (child_table.sales_invoice.isin(sales_invoices))
+			conditions.extend(
+				[table.sales_invoice.isin(sales_invoices), child_table.sales_invoice.isin(sales_invoices)]
 			)
 		if projects:
-			query = query.where(child_table.project.isin(projects))
+			conditions.append(child_table.project.isin(projects))
+
+		if conditions:
+			query = query.where(frappe.qb.terms.Criterion.any(conditions))
 
 		return query.run(as_dict=True)
 	else:
