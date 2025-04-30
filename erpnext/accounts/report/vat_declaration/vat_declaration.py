@@ -15,69 +15,88 @@ def fetch_vat_data(filters):
     to_date = filters.get("to_date", "2100-12-31")
     company = filters.get("company", "")
 
-    query = """
+    sales_query = """
         SELECT
-            SUM(CASE WHEN si.tax_category LIKE CONCAT("%%", "21", "%%") THEN si.base_net_total ELSE 0 END) AS domestic_high_rate,
-            SUM(CASE WHEN si.tax_category LIKE CONCAT("%%", "9", "%%") THEN si.base_net_total ELSE 0 END) AS domestic_low_rate,
-            SUM(CASE WHEN si.tax_category LIKE CONCAT("%%", "tarief", "%%") 
-                     AND si.tax_category NOT LIKE CONCAT("%%", "0", "%%") 
-                     AND si.tax_category NOT LIKE CONCAT("%%", "21", "%%") 
-                     AND si.tax_category NOT LIKE CONCAT("%%", "9", "%%") 
-                 THEN si.base_net_total ELSE 0 END) AS domestic_other_rates,
-            SUM(CASE WHEN si.tax_category LIKE CONCAT("%%", "priv", "%%") OR si.remarks LIKE CONCAT("%%", "priv", "%%") THEN si.base_net_total ELSE 0 END) AS private_use,
-            SUM(CASE WHEN si.tax_category LIKE CONCAT("%%", "vrijgesteld", "%%") THEN si.base_net_total ELSE 0 END) AS exempt_sales,
-            SUM(CASE WHEN stc.description LIKE CONCAT("%%", "verlegd", "%%") OR stc.account_head LIKE CONCAT("%%", "verlegd", "%%") THEN stc.base_tax_amount ELSE 0 END) AS reverse_charge,
-            SUM(CASE WHEN si.incoterm IS NOT NULL AND si.incoterm LIKE CONCAT("%%", "export", "%%") THEN si.base_net_total ELSE 0 END) AS export_outside_EU,
-            SUM(CASE WHEN si.tax_category LIKE CONCAT("%%", "EU", "%%") AND si.base_net_total > 0 THEN si.base_net_total ELSE 0 END) AS intra_EU_sales,
-            SUM(CASE WHEN si.tax_category LIKE CONCAT("%%", "afstand", "%%") OR si.remarks LIKE CONCAT("%%", "installatie", "%%") THEN si.base_net_total ELSE 0 END) AS distance_sales_EU,
-            SUM(CASE WHEN pi.tax_category LIKE CONCAT("%%", "diensten", "%%") AND pi.tax_category LIKE CONCAT("%%", "buiten", "%%") THEN pi.base_net_total ELSE 0 END) AS services_outside_EU,
-            SUM(CASE WHEN pi.tax_category LIKE CONCAT("%%", "diensten", "%%") AND pi.tax_category LIKE CONCAT("%%", "EU", "%%") THEN pi.base_net_total ELSE 0 END) AS services_EU,
-            SUM(pi.base_total_taxes_and_charges) AS input_tax,
-            SUM(si.base_total_taxes_and_charges) AS output_tax_due,
-            SUM(si.base_total_taxes_and_charges) - SUM(pi.base_total_taxes_and_charges) AS net_payable_or_refundable
-        FROM `tabSales Invoice` si
-        LEFT JOIN `tabSales Taxes and Charges` stc ON stc.parent = si.name AND stc.parenttype = "Sales Invoice"
-        LEFT JOIN `tabPurchase Invoice` pi ON pi.posting_date BETWEEN %(from_date)s AND %(to_date)s
-        WHERE si.posting_date BETWEEN %(from_date)s AND %(to_date)s
-            AND si.docstatus = 1
-            AND (pi.docstatus = 1 OR pi.docstatus IS NULL)
-            AND si.company = %(company)s
+            SUM(CASE WHEN tax_category LIKE '%%21%%' THEN base_net_total ELSE 0 END) AS domestic_high_rate,
+            SUM(CASE WHEN tax_category LIKE '%%9%%' THEN base_net_total ELSE 0 END) AS domestic_low_rate,
+            SUM(CASE WHEN tax_category LIKE '%%0%%' THEN base_net_total ELSE 0 END) AS domestic_zero_rate,
+            SUM(CASE WHEN tax_category LIKE '%%tarief%%' AND tax_category NOT LIKE '%%0%%' AND tax_category NOT LIKE '%%21%%' AND tax_category NOT LIKE '%%9%%' THEN base_net_total ELSE 0 END) AS domestic_other_rates,
+            SUM(CASE WHEN tax_category LIKE '%%priv%%' OR remarks LIKE '%%priv%%' THEN base_net_total ELSE 0 END) AS private_use,
+            SUM(CASE WHEN tax_category LIKE '%%vrijgesteld%%' THEN base_net_total ELSE 0 END) AS exempt_sales,
+            SUM(base_total_taxes_and_charges) AS output_tax_due,
+            SUM(CASE WHEN tax_category LIKE '%%21%%' THEN base_total_taxes_and_charges ELSE 0 END) AS vat_21_sales,
+            SUM(CASE WHEN tax_category LIKE '%%9%%' THEN base_total_taxes_and_charges ELSE 0 END) AS vat_9_sales,
+            SUM(CASE WHEN tax_category LIKE '%%0%%' THEN base_total_taxes_and_charges ELSE 0 END) AS vat_0_sales,
+            SUM(CASE WHEN incoterm LIKE '%%export%%' THEN base_net_total ELSE 0 END) AS export_outside_EU,
+            SUM(CASE WHEN tax_category LIKE '%%EU%%' AND base_net_total > 0 THEN base_net_total ELSE 0 END) AS intra_EU_sales,
+            SUM(CASE WHEN tax_category LIKE '%%afstand%%' OR remarks LIKE '%%installatie%%' THEN base_net_total ELSE 0 END) AS distance_sales_EU
+        FROM `tabSales Invoice`
+        WHERE posting_date BETWEEN %(from_date)s AND %(to_date)s
+            AND docstatus = 1
+            AND company = %(company)s
     """
 
-    result = frappe.db.sql(query, {
-        "from_date": from_date,
-        "to_date": to_date,
-        "company": company
-    }, as_dict=True)
+    purchase_query = """
+        SELECT
+            SUM(CASE WHEN tax_category LIKE '%%diensten%%' AND tax_category LIKE '%%buiten%%' THEN base_net_total ELSE 0 END) AS services_outside_EU,
+            SUM(CASE WHEN tax_category LIKE '%%diensten%%' AND tax_category LIKE '%%EU%%' THEN base_net_total ELSE 0 END) AS services_EU,
+            SUM(base_total_taxes_and_charges) AS input_tax,
+            SUM(CASE WHEN tax_category LIKE '%%21%%' THEN base_total_taxes_and_charges ELSE 0 END) AS vat_21_purchases,
+            SUM(CASE WHEN tax_category LIKE '%%9%%' THEN base_total_taxes_and_charges ELSE 0 END) AS vat_9_purchases,
+            SUM(CASE WHEN tax_category LIKE '%%0%%' THEN base_total_taxes_and_charges ELSE 0 END) AS vat_0_purchases,
+            SUM(CASE WHEN tax_category LIKE '%%21%%' THEN base_net_total ELSE 0 END) AS base_21_purchases,
+            SUM(CASE WHEN tax_category LIKE '%%9%%' THEN base_net_total ELSE 0 END) AS base_9_purchases,
+            SUM(CASE WHEN tax_category LIKE '%%0%%' THEN base_net_total ELSE 0 END) AS base_0_purchases
+        FROM `tabPurchase Invoice`
+        WHERE posting_date BETWEEN %(from_date)s AND %(to_date)s
+            AND docstatus = 1
+            AND company = %(company)s
+    """
 
-    if not result or not result[0]:
-        return []
+    reverse_charge_query = """
+        SELECT SUM(base_tax_amount) AS reverse_charge
+        FROM `tabSales Taxes and Charges`
+        WHERE (description LIKE '%%verlegd%%' OR account_head LIKE '%%verlegd%%')
+            AND parenttype = 'Sales Invoice'
+            AND docstatus = 1
+    """
 
-    vat = result[0]
+    sales = frappe.db.sql(sales_query, filters, as_dict=True)[0]
+    purchases = frappe.db.sql(purchase_query, filters, as_dict=True)[0]
+    reverse_charge = frappe.db.sql(reverse_charge_query, filters, as_dict=True)[0].reverse_charge or 0.0
+
+    for key in sales:
+        if sales[key] is None:
+            sales[key] = 0.0
+
+    for key in purchases:
+        if purchases[key] is None:
+            purchases[key] = 0.0
+
     return [
-        {"rubric": "1a", "description": _("Domestic sales with high VAT rate (21%)"), "amount": vat.domestic_high_rate},
-        {"rubric": "1b", "description": _("Domestic sales with low VAT rate (9%)"), "amount": vat.domestic_low_rate},
-        {"rubric": "1c", "description": _("Other VAT rates"), "amount": vat.domestic_other_rates},
-        {"rubric": "1d", "description": _("Private use (privégebruik)"), "amount": vat.private_use},
-        {"rubric": "1e", "description": _("Sales at 0% or exempt (vrijgesteld)"), "amount": vat.exempt_sales},
-        {"rubric": "2a", "description": _("Domestic reverse charge (verlegd)"), "amount": vat.reverse_charge},
-        {"rubric": "3a", "description": _("Exports outside the EU"), "amount": vat.export_outside_EU},
-        {"rubric": "3b", "description": _("Intra-EU sales"), "amount": vat.intra_EU_sales},
-        {"rubric": "3c", "description": _("Distance/installation sales within EU"), "amount": vat.distance_sales_EU},
-        {"rubric": "4a", "description": _("Services from outside the EU"), "amount": vat.services_outside_EU},
-        {"rubric": "4b", "description": _("Services from within the EU"), "amount": vat.services_EU},
-        {"rubric": "5b", "description": _("Input VAT from purchases"), "amount": vat.input_tax},
-        {"rubric": "5a", "description": _("Total output VAT payable"), "amount": vat.output_tax_due},
-        {"rubric": "5c", "description": _("Subtotal (output VAT - input VAT)"), "amount": vat.net_payable_or_refundable},
-        {"rubric": "5d", "description": _("Small business scheme deduction (KOR)"), "amount": 0.0},
-        {"rubric": "5e", "description": _("Correction(s) from previous declarations"), "amount": 0.0},
-        {"rubric": "5f", "description": _("Estimated for this declaration"), "amount": 0.0},
-        {"rubric": "Total", "description": _("VAT Payable/Refundable"), "amount": vat.net_payable_or_refundable}
+        {"rubric": "1a", "description": _("1a. Leveringen binnenland hoog tarief"), "amount": sales.domestic_high_rate},
+        {"rubric": "1b", "description": _("1b. Leveringen binnenland laag tarief"), "amount": sales.domestic_low_rate},
+        {"rubric": "1c", "description": _("1c. Overige tarieven"), "amount": sales.domestic_other_rates},
+        {"rubric": "1d", "description": _("1d. Privégebruik"), "amount": sales.private_use},
+        {"rubric": "1e", "description": _("1e. Leveringen tegen 0% of vrijgesteld"), "amount": sales.exempt_sales},
+        {"rubric": "2a", "description": _("2a. Verleggingsregeling binnenland"), "amount": reverse_charge},
+        {"rubric": "3a", "description": _("3a. Export buiten de EU"), "amount": sales.export_outside_EU},
+        {"rubric": "3b", "description": _("3b. Leveringen binnen de EU"), "amount": sales.intra_EU_sales},
+        {"rubric": "3c", "description": _("3c. Afstandsverkopen binnen de EU"), "amount": sales.distance_sales_EU},
+        {"rubric": "4a", "description": _("4a. Diensten uit landen buiten de EU"), "amount": purchases.services_outside_EU},
+        {"rubric": "4b", "description": _("4b. Diensten uit EU-landen"), "amount": purchases.services_EU},
+        {"rubric": "5a", "description": _("5a. Verschuldigde omzetbelasting"), "amount": sales.output_tax_due},
+        {"rubric": "5b", "description": _("5b. Voorbelasting"), "amount": purchases.input_tax},
+        {"rubric": "5c", "description": _("5c. Subtotaal (5a - 5b)"), "amount": (sales.output_tax_due or 0.0) - (purchases.input_tax or 0.0)},
+        {"rubric": "5d", "description": _("5d. KOR vermindering"), "amount": 0.0},
+        {"rubric": "5e", "description": _("5e. Correctie vorige aangifte"), "amount": 0.0},
+        {"rubric": "5f", "description": _("5f. Schatting deze aangifte"), "amount": 0.0},
+        {"rubric": "Totaal", "description": _("Totaal te betalen of terug te vorderen"), "amount": (sales.output_tax_due or 0.0) - (purchases.input_tax or 0.0)}
     ]
 
 def get_columns():
     return [
-        {"fieldname": "rubric", "label": _("Rubric"), "fieldtype": "Data", "width": 80},
-        {"fieldname": "description", "label": _("Description"), "fieldtype": "Data", "width": 300},
-        {"fieldname": "amount", "label": _("Amount"), "fieldtype": "Currency", "width": 150}
+        {"fieldname": "rubric", "label": _("Rubriek"), "fieldtype": "Data", "width": 80},
+        {"fieldname": "description", "label": _("Omschrijving"), "fieldtype": "Data", "width": 300},
+        {"fieldname": "amount", "label": _("Bedrag"), "fieldtype": "Currency", "width": 150}
     ]
