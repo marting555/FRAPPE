@@ -398,11 +398,7 @@
   }
  ],
  "links": [],
-<<<<<<< HEAD
- "modified": "2024-10-18 17:51:39.108481",
-=======
  "modified": "2025-04-30 14:43:23.643006",
->>>>>>> 13a84e7f82 (fix: renaming group by fieldname and value in reports (#47352))
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Process Statement Of Accounts",
