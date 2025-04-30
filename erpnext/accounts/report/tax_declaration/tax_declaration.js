@@ -95,7 +95,7 @@ frappe.query_reports["TAX Declaration"] = {
 			const filters = report.get_values();
 			
 			// Create a title for the PDF
-			const title = __("TAX Declaration") + ": " + 
+			const title = __("Tax Declaration") + ": " + 
 				frappe.datetime.str_to_user(filters.from_date) + " - " + 
 				frappe.datetime.str_to_user(filters.to_date);
 			
@@ -199,25 +199,30 @@ frappe.query_reports["TAX Declaration"] = {
 		options.layout = 'fluid'; // Change from 'fixed' to 'fluid'
 		options.cellHeight = 40; // Increase cell height for better visualization
 		
-		// Ensure the table occupies all available width
-		options.dynamicRowHeight = false;
+		// Adjust column widths
+		options.columns.forEach(col => {
+			if (col.id === 'rubric') {
+				col.width = 80; // Make the rubric column narrower
+			} else if (col.id === 'description') {
+				col.width = 300; // Make the description column wider
+			} else if (col.id === 'amount') {
+				col.width = 150; // Set a fixed width for the amount column
+			}
+		});
 		
 		return options;
 	},
 	
 	// Function that runs after rendering the table
-	after_datatable_render: function(datatable) {
-		// Add any additional styling or functionality after table render
-		$('.dt-row').css('height', '40px');
+	after_datatable_render(datatable) {
+		// Add custom styling to the table
+		datatable.$el.find('.dt-row').css({
+			'border-bottom': '1px solid #f2f2f2'
+		});
 		
-		// Add special styling for the net payable/refundable row
-		datatable.rowmanager.getRows().forEach(function(row, i) {
-			if (datatable.datamanager.getRow(i).rubric === "5c") {
-				$(row).css({
-					'background-color': '#f9f9f9',
-					'font-weight': 'bold'
-				});
-			}
+		// Add alternating row colors
+		datatable.$el.find('.dt-row:nth-child(even)').css({
+			'background-color': '#f9f9f9'
 		});
 	}
 };
