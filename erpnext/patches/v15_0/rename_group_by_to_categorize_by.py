@@ -16,6 +16,5 @@ def execute():
 			END
 		WHERE
 			categorize_by IN ('Group by Voucher (Consolidated)', 'Group by Voucher')
-			AND docstatus < 2
 	"""
 	)
