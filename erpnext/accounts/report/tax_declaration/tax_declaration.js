@@ -108,29 +108,39 @@ frappe.query_reports["TAX Declaration"] = {
 				return frappe.format(amount, {fieldtype: 'Currency'});
 			}
 			
-			// Crear HTML directamente sin usar templates
+			// Función para obtener el valor BTW (impuesto) basado en el índice
+			function getBtw(idx) {
+				// Por defecto, devolver "-"
+				if (!reportData[idx] || reportData[idx].btw === undefined) return "-";
+				return formatAmount(reportData[idx].btw);
+			}
+			
+			// Obtener datos de la empresa desde los filtros
+			const company = filters.company || "";
+			
+			// Crear HTML directamente sin usar templates, pero respetando la estructura del HTML original
 			const html = `
 			<div class="belasting-pdf">
 				<table class="header-table">
-					<tr><td><strong>Naam:</strong></td><td>${filters.company || "FISCALE EENHEID R.M. LOGMANS BEHEER B.V. EN TVS ENGINEERING B.V. C.S."}</td></tr>
-					<tr><td><strong>RSIN/fiscaalnummer/BSN:</strong></td><td>823862021</td></tr>
-					<tr><td><strong>Aangiftenummer:</strong></td><td>823862021B014300</td></tr>
+					<tr><td><strong>Naam:</strong></td><td>${company}</td></tr>
+					<tr><td><strong>RSIN/fiscaalnummer/BSN:</strong></td><td>${frappe.boot.sysdefaults.rsin || "823862021"}</td></tr>
+					<tr><td><strong>Aangiftenummer:</strong></td><td>${frappe.boot.sysdefaults.aangiftenummer || "823862021B014300"}</td></tr>
 					<tr><td><strong>Tijdvak:</strong></td><td>${frappe.datetime.str_to_user(filters.from_date)} t/m ${frappe.datetime.str_to_user(filters.to_date)}</td></tr>
 					<tr><td><strong>Uiterste inzend- en betaaldatum:</strong></td><td>${frappe.datetime.str_to_user(frappe.datetime.add_days(filters.to_date, 30))}</td></tr>
 					<tr><td><strong>Hebt u dit tijdvak iets aan te geven?</strong></td><td>Ja</td></tr>
-					<tr><td><strong>Achternaam en voorletter(s):</strong></td><td>Logmans JCA</td></tr>
-					<tr><td><strong>Telefoonnummer:</strong></td><td>0645921347</td></tr>
+					<tr><td><strong>Achternaam en voorletter(s):</strong></td><td>${frappe.boot.sysdefaults.contact_name || "Logmans JCA"}</td></tr>
+					<tr><td><strong>Telefoonnummer:</strong></td><td>${frappe.boot.sysdefaults.phone || "0645921347"}</td></tr>
 				</table>
 				
 				<h4 class="rubriek-title">Rubriek 1: Prestaties binnenland</h4>
 				<table class="rubriek-table">
 					<thead><tr><th>Omschrijving</th><th class="right">Omzet</th><th class="right">Btw</th></tr></thead>
 					<tbody>
-						<tr><td>1a. Leveringen/diensten belast met hoog tarief</td><td class="right">${formatAmount(reportData[0]?.amount)}</td><td class="right">€ 66.727</td></tr>
-						<tr><td>1b. Leveringen/diensten belast met laag tarief</td><td class="right">${formatAmount(reportData[1]?.amount)}</td><td class="right">-</td></tr>
-						<tr><td>1c. Andere tarieven</td><td class="right">${formatAmount(reportData[2]?.amount)}</td><td class="right">-</td></tr>
-						<tr><td>1d. Privégebruik</td><td class="right">${formatAmount(reportData[3]?.amount)}</td><td class="right">-</td></tr>
-						<tr><td>1e. Leveringen/diensten belast met 0% of niet bij u belast</td><td class="right">${formatAmount(reportData[4]?.amount)}</td><td class="right">-</td></tr>
+						<tr><td>${reportData[0]?.description || "1a. Leveringen/diensten belast met hoog tarief"}</td><td class="right">${formatAmount(reportData[0]?.amount)}</td><td class="right">${getBtw(0)}</td></tr>
+						<tr><td>${reportData[1]?.description || "1b. Leveringen/diensten belast met laag tarief"}</td><td class="right">${formatAmount(reportData[1]?.amount)}</td><td class="right">${getBtw(1)}</td></tr>
+						<tr><td>${reportData[2]?.description || "1c. Andere tarieven"}</td><td class="right">${formatAmount(reportData[2]?.amount)}</td><td class="right">${getBtw(2)}</td></tr>
+						<tr><td>${reportData[3]?.description || "1d. Privégebruik"}</td><td class="right">${formatAmount(reportData[3]?.amount)}</td><td class="right">${getBtw(3)}</td></tr>
+						<tr><td>${reportData[4]?.description || "1e. Leveringen/diensten belast met 0% of niet bij u belast"}</td><td class="right">${formatAmount(reportData[4]?.amount)}</td><td class="right">${getBtw(4)}</td></tr>
 					</tbody>
 				</table>
 				
@@ -138,17 +148,17 @@ frappe.query_reports["TAX Declaration"] = {
 				<table class="rubriek-table">
 					<thead><tr><th>Omschrijving</th><th class="right">Omzet</th><th class="right">Btw</th></tr></thead>
 					<tbody>
-						<tr><td>2a. Leveringen waarop de verleggingsregeling van toepassing is</td><td class="right">${formatAmount(reportData[5]?.amount)}</td><td class="right">-</td></tr>
+						<tr><td>${reportData[5]?.description || "2a. Leveringen waarop de verleggingsregeling van toepassing is"}</td><td class="right">${formatAmount(reportData[5]?.amount)}</td><td class="right">${getBtw(5)}</td></tr>
 					</tbody>
 				</table>
 				
 				<h4 class="rubriek-title">Rubriek 3: Prestaties naar of in het buitenland</h4>
 				<table class="rubriek-table">
-					<thead><tr><th>Omschrijving</th><th class="right">Omzet</th><th></th></tr></thead>
+					<thead><tr><th>Omschrijving</th><th class="right">Omzet</th><th class="right">Btw</th></tr></thead>
 					<tbody>
-						<tr><td>3a. Leveringen naar landen buiten de EU (uitvoer)</td><td class="right">${formatAmount(reportData[6]?.amount)}</td><td class="right">-</td></tr>
-						<tr><td>3b. Leveringen naar of diensten in landen binnen de EU</td><td class="right">${formatAmount(reportData[7]?.amount)}</td><td class="right">-</td></tr>
-						<tr><td>3c. Afstandsverkopen/installaties binnen de EU</td><td class="right">${formatAmount(reportData[8]?.amount)}</td><td class="right">-</td></tr>
+						<tr><td>${reportData[6]?.description || "3a. Leveringen naar landen buiten de EU (uitvoer)"}</td><td class="right">${formatAmount(reportData[6]?.amount)}</td><td class="right">${getBtw(6)}</td></tr>
+						<tr><td>${reportData[7]?.description || "3b. Leveringen naar of diensten in landen binnen de EU"}</td><td class="right">${formatAmount(reportData[7]?.amount)}</td><td class="right">${getBtw(7)}</td></tr>
+						<tr><td>${reportData[8]?.description || "3c. Afstandsverkopen/installaties binnen de EU"}</td><td class="right">${formatAmount(reportData[8]?.amount)}</td><td class="right">${getBtw(8)}</td></tr>
 					</tbody>
 				</table>
 				
@@ -156,8 +166,8 @@ frappe.query_reports["TAX Declaration"] = {
 				<table class="rubriek-table">
 					<thead><tr><th>Omschrijving</th><th class="right">Omzet</th><th class="right">Btw</th></tr></thead>
 					<tbody>
-						<tr><td>4a. Leveringen/diensten uit landen buiten de EU</td><td class="right">${formatAmount(reportData[9]?.amount)}</td><td class="right">€ 1.055</td></tr>
-						<tr><td>4b. Leveringen/diensten uit landen binnen de EU</td><td class="right">${formatAmount(reportData[10]?.amount)}</td><td class="right">€ 78.796</td></tr>
+						<tr><td>${reportData[9]?.description || "4a. Leveringen/diensten uit landen buiten de EU"}</td><td class="right">${formatAmount(reportData[9]?.amount)}</td><td class="right">${getBtw(9)}</td></tr>
+						<tr><td>${reportData[10]?.description || "4b. Leveringen/diensten uit landen binnen de EU"}</td><td class="right">${formatAmount(reportData[10]?.amount)}</td><td class="right">${getBtw(10)}</td></tr>
 					</tbody>
 				</table>
 				
@@ -165,12 +175,12 @@ frappe.query_reports["TAX Declaration"] = {
 				<table class="rubriek-table">
 					<thead><tr><th>Omschrijving</th><th></th><th class="right">Btw</th></tr></thead>
 					<tbody>
-						<tr><td>5a. Verschuldigde btw</td><td></td><td class="right">${formatAmount(reportData[13]?.amount)}</td></tr>
-						<tr><td>5b. Voorbelasting</td><td></td><td class="right">${formatAmount(reportData[11]?.amount)}</td></tr>
-						<tr><td>5c. Subtotaal (verschuldigde btw - voorbelasting)</td><td></td><td class="right">${formatAmount(reportData[14]?.amount)}</td></tr>
-						<tr><td>5d. Vermindering volgens de kleineondernemersregeling (KOR)</td><td></td><td class="right">${formatAmount(reportData[15]?.amount)}</td></tr>
-						<tr><td>5e. Correcties uit eerdere aangiften</td><td></td><td class="right">${formatAmount(reportData[16]?.amount)}</td></tr>
-						<tr><td>5f. Voorlopige schatting</td><td></td><td class="right">${formatAmount(reportData[17]?.amount)}</td></tr>
+						<tr><td>${reportData[12]?.description || "5a. Verschuldigde btw"}</td><td></td><td class="right">${formatAmount(reportData[12]?.amount)}</td></tr>
+						<tr><td>${reportData[11]?.description || "5b. Voorbelasting"}</td><td></td><td class="right">${formatAmount(reportData[11]?.amount)}</td></tr>
+						<tr><td>${reportData[13]?.description || "5c. Subtotaal (verschuldigde btw - voorbelasting)"}</td><td></td><td class="right">${formatAmount(reportData[13]?.amount)}</td></tr>
+						<tr><td>${reportData[14]?.description || "5d. Vermindering volgens de kleineondernemersregeling (KOR)"}</td><td></td><td class="right">${formatAmount(reportData[14]?.amount)}</td></tr>
+						<tr><td>${reportData[15]?.description || "5e. Correcties uit eerdere aangiften"}</td><td></td><td class="right">${formatAmount(reportData[15]?.amount)}</td></tr>
+						<tr><td>${reportData[16]?.description || "5f. Voorlopige schatting"}</td><td></td><td class="right">${formatAmount(reportData[16]?.amount)}</td></tr>
 					</tbody>
 				</table>
 			</div>
