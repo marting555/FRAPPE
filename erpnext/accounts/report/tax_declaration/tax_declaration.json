@@ -11,14 +11,14 @@
  "is_standard": "Yes",
  "letter_head": "TVS",
  "letterhead": null,
- "modified": "2025-04-30 18:12:58.852315",
+ "modified": "2025-05-01 17:16:30.899101",
  "modified_by": "Administrator",
  "module": "Accounts",
- "name": "Tax Declaration",
+ "name": "TAX Declaration",
  "owner": "Administrator",
  "prepared_report": 0,
- "ref_doctype": "Sales Invoice",
- "report_name": "Tax Declaration",
+ "ref_doctype": "Report",
+ "report_name": "TAX Declaration",
  "report_type": "Script Report",
  "roles": [
   {
