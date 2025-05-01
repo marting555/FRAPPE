@@ -574,6 +574,8 @@ def get_result_as_list(data, filters):
 
 		d["account_currency"] = filters.account_currency
 
+		d["presentation_currency"] = filters.presentation_currency
+
 	return data
 
 
@@ -621,19 +623,22 @@ def get_columns(filters):
 		{
 			"label": _("Debit ({0})").format(currency),
 			"fieldname": "debit",
-			"fieldtype": "Float",
+			"fieldtype": "Currency",
+			"options": "presentation_currency",
 			"width": 130,
 		},
 		{
 			"label": _("Credit ({0})").format(currency),
 			"fieldname": "credit",
-			"fieldtype": "Float",
+			"fieldtype": "Currency",
+			"options": "presentation_currency",
 			"width": 130,
 		},
 		{
 			"label": _("Balance ({0})").format(currency),
 			"fieldname": "balance",
-			"fieldtype": "Float",
+			"fieldtype": "Currency",
+			"options": "presentation_currency",
 			"width": 130,
 		},
 	]
