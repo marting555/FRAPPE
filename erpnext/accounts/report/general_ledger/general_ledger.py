@@ -602,7 +602,7 @@ def get_columns(filters):
 		currency = filters["presentation_currency"]
 	else:
 		company = filters.get("company") or get_default_company()
-		currency = get_company_currency(company)
+		filters["presentation_currency"] = currency = get_company_currency(company)
 
 	columns = [
 		{
