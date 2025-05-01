@@ -1544,8 +1544,10 @@ class SalesInvoice(SellingController):
 		return self._enable_discount_accounting
 
 	def set_asset_status(self, asset):
-		if self.is_return:
+		if self.is_return and not self.docstatus == 2:
 			asset.set_status()
+		elif self.is_return and self.docstatus == 2:
+			asset.set_status("Sold")
 		else:
 			asset.set_status("Sold" if self.docstatus == 1 else None)
 
