@@ -348,6 +348,7 @@ frappe.ui.form.on('Stock Entry', {
 		}
 	},
 
+<<<<<<< HEAD
 	get_items_from_transit_entry: function(frm) {
 		if (frm.doc.docstatus===0) {
 			frm.add_custom_button(__('Transit Entry'), function() {
@@ -367,6 +368,34 @@ frappe.ui.form.on('Stock Entry', {
 					}
 				})
 			}, __("Get Items From"));
+=======
+	get_items_from_transit_entry: function (frm) {
+		if (frm.doc.docstatus === 0) {
+			frm.add_custom_button(
+				__("Transit Entry"),
+				function () {
+					erpnext.utils.map_current_doc({
+						method: "erpnext.stock.doctype.stock_entry.stock_entry.make_stock_in_entry",
+						source_doctype: "Stock Entry",
+						target: frm,
+						date_field: "posting_date",
+						read_only_setters: ["stock_entry_type", "purpose", "add_to_transit"],
+						setters: {
+							stock_entry_type: "Material Transfer",
+							purpose: "Material Transfer",
+							add_to_transit: 1,
+						},
+						get_query_filters: {
+							docstatus: 1,
+							purpose: "Material Transfer",
+							add_to_transit: 1,
+							per_transferred: ["<", 100],
+						},
+					});
+				},
+				__("Get Items From")
+			);
+>>>>>>> 97db9da10e (fix: completed transactions showing in the list (#47374))
 		}
 	},
 
