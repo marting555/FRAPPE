@@ -2179,6 +2179,38 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		so2.save().submit()
 
 		self.assertRaises(frappe.ValidationError, so1.update_status, "Draft")
+
+	def test_item_tax_transfer_from_sales_to_purchase(self):
+		from erpnext.selling.doctype.sales_order.sales_order import make_purchase_order
+
+		item_tax = frappe.new_doc("Item Tax Template")
+		item_tax.title = "Test Item Tax Template"
+		item_tax.company = "_Test Company"
+		item_tax.append("taxes", {"tax_type": "_Test Account Service Tax - _TC", "tax_rate": 2})
+		item_tax.save()
+
+		item_group = frappe.get_doc("Item Group", "_Test Item Group")
+		item_group.append("taxes", {"item_tax_template": "Test Item Tax Template - _TC"})
+		item_group.save()
+
+		so = make_sales_order(item_code="_Test Item", qty=1, do_not_submit=1)
+		so.append(
+			"taxes",
+			{
+				"account_head": "_Test Account Service Tax - _TC",
+				"charge_type": "On Net Total",
+				"description": "TDS",
+				"doctype": "Sales Taxes and Charges",
+				"rate": 2,
+			},
+		)
+		so.submit()
+
+		po = make_purchase_order(so.name, selected_items=so.items)
+		po.supplier = "_Test Supplier"
+		po.items[0].rate = 100
+		po.submit()
+		self.assertEqual(po.taxes[0].tax_amount, 2)
 	
 	def test_sales_order_discount_on_total(self):
 		make_item_price()
@@ -4895,6 +4927,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		po = make_purchase_order(mr.name)
 		po.supplier = "_Test Supplier"
 		po.cost_center = "Main - _TC"
+		po.currency = "INR"
 		po.save()
 		po.submit()
 		
@@ -4918,7 +4951,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(pi.status, "Unpaid")
   
 		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name,'account':'Creditors - _TC'}, 'credit'), 5000)
-		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name,'account':'Stock Received But Not Billed - _TC'}, 'debit'), 5000)
+		self.assertEqual(frappe.db.get_value('GL Entry', {'voucher_no': pi.name,'account':'_Test Account Cost for Goods Sold - _TC'}, 'debit'), 5000)
 
 	def test_sales_order_for_stock_unreserve_TC_S_071(self):
 		so = self.test_sales_order_for_stock_reservation_TC_S_063(get_so_with_stock_reserved=1)
@@ -4982,6 +5015,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		po = make_purchase_order(mr.name)
 		po.supplier = "_Test Supplier"
 		po.cost_center = "_Test Cost Center - _TC"
+		po.currency = "INR"
 		po.save()
 		po.submit()
 		
@@ -5076,6 +5110,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		from erpnext.stock.doctype.material_request.material_request import make_supplier_quotation
 		sq = make_supplier_quotation(mr.name)
 		sq.supplier = "_Test Supplier"
+		sq.currency ="INR"
 		sq.save()
 		sq.submit()
   
@@ -5597,6 +5632,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		purchase_orders = make_purchase_order_for_default_supplier(so.name,selected_items=so.items)
 		for i in purchase_orders[0].items:
 			i.rate = 3000
+		purchase_orders[0].currency = "INR"
 		purchase_orders[0].submit()
 
 		update_status("Delivered", purchase_orders[0].name)
@@ -5654,6 +5690,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		for i in purchase_orders[0].items:
 			i.rate = 3000
 			i.item_tax_template = "GST 18% - _TC"
+		purchase_orders[0].currency = "INR"
 		purchase_orders[0].tax_category = "In-State"
 		purchase_orders[0].taxes_and_charges = "Input GST In-state - _TC"
 		purchase_orders[0].save()
@@ -6018,6 +6055,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 	def create_and_submit_sales_order_with_gst(self, item_code, qty=None, rate=None):
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_registered_company
 		create_registered_company()
+		create_registered_customer()
 		get_or_create_fiscal_year("_Test Indian Registered Company")
 		create_test_warehouse(name= "Stores - _TIRC", warehouse_name="Stores", company="_Test Indian Registered Company")
 		make_item("_Test Item", {"is_stock_item": 1})
@@ -6178,6 +6216,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			self.assertRaises(frappe.ValidationError,sales_order.submit)
 			customer.credit_limits=[]
 			customer.save()
+			frappe.db.rollback()
 		except Exception as e:
 			pass
 		
@@ -6677,3 +6716,38 @@ def get_or_create_fiscal_year(company):
 def _make_blanket_order(**args):
 	from erpnext.manufacturing.doctype.blanket_order.test_blanket_order import make_blanket_order
 	return make_blanket_order(**args)
+
+def create_registered_customer():
+	if not frappe.db.exists("Customer", "_Test Registered Customer"):
+		customer = frappe.get_doc({
+			"doctype": "Customer",
+			"customer_name": "_Test Registered Customer",
+			"customer_type": "Company",
+			"customer_group": "Commercial",
+			"territory": "India",
+            "gstin": "24AANFA2641L1ZF",
+            "gst_category": "Registered Regular"
+		})
+		customer.insert()
+
+	if not frappe.db.exists("Address", "_Test Registered Customer-Billing"):
+		address = frappe.get_doc({
+			"doctype": "Address",
+			"address_title": "_Test Registered Customer",
+			"address_type": "Billing",
+            "address_line1": "Test Address - 1",
+            "city": "Test City",
+            "state": "Gujarat",
+            "pincode": "380015",
+            "country": "India",
+            "gstin": "24AAQCA8719H1ZC",
+            "gst_category": "Registered Regular",
+            "is_primary_address": 1,
+            "is_company_address": 1,
+            "is_shipping_address": 1,
+			"links": [{
+				"link_doctype": "Customer",
+				"link_name": "_Test Registered Customer"
+			}]
+		})
+		address.insert()

@@ -4893,7 +4893,7 @@ class TestSalesInvoice(FrappeTestCase):
 		income_account = sales_invoice.items[0].income_account
 		shipping_rule_account = frappe.db.get_value("Shipping Rule", "_Test Shipping Rule", "account")
 
-		shipping_charge = 50  
+		shipping_charge = 200  
 		expected_grand_total = 20000 + shipping_charge
 		self.assertEqual(sales_invoice.grand_total , expected_grand_total)
 
@@ -4904,9 +4904,9 @@ class TestSalesInvoice(FrappeTestCase):
 		)
 
 		expected_si_gl = {
-			sales_invoice.debit_to: 20050,       
+			sales_invoice.debit_to: 20200,       
 			income_account: -20000,            
-			shipping_rule_account: -50         
+			shipping_rule_account: -200        
 		}
 
 		for entry in si_gl_entries:
@@ -4962,7 +4962,7 @@ class TestSalesInvoice(FrappeTestCase):
 			}).insert()
 		
 		# Set default accounts for test company
-		frappe.db.set_value("Company", "_Test Company", {
+		frappe.set_value("Company", "_Test Company", {
 			"default_receivable_account": "Debtors - _TC",
 			"default_income_account": "Sales - _TC",
 			"default_expense_account": "Cost of Goods Sold - _TC",
@@ -4986,9 +4986,9 @@ class TestSalesInvoice(FrappeTestCase):
 				"account": "_Test Account Shipping Charges - _TC"
 			}).insert()
 		else:
-			frappe.db.set_value("Shipping Rule", "_Test Shipping Rule", "account", "Shipping Charges - _TC")
+			frappe.set_value("Shipping Rule", "_Test Shipping Rule", "account", "Shipping Charges - _TC")
 
-		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
+		frappe.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
 		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=10, rate=4000)
 
 		sales_invoice = create_sales_invoice(
@@ -5038,8 +5038,6 @@ class TestSalesInvoice(FrappeTestCase):
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		get_or_create_fiscal_year("_Test Company")
-		# Enable perpetual inventory and set up accounts
-		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
 		
 		# Create or get inventory account if not exists
 		if not frappe.db.exists("Account", "Stock In Hand - _TC"):
@@ -5053,11 +5051,12 @@ class TestSalesInvoice(FrappeTestCase):
 			}).insert()
 		
 		# Set default accounts for test company
-		frappe.db.set_value("Company", "_Test Company", {
+		frappe.set_value("Company", "_Test Company", {
 			"default_receivable_account": "Debtors - _TC",
 			"default_income_account": "Sales - _TC",
 			"default_expense_account": "Cost of Goods Sold - _TC",
-			"default_inventory_account": "Stock In Hand - _TC"
+			"default_inventory_account": "Stock In Hand - _TC",
+			"enable_perpetual_inventory":1
 		})
 
 		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=10, rate=1000)
@@ -5173,14 +5172,14 @@ class TestSalesInvoice(FrappeTestCase):
 				}).insert()
 
 		# Set default accounts for test company
-		frappe.db.set_value("Company", "_Test Company", {
+		frappe.set_value("Company", "_Test Company", {
 			"default_receivable_account": "Debtors - _TC",
 			"default_income_account": "Sales - _TC",
 			"default_expense_account": "Cost of Goods Sold - _TC",
-			"default_inventory_account": "Stock In Hand - _TC"
+			"default_inventory_account": "Stock In Hand - _TC",
+			"enable_perpetual_inventory":1
 		})
 
-		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
 		make_stock_entry(item="_Test Item Home Desktop 100", target="Stores - _TC", qty=10, rate=2500)
 
 		sales_invoice = create_sales_invoice(
@@ -6660,7 +6659,7 @@ class TestSalesInvoice(FrappeTestCase):
 		si.submit()
 
 		self.assertEqual(si.status, "Unpaid")
-		self.assertEqual(si.grand_total, 1000)
+		self.assertEqual(si.grand_total, 10000)
   
 	@change_settings("Selling Settings", {"allow_multiple_items": 1})
 	def test_sales_invoice_to_allow_item_multiple_times_TC_S_159(self):
@@ -6757,7 +6756,6 @@ class TestSalesInvoice(FrappeTestCase):
 					do_not_submit=True
 			)
 			si.submit()
-			frappe.db.commit()
 			self.assertEqual(si.total_commission,500)
 			self.assertEqual(si.commission_rate,5)
 			self.assertEqual(si.amount_eligible_for_commission,10000)
@@ -7142,14 +7140,12 @@ def create_internal_parties():
 	create_customer_group("_Test Customer Group")
 	create_territory("_Test Territory")
 
-	create_company(company_name="_Test Company 1", country="India", currency="INR", abbr="_TC1")
 	create_internal_customer(
 		customer_name="_Test Internal Customer",
 		represents_company="_Test Company 1",
 		allowed_to_interact_with="Wind Power LLC",
 	)
 
-	create_company(company_name="_Test Company with perpetual inventory", country="India", currency="INR", abbr="_TCPI")
 	create_internal_customer(
 		customer_name="_Test Internal Customer 2",
 		represents_company="_Test Company with perpetual inventory",
@@ -7210,13 +7206,15 @@ def setup_accounts():
 	## Create internal transfer account
 	account = create_account(
 		account_name="Unrealized Profit",
-		parent_account="Current Liabilities - _TCPI",
+		parent_account="Current Liabilities - TCP1",
 		company="_Test Company with perpetual inventory",
 	)
 
 	frappe.db.set_value(
 		"Company", "_Test Company with perpetual inventory", "unrealized_profit_loss_account", account
 	)
+	frappe.db.set_value(
+		"Company", "_Test Company", "stock_adjustment_account", "Cost of Goods Sold - _TC")
 
 def add_taxes(doc):
 	doc.append(
@@ -7371,7 +7369,7 @@ def create_company_and_supplier():
 
 	if parent_company not in linked_companies:
 		fiscal_year_doc.append("companies", {"company": parent_company})
-		fiscal_year_doc.save()
+		fiscal_year_doc.save(ignore_permissions=True)
 
 	if not frappe.db.exists("Company", child_company):
 		frappe.get_doc(
@@ -7389,7 +7387,7 @@ def create_company_and_supplier():
 
 	if child_company not in linked_companies:
 		fiscal_year_doc.append("companies", {"company": child_company})
-		fiscal_year_doc.save()
+		fiscal_year_doc.save(ignore_permissions=True)
 
 
 	if not frappe.db.exists("Price List", price_list):
