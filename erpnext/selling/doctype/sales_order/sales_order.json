@@ -181,6 +181,8 @@
   "campaign",
   "party_account_currency",
   "payment_schedule_section",
+  "thanh_to\u00e1n_section",
+  "table_xqiw",
   "payment_terms_section",
   "payment_terms_template",
   "payment_schedule",
@@ -1642,7 +1644,8 @@
   {
    "fieldname": "payment_terms_section",
    "fieldtype": "Section Break",
-   "label": "Thanh To\u00e1n"
+   "hidden": 1,
+   "label": "C\u00e1c K\u1ef3 Thanh To\u00e1n"
   },
   {
    "fieldname": "column_break_116",
@@ -1878,13 +1881,23 @@
    "fieldname": "source_name",
    "fieldtype": "Data",
    "label": "T\u00ean Ngu\u1ed3n \u0110\u01a1n H\u00e0ng"
+  },
+  {
+   "fieldname": "thanh_to\u00e1n_section",
+   "fieldtype": "Section Break",
+   "label": "Thanh To\u00e1n"
+  },
+  {
+   "fieldname": "table_xqiw",
+   "fieldtype": "Table",
+   "options": "Sales Order Payment Record"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-04-26 16:23:54.438624",
+ "modified": "2025-05-04 19:43:10.419690",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
