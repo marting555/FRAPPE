@@ -14,12 +14,9 @@
   "column_break0",
   "title",
   "naming_series",
-  "customer",
-  "customer_name",
   "tax_id",
   "column_break1",
   "order_type",
-  "transaction_date",
   "skip_delivery_note",
   "delivery_date",
   "po_no",
@@ -27,15 +24,14 @@
   "company",
   "amended_from",
   "section_break_uceh",
+  "customer_name",
+  "transaction_date",
   "column_break_7",
   "order_number",
-  "confirmed_status",
   "cancelled_status",
-  "cancelled_date",
   "column_break_dqxa",
   "financial_status",
   "fulfillment_status",
-  "assigned_location_at",
   "accounting_dimensions_section",
   "cost_center",
   "dimension_col_break",
@@ -61,16 +57,22 @@
   "coupon_code",
   "column_break_50",
   "additional_discount_percentage",
-  "discount_amount",
   "section_break_31",
+  "column_break_33a",
+  "promotions",
+  "product_category",
+  "column_break_bscz",
   "total_qty",
-  "total_net_weight",
+  "total",
+  "discount_amount",
+  "grand_total",
+  "section_break_ownx",
   "column_break_33",
   "base_total",
   "base_net_total",
-  "column_break_33a",
-  "total",
+  "total_net_weight",
   "net_total",
+  "column_break_wwye",
   "taxes_section",
   "tax_category",
   "taxes_and_charges",
@@ -91,14 +93,11 @@
   "base_rounded_total",
   "base_in_words",
   "column_break3",
-  "grand_total",
   "rounding_adjustment",
   "rounded_total",
   "in_words",
   "advance_paid",
   "disable_rounded_total",
-  "ch\u01b0\u01a1ng_tr\u00ecnh_khuy\u1ebfn_m\u00e3i_\u0111\u01a1n_h\u00e0ng_section",
-  "promotions",
   "sec_tax_breakup",
   "other_charges_calculation",
   "packing_list",
@@ -106,35 +105,43 @@
   "pricing_rule_details",
   "pricing_rules",
   "contact_info",
-  "billing_address_column",
-  "customer_address",
-  "address_display",
-  "customer_group",
-  "territory",
-  "column_break_84",
+  "address_contact_section",
+  "th\u00f4ng_tin_li\u00ean_h\u1ec7",
   "contact_person",
   "contact_display",
   "contact_phone",
   "contact_mobile",
   "contact_email",
-  "shipping_address_column",
+  "invoice_location",
+  "invoice_date",
+  "column_break_biok",
+  "\u0111\u1ecba_ch\u1ec9_m\u1eb7c_\u0111\u1ecbnh",
+  "customer_address",
+  "address_display",
+  "customer_group",
+  "territory",
+  "\u0111\u1ecba_ch\u1ec9_giao_h\u00e0ng",
   "shipping_address_name",
   "shipping_address",
+  "shipping_address_column",
+  "column_break_xnxx",
   "column_break_93",
   "dispatch_address_name",
   "dispatch_address",
+  "th\u00f4ng_tin_c\u00e1_nh\u00e2n_section",
+  "customer",
+  "birth_date",
+  "gender",
+  "column_break_xpik",
+  "customer_personal_id",
+  "place_of_issuance",
+  "date_of_issuance",
   "col_break46",
   "company_address",
   "company_address_display",
   "column_break_92",
   "company_contact_person",
   "more_info",
-  "th\u00f4ng_tin_ho\u00e1_\u0111\u01a1n_section",
-  "invoice_location",
-  "product_category",
-  "column_break_quav",
-  "invoice_date",
-  "expected_delivery_date",
   "section_break_78",
   "status",
   "delivery_status",
@@ -186,10 +193,7 @@
   "haravan_tab",
   "haravan_order_id",
   "haravan_ref_order_id",
-  "creator_id",
-  "reorder_date",
   "column_break_phue",
-  "haravan_order_link",
   "haravan_created_at",
   "source_name",
   "connections_tab"
@@ -261,7 +265,7 @@
    "hide_days": 1,
    "hide_seconds": 1,
    "in_global_search": 1,
-   "label": "Customer Name",
+   "label": "H\u1ecd T\u00ean Kh\u00e1ch H\u00e0ng",
    "read_only": 1
   },
   {
@@ -328,6 +332,7 @@
    "no_copy": 1,
    "oldfieldname": "transaction_date",
    "oldfieldtype": "Date",
+   "read_only": 1,
    "reqd": 1,
    "search_index": 1,
    "width": "160px"
@@ -384,7 +389,7 @@
    "fieldtype": "Tab Break",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "\u0110\u1ecba Ch\u1ec9 & Li\u00ean H\u1ec7",
+   "label": "Th\u00f4ng Tin Ho\u00e1 \u0110\u01a1n",
    "options": "fa fa-bullhorn"
   },
   {
@@ -678,7 +683,7 @@
    "fieldtype": "Float",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "T\u1ed5ng S\u1ed1 L\u01b0\u1ee3ng",
+   "label": "S\u1ed1 L\u01b0\u1ee3ng S\u1ea3n Ph\u1ea9m",
    "read_only": 1
   },
   {
@@ -715,7 +720,7 @@
    "fieldtype": "Currency",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "T\u1ed5ng Gi\u00e1 Tr\u1ecb S\u1ea3n Ph\u1ea9m",
+   "label": "T\u1ed5ng Ti\u1ec1n H\u00e0ng",
    "options": "currency",
    "read_only": 1
   },
@@ -726,8 +731,7 @@
    "hide_seconds": 1,
    "label": "T\u1ed5ng Gi\u00e1 Sau Gi\u1ea3m",
    "options": "currency",
-   "print_hide": 1,
-   "read_only": 1
+   "print_hide": 1
   },
   {
    "depends_on": "total_net_weight",
@@ -906,11 +910,13 @@
    "default": "Grand Total",
    "fieldname": "apply_discount_on",
    "fieldtype": "Select",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Apply Additional Discount On",
    "options": "\nGrand Total\nNet Total",
-   "print_hide": 1
+   "print_hide": 1,
+   "read_only": 1
   },
   {
    "fieldname": "base_discount_amount",
@@ -938,13 +944,15 @@
    "print_hide": 1
   },
   {
+   "default": "0",
    "fieldname": "discount_amount",
    "fieldtype": "Currency",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "S\u1ed1 Ti\u1ec1n Gi\u1ea3m Gi\u00e1",
+   "label": "Gi\u1ea3m Gi\u00e1",
    "options": "currency",
-   "print_hide": 1
+   "print_hide": 1,
+   "read_only": 1
   },
   {
    "fieldname": "totals",
@@ -1013,6 +1021,7 @@
   {
    "fieldname": "column_break3",
    "fieldtype": "Column Break",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "oldfieldtype": "Column Break",
@@ -1025,7 +1034,7 @@
    "hide_days": 1,
    "hide_seconds": 1,
    "in_list_view": 1,
-   "label": "T\u1ed5ng C\u1ed9ng",
+   "label": "T\u1ed5ng Gi\u00e1 Tr\u1ecb \u0110\u01a1n H\u00e0ng",
    "oldfieldname": "grand_total_export",
    "oldfieldtype": "Currency",
    "options": "currency",
@@ -1521,6 +1530,7 @@
   {
    "fieldname": "contact_phone",
    "fieldtype": "Data",
+   "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "\u0110i\u1ec7n Tho\u1ea1i",
@@ -1639,22 +1649,12 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "billing_address_column",
-   "fieldtype": "Section Break",
-   "label": "Billing Address"
-  },
-  {
    "fieldname": "shipping_address_column",
    "fieldtype": "Section Break",
    "label": "\u0110\u1ecba Ch\u1ec9 Giao H\u00e0ng"
   },
   {
    "fieldname": "column_break_93",
-   "fieldtype": "Column Break",
-   "hidden": 1
-  },
-  {
-   "fieldname": "column_break_84",
    "fieldtype": "Column Break",
    "hidden": 1
   },
@@ -1717,39 +1717,32 @@
    "fieldname": "cancelled_status",
    "fieldtype": "Select",
    "label": "Tr\u1ea1ng Th\u00e1i Hu\u1ef7 \u0110\u01a1n",
-   "options": "\n\u0110\u00e3 Hu\u1ef7\nCh\u01b0a Hu\u1ef7"
+   "options": "\n\u0110\u00e3 Hu\u1ef7\nCh\u01b0a Hu\u1ef7",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_phue",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "confirmed_status",
-   "fieldtype": "Select",
-   "label": "Tr\u1ea1ng Th\u00e1i X\u00e1c Nh\u1eadn",
-   "options": "\n\u0110\u00e3 X\u00e1c Nh\u1eadn\nCh\u01b0a X\u00e1c Nh\u1eadn"
-  },
-  {
    "fieldname": "order_number",
    "fieldtype": "Data",
-   "label": "M\u00e3 \u0110\u01a1n H\u00e0ng Haravan"
+   "label": "M\u00e3 \u0110\u01a1n H\u00e0ng Haravan",
+   "read_only": 1
   },
   {
    "fieldname": "financial_status",
    "fieldtype": "Select",
    "label": "Tr\u1ea1ng Th\u00e1i Thanh To\u00e1n",
-   "options": "\n\u0110\u00e3 Thanh To\u00e1n\n\u0110\u00e3 Thanh To\u00e1n M\u1ed9t Ph\u1ea7n\n\u0110\u00e3 Ho\u00e0n Ti\u1ec1n\nCh\u1edd X\u1eed L\u00fd"
+   "options": "\n\u0110\u00e3 Thanh To\u00e1n\n\u0110\u00e3 Thanh To\u00e1n M\u1ed9t Ph\u1ea7n\n\u0110\u00e3 Ho\u00e0n Ti\u1ec1n\nCh\u1edd X\u1eed L\u00fd",
+   "read_only": 1
   },
   {
    "fieldname": "fulfillment_status",
    "fieldtype": "Select",
    "label": "Tr\u1ea1ng Th\u00e1i Giao H\u00e0ng",
-   "options": "\nCh\u01b0a Giao H\u00e0ng\n\u0110\u00e3 Giao H\u00e0ng"
-  },
-  {
-   "fieldname": "source_name",
-   "fieldtype": "Data",
-   "label": "T\u00ean Ngu\u1ed3n \u0110\u01a1n H\u00e0ng"
+   "options": "\nCh\u01b0a Giao H\u00e0ng\n\u0110\u00e3 Giao H\u00e0ng",
+   "read_only": 1
   },
   {
    "fieldname": "haravan_order_id",
@@ -1767,29 +1760,9 @@
    "label": "Chia Doanh S\u1ed1"
   },
   {
-   "fieldname": "assigned_location_at",
-   "fieldtype": "Datetime",
-   "label": "Th\u1eddi Gian Giao H\u00e0ng"
-  },
-  {
-   "fieldname": "expected_delivery_date",
-   "fieldtype": "Datetime",
-   "label": "Ng\u00e0y D\u1ef1 Ki\u1ebfn Giao H\u00e0ng"
-  },
-  {
-   "fieldname": "creator_id",
-   "fieldtype": "Data",
-   "label": "Ng\u01b0\u1eddi t\u1ea1o"
-  },
-  {
    "fieldname": "haravan_created_at",
    "fieldtype": "Datetime",
    "label": "Ng\u00e0y T\u1ea1o \u0110\u01a1n H\u00e0ng"
-  },
-  {
-   "fieldname": "haravan_order_link",
-   "fieldtype": "Data",
-   "label": "Link \u0110\u01a1n H\u00e0ng"
   },
   {
    "fieldname": "product_category",
@@ -1809,21 +1782,6 @@
    "label": "Ng\u00e0y L\u1eadp Ho\u00e1 \u0110\u01a1n"
   },
   {
-   "fieldname": "reorder_date",
-   "fieldtype": "Datetime",
-   "label": "Ng\u00e0y \u0110\u1eb7t L\u1ea1i"
-  },
-  {
-   "fieldname": "cancelled_date",
-   "fieldtype": "Datetime",
-   "label": "Ng\u00e0y Hu\u1ef7 \u0110\u01a1n H\u00e0ng "
-  },
-  {
-   "fieldname": "th\u00f4ng_tin_ho\u00e1_\u0111\u01a1n_section",
-   "fieldtype": "Section Break",
-   "label": "Th\u00f4ng Tin Ho\u00e1 \u0110\u01a1n"
-  },
-  {
    "fieldname": "section_break_uceh",
    "fieldtype": "Section Break"
   },
@@ -1832,26 +1790,101 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "column_break_quav",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "ch\u01b0\u01a1ng_tr\u00ecnh_khuy\u1ebfn_m\u00e3i_\u0111\u01a1n_h\u00e0ng_section",
-   "fieldtype": "Section Break",
-   "label": "Ch\u01b0\u01a1ng Tr\u00ecnh Khuy\u1ebfn M\u00e3i \u0110\u01a1n H\u00e0ng"
-  },
-  {
    "fieldname": "promotions",
    "fieldtype": "Table MultiSelect",
    "label": "Ch\u01b0\u01a1ng Tr\u00ecnh Khuy\u1ebfn M\u00e3i",
    "options": "Sales Order Promotion"
+  },
+  {
+   "fetch_from": "customer.personal_id",
+   "fieldname": "customer_personal_id",
+   "fieldtype": "Data",
+   "label": "CMND/CCCD"
+  },
+  {
+   "fieldname": "column_break_xpik",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "customer.place_of_issuance",
+   "fieldname": "place_of_issuance",
+   "fieldtype": "Data",
+   "label": "N\u01a1i C\u1ea5p"
+  },
+  {
+   "fetch_from": "customer.date_of_issuance",
+   "fieldname": "date_of_issuance",
+   "fieldtype": "Date",
+   "label": "Ng\u00e0y C\u1ea5p"
+  },
+  {
+   "fetch_from": "customer.birth_date",
+   "fieldname": "birth_date",
+   "fieldtype": "Date",
+   "label": "Ng\u00e0y Sinh"
+  },
+  {
+   "fetch_from": "customer.gender",
+   "fieldname": "gender",
+   "fieldtype": "Data",
+   "label": "Gi\u1edbi T\u00ednh"
+  },
+  {
+   "fieldname": "th\u00f4ng_tin_c\u00e1_nh\u00e2n_section",
+   "fieldtype": "Section Break",
+   "label": "Th\u00f4ng Tin C\u00e1 Nh\u00e2n"
+  },
+  {
+   "fieldname": "address_contact_section",
+   "fieldtype": "Section Break",
+   "label": "\u0110\u1ecba Ch\u1ec9 & Li\u00ean H\u1ec7"
+  },
+  {
+   "fieldname": "th\u00f4ng_tin_li\u00ean_h\u1ec7",
+   "fieldtype": "Heading",
+   "label": "Th\u00f4ng Tin Li\u00ean H\u1ec7"
+  },
+  {
+   "fieldname": "column_break_biok",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "\u0111\u1ecba_ch\u1ec9_m\u1eb7c_\u0111\u1ecbnh",
+   "fieldtype": "Heading",
+   "label": "\u0110\u1ecba Ch\u1ec9 M\u1eb7c \u0110\u1ecbnh"
+  },
+  {
+   "fieldname": "\u0111\u1ecba_ch\u1ec9_giao_h\u00e0ng",
+   "fieldtype": "Heading",
+   "label": "\u0110\u1ecba Ch\u1ec9 Giao H\u00e0ng"
+  },
+  {
+   "fieldname": "column_break_xnxx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_bscz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_ownx",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_wwye",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "source_name",
+   "fieldtype": "Data",
+   "label": "T\u00ean Ngu\u1ed3n \u0110\u01a1n H\u00e0ng"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-04-24 14:08:45.916384",
+ "modified": "2025-04-26 16:23:54.438624",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

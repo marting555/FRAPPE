@@ -16,7 +16,7 @@ frappe.ui.form.on("Customer", {
 				}),
 		};
 
-		frm.add_fetch("lead_name", "company_name", "customer_name");
+		// frm.add_fetch("lead_name", "company_name", "customer_name");
 		frm.add_fetch("default_sales_partner", "commission_rate", "default_commission_rate");
 		frm.set_query("default_price_list", { selling: 1 });
 		frm.set_query("account", "accounts", function (doc, cdt, cdn) {
@@ -52,22 +52,22 @@ frappe.ui.form.on("Customer", {
 			frm.set_value("represents_company", "");
 		}
 
-		frm.set_query("customer_primary_contact", function (doc) {
-			return {
-				query: "erpnext.selling.doctype.customer.customer.get_customer_primary_contact",
-				filters: {
-					customer: doc.name,
-				},
-			};
-		});
-		frm.set_query("customer_primary_address", function (doc) {
-			return {
-				filters: {
-					link_doctype: "Customer",
-					link_name: doc.name,
-				},
-			};
-		});
+		// frm.set_query("customer_primary_contact", function (doc) {
+		// 	return {
+		// 		query: "erpnext.selling.doctype.customer.customer.get_customer_primary_contact",
+		// 		filters: {
+		// 			customer: doc.name,
+		// 		},
+		// 	};
+		// });
+		// frm.set_query("customer_primary_address", function (doc) {
+		// 	return {
+		// 		filters: {
+		// 			link_doctype: "Customer",
+		// 			link_name: doc.name,
+		// 		},
+		// 	};
+		// });
 
 		frm.set_query("default_bank_account", function () {
 			return {
