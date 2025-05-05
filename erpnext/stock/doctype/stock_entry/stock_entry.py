@@ -9,7 +9,17 @@ import frappe
 from frappe import _
 from frappe.model.mapper import get_mapped_doc
 from frappe.query_builder.functions import Sum
-from frappe.utils import cint, comma_or, cstr, flt, format_time, formatdate, getdate, nowdate, get_link_to_form
+from frappe.utils import (
+	cint,
+	comma_or,
+	cstr,
+	flt,
+	format_time,
+	formatdate,
+	get_link_to_form,
+	getdate,
+	nowdate,
+)
 
 import erpnext
 from erpnext.accounts.general_ledger import process_gl_map
