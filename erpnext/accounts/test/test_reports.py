@@ -12,17 +12,10 @@ DEFAULT_FILTERS = {
 
 
 REPORT_FILTER_TEST_CASES: list[tuple[ReportName, ReportFilters]] = [
-<<<<<<< HEAD
-	("General Ledger", {"group_by": "Group by Voucher (Consolidated)"}),
-	("General Ledger", {"group_by": "Group by Voucher (Consolidated)", "include_dimensions": 1}),
-	("Accounts Payable", {"range1": 30, "range2": 60, "range3": 90, "range4": 120}),
-	("Accounts Receivable", {"range1": 30, "range2": 60, "range3": 90, "range4": 120}),
-=======
 	("General Ledger", {"categorize_by": "Categorize by Voucher (Consolidated)"}),
 	("General Ledger", {"categorize_by": "Categorize by Voucher (Consolidated)", "include_dimensions": 1}),
-	("Accounts Payable", {"range": "30, 60, 90, 120"}),
-	("Accounts Receivable", {"range": "30, 60, 90, 120"}),
->>>>>>> 3de249dcba (fix: rename unchanged group_by filter related to general ledger report (#47366))
+	("Accounts Payable", {"range1": 30, "range2": 60, "range3": 90, "range4": 120}),
+	("Accounts Receivable", {"range1": 30, "range2": 60, "range3": 90, "range4": 120}),
 	("Consolidated Financial Statement", {"report": "Balance Sheet"}),
 	("Consolidated Financial Statement", {"report": "Profit and Loss Statement"}),
 	("Consolidated Financial Statement", {"report": "Cash Flow"}),
