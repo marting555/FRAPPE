@@ -16,6 +16,8 @@ class LeadSource(Document):
 		from frappe.types import DF
 
 		details: DF.TextEditor | None
+		pancake_page_id: DF.Data | None
+		pancake_platform: DF.Data | None
 		source_name: DF.Data
 	# end: auto-generated types
 

@@ -369,6 +369,8 @@ class Lead(SellingController, CRMNote):
 			new_lead_source = frappe.new_doc("Lead Source")
 			new_lead_source.update({
 				"source_name": self.source,
+				"pancake_page_id": parsed_pancake_data.get("page_id", None),
+				"pancake_platform": parsed_pancake_data.get("platform", None)
 			})
 			new_lead_source.insert(ignore_permissions=True)
 			new_lead_source.reload()
