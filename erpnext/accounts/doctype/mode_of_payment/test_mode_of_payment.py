@@ -5,7 +5,6 @@ import unittest
 
 
 import frappe
-from frappe.tests import IntegrationTestCase
 
 
 class TestModeofPayment(unittest.TestCase):
