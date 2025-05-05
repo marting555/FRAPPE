@@ -3,7 +3,6 @@
 
 import unittest
 
-
 import frappe
 
 
