@@ -277,7 +277,6 @@ frappe.ui.form.on('Payment Entry', {
 		frm.refresh_fields();
 	},
 
-<<<<<<< HEAD
 	set_dynamic_labels: function(frm) {
 		var company_currency = frm.doc.company? frappe.get_doc(":Company", frm.doc.company)?.default_currency: "";
 
@@ -320,30 +319,11 @@ frappe.ui.form.on('Payment Entry', {
 					"from_date": frm.doc.posting_date,
 					"to_date": moment(frm.doc.modified).format('YYYY-MM-DD'),
 					"company": frm.doc.company,
-					"group_by": "",
+					"categorize_by": "",
 					"show_cancelled_entries": frm.doc.docstatus === 2
 				};
 				frappe.set_route("query-report", "General Ledger");
 			}, "fa fa-table");
-=======
-	show_general_ledger: function (frm) {
-		if (frm.doc.docstatus > 0) {
-			frm.add_custom_button(
-				__("Ledger"),
-				function () {
-					frappe.route_options = {
-						voucher_no: frm.doc.name,
-						from_date: frm.doc.posting_date,
-						to_date: moment(frm.doc.modified).format("YYYY-MM-DD"),
-						company: frm.doc.company,
-						categorize_by: "",
-						show_cancelled_entries: frm.doc.docstatus === 2,
-					};
-					frappe.set_route("query-report", "General Ledger");
-				},
-				"fa fa-table"
-			);
->>>>>>> 3de249dcba (fix: rename unchanged group_by filter related to general ledger report (#47366))
 		}
 	},
 
