@@ -1230,7 +1230,7 @@ function set_time_to_resolve_and_response(frm, apply_sla_for_resolution) {
 		if (!frm.doc.resolution_date) {
 			time_to_resolve = get_time_left(frm.doc.sla_resolution_by, frm.doc.agreement_status);
 		} else {
-			time_to_resolve = get_status(frm.doc.sla_resolution_by, frm.doc.resolution_date);
+			time_to_resolve = get_status(frm.doc.sla_resolution_by, frm.doc.sla_resolution_date);
 		}
 
 		alert += `
