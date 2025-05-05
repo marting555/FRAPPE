@@ -531,16 +531,3 @@ erpnext.pre_sales = {
 		});
 	},
 };
-
-frappe.ui.form.on('Sales Team', {
-	allocated_percentage: function(frm, cdt, cdn) {
-		var sales_person = frappe.get_doc(cdt, cdn);
-		if (sales_person.allocated_percentage) {
-			sales_person.allocated_amount = flt(
-				(frm.doc.amount_eligible_for_commission * sales_person.allocated_percentage) / 100.0,
-				precision('allocated_amount', sales_person)
-			);
-			refresh_field('allocated_amount', sales_person.name, sales_person.parentfield);
-		}
-	}
-});

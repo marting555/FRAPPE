@@ -45,13 +45,12 @@
   "ceo_name",
   "advanced_information_selection",
   "personal_document_type",
-  "gender",
-  "birth_date",
-  "column_break_bjiq",
   "personal_id",
-  "place_of_issuance",
+  "column_break_bjiq",
+  "birth_date",
+  "gender",
   "column_break_akie",
-  "person_name",
+  "place_of_issuance",
   "date_of_issuance",
   "orther_section",
   "first_channel",
@@ -350,7 +349,6 @@
   {
    "fieldname": "customer_primary_contact",
    "fieldtype": "Link",
-   "hidden": 1,
    "label": "Ch\u1ecdn Li\u00ean H\u1ec7 Ch\u00ednh",
    "options": "Contact"
   },
@@ -701,7 +699,7 @@
    "fieldname": "place_of_issuance",
    "fieldtype": "Select",
    "label": "N\u01a1i C\u1ea5p",
-   "options": "B\u1ed9 C\u00f4ng An\nC\u1ee5c C\u1ea3nh s\u00e1t QLHC v\u1ec1 TTXH\nC\u1ee5c C\u1ea3nh s\u00e1t \u0111\u0103ng k\u00fd, qu\u1ea3n l\u00fd c\u01b0 tr\u00fa v\u00e0 d\u1eef li\u1ec7u qu\u1ed1c gia v\u1ec1 d\u00e2n c\u01b0"
+   "options": "\nB\u1ed9 C\u00f4ng An\nC\u1ee5c C\u1ea3nh s\u00e1t QLHC v\u1ec1 TTXH\nC\u1ee5c C\u1ea3nh s\u00e1t \u0111\u0103ng k\u00fd, qu\u1ea3n l\u00fd c\u01b0 tr\u00fa v\u00e0 d\u1eef li\u1ec7u qu\u1ed1c gia v\u1ec1 d\u00e2n c\u01b0"
   },
   {
    "fieldname": "date_of_issuance",
@@ -717,13 +715,13 @@
    "fieldname": "bank_name",
    "fieldtype": "Select",
    "label": "T\u00e0i Kho\u1ea3n Ng\u00e2n H\u00e0ng",
-   "options": "Agribank\nACB\nBIDV\nVietcombank\nVietinBank\nTechcombank\nSacombank\nMB Bank\nEximbank\nVPBank\nSHB\nNamABank\nB\u1eafc \u00c1 Bank\nOceanBank\nTPBank"
+   "options": "\nAgribank\nACB\nBIDV\nVietcombank\nVietinBank\nTechcombank\nSacombank\nMB Bank\nEximbank\nVPBank\nSHB\nNamABank\nB\u1eafc \u00c1 Bank\nOceanBank\nTPBank"
   },
   {
    "fieldname": "bank_branch",
    "fieldtype": "Select",
    "label": "Chi Nh\u00e1nh",
-   "options": "B\u1eafc\nTrung Nam"
+   "options": "\nB\u1eafc\nTrung Nam"
   },
   {
    "fieldname": "account_number",
@@ -808,11 +806,6 @@
    "label": "Th\u00f4ng Tin Kh\u00e1c"
   },
   {
-   "fieldname": "person_name",
-   "fieldtype": "Data",
-   "label": "H\u1ecd V\u00e0 T\u00ean"
-  },
-  {
    "fieldname": "column_break_ioxt",
    "fieldtype": "Column Break"
   },
@@ -890,7 +883,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-04-28 00:33:15.866806",
+ "modified": "2025-05-05 11:17:58.724934",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",

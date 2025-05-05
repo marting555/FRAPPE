@@ -5,7 +5,7 @@
 from frappe.model.document import Document
 
 
-class Design(Document):
+class SalesOrderPaymentRecord(Document):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
 
@@ -14,7 +14,10 @@ class Design(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		description: DF.Data | None
-		design_code: DF.Data
+		amount: DF.Currency
+		date: DF.Date | None
+		parent: DF.Data
+		parentfield: DF.Data
+		parenttype: DF.Data
 	# end: auto-generated types
 	pass

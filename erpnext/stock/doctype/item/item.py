@@ -212,8 +212,6 @@ class Item(Document):
 		self.validate_auto_reorder_enabled_in_stock_settings()
 		self.cant_change()
 		self.validate_item_tax_net_rate_range()
-		self.validate_design()
-		self.validate_stock_item_vs_has_variant()
 
 		if not self.is_new():
 			self.old_item_group = frappe.db.get_value(self.doctype, self.name, "item_group")
@@ -791,20 +789,6 @@ class Item(Document):
 		if not self.has_variants and frappe.db.get_value("Item", self.name, "has_variants"):
 			if frappe.db.exists("Item", {"variant_of": self.name}):
 				frappe.throw(_("Item has variants."))
-
-	def validate_design(self):
-		"""
-		Custom validation for business rules
-		"""
-		if self.design:
-			if not self.has_variants:
-				frappe.throw(_("A design Item must have variants."))
-			if self.is_stock_item:
-				frappe.throw(_("A design item is a template and cannot be maintained as a stock item."))
-
-	def validate_stock_item_vs_has_variant(self):
-		if self.is_stock_item == self.has_variants and self.is_stock_item == 1:
-			frappe.throw(_("An item cannot be both stock item and a template."))
 
 	def validate_attributes_in_variants(self):
 		if not self.has_variants or self.is_new():
