@@ -602,6 +602,7 @@ def validate_due_date(
 	if getdate(due_date) < getdate(posting_date):
 		frappe.throw(_("Due Date cannot be before Posting / Supplier Invoice Date"))
 	else:
+<<<<<<< HEAD
 		if not template_name:
 			return
 
@@ -615,6 +616,28 @@ def validate_due_date(
 		if default_due_date != posting_date and getdate(due_date) > getdate(default_due_date):
 			is_credit_controller = (
 				frappe.db.get_single_value("Accounts Settings", "credit_controller") in frappe.get_roles()
+=======
+		validate_due_date_with_template(posting_date, due_date, bill_date, template_name, doctype)
+
+
+def validate_due_date_with_template(posting_date, due_date, bill_date, template_name, doctype=None):
+	if not template_name:
+		return
+
+	default_due_date = format(get_due_date_from_template(template_name, posting_date, bill_date))
+
+	if not default_due_date:
+		return
+
+	if default_due_date != posting_date and getdate(due_date) > getdate(default_due_date):
+		if frappe.db.get_single_value("Accounts Settings", "credit_controller") in frappe.get_roles():
+			party_type = "supplier" if doctype == "Purchase Invoice" else "customer"
+
+			msgprint(
+				_("Note: Due Date exceeds allowed {0} credit days by {1} day(s)").format(
+					party_type, date_diff(due_date, default_due_date)
+				)
+>>>>>>> b6d9134014 (fix: show party type in due date exceeding message)
 			)
 			if is_credit_controller:
 				msgprint(
