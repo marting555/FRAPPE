@@ -349,7 +349,6 @@
   {
    "fieldname": "customer_primary_contact",
    "fieldtype": "Link",
-   "hidden": 1,
    "label": "Ch\u1ecdn Li\u00ean H\u1ec7 Ch\u00ednh",
    "options": "Contact"
   },
@@ -884,7 +883,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-04-28 00:33:15.866806",
+ "modified": "2025-05-05 11:17:58.724934",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
