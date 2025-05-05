@@ -7,14 +7,10 @@ import unittest
 import frappe
 from frappe import _
 
-<<<<<<< HEAD
-from erpnext.accounts.doctype.pos_invoice.pos_invoice import PartialPaymentValidationError, make_sales_return
-=======
 from erpnext.accounts.doctype.mode_of_payment.test_mode_of_payment import (
 	set_default_account_for_mode_of_payment,
 )
-from erpnext.accounts.doctype.pos_invoice.pos_invoice import make_sales_return
->>>>>>> 8067799692 (fix: update accounts on change of mode of payment in sales invoice payment (#47381))
+from erpnext.accounts.doctype.pos_invoice.pos_invoice import PartialPaymentValidationError, make_sales_return
 from erpnext.accounts.doctype.pos_profile.test_pos_profile import make_pos_profile
 from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
 from erpnext.stock.doctype.item.test_item import make_item
