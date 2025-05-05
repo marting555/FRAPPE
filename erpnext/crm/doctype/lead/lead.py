@@ -88,7 +88,7 @@ class Lead(SellingController, CRMNote):
 		source: DF.Link | None
 		state: DF.Data | None
 		status: DF.Literal["Lead", "Open", "Replied", "Opportunity", "Quotation", "Lost Quotation", "Interested", "Converted", "Do Not Contact", "Spam"]
-		stringeex_data: DF.JSON | None
+		stringee_data: DF.JSON | None
 		table_uzxd: DF.Table[LeadChannel]
 		tax_number: DF.Data | None
 		territory: DF.Link | None
@@ -96,6 +96,7 @@ class Lead(SellingController, CRMNote):
 		type: DF.Literal["C\u00e1 Nh\u00e2n", "Doanh Nghi\u1ec7p"]
 		unsubscribed: DF.Check
 		website: DF.Data | None
+		website_from_data: DF.JSON | None
 		whatsapp_no: DF.Data | None
 	# end: auto-generated types
 
