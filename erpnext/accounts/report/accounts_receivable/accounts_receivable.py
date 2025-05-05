@@ -49,9 +49,10 @@ class ReceivablePayableReport:
 		self.age_as_on = (
 			getdate(nowdate()) if self.filters.report_date > getdate(nowdate()) else self.filters.report_date
 		)
-		self.ple_fetch_method = frappe.db.get_single_value(
-			"Accounts Settings", "receivable_payable_fetch_method"
-		)
+		self.ple_fetch_method = (
+			frappe.db.get_single_value("Accounts Settings", "receivable_payable_fetch_method")
+			or "Buffered Cursor"
+		)  # Fail Safe
 
 	def run(self, args):
 		self.filters.update(args)
