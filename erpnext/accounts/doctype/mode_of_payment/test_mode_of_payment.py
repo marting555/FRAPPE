@@ -3,12 +3,9 @@
 
 import unittest
 
-<<<<<<< HEAD
-# test_records = frappe.get_test_records('Mode of Payment')
-=======
+
 import frappe
 from frappe.tests import IntegrationTestCase
->>>>>>> 8067799692 (fix: update accounts on change of mode of payment in sales invoice payment (#47381))
 
 
 class TestModeofPayment(unittest.TestCase):
