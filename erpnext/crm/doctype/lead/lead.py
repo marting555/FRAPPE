@@ -43,7 +43,7 @@ class Lead(SellingController, CRMNote):
 		budget_lead: DF.Link | None
 		campaign_name: DF.Link | None
 		ceo_name: DF.Data | None
-		chọn_lead_trùng: DF.Link | None
+		check_duplicate: DF.Link | None
 		city: DF.Data | None
 		company: DF.Link | None
 		company_name: DF.Data | None
