@@ -2313,3 +2313,37 @@ ALTER TABLE `tabAddress` MODIFY `is_primary_address` tinyint NOT NULL DEFAULT 0,
 ALTER TABLE `tabContact` ADD COLUMN `is_billing_contact` tinyint NOT NULL DEFAULT 0
 2025-04-24 10:07:31,768 WARNING database DDL Query made to DB:
 ALTER TABLE `tabContact` MODIFY `unsubscribed` tinyint NOT NULL DEFAULT 0, MODIFY `is_primary_contact` tinyint NOT NULL DEFAULT 0, MODIFY `sync_with_google_contacts` tinyint NOT NULL DEFAULT 0, MODIFY `pulled_from_google_contacts` tinyint NOT NULL DEFAULT 0
+2025-05-01 11:38:25,629 WARNING database DDL Query made to DB:
+alter table `tabDocType` add column if not exists migration_hash varchar(140)
+2025-05-01 11:38:30,053 WARNING database DDL Query made to DB:
+ALTER TABLE `tabAddress` MODIFY `disabled` tinyint NOT NULL DEFAULT 0, MODIFY `is_primary_address` tinyint NOT NULL DEFAULT 0, MODIFY `is_your_company_address` tinyint NOT NULL DEFAULT 0, MODIFY `is_shipping_address` tinyint NOT NULL DEFAULT 0
+2025-05-01 11:38:30,141 WARNING database DDL Query made to DB:
+ALTER TABLE `tabContact` MODIFY `is_primary_contact` tinyint NOT NULL DEFAULT 0, MODIFY `unsubscribed` tinyint NOT NULL DEFAULT 0, MODIFY `pulled_from_google_contacts` tinyint NOT NULL DEFAULT 0, MODIFY `sync_with_google_contacts` tinyint NOT NULL DEFAULT 0, MODIFY `is_billing_contact` tinyint NOT NULL DEFAULT 0
+2025-05-05 18:38:57,409 WARNING database DDL Query made to DB:
+create table `tabData Reset` (
+			name varchar(140) primary key,
+			creation datetime(6),
+			modified datetime(6),
+			modified_by varchar(140),
+			owner varchar(140),
+			docstatus tinyint not null default '0',
+			idx int not null default '0',
+			`_user_tags` text,
+`_comments` text,
+`_assign` text,
+`_liked_by` text,
+index creation(creation))
+			ENGINE=InnoDB
+			ROW_FORMAT=DYNAMIC
+			CHARACTER SET=utf8mb4
+			COLLATE=utf8mb4_unicode_ci
+2025-05-05 18:45:49,681 WARNING database DDL Query made to DB:
+ALTER TABLE `tabData Reset` ADD COLUMN `item` tinyint NOT NULL DEFAULT 0, ADD COLUMN `material_request` tinyint NOT NULL DEFAULT 0, ADD COLUMN `quotation` tinyint NOT NULL DEFAULT 0, ADD COLUMN `supplier_quotation` tinyint NOT NULL DEFAULT 0, ADD COLUMN `purchase_order` tinyint NOT NULL DEFAULT 0, ADD COLUMN `purchase_invoice` tinyint NOT NULL DEFAULT 0, ADD COLUMN `payment_entry` tinyint NOT NULL DEFAULT 0, ADD COLUMN `purchase_receipt` tinyint NOT NULL DEFAULT 0
+2025-05-05 19:18:13,744 WARNING database DDL Query made to DB:
+ALTER TABLE `tabData Reset` ADD COLUMN `supplier` tinyint NOT NULL DEFAULT 0
+2025-05-05 19:18:13,761 WARNING database DDL Query made to DB:
+ALTER TABLE `tabData Reset` MODIFY `supplier_quotation` tinyint NOT NULL DEFAULT 0, MODIFY `quotation` tinyint NOT NULL DEFAULT 0, MODIFY `purchase_order` tinyint NOT NULL DEFAULT 0, MODIFY `payment_entry` tinyint NOT NULL DEFAULT 0, MODIFY `purchase_invoice` tinyint NOT NULL DEFAULT 0, MODIFY `item` tinyint NOT NULL DEFAULT 0, MODIFY `material_request` tinyint NOT NULL DEFAULT 0, MODIFY `purchase_receipt` tinyint NOT NULL DEFAULT 0
+2025-05-05 21:25:02,540 WARNING database DDL Query made to DB:
+ALTER TABLE `tabData Reset` ADD COLUMN `request_for_quotation` tinyint NOT NULL DEFAULT 0
+2025-05-05 21:25:02,556 WARNING database DDL Query made to DB:
+ALTER TABLE `tabData Reset` MODIFY `material_request` tinyint NOT NULL DEFAULT 0, MODIFY `purchase_receipt` tinyint NOT NULL DEFAULT 0, MODIFY `quotation` tinyint NOT NULL DEFAULT 0, MODIFY `purchase_order` tinyint NOT NULL DEFAULT 0, MODIFY `payment_entry` tinyint NOT NULL DEFAULT 0, MODIFY `supplier` tinyint NOT NULL DEFAULT 0, MODIFY `supplier_quotation` tinyint NOT NULL DEFAULT 0, MODIFY `item` tinyint NOT NULL DEFAULT 0, MODIFY `purchase_invoice` tinyint NOT NULL DEFAULT 0

@@ -83,3 +83,196 @@
 2025-04-28 09:11:16,203 INFO /home/aina/.local/bin/bench watch
 2025-04-28 09:11:16,209 INFO /home/aina/.local/bin/bench serve --port 8000
 2025-04-28 09:11:16,275 INFO /home/aina/.local/bin/bench worker
+2025-04-28 16:28:32,829 INFO /home/aina/.local/bin/bench start
+2025-04-28 16:28:33,380 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-04-28 16:28:33,445 INFO /home/aina/.local/bin/bench schedule
+2025-04-28 16:28:33,495 INFO /home/aina/.local/bin/bench watch
+2025-04-28 16:28:33,500 INFO /home/aina/.local/bin/bench worker
+2025-04-28 16:48:20,737 INFO /home/aina/.local/bin/bench start
+2025-04-28 16:48:21,232 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-04-28 16:48:21,293 INFO /home/aina/.local/bin/bench worker
+2025-04-28 16:48:21,383 INFO /home/aina/.local/bin/bench watch
+2025-04-28 16:48:21,450 INFO /home/aina/.local/bin/bench schedule
+2025-04-29 17:51:39,800 INFO /home/aina/.local/bin/bench start
+2025-04-29 17:51:40,314 INFO /home/aina/.local/bin/bench watch
+2025-04-29 17:51:40,317 INFO /home/aina/.local/bin/bench worker
+2025-04-29 17:51:40,412 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-04-29 17:51:40,469 INFO /home/aina/.local/bin/bench schedule
+2025-04-29 18:00:02,290 INFO /home/aina/.local/bin/bench --verbose --site all backup
+2025-04-30 07:55:21,614 INFO /home/aina/.local/bin/bench start
+2025-04-30 07:55:22,128 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-04-30 07:55:22,150 INFO /home/aina/.local/bin/bench watch
+2025-04-30 07:55:22,223 INFO /home/aina/.local/bin/bench schedule
+2025-04-30 07:55:22,386 INFO /home/aina/.local/bin/bench worker
+2025-04-30 12:00:02,100 INFO /home/aina/.local/bin/bench --verbose --site all backup
+2025-05-01 08:01:41,776 INFO /home/aina/.local/bin/bench start
+2025-05-01 08:01:42,336 INFO /home/aina/.local/bin/bench watch
+2025-05-01 08:01:42,364 INFO /home/aina/.local/bin/bench worker
+2025-05-01 08:01:42,407 INFO /home/aina/.local/bin/bench schedule
+2025-05-01 08:01:42,451 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-01 11:38:24,626 INFO /home/aina/.local/bin/bench --site erpnext.localhost migrate
+2025-05-01 12:00:01,932 INFO /home/aina/.local/bin/bench --verbose --site all backup
+2025-05-01 18:43:48,224 INFO /home/aina/.local/bin/bench start
+2025-05-01 18:43:48,678 INFO /home/aina/.local/bin/bench worker
+2025-05-01 18:43:48,696 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-01 18:43:48,704 INFO /home/aina/.local/bin/bench watch
+2025-05-01 18:43:48,745 INFO /home/aina/.local/bin/bench schedule
+2025-05-01 19:35:31,520 INFO /home/aina/.local/bin/bench start
+2025-05-01 19:35:31,932 INFO /home/aina/.local/bin/bench schedule
+2025-05-01 19:35:31,942 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-01 19:35:32,059 INFO /home/aina/.local/bin/bench worker
+2025-05-01 19:35:32,084 INFO /home/aina/.local/bin/bench watch
+2025-05-01 19:41:50,280 INFO /home/aina/.local/bin/bench --site erpnext.localhost logs
+2025-05-01 19:46:46,359 INFO /home/aina/.local/bin/bench restart
+2025-05-01 19:46:58,024 INFO /home/aina/.local/bin/bench --site erpnext.localhost logs
+2025-05-01 19:47:09,252 INFO /home/aina/.local/bin/bench start
+2025-05-01 19:47:09,755 INFO /home/aina/.local/bin/bench worker
+2025-05-01 19:47:09,757 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-01 19:47:09,842 INFO /home/aina/.local/bin/bench watch
+2025-05-01 19:47:09,850 INFO /home/aina/.local/bin/bench schedule
+2025-05-02 07:17:47,513 INFO /home/aina/.local/bin/bench start
+2025-05-02 07:17:47,957 INFO /home/aina/.local/bin/bench worker
+2025-05-02 07:17:47,967 INFO /home/aina/.local/bin/bench watch
+2025-05-02 07:17:47,992 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-02 07:17:48,025 INFO /home/aina/.local/bin/bench schedule
+2025-05-02 07:40:21,923 INFO /home/aina/.local/bin/bench start
+2025-05-02 07:40:22,385 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-02 07:40:22,437 INFO /home/aina/.local/bin/bench schedule
+2025-05-02 07:40:22,522 INFO /home/aina/.local/bin/bench worker
+2025-05-02 07:40:22,559 INFO /home/aina/.local/bin/bench watch
+2025-05-02 08:16:45,271 INFO /home/aina/.local/bin/bench start
+2025-05-02 08:16:45,704 INFO /home/aina/.local/bin/bench watch
+2025-05-02 08:16:45,771 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-02 08:16:45,822 INFO /home/aina/.local/bin/bench worker
+2025-05-02 08:16:45,837 INFO /home/aina/.local/bin/bench schedule
+2025-05-02 12:00:02,031 INFO /home/aina/.local/bin/bench --verbose --site all backup
+2025-05-02 14:05:42,423 INFO /home/aina/.local/bin/bench restart
+2025-05-02 14:05:45,436 INFO /home/aina/.local/bin/bench restart
+2025-05-02 14:05:48,514 INFO /home/aina/.local/bin/bench start
+2025-05-02 14:05:48,963 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-02 14:05:48,972 INFO /home/aina/.local/bin/bench watch
+2025-05-02 14:05:49,020 INFO /home/aina/.local/bin/bench worker
+2025-05-02 14:05:49,051 INFO /home/aina/.local/bin/bench schedule
+2025-05-02 14:51:47,682 INFO /home/aina/.local/bin/bench restart
+2025-05-02 14:51:50,385 INFO /home/aina/.local/bin/bench start
+2025-05-02 14:51:50,798 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-02 14:51:50,831 INFO /home/aina/.local/bin/bench worker
+2025-05-02 14:51:50,905 INFO /home/aina/.local/bin/bench schedule
+2025-05-02 14:51:50,951 INFO /home/aina/.local/bin/bench watch
+2025-05-02 16:45:16,068 INFO /home/aina/.local/bin/bench restart
+2025-05-02 16:45:21,141 INFO /home/aina/.local/bin/bench start
+2025-05-02 16:45:21,586 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-02 16:45:21,644 INFO /home/aina/.local/bin/bench schedule
+2025-05-02 16:45:21,649 INFO /home/aina/.local/bin/bench worker
+2025-05-02 16:45:21,678 INFO /home/aina/.local/bin/bench watch
+2025-05-02 17:51:56,172 INFO /home/aina/.local/bin/bench start
+2025-05-02 17:51:56,598 INFO /home/aina/.local/bin/bench worker
+2025-05-02 17:51:56,613 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-02 17:51:56,659 INFO /home/aina/.local/bin/bench schedule
+2025-05-02 17:51:56,680 INFO /home/aina/.local/bin/bench watch
+2025-05-02 18:00:01,424 INFO /home/aina/.local/bin/bench --verbose --site all backup
+2025-05-03 08:14:26,801 INFO /home/aina/.local/bin/bench start
+2025-05-03 08:14:27,256 INFO /home/aina/.local/bin/bench schedule
+2025-05-03 08:14:27,257 INFO /home/aina/.local/bin/bench watch
+2025-05-03 08:14:27,280 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-03 08:14:27,318 INFO /home/aina/.local/bin/bench worker
+2025-05-03 10:16:43,393 INFO /home/aina/.local/bin/bench start
+2025-05-03 10:16:43,817 INFO /home/aina/.local/bin/bench worker
+2025-05-03 10:16:43,872 INFO /home/aina/.local/bin/bench schedule
+2025-05-03 10:16:43,881 INFO /home/aina/.local/bin/bench watch
+2025-05-03 10:16:43,922 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-03 10:20:41,834 INFO /home/aina/.local/bin/bench restart
+2025-05-03 10:20:46,977 INFO /home/aina/.local/bin/bench start
+2025-05-03 10:20:47,386 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-03 10:20:47,427 INFO /home/aina/.local/bin/bench worker
+2025-05-03 10:20:47,489 INFO /home/aina/.local/bin/bench watch
+2025-05-03 10:20:47,560 INFO /home/aina/.local/bin/bench schedule
+2025-05-03 10:44:47,453 INFO /home/aina/.local/bin/bench start
+2025-05-03 10:44:47,862 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-03 10:44:47,902 INFO /home/aina/.local/bin/bench schedule
+2025-05-03 10:44:47,924 INFO /home/aina/.local/bin/bench watch
+2025-05-03 10:44:47,938 INFO /home/aina/.local/bin/bench worker
+2025-05-03 12:00:02,168 INFO /home/aina/.local/bin/bench --verbose --site all backup
+2025-05-03 15:27:44,882 INFO /home/aina/.local/bin/bench start
+2025-05-03 15:27:45,294 INFO /home/aina/.local/bin/bench schedule
+2025-05-03 15:27:45,307 INFO /home/aina/.local/bin/bench watch
+2025-05-03 15:27:45,426 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-03 15:27:45,487 INFO /home/aina/.local/bin/bench worker
+2025-05-04 12:15:04,982 INFO /home/aina/.local/bin/bench start
+2025-05-04 12:15:05,512 INFO /home/aina/.local/bin/bench watch
+2025-05-04 12:15:05,551 INFO /home/aina/.local/bin/bench worker
+2025-05-04 12:15:05,576 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-04 12:15:05,727 INFO /home/aina/.local/bin/bench schedule
+2025-05-04 17:10:38,249 INFO /home/aina/.local/bin/bench start
+2025-05-04 17:10:38,682 INFO /home/aina/.local/bin/bench schedule
+2025-05-04 17:10:38,707 INFO /home/aina/.local/bin/bench watch
+2025-05-04 17:10:38,719 INFO /home/aina/.local/bin/bench worker
+2025-05-04 17:10:38,745 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-04 18:00:01,783 INFO /home/aina/.local/bin/bench --verbose --site all backup
+2025-05-05 07:05:05,311 INFO /home/aina/.local/bin/bench start
+2025-05-05 07:05:05,748 INFO /home/aina/.local/bin/bench schedule
+2025-05-05 07:05:05,752 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-05 07:05:05,785 INFO /home/aina/.local/bin/bench watch
+2025-05-05 07:05:05,813 INFO /home/aina/.local/bin/bench worker
+2025-05-05 14:20:12,091 INFO /home/aina/.local/bin/bench start
+2025-05-05 14:20:12,526 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-05 14:20:12,536 INFO /home/aina/.local/bin/bench schedule
+2025-05-05 14:20:12,551 INFO /home/aina/.local/bin/bench watch
+2025-05-05 14:20:12,617 INFO /home/aina/.local/bin/bench worker
+2025-05-05 14:55:36,038 INFO /home/aina/.local/bin/bench start
+2025-05-05 14:55:36,476 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-05 14:55:36,543 INFO /home/aina/.local/bin/bench schedule
+2025-05-05 14:55:36,558 INFO /home/aina/.local/bin/bench worker
+2025-05-05 14:55:36,561 INFO /home/aina/.local/bin/bench watch
+2025-05-05 18:27:13,120 INFO /home/aina/.local/bin/bench start
+2025-05-05 18:27:13,564 INFO /home/aina/.local/bin/bench schedule
+2025-05-05 18:27:13,569 INFO /home/aina/.local/bin/bench watch
+2025-05-05 18:27:13,596 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-05 18:27:13,647 INFO /home/aina/.local/bin/bench worker
+2025-05-05 18:33:14,375 INFO /home/aina/.local/bin/bench new-app custom_reset
+2025-05-05 18:33:14,382 LOG creating new app custom_reset
+2025-05-05 18:33:48,725 INFO /home/aina/.local/bin/bench start
+2025-05-05 18:33:49,124 INFO /home/aina/.local/bin/bench schedule
+2025-05-05 18:33:49,142 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-05 18:33:49,197 INFO /home/aina/.local/bin/bench worker
+2025-05-05 18:33:49,663 INFO /home/aina/.local/bin/bench watch
+2025-05-05 18:33:57,276 WARNING /home/aina/.local/bin/bench new-app custom_reset executed with exit code 1
+2025-05-05 18:34:09,952 INFO /home/aina/.local/bin/bench new-app custom_reset
+2025-05-05 18:34:09,960 LOG creating new app custom_reset
+2025-05-05 18:35:46,969 LOG Installing custom_reset
+2025-05-05 18:35:46,971 DEBUG cd /home/aina/Documents/Evaluation/erpnext/frappe-bench && /home/aina/Documents/Evaluation/erpnext/frappe-bench/env/bin/python -m pip install --quiet --upgrade -e /home/aina/Documents/Evaluation/erpnext/frappe-bench/apps/custom_reset 
+2025-05-05 18:35:50,903 DEBUG bench build --app custom_reset
+2025-05-05 18:35:51,061 INFO /home/aina/.local/bin/bench build --app custom_reset
+2025-05-05 18:37:19,492 INFO /home/aina/.local/bin/bench --site erpnext.localhost install-app custom_reset
+2025-05-05 18:37:42,538 INFO /home/aina/.local/bin/bench start
+2025-05-05 18:37:42,968 INFO /home/aina/.local/bin/bench worker
+2025-05-05 18:37:42,994 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-05 18:37:43,019 INFO /home/aina/.local/bin/bench watch
+2025-05-05 18:37:43,043 INFO /home/aina/.local/bin/bench schedule
+2025-05-05 18:51:17,395 INFO /home/aina/.local/bin/bench start
+2025-05-05 18:51:17,882 INFO /home/aina/.local/bin/bench watch
+2025-05-05 18:51:17,906 INFO /home/aina/.local/bin/bench schedule
+2025-05-05 18:51:17,931 INFO /home/aina/.local/bin/bench worker
+2025-05-05 18:51:17,935 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-05 19:25:41,166 INFO /home/aina/.local/bin/bench start
+2025-05-05 19:25:41,572 INFO /home/aina/.local/bin/bench worker
+2025-05-05 19:25:41,586 INFO /home/aina/.local/bin/bench schedule
+2025-05-05 19:25:41,651 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-05 19:25:41,712 INFO /home/aina/.local/bin/bench watch
+2025-05-05 21:28:51,170 INFO /home/aina/.local/bin/bench start
+2025-05-05 21:28:51,597 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-05 21:28:51,609 INFO /home/aina/.local/bin/bench watch
+2025-05-05 21:28:51,643 INFO /home/aina/.local/bin/bench worker
+2025-05-05 21:28:51,723 INFO /home/aina/.local/bin/bench schedule
+2025-05-06 07:39:32,772 INFO /home/aina/.local/bin/bench start
+2025-05-06 07:39:33,207 INFO /home/aina/.local/bin/bench watch
+2025-05-06 07:39:33,238 INFO /home/aina/.local/bin/bench worker
+2025-05-06 07:39:33,251 INFO /home/aina/.local/bin/bench schedule
+2025-05-06 07:39:33,295 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-06 11:01:03,804 INFO /home/aina/.local/bin/bench start
+2025-05-06 12:00:02,066 INFO /home/aina/.local/bin/bench --verbose --site all backup
+2025-05-06 12:01:52,201 INFO /home/aina/.local/bin/bench start
+2025-05-06 12:01:54,613 INFO /home/aina/.local/bin/bench worker
+2025-05-06 12:01:54,667 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-06 12:01:54,725 INFO /home/aina/.local/bin/bench schedule
+2025-05-06 12:01:54,739 INFO /home/aina/.local/bin/bench watch

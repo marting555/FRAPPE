@@ -1,0 +1,7 @@
+2025-05-05 18:32:00,607 ERROR scheduler Skipped queueing frappe.oauth.delete_oauth2_data because it was found in queue for erpnext.localhost
+2025-05-05 18:32:00,612 ERROR scheduler Skipped queueing frappe.twofactor.delete_all_barcodes_for_users because it was found in queue for erpnext.localhost
+2025-05-05 18:32:00,620 ERROR scheduler Skipped queueing frappe.automation.doctype.reminder.reminder.send_reminders because it was found in queue for erpnext.localhost
+2025-05-05 18:32:00,625 ERROR scheduler Skipped queueing erpnext.utilities.doctype.video.video.update_youtube_data because it was found in queue for erpnext.localhost
+2025-05-05 18:32:00,626 ERROR scheduler Skipped queueing frappe.website.doctype.web_page.web_page.check_publish_status because it was found in queue for erpnext.localhost
+2025-05-05 18:32:00,628 ERROR scheduler Skipped queueing frappe.email.doctype.email_account.email_account.notify_unreplied because it was found in queue for erpnext.localhost
+2025-05-05 18:32:00,630 ERROR scheduler Skipped queueing frappe.core.doctype.prepared_report.prepared_report.expire_stalled_report because it was found in queue for erpnext.localhost
