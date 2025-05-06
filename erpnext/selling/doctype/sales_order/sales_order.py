@@ -760,18 +760,23 @@ class SalesOrder(SellingController):
 
 
 	def cancel_sales_order(self):
-		self.docstatus = 2
+		if self.docstatus == 1:  # Only cancel submitted documents
+			self.cancel()
+		elif self.docstatus == 0:  # For draft documents
+			self.flags.ignore_permissions = True
+			self.docstatus = 2
+			self.flags.ignore_on_cancel = True
 
 	def before_save(self):
 		"""
-			If order from Haravan is cancel, cancle the current order too
+			If order from Haravan is cancel, cancel the current order too
 		"""
 		if self.cancelled_status == "Đã Huỷ":
 			self.cancel_sales_order()
 
 	def before_insert(self):
 		"""
-			If order from Haravan is cancel, cancle the current order too
+			If order from Haravan is cancel, cancel the current order too
 		"""
 		if self.cancelled_status == "Đã Huỷ":
 			self.cancel_sales_order()

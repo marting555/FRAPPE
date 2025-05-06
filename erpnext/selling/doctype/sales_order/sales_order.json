@@ -1539,7 +1539,7 @@
    "read_only": 1
   },
   {
-   "default": "1",
+   "default": "0",
    "fieldname": "skip_delivery_note",
    "fieldtype": "Check",
    "hidden": 1,
