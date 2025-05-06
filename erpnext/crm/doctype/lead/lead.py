@@ -402,8 +402,6 @@ class Lead(SellingController, CRMNote):
 				"source_group": lead_source[2]
 			})
 
-			print("contact = ", contact.as_json())
-
 			try:
 				contact.insert(
 					ignore_permissions=True,
@@ -412,10 +410,12 @@ class Lead(SellingController, CRMNote):
 				contact.reload()
 				return contact
 			except frappe.LinkValidationError as e:
+				print("ERROR:", e)
 				frappe.log_error(
 					f"Failed to create contact for lead (LinkValidationError): {str(e)}")
 				frappe.throw(_(f"Failed to create contact for lead (LinkValidationError): {str(e)}."))		
 			except Exception as e:
+				print("ERROR 22:", e)
 				frappe.log_error(
 					f"Failed to create contact for lead {str(e)}")
 				frappe.throw(_(f"Failed to create contact for lead {str(e)}."))		
