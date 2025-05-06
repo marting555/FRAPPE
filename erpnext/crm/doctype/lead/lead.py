@@ -359,35 +359,70 @@ class Lead(SellingController, CRMNote):
 
 		if self.mobile_no:
 			contact.append("phone_nos", {"phone": self.mobile_no, "is_primary_mobile_no": 1})
-        
-		try:
-			contact.insert(
-				ignore_permissions=True,
-				raise_direct_exception=True,
-			)
-			contact.reload()
-			return contact
-		except frappe.LinkValidationError as e:
-			new_lead_source = frappe.new_doc("Lead Source")
-			new_lead_source.update({
-				"source_name": self.source,
-				"pancake_page_id": parsed_pancake_data.get("page_id", None),
-				"pancake_platform": parsed_pancake_data.get("platform", None)
-			})
-			new_lead_source.insert(ignore_permissions=True)
-			new_lead_source.reload()
-			contact.insert(
-				ignore_permissions=True,
-				raise_direct_exception=True
-			)
-			contact.reload()
-			return contact
-		except Exception as e:
-			frappe.log_error(f"Failed to create contact for lead {self.name}: {str(e)}", 
-				"Contact Creation Error")
-			frappe.throw(_("Failed to create contact. Please check error log for details."))		
 
-		return contact
+		'''
+		Check if lead source already exists
+		'''
+		lead_source = None
+		print(parsed_pancake_data)
+		if parsed_pancake_data.get("page_id", None):
+			print("Page ID: ", parsed_pancake_data.get("page_id"))
+			lead_source = frappe.db.get_value("Lead Source", {"pancake_page_id": parsed_pancake_data.get("page_id")}, ["name", "source_name", "pancake_platform" ])
+			if lead_source is None or lead_source == "":
+				lead_source = frappe.new_doc("Lead Source")
+
+				pc_platform = parsed_pancake_data.get("platform", None)
+				lead_source_platform = None
+				if "facebook" in pc_platform:
+					lead_source_platform = "Facebook"
+				elif "zalo" in pc_platform:
+					lead_source_platform = "Zalo"
+				elif "instagram" in pc_platform:
+					lead_source_platform = "Instagram"			
+				elif "tiktok" in pc_platform:
+					lead_source_platform = "Tiktok"	
+
+				lead_source.update({
+					"source_name": "Chưa rõ",
+					"pancake_page_id": parsed_pancake_data.get("page_id", None),
+					"pancake_platform": lead_source_platform
+				})
+				lead_source.insert(ignore_permissions=True)
+				lead_source.reload()
+				lead_source = frappe.db.get_value("Lead Source", {"name": lead_source.name}, ["name", "source_name", "pancake_platform"])
+		
+		if lead_source:
+			print("Lead Source: ", lead_source)
+			print("Lead Source ID: ", lead_source[0])
+			print("Lead Source Name: ", lead_source[1])
+			print("Lead Source Group: ", lead_source[2])
+
+			contact.update({
+				"source": lead_source[0],
+				"source_group": lead_source[2]
+			})
+
+			print("contact = ", contact.as_json())
+
+			try:
+				contact.insert(
+					ignore_permissions=True,
+					raise_direct_exception=True,
+				)
+				contact.reload()
+				return contact
+			except frappe.LinkValidationError as e:
+				frappe.log_error(
+					f"Failed to create contact for lead (LinkValidationError): {str(e)}")
+				frappe.throw(_(f"Failed to create contact for lead (LinkValidationError): {str(e)}."))		
+			except Exception as e:
+				frappe.log_error(
+					f"Failed to create contact for lead {str(e)}")
+				frappe.throw(_(f"Failed to create contact for lead {str(e)}."))		
+
+			return None
+		else:
+			return None
 
 	def create_prospect(self, company_name):
 		try:
