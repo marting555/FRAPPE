@@ -7,27 +7,40 @@
  "engine": "InnoDB",
  "field_order": [
   "date",
-  "amount"
+  "amount",
+  "gateway",
+  "kind"
  ],
  "fields": [
   {
    "fieldname": "date",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "date"
+   "label": "Ng\u00e0y"
   },
   {
    "fieldname": "amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "amount"
+   "label": "S\u1ed1 Ti\u1ec1n"
+  },
+  {
+   "fieldname": "gateway",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "C\u1ed5ng Thanh To\u00e1n"
+  },
+  {
+   "fieldname": "kind",
+   "fieldtype": "Data",
+   "label": "kind"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-05-04 19:40:54.301336",
+ "modified": "2025-05-06 11:11:23.243913",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order Payment Record",

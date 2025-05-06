@@ -16,6 +16,8 @@ class SalesOrderPaymentRecord(Document):
 
 		amount: DF.Currency
 		date: DF.Date | None
+		gateway: DF.Data | None
+		kind: DF.Data | None
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data
