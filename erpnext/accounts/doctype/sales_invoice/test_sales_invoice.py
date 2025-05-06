@@ -7023,7 +7023,7 @@ def check_gl_entries(doc, voucher_no, expected_gle, posting_date, voucher_type="
 def create_sales_invoice(**args):
 	si = frappe.new_doc("Sales Invoice")
 	args = frappe._dict(args)
-	a = frappe.get_doc("Shipping Rule", args.shipping_rule)
+	
 	if args.posting_date:
 		si.set_posting_time = 1
 	si.posting_date = args.posting_date or nowdate()
@@ -7277,7 +7277,7 @@ def setup_accounts():
 	## Create internal transfer account
 	account = create_account(
 		account_name="Unrealized Profit",
-		parent_account="Current Liabilities - _TCPI",
+		parent_account="Current Liabilities - TCP1",
 		company="_Test Company with perpetual inventory",
 	)
 
