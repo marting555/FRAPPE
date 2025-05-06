@@ -684,7 +684,9 @@ class AccountsController(TransactionBase):
 				"Customer",
 				self.customer,
 				self.company,
+				None,
 				self.payment_terms_template,
+				self.doctype,
 			)
 		elif self.doctype == "Purchase Invoice":
 			validate_due_date(
@@ -695,6 +697,7 @@ class AccountsController(TransactionBase):
 				self.company,
 				self.bill_date,
 				self.payment_terms_template,
+				self.doctype,
 			)
 
 	def set_price_list_currency(self, buying_or_selling):
