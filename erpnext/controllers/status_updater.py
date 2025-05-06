@@ -227,12 +227,12 @@ class StatusUpdater(Document):
 		sl = status_map[self.doctype][:]
 		sl.reverse()
 
-		for s in sl:
-			if not s[1]:
-				return {"status": s[0]}
-			elif s[1].startswith("eval:"):
+		for label, condition in sl:
+			if not condition:
+				return {"status": label}
+			elif condition.startswith("eval:"):
 				if frappe.safe_eval(
-					s[1][5:],
+					condition[5:],
 					None,
 					{
 						"self": self.as_dict(),
@@ -241,9 +241,9 @@ class StatusUpdater(Document):
 						"get_value": frappe.db.get_value,
 					},
 				):
-					return {"status": s[0]}
-			elif getattr(self, s[1])():
-				return {"status": s[0]}
+					return {"status": label}
+			elif getattr(self, condition)():
+				return {"status": label}
 
 		return {"status": self.status}
 
