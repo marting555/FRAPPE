@@ -853,9 +853,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 	def test_auto_insert_price(self):
 		make_item("_Test Item for Auto Price List", {"is_stock_item": 0})
 		make_item("_Test Item for Auto Price List with Discount Percentage", {"is_stock_item": 0})
-<<<<<<< HEAD
-		frappe.db.set_value("Stock Settings", None, "auto_insert_price_list_rate_if_missing", 1)
-=======
 		frappe.db.set_single_value(
 			"Stock Settings",
 			{
@@ -863,7 +860,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 				"update_price_list_based_on": "Price List Rate",
 			},
 		)
->>>>>>> 3ebde4526a (feat!: configure which rate is used to auto-update price list)
 
 		item_price = frappe.db.get_value(
 			"Item Price", {"price_list": "_Test Price List", "item_code": "_Test Item for Auto Price List"}
