@@ -6,7 +6,7 @@ from frappe.tests.utils import FrappeTestCase
 test_records = frappe.get_test_records("Product Bundle")
 
 class TestProductBundle(FrappeTestCase):
-	def test_get_new_item_code(self):
+	def test_get_new_item_code_TC_S_193(self):
 		from erpnext.selling.doctype.product_bundle.product_bundle import get_new_item_code
 		from erpnext.stock.doctype.item.test_item import make_item
 
