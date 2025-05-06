@@ -142,3 +142,30 @@ Form Dict: {'filters': '[["rfq","=","PUR-RFQ-2025-00005"]]', 'fields': ['name'],
 2025-05-06 07:46:31,667 ERROR frappe New Exception collected in error log
 Site: erpnext.localhost
 Form Dict: {'content1': 'date,item_name,item_groupe,required_by,quantity,purpose,target_warehouse,ref\r\n02/05/2025,boulon,piece,02/06/2025,13,Purchase,All Warehouse,1\r\n02/05/2025,ciment,consommable,02/06/2025,5,Purchase,All Warehouse,2', 'content2': 'supplier_name,country,type\r\nSanifer,Madagascar,Company\r\nExxon,Usa,Company\r\nElectroplus,Madagascar,Company', 'content3': 'ref_request_quotation,supplier\r\n1,Sanifer\r\n1,Exxon\r\n2,Sanifer', 'cmd': 'erpnext.data_import.page.import_csv.upload_and_import'}
+2025-05-06 13:19:53,746 ERROR frappe New Exception collected in error log
+Site: erpnext.localhost
+Form Dict: {'supplierB64': 'c3VwcGxpZXJfbmFtZSxjb3VudHJ5LHR5cGUKU2FuaWZlcixNYWRhZ2FzY2FyLENvbXBhbnkKRXh4b24sVW5pdGVkIFN0YXRlcyxDb21wYW55CkVsZWN0cm9wbHVzLE1hZGFnYXNjYXIsQ29tcGFueQo=', 'materialRequestB64': 'ZGF0ZSxpdGVtX25hbWUsaXRlbV9ncm91cGUscmVxdWlyZWRfYnkscXVhbnRpdHkscHVycG9zZSx0YXJnZXRfd2FyZWhvdXNlLHJlZg0KMDIvMDUvMjAyNSxib3Vsb24scGllY2UsMDIvMDYvMjAyNSwxMyxQdXJjaGFzZSxBbGwgV2FyZWhvdXNlLDENCjAyLzA1LzIwMjUsY2ltZW50LGNvbnNvbW1hYmxlLDAyLzA2LzIwMjUsNSxQdXJjaGFzZSxBbGwgV2FyZWhvdXNlLDI=', 'requestForQuotationB64': 'cmVmX3JlcXVlc3RfcXVvdGF0aW9uLHN1cHBsaWVyDQoxLFNhbmlmZXINCjEsRXh4b24NCjIsU2FuaWZlcg==', 'trad': 'ewogICAgImNvbnNvbW1hYmxlIjogIkNvbnN1bWFibGUiLAogICAgInBpZWNlIjogInBpZWNlIiwKICAgICJwcm9kdWl0IjogIlByb2R1Y3RzIiwKICAgICJhY2hhdCI6ICJwdXJjaGFzZSIsCiAgICAidXNhIjogIlVzYSIKfQ==', 'cmd': 'erpnext.importation.controller.Import_controller.import_data'}
+2025-05-06 13:24:43,360 ERROR frappe New Exception collected in error log
+Site: erpnext.localhost
+Form Dict: {'supplierB64': 'c3VwcGxpZXJfbmFtZSxjb3VudHJ5LHR5cGUKU2FuaWZlcixNYWRhZ2FzY2FyLENvbXBhbnkKRXh4b24sVW5pdGVkIFN0YXRlcyxDb21wYW55CkVsZWN0cm9wbHVzLE1hZGFnYXNjYXIsQ29tcGFueQo=', 'materialRequestB64': 'ZGF0ZSxpdGVtX25hbWUsaXRlbV9ncm91cGUscmVxdWlyZWRfYnkscXVhbnRpdHkscHVycG9zZSx0YXJnZXRfd2FyZWhvdXNlLHJlZg0KMDIvMDUvMjAyNSxib3Vsb24scGllY2UsMDIvMDYvMjAyNSwxMyxQdXJjaGFzZSxBbGwgV2FyZWhvdXNlLDENCjAyLzA1LzIwMjUsY2ltZW50LGNvbnNvbW1hYmxlLDAyLzA2LzIwMjUsNSxQdXJjaGFzZSxBbGwgV2FyZWhvdXNlLDI=', 'requestForQuotationB64': 'cmVmX3JlcXVlc3RfcXVvdGF0aW9uLHN1cHBsaWVyDQoxLFNhbmlmZXINCjEsRXh4b24NCjIsU2FuaWZlcg==', 'trad': 'ewogICAgImNvbnNvbW1hYmxlIjogIkNvbnN1bWFibGUiLAogICAgInBpZWNlIjogInBpZWNlIiwKICAgICJwcm9kdWl0IjogIlByb2R1Y3RzIiwKICAgICJhY2hhdCI6ICJwdXJjaGFzZSIsCiAgICAidXNhIjogIlVuaXRlZCBTdGF0ZXMiLAogICAgIm1hZGFnYXNjYXIiOiAiTWFkYWdhc2NhciIKfQ==', 'cmd': 'erpnext.importation.controller.Import_controller.import_data'}
+2025-05-06 13:26:08,319 ERROR frappe New Exception collected in error log
+Site: erpnext.localhost
+Form Dict: {'supplierB64': 'c3VwcGxpZXJfbmFtZSxjb3VudHJ5LHR5cGUKU2FuaWZlcixNYWRhZ2FzY2FyLENvbXBhbnkKRXh4b24sVW5pdGVkIFN0YXRlcyxDb21wYW55CkVsZWN0cm9wbHVzLE1hZGFnYXNjYXIsQ29tcGFueQo=', 'materialRequestB64': 'ZGF0ZSxpdGVtX25hbWUsaXRlbV9ncm91cGUscmVxdWlyZWRfYnkscXVhbnRpdHkscHVycG9zZSx0YXJnZXRfd2FyZWhvdXNlLHJlZg0KMDIvMDUvMjAyNSxib3Vsb24scGllY2UsMDIvMDYvMjAyNSwxMyxQdXJjaGFzZSxBbGwgV2FyZWhvdXNlLDENCjAyLzA1LzIwMjUsY2ltZW50LGNvbnNvbW1hYmxlLDAyLzA2LzIwMjUsNSxQdXJjaGFzZSxBbGwgV2FyZWhvdXNlLDI=', 'requestForQuotationB64': 'cmVmX3JlcXVlc3RfcXVvdGF0aW9uLHN1cHBsaWVyDQoxLFNhbmlmZXINCjEsRXh4b24NCjIsU2FuaWZlcg==', 'trad': 'ewogICAgImNvbnNvbW1hYmxlIjogIkNvbnN1bWFibGUiLAogICAgInBpZWNlIjogInBpZWNlIiwKICAgICJwcm9kdWl0IjogIlByb2R1Y3RzIiwKICAgICJhY2hhdCI6ICJwdXJjaGFzZSIsCiAgICAidXNhIjogIlVuaXRlZCBTdGF0ZXMiLAogICAgIm1hZGFnYXNjYXIiOiAiTWFkYWdhc2NhciIKfQ==', 'cmd': 'erpnext.importation.controller.Import_controller.import_data'}
+2025-05-06 15:10:32,559 ERROR frappe New Exception collected in error log
+Site: erpnext.localhost
+Form Dict: {'doctype': 'Material Request', 'txt': '', 'filters': '{"docstatus":["!=",2],"supplier":"Exxon","company":"Aina Tiana (Demo)"}', 'filter_fields': '["company"]', 'page_length': '25', 'query': 'erpnext.stock.doctype.material_request.material_request.get_material_requests_based_on_supplier', 'as_dict': '1', 'cmd': 'frappe.desk.search.search_widget'}
+2025-05-06 16:24:30,620 ERROR frappe New Exception collected in error log
+Site: erpnext.localhost
+Form Dict: {'supplier_name': 'Exxon', 'cmd': 'erpnext.buying.fournisseur.get_purchase_orders_with_status_by_supplier'}
+2025-05-06 16:26:20,195 ERROR frappe New Exception collected in error log
+Site: erpnext.localhost
+Form Dict: {'supplier_name': 'Exxon', 'cmd': 'erpnext.buying.fournisseur.get_purchase_orders_with_status_by_supplier'}
+2025-05-06 16:26:27,270 ERROR frappe New Exception collected in error log
+Site: erpnext.localhost
+Form Dict: {'supplier_name': 'Exxon', 'cmd': 'erpnext.buying.fournisseur.get_purchase_orders_with_status_by_supplier'}
+2025-05-06 16:36:27,660 ERROR frappe New Exception collected in error log
+Site: erpnext.localhost
+Form Dict: {'supplier_name': 'Exxon', 'cmd': 'erpnext.buying.fournisseur.get_purchase_orders_with_status_by_supplier'}
+2025-05-06 16:44:22,106 ERROR frappe New Exception collected in error log
+Site: erpnext.localhost
+Form Dict: {'supplier_name': 'Exxon', 'cmd': 'erpnext.buying.fournisseur.get_purchase_orders_with_status_by_supplier'}

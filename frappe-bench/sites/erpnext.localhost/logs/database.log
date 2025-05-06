@@ -1883,3 +1883,7 @@ ALTER TABLE `tabData Reset` MODIFY `supplier_quotation` tinyint NOT NULL DEFAULT
 ALTER TABLE `tabData Reset` ADD COLUMN `request_for_quotation` tinyint NOT NULL DEFAULT 0
 2025-05-05 21:25:02,556 WARNING database DDL Query made to DB:
 ALTER TABLE `tabData Reset` MODIFY `material_request` tinyint NOT NULL DEFAULT 0, MODIFY `purchase_receipt` tinyint NOT NULL DEFAULT 0, MODIFY `quotation` tinyint NOT NULL DEFAULT 0, MODIFY `purchase_order` tinyint NOT NULL DEFAULT 0, MODIFY `payment_entry` tinyint NOT NULL DEFAULT 0, MODIFY `supplier` tinyint NOT NULL DEFAULT 0, MODIFY `supplier_quotation` tinyint NOT NULL DEFAULT 0, MODIFY `item` tinyint NOT NULL DEFAULT 0, MODIFY `purchase_invoice` tinyint NOT NULL DEFAULT 0
+2025-05-06 13:18:47,341 WARNING database DDL Query made to DB:
+ALTER TABLE `tabMaterial Request` ADD COLUMN `ref` varchar(140)
+2025-05-06 13:18:47,357 WARNING database DDL Query made to DB:
+ALTER TABLE `tabMaterial Request` MODIFY `per_ordered` decimal(21,9) NOT NULL DEFAULT 0.0, MODIFY `per_received` decimal(21,9) NOT NULL DEFAULT 0.0
