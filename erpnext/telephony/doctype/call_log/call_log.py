@@ -71,15 +71,42 @@ class CallLog(Document):
 		lead_number = self.get("from") if self.is_incoming_call() else self.get("to")
 		lead_number = strip_number(lead_number)
 
+		#contact = get_contact_with_phone_number(lead_number)
 		if contact := get_contact_with_phone_number(strip_number(lead_number)):
 			self.add_link(link_type="Contact", link_name=contact)
 
+		else:
+			lead = self.create_lead_from_phone(lead_number)
+			#self.add_link(link_type="Lead", link_name=lead)
+			
+			# Add Contact
+			contact = self.get_contact_from_lead(lead)
+			self.add_link(link_type="Contact", link_name=contact)
+		
 		if lead := get_lead_with_phone_number(lead_number):
 			self.add_link(link_type="Lead", link_name=lead)
 
 		# Add Employee Name
 		if self.is_incoming_call():
 			self.update_received_by()
+
+	def create_lead_from_phone(self, lead_number):
+		
+		lead = frappe.new_doc("Lead")
+		lead.update({
+			"lead_name": lead_number,  # Tạo lead_name từ số điện thoại
+			"phone": lead_number,
+		})
+		lead.insert(ignore_permissions=True)
+		return lead
+
+	def get_contact_from_lead(self, lead):
+		contact = frappe.get_all(
+			"Contact", 
+			filters={"lead": lead.name}, 
+			limit=1
+		)
+		return contact[0] if contact else None
 
 	def after_insert(self):
 		self.trigger_call_popup()
@@ -236,5 +263,4 @@ def get_linked_call_logs(doctype, docname):
 				"template_data": log,
 			}
 		)
-
 	return timeline_contents

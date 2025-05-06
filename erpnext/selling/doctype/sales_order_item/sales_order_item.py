@@ -91,7 +91,7 @@ class SalesOrderItem(Document):
 		reserve_stock: DF.Check
 		returned_qty: DF.Float
 		serial: DF.Link | None
-		serial_numbers: DF.Text | None
+		serial_numbers: DF.SmallText | None
 		sku: DF.Data | None
 		stock_qty: DF.Float
 		stock_reserved_qty: DF.Float
