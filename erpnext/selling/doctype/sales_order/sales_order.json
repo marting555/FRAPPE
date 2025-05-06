@@ -181,7 +181,7 @@
   "party_account_currency",
   "payment_schedule_section",
   "thanh_to\u00e1n_section",
-  "table_xqiw",
+  "payment_records",
   "payment_terms_section",
   "payment_terms_template",
   "payment_schedule",
@@ -1729,8 +1729,9 @@
   {
    "fieldname": "order_number",
    "fieldtype": "Data",
-   "label": "M\u00e3 \u0110\u01a1n H\u00e0ng Haravan",
-   "read_only": 1
+   "label": "M\u00e3 \u0110\u01a1n H\u00e0ng",
+   "read_only": 1,
+   "unique": 1
   },
   {
    "fieldname": "financial_status",
@@ -1887,7 +1888,7 @@
    "label": "Thanh To\u00e1n"
   },
   {
-   "fieldname": "table_xqiw",
+   "fieldname": "payment_records",
    "fieldtype": "Table",
    "options": "Sales Order Payment Record"
   }
@@ -1896,7 +1897,7 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-05 09:42:32.351553",
+ "modified": "2025-05-06 14:01:27.821316",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

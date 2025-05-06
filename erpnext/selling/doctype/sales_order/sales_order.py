@@ -136,6 +136,7 @@ class SalesOrder(SellingController):
 		other_charges_calculation: DF.TextEditor | None
 		packed_items: DF.Table[PackedItem]
 		party_account_currency: DF.Link | None
+		payment_records: DF.Table[SalesOrderPaymentRecord]
 		payment_schedule: DF.Table[PaymentSchedule]
 		payment_terms_template: DF.Link | None
 		per_billed: DF.Percent
@@ -167,7 +168,6 @@ class SalesOrder(SellingController):
 		source: DF.Link | None
 		source_name: DF.Data | None
 		status: DF.Literal["", "Draft", "On Hold", "To Deliver and Bill", "To Bill", "To Deliver", "Completed", "Cancelled", "Closed"]
-		table_xqiw: DF.Table[SalesOrderPaymentRecord]
 		tax_category: DF.Link | None
 		tax_id: DF.Data | None
 		taxes: DF.Table[SalesTaxesandCharges]
