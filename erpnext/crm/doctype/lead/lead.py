@@ -197,9 +197,11 @@ class Lead(SellingController, CRMNote):
 	def check_phone_is_unique(self):
 		if self.phone:
 			# Validate phone number is unique
-			duplicate_leads = frappe.get_all(
-				"Lead", filters={"phone": self.phone, "name": ["!=", self.name]}
-			)
+			filters = {"phone": self.phone}
+			if self.name:
+				filters["name"] = ["!=", self.name]
+				
+			duplicate_leads = frappe.get_all("Lead", filters=filters)
 			duplicate_leads = [
 				frappe.bold(get_link_to_form("Lead", lead.name)) for lead in duplicate_leads
 			]
