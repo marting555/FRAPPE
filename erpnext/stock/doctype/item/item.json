@@ -2,7 +2,7 @@
  "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
- "autoname": "format:IT{YY}{######}",
+ "autoname": "format:ITEM{YY}{######}",
  "creation": "2013-05-03 10:45:46",
  "description": "A Product or a Service that is bought, sold or kept in stock.",
  "doctype": "DocType",
@@ -12,7 +12,6 @@
  "field_order": [
   "details",
   "item_group",
-  "design",
   "naming_series",
   "item_code",
   "item_name",
@@ -906,12 +905,6 @@
    "fieldname": "deferred_accounting_section",
    "fieldtype": "Section Break",
    "label": "Deferred Accounting"
-  },
-  {
-   "fieldname": "design",
-   "fieldtype": "Link",
-   "label": "M\u00e3 Thi\u1ebft K\u1ebf",
-   "options": "Design"
   }
  ],
  "icon": "fa fa-tag",
@@ -919,7 +912,7 @@
  "image_field": "image",
  "links": [],
  "make_attachments_public": 1,
- "modified": "2025-04-16 19:19:42.626914",
+ "modified": "2025-05-06 16:13:26.389272",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",

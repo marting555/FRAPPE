@@ -25,9 +25,8 @@
   "amended_from",
   "section_break_uceh",
   "customer_name",
-  "transaction_date",
-  "column_break_7",
   "order_number",
+  "transaction_date",
   "column_break_dqxa",
   "financial_status",
   "fulfillment_status",
@@ -105,7 +104,7 @@
   "pricing_rules",
   "contact_info",
   "address_contact_section",
-  "th\u00f4ng_tin_li\u00ean_h\u1ec7",
+  "contact_info_section",
   "contact_person",
   "contact_display",
   "contact_phone",
@@ -1622,10 +1621,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "column_break_7",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "column_break_28",
    "fieldtype": "Column Break"
   },
@@ -1843,11 +1838,6 @@
    "label": "\u0110\u1ecba Ch\u1ec9 & Li\u00ean H\u1ec7"
   },
   {
-   "fieldname": "th\u00f4ng_tin_li\u00ean_h\u1ec7",
-   "fieldtype": "Heading",
-   "label": "Th\u00f4ng Tin Li\u00ean H\u1ec7"
-  },
-  {
    "fieldname": "column_break_biok",
    "fieldtype": "Column Break"
   },
@@ -1891,13 +1881,18 @@
    "fieldname": "payment_records",
    "fieldtype": "Table",
    "options": "Sales Order Payment Record"
+  },
+  {
+   "fieldname": "contact_info_section",
+   "fieldtype": "Heading",
+   "label": "Th\u00f4ng Tin Li\u00ean H\u1ec7"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-06 14:01:27.821316",
+ "modified": "2025-05-06 16:12:24.092929",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
