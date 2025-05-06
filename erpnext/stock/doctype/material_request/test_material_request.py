@@ -7486,7 +7486,6 @@ class TestMaterialRequest(FrappeTestCase):
 		mr = frappe.copy_doc(test_records[0]).insert()
 		new_modified = frappe.utils.add_days(mr.modified, 1)
 		frappe.db.set_value("Material Request", mr.name, "modified", new_modified)
-		frappe.db.commit()
 		with self.assertRaises(frappe.ValidationError) as ctx:
 			mr.check_modified_date()
 		self.assertIn("has been modified. Please refresh.", str(ctx.exception))
@@ -7619,18 +7618,7 @@ class TestMaterialRequest(FrappeTestCase):
 		frappe.set_user("Administrator")
 		# Create Item
 		item = create_item(item_code="_Test Item", stock_uom="Nos")
-
-		raw_material_item = frappe.get_all("Item", filters={"is_stock_item": 1}, limit=1, fields=["name"]) 
-		if not raw_material_item:
-			raw_material_item = frappe.get_doc({
-				"doctype": "Item",
-				"item_code": "Test Raw Material",
-				"item_name": "Test Raw Material",
-				"is_stock_item": 1,
-				"stock_uom": "Nos"
-			}).insert()
-		else:
-			raw_material_item = raw_material_item[0]
+		raw_material_item = create_item(item_code="_Test Raw Material", stock_uom="Nos", is_stock_item=1, is_purchase_item=1)
 		
 		# Create or Get BOM
 		bom = frappe.db.get_value("BOM", {"item": item.name, "is_active": 1, "is_default": 1}) 
@@ -7725,22 +7713,19 @@ class TestMaterialRequest(FrappeTestCase):
 			return meta
 
 		frappe.get_meta = fake_get_meta
-		try:
-			results = get_default_supplier_query(
-				doctype="Supplier",
-				txt=supplier.name, 
-				searchfield="name",
-				start=0,
-				page_len=10,
-				filters={"doc": mr.name}
-			)
+		results = get_default_supplier_query(
+			doctype="Supplier",
+			txt=supplier.name, 
+			searchfield="name",
+			start=0,
+			page_len=10,
+			filters={"doc": mr.name}
+		)
 
-			self.assertTrue(results)
-			self.assertEqual(len(results[0]), 2)  
-			self.assertEqual(results[0][0], supplier.name)
-
-		finally:
-			frappe.get_meta = original_get_meta
+		self.assertTrue(results)
+		self.assertEqual(len(results[0]), 2)  
+		frappe.get_meta = original_get_meta
+		self.assertEqual(results[0][0], supplier.name)
 
 	def test_update_original_budget_TC_SCK_253(self):
 		from erpnext.stock.doctype.material_request.material_request import update_original_budget
@@ -7820,10 +7805,10 @@ class TestMaterialRequest(FrappeTestCase):
 		update_original_budget(self.mr, event="Cancel")
 
 		#Reload WBS again
-		wbs_doc = frappe.get_doc("Work Breakdown Structure", self.wbs.name)
-		self.assertEqual(wbs_doc.committed_overall_budget, 0)
-		self.assertEqual(wbs_doc.assigned_overall_budget, wbs_doc.actual_overall_budget)
-		self.assertEqual(wbs_doc.available_budget, 100000 - wbs_doc.actual_overall_budget)
+		self.wbs.reload()
+		self.assertEqual(self.wbs.committed_overall_budget, 0)
+		self.assertEqual(self.wbs.assigned_overall_budget, self.wbs.actual_overall_budget)
+		self.assertEqual(self.wbs.available_budget, 100000 - self.wbs.actual_overall_budget)
 
 		#Check Budget Entry (debit)
 		bgt_entry = frappe.get_all("Budget Entry", filters={"voucher_no": self.mr.name, "docstatus": 1})
