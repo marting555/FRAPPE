@@ -7484,8 +7484,6 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_check_modified_date_con_fail_TC_SCK_248(self):
 		mr = frappe.copy_doc(test_records[0]).insert()
-		mr = frappe.get_doc("Material Request", mr.name)
-		mr.submit()
 		new_modified = frappe.utils.add_days(mr.modified, 1)
 		frappe.db.set_value("Material Request", mr.name, "modified", new_modified)
 		frappe.db.commit()
@@ -7494,6 +7492,7 @@ class TestMaterialRequest(FrappeTestCase):
 		self.assertIn("has been modified. Please refresh.", str(ctx.exception))
 	
 	def test_get_material_requests_based_on_supplier_TC_SCK_249(self):
+		from erpnext.stock.doctype.material_request.material_request import get_material_requests_based_on_supplier
 		frappe.set_user("Administrator")
 
 		# Create supplier and item
@@ -7512,7 +7511,6 @@ class TestMaterialRequest(FrappeTestCase):
 			},
 		)
 		item.save()
-		item = frappe.get_doc("Item", item.name)
 		
 		#Create MR
 		mr = make_material_request(
@@ -7552,8 +7550,6 @@ class TestMaterialRequest(FrappeTestCase):
 				"company": "_Test Company",
 			}
 		)
-		if not results:
-			frappe.throw("No results found")
 
 		self.assertTrue(results)
 		self.assertEqual(results[0]["name"], mr.name)
@@ -7621,9 +7617,8 @@ class TestMaterialRequest(FrappeTestCase):
 
 	def test_update_requested_qty_in_production_plan_TC_SCK_251(self):
 		frappe.set_user("Administrator")
-		 # Create or Get Item
-
-		item = frappe.get_all("Item", limit=1)[0].name
+		# Create Item
+		item = create_item(item_code="_Test Item", stock_uom="Nos")
 
 		raw_material_item = frappe.get_all("Item", filters={"is_stock_item": 1}, limit=1, fields=["name"]) 
 		if not raw_material_item:
@@ -7637,7 +7632,8 @@ class TestMaterialRequest(FrappeTestCase):
 		else:
 			raw_material_item = raw_material_item[0]
 		
-		bom = frappe.db.get_value("BOM", {"item": item, "is_active": 1, "is_default": 1}) # Create or Get BOM
+		# Create or Get BOM
+		bom = frappe.db.get_value("BOM", {"item": item.name, "is_active": 1, "is_default": 1}) 
 		if not bom:
 			bom = frappe.get_doc({
 				"doctype": "BOM",
@@ -7652,7 +7648,8 @@ class TestMaterialRequest(FrappeTestCase):
 				}]
 			}).insert().name
 
-		production_plan = frappe.get_doc({ #Create Production Plan with po_items (this creates internal link)
+		#Create Production Plan with po_items (this creates internal link)
+		production_plan = frappe.get_doc({ 
 			"doctype": "Production Plan",
 			"company": frappe.defaults.get_user_default("Company"),
 			"from_date": frappe.utils.nowdate(),
@@ -7666,7 +7663,9 @@ class TestMaterialRequest(FrappeTestCase):
 		}).insert()
 
 		material_request_plan_item_name = production_plan.po_items[0].name
-		material_request = frappe.get_doc({   #Create a Material Request linked to above Plan and Plan Item
+
+		#Create a Material Request linked to above Plan and Plan Item
+		material_request = frappe.get_doc({   
 			"doctype": "Material Request",
 			"material_request_type": "Purchase",
 			"schedule_date": frappe.utils.add_days(frappe.utils.nowdate(), 5),
@@ -7806,10 +7805,10 @@ class TestMaterialRequest(FrappeTestCase):
 		update_original_budget(self.mr, event="Submit")
 
 		# Reload WBS
-		wbs_doc = frappe.get_doc("Work Breakdown Structure", self.wbs.name)
-		self.assertEqual(wbs_doc.committed_overall_budget, 950)  # 500+450
-		self.assertEqual(wbs_doc.assigned_overall_budget, 950)
-		self.assertEqual(wbs_doc.available_budget, 100000 - 950)
+		self.wbs.reload()
+		self.assertEqual(self.wbs.committed_overall_budget, 950)  # 500+450
+		self.assertEqual(self.wbs.assigned_overall_budget, 950)
+		self.assertEqual(self.wbs.available_budget, 100000 - 950)
 
 		#Check Budget Entry (credit)
 		bgt_entry = frappe.get_all("Budget Entry", filters={"voucher_no": self.mr.name, "docstatus": 1})
