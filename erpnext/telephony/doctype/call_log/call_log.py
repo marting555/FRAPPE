@@ -71,7 +71,7 @@ class CallLog(Document):
 		lead_number = self.get("from") if self.is_incoming_call() else self.get("to")
 		lead_number = strip_number(lead_number)
 
-		contact = get_contact_with_phone_number(lead_number)
+		#contact = get_contact_with_phone_number(lead_number)
 		if contact := get_contact_with_phone_number(strip_number(lead_number)):
 			self.add_link(link_type="Contact", link_name=contact)
 
@@ -91,7 +91,7 @@ class CallLog(Document):
 			self.update_received_by()
 
 	def create_lead_from_phone(self, lead_number):
-		"""Tạo Lead mới từ số điện thoại nếu không có Lead"""
+		
 		lead = frappe.new_doc("Lead")
 		lead.update({
 			"lead_name": lead_number,  # Tạo lead_name từ số điện thoại
@@ -101,7 +101,6 @@ class CallLog(Document):
 		return lead
 
 	def get_contact_from_lead(self, lead):
-		"""Lấy Contact được tạo từ Lead"""
 		contact = frappe.get_all(
 			"Contact", 
 			filters={"lead": lead.name}, 
