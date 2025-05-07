@@ -150,6 +150,8 @@ class Lead(SellingController, CRMNote):
 			parsed_pancake_data = frappe.parse_json(self.pancake_data)
 		except Exception as e:
 			parsed_pancake_data = None
+		if parsed_pancake_data is None:
+			return 
 		if parsed_pancake_data.get("page_id", None):
 			lead_source = frappe.db.get_value("Lead Source", 
 			{"pancake_page_id": parsed_pancake_data.get("page_id")}, ["name", "source_name", "pancake_platform" ])
