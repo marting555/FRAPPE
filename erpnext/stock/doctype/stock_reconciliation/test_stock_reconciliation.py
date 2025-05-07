@@ -1437,18 +1437,18 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 		sr.submit()
 			
 		self.assertEqual(sr.expense_account, "Temporary Opening - _TC")
-		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Temporary Opening - _TC'},'credit')#get_difference_account API ref.
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Temporary Opening - _TC'},'credit')
 		
 		self.assertEqual(gl_temp_credit, 4000)
 		
-		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Stock In Hand - _TC'},'debit')#get_difference_account API ref.
+		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Stock In Hand - _TC'},'debit')
 		self.assertEqual(gl_stock_debit, 4000)
 
-		actual_qty,incoming_rate = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':sr.name, 'voucher_type':'Stock Reconciliation','warehouse':'Stores - _TC'},['qty_after_transaction','valuation_rate'])#get_difference_account API ref.
+		actual_qty,incoming_rate = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':sr.name, 'voucher_type':'Stock Reconciliation','warehouse':'Stores - _TC'},['qty_after_transaction','valuation_rate'])
 		self.assertEqual(actual_qty, 10)
 		self.assertEqual(incoming_rate, 100)
 
-		actual_qty1,incoming_rate1 = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':sr.name, 'voucher_type':'Stock Reconciliation','warehouse':'Finished Goods - _TC'},['qty_after_transaction','valuation_rate'])#get_difference_account API ref.
+		actual_qty1,incoming_rate1 = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':sr.name, 'voucher_type':'Stock Reconciliation','warehouse':'Finished Goods - _TC'},['qty_after_transaction','valuation_rate'])
 		self.assertEqual(actual_qty1, 20)
 		self.assertEqual(incoming_rate1, 150)
 
@@ -1465,7 +1465,7 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 		sr.posting_time = nowtime()
 		sr.set_posting_time = 1
 		sr.company = "_Test Company"
-		sr.expense_account = frappe.db.get_value("Account", {"is_group": 0, "company": sr.company, "account_type": "Temporary"}, "name") #get_difference_account API ref.
+		sr.expense_account = frappe.db.get_value("Account", {"is_group": 0, "company": sr.company, "account_type": "Temporary"}, "name")
 		sr.append(
             "items",
             {
