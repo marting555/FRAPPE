@@ -397,12 +397,37 @@ def make_sales_order(source_name: str, target_doc=None):
 
 def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	customer = _make_customer(source_name, ignore_permissions)
-	ordered_items = get_ordered_items(source_name)
+	ordered_details = frappe.get_all(
+		"Sales Order Item",
+		filters={"prevdoc_docname": source_name, "docstatus": 1},
+		fields=["item_code", "qty", "quotation_item"],
+	)
+
+	ordered_items = frappe._dict()
+	for item in ordered_details:
+		ordered_items[item.item_code] = ordered_items.get(item.item_code, 0.0) + item.qty
+
+	quoted_rows = {row.quotation_item for row in ordered_details}
 
 	selected_rows = [x.get("name") for x in frappe.flags.get("args", {}).get("selected_items", [])]
 
 	# 0 qty is accepted, as the qty uncertain for some items
-	has_unit_price_items = frappe.db.get_value("Quotation", source_name, "has_unit_price_items")
+	has_unit_price_items, quotation_status = frappe.db.get_value(
+		"Quotation", source_name, ["has_unit_price_items", "status"]
+	)
+
+	quoted_qty = frappe._dict()
+
+	if quotation_status == "Partially Ordered":
+		quoted_qty = frappe._dict(
+			frappe.get_all(
+				"Quotation Item",
+				filters={"parent": source_name, "parenttype": "Quotation"},
+				fields=["item_code", "sum(qty)"],
+				group_by="item_code",
+				as_list=1,
+			)
+		)
 
 	def is_unit_price_row(source) -> bool:
 		return has_unit_price_items and source.qty == 0
@@ -435,7 +460,17 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		target.run_method("calculate_taxes_and_totals")
 
 	def update_item(obj, target, source_parent):
-		balance_qty = obj.qty if is_unit_price_row(obj) else obj.qty - ordered_items.get(obj.item_code, 0.0)
+		balance_qty = 0
+
+		if is_unit_price_row(obj):
+			balance_qty = obj.qty
+		elif quotation_status == "Partially Ordered":
+			balance_qty = quoted_qty[obj.item_code] = quoted_qty.get(obj.item_code, 0.0) - ordered_items.get(
+				obj.item_code, 0.0
+			)
+		else:
+			balance_qty = obj.qty - ordered_items.get(obj.item_code, 0.0)
+
 		target.qty = balance_qty if balance_qty > 0 else 0
 		target.stock_qty = flt(target.qty) * flt(obj.conversion_factor)
 
@@ -452,9 +487,14 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		3. If no selections: Simple row: Map if adequate qty
 		"""
 		balance_qty = item.qty - ordered_items.get(item.item_code, 0.0)
-		has_valid_qty: bool = (balance_qty > 0) or is_unit_price_row(item)
+		has_valid_qty = True
 
-		if not has_valid_qty:
+		if quotation_status == "Partially Ordered":
+			has_valid_qty = ordered_items.get(item.item_code, 0.0) < quoted_qty.get(item.item_code, 0.0)
+		else:
+			has_valid_qty = balance_qty > 0
+
+		if not (has_valid_qty or is_unit_price_row(item)):
 			return False
 
 		if not selected_rows:
@@ -462,6 +502,9 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 
 		if selected_rows and (item.is_alternative or item.has_alternative_item):
 			return item.name in selected_rows
+
+		if item.name in quoted_rows:
+			return False
 
 		# Simple row
 		return True
