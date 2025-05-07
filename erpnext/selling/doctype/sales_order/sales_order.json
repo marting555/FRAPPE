@@ -389,7 +389,7 @@
    "fieldtype": "Tab Break",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Contact Info",
+   "label": "Address & Contact",
    "options": "fa fa-bullhorn"
   },
   {
@@ -408,7 +408,7 @@
    "fieldtype": "Small Text",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Address Display",
+   "label": "Address",
    "read_only": 1
   },
   {
@@ -426,7 +426,7 @@
    "hide_days": 1,
    "hide_seconds": 1,
    "in_global_search": 1,
-   "label": "Contact Display",
+   "label": "Contact",
    "read_only": 1
   },
   {
@@ -434,7 +434,7 @@
    "fieldtype": "Small Text",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Contact Mobile",
+   "label": "Mobile No",
    "options": "Phone",
    "read_only": 1
   },
