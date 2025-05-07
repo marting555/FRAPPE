@@ -169,3 +169,9 @@ Form Dict: {'supplier_name': 'Exxon', 'cmd': 'erpnext.buying.fournisseur.get_pur
 2025-05-06 16:44:22,106 ERROR frappe New Exception collected in error log
 Site: erpnext.localhost
 Form Dict: {'supplier_name': 'Exxon', 'cmd': 'erpnext.buying.fournisseur.get_purchase_orders_with_status_by_supplier'}
+2025-05-06 19:36:12,551 ERROR frappe New Exception collected in error log
+Site: erpnext.localhost
+Form Dict: {'supplierB64': 'c3VwcGxpZXJfbmFtZSxjb3VudHJ5LHR5cGUKU2FuaWZlcixNYWRhZ2FzY2FyLENvbXBhbnkKRXh4b24sVW5pdGVkIFN0YXRlcyxDb21wYW55CkVsZWN0cm9wbHVzLE1hZGFnYXNjYXIsQ29tcGFueQo=', 'materialRequestB64': 'ZGF0ZSxpdGVtX25hbWUsaXRlbV9ncm91cGUscmVxdWlyZWRfYnkscXVhbnRpdHkscHVycG9zZSx0YXJnZXRfd2FyZWhvdXNlLHJlZg0KMDIvMDUvMjAyNSxib3Vsb24scGllY2UsMDIvMDYvMjAyNSwxMyxQdXJjaGFzZSxBbGwgV2FyZWhvdXNlLDENCjAyLzA1LzIwMjUsY2ltZW50LGNvbnNvbW1hYmxlLDAyLzA2LzIwMjUsNSxQdXJjaGFzZSxBbGwgV2FyZWhvdXNlLDI=', 'requestForQuotationB64': 'cmVmX3JlcXVlc3RfcXVvdGF0aW9uLHN1cHBsaWVyDQoxLFNhbmlmZXINCjEsRXh4b24NCjIsU2FuaWZlcg==', 'trad': 'ewogICAgImNvbnNvbW1hYmxlIjogIkNvbnN1bWFibGUiLAogICAgInBpZWNlIjogInBpZWNlIiwKICAgICJwcm9kdWl0IjogIlByb2R1Y3RzIiwKICAgICJhY2hhdCI6ICJwdXJjaGFzZSIsCiAgICAidXNhIjogIlVuaXRlZCBTdGF0ZXMiLAogICAgIm1hZGFnYXNjYXIiOiAiTWFkYWdhc2NhciIKCn0=', 'cmd': 'erpnext.importation.controller.Import_controller.import_data'}
+2025-05-07 06:48:27,721 ERROR frappe New Exception collected in error log
+Site: erpnext.localhost
+Form Dict: {'supplier_name': 'Exxon', 'cmd': 'erpnext.buying.fournisseur.get_purchase_orders_with_status_by_supplier'}
