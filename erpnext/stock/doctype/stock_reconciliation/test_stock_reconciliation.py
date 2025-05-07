@@ -1556,14 +1556,14 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 		sr.submit()
 			
 		self.assertEqual(sr.expense_account, "Temporary Opening - _TC")
-		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Temporary Opening - _TC'},'credit')#get_difference_account API ref.
+		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Temporary Opening - _TC'},'credit')
 		
 		self.assertEqual(gl_temp_credit, 50000)
 		
-		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Stock In Hand - _TC'},'debit')#get_difference_account API ref.
+		gl_stock_debit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Stock In Hand - _TC'},'debit')
 		self.assertEqual(gl_stock_debit, 50000)
 
-		actual_qty,incoming_rate = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':sr.name, 'voucher_type':'Stock Reconciliation','warehouse':'Stores - _TC'},['qty_after_transaction','valuation_rate'])#get_difference_account API ref.
+		actual_qty,incoming_rate = frappe.db.get_value('Stock Ledger Entry',{'voucher_no':sr.name, 'voucher_type':'Stock Reconciliation','warehouse':'Stores - _TC'},['qty_after_transaction','valuation_rate'])
 		self.assertEqual(actual_qty, 100)
 		self.assertEqual(incoming_rate, 500)
 
