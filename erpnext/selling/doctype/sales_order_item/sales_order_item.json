@@ -25,7 +25,7 @@
   "serial_numbers",
   "column_break_lnqd",
   "serial",
-  "ch\u01b0\u1eddng_tr\u00ecnh_khuy\u1ebfn_m\u00e3i_section",
+  "promotion_section",
   "g0",
   "g1",
   "g2",
@@ -143,7 +143,7 @@
    "fieldtype": "Link",
    "hidden": 1,
    "in_global_search": 1,
-   "label": "M\u00e3 S\u1ea3n Ph\u1ea9m",
+   "label": "Item Code",
    "oldfieldname": "item_code",
    "oldfieldtype": "Link",
    "options": "Item",
@@ -174,7 +174,7 @@
    "fieldtype": "Data",
    "in_global_search": 1,
    "in_list_view": 1,
-   "label": "T\u00ean S\u1ea3n Ph\u1ea9m",
+   "label": "Item Name",
    "oldfieldname": "item_name",
    "oldfieldtype": "Data",
    "print_hide": 1,
@@ -203,7 +203,7 @@
    "depends_on": "eval: !parent.skip_delivery_note",
    "fieldname": "delivery_date",
    "fieldtype": "Date",
-   "label": "Ng\u00e0y Giao H\u00e0ng",
+   "label": "Delivery Date",
    "no_copy": 1,
    "print_hide": 1
   },
@@ -231,7 +231,7 @@
    "fieldname": "qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "S\u1ed1 L\u01b0\u1ee3ng",
+   "label": "Quantity",
    "non_negative": 1,
    "oldfieldname": "qty",
    "oldfieldtype": "Currency",
@@ -292,7 +292,7 @@
    "fieldname": "price_list_rate",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "Gi\u00e1 S\u1ea3n Ph\u1ea9m",
+   "label": "Price List Rate",
    "oldfieldname": "ref_rate",
    "oldfieldtype": "Currency",
    "options": "currency",
@@ -365,7 +365,7 @@
    "fieldname": "discount_amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "S\u1ed1 Ti\u1ec1n Gi\u1ea3m",
+   "label": "Discount Amount",
    "options": "currency"
   },
   {
@@ -388,7 +388,7 @@
    "fieldname": "rate",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "Gi\u00e1 B\u00e1n",
+   "label": "Rate",
    "oldfieldname": "export_rate",
    "oldfieldtype": "Currency",
    "options": "currency",
@@ -400,7 +400,7 @@
    "fieldname": "amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "T\u1ed5ng",
+   "label": "Amount",
    "oldfieldname": "export_amount",
    "oldfieldtype": "Currency",
    "options": "currency",
@@ -1042,12 +1042,12 @@
   {
    "fieldname": "variant_title",
    "fieldtype": "Data",
-   "label": "T\u00ean Bi\u1ebfn Th\u1ec3"
+   "label": "Variant Title"
   },
   {
    "fieldname": "product_details",
    "fieldtype": "Data",
-   "label": "Chi Ti\u1ebft S\u1ea3n Ph\u1ea9m"
+   "label": "Product Details"
   },
   {
    "fieldname": "section_break_eour",
@@ -1065,13 +1065,8 @@
   {
    "fieldname": "serial",
    "fieldtype": "Link",
-   "label": "T\u00ecm Serial Number",
+   "label": "Find Serial Number",
    "options": "Serial"
-  },
-  {
-   "fieldname": "ch\u01b0\u1eddng_tr\u00ecnh_khuy\u1ebfn_m\u00e3i_section",
-   "fieldtype": "Section Break",
-   "label": "Ch\u01b0\u01a1ng Tr\u00ecnh Khuy\u1ebfn M\u00e3i"
   },
   {
    "fieldname": "g1",
@@ -1129,12 +1124,17 @@
    "label": "G0",
    "link_filters": "[[\"Promotion\",\"scope\",\"=\",\"S\u1ea3n ph\u1ea9m\"],[\"Promotion\",\"priority\",\"=\",\"G0\"]]",
    "options": "Promotion"
+  },
+  {
+   "fieldname": "promotion_section",
+   "fieldtype": "Section Break",
+   "label": "Promotion Section"
   }
  ],
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-05-07 12:27:56.675487",
+ "modified": "2025-05-07 16:33:22.512716",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order Item",
