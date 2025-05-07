@@ -409,7 +409,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	for item in ordered_item_details:
 		ordered_items[item.item_code] = ordered_items.get(item.item_code, 0.0) + item.qty
 
-		# to know which rows are already ordered from quotation
+	# to know which rows are already ordered from quotation
 	quoted_item_rows = {row.quotation_item for row in ordered_item_details}
 
 	selected_rows = [x.get("name") for x in frappe.flags.get("args", {}).get("selected_items", [])]
@@ -502,15 +502,15 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		if not (has_valid_qty or is_unit_price_row(row)):
 			return False
 
+		# quoted item is already ordered in SO
+		if row.name in quoted_item_rows:
+			return False
+
 		if not selected_rows:
 			return not row.is_alternative
 
 		if selected_rows and (row.is_alternative or row.has_alternative_item):
 			return row.name in selected_rows
-
-		# quoted item is already ordered in SO
-		if row.name in quoted_item_rows:
-			return False
 
 		# Simple row
 		return True
