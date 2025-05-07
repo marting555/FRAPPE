@@ -647,7 +647,7 @@
   {
    "fieldname": "ceo_name",
    "fieldtype": "Data",
-   "label": "Ceo"
+   "label": "CEO"
   },
   {
    "fieldname": "first_channel",
@@ -751,7 +751,7 @@
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-05-07 02:49:54.513416",
+ "modified": "2025-05-07 03:30:53.860531",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",
