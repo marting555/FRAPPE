@@ -161,7 +161,7 @@
    "fieldname": "customer_name",
    "fieldtype": "Data",
    "in_global_search": 1,
-   "label": "H\u1ecd V\u00e0 T\u00ean",
+   "label": "Customer Name",
    "no_copy": 1,
    "oldfieldname": "customer_name",
    "oldfieldtype": "Data",
@@ -172,7 +172,7 @@
    "depends_on": "eval:doc.customer_type != 'Company'",
    "fieldname": "gender",
    "fieldtype": "Link",
-   "label": "Gi\u1edbi T\u00ednh",
+   "label": "Gender",
    "link_filters": "[[\"Gender\",\"name\",\"in\",[\"Nam\",\"N\u1eef\",\"Kh\u00e1c\"]]]",
    "options": "Gender"
   },
@@ -181,7 +181,7 @@
    "fieldname": "customer_type",
    "fieldtype": "Select",
    "hidden": 1,
-   "label": "Lo\u1ea1i Kh\u00e1ch H\u00e0ng",
+   "label": "Customer Type",
    "oldfieldname": "customer_type",
    "oldfieldtype": "Select",
    "options": "Company\nIndividual\nPartnership"
@@ -195,7 +195,7 @@
   {
    "fieldname": "lead_name",
    "fieldtype": "Link",
-   "label": "T\u1ea1o T\u1eeb Lead",
+   "label": "From Lead",
    "no_copy": 1,
    "oldfieldname": "lead_name",
    "oldfieldtype": "Link",
@@ -218,7 +218,7 @@
   {
    "fieldname": "account_manager",
    "fieldtype": "Link",
-   "label": "Ph\u1ee5 Tr\u00e1ch",
+   "label": "Account Manager",
    "options": "User"
   },
   {
@@ -227,7 +227,7 @@
    "hidden": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Nh\u00f3m Kh\u00e1ch H\u00e0ng",
+   "label": "Customer Group",
    "oldfieldname": "customer_group",
    "oldfieldtype": "Link",
    "options": "Customer Group",
@@ -239,7 +239,7 @@
    "hidden": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Khu V\u1ef1c",
+   "label": "Territory",
    "link_filters": "[[\"Territory\",\"name\",\"like\",\"%B\u1ed9%\"]]",
    "oldfieldname": "territory",
    "oldfieldtype": "Link",
@@ -268,7 +268,7 @@
    "fieldname": "is_internal_customer",
    "fieldtype": "Check",
    "hidden": 1,
-   "label": "L\u00e0 Nh\u00e2n Vi\u00ean Jemmia"
+   "label": "Is Internal Customer"
   },
   {
    "depends_on": "is_internal_customer",
@@ -530,7 +530,7 @@
   {
    "fieldname": "opportunity_name",
    "fieldtype": "Link",
-   "label": "T\u1ea1o T\u1eeb C\u01a1 H\u1ed9i",
+   "label": "From Opportunity",
    "no_copy": 1,
    "options": "Opportunity",
    "print_hide": 1
@@ -538,7 +538,7 @@
   {
    "fieldname": "contact_and_address_tab",
    "fieldtype": "Tab Break",
-   "label": "Ngu\u1ed3n"
+   "label": "Address & Contact"
   },
   {
    "fieldname": "defaults_tab",
@@ -550,7 +550,7 @@
    "fieldname": "settings_tab",
    "fieldtype": "Tab Break",
    "hidden": 1,
-   "label": "C\u00e0i \u0110\u1eb7t"
+   "label": "Settings"
   },
   {
    "collapsible": 1,
@@ -558,7 +558,7 @@
    "fieldname": "sales_team_tab",
    "fieldtype": "Tab Break",
    "hidden": 1,
-   "label": "Nh\u00f3m B\u00e1n H\u00e0ng",
+   "label": "Sales Team",
    "oldfieldtype": "Section Break",
    "options": "fa fa-group"
   },
@@ -574,7 +574,7 @@
    "fieldname": "dashboard_tab",
    "fieldtype": "Tab Break",
    "hidden": 1,
-   "label": "T\u1ed5ng Quan",
+   "label": "Dashboard",
    "show_dashboard": 1
   },
   {
@@ -595,13 +595,13 @@
   {
    "fieldname": "accounting_tab",
    "fieldtype": "Tab Break",
-   "label": "T\u00e0i Kho\u1ea3n"
+   "label": "Accounting"
   },
   {
    "fieldname": "tax_tab",
    "fieldtype": "Tab Break",
    "hidden": 1,
-   "label": "Thu\u1ebf"
+   "label": "Tax"
   },
   {
    "collapsible": 1,
@@ -875,7 +875,7 @@
   {
    "fieldname": "person_name",
    "fieldtype": "Data",
-   "label": "H\u1ecd V\u00e0 T\u00ean"
+   "label": "Customer Name"
   }
  ],
  "icon": "fa fa-user",
@@ -889,7 +889,11 @@
    "link_fieldname": "party"
   }
  ],
+<<<<<<< Updated upstream
  "modified": "2025-05-07 01:19:33.718859",
+=======
+ "modified": "2025-05-07 02:44:26.837100",
+>>>>>>> Stashed changes
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
