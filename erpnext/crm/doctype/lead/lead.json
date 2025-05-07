@@ -193,7 +193,7 @@
    "fieldname": "gender",
    "fieldtype": "Link",
    "label": "Gender",
-   "link_filters": "[[\"Gender\",\"name\",\"in\",[\"Nam\",\"N\u1eef\",\"Kh\u00e1c\"]]]",
+   "link_filters": "[]",
    "options": "Gender"
   },
   {
@@ -751,7 +751,7 @@
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-05-07 03:30:53.860531",
+ "modified": "2025-05-07 03:33:17.622767",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",
