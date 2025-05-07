@@ -795,7 +795,7 @@
    "fieldname": "personal_document_type",
    "fieldtype": "Select",
    "label": "Lo\u1ea1i Gi\u1ea7y T\u1edd C\u00e1 Nh\u00e2n",
-   "options": "CCCD\nCMND\nH\u1ed9 Chi\u1ebfu\nPassport"
+   "options": "CCCD\nCMND\nPassport"
   },
   {
    "fieldname": "column_break_akie",
@@ -889,7 +889,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-05-05 21:56:27.120144",
+ "modified": "2025-05-07 01:19:33.718859",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",

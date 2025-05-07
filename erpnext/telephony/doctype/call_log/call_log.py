@@ -94,7 +94,7 @@ class CallLog(Document):
 		
 		lead = frappe.new_doc("Lead")
 		lead.update({
-			"lead_name": lead_number,  # Tạo lead_name từ số điện thoại
+			"lead_name": lead_number,  
 			"phone": lead_number,
 		})
 		lead.insert(ignore_permissions=True)
