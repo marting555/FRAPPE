@@ -490,16 +490,15 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		2. If selections: Is Alternative Item/Has Alternative Item: Map if selected and adequate qty
 		3. If no selections: Simple row: Map if adequate qty
 		"""
-		balance_qty = row.qty - ordered_items.get(row.item_code, 0.0)
 		has_valid_qty = True
 
 		# for `Partially Ordered` check for total qty of item in quotation
 		if quotation_status == "Partially Ordered":
-			has_valid_qty = ordered_items.get(row.item_code, 0.0) < quoted_qty.get(row.item_code, 0.0)
+			has_valid_qty = quoted_qty[row.item_code] > ordered_items.get(row.item_code, 0.0)
 		else:
-			has_valid_qty = balance_qty > 0
+			has_valid_qty = row.qty > ordered_items.get(row.item_code, 0.0)
 
-		if not has_valid_qty or not is_unit_price_row(row):
+		if not (has_valid_qty or is_unit_price_row(row)):
 			return False
 
 		# quoted item is already ordered in SO
