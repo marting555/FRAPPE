@@ -889,11 +889,7 @@
    "link_fieldname": "party"
   }
  ],
-<<<<<<< Updated upstream
- "modified": "2025-05-07 01:19:33.718859",
-=======
  "modified": "2025-05-07 02:44:26.837100",
->>>>>>> Stashed changes
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
