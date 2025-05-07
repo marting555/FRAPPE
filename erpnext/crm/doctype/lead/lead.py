@@ -1,6 +1,5 @@
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
-# Hello World 
 import frappe
 from frappe import _
 from frappe.contacts.address_and_contact import (
