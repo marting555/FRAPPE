@@ -221,35 +221,6 @@ class Lead(SellingController, CRMNote):
 				if len(self.phone) < 10:  # Example condition
 					frappe.throw(_("Phone number must be at least 10 digits long."))
 
-	
-	# def check_phone_number_is_unique(self):
-	# 	if self.mobile_no:
-	# 		# Validate phone number is unique
-	# 		if not frappe.db.get_single_value("CRM Settings", "allow_lead_duplication_based_on_phone_numbers"):
-	# 			duplicate_leads = frappe.get_all(
-	# 				"Lead", filters={"mobile_no": self.mobile_no, "name": ["!=", self.name]}
-	# 			)
-	# 			duplicate_leads = [
-	# 				frappe.bold(get_link_to_form("Lead", lead.name)) for lead in duplicate_leads
-	# 			]
-
-	# 			if duplicate_leads:
-	# 				frappe.throw(
-	# 					_("Phone Number must be unique, it is already used in {0}").format(
-	# 						comma_and(duplicate_leads)
-	# 					),
-	# 					frappe.DuplicateEntryError,
-	# 				)
-
-	# def validate_phone_number(self):
-	# 	if self.mobile_no:
-	# 		# Add any specific validation for phone number format if needed
-	# 		if not self.flags.ignore_phone_validation:
-	# 			# Example: Check if the phone number is valid (you can customize this)
-	# 			if len(self.mobile_no) < 10:  # Example condition
-	# 				frappe.throw(_("Phone number must be at least 10 digits long."))
-
-
 
 	def link_to_contact(self):
 		# update contact links
