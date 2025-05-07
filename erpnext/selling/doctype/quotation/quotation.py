@@ -499,7 +499,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		else:
 			has_valid_qty = balance_qty > 0
 
-		if not (has_valid_qty or is_unit_price_row(row)):
+		if not has_valid_qty or not is_unit_price_row(row):
 			return False
 
 		# quoted item is already ordered in SO
