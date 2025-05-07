@@ -88,4 +88,3 @@ By contributing to ERPNext, you agree that your contributions will be licensed u
 
 Please read our [Logo and Trademark Policy](TRADEMARK_POLICY.md).
 
-# Hello World
