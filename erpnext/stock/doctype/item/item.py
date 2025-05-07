@@ -89,7 +89,6 @@ class Item(Document):
 		default_material_request_type: DF.Literal["Purchase", "Material Transfer", "Material Issue", "Manufacture", "Customer Provided"]
 		delivered_by_supplier: DF.Check
 		description: DF.TextEditor | None
-		design: DF.Link | None
 		disabled: DF.Check
 		enable_deferred_expense: DF.Check
 		enable_deferred_revenue: DF.Check

@@ -21,5 +21,6 @@ class SalesOrderPaymentRecord(Document):
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data
+		transaction_id: DF.Int
 	# end: auto-generated types
 	pass

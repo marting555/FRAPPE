@@ -111,7 +111,7 @@
   "column_break_bwya",
   "table_uzxd",
   "merge_lead_tab",
-  "ch\u1ecdn_lead_tr\u00f9ng",
+  "check_duplicate",
   "dashboard_tab"
  ],
  "fields": [
@@ -180,6 +180,7 @@
    "no_copy": 1,
    "oldfieldname": "status",
    "oldfieldtype": "Select",
+   "status": "Lead\nOpen\nReplied\nOpportunity\nQuotation\nLost Quotation\nInterested\nConverted\nDo Not Contact\nSpam",
    "options": "Lead\nOpen\nReplied\nOpportunity\nQuotation\nLost Quotation\nInterested\nConverted\nDo Not Contact\nSpam",
    "reqd": 1,
    "search_index": 1
@@ -558,12 +559,6 @@
    "label": "Ki\u1ec3m Tra Tr\u00f9ng"
   },
   {
-   "fieldname": "ch\u1ecdn_lead_tr\u00f9ng",
-   "fieldtype": "Link",
-   "label": "Ch\u1ecdn Lead tr\u00f9ng",
-   "options": "Lead"
-  },
-  {
    "fieldname": "birth_date",
    "fieldtype": "Date",
    "label": "Ng\u00e0y Sinh"
@@ -758,13 +753,19 @@
    "fieldname": "website_from_data",
    "fieldtype": "JSON",
    "label": "website_form_data"
+  },
+  {
+   "fieldname": "check_duplicate",
+   "fieldtype": "Link",
+   "label": "Ch\u1ecdn Lead tr\u00f9ng",
+   "options": "Lead"
   }
  ],
  "icon": "fa fa-user",
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-04-29 00:18:55.477067",
+ "modified": "2025-05-06 00:34:20.084798",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",

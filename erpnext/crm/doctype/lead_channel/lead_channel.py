@@ -21,7 +21,6 @@ class LeadChannel(Document):
 		last_incoming_call_time: DF.Datetime | None
 		last_message_time: DF.Datetime | None
 		last_outgoing_call_time: DF.Datetime | None
-		link_ovaa: DF.Link | None
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data

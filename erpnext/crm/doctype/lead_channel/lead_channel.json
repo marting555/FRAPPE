@@ -20,8 +20,7 @@
   "last_incoming_call_time",
   "last_outgoing_call_time",
   "type",
-  "phone_number_provided_time",
-  "link_ovaa"
+  "phone_number_provided_time"
  ],
  "fields": [
   {
@@ -99,18 +98,13 @@
    "fieldname": "phone_number_provided_time",
    "fieldtype": "Datetime",
    "label": "Th\u1eddi Gian \u0110\u1ec3 L\u1ea1i S\u1ed1 \u0110i\u1ec7n Tho\u1ea1i"
-  },
-  {
-   "fieldname": "link_ovaa",
-   "fieldtype": "Link",
-   "options": "Lead Channel"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-04-16 00:46:35.195029",
+ "modified": "2025-05-06 21:00:36.864910",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead Channel",
