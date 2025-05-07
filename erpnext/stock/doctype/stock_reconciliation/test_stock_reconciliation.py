@@ -1429,16 +1429,12 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 		self.assertTrue(sr.items[0].qty == 0)
 
 	def test_create_stock_reconciliation_for_opening(self):
-		from erpnext.accounts.utils import get_company_default
-		
-		frappe.db.rollback()
+		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
+		frappe.db.set_value("Company", "_Test Company", "default_inventory_account", "Stock In Hand - _TC")
 		sr = self._create_stock_reconciliation_for_opening()
-		try:
-			sr.save()
-			sr.submit()
-		except Exception as e:
-			frappe.db.rollback()
-			assert False, f"An error occurred while saving the document: {str(e)}\n{frappe.get_traceback()}"
+		
+		sr.save()
+		sr.submit()
 			
 		self.assertEqual(sr.expense_account, "Temporary Opening - _TC")
 		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Temporary Opening - _TC'},'credit')#get_difference_account API ref.
@@ -1552,17 +1548,12 @@ class TestStockReconciliation(FrappeTestCase, StockTestMixin):
 		self.assertEqual(current_stock_in_hand, expected_stock_in_hand)
 
 	def test_stock_reconciliation_for_opening(self):
-		from erpnext.accounts.utils import get_company_default
-		
-		frappe.db.rollback()
+		frappe.db.set_value("Company", "_Test Company", "enable_perpetual_inventory", 1)
+		frappe.db.set_value("Company", "_Test Company", "default_inventory_account", "Stock In Hand - _TC")
 		sr = create_stock_reconciliation_for_opening()
 		
-		try:
-			sr.save()
-			sr.submit()
-		except Exception as e:
-			frappe.db.rollback()
-			assert False, f"An error occurred while saving the document: {str(e)}\n{frappe.get_traceback()}"
+		sr.save()
+		sr.submit()
 			
 		self.assertEqual(sr.expense_account, "Temporary Opening - _TC")
 		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':sr.name, 'account': 'Temporary Opening - _TC'},'credit')#get_difference_account API ref.
