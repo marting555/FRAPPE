@@ -957,6 +957,7 @@
   {
    "fieldname": "distributed_discount_amount",
    "fieldtype": "Currency",
+   "hidden": 1,
    "label": "Distributed Discount Amount",
    "options": "currency"
   },
@@ -1133,7 +1134,7 @@
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-02-28 09:45:44.934947",
+ "modified": "2025-05-07 12:27:56.675487",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order Item",
