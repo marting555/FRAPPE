@@ -33,11 +33,11 @@
   {
    "fieldname": "pancake_platform",
    "fieldtype": "Data",
-   "label": "N\u1ec1n T\u1ea3ng K\u00eanh"
+   "label": "Platform"
   }
  ],
  "links": [],
- "modified": "2025-04-29 07:41:38.161109",
+ "modified": "2025-05-07 03:10:44.215481",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead Source",

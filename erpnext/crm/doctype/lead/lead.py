@@ -43,7 +43,6 @@ class Lead(SellingController, CRMNote):
 		campaign_name: DF.Link | None
 		ceo_name: DF.Data | None
 		check_duplicate: DF.Link | None
-		city: DF.Data | None
 		company: DF.Link | None
 		company_name: DF.Data | None
 		customer: DF.Link | None
@@ -82,17 +81,16 @@ class Lead(SellingController, CRMNote):
 		qualification_status: DF.Literal["Unqualified", "In Process", "Qualified"]
 		qualified_by: DF.Link | None
 		qualified_on: DF.Date | None
-		request_type: DF.Literal["", "Product Enquiry", "Request for Information", "Suggestions", "Other"]
+		request_type: DF.Literal["Product Enquiry", "Request for Information", "Suggestions", "Other"]
 		salutation: DF.Link | None
 		source: DF.Link | None
-		state: DF.Data | None
 		status: DF.Literal["Lead", "Open", "Replied", "Opportunity", "Quotation", "Lost Quotation", "Interested", "Converted", "Do Not Contact", "Spam"]
 		stringee_data: DF.JSON | None
 		table_uzxd: DF.Table[LeadChannel]
 		tax_number: DF.Data | None
 		territory: DF.Link | None
 		title: DF.Data | None
-		type: DF.Literal["C\u00e1 Nh\u00e2n", "Doanh Nghi\u1ec7p"]
+		type: DF.Literal["Individual", "Business"]
 		unsubscribed: DF.Check
 		website: DF.Data | None
 		website_from_data: DF.JSON | None

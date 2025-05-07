@@ -52,15 +52,13 @@
   "fax",
   "tax_number",
   "ceo_name",
-  "contac_section",
+  "contact_section",
   "contact_html",
   "address_section",
   "address_html",
   "advanced_information_selection",
   "birth_date",
   "address",
-  "state",
-  "city",
   "column_break_38",
   "personal_tax_id",
   "first_channel",
@@ -101,7 +99,7 @@
   "column_break_64",
   "qualified_by",
   "qualified_on",
-  "ghi_ch\u00fa_tab",
+  "note_tab",
   "notes_html",
   "notes",
   "activities_tab",
@@ -141,7 +139,7 @@
   {
    "fieldname": "company_name",
    "fieldtype": "Data",
-   "label": "T\u00ean Doanh Nghi\u1ec7p",
+   "label": "Company Name",
    "mandatory_depends_on": "eval: !(doc.first_name)",
    "oldfieldname": "company_name",
    "oldfieldtype": "Data"
@@ -164,7 +162,7 @@
    "default": "__user",
    "fieldname": "lead_owner",
    "fieldtype": "Link",
-   "label": "Ph\u1ee5 Tr\u00e1ch",
+   "label": "Lead Owner",
    "oldfieldname": "lead_owner",
    "oldfieldtype": "Link",
    "options": "User",
@@ -176,27 +174,25 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Tr\u1ea1ng Th\u00e1i Lead",
+   "label": "Lead Status",
    "no_copy": 1,
    "oldfieldname": "status",
    "oldfieldtype": "Select",
-   "status": "Lead\nOpen\nReplied\nOpportunity\nQuotation\nLost Quotation\nInterested\nConverted\nDo Not Contact\nSpam",
    "options": "Lead\nOpen\nReplied\nOpportunity\nQuotation\nLost Quotation\nInterested\nConverted\nDo Not Contact\nSpam",
    "reqd": 1,
    "search_index": 1
   },
   {
-   "depends_on": "eval:doc.type==\"C\u00e1 Nh\u00e2n\"",
+   "depends_on": "eval:doc.type==\"Individual\"",
    "fieldname": "salutation",
    "fieldtype": "Link",
-   "label": "Danh X\u01b0ng",
-   "link_filters": "[[\"Salutation\",\"name\",\"in\",[\"B\u00e1c\",\"Ch\u00fa\",\"C\u00f4\",\"Ch\u1ecb\",\"Anh\",\"B\u00e0\",\"\u00d4ng\"]]]",
+   "label": "Salutation",
    "options": "Salutation"
   },
   {
    "fieldname": "gender",
    "fieldtype": "Link",
-   "label": "Gi\u1edbi T\u00ednh",
+   "label": "Gender",
    "link_filters": "[[\"Gender\",\"name\",\"in\",[\"Nam\",\"N\u1eef\",\"Kh\u00e1c\"]]]",
    "options": "Gender"
   },
@@ -205,7 +201,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Ngu\u1ed3n Lead",
+   "label": "Lead Source",
    "oldfieldname": "source",
    "oldfieldtype": "Select",
    "options": "Lead Source"
@@ -258,7 +254,7 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "S\u1ed1 \u0110i\u1ec7n Tho\u1ea1i",
+   "label": "Phone",
    "oldfieldname": "contact_no",
    "oldfieldtype": "Data",
    "options": "Phone"
@@ -280,18 +276,18 @@
    "oldfieldtype": "Data"
   },
   {
-   "default": "C\u00e1 Nh\u00e2n",
+   "default": "Individual",
    "fieldname": "type",
    "fieldtype": "Select",
-   "label": "Lo\u1ea1i Kh\u00e1ch H\u00e0ng",
+   "label": "Customer Type",
    "oldfieldname": "type",
    "oldfieldtype": "Select",
-   "options": "C\u00e1 Nh\u00e2n\nDoanh Nghi\u1ec7p"
+   "options": "Individual\nBusiness"
   },
   {
    "fieldname": "market_segment",
    "fieldtype": "Link",
-   "label": "Ph\u00e2n Kh\u00fac Th\u1ecb Tr\u01b0\u1eddng",
+   "label": "Market Segment",
    "oldfieldname": "market_segment",
    "oldfieldtype": "Select",
    "options": "Market Segment"
@@ -299,7 +295,7 @@
   {
    "fieldname": "industry",
    "fieldtype": "Link",
-   "label": "L\u0129nh V\u1ef1c Kinh Doanh",
+   "label": "Industry",
    "oldfieldname": "industry",
    "oldfieldtype": "Link",
    "options": "Industry Type"
@@ -311,7 +307,7 @@
    "label": "Request Type",
    "oldfieldname": "request_type",
    "oldfieldtype": "Select",
-   "options": "\nProduct Enquiry\nRequest for Information\nSuggestions\nOther"
+   "options": "Product Enquiry\nRequest for Information\nSuggestions\nOther"
   },
   {
    "fieldname": "company",
@@ -335,7 +331,7 @@
    "hidden": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Khu V\u1ef1c",
+   "label": "Territory",
    "link_filters": "[[\"Territory\",\"name\",\"like\",\"%B\u1ed9%\"]]",
    "oldfieldname": "territory",
    "oldfieldtype": "Link",
@@ -372,7 +368,7 @@
    "bold": 1,
    "fieldname": "first_name",
    "fieldtype": "Data",
-   "label": "H\u1ecd v\u00e0 T\u00ean",
+   "label": "Lead Name",
    "mandatory_depends_on": "eval: !(doc.company_name)"
   },
   {
@@ -390,7 +386,7 @@
   {
    "fieldname": "no_of_employees",
    "fieldtype": "Select",
-   "label": "Quy M\u00f4",
+   "label": "No Of Employees",
    "options": "1-10\n11-50\n51-200\n201-500\n501-1000\n1000+"
   },
   {
@@ -455,7 +451,7 @@
   {
    "fieldname": "address_section",
    "fieldtype": "Section Break",
-   "label": "\u0110\u1ecba Ch\u1ec9"
+   "label": "Address Section"
   },
   {
    "fieldname": "column_break_64",
@@ -482,13 +478,13 @@
    "fieldname": "activities_tab",
    "fieldtype": "Tab Break",
    "hidden": 1,
-   "label": "H\u00e0nh \u0110\u1ed9ng"
+   "label": "Activities"
   },
   {
-   "depends_on": "eval:doc.type==\"Doanh Nghi\u1ec7p\"",
+   "depends_on": "eval:doc.type==\"Business\"",
    "fieldname": "organization_section",
    "fieldtype": "Section Break",
-   "label": "Th\u00f4ng Tin Doanh Nghi\u1ec7p"
+   "label": "Organization Section"
   },
   {
    "fieldname": "column_break_28",
@@ -536,16 +532,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "city",
-   "fieldtype": "Data",
-   "label": "X\u00e3/Ph\u01b0\u1eddng"
-  },
-  {
-   "fieldname": "state",
-   "fieldtype": "Data",
-   "label": "Qu\u1eadn/Huy\u1ec7n"
-  },
-  {
    "fieldname": "dashboard_tab",
    "fieldtype": "Tab Break",
    "hidden": 1,
@@ -556,12 +542,12 @@
    "fieldname": "merge_lead_tab",
    "fieldtype": "Tab Break",
    "hidden": 1,
-   "label": "Ki\u1ec3m Tra Tr\u00f9ng"
+   "label": "Merge Lead"
   },
   {
    "fieldname": "birth_date",
    "fieldtype": "Date",
-   "label": "Ng\u00e0y Sinh"
+   "label": "Birth Date"
   },
   {
    "fieldname": "column_break_kkvk",
@@ -571,25 +557,25 @@
    "default": "Now",
    "fieldname": "lead_received_date",
    "fieldtype": "Datetime",
-   "label": "Ng\u00e0y Nh\u1eadn Lead",
+   "label": "Lead Received Date",
    "read_only": 1
   },
   {
    "fieldname": "basic_information_section",
    "fieldtype": "Section Break",
-   "label": "Th\u00f4ng Tin C\u01a1 B\u1ea3n"
+   "label": "Basic Information"
   },
   {
    "collapsible": 1,
    "fieldname": "advanced_information_selection",
    "fieldtype": "Section Break",
    "hidden": 1,
-   "label": "Th\u00f4ng Tin N\u00e2ng Cao"
+   "label": "Advanced Information Selection"
   },
   {
    "fieldname": "address",
    "fieldtype": "Data",
-   "label": "\u0110\u1ecba Ch\u1ec9 Li\u00ean H\u1ec7"
+   "label": "Address"
   },
   {
    "fieldname": "column_break_bzqz",
@@ -604,18 +590,18 @@
   {
    "fieldname": "place_of_issuance",
    "fieldtype": "Select",
-   "label": "N\u01a1i C\u1ea5p",
+   "label": "Place Of Issuance",
    "options": "B\u1ed9 C\u00f4ng An\nC\u1ee5c C\u1ea3nh s\u00e1t QLHC v\u1ec1 TTXH\nC\u1ee5c C\u1ea3nh s\u00e1t \u0111\u0103ng k\u00fd, qu\u1ea3n l\u00fd c\u01b0 tr\u00fa v\u00e0 d\u1eef li\u1ec7u qu\u1ed1c gia v\u1ec1 d\u00e2n c\u01b0"
   },
   {
    "fieldname": "date_of_issuance",
    "fieldtype": "Date",
-   "label": "Ng\u00e0y C\u1ea5p"
+   "label": "Date Of Issuance"
   },
   {
    "fieldname": "information_tab",
    "fieldtype": "Tab Break",
-   "label": "Chi Ti\u1ebft"
+   "label": "Detail"
   },
   {
    "fieldname": "table_uzxd",
@@ -623,62 +609,57 @@
    "options": "Lead Channel"
   },
   {
-   "fieldname": "contac_section",
-   "fieldtype": "Section Break",
-   "label": "L\u1ecbch S\u1eed Li\u00ean H\u1ec7"
-  },
-  {
    "fieldname": "bank_name",
    "fieldtype": "Select",
-   "label": "T\u00e0i Kho\u1ea3n Ng\u00e2n H\u00e0ng",
+   "label": "Bank Name",
    "options": "Agribank\nACB\nBIDV\nVietcombank\nVietinBank\nTechcombank\nSacombank\nMB Bank\nEximbank\nVPBank\nSHB\nNamABank\nB\u1eafc \u00c1 Bank\nOceanBank\nTPBank"
   },
   {
    "fieldname": "bank_branch",
    "fieldtype": "Select",
-   "label": "Chi Nh\u00e1nh"
+   "label": "Bank Branch"
   },
   {
    "fieldname": "account_number",
    "fieldtype": "Data",
-   "label": "S\u1ed1 T\u00e0i Kho\u1ea3n"
+   "label": "Account Number"
   },
   {
    "fieldname": "bank_province",
    "fieldtype": "Select",
-   "label": "T\u1ec9nh/TP c\u1ee7a ng\u00e2n h\u00e0ng"
+   "label": "Bank Province"
   },
   {
    "fieldname": "bank_district",
    "fieldtype": "Select",
-   "label": "Ch\u1ecdn Qu\u1eadn/Huy\u1ec7n"
+   "label": "Bank District"
   },
   {
    "fieldname": "bank_ward",
    "fieldtype": "Select",
-   "label": "Ch\u1ecdn X\u00e3/Ph\u01b0\u1eddng"
+   "label": "Bank Ward"
   },
   {
    "fieldname": "tax_number",
    "fieldtype": "Data",
-   "label": "M\u00e3 S\u1ed1 Thu\u1ebf"
+   "label": "Tax Number"
   },
   {
    "fieldname": "ceo_name",
    "fieldtype": "Data",
-   "label": "Ch\u1ee7 Doanh Nghi\u1ec7p"
+   "label": "Ceo"
   },
   {
    "fieldname": "first_channel",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "K\u00eanh Ti\u1ebfp C\u1eadn",
+   "label": "First Channel",
    "options": "Lead Source"
   },
   {
    "fieldname": "personal_tax_id",
    "fieldtype": "Data",
-   "label": "S\u1ed1 CCCD/H\u1ed9 Chi\u1ebfu"
+   "label": "Personal ID"
   },
   {
    "fieldname": "column_break_bwya",
@@ -687,13 +668,13 @@
   {
    "fieldname": "purpose_lead",
    "fieldtype": "Link",
-   "label": "M\u1ee5c \u0110\u00edch",
+   "label": "Purpose Lead ",
    "options": "Lead Demand"
   },
   {
    "fieldname": "budget_lead",
    "fieldtype": "Link",
-   "label": "Ng\u00e2n S\u00e1ch",
+   "label": "Budget Lead",
    "options": "Lead Budget"
   },
   {
@@ -703,35 +684,30 @@
   {
    "fieldname": "preferred_product_type",
    "fieldtype": "Table MultiSelect",
-   "label": "S\u1ea3n Ph\u1ea9m",
+   "label": "Preferred Product Type",
    "options": "Lead Product Item"
   },
   {
    "fieldname": "preferred_diamond",
    "fieldtype": "Table",
-   "label": "Kim C\u01b0\u01a1ng",
+   "label": "Preferred Diamond",
    "options": "Lead Diamond"
-  },
-  {
-   "fieldname": "ghi_ch\u00fa_tab",
-   "fieldtype": "Tab Break",
-   "label": "Ghi Ch\u00fa"
   },
   {
    "fieldname": "demand_notes",
    "fieldtype": "Small Text",
    "hidden": 1,
-   "label": "Th\u00f4ng Tin Th\u00eam"
+   "label": "Demand Notes"
   },
   {
    "fieldname": "customer_demand_section",
    "fieldtype": "Section Break",
-   "label": "Nhu C\u1ea7u Kh\u00e1ch H\u00e0ng"
+   "label": "Customer Demand"
   },
   {
    "fieldname": "expected_delivery_date",
    "fieldtype": "Date",
-   "label": "Ng\u00e0y Mua H\u00e0ng (d\u1ef1 ki\u1ebfn)"
+   "label": "Expected Delivery Date"
   },
   {
    "fieldname": "column_break_wsdb",
@@ -757,15 +733,25 @@
   {
    "fieldname": "check_duplicate",
    "fieldtype": "Link",
-   "label": "Ch\u1ecdn Lead tr\u00f9ng",
+   "label": "Check Duplicate",
    "options": "Lead"
+  },
+  {
+   "fieldname": "contact_section",
+   "fieldtype": "Section Break",
+   "label": "Contact Section"
+  },
+  {
+   "fieldname": "note_tab",
+   "fieldtype": "Tab Break",
+   "label": "Notes"
   }
  ],
  "icon": "fa fa-user",
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-05-06 00:34:20.084798",
+ "modified": "2025-05-07 02:49:54.513416",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",

@@ -12,8 +12,8 @@
  "email_append_to": 1,
  "engine": "InnoDB",
  "field_order": [
-  "chi_ti\u1ebft_tab",
-  "th\u00f4ng_tin_c\u01a1_h\u1ed9i_section",
+  "detail_tab",
+  "opportunity_section",
   "naming_series",
   "opportunity_from",
   "party_name",
@@ -121,7 +121,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Ngu\u1ed3n C\u01a1 H\u1ed9i",
+   "label": "Opportunity From",
    "oldfieldname": "enquiry_from",
    "oldfieldtype": "Select",
    "options": "DocType",
@@ -133,7 +133,7 @@
    "fieldname": "party_name",
    "fieldtype": "Dynamic Link",
    "in_standard_filter": 1,
-   "label": "Ch\u1ecdn Li\u00ean K\u1ebft",
+   "label": "Party Name",
    "oldfieldname": "customer",
    "oldfieldtype": "Link",
    "options": "opportunity_from",
@@ -147,7 +147,7 @@
    "in_global_search": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "H\u1ecd V\u00e0 T\u00ean",
+   "label": "Customer Name",
    "read_only": 1
   },
   {
@@ -169,7 +169,7 @@
    "fieldtype": "Link",
    "hidden": 1,
    "in_list_view": 1,
-   "label": "Lo\u1ea1i C\u01a1 H\u1ed9i",
+   "label": "Opportunity Type",
    "oldfieldname": "enquiry_type",
    "oldfieldtype": "Select",
    "options": "Opportunity Type"
@@ -180,7 +180,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Tr\u1ea1ng Th\u00e1i",
+   "label": "Status",
    "no_copy": 1,
    "oldfieldname": "status",
    "oldfieldtype": "Select",
@@ -191,7 +191,7 @@
   {
    "fieldname": "order_lost_reason",
    "fieldtype": "Small Text",
-   "label": "Nguy\u00ean Nh\u00e2n Chi Ti\u1ebft",
+   "label": "Order Lost Reason",
    "no_copy": 1,
    "read_only": 1
   },
@@ -199,7 +199,7 @@
    "fieldname": "expected_closing",
    "fieldtype": "Date",
    "hidden": 1,
-   "label": "Ng\u00e0y D\u1ef1 Ki\u1ec7n \u0110\u00f3ng C\u01a1 H\u1ed9i",
+   "label": "Expected Closing",
    "no_copy": 1
   },
   {
@@ -218,7 +218,7 @@
   {
    "fieldname": "opportunity_amount",
    "fieldtype": "Currency",
-   "label": "Gi\u00e1 Tr\u1ecb C\u01a1 H\u1ed9i",
+   "label": "Opportunity Amount",
    "options": "currency"
   },
   {
@@ -229,14 +229,14 @@
    "default": "Prospecting",
    "fieldname": "sales_stage",
    "fieldtype": "Link",
-   "label": "Gi\u1ea3i \u0110o\u1ea1n B\u00e1n H\u00e0ng",
+   "label": "Sales Stage",
    "options": "Sales Stage"
   },
   {
    "default": "100",
    "fieldname": "probability",
    "fieldtype": "Percent",
-   "label": "X\u00e1c Su\u1ea5t (%)"
+   "label": "Probability"
   },
   {
    "fieldname": "items_section",
@@ -254,7 +254,7 @@
   {
    "fieldname": "contact_info",
    "fieldtype": "Tab Break",
-   "label": "Li\u00ean H\u1ec7",
+   "label": "Contact",
    "options": "fa fa-bullhorn"
   },
   {
@@ -302,7 +302,7 @@
    "depends_on": "eval:doc.party_name",
    "fieldname": "contact_person",
    "fieldtype": "Link",
-   "label": "Ng\u01b0\u1eddi Li\u00ean H\u1ec7",
+   "label": "Contact Person",
    "options": "Contact",
    "print_hide": 1
   },
@@ -311,7 +311,7 @@
    "fieldname": "contact_display",
    "fieldtype": "Small Text",
    "in_global_search": 1,
-   "label": "Li\u00ean L\u1ea1c Ch\u00ednh",
+   "label": "Contact Display",
    "read_only": 1
   },
   {
@@ -339,7 +339,7 @@
   {
    "fieldname": "source",
    "fieldtype": "Link",
-   "label": "Ngu\u1ed3n",
+   "label": "Source",
    "oldfieldname": "source",
    "oldfieldtype": "Select",
    "options": "Lead Source"
@@ -400,7 +400,7 @@
    "depends_on": "eval:doc.status===\"Lost\"",
    "fieldname": "lost_reasons",
    "fieldtype": "Table MultiSelect",
-   "label": "Nguy\u00ean Nh\u00e2n",
+   "label": "Lost Reasons",
    "options": "Opportunity Lost Reason Detail",
    "read_only": 1
   },
@@ -459,7 +459,7 @@
    "depends_on": "eval:doc.status===\"Lost\"",
    "fieldname": "lost_detail_section",
    "fieldtype": "Section Break",
-   "label": "Nguy\u00ean Nh\u00e2n \u0110\u00f3ng C\u01a1 H\u1ed9i"
+   "label": "Lost Detail Section"
   },
   {
    "fieldname": "column_break_56",
@@ -513,7 +513,7 @@
   {
    "fieldname": "address_contact_section",
    "fieldtype": "Section Break",
-   "label": "Danh S\u00e1ch \u0110\u1ecba Ch\u1ec9 & Li\u00ean H\u1ec7"
+   "label": "Address & Contact"
   },
   {
    "fieldname": "column_break_36",
@@ -522,7 +522,7 @@
   {
    "fieldname": "opportunity_owner",
    "fieldtype": "Link",
-   "label": "Ph\u1ee5 Tr\u00e1ch",
+   "label": "Opportunity Owner",
    "options": "User"
   },
   {
@@ -544,7 +544,7 @@
   {
    "fieldname": "phone",
    "fieldtype": "Data",
-   "label": "S\u1ed1 \u0110i\u1ec7n Tho\u1ea1i",
+   "label": "Phone",
    "options": "Phone"
   },
   {
@@ -560,7 +560,7 @@
   {
    "fieldname": "primary_contact_section",
    "fieldtype": "Section Break",
-   "label": "Li\u00ean H\u1ec7 Ch\u00ednh"
+   "label": "Primary Contact Section"
   },
   {
    "fieldname": "column_break_54",
@@ -577,7 +577,7 @@
    "depends_on": "eval:!doc.__islocal",
    "fieldname": "notes_tab",
    "fieldtype": "Tab Break",
-   "label": "Ghi Ch\u00fa"
+   "label": "Notes"
   },
   {
    "fieldname": "notes_html",
@@ -647,36 +647,26 @@
    "options": "Country"
   },
   {
-   "fieldname": "chi_ti\u1ebft_tab",
-   "fieldtype": "Tab Break",
-   "label": "Chi Ti\u1ebft"
-  },
-  {
-   "fieldname": "th\u00f4ng_tin_c\u01a1_h\u1ed9i_section",
-   "fieldtype": "Section Break",
-   "label": "Th\u00f4ng Tin C\u01a1 H\u1ed9i"
-  },
-  {
    "fieldname": "customer_demand_sections",
    "fieldtype": "Section Break",
-   "label": "Nhu C\u1ea7u Kh\u00e1ch H\u00e0ng"
+   "label": "Customer Demand Sections"
   },
   {
    "fieldname": "purpose_lead",
    "fieldtype": "Link",
-   "label": "M\u1ee5c \u0110\u00edch",
+   "label": "Purpose Lead",
    "options": "Lead Demand"
   },
   {
    "fieldname": "budget_lead",
    "fieldtype": "Link",
-   "label": "Ng\u00e2n S\u00e1ch",
+   "label": "Budget Lead",
    "options": "Lead Budget"
   },
   {
    "fieldname": "preferred_product_type",
    "fieldtype": "Table MultiSelect",
-   "label": "S\u1ea3n Ph\u1ea9m",
+   "label": "Preferred Product Type",
    "options": "Lead Product Item"
   },
   {
@@ -686,29 +676,39 @@
   {
    "fieldname": "preferred_diamond",
    "fieldtype": "Table",
-   "label": "Kim C\u01b0\u01a1ng",
+   "label": "Preferred Diamond",
    "options": "Lead Diamond"
   },
   {
    "fieldname": "demand_notes",
    "fieldtype": "Small Text",
    "hidden": 1,
-   "label": "Th\u00f4ng Tin Th\u00eam"
+   "label": "Demand Notes"
   },
   {
    "fieldname": "expected_delivery_date",
    "fieldtype": "Date",
-   "label": "Ng\u00e0y mong \u0111\u1ee3i nh\u1eadn h\u00e0ng"
+   "label": "Expected Delivery Date"
   },
   {
    "fieldname": "column_break_rirs",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "detail_tab",
+   "fieldtype": "Tab Break",
+   "label": "Detail"
+  },
+  {
+   "fieldname": "opportunity_section",
+   "fieldtype": "Section Break",
+   "label": "Opportunity"
   }
  ],
  "icon": "fa fa-info-sign",
  "idx": 195,
  "links": [],
- "modified": "2025-04-28 00:33:44.585552",
+ "modified": "2025-05-07 03:24:37.305459",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Opportunity",
