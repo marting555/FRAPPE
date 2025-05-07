@@ -444,7 +444,7 @@
    "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Email",
+   "label": "Contact Email",
    "options": "Email",
    "print_hide": 1,
    "read_only": 1
@@ -520,7 +520,7 @@
    "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Currency And Price List",
+   "label": "Currency and Price List",
    "options": "fa fa-tag",
    "print_hide": 1
   },
@@ -895,7 +895,7 @@
    "fieldtype": "Section Break",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Gi\u1ea3m Gi\u00e1"
+   "label": "Additional Discount"
   },
   {
    "fieldname": "coupon_code",
@@ -949,7 +949,7 @@
    "fieldtype": "Currency",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Discount Amount",
+   "label": "Additional Discount Amount",
    "options": "currency",
    "print_hide": 1,
    "read_only": 1
@@ -1533,7 +1533,7 @@
    "hidden": 1,
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Contact Phone",
+   "label": "Phone",
    "options": "Phone",
    "read_only": 1
   },
@@ -1638,6 +1638,7 @@
   {
    "fieldname": "payment_terms_section",
    "fieldtype": "Section Break",
+   "label": "Payment Terms",
    "hidden": 1
   },
   {
@@ -1647,7 +1648,7 @@
   {
    "fieldname": "shipping_address_column",
    "fieldtype": "Section Break",
-   "label": "\u0110\u1ecba Ch\u1ec9 Giao H\u00e0ng"
+   "label": "Shipping Adress"
   },
   {
    "fieldname": "column_break_93",
