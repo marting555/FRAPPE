@@ -397,17 +397,20 @@ def make_sales_order(source_name: str, target_doc=None):
 
 def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	customer = _make_customer(source_name, ignore_permissions)
-	ordered_details = frappe.get_all(
+
+	ordered_item_details = frappe.get_all(
 		"Sales Order Item",
 		filters={"prevdoc_docname": source_name, "docstatus": 1},
 		fields=["item_code", "qty", "quotation_item"],
 	)
 
+	# total quantity of item in order
 	ordered_items = frappe._dict()
-	for item in ordered_details:
+	for item in ordered_item_details:
 		ordered_items[item.item_code] = ordered_items.get(item.item_code, 0.0) + item.qty
 
-	quoted_rows = {row.quotation_item for row in ordered_details}
+		# to know which rows are already ordered from quotation
+	quoted_item_rows = {row.quotation_item for row in ordered_item_details}
 
 	selected_rows = [x.get("name") for x in frappe.flags.get("args", {}).get("selected_items", [])]
 
@@ -418,6 +421,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 
 	quoted_qty = frappe._dict()
 
+	# total quantity of item in quotation, to allocate remaining items (qty) in SO
 	if quotation_status == "Partially Ordered":
 		quoted_qty = frappe._dict(
 			frappe.get_all(
@@ -429,8 +433,8 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 			)
 		)
 
-	def is_unit_price_row(source) -> bool:
-		return has_unit_price_items and source.qty == 0
+	def is_unit_price_row(row) -> bool:
+		return has_unit_price_items and row.qty == 0
 
 	def set_missing_values(source, target):
 		if customer:
@@ -459,51 +463,53 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		target.run_method("set_missing_values")
 		target.run_method("calculate_taxes_and_totals")
 
-	def update_item(obj, target, source_parent):
+	def update_item(row, target, source_parent):
 		balance_qty = 0
 
-		if is_unit_price_row(obj):
-			balance_qty = obj.qty
+		if is_unit_price_row(row):
+			balance_qty = row.qty
 		elif quotation_status == "Partially Ordered":
-			balance_qty = quoted_qty[obj.item_code] = quoted_qty.get(obj.item_code, 0.0) - ordered_items.get(
-				obj.item_code, 0.0
-			)
+			# subtracting to avoid double counting for same item
+			quoted_qty[row.item_code] -= ordered_items.get(row.item_code, 0.0)
+			balance_qty = quoted_qty[row.item_code]
 		else:
-			balance_qty = obj.qty - ordered_items.get(obj.item_code, 0.0)
+			balance_qty = row.qty - ordered_items.get(row.item_code, 0.0)
 
 		target.qty = balance_qty if balance_qty > 0 else 0
-		target.stock_qty = flt(target.qty) * flt(obj.conversion_factor)
+		target.stock_qty = flt(target.qty) * flt(row.conversion_factor)
 
-		if obj.against_blanket_order:
-			target.against_blanket_order = obj.against_blanket_order
-			target.blanket_order = obj.blanket_order
-			target.blanket_order_rate = obj.blanket_order_rate
+		if row.against_blanket_order:
+			target.against_blanket_order = row.against_blanket_order
+			target.blanket_order = row.blanket_order
+			target.blanket_order_rate = row.blanket_order_rate
 
-	def can_map_row(item) -> bool:
+	def can_map_row(row) -> bool:
 		"""
 		Row mapping from Quotation to Sales order:
 		1. If no selections, map all non-alternative rows (that sum up to the grand total)
 		2. If selections: Is Alternative Item/Has Alternative Item: Map if selected and adequate qty
 		3. If no selections: Simple row: Map if adequate qty
 		"""
-		balance_qty = item.qty - ordered_items.get(item.item_code, 0.0)
+		balance_qty = row.qty - ordered_items.get(row.item_code, 0.0)
 		has_valid_qty = True
 
+		# for `Partially Ordered` check for total qty of item in quotation
 		if quotation_status == "Partially Ordered":
-			has_valid_qty = ordered_items.get(item.item_code, 0.0) < quoted_qty.get(item.item_code, 0.0)
+			has_valid_qty = ordered_items.get(row.item_code, 0.0) < quoted_qty.get(row.item_code, 0.0)
 		else:
 			has_valid_qty = balance_qty > 0
 
-		if not (has_valid_qty or is_unit_price_row(item)):
+		if not (has_valid_qty or is_unit_price_row(row)):
 			return False
 
 		if not selected_rows:
-			return not item.is_alternative
+			return not row.is_alternative
 
-		if selected_rows and (item.is_alternative or item.has_alternative_item):
-			return item.name in selected_rows
+		if selected_rows and (row.is_alternative or row.has_alternative_item):
+			return row.name in selected_rows
 
-		if item.name in quoted_rows:
+		# quoted item is already ordered in SO
+		if row.name in quoted_item_rows:
 			return False
 
 		# Simple row
