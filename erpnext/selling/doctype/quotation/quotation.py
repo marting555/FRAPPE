@@ -397,20 +397,7 @@ def make_sales_order(source_name: str, target_doc=None):
 
 def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	customer = _make_customer(source_name, ignore_permissions)
-
-	ordered_item_details = frappe.get_all(
-		"Sales Order Item",
-		filters={"prevdoc_docname": source_name, "docstatus": 1},
-		fields=["item_code", "qty", "quotation_item"],
-	)
-
-	# total quantity of item in order
-	ordered_items = frappe._dict()
-	for item in ordered_item_details:
-		ordered_items[item.item_code] = ordered_items.get(item.item_code, 0.0) + item.qty
-
-	# to know which rows are already ordered from quotation
-	quoted_item_rows = {row.quotation_item for row in ordered_item_details}
+	ordered_items = get_ordered_items(source_name)
 
 	selected_rows = [x.get("name") for x in frappe.flags.get("args", {}).get("selected_items", [])]
 
@@ -499,10 +486,6 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 			has_valid_qty = row.qty > ordered_items.get(row.item_code, 0.0)
 
 		if not (has_valid_qty or is_unit_price_row(row)):
-			return False
-
-		# quoted item is already ordered in SO
-		if row.name in quoted_item_rows:
 			return False
 
 		if not selected_rows:
