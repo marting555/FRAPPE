@@ -341,26 +341,22 @@ class Lead(SellingController, CRMNote):
 			contact.reload()
 			return contact
 		except frappe.LinkValidationError as e:
-			new_lead_source = frappe.new_doc("Lead Source")
-			new_lead_source.update({
-				"source_name": self.source,
-				"pancake_page_id": parsed_pancake_data.get("page_id", None),
-				"pancake_platform": parsed_pancake_data.get("platform", None)
-			})
-			new_lead_source.insert(ignore_permissions=True)
-			new_lead_source.reload()
-			contact.insert(
-				ignore_permissions=True,
-				raise_direct_exception=True
-			)
-			contact.reload()
-			return contact
-		except Exception as e:
-			frappe.log_error(f"Failed to create contact for lead {self.name}: {str(e)}", 
-				"Contact Creation Error")
-			frappe.throw(_("Failed to create contact. Please check error log for details."))		
-
-		return contact
+			if "source" in str(e).lower():
+				new_lead_source = frappe.new_doc("Lead Source")
+				new_lead_source.update({
+					"source_name": self.source,
+				})
+				new_lead_source.insert(ignore_permissions=True)
+				new_lead_source.reload()
+				contact.insert(
+					ignore_permissions=True,
+					raise_direct_exception=True
+				)
+				contact.reload()
+				return contact
+			else:
+				# Re-raise the error if it's not related to source
+				raise
 
 	def create_prospect(self, company_name):
 		try:
