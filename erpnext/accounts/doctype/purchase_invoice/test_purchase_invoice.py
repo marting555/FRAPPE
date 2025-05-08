@@ -40,6 +40,7 @@ test_ignore = ["Serial No"]
 class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 	@classmethod
 	def setUpClass(self):
+		frappe.set_user("Administrator")
 		unlink_payment_on_cancel_of_invoice()
 		frappe.db.set_single_value("Buying Settings", "allow_multiple_items", 1)
 
