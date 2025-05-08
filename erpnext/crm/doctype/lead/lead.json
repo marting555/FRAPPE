@@ -354,7 +354,7 @@
    "fieldname": "title",
    "fieldtype": "Data",
    "hidden": 1,
-   "label": "T\u00ean Lead",
+   "label": "Title",
    "print_hide": 1,
    "read_only": 1
   },
