@@ -15,18 +15,17 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 
 class POSProfile(Document):
 	# begin: auto-generated types
-	# ruff: noqa
-
 	# This code is auto-generated. Do not modify anything in this block.
 
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
+		from frappe.types import DF
+
 		from erpnext.accounts.doctype.pos_customer_group.pos_customer_group import POSCustomerGroup
 		from erpnext.accounts.doctype.pos_item_group.pos_item_group import POSItemGroup
 		from erpnext.accounts.doctype.pos_payment_method.pos_payment_method import POSPaymentMethod
 		from erpnext.accounts.doctype.pos_profile_user.pos_profile_user import POSProfileUser
-		from frappe.types import DF
 
 		account_for_change_amount: DF.Link | None
 		allow_discount_change: DF.Check
@@ -41,7 +40,6 @@ class POSProfile(Document):
 		currency: DF.Link
 		customer: DF.Link | None
 		customer_groups: DF.Table[POSCustomerGroup]
-		disable_grand_total_to_default_mop: DF.Check
 		disable_rounded_total: DF.Check
 		disabled: DF.Check
 		enable_numpad_for_payments: DF.Check
@@ -58,6 +56,7 @@ class POSProfile(Document):
 		project: DF.Link | None
 		select_print_heading: DF.Link | None
 		selling_price_list: DF.Link | None
+		set_grand_total_to_default_mop: DF.Check
 		tax_category: DF.Link | None
 		taxes_and_charges: DF.Link | None
 		tc_name: DF.Link | None
@@ -70,7 +69,6 @@ class POSProfile(Document):
 		write_off_account: DF.Link
 		write_off_cost_center: DF.Link
 		write_off_limit: DF.Currency
-	# ruff: noqa
 	# end: auto-generated types
 
 	def validate(self):
