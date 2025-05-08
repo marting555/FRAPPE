@@ -28,7 +28,7 @@ class LeadChannel(Document):
 		phone_number_provided_time: DF.Datetime | None
 		profile_url: DF.Data | None
 		source: DF.Data | None
-		source_group: DF.Literal["Facebook", "Zalo", "Tiktok", "Call Centrel", "Website Form", "Visiting Guests", "Email"]
+		source_group: DF.Literal["Facebook", "Zalo", "Tiktok", "Call Center", "Website Form", "Visiting Guests", "Email"]
 		type: DF.Data | None
 	# end: auto-generated types
 	pass
