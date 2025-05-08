@@ -212,7 +212,7 @@
    "default": "VND",
    "fieldname": "currency",
    "fieldtype": "Link",
-   "label": "\u0110\u01a1n V\u1ecb",
+   "label": "Currency",
    "options": "Currency"
   },
   {

@@ -12,7 +12,7 @@
   {
    "fieldname": "title",
    "fieldtype": "Data",
-   "label": "title"
+   "label": "Title"
   }
  ],
  "grid_page_length": 50,
