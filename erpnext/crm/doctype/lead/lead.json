@@ -332,7 +332,6 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Territory",
-   "link_filters": "[[\"Territory\",\"name\",\"like\",\"%B\u1ed9%\"]]",
    "oldfieldname": "territory",
    "oldfieldtype": "Link",
    "options": "Territory",
