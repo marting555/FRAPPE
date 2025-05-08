@@ -279,10 +279,10 @@
    "default": "Individual",
    "fieldname": "type",
    "fieldtype": "Select",
-   "label": "Customer Type",
+   "label": "Lead Type",
    "oldfieldname": "type",
    "oldfieldtype": "Select",
-   "options": "Individual\nCompany"
+   "options": "Individual\nCompany\nConsultant\nChannel Partner"
   },
   {
    "fieldname": "market_segment",
@@ -386,7 +386,7 @@
   {
    "fieldname": "no_of_employees",
    "fieldtype": "Select",
-   "label": "No of Employees",
+   "label": "No Of Employees",
    "options": "1-10\n11-50\n51-200\n201-500\n501-1000\n1000+"
   },
   {
@@ -591,7 +591,7 @@
    "fieldname": "place_of_issuance",
    "fieldtype": "Select",
    "label": "Place Of Issuance",
-   "options": "B\u1ed9 C\u00f4ng An\nC\u1ee5c C\u1ea3nh s\u00e1t QLHC v\u1ec1 TTXH\nC\u1ee5c C\u1ea3nh s\u00e1t \u0111\u0103ng k\u00fd, qu\u1ea3n l\u00fd c\u01b0 tr\u00fa v\u00e0 d\u1eef li\u1ec7u qu\u1ed1c gia v\u1ec1 d\u00e2n c\u01b0"
+   "options": "Ministry of Public Security\nDepartment of Police for Administrative Management of Social Order\nDepartment of Police for Registration, Residency Management, and National Population Data"
   },
   {
    "fieldname": "date_of_issuance",
@@ -751,7 +751,7 @@
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-05-07 19:33:05.668826",
+ "modified": "2025-05-07 23:54:44.604084",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",

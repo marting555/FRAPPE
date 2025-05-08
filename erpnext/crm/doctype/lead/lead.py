@@ -74,7 +74,7 @@ class Lead(SellingController, CRMNote):
 		personal_tax_id: DF.Data | None
 		phone: DF.Data | None
 		phone_ext: DF.Data | None
-		place_of_issuance: DF.Literal["B\u1ed9 C\u00f4ng An", "C\u1ee5c C\u1ea3nh s\u00e1t QLHC v\u1ec1 TTXH", "C\u1ee5c C\u1ea3nh s\u00e1t \u0111\u0103ng k\u00fd, qu\u1ea3n l\u00fd c\u01b0 tr\u00fa v\u00e0 d\u1eef li\u1ec7u qu\u1ed1c gia v\u1ec1 d\u00e2n c\u01b0"]
+		place_of_issuance: DF.Literal["Ministry of Public Security", "Department of Police for Administrative Management of Social Order", "Department of Police for Registration, Residency Management, and National Population Data"]
 		preferred_diamond: DF.Table[LeadDiamond]
 		preferred_product_type: DF.TableMultiSelect[LeadProductItem]
 		purpose_lead: DF.Link | None
@@ -90,7 +90,7 @@ class Lead(SellingController, CRMNote):
 		tax_number: DF.Data | None
 		territory: DF.Link | None
 		title: DF.Data | None
-		type: DF.Literal["Individual", "Company"]
+		type: DF.Literal["Individual", "Company", "Consultant", "Channel Partner"]
 		unsubscribed: DF.Check
 		website: DF.Data | None
 		website_from_data: DF.JSON | None
