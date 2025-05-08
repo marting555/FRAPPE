@@ -70,13 +70,12 @@ class CallLog(Document):
 		"""Add lead(third party person) links to the document."""
 		lead_number = self.get("from") if self.is_incoming_call() else self.get("to")
 		lead_number = strip_number(lead_number)
-		
+
 		if contact := get_contact_with_phone_number(strip_number(lead_number)):
 			self.add_link(link_type="Contact", link_name=contact)
 
 		else:
 			lead = self.create_lead_from_phone(lead_number)
-			#self.add_link(link_type="Lead", link_name=lead)
 			
 			# Add Contact
 			contact = self.get_contact_from_lead(lead)
