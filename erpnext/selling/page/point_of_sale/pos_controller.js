@@ -156,6 +156,10 @@ erpnext.PointOfSale.Controller = class {
 			},
 		});
 
+		this.add_pos_closed_listener();
+	}
+
+	add_pos_closed_listener() {
 		frappe.realtime.on(`poe_${this.pos_opening}_closed`, (data) => {
 			const route = frappe.get_route_str();
 			if (data && route == "point-of-sale") {
