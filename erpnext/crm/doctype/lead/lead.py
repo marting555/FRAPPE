@@ -264,7 +264,6 @@ class Lead(SellingController, CRMNote):
 				if len(self.phone) < 10:  # Example condition
 					frappe.throw(_("Phone number must be at least 10 digits long."))
 
-
 	def link_to_contact(self):
 		# update contact links
 		if self.contact_doc:
