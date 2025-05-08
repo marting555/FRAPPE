@@ -121,7 +121,7 @@ class SalesOrder(SellingController):
 		incoterm: DF.Link | None
 		inter_company_order_reference: DF.Link | None
 		invoice_date: DF.Datetime | None
-		invoice_location: DF.Literal["", "72 Nguy\u1ec5n C\u01b0 Trinh, P. Ph\u1ea1m Ng\u0169 L\u00e3o, Qu\u1eadn 1, TP. H\u1ed3 Ch\u00ed Minh", "63 Kim M\u00e3, Ba \u0110\u00ecnh, H\u00e0 N\u1ed9i", "209, \u0110 30 Th\u00e1ng 4, Xu\u00e2n Khanh, Ninh Ki\u1ec1u, C\u1ea7n Th\u01a1"]
+		invoice_location: DF.Literal[None]
 		is_internal_customer: DF.Check
 		items: DF.Table[SalesOrderItem]
 		language: DF.Data | None

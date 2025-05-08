@@ -126,7 +126,6 @@
   "column_break_93",
   "dispatch_address_name",
   "dispatch_address",
-  "th\u00f4ng_tin_c\u00e1_nh\u00e2n_section",
   "customer",
   "birth_date",
   "gender",
@@ -1761,8 +1760,7 @@
   {
    "fieldname": "invoice_location",
    "fieldtype": "Select",
-   "label": "Invoice Location",
-   "options": "\n72 Nguy\u1ec5n C\u01b0 Trinh, P. Ph\u1ea1m Ng\u0169 L\u00e3o, Qu\u1eadn 1, TP. H\u1ed3 Ch\u00ed Minh\n63 Kim M\u00e3, Ba \u0110\u00ecnh, H\u00e0 N\u1ed9i\n209, \u0110 30 Th\u00e1ng 4, Xu\u00e2n Khanh, Ninh Ki\u1ec1u, C\u1ea7n Th\u01a1"
+   "label": "Invoice Location"
   },
   {
    "fieldname": "invoice_date",
@@ -1816,11 +1814,6 @@
    "fieldname": "gender",
    "fieldtype": "Data",
    "label": "Gender"
-  },
-  {
-   "fieldname": "personal_info_section",
-   "fieldtype": "Section Break",
-   "label": "Personal Info"
   },
   {
    "fieldname": "address_contact_section",
@@ -1892,7 +1885,7 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-08 09:42:08.799115",
+ "modified": "2025-05-08 14:04:46.449593",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
