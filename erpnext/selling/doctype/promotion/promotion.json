@@ -16,42 +16,42 @@
   {
    "fieldname": "type",
    "fieldtype": "Select",
-   "label": "Lo\u1ea1i Ch\u01b0\u01a1ng Tr\u00ecnh",
+   "label": "Type",
    "options": "Gi\u1ea3m theo ph\u1ea7n tr\u0103m\nGi\u1ea3m theo s\u1ed1 ti\u1ec1n\nQu\u00e0 t\u1eb7ng",
    "reqd": 1
   },
   {
    "fieldname": "scope",
    "fieldtype": "Select",
-   "label": "Ph\u1ea1m Vi",
-   "options": "S\u1ea3n ph\u1ea9m\n\u0110\u01a1n h\u00e0ng",
+   "label": "Scope",
+   "options": "Line Item\nOrder",
    "reqd": 1
   },
   {
    "default": "0",
    "fieldname": "is_expired",
    "fieldtype": "Check",
-   "label": "C\u00f3 Th\u1eddi H\u1ea1n"
+   "label": "Is Expired"
   },
   {
    "fieldname": "priority",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "Th\u1ee9 T\u1ef1 \u01afu Ti\u00ean",
+   "label": "Priority Order",
    "options": "\nG0\nG1\nG2\nG3\nG4\nG5\nG6\nG7",
    "reqd": 1
   },
   {
    "fieldname": "title",
    "fieldtype": "Data",
-   "label": "T\u00ean Ch\u01b0\u01a1ng Tr\u00ecnh Khuy\u1ebfn M\u00e3i",
+   "label": "Promotion Title",
    "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-22 13:42:41.073713",
+ "modified": "2025-05-08 11:08:46.946594",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Promotion",
