@@ -737,6 +737,7 @@
    "label": "Customer Journey"
   },
   {
+   "default": "Silver",
    "fieldname": "customer_rank",
    "fieldtype": "Select",
    "label": "Customer Rank",
@@ -878,7 +879,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-05-07 19:29:50.615107",
+ "modified": "2025-05-08 10:26:05.177005",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
