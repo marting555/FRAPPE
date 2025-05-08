@@ -1754,8 +1754,7 @@
   {
    "fieldname": "product_category",
    "fieldtype": "Select",
-   "label": "Product Category",
-   "options": "\nNh\u1eabn Nam KCTN Nguy\u00ean Chi\u1ebfc\nNh\u1eabn Nam Moiss Nguy\u00ean Chi\u1ebfc\nNh\u1eabn Nam Tr\u01a1n\nNh\u1eabn Nam KCTN\nNh\u1eabn N\u1eef\nNh\u1eabn N\u1eef KCTN\nNh\u1eabn C\u01b0\u1edbi\nNh\u1eabn C\u01b0\u1edbi - Vi\u00ean KCTN\nNh\u1eabn C\u01b0\u1edbi N\u1eef\nNh\u1eabn C\u01b0\u1edbi N\u1eef Nguy\u00ean Chi\u1ebfc"
+   "label": "Product Category"
   },
   {
    "fieldname": "invoice_location",
@@ -1885,7 +1884,7 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-08 14:04:46.449593",
+ "modified": "2025-05-08 14:20:20.889248",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

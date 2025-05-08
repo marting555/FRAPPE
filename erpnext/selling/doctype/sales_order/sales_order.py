@@ -148,7 +148,7 @@ class SalesOrder(SellingController):
 		po_no: DF.Data | None
 		price_list_currency: DF.Link
 		pricing_rules: DF.Table[PricingRuleDetail]
-		product_category: DF.Literal["", "Nh\u1eabn Nam KCTN Nguy\u00ean Chi\u1ebfc", "Nh\u1eabn Nam Moiss Nguy\u00ean Chi\u1ebfc", "Nh\u1eabn Nam Tr\u01a1n", "Nh\u1eabn Nam KCTN", "Nh\u1eabn N\u1eef", "Nh\u1eabn N\u1eef KCTN", "Nh\u1eabn C\u01b0\u1edbi", "Nh\u1eabn C\u01b0\u1edbi - Vi\u00ean KCTN", "Nh\u1eabn C\u01b0\u1edbi N\u1eef", "Nh\u1eabn C\u01b0\u1edbi N\u1eef Nguy\u00ean Chi\u1ebfc"]
+		product_category: DF.Literal[None]
 		project: DF.Link | None
 		promotions: DF.TableMultiSelect[SalesOrderPromotion]
 		represents_company: DF.Link | None

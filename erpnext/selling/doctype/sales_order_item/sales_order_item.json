@@ -224,7 +224,7 @@
   {
    "fieldname": "quantity_and_rate",
    "fieldtype": "Section Break",
-   "label": "S\u1ed1 L\u01b0\u1ee3ng & Gi\u00e1"
+   "label": "Quantity and Rate"
   },
   {
    "columns": 1,
@@ -861,7 +861,8 @@
    "fieldname": "grant_commission",
    "fieldtype": "Check",
    "hidden": 1,
-   "label": "Grant Commission"
+   "label": "Grant Commission",
+   "read_only": 1
   },
   {
    "fieldname": "picked_qty",
@@ -1137,7 +1138,7 @@
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-05-08 11:14:28.722003",
+ "modified": "2025-05-08 14:23:20.494611",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order Item",
