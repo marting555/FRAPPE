@@ -80,7 +80,7 @@ class SalesOrder(SellingController):
 		billing_status: DF.Literal["Not Billed", "Fully Billed", "Partly Billed", "Closed"]
 		birth_date: DF.Date | None
 		campaign: DF.Link | None
-		cancelled_status: DF.Literal["", "\u0110\u00e3 Hu\u1ef7", "Ch\u01b0a Hu\u1ef7"]
+		cancelled_status: DF.Literal["", "Uncancelled", "Cancelled"]
 		commission_rate: DF.Float
 		company: DF.Link
 		company_address: DF.Link | None
@@ -107,9 +107,9 @@ class SalesOrder(SellingController):
 		discount_amount: DF.Currency
 		dispatch_address: DF.SmallText | None
 		dispatch_address_name: DF.Link | None
-		financial_status: DF.Literal["", "\u0110\u00e3 Thanh To\u00e1n", "\u0110\u00e3 Thanh To\u00e1n M\u1ed9t Ph\u1ea7n", "\u0110\u00e3 Ho\u00e0n Ti\u1ec1n", "Ch\u1edd X\u1eed L\u00fd"]
+		financial_status: DF.Literal["", "Paid", "Partially Paid", "Partially Refunded", "Refunded", "Pending"]
 		from_date: DF.Date | None
-		fulfillment_status: DF.Literal["", "Ch\u01b0a Giao H\u00e0ng", "\u0110\u00e3 Giao H\u00e0ng"]
+		fulfillment_status: DF.Literal["", "Fulfilled", "Not Fulfilled"]
 		gender: DF.Data | None
 		grand_total: DF.Currency
 		group_same_items: DF.Check
@@ -771,14 +771,14 @@ class SalesOrder(SellingController):
 		"""
 			If order from Haravan is cancel, cancel the current order too
 		"""
-		if self.cancelled_status == "Đã Huỷ":
+		if self.cancelled_status == "Cancelled":
 			self.cancel_sales_order()
 
 	def before_insert(self):
 		"""
 			If order from Haravan is cancel, cancel the current order too
 		"""
-		if self.cancelled_status == "Đã Huỷ":
+		if self.cancelled_status == "Cancelled":
 			self.cancel_sales_order()
 
 def get_unreserved_qty(item: object, reserved_qty_details: dict) -> float:

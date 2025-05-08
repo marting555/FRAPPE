@@ -1638,8 +1638,8 @@
   {
    "fieldname": "payment_terms_section",
    "fieldtype": "Section Break",
-   "label": "Payment Terms",
-   "hidden": 1
+   "hidden": 1,
+   "label": "Payment Terms"
   },
   {
    "fieldname": "column_break_116",
@@ -1709,7 +1709,7 @@
    "fieldname": "cancelled_status",
    "fieldtype": "Select",
    "label": "Cancelled Status",
-   "options": "\n\u0110\u00e3 Hu\u1ef7\nCh\u01b0a Hu\u1ef7",
+   "options": "\nUncancelled\nCancelled",
    "read_only": 1
   },
   {
@@ -1727,14 +1727,14 @@
    "fieldname": "financial_status",
    "fieldtype": "Select",
    "label": "Financial Status",
-   "options": "\n\u0110\u00e3 Thanh To\u00e1n\n\u0110\u00e3 Thanh To\u00e1n M\u1ed9t Ph\u1ea7n\n\u0110\u00e3 Ho\u00e0n Ti\u1ec1n\nCh\u1edd X\u1eed L\u00fd",
+   "options": "\nPaid\nPartially Paid\nPartially Refunded\nRefunded\nPending",
    "read_only": 1
   },
   {
    "fieldname": "fulfillment_status",
    "fieldtype": "Select",
    "label": "Fulfillment Status",
-   "options": "\nCh\u01b0a Giao H\u00e0ng\n\u0110\u00e3 Giao H\u00e0ng",
+   "options": "\nFulfilled\nNot Fulfilled",
    "read_only": 1
   },
   {
@@ -1892,7 +1892,7 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-07 16:49:47.779931",
+ "modified": "2025-05-08 09:42:08.799115",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
