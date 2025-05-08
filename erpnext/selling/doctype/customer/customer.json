@@ -10,7 +10,7 @@
  "document_type": "Setup",
  "engine": "InnoDB",
  "field_order": [
-  "chi_ti\u1ebft_tab",
+  "detail_tab",
   "basic_info",
   "naming_series",
   "salutation",
@@ -235,7 +235,6 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Territory",
-   "link_filters": "[[\"Territory\",\"name\",\"like\",\"%B\u1ed9%\"]]",
    "oldfieldname": "territory",
    "oldfieldtype": "Link",
    "options": "Territory",
@@ -335,7 +334,7 @@
    "fieldtype": "HTML",
    "label": "Contact HTML",
    "oldfieldtype": "HTML",
-   "options": "\n\n    <p>Danh S\u00e1ch Li\u00ean H\u1ec7</p>\n\n",
+   "options": "\n\n    <p>Contact List</p>\n\n",
    "read_only": 1
   },
   {
@@ -640,11 +639,6 @@
    "print_hide": 1
   },
   {
-   "fieldname": "chi_ti\u1ebft_tab",
-   "fieldtype": "Tab Break",
-   "label": "Chi Ti\u1ebft"
-  },
-  {
    "fetch_from": "customer_primary_contact.phone",
    "fieldname": "phone",
    "fieldtype": "Read Only",
@@ -859,6 +853,11 @@
    "fieldname": "person_name",
    "fieldtype": "Data",
    "label": "Customer Name"
+  },
+  {
+   "fieldname": "detail_tab",
+   "fieldtype": "Tab Break",
+   "label": "Details"
   }
  ],
  "icon": "fa fa-user",
@@ -872,7 +871,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-05-07 21:29:44.122848",
+ "modified": "2025-05-08 00:33:48.921340",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
