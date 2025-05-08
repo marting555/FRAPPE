@@ -1818,9 +1818,9 @@
    "label": "Gender"
   },
   {
-   "fieldname": "th\u00f4ng_tin_c\u00e1_nh\u00e2n_section",
+   "fieldname": "personal_info_section",
    "fieldtype": "Section Break",
-   "label": "Th\u00f4ng Tin C\u00e1 Nh\u00e2n"
+   "label": "Personal Info"
   },
   {
    "fieldname": "address_contact_section",
