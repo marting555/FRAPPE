@@ -713,19 +713,19 @@ class WorkOrder(Document):
 				_("If any single operation has a Sequence ID then all other operations must have one too.")
 			)
 
-		for row in self.operations:
+		for idx, row in enumerate(self.operations):
 			qty = self.qty
 			while qty > 0:
 				qty = split_qty_based_on_batch_size(self, row, qty)
 				if row.job_card_qty > 0:
-					self.prepare_data_for_job_card(row, plan_days, enable_capacity_planning)
+					self.prepare_data_for_job_card(row, idx, plan_days, enable_capacity_planning)
 
 		planned_end_date = self.operations and self.operations[-1].planned_end_time
 		if planned_end_date:
 			self.db_set("planned_end_date", planned_end_date)
 
-	def prepare_data_for_job_card(self, row, plan_days, enable_capacity_planning):
-		self.set_operation_start_end_time(row)
+	def prepare_data_for_job_card(self, idx, row, plan_days, enable_capacity_planning):
+		self.set_operation_start_end_time(idx, row)
 
 		job_card_doc = create_job_card(
 			self, row, auto_create=True, enable_capacity_planning=enable_capacity_planning
@@ -750,22 +750,18 @@ class WorkOrder(Document):
 
 			row.db_update()
 
-	def set_operation_start_end_time(self, row):
+	def set_operation_start_end_time(self, idx, row):
 		"""Set start and end time for given operation. If first operation, set start as
 		`planned_start_date`, else add time diff to end time of earlier operation."""
-		if row.idx == 1:
+		if idx == 1:
 			# first operation at planned_start date
 			row.planned_start_time = self.planned_start_date
-		elif self.operations[row.idx - 2].sequence_id:
-			if self.operations[row.idx - 2].sequence_id == row.sequence_id:
-				row.planned_start_time = self.operations[row.idx - 2].planned_start_time
+		elif self.operations[idx - 1].sequence_id:
+			if self.operations[idx - 1].sequence_id == row.sequence_id:
+				row.planned_start_time = self.operations[idx - 1].planned_start_time
 			else:
 				last_ops_with_same_sequence_ids = sorted(
-					[
-						op
-						for op in self.operations
-						if op.sequence_id == self.operations[row.idx - 2].sequence_id
-					],
+					[op for op in self.operations if op.sequence_id == self.operations[idx - 1].sequence_id],
 					key=lambda op: get_datetime(op.planned_end_time),
 				)
 				row.planned_start_time = (
@@ -774,7 +770,7 @@ class WorkOrder(Document):
 				)
 		else:
 			row.planned_start_time = (
-				get_datetime(self.operations[row.idx - 2].planned_end_time) + get_mins_between_operations()
+				get_datetime(self.operations[idx - 1].planned_end_time) + get_mins_between_operations()
 			)
 
 		row.planned_end_time = get_datetime(row.planned_start_time) + relativedelta(minutes=row.time_in_mins)
