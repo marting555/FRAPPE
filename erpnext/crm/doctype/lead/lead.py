@@ -34,7 +34,7 @@ class Lead(SellingController, CRMNote):
 		annual_revenue: DF.Currency
 		bank_branch: DF.Literal[None]
 		bank_district: DF.Literal[None]
-		bank_name: DF.Literal["Agribank", "ACB", "BIDV", "Vietcombank", "Vietinbank", "Techcombank", "Sacombank", "MB Bank", "Eximbank", "VPBank", "SHB", "Nam A Bank", "Bac A Bank", "OceanBank", "TPBank"]
+		bank_name: DF.Literal["Agribank", "ACB", "BIDV", "Vietcombank", "Vietinbank", "Techcombank", "Sacombank", "MB Bank", "Eximbank", "VPBank", "SHB", "Nam A Bank", "BAC A BANK", "OceanBank", "TPBank"]
 		bank_province: DF.Literal[None]
 		bank_ward: DF.Literal[None]
 		birth_date: DF.Date | None

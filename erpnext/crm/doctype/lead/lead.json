@@ -612,7 +612,7 @@
    "fieldname": "bank_name",
    "fieldtype": "Select",
    "label": "Bank Name",
-   "options": "Agribank\nACB\nBIDV\nVietcombank\nVietinbank\nTechcombank\nSacombank\nMB Bank\nEximbank\nVPBank\nSHB\nNam A Bank\nBac A Bank\nOceanBank\nTPBank"
+   "options": "Agribank\nACB\nBIDV\nVietcombank\nVietinbank\nTechcombank\nSacombank\nMB Bank\nEximbank\nVPBank\nSHB\nNam A Bank\nBAC A BANK\nOceanBank\nTPBank"
   },
   {
    "fieldname": "bank_branch",
@@ -751,7 +751,7 @@
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-05-08 22:45:39.175034",
+ "modified": "2025-05-08 22:58:31.092249",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",
