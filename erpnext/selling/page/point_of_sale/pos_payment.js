@@ -4,6 +4,7 @@ erpnext.PointOfSale.Payment = class {
 		this.wrapper = wrapper;
 		this.events = events;
 		this.enable_numpad = settings.enable_numpad_for_payments;
+		this.set_gt_to_default_mop = settings.set_grand_total_to_default_mop;
 
 		this.init_component();
 	}
@@ -386,7 +387,7 @@ erpnext.PointOfSale.Payment = class {
 		this.render_payment_mode_dom();
 		this.make_invoice_fields_control();
 		this.update_totals_section();
-		this.unset_grand_total_to_default_mop();
+		this.set_grand_total_to_default_mop();
 	}
 
 	after_render() {
@@ -671,15 +672,8 @@ erpnext.PointOfSale.Payment = class {
 			.toLowerCase();
 	}
 
-	async unset_grand_total_to_default_mop() {
-		const doc = this.events.get_frm().doc;
-		let r = await frappe.db.get_value(
-			"POS Profile",
-			doc.pos_profile,
-			"disable_grand_total_to_default_mop"
-		);
-
-		if (!r.message.disable_grand_total_to_default_mop) {
+	set_grand_total_to_default_mop() {
+		if (this.set_gt_to_default_mop) {
 			this.focus_on_default_mop();
 		}
 	}
