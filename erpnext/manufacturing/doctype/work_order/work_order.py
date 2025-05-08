@@ -753,7 +753,7 @@ class WorkOrder(Document):
 	def set_operation_start_end_time(self, idx, row):
 		"""Set start and end time for given operation. If first operation, set start as
 		`planned_start_date`, else add time diff to end time of earlier operation."""
-		if idx == 1:
+		if idx == 0:
 			# first operation at planned_start date
 			row.planned_start_time = self.planned_start_date
 		elif self.operations[idx - 1].sequence_id:
