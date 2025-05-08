@@ -37,13 +37,12 @@ class Customer(TransactionBase):
 		from erpnext.utilities.doctype.portal_user.portal_user import PortalUser
 		from frappe.types import DF
 
-		_customer_type: DF.Literal["C\u00e1 Nh\u00e2n", "Doanh Nghi\u1ec7p", "Nh\u00e2n Vi\u00ean Jemmia"]
 		account_manager: DF.Link | None
 		account_number: DF.Data | None
 		accounts: DF.Table[PartyAccount]
 		bank_account_name: DF.Data | None
 		bank_branch: DF.Literal["B\u1eafc", "Trung Nam"]
-		bank_name: DF.Literal["Agribank", "ACB", "BIDV", "Vietcombank", "VietinBank", "Techcombank", "Sacombank", "MB Bank", "Eximbank", "VPBank", "SHB", "NamABank", "B\u1eafc \u00c1 Bank", "OceanBank", "TPBank"]
+		bank_name: DF.Literal["Agribank", "ACB", "BIDV", "Vietcombank", "VietinBank", "Techcombank", "Sacombank", "MB Bank", "Eximbank", "VPBank", "SHB", "NamABank", "OceanBank", "TPBank"]
 		birth_date: DF.Date | None
 		ceo_name: DF.Data | None
 		companies: DF.Table[AllowedToTransactWith]
@@ -56,7 +55,7 @@ class Customer(TransactionBase):
 		customer_pos_id: DF.Data | None
 		customer_primary_address: DF.Link | None
 		customer_primary_contact: DF.Link | None
-		customer_rank: DF.Literal["Ch\u01b0a c\u00f3 h\u1ea1ng", "Silver", "Gold", "Platinum"]
+		customer_rank: DF.Literal["Silver", "Gold", "Platinum"]
 		customer_type: DF.Literal["Company", "Individual", "Partnership"]
 		customer_website: DF.Data | None
 		date_of_issuance: DF.Date | None
@@ -72,7 +71,7 @@ class Customer(TransactionBase):
 		gender: DF.Link | None
 		image: DF.AttachImage | None
 		industry: DF.Link | None
-		invoice_type: DF.Literal["C\u00e1 Nh\u00e2n", "Doanh Nghi\u1ec7p"]
+		invoice_type: DF.Literal["Individual", "Company"]
 		is_frozen: DF.Check
 		is_internal_customer: DF.Check
 		language: DF.Link | None

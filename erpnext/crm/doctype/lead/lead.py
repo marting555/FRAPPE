@@ -90,7 +90,7 @@ class Lead(SellingController, CRMNote):
 		tax_number: DF.Data | None
 		territory: DF.Link | None
 		title: DF.Data | None
-		type: DF.Literal["Individual", "Business"]
+		type: DF.Literal["Individual", "Company"]
 		unsubscribed: DF.Check
 		website: DF.Data | None
 		website_from_data: DF.JSON | None

@@ -282,7 +282,7 @@
    "label": "Customer Type",
    "oldfieldname": "type",
    "oldfieldtype": "Select",
-   "options": "Individual\nBusiness"
+   "options": "Individual\nCompany"
   },
   {
    "fieldname": "market_segment",
@@ -451,7 +451,7 @@
   {
    "fieldname": "address_section",
    "fieldtype": "Section Break",
-   "label": "Address Section"
+   "label": "Address Information"
   },
   {
    "fieldname": "column_break_64",
@@ -481,7 +481,7 @@
    "label": "Activities"
   },
   {
-   "depends_on": "eval:doc.type==\"Business\"",
+   "depends_on": "eval:doc.type==\"Company\"",
    "fieldname": "organization_section",
    "fieldtype": "Section Break",
    "label": "Organization Section"
@@ -563,7 +563,7 @@
   {
    "fieldname": "basic_information_section",
    "fieldtype": "Section Break",
-   "label": "Basic Information"
+   "label": "Information"
   },
   {
    "collapsible": 1,
@@ -739,7 +739,7 @@
   {
    "fieldname": "contact_section",
    "fieldtype": "Section Break",
-   "label": "Contact Section"
+   "label": "Contact Information"
   },
   {
    "fieldname": "note_tab",
@@ -751,7 +751,7 @@
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-05-07 03:33:17.622767",
+ "modified": "2025-05-07 19:33:05.668826",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",

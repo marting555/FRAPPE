@@ -18,7 +18,6 @@
   "customer_type",
   "customer_group",
   "column_break_eofp",
-  "_customer_type",
   "is_internal_customer",
   "customer_rank",
   "column_break0",
@@ -153,7 +152,6 @@
    "fieldname": "salutation",
    "fieldtype": "Link",
    "label": "Salutation",
-   "link_filters": "[[\"Salutation\",\"name\",\"in\",[\"B\u00e1c\",\"Ch\u00fa\",\"C\u00f4\",\"Ch\u1ecb\",\"Anh\",\"B\u00e0\",\"\u00d4ng\"]]]",
    "options": "Salutation"
   },
   {
@@ -173,14 +171,12 @@
    "fieldname": "gender",
    "fieldtype": "Link",
    "label": "Gender",
-   "link_filters": "[[\"Gender\",\"name\",\"in\",[\"Nam\",\"N\u1eef\",\"Kh\u00e1c\"]]]",
    "options": "Gender"
   },
   {
    "default": "Individual",
    "fieldname": "customer_type",
    "fieldtype": "Select",
-   "hidden": 1,
    "label": "Customer Type",
    "oldfieldname": "customer_type",
    "oldfieldtype": "Select",
@@ -654,58 +650,51 @@
    "fieldname": "phone",
    "fieldtype": "Read Only",
    "hidden": 1,
-   "label": "S\u1ed1 \u0110i\u1ec7n Tho\u1ea1i"
+   "label": "Phone"
   },
   {
    "fieldname": "address_list",
    "fieldtype": "HTML",
    "is_virtual": 1,
-   "options": " <p>Danh S\u00e1ch \u0110\u1ecba Ch\u1ec9</p>\n\n"
+   "options": " <p>Address List</p>\n\n"
   },
   {
    "fieldname": "contact_list",
    "fieldtype": "HTML",
    "is_virtual": 1,
-   "options": "\n\n    <p>Danh S\u00e1ch Li\u00ean H\u1ec7</p>\n\n"
-  },
-  {
-   "default": "C\u00e1 Nh\u00e2n",
-   "fieldname": "_customer_type",
-   "fieldtype": "Select",
-   "label": "Lo\u1ea1i Kh\u00e1ch H\u00e0ng",
-   "options": "C\u00e1 Nh\u00e2n\nDoanh Nghi\u1ec7p\nNh\u00e2n Vi\u00ean Jemmia"
+   "options": "\n\n    <p>Contact List</p>\n\n"
   },
   {
    "fieldname": "advanced_information_selection",
    "fieldtype": "Section Break",
-   "label": "Th\u00f4ng Tin H\u00f3a \u0110\u01a1n"
+   "label": "Billing Information"
   },
   {
    "fieldname": "birth_date",
    "fieldtype": "Date",
-   "label": "Ng\u00e0y Sinh"
+   "label": "Birth Date"
   },
   {
    "fieldname": "first_channel",
    "fieldtype": "Select",
-   "label": "K\u00eanh Ti\u1ebfp C\u1eadn",
+   "label": "First Channel",
    "options": "FB - Jemmia Diamond\nFB - Jemmia Diamond - H\u00e0 N\u1ed9i\nFT - Kh\u00e1ch v\u00e3ng lai\nGG-Zalo OA\nGG - Google\nFB - Jemmia Love Jewelry\nTT - Ki\u1ec7t H\u1ed9t Xo\u00e0n\nGG - Youtube KHX\nGG-Mail CSKH\nGG - Website\nFT - Kh\u00e1ch \u0111\u01b0\u1ee3c gi\u1edbi thi\u1ec7u qua Referral\nFB - Ki\u1ebft H\u00f4t Xo\u00e0n\nGG - Hotline 333\nFT - Tiktok c\u00e1 nh\u00e2n c\u1ee7a sale\nFT - Kh\u00e1ch sales t\u01b0 t\u00ecm\nFT - Nh\u00e2n vi\u00ean mua h\u00e0ng\nTiktok c\u1ee7a kh\u00e1ch\nTT - Hotline 11119\nIG - Jemmia Diamond\nFB - Jemmia Review\nKh\u00e1ch v\u00e3ng lai xem FB\nKh\u00e1ch v\u00e3ng lai xem Web\nGG - Chatbot\nIG - Jemmia Love Jewelry"
   },
   {
    "fieldname": "personal_id",
    "fieldtype": "Data",
-   "label": "S\u1ed1 CCCD/H\u1ed9 Chi\u1ebfu"
+   "label": "Personal ID"
   },
   {
    "fieldname": "place_of_issuance",
    "fieldtype": "Select",
-   "label": "N\u01a1i C\u1ea5p",
+   "label": "Place Of Issuance",
    "options": "B\u1ed9 C\u00f4ng An\nC\u1ee5c C\u1ea3nh s\u00e1t QLHC v\u1ec1 TTXH\nC\u1ee5c C\u1ea3nh s\u00e1t \u0111\u0103ng k\u00fd, qu\u1ea3n l\u00fd c\u01b0 tr\u00fa v\u00e0 d\u1eef li\u1ec7u qu\u1ed1c gia v\u1ec1 d\u00e2n c\u01b0"
   },
   {
    "fieldname": "date_of_issuance",
    "fieldtype": "Date",
-   "label": "Ng\u00e0y C\u1ea5p"
+   "label": "Date Of Issuance"
   },
   {
    "fieldname": "customer_website",
@@ -715,24 +704,24 @@
   {
    "fieldname": "bank_name",
    "fieldtype": "Select",
-   "label": "T\u00e0i Kho\u1ea3n Ng\u00e2n H\u00e0ng",
-   "options": "Agribank\nACB\nBIDV\nVietcombank\nVietinBank\nTechcombank\nSacombank\nMB Bank\nEximbank\nVPBank\nSHB\nNamABank\nB\u1eafc \u00c1 Bank\nOceanBank\nTPBank"
+   "label": "Bank Name",
+   "options": "Agribank\nACB\nBIDV\nVietcombank\nVietinBank\nTechcombank\nSacombank\nMB Bank\nEximbank\nVPBank\nSHB\nNamABank\nOceanBank\nTPBank"
   },
   {
    "fieldname": "bank_branch",
    "fieldtype": "Select",
-   "label": "Chi Nh\u00e1nh",
+   "label": "Bank Branch",
    "options": "B\u1eafc\nTrung Nam"
   },
   {
    "fieldname": "account_number",
    "fieldtype": "Data",
-   "label": "S\u1ed1 T\u00e0i Kho\u1ea3n"
+   "label": "Account Number"
   },
   {
    "fieldname": "personal_tax_id",
    "fieldtype": "Data",
-   "label": "M\u00e3 S\u1ed1 Thu\u1ebf"
+   "label": "Personal Tax ID"
   },
   {
    "fieldname": "column_break_waqk",
@@ -745,29 +734,29 @@
   {
    "fieldname": "customer_journey",
    "fieldtype": "Small Text",
-   "label": "H\u00e0nh Tr\u00ecnh Kh\u00e1ch H\u00e0ng"
+   "label": "Customer Journey"
   },
   {
    "fieldname": "customer_rank",
    "fieldtype": "Select",
-   "label": "H\u1ea1ng Kh\u00e1ch H\u00e0ng",
-   "options": "Ch\u01b0a c\u00f3 h\u1ea1ng\nSilver\nGold\nPlatinum"
+   "label": "Customer Rank",
+   "options": "Silver\nGold\nPlatinum"
   },
   {
-   "depends_on": "eval:doc._customer_type==\"Doanh Nghi\u1ec7p\"",
+   "depends_on": "eval:doc.customer_type==\"Company\"",
    "fieldname": "organization_section",
    "fieldtype": "Section Break",
-   "label": "Th\u00f4ng Tin Doanh Nghi\u1ec7p"
+   "label": "Organization"
   },
   {
    "fieldname": "company_name",
    "fieldtype": "Data",
-   "label": "T\u00ean Doanh Nghi\u1ec7p"
+   "label": "Company Name"
   },
   {
    "fieldname": "no_of_employees",
    "fieldtype": "Data",
-   "label": "Quy M\u00f4"
+   "label": "No Of Employees"
   },
   {
    "fieldname": "column_break_rwpe",
@@ -780,12 +769,12 @@
   {
    "fieldname": "tax_number",
    "fieldtype": "Data",
-   "label": "M\u00e3 S\u1ed1 Thu\u1ebf"
+   "label": "Tax Number"
   },
   {
    "fieldname": "ceo_name",
    "fieldtype": "Data",
-   "label": "Ch\u1ee7 Doanh Nghi\u1ec7p"
+   "label": "CEO"
   },
   {
    "fieldname": "column_break_eofp",
@@ -794,7 +783,7 @@
   {
    "fieldname": "personal_document_type",
    "fieldtype": "Select",
-   "label": "Lo\u1ea1i Gi\u1ea7y T\u1edd C\u00e1 Nh\u00e2n",
+   "label": "Personal Document Type",
    "options": "CCCD\nCMND\nPassport"
   },
   {
@@ -804,7 +793,7 @@
   {
    "fieldname": "orther_section",
    "fieldtype": "Section Break",
-   "label": "Th\u00f4ng Tin Kh\u00e1c"
+   "label": "Orther Section"
   },
   {
    "fieldname": "column_break_ioxt",
@@ -813,13 +802,13 @@
   {
    "fieldname": "invoice_type",
    "fieldtype": "Select",
-   "label": "Lo\u1ea1i",
-   "options": "C\u00e1 Nh\u00e2n\nDoanh Nghi\u1ec7p"
+   "label": "Invoice Type",
+   "options": "Individual\nCompany"
   },
   {
    "fieldname": "vat_infor_section",
    "fieldtype": "Section Break",
-   "label": "Th\u00f4ng Tin Xu\u1ea5t VAT"
+   "label": "VAT "
   },
   {
    "fieldname": "column_break_ikkg",
@@ -828,12 +817,12 @@
   {
    "fieldname": "bank_section",
    "fieldtype": "Section Break",
-   "label": "T\u00e0i Kho\u1ea3n Ng\u00e2n H\u00e0ng"
+   "label": "Bank Account"
   },
   {
    "fieldname": "vat_name",
    "fieldtype": "Data",
-   "label": "T\u00ean"
+   "label": "VAT Name"
   },
   {
    "fieldname": "vat_email",
@@ -841,10 +830,10 @@
    "label": "Email"
   },
   {
-   "description": "V\u00ed d\u1ee5: 123 \u0111\u01b0\u1eddng ABC, P.1, Q.2, TP HCM",
+   "description": "For example: 123 ABC Street, Ward 1, District 2, Ho Chi Minh City",
    "fieldname": "vat_address",
    "fieldtype": "Data",
-   "label": "\u0110\u1ecba Ch\u1ec9"
+   "label": "VAT Address"
   },
   {
    "fieldname": "column_break_kufu",
@@ -857,12 +846,12 @@
   {
    "fieldname": "bank_account_name",
    "fieldtype": "Data",
-   "label": "T\u00ean T\u00e0i Kho\u1ea3n"
+   "label": "Bank Account Name"
   },
   {
    "fieldname": "address_section",
    "fieldtype": "Section Break",
-   "label": "Th\u00f4ng Tin \u0110\u1ecba Ch\u1ec9"
+   "label": "Address"
   },
   {
    "fieldname": "column_break_aqyz",
@@ -889,7 +878,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-05-07 02:44:26.837100",
+ "modified": "2025-05-07 19:29:50.615107",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
