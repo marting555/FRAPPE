@@ -42,7 +42,6 @@ class POSProfile(Document):
 		customer_groups: DF.Table[POSCustomerGroup]
 		disable_rounded_total: DF.Check
 		disabled: DF.Check
-		enable_numpad_for_payments: DF.Check
 		expense_account: DF.Link | None
 		hide_images: DF.Check
 		hide_unavailable_items: DF.Check

@@ -3,7 +3,6 @@ erpnext.PointOfSale.Payment = class {
 	constructor({ events, wrapper, settings }) {
 		this.wrapper = wrapper;
 		this.events = events;
-		this.enable_numpad = settings.enable_numpad_for_payments;
 		this.set_gt_to_default_mop = settings.set_grand_total_to_default_mop;
 		this.invoice_fields = settings.invoice_fields;
 
@@ -152,11 +151,6 @@ erpnext.PointOfSale.Payment = class {
 		const me = this;
 
 		this.$payment_modes.on("click", ".mode-of-payment", function (e) {
-			if (me.enable_numpad) {
-				$(`.number-pad`).removeClass("scroll-out");
-				$(`.number-pad`).addClass("scroll-in");
-			}
-
 			const mode_clicked = $(this);
 			// if clicked element doesn't have .mode-of-payment class then return
 			if (!$(e.target).is(mode_clicked)) return;
@@ -191,13 +185,6 @@ erpnext.PointOfSale.Payment = class {
 				me.selected_mode = me[`${mode}_control`];
 				me.selected_mode && me.selected_mode.$input.get(0).focus();
 				me.auto_set_remaining_amount();
-			}
-		});
-
-		this.$invoice_fields_section.on("click", ".invoice_detail_field", function (e) {
-			if (me.enable_numpad) {
-				$(`.number-pad`).removeClass("scroll-in");
-				$(`.number-pad`).addClass("scroll-out");
 			}
 		});
 
