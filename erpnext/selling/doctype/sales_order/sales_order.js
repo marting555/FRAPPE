@@ -547,6 +547,7 @@ frappe.ui.form.on("Sales Order Item", {
 	},
 	
 	serial: function (frm, cdt, cdn) {
+		// When serial is selected, append serial number to serial_numbers field
 		var row = locals[cdt][cdn];
 		if (row.serial) {
 			frappe.db.get_value('Serial', row.serial, 'serial_number')
