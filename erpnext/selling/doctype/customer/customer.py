@@ -66,7 +66,7 @@ class Customer(TransactionBase):
 		disabled: DF.Check
 		dn_required: DF.Check
 		email_id: DF.ReadOnly | None
-		first_channel: DF.Literal["FB - Jemmia Diamond", "FB - Jemmia Diamond - H\u00e0 N\u1ed9i", "FT - Kh\u00e1ch v\u00e3ng lai", "GG-Zalo OA", "GG - Google", "FB - Jemmia Love Jewelry", "TT - Ki\u1ec7t H\u1ed9t Xo\u00e0n", "GG - Youtube KHX", "GG-Mail CSKH", "GG - Website", "FT - Kh\u00e1ch \u0111\u01b0\u1ee3c gi\u1edbi thi\u1ec7u qua Referral", "FB - Ki\u1ebft H\u00f4t Xo\u00e0n", "GG - Hotline 333", "FT - Tiktok c\u00e1 nh\u00e2n c\u1ee7a sale", "FT - Kh\u00e1ch sales t\u01b0 t\u00ecm", "FT - Nh\u00e2n vi\u00ean mua h\u00e0ng", "Tiktok c\u1ee7a kh\u00e1ch", "TT - Hotline 11119", "IG - Jemmia Diamond", "FB - Jemmia Review", "Kh\u00e1ch v\u00e3ng lai xem FB", "Kh\u00e1ch v\u00e3ng lai xem Web", "GG - Chatbot", "IG - Jemmia Love Jewelry"]
+		first_channel: DF.Data | None
 		gender: DF.Link | None
 		image: DF.AttachImage | None
 		industry: DF.Link | None

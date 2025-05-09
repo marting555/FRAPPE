@@ -669,9 +669,8 @@
   },
   {
    "fieldname": "first_channel",
-   "fieldtype": "Select",
-   "label": "First Channel",
-   "options": "FB - Jemmia Diamond\nFB - Jemmia Diamond - H\u00e0 N\u1ed9i\nFT - Kh\u00e1ch v\u00e3ng lai\nGG-Zalo OA\nGG - Google\nFB - Jemmia Love Jewelry\nTT - Ki\u1ec7t H\u1ed9t Xo\u00e0n\nGG - Youtube KHX\nGG-Mail CSKH\nGG - Website\nFT - Kh\u00e1ch \u0111\u01b0\u1ee3c gi\u1edbi thi\u1ec7u qua Referral\nFB - Ki\u1ebft H\u00f4t Xo\u00e0n\nGG - Hotline 333\nFT - Tiktok c\u00e1 nh\u00e2n c\u1ee7a sale\nFT - Kh\u00e1ch sales t\u01b0 t\u00ecm\nFT - Nh\u00e2n vi\u00ean mua h\u00e0ng\nTiktok c\u1ee7a kh\u00e1ch\nTT - Hotline 11119\nIG - Jemmia Diamond\nFB - Jemmia Review\nKh\u00e1ch v\u00e3ng lai xem FB\nKh\u00e1ch v\u00e3ng lai xem Web\nGG - Chatbot\nIG - Jemmia Love Jewelry"
+   "fieldtype": "Data",
+   "label": "First Channel"
   },
   {
    "fieldname": "personal_id",
@@ -871,7 +870,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-05-08 00:33:48.921340",
+ "modified": "2025-05-09 14:21:36.923907",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
