@@ -175,7 +175,15 @@ class Quotation(SellingController):
 		)
 
 	def get_ordered_status(self):
-		ordered_items = get_ordered_items(self.name)
+		ordered_items = frappe._dict(
+			frappe.db.get_all(
+				"Sales Order Item",
+				{"prevdoc_docname": self.name, "docstatus": 1},
+				["item_code", "sum(qty)"],
+				group_by="item_code",
+				as_list=1,
+			)
+		)
 
 		if not ordered_items:
 			return "Open"
@@ -337,32 +345,6 @@ class Quotation(SellingController):
 		return rows_with_alternatives
 
 
-def get_ordered_items(quotation: str):
-	"""
-	Get the ordered item and quantity from the `Sales Order Item` for a given `Quotation`.
-
-	:param quotation: Quotation name
-
-	Example:
-	```
-	{
-	        "item_01": 10,
-	        "item_02": 5,
-	        ...
-	}
-	```
-	"""
-	return frappe._dict(
-		frappe.db.get_all(
-			"Sales Order Item",
-			{"prevdoc_docname": quotation, "docstatus": 1},
-			["item_code", "sum(qty)"],
-			group_by="item_code",
-			as_list=1,
-		)
-	)
-
-
 def get_list_context(context=None):
 	from erpnext.controllers.website_list_for_contact import get_list_context
 
@@ -397,7 +379,15 @@ def make_sales_order(source_name: str, target_doc=None):
 
 def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	customer = _make_customer(source_name, ignore_permissions)
-	ordered_items = get_ordered_items(source_name)
+	ordered_items = frappe._dict(
+		frappe.db.get_all(
+			"Sales Order Item",
+			{"prevdoc_docname": source_name, "docstatus": 1},
+			["item_code", "sum(qty)"],
+			group_by="item_code",
+			as_list=1,
+		)
+	)
 
 	selected_rows = [x.get("name") for x in frappe.flags.get("args", {}).get("selected_items", [])]
 
