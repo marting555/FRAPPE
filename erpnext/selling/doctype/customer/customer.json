@@ -3,103 +3,66 @@
  "allow_events_in_timeline": 1,
  "allow_import": 1,
  "allow_rename": 1,
- "autoname": "format:CUST{YY}{######}",
+ "autoname": "naming_series:",
  "creation": "2013-06-11 14:26:44",
  "description": "Buyer of Goods and Services.",
  "doctype": "DocType",
  "document_type": "Setup",
  "engine": "InnoDB",
  "field_order": [
-  "detail_tab",
   "basic_info",
   "naming_series",
   "salutation",
   "customer_name",
   "customer_type",
   "customer_group",
-  "column_break_eofp",
-  "is_internal_customer",
-  "customer_rank",
   "column_break0",
-  "account_manager",
+  "territory",
+  "gender",
   "lead_name",
   "opportunity_name",
-  "territory",
   "prospect_name",
-  "address_section",
-  "customer_primary_address",
-  "primary_address",
+  "account_manager",
   "image",
-  "column_break_aqyz",
-  "address_list",
-  "address_html",
-  "organization_section",
-  "company_name",
-  "no_of_employees",
-  "column_break_rwpe",
-  "industry",
-  "market_segment",
-  "column_break_czdq",
-  "tax_number",
-  "ceo_name",
-  "advanced_information_selection",
-  "personal_document_type",
-  "gender",
-  "birth_date",
-  "column_break_bjiq",
-  "personal_id",
-  "place_of_issuance",
-  "column_break_akie",
-  "person_name",
-  "date_of_issuance",
-  "orther_section",
-  "first_channel",
-  "customer_website",
-  "column_break_ioxt",
-  "customer_journey",
   "defaults_tab",
   "default_currency",
   "default_bank_account",
   "column_break_14",
   "default_price_list",
   "internal_customer_section",
+  "is_internal_customer",
   "represents_company",
   "column_break_70",
   "companies",
   "more_info",
+  "market_segment",
+  "industry",
   "customer_pos_id",
   "website",
   "language",
   "column_break_45",
   "customer_details",
+  "dashboard_tab",
   "contact_and_address_tab",
+  "address_contacts",
+  "address_html",
+  "column_break1",
+  "contact_html",
   "primary_address_and_contact_detail",
   "column_break_26",
+  "customer_primary_address",
+  "primary_address",
   "column_break_nwor",
   "customer_primary_contact",
   "mobile_no",
   "email_id",
-  "phone",
-  "address_contacts",
-  "column_break_cgqq",
-  "column_break1",
-  "contact_list",
-  "contact_html",
+  "tax_tab",
+  "taxation_section",
+  "tax_id",
+  "column_break_21",
+  "tax_category",
+  "tax_withholding_category",
   "accounting_tab",
-  "vat_infor_section",
-  "invoice_type",
-  "vat_email",
-  "column_break_waqk",
-  "vat_name",
-  "vat_address",
-  "column_break_ikkg",
-  "personal_tax_id",
-  "bank_section",
-  "bank_name",
-  "column_break_kufu",
-  "account_number",
-  "column_break_kqch",
-  "bank_account_name",
   "credit_limit_section",
   "payment_terms",
   "credit_limits",
@@ -122,14 +85,7 @@
   "is_frozen",
   "disabled",
   "portal_users_tab",
-  "portal_users",
-  "dashboard_tab",
-  "tax_tab",
-  "taxation_section",
-  "tax_id",
-  "column_break_21",
-  "tax_category",
-  "tax_withholding_category"
+  "portal_users"
  ],
  "fields": [
   {
@@ -173,13 +129,14 @@
    "options": "Gender"
   },
   {
-   "default": "Individual",
+   "default": "Company",
    "fieldname": "customer_type",
    "fieldtype": "Select",
    "label": "Customer Type",
    "oldfieldname": "customer_type",
    "oldfieldtype": "Select",
-   "options": "Company\nIndividual\nPartnership"
+   "options": "Company\nIndividual\nPartnership",
+   "reqd": 1
   },
   {
    "fieldname": "default_bank_account",
@@ -219,7 +176,6 @@
   {
    "fieldname": "customer_group",
    "fieldtype": "Link",
-   "hidden": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Customer Group",
@@ -231,7 +187,6 @@
   {
    "fieldname": "territory",
    "fieldtype": "Link",
-   "hidden": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Territory",
@@ -261,7 +216,6 @@
    "default": "0",
    "fieldname": "is_internal_customer",
    "fieldtype": "Check",
-   "hidden": 1,
    "label": "Is Internal Customer"
   },
   {
@@ -309,6 +263,7 @@
    "depends_on": "eval:!doc.__islocal",
    "fieldname": "address_contacts",
    "fieldtype": "Section Break",
+   "label": "Address and Contact",
    "options": "fa fa-map-marker"
   },
   {
@@ -334,14 +289,16 @@
    "fieldtype": "HTML",
    "label": "Contact HTML",
    "oldfieldtype": "HTML",
-   "options": "\n\n    <p>Contact List</p>\n\n",
    "read_only": 1
   },
   {
+   "description": "Select, to make the customer searchable with these fields",
    "fieldname": "primary_address_and_contact_detail",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Primary Address and Contact"
   },
   {
+   "description": "Reselect, if the chosen contact is edited after save",
    "fieldname": "customer_primary_contact",
    "fieldtype": "Link",
    "label": "Customer Primary Contact",
@@ -351,7 +308,6 @@
    "fetch_from": "customer_primary_contact.mobile_no",
    "fieldname": "mobile_no",
    "fieldtype": "Read Only",
-   "hidden": 1,
    "label": "Mobile No",
    "options": "Mobile"
   },
@@ -359,8 +315,7 @@
    "fetch_from": "customer_primary_contact.email_id",
    "fieldname": "email_id",
    "fieldtype": "Read Only",
-   "hidden": 1,
-   "label": "Email",
+   "label": "Email Id",
    "options": "Email"
   },
   {
@@ -368,6 +323,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "description": "Reselect, if the chosen address is edited after save",
    "fieldname": "customer_primary_address",
    "fieldtype": "Link",
    "label": "Customer Primary Address",
@@ -382,7 +338,6 @@
   {
    "fieldname": "default_receivable_accounts",
    "fieldtype": "Section Break",
-   "hidden": 1,
    "label": "Default Accounts"
   },
   {
@@ -395,7 +350,6 @@
   {
    "fieldname": "credit_limit_section",
    "fieldtype": "Section Break",
-   "hidden": 1,
    "label": "Credit Limit and Payment Terms"
   },
   {
@@ -409,7 +363,6 @@
    "collapsible_depends_on": "customer_details",
    "fieldname": "more_info",
    "fieldtype": "Section Break",
-   "hidden": 1,
    "label": "More Information",
    "oldfieldtype": "Section Break",
    "options": "fa fa-file-text"
@@ -436,7 +389,7 @@
    "fieldname": "industry",
    "fieldtype": "Link",
    "label": "Industry",
-   "options": "Market Segment"
+   "options": "Industry Type"
   },
   {
    "default": "0",
@@ -537,13 +490,11 @@
   {
    "fieldname": "defaults_tab",
    "fieldtype": "Section Break",
-   "hidden": 1,
    "label": "Defaults"
   },
   {
    "fieldname": "settings_tab",
    "fieldtype": "Tab Break",
-   "hidden": 1,
    "label": "Settings"
   },
   {
@@ -551,7 +502,6 @@
    "collapsible_depends_on": "default_sales_partner",
    "fieldname": "sales_team_tab",
    "fieldtype": "Tab Break",
-   "hidden": 1,
    "label": "Sales Team",
    "oldfieldtype": "Section Break",
    "options": "fa fa-group"
@@ -567,7 +517,6 @@
   {
    "fieldname": "dashboard_tab",
    "fieldtype": "Tab Break",
-   "hidden": 1,
    "label": "Dashboard",
    "show_dashboard": 1
   },
@@ -579,7 +528,6 @@
    "collapsible": 1,
    "fieldname": "loyalty_points_tab",
    "fieldtype": "Section Break",
-   "hidden": 1,
    "label": "Loyalty Points"
   },
   {
@@ -594,7 +542,6 @@
   {
    "fieldname": "tax_tab",
    "fieldtype": "Tab Break",
-   "hidden": 1,
    "label": "Tax"
   },
   {
@@ -602,7 +549,6 @@
    "collapsible_depends_on": "is_internal_customer",
    "fieldname": "internal_customer_section",
    "fieldtype": "Section Break",
-   "hidden": 1,
    "label": "Internal Customer"
   },
   {
@@ -616,7 +562,6 @@
   {
    "fieldname": "portal_users_tab",
    "fieldtype": "Tab Break",
-   "hidden": 1,
    "label": "Portal Users"
   },
   {
@@ -632,232 +577,10 @@
   {
    "fieldname": "prospect_name",
    "fieldtype": "Link",
-   "hidden": 1,
    "label": "From Prospect",
    "no_copy": 1,
    "options": "Prospect",
    "print_hide": 1
-  },
-  {
-   "fetch_from": "customer_primary_contact.phone",
-   "fieldname": "phone",
-   "fieldtype": "Read Only",
-   "hidden": 1,
-   "label": "Phone"
-  },
-  {
-   "fieldname": "address_list",
-   "fieldtype": "HTML",
-   "is_virtual": 1,
-   "options": " <p>Address List</p>\n\n"
-  },
-  {
-   "fieldname": "contact_list",
-   "fieldtype": "HTML",
-   "is_virtual": 1,
-   "options": "\n\n    <p>Contact List</p>\n\n"
-  },
-  {
-   "fieldname": "advanced_information_selection",
-   "fieldtype": "Section Break",
-   "label": "Billing Information"
-  },
-  {
-   "fieldname": "birth_date",
-   "fieldtype": "Date",
-   "label": "Birth Date"
-  },
-  {
-   "fieldname": "first_channel",
-   "fieldtype": "Select",
-   "label": "First Channel",
-   "options": "FB - Jemmia Diamond\nFB - Jemmia Diamond - H\u00e0 N\u1ed9i\nFT - Kh\u00e1ch v\u00e3ng lai\nGG-Zalo OA\nGG - Google\nFB - Jemmia Love Jewelry\nTT - Ki\u1ec7t H\u1ed9t Xo\u00e0n\nGG - Youtube KHX\nGG-Mail CSKH\nGG - Website\nFT - Kh\u00e1ch \u0111\u01b0\u1ee3c gi\u1edbi thi\u1ec7u qua Referral\nFB - Ki\u1ebft H\u00f4t Xo\u00e0n\nGG - Hotline 333\nFT - Tiktok c\u00e1 nh\u00e2n c\u1ee7a sale\nFT - Kh\u00e1ch sales t\u01b0 t\u00ecm\nFT - Nh\u00e2n vi\u00ean mua h\u00e0ng\nTiktok c\u1ee7a kh\u00e1ch\nTT - Hotline 11119\nIG - Jemmia Diamond\nFB - Jemmia Review\nKh\u00e1ch v\u00e3ng lai xem FB\nKh\u00e1ch v\u00e3ng lai xem Web\nGG - Chatbot\nIG - Jemmia Love Jewelry"
-  },
-  {
-   "fieldname": "personal_id",
-   "fieldtype": "Data",
-   "label": "Personal ID"
-  },
-  {
-   "fieldname": "place_of_issuance",
-   "fieldtype": "Select",
-   "label": "Place Of Issuance",
-   "options": "Ministry of Public Security\nDepartment of Police for Administrative Management of Social Order\nDepartment of Police for Registration, Residency Management, and National Population Data"
-  },
-  {
-   "fieldname": "date_of_issuance",
-   "fieldtype": "Date",
-   "label": "Date Of Issuance"
-  },
-  {
-   "fieldname": "customer_website",
-   "fieldtype": "Data",
-   "label": "Website"
-  },
-  {
-   "fieldname": "bank_name",
-   "fieldtype": "Select",
-   "label": "Bank Name",
-   "options": "Agribank\nACB\nBIDV\nVietcombank\nVietinBank\nTechcombank\nSacombank\nMB Bank\nEximbank\nVPBank\nSHB\nNamABank\nOceanBank\nTPBank"
-  },
-  {
-   "fieldname": "account_number",
-   "fieldtype": "Data",
-   "label": "Account Number"
-  },
-  {
-   "fieldname": "personal_tax_id",
-   "fieldtype": "Data",
-   "label": "Personal Tax ID"
-  },
-  {
-   "fieldname": "column_break_waqk",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_bjiq",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "customer_journey",
-   "fieldtype": "Small Text",
-   "label": "Customer Journey"
-  },
-  {
-   "default": "Silver",
-   "fieldname": "customer_rank",
-   "fieldtype": "Select",
-   "label": "Customer Rank",
-   "options": "Silver\nGold\nPlatinum"
-  },
-  {
-   "depends_on": "eval:doc.customer_type==\"Company\"",
-   "fieldname": "organization_section",
-   "fieldtype": "Section Break",
-   "label": "Organization"
-  },
-  {
-   "fieldname": "company_name",
-   "fieldtype": "Data",
-   "label": "Company Name"
-  },
-  {
-   "fieldname": "no_of_employees",
-   "fieldtype": "Data",
-   "label": "No Of Employees"
-  },
-  {
-   "fieldname": "column_break_rwpe",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_czdq",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "tax_number",
-   "fieldtype": "Data",
-   "label": "Tax Number"
-  },
-  {
-   "fieldname": "ceo_name",
-   "fieldtype": "Data",
-   "label": "CEO"
-  },
-  {
-   "fieldname": "column_break_eofp",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "personal_document_type",
-   "fieldtype": "Select",
-   "label": "Personal Document Type",
-   "options": "CCCD\nCMND\nPassport"
-  },
-  {
-   "fieldname": "column_break_akie",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "orther_section",
-   "fieldtype": "Section Break",
-   "label": "Orther Section"
-  },
-  {
-   "fieldname": "column_break_ioxt",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "invoice_type",
-   "fieldtype": "Select",
-   "label": "Invoice Type",
-   "options": "Individual\nCompany"
-  },
-  {
-   "fieldname": "vat_infor_section",
-   "fieldtype": "Section Break",
-   "label": "VAT "
-  },
-  {
-   "fieldname": "column_break_ikkg",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "bank_section",
-   "fieldtype": "Section Break",
-   "label": "Bank Account"
-  },
-  {
-   "fieldname": "vat_name",
-   "fieldtype": "Data",
-   "label": "VAT Name"
-  },
-  {
-   "fieldname": "vat_email",
-   "fieldtype": "Data",
-   "label": "Email"
-  },
-  {
-   "description": "For example: 123 ABC Street, Ward 1, District 2, Ho Chi Minh City",
-   "fieldname": "vat_address",
-   "fieldtype": "Data",
-   "label": "VAT Address"
-  },
-  {
-   "fieldname": "column_break_kufu",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_kqch",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "bank_account_name",
-   "fieldtype": "Data",
-   "label": "Bank Account Name"
-  },
-  {
-   "fieldname": "address_section",
-   "fieldtype": "Section Break",
-   "label": "Address"
-  },
-  {
-   "fieldname": "column_break_aqyz",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_cgqq",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "person_name",
-   "fieldtype": "Data",
-   "label": "Customer Name"
-  },
-  {
-   "fieldname": "detail_tab",
-   "fieldtype": "Tab Break",
-   "label": "Details"
   }
  ],
  "icon": "fa fa-user",
@@ -871,11 +594,11 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-05-08 00:33:48.921340",
+ "modified": "2024-06-17 03:24:59.612974",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
- "naming_rule": "Expression",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
@@ -949,14 +672,11 @@
   }
  ],
  "quick_entry": 1,
- "row_format": "Dynamic",
  "search_fields": "customer_group,territory, mobile_no,primary_address",
  "show_name_in_global_search": 1,
- "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
  "title_field": "customer_name",
- "track_changes": 1,
- "translated_doctype": 1
+ "track_changes": 1
 }

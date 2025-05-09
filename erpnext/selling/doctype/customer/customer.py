@@ -30,34 +30,29 @@ class Customer(TransactionBase):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import AllowedToTransactWith
-		from erpnext.accounts.doctype.party_account.party_account import PartyAccount
-		from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import CustomerCreditLimit
-		from erpnext.selling.doctype.sales_team.sales_team import SalesTeam
-		from erpnext.utilities.doctype.portal_user.portal_user import PortalUser
 		from frappe.types import DF
 
+		from erpnext.accounts.doctype.allowed_to_transact_with.allowed_to_transact_with import (
+			AllowedToTransactWith,
+		)
+		from erpnext.accounts.doctype.party_account.party_account import PartyAccount
+		from erpnext.selling.doctype.customer_credit_limit.customer_credit_limit import (
+			CustomerCreditLimit,
+		)
+		from erpnext.selling.doctype.sales_team.sales_team import SalesTeam
+		from erpnext.utilities.doctype.portal_user.portal_user import PortalUser
+
 		account_manager: DF.Link | None
-		account_number: DF.Data | None
 		accounts: DF.Table[PartyAccount]
-		bank_account_name: DF.Data | None
-		bank_name: DF.Literal["Agribank", "ACB", "BIDV", "Vietcombank", "VietinBank", "Techcombank", "Sacombank", "MB Bank", "Eximbank", "VPBank", "SHB", "NamABank", "OceanBank", "TPBank"]
-		birth_date: DF.Date | None
-		ceo_name: DF.Data | None
 		companies: DF.Table[AllowedToTransactWith]
-		company_name: DF.Data | None
 		credit_limits: DF.Table[CustomerCreditLimit]
 		customer_details: DF.Text | None
 		customer_group: DF.Link | None
-		customer_journey: DF.SmallText | None
 		customer_name: DF.Data
 		customer_pos_id: DF.Data | None
 		customer_primary_address: DF.Link | None
 		customer_primary_contact: DF.Link | None
-		customer_rank: DF.Literal["Silver", "Gold", "Platinum"]
 		customer_type: DF.Literal["Company", "Individual", "Partnership"]
-		customer_website: DF.Data | None
-		date_of_issuance: DF.Date | None
 		default_bank_account: DF.Link | None
 		default_commission_rate: DF.Float
 		default_currency: DF.Link | None
@@ -66,11 +61,9 @@ class Customer(TransactionBase):
 		disabled: DF.Check
 		dn_required: DF.Check
 		email_id: DF.ReadOnly | None
-		first_channel: DF.Literal["FB - Jemmia Diamond", "FB - Jemmia Diamond - H\u00e0 N\u1ed9i", "FT - Kh\u00e1ch v\u00e3ng lai", "GG-Zalo OA", "GG - Google", "FB - Jemmia Love Jewelry", "TT - Ki\u1ec7t H\u1ed9t Xo\u00e0n", "GG - Youtube KHX", "GG-Mail CSKH", "GG - Website", "FT - Kh\u00e1ch \u0111\u01b0\u1ee3c gi\u1edbi thi\u1ec7u qua Referral", "FB - Ki\u1ebft H\u00f4t Xo\u00e0n", "GG - Hotline 333", "FT - Tiktok c\u00e1 nh\u00e2n c\u1ee7a sale", "FT - Kh\u00e1ch sales t\u01b0 t\u00ecm", "FT - Nh\u00e2n vi\u00ean mua h\u00e0ng", "Tiktok c\u1ee7a kh\u00e1ch", "TT - Hotline 11119", "IG - Jemmia Diamond", "FB - Jemmia Review", "Kh\u00e1ch v\u00e3ng lai xem FB", "Kh\u00e1ch v\u00e3ng lai xem Web", "GG - Chatbot", "IG - Jemmia Love Jewelry"]
 		gender: DF.Link | None
 		image: DF.AttachImage | None
 		industry: DF.Link | None
-		invoice_type: DF.Literal["Individual", "Company"]
 		is_frozen: DF.Check
 		is_internal_customer: DF.Check
 		language: DF.Link | None
@@ -80,15 +73,8 @@ class Customer(TransactionBase):
 		market_segment: DF.Link | None
 		mobile_no: DF.ReadOnly | None
 		naming_series: DF.Literal["CUST-.YYYY.-"]
-		no_of_employees: DF.Data | None
 		opportunity_name: DF.Link | None
 		payment_terms: DF.Link | None
-		person_name: DF.Data | None
-		personal_document_type: DF.Literal["CCCD", "CMND", "Passport"]
-		personal_id: DF.Data | None
-		personal_tax_id: DF.Data | None
-		phone: DF.ReadOnly | None
-		place_of_issuance: DF.Literal["Ministry of Public Security", "Department of Police for Administrative Management of Social Order", "Department of Police for Registration, Residency Management, and National Population Data"]
 		portal_users: DF.Table[PortalUser]
 		primary_address: DF.Text | None
 		prospect_name: DF.Link | None
@@ -98,12 +84,8 @@ class Customer(TransactionBase):
 		so_required: DF.Check
 		tax_category: DF.Link | None
 		tax_id: DF.Data | None
-		tax_number: DF.Data | None
 		tax_withholding_category: DF.Link | None
 		territory: DF.Link | None
-		vat_address: DF.Data | None
-		vat_email: DF.Data | None
-		vat_name: DF.Data | None
 		website: DF.Data | None
 	# end: auto-generated types
 
@@ -115,6 +97,15 @@ class Customer(TransactionBase):
 	def load_dashboard_info(self):
 		info = get_dashboard_info(self.doctype, self.name, self.loyalty_program)
 		self.set_onload("dashboard_info", info)
+
+	def autoname(self):
+		cust_master_name = frappe.defaults.get_global_default("cust_master_name")
+		if cust_master_name == "Customer Name":
+			self.name = self.get_customer_name()
+		elif cust_master_name == "Naming Series":
+			set_name_by_naming_series(self)
+		else:
+			set_name_from_naming_options(frappe.get_meta(self.doctype).autoname, self)
 
 	def get_customer_name(self):
 		if frappe.db.get_value("Customer", self.customer_name) and not frappe.flags.in_import:
