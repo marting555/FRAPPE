@@ -102,7 +102,7 @@ class SalesOrder(SellingController):
 		customer_personal_id: DF.Data | None
 		date_of_issuance: DF.Date | None
 		delivery_date: DF.Date | None
-		delivery_status: DF.Literal["Not Delivered", "Fully Delivered", "Partly Delivered", "Closed", "Not Applicable"]
+		delivery_status: DF.Literal["Not Delivered", "Fully Delivered", "Partially Delivered", "Closed", "Not Applicable"]
 		disable_rounded_total: DF.Check
 		discount_amount: DF.Currency
 		dispatch_address: DF.SmallText | None

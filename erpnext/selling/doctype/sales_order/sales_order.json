@@ -1341,7 +1341,7 @@
    "in_standard_filter": 1,
    "label": "Delivery Status",
    "no_copy": 1,
-   "options": "Not Delivered\nFully Delivered\nPartly Delivered\nClosed\nNot Applicable",
+   "options": "Not Delivered\nFully Delivered\nPartially Delivered\nClosed\nNot Applicable",
    "print_hide": 1
   },
   {
@@ -1884,7 +1884,7 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-08 14:20:20.889248",
+ "modified": "2025-05-09 11:46:00.666904",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
