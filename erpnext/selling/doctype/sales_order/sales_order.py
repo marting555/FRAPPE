@@ -769,14 +769,14 @@ class SalesOrder(SellingController):
 
 	def before_save(self):
 		"""
-			If order from Haravan is cancel, cancel the current order too
+			If order from Haravan is cancelled, cancel the current order too
 		"""
 		if self.cancelled_status == "Cancelled":
 			self.cancel_sales_order()
 
 	def before_insert(self):
 		"""
-			If order from Haravan is cancel, cancel the current order too
+			If order from Haravan is cancelled, cancel the current order too
 		"""
 		if self.cancelled_status == "Cancelled":
 			self.cancel_sales_order()
