@@ -29,7 +29,7 @@ erpnext.PointOfSale.Payment = class {
 							<div class="fields-section">
 								<div class="invoice-fields">
 									<button class="btn btn-default btn-sm btn-shadow addl-fields hidden">${__(
-										"Add Additional Information"
+										"Update Additional Information"
 									)}</button>
 								</div>
 							</div>
@@ -75,7 +75,7 @@ erpnext.PointOfSale.Payment = class {
 			frm.set_value(value, values[value]);
 		}
 		frappe.show_alert({
-			message: __("Additional Information saved."),
+			message: __("Additional Information updated successfully."),
 			indicator: "green",
 		});
 	}
