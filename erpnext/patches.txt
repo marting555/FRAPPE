@@ -407,3 +407,5 @@ execute:frappe.db.set_single_value("Accounts Settings", "receivable_payable_fetc
 erpnext.patches.v14_0.set_update_price_list_based_on
 
 erpnext.seeds.item_group.create_default_lead_source # 6/5/2025 - 4
+erpnext.seeds.item_group.create_default_lead_budget # 9/5 - 4
+erpnext.seeds.item_group.create_default_lead_demand # 9/5 - 4
