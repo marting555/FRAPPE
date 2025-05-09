@@ -133,7 +133,7 @@ class Lead(SellingController, CRMNote):
 				if lead_source:
 					self.contact_doc = self.create_contact(lead_source)
 					if self.contact_doc:
-						self.source = self.contact_doc.name
+						self.source = self.contact_doc.source
 			else:
 				self.contact_doc = self.create_contact()
 
