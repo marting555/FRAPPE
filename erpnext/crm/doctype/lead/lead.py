@@ -34,7 +34,7 @@ class Lead(SellingController, CRMNote):
 		annual_revenue: DF.Currency
 		bank_branch: DF.Literal[None]
 		bank_district: DF.Literal[None]
-		bank_name: DF.Literal["Agribank", "ACB", "BIDV", "Vietcombank", "VietinBank", "Techcombank", "Sacombank", "MB Bank", "Eximbank", "VPBank", "SHB", "NamABank", "B\u1eafc \u00c1 Bank", "OceanBank", "TPBank"]
+		bank_name: DF.Literal["Agribank", "ACB", "BIDV", "Vietcombank", "Vietinbank", "Techcombank", "Sacombank", "MB Bank", "Eximbank", "VPBank", "SHB", "Nam A Bank", "BAC A BANK", "OceanBank", "TPBank"]
 		bank_province: DF.Literal[None]
 		bank_ward: DF.Literal[None]
 		birth_date: DF.Date | None
@@ -110,7 +110,6 @@ class Lead(SellingController, CRMNote):
 		self.set_status()
 		self.check_email_id_is_unique()
 		self.check_phone_is_unique()
-		self.validate_phone_number()
 		self.validate_email_id()
 
 	def before_insert(self):
@@ -255,14 +254,6 @@ class Lead(SellingController, CRMNote):
 					),
 					frappe.DuplicateEntryError,
 				)
-
-	def validate_phone_number(self):
-		if self.phone:
-			# Add any specific validation for phone number format if needed
-			if not self.flags.ignore_phone_validation:
-				# Example: Check if the phone number is valid (you can customize this)
-				if len(self.phone) < 10:  # Example condition
-					frappe.throw(_("Phone number must be at least 10 digits long."))
 
 	def link_to_contact(self):
 		# update contact links

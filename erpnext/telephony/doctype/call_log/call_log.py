@@ -76,7 +76,6 @@ class CallLog(Document):
 
 		else:
 			lead = self.create_lead_from_phone(lead_number)
-			
 			# Add Contact
 			contact = self.get_contact_from_lead(lead)
 			self.add_link(link_type="Contact", link_name=contact)
@@ -89,11 +88,12 @@ class CallLog(Document):
 			self.update_received_by()
 
 	def create_lead_from_phone(self, lead_number):
-		
+		print("creating ...", lead_number)
 		lead = frappe.new_doc("Lead")
 		lead.update({
 			"lead_name": lead_number,  
 			"phone": lead_number,
+			"source": "CRM-LEAD-SOURCE-0000001",
 		})
 		lead.insert(ignore_permissions=True)
 		return lead

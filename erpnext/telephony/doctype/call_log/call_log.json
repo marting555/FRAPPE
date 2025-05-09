@@ -62,21 +62,21 @@
    "fieldname": "from",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "G\u1ecdi T\u1eeb",
+   "label": "From",
    "read_only": 1
   },
   {
    "fieldname": "to",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "G\u1ecdi \u0110\u1ebfn",
+   "label": "To",
    "read_only": 1
   },
   {
    "fieldname": "status",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "Tr\u1ea1ng Th\u00e1i",
+   "label": "status",
    "options": "Ringing\nIn Progress\nCompleted\nFailed\nBusy\nNo Answer\nQueued\nCanceled",
    "read_only": 1
   },
@@ -91,7 +91,6 @@
   {
    "fieldname": "recording_url",
    "fieldtype": "Text",
-   "hidden": 1,
    "label": "Recording URL"
   },
   {
@@ -103,7 +102,7 @@
   {
    "fieldname": "type",
    "fieldtype": "Select",
-   "label": "Ki\u1ec3u Tr\u1ea1ng Th\u00e1i Cu\u1ed9c G\u1ecdi",
+   "label": "Call Type",
    "options": "Incoming\nOutgoing",
    "read_only": 1
   },
@@ -142,7 +141,7 @@
   {
    "fieldname": "start_time",
    "fieldtype": "Datetime",
-   "label": "B\u0103t \u0110\u1ea7u G\u1ecdi L\u00fac",
+   "label": "Start Time",
    "read_only": 1
   },
   {
@@ -161,7 +160,7 @@
   {
    "fieldname": "call_details_section",
    "fieldtype": "Section Break",
-   "label": "Th\u00f4ng Tin C\u01a1 b\u1ea3n"
+   "label": "Details"
   },
   {
    "fieldname": "employee_user_id",
@@ -194,28 +193,28 @@
   {
    "fieldname": "stringeex_selections",
    "fieldtype": "Section Break",
-   "label": "Th\u00f4ng Tin Chi Ti\u1ebft"
+   "label": "Stringee Information"
   },
   {
    "fieldname": "answer_time",
    "fieldtype": "Datetime",
-   "label": "B\u1eaft \u0110\u1ea7u N\u00f3i Chuy\u1ec7n L\u00fac"
+   "label": "Answer Time"
   },
   {
    "fieldname": "stop_time",
    "fieldtype": "Datetime",
-   "label": "K\u1ebft Th\u00fac L\u00fac"
+   "label": "Stop Time"
   },
   {
    "fieldname": "first_answer_time",
    "fieldtype": "Datetime",
    "hidden": 1,
-   "label": "Th\u1eddi Gian Tr\u1ea3 L\u1eddi \u0110\u1ea7u Ti\u00ean"
+   "label": "First Answer Time"
   },
   {
    "fieldname": "to_alias",
    "fieldtype": "Data",
-   "label": "T\u00ean Hi\u1ec3n Th\u1ecb Ng\u01b0\u1eddi Nh\u1eadn"
+   "label": "Name"
   },
   {
    "fieldname": "column_break_gztc",
@@ -224,19 +223,19 @@
   {
    "fieldname": "answer_duration",
    "fieldtype": "Int",
-   "label": "Th\u1eddi L\u01b0\u1ee3ng \u0110\u00e0m Tho\u1ea1i (gi\u00e2y)"
+   "label": "Answer Duration(s)"
   },
   {
    "default": "0",
    "fieldname": "from_internal",
    "fieldtype": "Check",
-   "label": "G\u1ecdi \u0110i"
+   "label": "From Internal"
   },
   {
    "default": "0",
    "fieldname": "to_internal",
    "fieldtype": "Check",
-   "label": "G\u1ecdi \u0110\u1ebfn"
+   "label": "To Internal"
   },
   {
    "default": "0",
@@ -244,13 +243,13 @@
    "fieldtype": "Check",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "\u0110\u00e3 Ghi \u00c2m"
+   "label": "Recorded"
   },
   {
    "default": "0",
    "fieldname": "video_call",
    "fieldtype": "Check",
-   "label": "Cu\u1ed9c G\u1ecdi Video"
+   "label": "Video Call"
   },
   {
    "fieldname": "project_id",
@@ -260,66 +259,66 @@
   {
    "fieldname": "project_name",
    "fieldtype": "Data",
-   "label": "T\u00ean D\u1ef1 \u00c1n"
+   "label": "Project Name"
   },
   {
    "fieldname": "account_id",
    "fieldtype": "Data",
-   "label": "ID T\u00e0i Kho\u1ea3n"
+   "label": "Account ID"
   },
   {
    "fieldname": "object_type",
    "fieldtype": "Data",
-   "label": "Lo\u1ea1i \u0110\u1ed1i T\u01b0\u1ee3ng"
+   "label": "Object Type"
   },
   {
    "fieldname": "created",
    "fieldtype": "Datetime",
    "hidden": 1,
-   "label": "Th\u1eddi Gian T\u1ea1o"
+   "label": "Created At"
   },
   {
    "fieldname": "from_number",
    "fieldtype": "Data",
    "hidden": 1,
-   "label": "G\u1ecdi \u0110\u1ebfn"
+   "label": "To"
   },
   {
    "fieldname": "to_number",
    "fieldtype": "Data",
    "hidden": 1,
-   "label": "G\u1ecdi T\u1eeb"
+   "label": "From"
   },
   {
    "fieldname": "from_user_id",
    "fieldtype": "Data",
-   "label": "ID Ng\u01b0\u1eddi G\u1ecdi"
+   "label": "From User ID"
   },
   {
    "fieldname": "amount",
    "fieldtype": "Currency",
-   "label": "Chi Ph\u00ed Cu\u1ed9c G\u00f2i"
+   "label": "Amount"
   },
   {
    "fieldname": "record_path",
    "fieldtype": "Data",
-   "label": "\u0110\u01b0\u1eddng D\u1eabn Ghi \u00c2m"
+   "label": "Record Path"
   },
   {
    "fieldname": "answer_duration_minutes",
    "fieldtype": "Int",
-   "label": "Th\u1eddi L\u01b0\u1ee3ng \u0110\u00e0m Tho\u1ea1i (ph\u00fat)"
+   "label": "Answer Duration Minutes"
   },
   {
    "fieldname": "system_selections",
    "fieldtype": "Section Break",
    "hidden": 1,
-   "label": "system_selections"
+   "label": "System Selections"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-05 21:10:59.800311",
+ "modified": "2025-05-08 02:48:47.590842",
  "modified_by": "Administrator",
  "module": "Telephony",
  "name": "Call Log",
