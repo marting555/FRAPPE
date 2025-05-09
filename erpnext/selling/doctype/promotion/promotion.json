@@ -1,7 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "format:{YY}{MM}{######}",
+ "autoname": "format: PROMOTION{YY}{MM}{######}",
  "creation": "2025-04-22 09:48:32.212469",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -51,7 +51,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-08 14:16:32.912981",
+ "modified": "2025-05-09 14:26:15.531471",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Promotion",
