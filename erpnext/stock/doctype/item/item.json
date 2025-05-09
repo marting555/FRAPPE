@@ -2,7 +2,7 @@
  "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
- "autoname": "format:ITEM{YY}{######}",
+ "autoname": "field:item_code",
  "creation": "2013-05-03 10:45:46",
  "description": "A Product or a Service that is bought, sold or kept in stock.",
  "doctype": "DocType",
@@ -11,10 +11,10 @@
  "engine": "InnoDB",
  "field_order": [
   "details",
-  "item_group",
   "naming_series",
   "item_code",
   "item_name",
+  "item_group",
   "stock_uom",
   "column_break0",
   "disabled",
@@ -128,12 +128,10 @@
   },
   {
    "bold": 1,
-   "fetch_from": "design.design_code",
-   "fetch_if_empty": 1,
    "fieldname": "item_code",
    "fieldtype": "Data",
    "in_global_search": 1,
-   "label": "M\u00e3 S\u1ea3n Ph\u1ea9m",
+   "label": "Item Code",
    "oldfieldname": "item_code",
    "oldfieldtype": "Data",
    "reqd": 1,
@@ -157,7 +155,7 @@
    "fieldname": "item_name",
    "fieldtype": "Data",
    "in_global_search": 1,
-   "label": "T\u00ean S\u1ea3n Ph\u1ea9m",
+   "label": "Item Name",
    "oldfieldname": "item_name",
    "oldfieldtype": "Data",
    "search_index": 1
@@ -168,8 +166,7 @@
    "in_list_view": 1,
    "in_preview": 1,
    "in_standard_filter": 1,
-   "label": "Nh\u00f3m S\u1ea3n Ph\u1ea9m",
-   "link_filters": "[[\"Item Group\",\"is_group\",\"=\",0]]",
+   "label": "Item Group",
    "oldfieldname": "item_group",
    "oldfieldtype": "Link",
    "options": "Item Group",
@@ -180,7 +177,7 @@
    "fieldname": "stock_uom",
    "fieldtype": "Link",
    "ignore_user_permissions": 1,
-   "label": "\u0110\u01a1n V\u1ecb T\u00ednh",
+   "label": "Default Unit of Measure",
    "oldfieldname": "stock_uom",
    "oldfieldtype": "Link",
    "options": "UOM",
@@ -194,7 +191,6 @@
    "default": "0",
    "fieldname": "disabled",
    "fieldtype": "Check",
-   "hidden": 1,
    "label": "Disabled",
    "search_index": 1
   },
@@ -202,22 +198,21 @@
    "default": "0",
    "fieldname": "allow_alternative_item",
    "fieldtype": "Check",
-   "hidden": 1,
    "label": "Allow Alternative Item"
   },
   {
    "allow_in_quick_entry": 1,
    "bold": 1,
-   "default": "0",
+   "default": "1",
    "depends_on": "eval:!doc.is_fixed_asset",
    "fieldname": "is_stock_item",
    "fieldtype": "Check",
-   "label": "C\u00f3 Qu\u1ea3n L\u00fd T\u1ed3n",
+   "label": "Maintain Stock",
    "oldfieldname": "is_stock_item",
    "oldfieldtype": "Select"
   },
   {
-   "default": "0",
+   "default": "1",
    "depends_on": "eval:!doc.is_fixed_asset",
    "fieldname": "include_item_in_manufacturing",
    "fieldtype": "Check",
@@ -228,14 +223,12 @@
    "depends_on": "eval:(doc.__islocal&&doc.is_stock_item && !doc.has_serial_no && !doc.has_batch_no)",
    "fieldname": "opening_stock",
    "fieldtype": "Float",
-   "hidden": 1,
    "label": "Opening Stock"
   },
   {
    "depends_on": "is_stock_item",
    "fieldname": "valuation_rate",
    "fieldtype": "Currency",
-   "hidden": 1,
    "label": "Valuation Rate"
   },
   {
@@ -243,14 +236,13 @@
    "depends_on": "eval:doc.__islocal",
    "fieldname": "standard_rate",
    "fieldtype": "Currency",
-   "label": "Gi\u00e1 B\u00e1n Ti\u00eau Chu\u1ea9n"
+   "label": "Standard Selling Rate"
   },
   {
    "allow_in_quick_entry": 1,
    "default": "0",
    "fieldname": "is_fixed_asset",
    "fieldtype": "Check",
-   "hidden": 1,
    "label": "Is Fixed Asset",
    "set_only_once": 1
   },
@@ -279,14 +271,14 @@
    "print_hide": 1
   },
   {
+   "collapsible": 1,
    "fieldname": "section_break_11",
    "fieldtype": "Section Break",
-   "label": "M\u00f4 T\u1ea3"
+   "label": "Description"
   },
   {
    "fieldname": "brand",
    "fieldtype": "Link",
-   "hidden": 1,
    "label": "Brand",
    "oldfieldname": "brand",
    "oldfieldtype": "Link",
@@ -297,7 +289,7 @@
    "fieldname": "description",
    "fieldtype": "Text Editor",
    "in_preview": 1,
-   "label": "M\u00f4 T\u1ea3",
+   "label": "Description",
    "oldfieldname": "description",
    "oldfieldtype": "Text"
   },
@@ -318,7 +310,7 @@
    "depends_on": "is_stock_item",
    "fieldname": "inventory_section",
    "fieldtype": "Tab Break",
-   "label": "Qu\u1ea3n L\u00fd T\u1ed3n Kho",
+   "label": "Inventory",
    "oldfieldtype": "Section Break",
    "options": "fa fa-truck"
   },
@@ -385,7 +377,6 @@
    "depends_on": "is_stock_item",
    "fieldname": "reorder_section",
    "fieldtype": "Section Break",
-   "hidden": 1,
    "label": "Auto re-order",
    "options": "fa fa-rss"
   },
@@ -393,7 +384,6 @@
    "description": "Will also apply for variants unless overrridden",
    "fieldname": "reorder_levels",
    "fieldtype": "Table",
-   "hidden": 1,
    "label": "Reorder level based on Warehouse",
    "options": "Item Reorder"
   },
@@ -401,7 +391,6 @@
    "collapsible": 1,
    "fieldname": "unit_of_measure_conversion",
    "fieldtype": "Section Break",
-   "hidden": 1,
    "label": "Units of Measure"
   },
   {
@@ -414,18 +403,18 @@
    "options": "UOM Conversion Detail"
   },
   {
+   "collapsible": 1,
    "collapsible_depends_on": "eval:doc.has_batch_no || doc.has_serial_no",
    "depends_on": "eval:doc.is_stock_item",
    "fieldname": "serial_nos_and_batches",
    "fieldtype": "Section Break",
-   "label": "Serial V\u00e0 L\u00f4"
+   "label": "Serial Nos and Batches"
   },
   {
    "default": "0",
    "depends_on": "eval:doc.is_stock_item",
    "fieldname": "has_batch_no",
    "fieldtype": "Check",
-   "hidden": 1,
    "label": "Has Batch No",
    "oldfieldname": "has_batch_no",
    "oldfieldtype": "Select"
@@ -435,7 +424,6 @@
    "depends_on": "has_batch_no",
    "fieldname": "create_new_batch",
    "fieldtype": "Check",
-   "hidden": 1,
    "label": "Automatically Create New Batch"
   },
   {
@@ -443,7 +431,6 @@
    "description": "Example: ABCD.#####. If series is set and Batch No is not mentioned in transactions, then automatic batch number will be created based on this series. If you always want to explicitly mention Batch No for this item, leave this blank. Note: this setting will take priority over the Naming Series Prefix in Stock Settings.",
    "fieldname": "batch_number_series",
    "fieldtype": "Data",
-   "hidden": 1,
    "label": "Batch Number Series",
    "translatable": 1
   },
@@ -452,7 +439,6 @@
    "depends_on": "has_batch_no",
    "fieldname": "has_expiry_date",
    "fieldtype": "Check",
-   "hidden": 1,
    "label": "Has Expiry Date"
   },
   {
@@ -460,7 +446,6 @@
    "depends_on": "has_batch_no",
    "fieldname": "retain_sample",
    "fieldtype": "Check",
-   "hidden": 1,
    "label": "Retain Sample"
   },
   {
@@ -479,7 +464,7 @@
    "depends_on": "eval:doc.is_stock_item",
    "fieldname": "has_serial_no",
    "fieldtype": "Check",
-   "label": "C\u00f3 Serial",
+   "label": "Has Serial No",
    "oldfieldname": "has_serial_no",
    "oldfieldtype": "Select"
   },
@@ -496,7 +481,7 @@
    "depends_on": "eval:!doc.is_fixed_asset",
    "fieldname": "variants_section",
    "fieldtype": "Tab Break",
-   "label": "Bi\u1ebfn Th\u1ec3"
+   "label": "Variants"
   },
   {
    "default": "0",
@@ -505,7 +490,7 @@
    "fieldname": "has_variants",
    "fieldtype": "Check",
    "in_standard_filter": 1,
-   "label": "C\u00f3 Bi\u1ebfn Th\u1ec3"
+   "label": "Has Variants"
   },
   {
    "default": "Item Attribute",
@@ -643,7 +628,6 @@
    "collapsible": 1,
    "fieldname": "sales_details",
    "fieldtype": "Tab Break",
-   "hidden": 1,
    "label": "Sales",
    "oldfieldtype": "Section Break",
    "options": "fa fa-tag"
@@ -715,7 +699,6 @@
    "collapsible_depends_on": "taxes",
    "fieldname": "item_tax_section_break",
    "fieldtype": "Tab Break",
-   "hidden": 1,
    "label": "Tax",
    "oldfieldtype": "Section Break",
    "options": "fa fa-money"
@@ -755,7 +738,6 @@
    "depends_on": "is_stock_item",
    "fieldname": "manufacturing",
    "fieldtype": "Tab Break",
-   "hidden": 1,
    "label": "Manufacturing",
    "oldfieldtype": "Section Break",
    "options": "fa fa-cogs"
@@ -804,7 +786,6 @@
    "depends_on": "eval:!doc.__islocal && !doc.is_fixed_asset",
    "fieldname": "over_delivery_receipt_allowance",
    "fieldtype": "Float",
-   "hidden": 1,
    "label": "Over Delivery/Receipt Allowance (%)",
    "oldfieldname": "tolerance",
    "oldfieldtype": "Currency"
@@ -813,7 +794,6 @@
    "depends_on": "eval:!doc.__islocal && !doc.is_fixed_asset",
    "fieldname": "over_billing_allowance",
    "fieldtype": "Float",
-   "hidden": 1,
    "label": "Over Billing Allowance (%)"
   },
   {
@@ -858,25 +838,22 @@
   {
    "fieldname": "inventory_settings_section",
    "fieldtype": "Section Break",
-   "hidden": 1,
    "label": "Inventory Settings"
   },
   {
    "fieldname": "purchasing_tab",
    "fieldtype": "Tab Break",
-   "hidden": 1,
    "label": "Purchasing"
   },
   {
    "fieldname": "quality_tab",
    "fieldtype": "Tab Break",
-   "hidden": 1,
    "label": "Quality"
   },
   {
    "fieldname": "details",
    "fieldtype": "Tab Break",
-   "label": "Chi Ti\u1ebft",
+   "label": "Details",
    "oldfieldtype": "Section Break",
    "options": "fa fa-flag"
   },
@@ -890,7 +867,6 @@
    "depends_on": "eval:!doc.is_fixed_asset",
    "fieldname": "accounting",
    "fieldtype": "Tab Break",
-   "hidden": 1,
    "label": "Accounting"
   },
   {
@@ -913,11 +889,11 @@
  "image_field": "image",
  "links": [],
  "make_attachments_public": 1,
- "modified": "2025-05-06 16:13:26.389272",
+ "modified": "2025-02-03 23:43:57.253667",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
- "naming_rule": "Expression",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
  "permissions": [
   {
@@ -978,7 +954,6 @@
   }
  ],
  "quick_entry": 1,
- "row_format": "Dynamic",
  "search_fields": "item_name,description,item_group,customer_code",
  "show_name_in_global_search": 1,
  "show_preview_popup": 1,

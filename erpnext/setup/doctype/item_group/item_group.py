@@ -15,14 +15,13 @@ class ItemGroup(NestedSet):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from erpnext.stock.doctype.item_default.item_default import ItemDefault
-		from erpnext.stock.doctype.item_tax.item_tax import ItemTax
 		from frappe.types import DF
 
-		has_variants: DF.Check
+		from erpnext.stock.doctype.item_default.item_default import ItemDefault
+		from erpnext.stock.doctype.item_tax.item_tax import ItemTax
+
 		image: DF.AttachImage | None
 		is_group: DF.Check
-		is_stock_group: DF.Check
 		item_group_defaults: DF.Table[ItemDefault]
 		item_group_name: DF.Data
 		lft: DF.Int
