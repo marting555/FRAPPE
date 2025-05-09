@@ -156,7 +156,25 @@ erpnext.PointOfSale.Controller = class {
 			},
 		});
 
+		this.fetch_invoice_fields();
 		this.add_pos_closed_listener();
+	}
+
+	fetch_invoice_fields() {
+		const me = this;
+		frappe.db.get_doc("POS Settings", undefined).then((doc) => {
+			me.settings.invoice_fields = doc.invoice_fields.map((field) => {
+				return {
+					fieldname: field.fieldname,
+					label: field.label,
+					fieldtype: field.fieldtype,
+					reqd: field.reqd,
+					options: field.options,
+					default_value: field.default_value,
+					read_only: field.read_only,
+				};
+			});
+		});
 	}
 
 	add_pos_closed_listener() {

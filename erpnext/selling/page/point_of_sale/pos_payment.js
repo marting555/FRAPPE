@@ -5,6 +5,7 @@ erpnext.PointOfSale.Payment = class {
 		this.events = events;
 		this.enable_numpad = settings.enable_numpad_for_payments;
 		this.set_gt_to_default_mop = settings.set_grand_total_to_default_mop;
+		this.invoice_fields = settings.invoice_fields;
 
 		this.init_component();
 	}
@@ -27,8 +28,11 @@ erpnext.PointOfSale.Payment = class {
 					<div class="payment-container-right">
 						<div class="fields-numpad-container">
 							<div class="fields-section">
-								<div class="section-label">${__("Additional Information")}</div>
-								<div class="invoice-fields"></div>
+								<div class="invoice-fields">
+									<button class="btn btn-default btn-sm btn-shadow addl-fields hidden">${__(
+										"Add Additional Information"
+									)}</button>
+								</div>
 							</div>
 							<div class="number-pad"></div>
 						</div>
@@ -48,48 +52,61 @@ erpnext.PointOfSale.Payment = class {
 		this.$invoice_fields_section = this.$component.find(".fields-section");
 	}
 
-	make_invoice_fields_control() {
-		this.reqd_invoice_fields = [];
-		frappe.db.get_doc("POS Settings", undefined).then((doc) => {
-			const fields = doc.invoice_fields;
-			if (!fields.length) return;
+	make_invoice_field_dialog() {
+		const me = this;
+		if (!me.invoice_fields.length) return;
+		me.addl_dlg = new frappe.ui.Dialog({
+			title: __("Additional Information"),
+			fields: me.invoice_fields,
+			size: "small",
+			primary_action_label: __("Save"),
+			primary_action(values) {
+				me.set_values_to_frm(values);
+				this.hide();
+			},
+		});
+		me.add_btn_field_click_listener();
+		me.set_value_on_dialog_fields();
+		me.make_addl_info_dialog_btn_visible();
+	}
 
-			this.$invoice_fields = this.$invoice_fields_section.find(".invoice-fields");
-			this.$invoice_fields.html("");
-			const frm = this.events.get_frm();
+	set_values_to_frm(values) {
+		const frm = this.events.get_frm();
+		for (const value in values) {
+			frm.set_value(value, values[value]);
+		}
+		frappe.show_alert({
+			message: __("Additional Information saved."),
+			indicator: "green",
+		});
+	}
 
-			fields.forEach((df) => {
-				this.$invoice_fields.append(
-					`<div class="invoice_detail_field ${df.fieldname}-field" data-fieldname="${df.fieldname}"></div>`
-				);
-				let df_events = {
-					onchange: function () {
-						frm.set_value(this.df.fieldname, this.get_value());
-					},
-				};
-				if (df.fieldtype == "Button") {
-					df_events = {
-						click: function () {
-							if (frm.script_manager.has_handlers(df.fieldname, frm.doc.doctype)) {
-								frm.script_manager.trigger(df.fieldname, frm.doc.doctype, frm.doc.docname);
-							}
-						},
-					};
-				}
-				if (df.reqd && (df.fieldtype !== "Button" || !df.read_only)) {
-					this.reqd_invoice_fields.push({ fieldname: df.fieldname, label: df.label });
-				}
-
-				this[`${df.fieldname}_field`] = frappe.ui.form.make_control({
-					df: {
-						...df,
-						...df_events,
-					},
-					parent: this.$invoice_fields.find(`.${df.fieldname}-field`),
-					render_input: true,
+	add_btn_field_click_listener() {
+		const frm = this.events.get_frm();
+		this.addl_dlg.fields.forEach((df) => {
+			if (df.fieldtype === "Button") {
+				this.addl_dlg.fields_dict[df.fieldname].$input.on("click", function () {
+					if (frm.script_manager.has_handlers(df.fieldname, frm.doc.doctype)) {
+						frm.script_manager.trigger(df.fieldname, frm.doc.doctype, frm.doc.docname);
+					}
 				});
-				this[`${df.fieldname}_field`].set_value(frm.doc[df.fieldname]);
-			});
+			}
+		});
+	}
+
+	set_value_on_dialog_fields() {
+		const doc = this.events.get_frm().doc;
+		this.addl_dlg.fields.forEach((df) => {
+			if (doc[df.fieldname] || df.default_value) {
+				this.addl_dlg.set_value(df.fieldname, doc[df.fieldname] || df.default_value);
+			}
+		});
+	}
+
+	make_addl_info_dialog_btn_visible() {
+		this.$invoice_fields_section.find(".addl-fields").removeClass("hidden");
+		this.$invoice_fields_section.find(".addl-fields").on("click", () => {
+			this.addl_dlg.show();
 		});
 	}
 
@@ -385,7 +402,7 @@ erpnext.PointOfSale.Payment = class {
 
 	render_payment_section() {
 		this.render_payment_mode_dom();
-		this.make_invoice_fields_control();
+		this.make_invoice_field_dialog();
 		this.update_totals_section();
 		this.set_grand_total_to_default_mop();
 	}
@@ -680,17 +697,20 @@ erpnext.PointOfSale.Payment = class {
 
 	validate_reqd_invoice_fields() {
 		const doc = this.events.get_frm().doc;
-		let validation_flag = true;
-		for (let field of this.reqd_invoice_fields) {
-			if (!doc[field.fieldname]) {
-				validation_flag = false;
+		for (const df of this.addl_dlg.fields) {
+			if (df.reqd && !doc[df.fieldname]) {
 				frappe.show_alert({
-					message: __("{0} is a mandatory field.", [field.label]),
-					indicator: "orange",
+					message: __(
+						"Invoice cannot be submitted without filling the mandatory Additional Information fields."
+					),
+					indicator: "red",
 				});
 				frappe.utils.play_sound("error");
+				this.addl_dlg.show();
+				this.addl_dlg.fields_dict[df.fieldname].$input.focus();
+				return false;
 			}
 		}
-		return validation_flag;
+		return true;
 	}
 };
