@@ -15,7 +15,7 @@ frappe.ui.form.on("Sales Order", {
 			"Sales Invoice": "Sales Invoice",
 			"Material Request": "Material Request",
 			"Purchase Order": "Purchase Order",
-			"Project": "Project",
+			Project: "Project",
 			"Payment Entry": "Payment",
 			"Work Order": "Work Order",
 		};
@@ -545,36 +545,6 @@ frappe.ui.form.on("Sales Order Item", {
 			erpnext.utils.copy_value_in_all_rows(frm.doc, cdt, cdn, "items", "delivery_date");
 		}
 	},
-	
-	serial: function (frm, cdt, cdn) {
-		var row = locals[cdt][cdn];
-		if (row.serial) {
-			frappe.db.get_value('Serial', row.serial, 'serial_number')
-				.then((r) => {
-					if (r && r.message && r.message.serial_number) {
-						const serialTitle = r.message.serial_number;
-						const serialNumbersList = row.serial_numbers ? row.serial_numbers.split('\n') : [];
-
-						if (!serialNumbersList.includes(serialTitle)) {
-							if (row.serial_numbers) {
-								row.serial_numbers += `\n${serialTitle}`;
-							} else {
-								row.serial_numbers = serialTitle;
-							}
-						}
-
-						// Clean up and finalize
-						row.serial_numbers = row.serial_numbers.replace(/\n+/g, '\n').trim();
-						row.serial = null;
-						frm.refresh_field('items');
-					}
-				})
-				.catch((err) => {
-					frappe.msgprint(__('Error fetching serial number: {0}', [err.message]));
-					console.error(err);
-				});
-		}
-	}
 });
 
 erpnext.selling.SalesOrderController = class SalesOrderController extends erpnext.selling.SellingController {
@@ -1054,10 +1024,10 @@ erpnext.selling.SalesOrderController = class SalesOrderController extends erpnex
 							frappe.msgprint(
 								__("Material Request {0} submitted.", [
 									'<a href="/app/material-request/' +
-									r.message.name +
-									'">' +
-									r.message.name +
-									"</a>",
+										r.message.name +
+										'">' +
+										r.message.name +
+										"</a>",
 								])
 							);
 						}
@@ -1092,8 +1062,8 @@ erpnext.selling.SalesOrderController = class SalesOrderController extends erpnex
 						</div>
 					</div>
 					${delivery_dates
-					.map(
-						(date) => `
+						.map(
+							(date) => `
 						<div class="list-item">
 							<div class="list-item__content list-item__content--flex-2">
 								<label>
@@ -1103,8 +1073,8 @@ erpnext.selling.SalesOrderController = class SalesOrderController extends erpnex
 							</div>
 						</div>
 					`
-					)
-					.join("")}
+						)
+						.join("")}
 				</div>
 			`);
 
