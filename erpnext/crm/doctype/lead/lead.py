@@ -132,6 +132,8 @@ class Lead(SellingController, CRMNote):
 				lead_source = self.check_lead_source()
 				if lead_source:
 					self.contact_doc = self.create_contact(lead_source)
+					if self.contact_doc:
+						self.source = self.contact_doc.name
 			else:
 				self.contact_doc = self.create_contact()
 
