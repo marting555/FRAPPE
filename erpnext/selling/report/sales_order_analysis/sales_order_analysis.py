@@ -16,6 +16,7 @@ def execute(filters=None):
 		return [], [], None, []
 
 	validate_filters(filters)
+	validate_status_filters(filters)
 
 	columns = get_columns(filters)
 	conditions = get_conditions(filters)
@@ -38,6 +39,22 @@ def validate_filters(filters):
 	elif date_diff(to_date, from_date) < 0:
 		frappe.throw(_("To Date cannot be before From Date."))
 
+def validate_status_filters(filters):
+    frappe.log_error(f"DEBUG: Received Filters: {filters}", "Status Filters Validation")
+    
+    status_list = filters.get('status', [])
+    exclude_status_list = filters.get('exclude_status', [])
+    
+    frappe.log_error(f"DEBUG: status_list={status_list}, exclude_status_list={exclude_status_list}", "Status Filters Validation")
+
+    if status_list and exclude_status_list:
+        status_set = set(status_list)
+        exclude_status_set = set(exclude_status_list)
+        intersection = status_set.intersection(exclude_status_set)
+
+        if intersection:
+            frappe.throw(f"Duplicate selections found in 'Include Status' and 'Exclude Status': {', '.join(intersection)}")
+
 
 def get_conditions(filters):
 	conditions = ""
@@ -52,6 +69,15 @@ def get_conditions(filters):
 
 	if filters.get("status"):
 		conditions += " and so.status in %(status)s"
+
+	if filters.get("exclude_status") and len(filters.get("exclude_status")) > 0:
+		status_list = filters.get("exclude_status")
+		
+		placeholders = ", ".join([f"%(exclude_{i})s" for i in range(len(status_list))])
+		conditions += f" and so.status NOT IN ({placeholders})"
+		
+		for i, status in enumerate(status_list):
+			filters[f"exclude_{i}"] = status
 
 	if filters.get("warehouse"):
 		conditions += " and soi.warehouse = %(warehouse)s"
@@ -86,7 +112,6 @@ def get_data(conditions, filters):
 			ON sii.so_detail = soi.name and sii.docstatus = 1
 		WHERE
 			soi.parent = so.name
-			and so.status not in ('Stopped', 'On Hold')
 			and so.docstatus = 1
 			{conditions}
 		GROUP BY soi.name
@@ -203,6 +228,8 @@ def prepare_data(data, so_elapsed_time, filters):
 		return data, chart_data
 
 	return data, chart_data
+
+	
 
 
 def prepare_chart_data(pending, completed):
