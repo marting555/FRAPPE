@@ -176,11 +176,11 @@ class Quotation(SellingController):
 
 	def get_ordered_status(self):
 		ordered_items = frappe._dict(
-			frappe.db.get_all(
+			frappe.get_all(
 				"Sales Order Item",
-				{"prevdoc_docname": self.name, "docstatus": 1},
-				["item_code", "sum(qty)"],
-				group_by="item_code",
+				filters={"prevdoc_docname": self.name, "docstatus": 1},
+				fields=["quotation_item", "sum(qty)"],
+				group_by="quotation_item",
 				as_list=1,
 			)
 		)
@@ -194,14 +194,8 @@ class Quotation(SellingController):
 			else self.get("items")
 		)
 
-		quoted_items = frappe._dict()
-
-		# consider total quantity of item in the table instead of the quantity of each row
 		for row in self._items:
-			quoted_items[row.item_code] = quoted_items.get(row.item_code, 0.0) + row.qty
-
-		for item_code, qty in quoted_items.items():
-			if qty > ordered_items.get(item_code, 0.0):
+			if row.name not in ordered_items or row.qty > ordered_items[row.name]:
 				return "Partially Ordered"
 
 		return "Ordered"
