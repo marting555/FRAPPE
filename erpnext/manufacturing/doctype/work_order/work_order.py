@@ -1592,7 +1592,7 @@ class WorkOrder(Document):
 
 
 @frappe.whitelist()
-def make_stock_reservation_entries(doc, items=None, notify=False):
+def make_stock_reservation_entries(doc, items=None, table_name=None, notify=False):
 	if isinstance(doc, str):
 		doc = parse_json(doc)
 		doc = frappe.get_doc("Work Order", doc.get("name"))

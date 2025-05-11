@@ -113,6 +113,12 @@ class ProductionPlan(Document):
 		warehouses: DF.TableMultiSelect[ProductionPlanMaterialRequestWarehouse]
 	# end: auto-generated types
 
+	def onload(self):
+		self.set_onload(
+			"enable_stock_reservation",
+			frappe.db.get_single_value("Stock Settings", "enable_stock_reservation"),
+		)
+
 	def validate(self):
 		self.set_pending_qty_in_row_without_reference()
 		self.calculate_total_planned_qty()
@@ -121,6 +127,11 @@ class ProductionPlan(Document):
 		validate_uom_is_integer(self, "stock_uom", "planned_qty")
 		self.validate_sales_orders()
 		self.validate_material_request_type()
+		self.enable_auto_reserve_stock()
+
+	def enable_auto_reserve_stock(self):
+		if self.is_new() and frappe.db.get_single_value("Stock Settings", "auto_reserve_stock"):
+			self.reserve_stock = 1
 
 	def validate_material_request_type(self):
 		for row in self.get("mr_items"):
@@ -2075,7 +2086,7 @@ def get_reserved_qty_for_sub_assembly(item_code, warehouse):
 
 
 @frappe.whitelist()
-def make_stock_reservation_entries(doc, items=None, notify=False):
+def make_stock_reservation_entries(doc, items=None, table_name=None, notify=False):
 	if isinstance(doc, str):
 		doc = parse_json(doc)
 		doc = frappe.get_doc("Work Order", doc.get("name"))
@@ -2096,8 +2107,11 @@ def make_stock_reservation_entries(doc, items=None, notify=False):
 		},
 	}
 
-	for table_name in mapper:
-		sre = StockReservation(doc, items=items, kwargs=mapper[table_name], notify=notify)
+	for child_table_name in mapper:
+		if table_name and table_name != child_table_name:
+			continue
+
+		sre = StockReservation(doc, items=items, kwargs=mapper[child_table_name], notify=notify)
 		if doc.docstatus == 1:
 			sre.make_stock_reservation_entries()
 			frappe.msgprint(_("Stock Reservation Entries Created"), alert=True)
@@ -2105,4 +2119,3 @@ def make_stock_reservation_entries(doc, items=None, notify=False):
 			sre.cancel_stock_reservation_entries()
 
 	doc.reload()
-	# doc.db_set("status", doc.get_status())
