@@ -758,9 +758,10 @@ def _get_item_tax_template(
 			)
 		]
 
+# I think the error 404 could be solved somewhere in the next couple of lines
 	# all templates have validity and no template is valid
 	if not taxes_with_validity and (not taxes_with_no_validity):
-		return None
+		return None # This leads to 404 when no templates are found
 
 	# do not change if already a valid template
 	if ctx.get("item_tax_template") in {t.item_tax_template for t in taxes}:
