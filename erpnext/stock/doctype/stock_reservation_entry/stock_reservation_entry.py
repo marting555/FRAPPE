@@ -1244,8 +1244,11 @@ class StockReservation:
 		sre.from_voucher_detail_no = against_row.voucher_detail_no
 		sre.from_voucher_type = against_row.voucher_type
 
+		bundles = [against_row.name]
 		if row.serial_and_batch_bundles:
-			self.set_serial_batch(sre, row.serial_and_batch_bundles)
+			bundles = row.serial_and_batch_bundles
+
+		self.set_serial_batch(sre, bundles)
 
 		sre.save()
 		sre.submit()
