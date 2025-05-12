@@ -12,7 +12,7 @@
   {
    "fieldname": "budget_label_item",
    "fieldtype": "Link",
-   "label": "Ng\u00e2n S\u00e1ch",
+   "label": "Budget",
    "options": "Lead Budget"
   }
  ],
@@ -20,7 +20,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-04-21 00:07:16.125403",
+ "modified": "2025-05-12 02:25:12.039083",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead Budget Item",

@@ -168,7 +168,7 @@ class Lead(SellingController, CRMNote):
 					lead_source_platform = "Tiktok"	
 
 				lead_source.update({
-					"source_name": "Chưa rõ",
+					"source_name": "Unspecified",
 					"pancake_page_id": parsed_pancake_data.get("page_id", None),
 					"pancake_platform": lead_source_platform
 				})
