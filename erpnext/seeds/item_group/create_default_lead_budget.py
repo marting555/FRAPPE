@@ -1,7 +1,7 @@
 import frappe
 
 groups = [
-        "Chưa rõ",
+        "Unspecified",
         "dưới 15 TRIỆU",
         "15-30 TRIỆU",
         "30-50 TRIỆU",

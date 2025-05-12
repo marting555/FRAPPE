@@ -59,14 +59,14 @@ def insert_lead(doc) -> "Document":
 	
 	purpose_lead = find_purpose_tag(pancake_list_tags)
 	if not purpose_lead:
-		purpose_lead = "Chưa rõ"
+		purpose_lead = "Unspecified"
 	if purpose_lead:
 		purpose_lead_name = frappe.get_doc("Lead Demand", {"demand_label": purpose_lead}, "name")
 		doc["purpose_lead"] = purpose_lead_name.name 
 
 	budget_lead = find_budget_tag(pancake_list_tags)
 	if not budget_lead:
-		budget_lead = "Chưa rõ"
+		budget_lead = "Unspecified"
 	if budget_lead:
 		budget_lead_name = frappe.get_doc("Lead Budget", {"budget_label": budget_lead}, "name")
 		doc["budget_lead"] = budget_lead_name.name 
@@ -115,14 +115,14 @@ def update_lead_by_batch(docs):
 			
 			purpose_lead = find_purpose_tag(pancake_list_tags)
 			if not purpose_lead:
-				purpose_lead = "Chưa rõ"
+				purpose_lead = "Unspecified"
 			if purpose_lead:
 				purpose_lead_name = frappe.get_doc("Lead Demand", {"demand_label": purpose_lead}, "name")
 				doc["purpose_lead"] = purpose_lead_name.name 
 
 			budget_lead = find_budget_tag(pancake_list_tags)
 			if not budget_lead:
-				budget_lead = "Chưa rõ"
+				budget_lead = "Unspecified"
 			if budget_lead:
 				budget_lead_name = frappe.get_doc("Lead Budget", {"budget_label": budget_lead}, "name")
 				doc["budget_lead"] = budget_lead_name.name 
@@ -148,7 +148,7 @@ def transform_price_label(label: str) -> str:
 
 def find_purpose_tag(tags):
     VALID_PURPOSE_TAGS = [
-		"Chưa rõ",
+		"Unspecified",
         "NC Cưới",
         "NC Khiếu nại",
         "NC TMTĐ",
@@ -169,7 +169,7 @@ def find_purpose_tag(tags):
 
 def find_budget_tag(tags):
     VALID_BUDGET_TAGS = [
-		"Chưa rõ",
+		"Unspecified",
         "dưới 15 TRIỆU",
         "15-30 TRIỆU",
         "30-50 TRIỆU",

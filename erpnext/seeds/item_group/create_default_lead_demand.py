@@ -1,7 +1,7 @@
 import frappe
 
 groups = [
-        "Chưa rõ",
+        "Unspecified",
         "NC Cưới",
         "NC Khiếu nại",
         "NC TMTĐ",
