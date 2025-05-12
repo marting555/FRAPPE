@@ -3,12 +3,12 @@
 
 import unittest
 import frappe
-from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 from erpnext.setup.doctype.company.test_company import create_child_company
 from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
 from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
 from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
 from erpnext.stock.doctype.delivery_note.delivery_note import make_installation_note
+from erpnext.stock.doctype.item.test_item import make_item
 
 
 class TestInstallationNote(unittest.TestCase):
@@ -29,7 +29,7 @@ class TestInstallationNote(unittest.TestCase):
 			create_child_company()
 		
 		if not frappe.db.exists("Item", item_code):
-			item = make_test_item(item_code, {
+			item = make_item(item_code, {
 				"is_stock_item": 1,
 				"has_serial_no": 1,
 				"item_group": "Products",
