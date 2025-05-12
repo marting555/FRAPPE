@@ -386,7 +386,7 @@
   {
    "fieldname": "no_of_employees",
    "fieldtype": "Select",
-   "label": "No Of Employees",
+   "label": "No of Employees",
    "options": "1-10\n11-50\n51-200\n201-500\n501-1000\n1000+"
   },
   {
@@ -612,7 +612,7 @@
    "fieldname": "bank_name",
    "fieldtype": "Select",
    "label": "Bank Name",
-   "options": "Agribank\nACB\nBIDV\nVietcombank\nVietinbank\nTechcombank\nSacombank\nMB Bank\nEximbank\nVPBank\nSHB\nNam A Bank\nBAC A BANK\nOceanBank\nTPBank"
+   "options": "Agribank (Vietnam Bank for Agriculture and Rural Development)\nBIDV (Bank for Investment and Development of Vietnam)\nVietinBank (Vietnam Joint Stock Commercial Bank for Industry and Trade)\nVietcombank (Bank for Foreign Trade of Vietnam)\nVBSP (Vietnam Bank for Social Policies)\nVDB (Vietnam Development Bank)\nVPBank (Vietnam Prosperity Bank)\nMB (Military Bank)\nTechcombank (Vietnam Technological and Commercial Bank)\nACB (Asia Commercial Bank)\nSHB (Saigon - Hanoi Bank)\nHDBank (Ho Chi Minh City Development Bank)\nLienVietPostBank (Lien Viet Post Joint Stock Commercial Bank)\nVIB (Vietnam International Bank)\nSeABank (Southeast Asia Bank)\nTPBank (Tien Phong Bank)\nOCB (Orient Commercial Bank)\nMSB (Maritime Bank)\nSCB (Saigon Commercial Bank)\nSacombank (Saigon Thuong Tin Bank)\nEximbank (Export Import Bank of Vietnam)\nNCB (National Citizen Bank)\nNam A Bank\nABBank (An Binh Bank)\nPVcomBank (Vietnam Public Joint Stock Commercial Bank)\nBAC A Bank\nVietBank (Vietnam Thuong Tin Bank)\nViet A Bank\nBVBank (Viet Capital Bank)\nDongA Bank\nKienlongBank (Kien Long Bank)\nSaigonBank (Saigon Industry and Trade Bank)\nBaoViet Bank\nPG Bank (Petrolimex Group Bank)\nANZ Bank (Australia and New Zealand Banking Group)\nCIMB Bank (Malaysia)\nHong Leong Bank\nHSBC Vietnam\nPublic Bank Vietnam\nShinhan Bank Vietnam\nStandard Chartered Bank Vietnam\nWoori Bank\nUOB Vietnam (United Overseas Bank)\nCitibank Vietnam\nKBank (Kasikorn Bank)\nBangkok Bank Vietnam\nDeutsche Bank Vietnam\nIndovina Bank (IVB)\nVRB (Vietnam - Russia Joint Venture Bank)\nGPBank (Global Petroleum Bank)\nOceanBank (Ocean Commercial Bank)\nCBBank (Construction Bank)\nVCCB (Vietcombank Digital Bank)\nVABank (VietBank Digital)\nModern Vietnam Bank (fictional/example)"
   },
   {
    "fieldname": "bank_branch",
@@ -751,7 +751,7 @@
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-05-08 22:58:31.092249",
+ "modified": "2025-05-12 03:11:11.548965",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",

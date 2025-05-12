@@ -76,7 +76,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "status",
+   "label": "Status",
    "options": "Ringing\nIn Progress\nCompleted\nFailed\nBusy\nNo Answer\nQueued\nCanceled",
    "read_only": 1
   },
@@ -318,7 +318,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-08 02:48:47.590842",
+ "modified": "2025-05-12 03:09:09.460887",
  "modified_by": "Administrator",
  "module": "Telephony",
  "name": "Call Log",
