@@ -6,7 +6,7 @@ import frappe
 from frappe import _
 
 field_map = {
-	"Contact": ["name", "first_name", "last_name", "phone", "mobile_no", "email_id", "is_primary_contact"],
+	"Contact": ["name", "first_name", "last_name", "phone", "mobile_no", "email_id", "designation", "is_primary_contact"],
 	"Address": [
 		"name",
 		"address_line1",
@@ -50,6 +50,7 @@ def get_columns(filters):
 		"Phone",
 		"Mobile No",
 		"Email Id",
+		"Designation",
 		"Is Primary Contact:Check",
 	]
 
