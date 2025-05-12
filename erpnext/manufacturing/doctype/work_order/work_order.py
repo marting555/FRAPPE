@@ -710,7 +710,9 @@ class WorkOrder(Document):
 				op.idx = idx + 1
 		elif any([op.sequence_id for op in self.operations]):
 			frappe.throw(
-				_("If any single operation has a Sequence ID then all other operations must have one too.")
+				_(
+					"Row #{0}: Incorrect Sequence ID. If any single operation has a Sequence ID then all other operations must have one too."
+				).format(next((op.idx for op in self.operations if not op.sequence_id), None))
 			)
 
 		for idx, row in enumerate(self.operations):
