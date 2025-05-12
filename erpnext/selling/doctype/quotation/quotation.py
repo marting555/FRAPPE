@@ -175,15 +175,7 @@ class Quotation(SellingController):
 		)
 
 	def get_ordered_status(self):
-		ordered_items = frappe._dict(
-			frappe.get_all(
-				"Sales Order Item",
-				filters={"prevdoc_docname": self.name, "docstatus": 1},
-				fields=["quotation_item", "sum(qty)"],
-				group_by="quotation_item",
-				as_list=1,
-			)
-		)
+		ordered_items = get_ordered_items(self.name)
 
 		if not ordered_items:
 			return "Open"
@@ -373,15 +365,7 @@ def make_sales_order(source_name: str, target_doc=None):
 
 def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	customer = _make_customer(source_name, ignore_permissions)
-	ordered_items = frappe._dict(
-		frappe.get_all(
-			"Sales Order Item",
-			filters={"prevdoc_docname": source_name, "docstatus": 1},
-			fields=["quotation_item", "sum(qty)"],
-			group_by="quotation_item",
-			as_list=1,
-		)
-	)
+	ordered_items = get_ordered_items(source_name)
 
 	selected_rows = [x.get("name") for x in frappe.flags.get("args", {}).get("selected_items", [])]
 
@@ -602,3 +586,28 @@ def handle_mandatory_error(e, customer, lead_name):
 	message += _("Please create Customer from Lead {0}.").format(get_link_to_form("Lead", lead_name))
 
 	frappe.throw(message, title=_("Mandatory Missing"))
+
+
+def get_ordered_items(quotation: str):
+	"""
+	Returns a dict of ordered items with their total qty based on quotation row name.
+
+	In `Sales Order Item`, `quotation_item` is the row name of `Quotation Item`.
+
+	Example:
+	```
+	{
+	    "refsdjhd2": 10,
+	    "ygdhdshrt": 5,
+	}
+	```
+	"""
+	return frappe._dict(
+		frappe.get_all(
+			"Sales Order Item",
+			filters={"prevdoc_docname": quotation, "docstatus": 1},
+			fields=["quotation_item", "sum(qty)"],
+			group_by="quotation_item",
+			as_list=1,
+		)
+	)
