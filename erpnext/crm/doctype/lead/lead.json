@@ -590,13 +590,13 @@
   {
    "fieldname": "place_of_issuance",
    "fieldtype": "Select",
-   "label": "Place Of Issuance",
+   "label": "Place of Issuance",
    "options": "Ministry of Public Security\nDepartment of Police for Administrative Management of Social Order\nDepartment of Police for Registration, Residency Management, and National Population Data"
   },
   {
    "fieldname": "date_of_issuance",
    "fieldtype": "Date",
-   "label": "Date Of Issuance"
+   "label": "Date of Issuance"
   },
   {
    "fieldname": "information_tab",
@@ -659,7 +659,7 @@
   {
    "fieldname": "personal_tax_id",
    "fieldtype": "Data",
-   "label": "Personal ID"
+   "label": "Personal Tax ID"
   },
   {
    "fieldname": "column_break_bwya",
@@ -717,18 +717,18 @@
    "fieldname": "pancake_data",
    "fieldtype": "JSON",
    "hidden": 1,
-   "label": "pancake_data"
+   "label": "Pancake Data"
   },
   {
    "fieldname": "stringee_data",
    "fieldtype": "JSON",
    "hidden": 1,
-   "label": "stringeex_data"
+   "label": "Stringeex Data"
   },
   {
    "fieldname": "website_from_data",
    "fieldtype": "JSON",
-   "label": "website_form_data"
+   "label": "Website Form Data"
   },
   {
    "fieldname": "check_duplicate",
@@ -751,7 +751,7 @@
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-05-12 03:11:11.548965",
+ "modified": "2025-05-12 04:02:40.675599",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",
