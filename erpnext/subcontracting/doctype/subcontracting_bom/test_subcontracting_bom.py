@@ -6,7 +6,7 @@ from frappe.tests.utils import FrappeTestCase
 
 
 class TestSubcontractingBOM(FrappeTestCase):
-	def test_get_subcontracting_boms_for_service_item(self):
+	def test_get_subcontracting_boms_for_service_item_TC_S_196(self):
 		from erpnext.manufacturing.doctype.production_plan.test_production_plan import make_bom
 		from erpnext.subcontracting.doctype.subcontracting_bom.subcontracting_bom import get_subcontracting_boms_for_service_item
 		from erpnext.stock.doctype.item.test_item import make_item
