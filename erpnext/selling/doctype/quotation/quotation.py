@@ -175,29 +175,30 @@ class Quotation(SellingController):
 		)
 
 	def get_ordered_status(self):
-		status = "Open"
 		ordered_items = frappe._dict(
-			frappe.db.get_all(
+			frappe.get_all(
 				"Sales Order Item",
-				{"prevdoc_docname": self.name, "docstatus": 1},
-				["item_code", "sum(qty)"],
-				group_by="item_code",
+				filters={"prevdoc_docname": self.name, "docstatus": 1},
+				fields=["quotation_item", "sum(qty)"],
+				group_by="quotation_item",
 				as_list=1,
 			)
 		)
 
 		if not ordered_items:
-			return status
+			return "Open"
 
-		has_alternatives = any(row.is_alternative for row in self.get("items"))
-		self._items = self.get_valid_items() if has_alternatives else self.get("items")
+		self._items = (
+			self.get_valid_items()
+			if any(row.is_alternative for row in self.get("items"))
+			else self.get("items")
+		)
 
-		if any(row.qty > ordered_items.get(row.item_code, 0.0) for row in self._items):
-			status = "Partially Ordered"
-		else:
-			status = "Ordered"
+		for row in self._items:
+			if row.name not in ordered_items or row.qty > ordered_items[row.name]:
+				return "Partially Ordered"
 
-		return status
+		return "Ordered"
 
 	def get_valid_items(self):
 		"""
