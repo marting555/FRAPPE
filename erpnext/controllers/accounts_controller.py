@@ -2261,8 +2261,6 @@ class AccountsController(TransactionBase):
 		if self.is_opening == "Yes":
 			return
 
-		party_type, party = self.get_party()
-		party_gle_currency = get_party_gle_currency(party_type, party, self.company)
 		party_account = self.get("debit_to") if self.doctype == "Sales Invoice" else self.get("credit_to")
 		party_account_currency = get_account_currency(party_account)
 		allow_multi_currency_invoices_against_single_party_account = frappe.db.get_singles_value(
@@ -2270,10 +2268,8 @@ class AccountsController(TransactionBase):
 		)
 
 		if (
-			not party_gle_currency
-			and (party_account_currency != self.currency)
-			and not allow_multi_currency_invoices_against_single_party_account
-		):
+			party_account_currency != self.currency
+		) and not allow_multi_currency_invoices_against_single_party_account:
 			frappe.throw(
 				_("Party Account {0} currency ({1}) and document currency ({2}) should be same").format(
 					frappe.bold(party_account), party_account_currency, self.currency
