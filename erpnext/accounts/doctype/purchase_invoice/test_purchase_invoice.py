@@ -2896,6 +2896,7 @@ def unlink_payment_on_cancel_of_invoice(enable=1):
 
 
 def make_purchase_invoice(**args):
+	args = frappe._dict(args)
 	if not args.credit_to and (args.currency or "INR") != "INR":
 		account = frappe.db.get_value(
 			"Account",
@@ -2916,7 +2917,6 @@ def make_purchase_invoice(**args):
 				account_type="Payable",
 			)
 	pi = frappe.new_doc("Purchase Invoice")
-	args = frappe._dict(args)
 	pi.posting_date = args.posting_date or today()
 	if args.posting_time:
 		pi.posting_time = args.posting_time

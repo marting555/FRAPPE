@@ -4410,6 +4410,7 @@ def check_gl_entries(doc, voucher_no, expected_gle, posting_date, voucher_type="
 
 
 def create_sales_invoice(**args):
+	args = frappe._dict(args)
 	if not args.debit_to and (args.currency or "INR") != "INR":
 		account = frappe.db.get_value(
 			"Account",
@@ -4430,7 +4431,6 @@ def create_sales_invoice(**args):
 				account_currency=args.currency or "INR",
 			)
 	si = frappe.new_doc("Sales Invoice")
-	args = frappe._dict(args)
 	if args.posting_date:
 		si.set_posting_time = 1
 	si.posting_date = args.posting_date or nowdate()
