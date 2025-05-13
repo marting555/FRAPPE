@@ -39,13 +39,10 @@ def validate_filters(filters):
 	elif date_diff(to_date, from_date) < 0:
 		frappe.throw(_("To Date cannot be before From Date."))
 
-def validate_status_filters(filters):
-    frappe.log_error(f"DEBUG: Received Filters: {filters}", "Status Filters Validation")
-    
+def validate_status_filters(filters):    
     status_list = filters.get('status', [])
     exclude_status_list = filters.get('exclude_status', [])
-    
-    frappe.log_error(f"DEBUG: status_list={status_list}, exclude_status_list={exclude_status_list}", "Status Filters Validation")
+
 
     if status_list and exclude_status_list:
         status_set = set(status_list)
