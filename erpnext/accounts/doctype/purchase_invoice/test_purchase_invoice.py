@@ -4241,12 +4241,13 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			{"rate": 18, "template": "GST 18%", "range": (10001, 100000)}
 		]
 		for gst in gst_rates:
-			if not frappe.db.exists("Item Tax Template",{"name":gst.get("template")}):
+			if not frappe.db.exists("Item Tax Template",{"title":gst.get("template")}):
 				frappe.get_doc(
 					{
 					"doctype":"Item Tax Template",
 					"title": gst.get("template"),
 					"company":"_Test Company",
+					"gst_rate":gst.get("rate"),
 					"taxes":[
 						{
 							"tax_type":"Marketing Expenses - _TC",
