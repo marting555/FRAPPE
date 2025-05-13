@@ -5,11 +5,7 @@
 import json
 
 import frappe
-<<<<<<< HEAD
 from frappe.tests.utils import FrappeTestCase, change_settings
-=======
-from frappe.tests import IntegrationTestCase, UnitTestCase, change_settings
->>>>>>> eea758f5b2 (test: Purchase Order with Unit Price Items)
 from frappe.utils import add_days, flt, getdate, nowdate
 from frappe.utils.data import today
 
@@ -48,13 +44,6 @@ class TestPurchaseOrder(FrappeTestCase):
 		po.items[1].qty = 0
 		self.assertRaises(InvalidQtyError, po.save)
 
-<<<<<<< HEAD
-=======
-		# No error with qty=1
-		po.items[1].qty = 1
-		po.save()
-		self.assertEqual(po.items[1].qty, 1)
-
 	def test_purchase_order_zero_qty(self):
 		po = create_purchase_order(qty=0, do_not_save=True)
 
@@ -62,7 +51,6 @@ class TestPurchaseOrder(FrappeTestCase):
 			po.save()
 			self.assertEqual(po.items[0].qty, 0)
 
->>>>>>> eea758f5b2 (test: Purchase Order with Unit Price Items)
 	def test_make_purchase_receipt(self):
 		po = create_purchase_order(do_not_submit=True)
 		self.assertRaises(frappe.ValidationError, make_purchase_receipt, po.name)
@@ -812,8 +800,6 @@ class TestPurchaseOrder(FrappeTestCase):
 		po_doc.reload()
 		self.assertEqual(po_doc.advance_paid, 5000)
 
-		from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_invoice
-
 		company_doc.book_advance_payments_in_separate_party_account = False
 		company_doc.save()
 
@@ -1218,7 +1204,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		po.reload()
 		self.assertEqual(po.per_billed, 100)
 
-	@IntegrationTestCase.change_settings("Buying Settings", {"allow_zero_qty_in_purchase_order": 1})
+	@change_settings("Buying Settings", {"allow_zero_qty_in_purchase_order": 1})
 	def test_receive_zero_qty_purchase_order(self):
 		"""
 		Test the flow of a Unit Price PO and PR creation against it until completion.
@@ -1267,7 +1253,7 @@ class TestPurchaseOrder(FrappeTestCase):
 		self.assertEqual(po.per_received, 100.0)
 		self.assertEqual(po.status, "To Bill")
 
-	@IntegrationTestCase.change_settings("Buying Settings", {"allow_zero_qty_in_purchase_order": 1})
+	@change_settings("Buying Settings", {"allow_zero_qty_in_purchase_order": 1})
 	def test_bill_zero_qty_purchase_order(self):
 		po = create_purchase_order(qty=0)
 

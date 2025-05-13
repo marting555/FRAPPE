@@ -1259,17 +1259,8 @@ class AccountsController(TransactionBase):
 			)
 
 	def validate_qty_is_not_zero(self):
-<<<<<<< HEAD
-		if self.doctype == "Purchase Receipt":
+		if self.doctype == "Purchase Receipt" or self.flags.allow_zero_qty:
 			return
-=======
-		if self.flags.allow_zero_qty:
-			return
-
-		for item in self.items:
-			if self.doctype == "Purchase Receipt" and item.rejected_qty:
-				continue
->>>>>>> c1e4e7af28 (feat: Unit Price Contract)
 
 		for item in self.items:
 			if not flt(item.qty):

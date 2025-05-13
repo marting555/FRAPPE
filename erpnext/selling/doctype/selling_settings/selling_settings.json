@@ -32,16 +32,9 @@
   "allow_sales_order_creation_for_expired_quotation",
   "dont_reserve_sales_order_qty_on_sales_return",
   "hide_tax_id",
-<<<<<<< HEAD
-  "enable_discount_accounting"
-=======
   "enable_discount_accounting",
-  "enable_cutoff_date_on_bulk_delivery_note_creation",
   "allow_zero_qty_in_quotation",
-  "allow_zero_qty_in_sales_order",
-  "experimental_section",
-  "use_server_side_reactivity"
->>>>>>> c1e4e7af28 (feat: Unit Price Contract)
+  "allow_zero_qty_in_sales_order"
  ],
  "fields": [
   {
@@ -209,25 +202,6 @@
    "fieldname": "blanket_order_allowance",
    "fieldtype": "Float",
    "label": "Blanket Order Allowance (%)"
-<<<<<<< HEAD
-=======
-  },
-  {
-   "default": "0",
-   "fieldname": "enable_cutoff_date_on_bulk_delivery_note_creation",
-   "fieldtype": "Check",
-   "label": "Enable Cut-Off Date on Bulk Delivery Note Creation"
-  },
-  {
-   "fieldname": "experimental_section",
-   "fieldtype": "Section Break",
-   "label": "Experimental"
-  },
-  {
-   "default": "1",
-   "fieldname": "use_server_side_reactivity",
-   "fieldtype": "Check",
-   "label": "Use Server Side Reactivity"
   },
   {
    "default": "0",
@@ -239,12 +213,7 @@
    "default": "0",
    "fieldname": "allow_zero_qty_in_quotation",
    "fieldtype": "Check",
-<<<<<<< HEAD
-   "label": "Allow 0 Qty in Quotation (Unit Price Contract)"
->>>>>>> c1e4e7af28 (feat: Unit Price Contract)
-=======
    "label": "Allow 0 Qty in Quotation (Unit Price Items)"
->>>>>>> e403d3f153 (feat: Unit Price Items in Buying (RFQ, SQ, PO))
   }
  ],
  "grid_page_length": 50,
@@ -253,15 +222,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
-<<<<<<< HEAD
-<<<<<<< HEAD
- "modified": "2023-10-25 14:03:03.966701",
-=======
- "modified": "2025-02-28 18:19:46.436595",
->>>>>>> c1e4e7af28 (feat: Unit Price Contract)
-=======
  "modified": "2025-03-03 16:39:16.360823",
->>>>>>> e403d3f153 (feat: Unit Price Items in Buying (RFQ, SQ, PO))
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Selling Settings",
@@ -286,12 +247,7 @@
    "write": 1
   }
  ],
-<<<<<<< HEAD
  "sort_field": "modified",
-=======
- "row_format": "Dynamic",
- "sort_field": "creation",
->>>>>>> c1e4e7af28 (feat: Unit Price Contract)
  "sort_order": "DESC",
  "states": [],
  "track_changes": 1

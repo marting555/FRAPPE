@@ -1099,15 +1099,7 @@
  "idx": 82,
  "is_submittable": 1,
  "links": [],
-<<<<<<< HEAD
-<<<<<<< HEAD
- "modified": "2024-11-26 12:43:29.293637",
-=======
- "modified": "2025-02-28 18:52:44.063265",
->>>>>>> c1e4e7af28 (feat: Unit Price Contract)
-=======
  "modified": "2025-03-03 16:49:20.050303",
->>>>>>> e403d3f153 (feat: Unit Price Items in Buying (RFQ, SQ, PO))
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Quotation",

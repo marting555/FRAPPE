@@ -236,11 +236,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
-<<<<<<< HEAD
- "modified": "2024-01-31 13:34:18.101256",
-=======
  "modified": "2025-03-03 17:32:25.939482",
->>>>>>> e403d3f153 (feat: Unit Price Items in Buying (RFQ, SQ, PO))
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Buying Settings",
@@ -286,12 +282,7 @@
    "role": "Purchase User"
   }
  ],
-<<<<<<< HEAD
  "sort_field": "modified",
-=======
- "row_format": "Dynamic",
- "sort_field": "creation",
->>>>>>> e403d3f153 (feat: Unit Price Items in Buying (RFQ, SQ, PO))
  "sort_order": "DESC",
  "states": [],
  "track_changes": 1

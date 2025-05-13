@@ -2,39 +2,13 @@
 # License: GNU General Public License v3. See license.txt
 
 import frappe
-<<<<<<< HEAD
-from frappe.tests.utils import FrappeTestCase
-=======
-from frappe.tests import IntegrationTestCase, UnitTestCase, change_settings
->>>>>>> 0447c7be0a (fix: Treat rows as Unit Price rows only until the qty is 0)
+from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, add_months, flt, getdate, nowdate
 
 test_dependencies = ["Product Bundle"]
 
 
-<<<<<<< HEAD
 class TestQuotation(FrappeTestCase):
-=======
-class UnitTestQuotation(UnitTestCase):
-	"""
-	Unit tests for Quotation.
-	Use this class for testing individual functions and methods.
-	"""
-
-	pass
-
-
-class TestQuotation(IntegrationTestCase):
-	def test_quotation_qty(self):
-		qo = make_quotation(qty=0, do_not_save=True)
-		with self.assertRaises(InvalidQtyError):
-			qo.save()
-
-		# No error with qty=1
-		qo.items[0].qty = 1
-		qo.save()
-		self.assertEqual(qo.items[0].qty, 1)
-
 	def test_quotation_zero_qty(self):
 		"""
 		Test if Quote with zero qty (Unit Price Item) is conditionally allowed.
@@ -44,7 +18,6 @@ class TestQuotation(IntegrationTestCase):
 			qo.save()
 			self.assertEqual(qo.items[0].qty, 0)
 
->>>>>>> 0447c7be0a (fix: Treat rows as Unit Price rows only until the qty is 0)
 	def test_make_quotation_without_terms(self):
 		quotation = make_quotation(do_not_save=1)
 		self.assertFalse(quotation.get("payment_schedule"))
@@ -797,7 +770,7 @@ class TestQuotation(IntegrationTestCase):
 		self.assertEqual(quotation.rounding_adjustment, 0)
 		self.assertEqual(quotation.rounded_total, 0)
 
-	@IntegrationTestCase.change_settings("Selling Settings", {"allow_zero_qty_in_quotation": 1})
+	@change_settings("Selling Settings", {"allow_zero_qty_in_quotation": 1})
 	def test_so_from_zero_qty_quotation(self):
 		from erpnext.selling.doctype.quotation.quotation import make_sales_order
 		from erpnext.stock.doctype.item.test_item import make_item

@@ -153,11 +153,7 @@ class SalesOrder(SellingController):
 		shipping_address_name: DF.Link | None
 		shipping_rule: DF.Link | None
 		skip_delivery_note: DF.Check
-<<<<<<< HEAD
-<<<<<<< HEAD
 		source: DF.Link | None
-=======
->>>>>>> 71f65bab5e (fix: Linters)
 		status: DF.Literal[
 			"",
 			"Draft",
@@ -170,12 +166,6 @@ class SalesOrder(SellingController):
 			"Cancelled",
 			"Closed",
 		]
-<<<<<<< HEAD
-=======
-		status: DF.Literal["", "Draft", "On Hold", "To Pay", "To Deliver and Bill", "To Bill", "To Deliver", "Completed", "Cancelled", "Closed"]
->>>>>>> c1e4e7af28 (feat: Unit Price Contract)
-=======
->>>>>>> 71f65bab5e (fix: Linters)
 		tax_category: DF.Link | None
 		tax_id: DF.Data | None
 		taxes: DF.Table[SalesTaxesandCharges]

@@ -6,11 +6,7 @@ import json
 import frappe
 import frappe.permissions
 from frappe.core.doctype.user_permission.test_user_permission import create_user
-<<<<<<< HEAD
 from frappe.tests.utils import FrappeTestCase, change_settings
-=======
-from frappe.tests import IntegrationTestCase, change_settings
->>>>>>> 55981c8358 (test: Sales Order + fix: Mapping of Items from Quotation & SO)
 from frappe.utils import add_days, flt, getdate, nowdate, today
 
 from erpnext.accounts.test.accounts_mixin import AccountsTestMixin
@@ -90,31 +86,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		)
 		update_child_qty_rate("Sales Order", trans_item, so.name)
 
-<<<<<<< HEAD
-=======
-	def test_sales_order_qty(self):
-		so = make_sales_order(qty=1, do_not_save=True)
-
-		# NonNegativeError with qty=-1
-		so.append(
-			"items",
-			{
-				"item_code": "_Test Item",
-				"qty": -1,
-				"rate": 10,
-			},
-		)
-		self.assertRaises(frappe.NonNegativeError, so.save)
-
-		# InvalidQtyError with qty=0
-		so.items[1].qty = 0
-		self.assertRaises(InvalidQtyError, so.save)
-
-		# No error with qty=1
-		so.items[1].qty = 1
-		so.save()
-		self.assertEqual(so.items[0].qty, 1)
-
 	def test_sales_order_zero_qty(self):
 		po = make_sales_order(qty=0, do_not_save=True)
 
@@ -122,7 +93,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 			po.save()
 			self.assertEqual(po.items[0].qty, 0)
 
->>>>>>> 55981c8358 (test: Sales Order + fix: Mapping of Items from Quotation & SO)
 	def test_make_material_request(self):
 		so = make_sales_order(do_not_submit=True)
 
@@ -1983,79 +1953,6 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 				self.assertEqual(so.items[0].rate, scenario.get("expected_rate"))
 				self.assertEqual(so.packed_items[0].rate, scenario.get("expected_rate"))
 
-<<<<<<< HEAD
-=======
-	@patch(
-		# this also shadows one (1) call to _get_payment_gateway_controller
-		"erpnext.accounts.doctype.payment_request.payment_request.PaymentRequest.get_payment_url",
-		return_value=None,
-	)
-	def test_sales_order_advance_payment_status(self, mocked_get_payment_url):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import get_payment_entry
-		from erpnext.accounts.doctype.payment_request.payment_request import make_payment_request
-
-		# Flow progressing to SI with payment entries "moved" from SO to SI
-		so = make_sales_order(qty=1, rate=100, do_not_submit=True)
-		# no-op; for optical consistency with how a webshop SO would look like
-		so.order_type = "Shopping Cart"
-		so.submit()
-		self.assertEqual(frappe.db.get_value(so.doctype, so.name, "advance_payment_status"), "Not Requested")
-
-		pr = make_payment_request(
-			dt=so.doctype,
-			dn=so.name,
-			order_type="Shopping Cart",
-			submit_doc=True,
-			return_doc=True,
-			mute_email=True,
-		)
-		self.assertEqual(frappe.db.get_value(so.doctype, so.name, "advance_payment_status"), "Requested")
-
-		pe = pr.set_as_paid()
-		pr.reload()  # status updated
-		pe.reload()  # references moved to Sales Invoice
-		self.assertEqual(pr.status, "Paid")
-		self.assertEqual(pe.references[0].reference_doctype, "Sales Invoice")
-		self.assertEqual(frappe.db.get_value(so.doctype, so.name, "advance_payment_status"), "Fully Paid")
-
-		pe.cancel()
-		pr.reload()
-		self.assertEqual(pr.status, "Paid")  # TODO: this might be a bug
-		so.reload()  # reload
-		# regardless, since the references have already "handed-over" to SI,
-		# the SO keeps its historical state at the time of hand over
-		self.assertEqual(frappe.db.get_value(so.doctype, so.name, "advance_payment_status"), "Fully Paid")
-
-		pr.cancel()
-		self.assertEqual(
-			frappe.db.get_value(so.doctype, so.name, "advance_payment_status"), "Not Requested"
-		)  # TODO: this might be a bug; handover has happened
-
-		# Flow NOT progressing to SI with payment entries NOT "moved"
-		so = make_sales_order(qty=1, rate=100)
-		self.assertEqual(frappe.db.get_value(so.doctype, so.name, "advance_payment_status"), "Not Requested")
-
-		pr = make_payment_request(
-			dt=so.doctype, dn=so.name, submit_doc=True, return_doc=True, mute_email=True
-		)
-		self.assertEqual(frappe.db.get_value(so.doctype, so.name, "advance_payment_status"), "Requested")
-
-		pe = get_payment_entry(so.doctype, so.name).save().submit()
-		self.assertEqual(frappe.db.get_value(so.doctype, so.name, "advance_payment_status"), "Fully Paid")
-
-		pe.reload()
-		pe.cancel()
-		self.assertEqual(
-			frappe.db.get_value(so.doctype, so.name, "advance_payment_status"), "Requested"
-		)  # here: reset
-
-		pr.reload()
-		pr.cancel()
-		self.assertEqual(
-			frappe.db.get_value(so.doctype, so.name, "advance_payment_status"), "Not Requested"
-		)  # here: reset
-
->>>>>>> 0447c7be0a (fix: Treat rows as Unit Price rows only until the qty is 0)
 	def test_pick_list_without_rejected_materials(self):
 		serial_and_batch_item = make_item(
 			"_Test Serial and Batch Item for Rejected Materials",
@@ -2302,7 +2199,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		po.submit()
 		self.assertEqual(po.taxes[0].tax_amount, 2)
 
-	@IntegrationTestCase.change_settings("Selling Settings", {"allow_zero_qty_in_sales_order": 1})
+	@change_settings("Selling Settings", {"allow_zero_qty_in_sales_order": 1})
 	def test_deliver_zero_qty_purchase_order(self):
 		"""
 		Test the flow of a Unit Price SO and DN creation against it until completion.
@@ -2350,7 +2247,7 @@ class TestSalesOrder(AccountsTestMixin, FrappeTestCase):
 		self.assertEqual(so.per_delivered, 100.0)
 		self.assertEqual(so.status, "To Bill")
 
-	@IntegrationTestCase.change_settings("Selling Settings", {"allow_zero_qty_in_sales_order": 1})
+	@change_settings("Selling Settings", {"allow_zero_qty_in_sales_order": 1})
 	def test_bill_zero_qty_sales_order(self):
 		so = make_sales_order(qty=0)
 

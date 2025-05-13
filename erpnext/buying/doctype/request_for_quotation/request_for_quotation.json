@@ -322,11 +322,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
-<<<<<<< HEAD
- "modified": "2023-11-06 12:45:28.898706",
-=======
  "modified": "2025-03-03 16:48:39.856779",
->>>>>>> e403d3f153 (feat: Unit Price Items in Buying (RFQ, SQ, PO))
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Request for Quotation",
