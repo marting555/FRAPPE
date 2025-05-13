@@ -12,13 +12,13 @@
   {
    "fieldname": "product_type",
    "fieldtype": "Data",
-   "label": "Danh m\u1ee5c s\u1ea3n ph\u1ea9m"
+   "label": "Product Type"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-04-21 00:29:25.363832",
+ "modified": "2025-05-13 01:35:05.438720",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead Product",
