@@ -779,17 +779,10 @@ class AccountsController(TransactionBase):
 			if not self.due_date:
 				frappe.throw(_("Due Date is mandatory"))
 
-			validate_due_date(
-				posting_date,
-				self.due_date,
-				self.payment_terms_template,
-			)
+			validate_due_date(posting_date, self.due_date, None, self.payment_terms_template, self.doctype)
 		elif self.doctype == "Purchase Invoice":
 			validate_due_date(
-				posting_date,
-				self.due_date,
-				self.bill_date,
-				self.payment_terms_template,
+				posting_date, self.due_date, self.bill_date, self.payment_terms_template, self.doctype
 			)
 
 	def set_price_list_currency(self, buying_or_selling):
@@ -1259,13 +1252,18 @@ class AccountsController(TransactionBase):
 			)
 
 	def validate_qty_is_not_zero(self):
-		if self.doctype == "Purchase Receipt" or self.flags.allow_zero_qty:
+		if self.flags.allow_zero_qty:
 			return
 
 		for item in self.items:
+			if self.doctype == "Purchase Receipt" and item.rejected_qty:
+				continue
+
 			if not flt(item.qty):
 				frappe.throw(
-					msg=_("Row #{0}: Item quantity cannot be zero").format(item.idx),
+					msg=_("Row #{0}: Quantity for Item {1} cannot be zero.").format(
+						item.idx, frappe.bold(item.item_code)
+					),
 					title=_("Invalid Quantity"),
 					exc=InvalidQtyError,
 				)
@@ -3596,7 +3594,7 @@ def update_child_qty_rate(parent_doctype, trans_items, parent_doctype_name, chil
 	def validate_quantity(child_item, new_data):
 		if not flt(new_data.get("qty")):
 			frappe.throw(
-				_("Row # {0}: Quantity for Item {1} cannot be zero").format(
+				_("Row #{0}: Quantity for Item {1} cannot be zero.").format(
 					new_data.get("idx"), frappe.bold(new_data.get("item_code"))
 				),
 				title=_("Invalid Qty"),

@@ -1492,9 +1492,12 @@ class PaymentEntry(AccountsController):
 		else:
 			# For backwards compatibility
 			# Supporting reposting on payment entries reconciled before select field introduction
-			if self.advance_reconciliation_takes_effect_on == "Advance Payment Date":
+			reconciliation_takes_effect_on = frappe.get_cached_value(
+				"Company", self.company, "reconciliation_takes_effect_on"
+			)
+			if reconciliation_takes_effect_on == "Advance Payment Date":
 				posting_date = self.posting_date
-			elif self.advance_reconciliation_takes_effect_on == "Oldest Of Invoice Or Advance":
+			elif reconciliation_takes_effect_on == "Oldest Of Invoice Or Advance":
 				date_field = "posting_date"
 				if invoice.reference_doctype in ["Sales Order", "Purchase Order"]:
 					date_field = "transaction_date"
@@ -1504,7 +1507,7 @@ class PaymentEntry(AccountsController):
 
 				if getdate(posting_date) < getdate(self.posting_date):
 					posting_date = self.posting_date
-			elif self.advance_reconciliation_takes_effect_on == "Reconciliation Date":
+			elif reconciliation_takes_effect_on == "Reconciliation Date":
 				posting_date = nowdate()
 			frappe.db.set_value("Payment Entry Reference", invoice.name, "reconcile_effect_on", posting_date)
 
@@ -1994,7 +1997,7 @@ class PaymentEntry(AccountsController):
 
 			# Re allocate amount to those references which have PR set (Higher priority)
 			for ref in self.references:
-				if not ref.payment_request:
+				if not (ref.reference_doctype and ref.reference_name and ref.payment_request):
 					continue
 
 				# fetch outstanding_amount of `Reference` (Payment Term) and `Payment Request` to allocate new amount
@@ -2045,7 +2048,7 @@ class PaymentEntry(AccountsController):
 					)
 			# Re allocate amount to those references which have no PR (Lower priority)
 			for ref in self.references:
-				if ref.payment_request:
+				if ref.payment_request or not (ref.reference_doctype and ref.reference_name):
 					continue
 
 				key = (ref.reference_doctype, ref.reference_name, ref.get("payment_term"))
@@ -2361,7 +2364,7 @@ def get_outstanding_reference_documents(args, validate=False):
 		accounts = get_party_account(
 			args.get("party_type"), args.get("party"), args.get("company"), include_advance=True
 		)
-		advance_account = accounts[1] if len(accounts) >= 1 else None
+		advance_account = accounts[1] if len(accounts) > 1 else None
 
 		if party_account == advance_account:
 			party_account = accounts[0]

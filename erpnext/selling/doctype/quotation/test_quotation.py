@@ -5,11 +5,23 @@ import frappe
 from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, add_months, flt, getdate, nowdate
 
+from erpnext.controllers.accounts_controller import InvalidQtyError
+
 test_dependencies = ["Product Bundle"]
 
 
 class TestQuotation(FrappeTestCase):
-	def test_quotation_zero_qty(self):
+	def test_quotation_qty(self):
+		qo = make_quotation(qty=0, do_not_save=True)
+		with self.assertRaises(InvalidQtyError):
+			qo.save()
+
+		# No error with qty=1
+		qo.items[0].qty = 1
+		qo.save()
+		self.assertEqual(qo.items[0].qty, 1)
+  
+  def test_quotation_zero_qty(self):
 		"""
 		Test if Quote with zero qty (Unit Price Item) is conditionally allowed.
 		"""
@@ -851,7 +863,7 @@ def make_quotation(**args):
 			{
 				"item_code": args.item or args.item_code or "_Test Item",
 				"warehouse": args.warehouse,
-				"qty": args.qty or 10,
+				"qty": args.qty if args.qty is not None else 10,
 				"uom": args.uom or None,
 				"rate": args.rate or 100,
 			},
