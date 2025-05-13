@@ -2896,6 +2896,25 @@ def unlink_payment_on_cancel_of_invoice(enable=1):
 
 
 def make_purchase_invoice(**args):
+	if not args.credit_to and (args.currency or "INR") != "INR":
+		account = frappe.db.get_value(
+			"Account",
+			filters={
+				"account_type": "Payable",
+				"company": args.company or "_Test Company",
+				"account_currency": args.currency or "INR",
+			},
+		)
+		if account:
+			args.debit_to = account
+		else:
+			args.debit_to = create_account(
+				account_name=f"Creditors - {args.currency or 'INR'}",
+				parent_account="Accounts Payable - _TC",
+				company=args.company or "_Test Company",
+				account_currency=args.currency or "INR",
+				account_type="Payable",
+			)
 	pi = frappe.new_doc("Purchase Invoice")
 	args = frappe._dict(args)
 	pi.posting_date = args.posting_date or today()
@@ -2914,6 +2933,7 @@ def make_purchase_invoice(**args):
 	pi.currency = args.currency or "INR"
 	pi.conversion_rate = args.conversion_rate or 1
 	pi.is_return = args.is_return
+	pi.credit_to = args.credit_to or "Creditors - _TC"
 	pi.return_against = args.return_against
 	pi.is_subcontracted = args.is_subcontracted or 0
 	pi.supplier_warehouse = args.supplier_warehouse or "_Test Warehouse 1 - _TC"

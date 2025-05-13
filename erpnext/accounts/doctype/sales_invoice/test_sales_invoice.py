@@ -4410,6 +4410,25 @@ def check_gl_entries(doc, voucher_no, expected_gle, posting_date, voucher_type="
 
 
 def create_sales_invoice(**args):
+	if not args.debit_to and (args.currency or "INR") != "INR":
+		account = frappe.db.get_value(
+			"Account",
+			filters={
+				"account_type": "Receivable",
+				"company": args.company or "_Test Company",
+				"account_currency": args.currency or "INR",
+			},
+		)
+		if account:
+			args.debit_to = account
+		else:
+			args.debit_to = create_account(
+				parent_account="Accounts Receivable - _TC",
+				account_name=f"Debtors - {args.currency or 'INR'}",
+				company=args.company or "_Test Company",
+				account_type="Receivable",
+				account_currency=args.currency or "INR",
+			)
 	si = frappe.new_doc("Sales Invoice")
 	args = frappe._dict(args)
 	if args.posting_date:
