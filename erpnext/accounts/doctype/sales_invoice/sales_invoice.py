@@ -818,6 +818,9 @@ class SalesInvoice(SellingController):
 			if pos.get("company_address"):
 				self.company_address = pos.get("company_address")
 
+			if pos.get("prefix"):
+				self.naming_series = pos.get("prefix")
+
 			if self.customer:
 				customer_price_list, customer_group = frappe.get_value(
 					"Customer", self.customer, ["default_price_list", "customer_group"]
