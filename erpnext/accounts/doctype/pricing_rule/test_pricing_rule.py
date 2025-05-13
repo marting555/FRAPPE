@@ -1472,9 +1472,6 @@ class TestPricingRule(IntegrationTestCase):
 		pi.cancel()
 
 
-EXTRA_TEST_RECORD_DEPENDENCIES = ["UTM Campaign"]
-
-
 def make_pricing_rule(**args):
 	args = frappe._dict(args)
 
