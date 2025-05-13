@@ -41,7 +41,6 @@ from erpnext.accounts.general_ledger import get_round_off_account_and_cost_cente
 from erpnext.accounts.party import (
 	get_party_account,
 	get_party_account_currency,
-	get_party_gle_currency,
 	validate_party_frozen_disabled,
 )
 from erpnext.accounts.utils import (
