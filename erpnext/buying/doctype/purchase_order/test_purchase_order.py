@@ -46,8 +46,8 @@ class TestPurchaseOrder(FrappeTestCase):
 		# InvalidQtyError with qty=0
 		po.items[1].qty = 0
 		self.assertRaises(InvalidQtyError, po.save)
-    
-    # No error with qty=1
+
+		# No error with qty=1
 		po.items[1].qty = 1
 		po.save()
 		self.assertEqual(po.items[1].qty, 1)

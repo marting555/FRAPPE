@@ -31,8 +31,8 @@ class TestRequestforQuotation(FrappeTestCase):
 		rfq.items[0].qty = 1
 		rfq.save()
 		self.assertEqual(rfq.items[0].qty, 1)
-  
-  def test_rfq_zero_qty(self):
+
+	def test_rfq_zero_qty(self):
 		"""
 		Test if RFQ with zero qty (Unit Price Item) is conditionally allowed.
 		"""

@@ -20,8 +20,8 @@ class TestQuotation(FrappeTestCase):
 		qo.items[0].qty = 1
 		qo.save()
 		self.assertEqual(qo.items[0].qty, 1)
-  
-  def test_quotation_zero_qty(self):
+
+	def test_quotation_zero_qty(self):
 		"""
 		Test if Quote with zero qty (Unit Price Item) is conditionally allowed.
 		"""
