@@ -797,7 +797,7 @@
    "format": "{}  Available",
    "label": "Item",
    "link_to": "Item",
-   "stats_filter": "{\n    \"disabled\" : 0\n}",
+   "stats_filter": "{\n \"disabled\" : 0\n}",
    "type": "DocType"
   },
   {
@@ -812,7 +812,7 @@
    "format": "{} Pending",
    "label": "Material Request",
    "link_to": "Material Request",
-   "stats_filter": "{\n    \"company\": [\"like\", '%' + frappe.defaults.get_global_default(\"company\") + '%'],\n    \"status\": \"Pending\"\n}",
+   "stats_filter": "{\n \"company\": [\"like\", '%' + frappe.defaults.get_global_default(\"company\") + '%'],\n \"status\": \"Pending\"\n}",
    "type": "DocType"
   },
   {
@@ -825,7 +825,7 @@
    "format": "{} To Bill",
    "label": "Purchase Receipt",
    "link_to": "Purchase Receipt",
-   "stats_filter": "{\n    \"company\": [\"like\", '%' + frappe.defaults.get_global_default(\"company\") + '%'],\n    \"status\": \"To Bill\"\n}",
+   "stats_filter": "{\n \"company\": [\"like\", '%' + frappe.defaults.get_global_default(\"company\") + '%'],\n \"status\": \"To Bill\"\n}",
    "type": "DocType"
   },
   {
@@ -833,7 +833,7 @@
    "format": "{} To Bill",
    "label": "Delivery Note",
    "link_to": "Delivery Note",
-   "stats_filter": "{\n    \"company\": [\"like\", '%' + frappe.defaults.get_global_default(\"company\") + '%'],\n    \"status\": \"To Bill\"\n}",
+   "stats_filter": "{\n \"company\": [\"like\", '%' + frappe.defaults.get_global_default(\"company\") + '%'],\n \"status\": \"To Bill\"\n}",
    "type": "DocType"
   },
   {
