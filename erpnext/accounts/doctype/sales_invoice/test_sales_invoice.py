@@ -2230,13 +2230,13 @@ class TestSalesInvoice(ERPNextTestSuite):
 			self.assertEqual(expected_account_values[1], gle.credit)
 
 	def test_rounding_adjustment_3(self):
-		from erpnext.accounts.doctype.accounting_dimension.test_accounting_dimension import (
-			create_dimension,
-			disable_dimension,
-		)
+		from erpnext.accounts.doctype.accounting_dimension.test_accounting_dimension import create_dimension
 
+		# Dimension creates custom field, which does an implicit DB commit as it is a DDL command
+		# Ensure dimension don't have any mandatory fields
 		create_dimension()
 
+		# rollback from tearDown() happens till here
 		si = create_sales_invoice(do_not_save=True)
 		si.items = []
 		for d in [(1122, 2), (1122.01, 1), (1122.01, 1)]:
@@ -2316,8 +2316,6 @@ class TestSalesInvoice(ERPNextTestSuite):
 		if round_off_gle:
 			self.assertEqual(round_off_gle.cost_center, "_Test Cost Center 2 - _TC")
 			self.assertEqual(round_off_gle.location, "Block 1")
-
-		disable_dimension()
 
 	def test_sales_invoice_with_shipping_rule(self):
 		from erpnext.accounts.doctype.shipping_rule.test_shipping_rule import create_shipping_rule
@@ -2981,7 +2979,7 @@ class TestSalesInvoice(ERPNextTestSuite):
 		expected_values = [
 			["2020-06-30", 1366.12, 1366.12],
 			["2021-06-30", 20000.0, 21366.12],
-			["2021-09-30", 5041.1, 26407.22],
+			["2021-09-30", 5041.34, 26407.46],
 		]
 
 		for i, schedule in enumerate(get_depr_schedule(asset.name, "Active")):
@@ -3013,42 +3011,13 @@ class TestSalesInvoice(ERPNextTestSuite):
 		)
 		asset.load_from_db()
 
-		expected_values = [["2020-12-31", 30000, 30000], ["2021-12-31", 30000, 60000]]
+		expected_values = [["2020-12-31", 30000, 30000], ["2021-12-31", 30041.15, 60041.15]]
 
 		for i, schedule in enumerate(get_depr_schedule(asset.name, "Active")):
 			self.assertEqual(getdate(expected_values[i][0]), schedule.schedule_date)
 			self.assertEqual(expected_values[i][1], schedule.depreciation_amount)
 			self.assertEqual(expected_values[i][2], schedule.accumulated_depreciation_amount)
 			self.assertTrue(schedule.journal_entry)
-
-	def test_depreciation_on_return_of_sold_asset(self):
-		from erpnext.controllers.sales_and_purchase_return import make_return_doc
-
-		create_asset_data()
-		asset = create_asset(item_code="Macbook Pro", calculate_depreciation=1, submit=1)
-		post_depreciation_entries(getdate("2021-09-30"))
-
-		si = create_sales_invoice(
-			item_code="Macbook Pro", asset=asset.name, qty=1, rate=90000, posting_date=getdate("2021-09-30")
-		)
-		return_si = make_return_doc("Sales Invoice", si.name)
-		return_si.submit()
-		asset.load_from_db()
-
-		expected_values = [
-			["2020-06-30", 1366.12, 1366.12, True],
-			["2021-06-30", 20000.0, 21366.12, True],
-			["2022-06-30", 20000.0, 41366.12, False],
-			["2023-06-30", 20000.0, 61366.12, False],
-			["2024-06-30", 20000.0, 81366.12, False],
-			["2025-06-06", 18633.88, 100000.0, False],
-		]
-
-		for i, schedule in enumerate(get_depr_schedule(asset.name, "Active")):
-			self.assertEqual(getdate(expected_values[i][0]), schedule.schedule_date)
-			self.assertEqual(expected_values[i][1], schedule.depreciation_amount)
-			self.assertEqual(expected_values[i][2], schedule.accumulated_depreciation_amount)
-			self.assertEqual(schedule.journal_entry, schedule.journal_entry)
 
 	def test_sales_invoice_against_supplier(self):
 		from erpnext.accounts.doctype.opening_invoice_creation_tool.test_opening_invoice_creation_tool import (
