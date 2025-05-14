@@ -349,13 +349,31 @@ class SalesInvoice(SellingController):
 	def before_naming(self):
 		if self.docstatus == 0:
 			self.assign_cai()
-			# self.create_prefix_for_days()
-			# self.create_daily_summary_series()
+			self.create_prefix_for_days()
+			self.create_daily_summary_series()
 
 		if self.status == 'Draft' and self.cai == None:
 			self.assign_cai()
-			# self.create_prefix_for_days()
-			# self.create_daily_summary_series()
+			self.create_prefix_for_days()
+			self.create_daily_summary_series()
+	
+	def create_prefix_for_days(self):
+		prefix = frappe.get_all("Prefix sales for days", ["name_prefix"], filters = {"name_prefix": self.naming_series})
+
+		if len(prefix) == 0:
+			doc = frappe.new_doc('Prefix sales for days')
+			doc.name_prefix = self.naming_series
+			doc.insert()
+	
+	def create_daily_summary_series(self):
+		split_serie = self.naming_series.split('-')
+		serie =  "{}-{}".format(split_serie[0], split_serie[1])
+		prefix = frappe.get_all("Daily summary series", ["name_serie"], filters = {"name_serie": serie})
+
+		if len(prefix) == 0:
+			doc = frappe.new_doc('Daily summary series')
+			doc.name_serie = serie
+			doc.insert()
 
 	def assign_cai(self):
 		user = frappe.session.user
