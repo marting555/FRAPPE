@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-05-04 09:35+0000\n"
-"PO-Revision-Date: 2025-05-12 17:59\n"
+"PO-Revision-Date: 2025-05-14 18:25\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Persian\n"
 "MIME-Version: 1.0\n"
@@ -28165,7 +28165,7 @@ msgstr "دفتر ها"
 #: erpnext/setup/doctype/driver/driver.json
 #: erpnext/setup/doctype/employee/employee.json
 msgid "Left"
-msgstr "ترک کرد"
+msgstr "چپ"
 
 #. Label of the left_child (Link) field in DocType 'Bisect Nodes'
 #: erpnext/accounts/doctype/bisect_nodes/bisect_nodes.json
