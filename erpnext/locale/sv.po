@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-05-04 09:35+0000\n"
-"PO-Revision-Date: 2025-05-06 17:06\n"
+"PO-Revision-Date: 2025-05-14 18:25\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -40734,7 +40734,7 @@ msgstr "Kvalificerad Av"
 #. Label of the qualified_on (Date) field in DocType 'Lead'
 #: erpnext/crm/doctype/lead/lead.json
 msgid "Qualified on"
-msgstr "Kvalificerad(Datum)"
+msgstr "Kvalificering Datum"
 
 #. Name of a Workspace
 #. Label of the quality_tab (Tab Break) field in DocType 'Item'
