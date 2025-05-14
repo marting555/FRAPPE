@@ -5388,7 +5388,6 @@ class TestMaterialRequest(FrappeTestCase):
 		doc_pi.load_from_db()
 		from erpnext.controllers.sales_and_purchase_return import make_return_doc
 		return_pi = make_return_doc("Purchase Invoice", doc_pi.name)
-		print(f"\n\n\n return_pi.posting_date={return_pi.posting_date}\n\n\n\n")
 		return_pi.submit()
 
 		gl_temp_credit = frappe.db.get_value('GL Entry',{'voucher_no':return_pi.name, 'account': return_pi.items[0].expense_account},'credit')
