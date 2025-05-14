@@ -6,7 +6,7 @@ import json
 from collections import defaultdict
 
 import frappe
-from frappe import _
+from frappe import _, bold
 from frappe.model.mapper import get_mapped_doc
 from frappe.query_builder.functions import Sum
 from frappe.utils import (
@@ -540,9 +540,19 @@ class StockEntry(StockController):
 			if acc_details.account_type == "Stock":
 				frappe.throw(
 					_(
-						"At row {0}: the Difference Account must not be a Stock type account, please change the Account Type for the account {1} or select a different account"
+						"At row #{0}: the Difference Account must not be a Stock type account, please change the Account Type for the account {1} or select a different account"
 					).format(d.idx, get_link_to_form("Account", d.expense_account)),
-					OpeningEntryAccountError,
+					title=_("Difference Account in Items Table"),
+				)
+
+			if self.purpose != "Material Issue" and acc_details.account_type == "Cost of Goods Sold":
+				frappe.msgprint(
+					_(
+						"At row #{0}: you have selected the Difference Account {1}, which is a Cost of Goods Sold type account. Please select a different account"
+					).format(d.idx, bold(get_link_to_form("Account", d.expense_account))),
+					title=_("Cost of Goods Sold Account in Items Table"),
+					indicator="orange",
+					alert=1,
 				)
 
 	def validate_warehouse(self):
@@ -1627,6 +1637,11 @@ class StockEntry(StockController):
 			_validate_work_order(pro_doc)
 
 			if self.fg_completed_qty:
+				if self.docstatus == 1:
+					pro_doc.add_additional_items(self)
+				else:
+					pro_doc.remove_additional_items(self)
+
 				pro_doc.run_method("update_work_order_qty")
 				if self.purpose == "Manufacture":
 					pro_doc.run_method("update_planned_qty")
@@ -1638,7 +1653,11 @@ class StockEntry(StockController):
 	def make_stock_reserve_for_wip_and_fg(self):
 		if self.is_stock_reserve_for_work_order():
 			pro_doc = frappe.get_doc("Work Order", self.work_order)
-			if self.purpose == "Manufacture" and not pro_doc.sales_order:
+			if (
+				self.purpose == "Manufacture"
+				and not pro_doc.sales_order
+				and not pro_doc.production_plan_sub_assembly_item
+			):
 				return
 
 			pro_doc.set_reserved_qty_for_wip_and_fg(self)
@@ -1646,7 +1665,11 @@ class StockEntry(StockController):
 	def cancel_stock_reserve_for_wip_and_fg(self):
 		if self.is_stock_reserve_for_work_order():
 			pro_doc = frappe.get_doc("Work Order", self.work_order)
-			if self.purpose == "Manufacture" and not pro_doc.sales_order:
+			if (
+				self.purpose == "Manufacture"
+				and not pro_doc.sales_order
+				and not pro_doc.production_plan_sub_assembly_item
+			):
 				return
 
 			pro_doc.cancel_reserved_qty_for_wip_and_fg(self)
