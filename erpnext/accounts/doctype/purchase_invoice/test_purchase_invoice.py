@@ -2694,75 +2694,77 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			create_purchase_invoice,
 			make_test_item
 		)
+		from erpnext.controllers.tests.test_accounts_controller import make_supplier
+		supplier_name = make_supplier("_Test Supplier USD",currency="USD")
 		
 		records_for_pi('_Test Supplier USD')
-		supplier = frappe.get_doc('Supplier', '_Test Supplier USD')
+		supplier = frappe.get_doc('Supplier', supplier_name)
 		
-		if supplier:
-			item = make_test_item()
-			
-			pi = create_purchase_invoice(
-				supplier=supplier.name,
-				currency="USD",
-				rate=100,
-				item_code=item.name,
-				credit_to="_Test Payable USD - _TC"
-			)
-			pi.conversion_rate = 63
-			pi.save()
-			pi.submit()
-			
-			pe = get_payment_entry("Purchase Invoice", pi.name)
-			pe.payment_type= "Pay"
-			pe.paid_from = "Cash - _TC"
-			pe.target_exchange_rate = 60
-			pe.save()
-			pe.submit()
-			
-			expected_gle = [
-				["Cash - _TC", 0.0, 6300.0, pe.posting_date],
-				["Exchange Gain/Loss - _TC", 300.0, 0.0, pe.posting_date],
-				["_Test Payable USD - _TC", 6000.0, 0.0, pe.posting_date]
-			]
-			
-			check_gl_entries(
-				doc=self,
-				voucher_no=pe.name,
-				expected_gle=expected_gle,
-				posting_date=pe.posting_date,
-				voucher_type="Payment Entry"
-			)
-			
-			jea_parent = frappe.db.get_all(
-				"Journal Entry Account",
-				filters={
-					"account": pi.credit_to,
-					"docstatus": 1,
-					"reference_name": pi.name,
-					"party_type": "Supplier",
-					"party": "_Test Supplier USD",
-					"debit": 300
-				},
-				fields=["parent"]
-			)[0]
-			
-			self.assertEqual(
-				frappe.db.get_value("Journal Entry", jea_parent.parent, "voucher_type"),
-				"Exchange Gain Or Loss"
-			)
-			
-			expected_jv_entries = [
-				["Exchange Gain/Loss - _TC", 0.0, 300.0, pe.posting_date],
-				["_Test Payable USD - _TC", 300.0, 0.0, pe.posting_date]
-			]
-			
-			check_gl_entries(
-				doc=self,
-				voucher_no=jea_parent.parent,
-				expected_gle=expected_jv_entries,
-				posting_date=pe.posting_date,
-				voucher_type="Journal Entry"
-			)
+		# if supplier:
+		item = make_test_item()
+		
+		pi = create_purchase_invoice(
+			supplier=supplier.name,
+			currency="USD",
+			rate=100,
+			item_code=item.name,
+			credit_to="_Test Payable USD - _TC"
+		)
+		pi.conversion_rate = 63
+		pi.save()
+		pi.submit()
+		
+		pe = get_payment_entry("Purchase Invoice", pi.name)
+		pe.payment_type= "Pay"
+		pe.paid_from = "Cash - _TC"
+		pe.target_exchange_rate = 60
+		pe.save()
+		pe.submit()
+		
+		expected_gle = [
+			["Cash - _TC", 0.0, 6300.0, pe.posting_date],
+			["Exchange Gain/Loss - _TC", 300.0, 0.0, pe.posting_date],
+			["_Test Payable USD - _TC", 6000.0, 0.0, pe.posting_date]
+		]
+		
+		check_gl_entries(
+			doc=self,
+			voucher_no=pe.name,
+			expected_gle=expected_gle,
+			posting_date=pe.posting_date,
+			voucher_type="Payment Entry"
+		)
+		
+		jea_parent = frappe.db.get_all(
+			"Journal Entry Account",
+			filters={
+				"account": pi.credit_to,
+				"docstatus": 1,
+				"reference_name": pi.name,
+				"party_type": "Supplier",
+				"party": "_Test Supplier USD",
+				"debit": 300
+			},
+			fields=["parent"]
+		)[0]
+		
+		self.assertEqual(
+			frappe.db.get_value("Journal Entry", jea_parent.parent, "voucher_type"),
+			"Exchange Gain Or Loss"
+		)
+		
+		expected_jv_entries = [
+			["Exchange Gain/Loss - _TC", 0.0, 300.0, pe.posting_date],
+			["_Test Payable USD - _TC", 300.0, 0.0, pe.posting_date]
+		]
+		
+		check_gl_entries(
+			doc=self,
+			voucher_no=jea_parent.parent,
+			expected_gle=expected_jv_entries,
+			posting_date=pe.posting_date,
+			voucher_type="Journal Entry"
+		)
 
 	
 	def test_advance_payment_TC_ACC_028(self):
@@ -3432,11 +3434,20 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 
 	def test_fully_paid_of_pi_to_pr_to_pe_TC_B_082(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		from erpnext.controllers.tests.test_accounts_controller import make_supplier
+		make_test_item("_Test Item")
+		make_supplier("_Test Supplier",currency="INR")
 		pi = make_purchase_invoice(
 			qty=1,
 			item_code="_Test Item",
 			supplier = "_Test Supplier",
 			company = "_Test Company",
+			cost_center="Main - _TC",
+			uom="Nos",
+			warehouse="Stores - _TC",
+			supplier_warehouse="Stores - _TC",
+			expense_account="Cost of Goods Sold - _TC",
 			rate = 500
 		)
 
