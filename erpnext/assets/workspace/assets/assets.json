@@ -14,7 +14,7 @@
  "hide_custom": 0,
  "icon": "assets",
  "idx": 0,
- "is_hidden": 1,
+ "is_hidden": 0,
  "label": "Assets",
  "links": [
   {
@@ -182,7 +182,6 @@
    "link_to": "Asset Maintenance",
    "link_type": "Report",
    "onboard": 0,
-   "report_ref_doctype": "Asset Maintenance",
    "type": "Link"
   },
   {
@@ -194,11 +193,10 @@
    "link_to": "Asset Activity",
    "link_type": "Report",
    "onboard": 0,
-   "report_ref_doctype": "Asset Activity",
    "type": "Link"
   }
  ],
- "modified": "2025-04-15 21:00:40.485696",
+ "modified": "2024-01-05 17:40:34.570041",
  "modified_by": "Administrator",
  "module": "Assets",
  "name": "Assets",
@@ -209,7 +207,7 @@
  "quick_lists": [],
  "restrict_to_domain": "",
  "roles": [],
- "sequence_id": 10.0,
+ "sequence_id": 7.0,
  "shortcuts": [
   {
    "label": "Asset",
@@ -224,7 +222,6 @@
   {
    "label": "Fixed Asset Register",
    "link_to": "Fixed Asset Register",
-   "report_ref_doctype": "Asset",
    "type": "Report"
   },
   {

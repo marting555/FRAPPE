@@ -155,7 +155,6 @@
   {
    "fieldname": "warranty_amc_details",
    "fieldtype": "Section Break",
-   "hidden": 1,
    "label": "Warranty / AMC Details"
   },
   {
@@ -208,7 +207,6 @@
   {
    "fieldname": "more_info",
    "fieldtype": "Section Break",
-   "hidden": 1,
    "label": "More Information"
   },
   {
@@ -274,7 +272,7 @@
  "icon": "fa fa-barcode",
  "idx": 1,
  "links": [],
- "modified": "2025-04-15 11:20:35.013777",
+ "modified": "2025-01-15 16:22:49.873889",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Serial No",
@@ -312,7 +310,6 @@
    "role": "Stock User"
   }
  ],
- "row_format": "Dynamic",
  "search_fields": "item_code",
  "show_name_in_global_search": 1,
  "sort_field": "modified",

@@ -12,7 +12,7 @@
   {
    "fieldname": "product_type",
    "fieldtype": "Link",
-   "label": "Ch\u1ecdn s\u1ea3n ph\u1ea9m",
+   "label": "Select Product",
    "options": "Lead Product"
   }
  ],
