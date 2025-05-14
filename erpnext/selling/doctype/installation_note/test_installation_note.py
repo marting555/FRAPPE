@@ -3,7 +3,7 @@
 
 import unittest
 import frappe
-from erpnext.setup.doctype.company.test_company import create_child_company
+from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company
 from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
 from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
 from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
@@ -22,20 +22,17 @@ class TestInstallationNote(unittest.TestCase):
 		company = "_Test Company"
 		item_code = "_Test Serialized Item"
 		
-		if not frappe.db.exists("Customer", customer):
-			create_customer(customer, currency="INR")
+		create_customer(customer, currency="INR")
 		
-		if not frappe.db.exists("Company", company):
-			create_child_company()
+		create_company(company)
 		
-		if not frappe.db.exists("Item", item_code):
-			item = make_item(item_code, {
-				"is_stock_item": 1,
-				"has_serial_no": 1,
-				"item_group": "Products",
-				"stock_uom": "Nos"
-			})
-			item.save()
+		item = make_item(item_code, {
+			"is_stock_item": 1,
+			"has_serial_no": 1,
+			"item_group": "Products",
+			"stock_uom": "Nos"
+		})
+		item.save()
 		
 		if not frappe.db.exists("Serial No", serial_no):
 			stock_entry = frappe.get_doc({
