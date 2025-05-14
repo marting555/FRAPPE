@@ -1,7 +1,7 @@
 import frappe
 
-def execute():
 
+def execute():
 	if "agriculture" in frappe.get_installed_apps():
 		return
 
