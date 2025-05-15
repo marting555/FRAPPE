@@ -213,7 +213,7 @@ erpnext.PointOfSale.Controller = class {
 		this.prepare_dom();
 		this.prepare_components();
 		this.prepare_menu();
-		this.prepare_fullscreen_btn();
+		this.prepare_btns();
 		this.make_new_invoice();
 	}
 
@@ -234,24 +234,20 @@ erpnext.PointOfSale.Controller = class {
 
 	prepare_menu() {
 		this.page.clear_menu();
-
 		this.page.add_menu_item(__("Open Form View"), this.open_form_view.bind(this), false, "Ctrl+F");
-
-		this.page.add_menu_item(
-			__("Toggle Recent Orders"),
-			this.toggle_recent_order.bind(this),
-			false,
-			"Ctrl+O"
-		);
-
-		this.page.add_menu_item(__("Save as Draft"), this.save_draft_invoice.bind(this), false, "Ctrl+S");
-
 		this.page.add_menu_item(__("Close the POS"), this.close_pos.bind(this), false, "Shift+Ctrl+C");
 	}
 
-	prepare_fullscreen_btn() {
-		this.page.page_actions.find(".custom-actions").empty();
+	prepare_btns() {
+		this.page.clear_custom_actions();
+		this.prepare_fullscreen_btn();
+		this.page.set_primary_action(__("New Invoice"), this.new_invoice_event.bind(this));
+		this.page.add_button(__("Recent Orders"), this.toggle_recent_order.bind(this), {
+			btn_class: "btn-default recent-order-btn",
+		});
+	}
 
+	prepare_fullscreen_btn() {
 		this.page.add_button(__("Full Screen"), null, { btn_class: "btn-default fullscreen-btn" });
 
 		this.bind_fullscreen_events();
@@ -289,36 +285,46 @@ erpnext.PointOfSale.Controller = class {
 
 	toggle_recent_order() {
 		const show = this.recent_order_list.$component.is(":hidden");
+		const recent_order_btn = this.page.page_actions.find(".recent-order-btn");
+		recent_order_btn.get(0).innerText = show ? __("Hide Recent Orders") : __("Recent Orders");
 		this.toggle_recent_order_list(show);
 	}
 
-	save_draft_invoice() {
+	new_invoice_event() {
+		const me = this;
 		if (!this.$components_wrapper.is(":visible")) return;
 
-		if (this.frm.doc.items.length == 0) {
-			frappe.show_alert({
-				message: __("You must add atleast one item to save it as draft."),
-				indicator: "red",
-			});
-			frappe.utils.play_sound("error");
+		if (this.frm.doc.items.length !== 0 && (this.frm.is_new() || this.frm.is_dirty())) {
+			if (this.settings.always_save_invoice_on_new_invoice) {
+				this.frm.save().then(me.load_new_invoice_on_pos.bind(me));
+				return;
+			}
+
+			frappe.confirm(
+				__("You have unsaved changes. Do you want to save the invoice?"),
+				() => {
+					me.frm.save().then(me.load_new_invoice_on_pos.bind(me));
+				},
+				() => {
+					me.load_new_invoice_on_pos();
+				}
+			);
 			return;
 		}
 
-		this.frm
-			.save(undefined, undefined, undefined, () => {
-				frappe.show_alert({
-					message: __("There was an error saving the document."),
-					indicator: "red",
-				});
-				frappe.utils.play_sound("error");
-			})
-			.then(() => {
-				frappe.run_serially([
-					() => frappe.dom.freeze(),
-					() => this.make_new_invoice(),
-					() => frappe.dom.unfreeze(),
-				]);
-			});
+		if (this.payment.$component.is(":visible")) {
+			this.load_new_invoice_on_pos();
+		}
+	}
+
+	load_new_invoice_on_pos() {
+		frappe.run_serially([
+			() => frappe.dom.freeze(),
+			() => this.make_new_invoice(),
+			() => this.payment.toggle_component(false),
+			() => this.item_selector.toggle_component(true),
+			() => frappe.dom.unfreeze(),
+		]);
 	}
 
 	close_pos() {
