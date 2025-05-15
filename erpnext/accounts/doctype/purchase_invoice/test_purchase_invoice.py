@@ -3846,6 +3846,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		gst_hsn_code = "11112222"
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_or_create_fiscal_year
 		get_or_create_fiscal_year("_Test Company")
+		from erpnext.accounts.doctype.account.test_account import create_account
+		create_account(account_name="Deferred Expense",company="_Test Company",parent_account="Tax Assets - _TC")
 		if not frappe.db.exists("GST HSN Code", gst_hsn_code):
 			gst_hsn_doc = frappe.new_doc("GST HSN Code")
 			gst_hsn_doc.hsn_code = gst_hsn_code
@@ -3935,6 +3937,7 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			create_records as records_for_pi,
 			make_test_item,
 		)
+		from erpnext.accounts.doctype.account.test_account import create_account
 		
 		records_for_pi('_Test Supplier')
 		
@@ -3942,6 +3945,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 		item.enable_deferred_expense=1
 		item.no_of_months_exp=12
 		item.save()
+
+		create_account(account_name="Deferred Expense",company="_Test Company",parent_account="Tax Assets - _TC")
 
 		pi = make_purchase_invoice(
 			qty=1,
@@ -3974,6 +3979,8 @@ class TestPurchaseInvoice(FrappeTestCase, StockTestMixin):
 			make_test_item,
 		)
 		from erpnext.stock.get_item_details import calculate_service_end_date
+		from erpnext.accounts.doctype.account.test_account import create_account
+		create_account(account_name="Deferred Expense",company="_Test Company",parent_account="Tax Assets - _TC")
 		records_for_pi('_Test Supplier')
 		
 		items_list = ['_Test Item 1', '_Test Item 2']
