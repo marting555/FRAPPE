@@ -13,59 +13,60 @@ from erpnext.stock.doctype.item.test_item import make_item
 
 class TestInstallationNote(unittest.TestCase):
 
-	def tearDown(self):
-		frappe.db.rollback()
+	def setUp(self):
+		self.serial_no = "SN-TEST-00001"
+		self.customer = "_Test Customer"
+		self.company = "_Test Company"
+		self.item_code = "_Test Serialized Item"
+		self.warehouse = "_Test Warehouse - _TC"
 
-	def test_installation_note_with_serial_no_TC_S_195(self):
-		serial_no = "SN-TEST-00001"
-		customer = "_Test Customer"
-		company = "_Test Company"
-		item_code = "_Test Serialized Item"
-		
-		create_customer(customer, currency="INR")
-		
-		create_company(company)
-		
-		item = make_item(item_code, {
+		create_customer(self.customer, currency="INR")
+		create_company(self.company)
+
+		item = make_item(self.item_code, {
 			"is_stock_item": 1,
 			"has_serial_no": 1,
 			"item_group": "Products",
 			"stock_uom": "Nos"
 		})
 		item.save()
-		
-		if not frappe.db.exists("Serial No", serial_no):
+
+		if not frappe.db.exists("Serial No", self.serial_no):
 			stock_entry = frappe.get_doc({
 				"doctype": "Stock Entry",
 				"stock_entry_type": "Material Receipt",
-				"company": company,
+				"company": self.company,
 				"items": [{
-					"item_code": item_code,
+					"item_code": self.item_code,
 					"qty": 1,
-					"t_warehouse": "_Test Warehouse - _TC",
-					"serial_no": serial_no,
+					"t_warehouse": self.warehouse,
+					"serial_no": self.serial_no,
 					"basic_rate": 100
 				}]
 			})
 			stock_entry.insert()
 			stock_entry.submit()
 
-		so = make_sales_order(item_code=item_code)
+	def tearDown(self):
+		frappe.db.rollback()
+
+	def test_installation_note_with_serial_no_TC_S_195(self):
+		so = make_sales_order(item_code=self.item_code)
 		dn = make_delivery_note(so.name)
 		dn.items[0].qty = 1
-		dn.items[0].serial_no = serial_no
+		dn.items[0].serial_no = self.serial_no
 		dn.submit()
-		
+
 		installation_note = make_installation_note(dn.name)
 		installation_note.inst_date = frappe.utils.nowdate()
 		installation_note.save()
-		
-		self.assertEqual(installation_note.items[0].serial_no, serial_no)
-		
+
+		self.assertEqual(installation_note.items[0].serial_no, self.serial_no)
+
 		installation_note.submit()
 		self.assertEqual(installation_note.status, "Submitted")
-		self.assertEqual(installation_note.customer, customer)
-		self.assertEqual(installation_note.company, company)
-		
+		self.assertEqual(installation_note.customer, self.customer)
+		self.assertEqual(installation_note.company, self.company)
+
 		installation_note.cancel()
 		self.assertEqual(installation_note.status, "Cancelled")
