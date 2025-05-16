@@ -23,6 +23,9 @@ class TestBudget(ERPNextTestSuite):
 		cls.make_monthly_distribution()
 		cls.make_projects()
 
+	def setUp(self):
+		frappe.db.set_single_value("Accounts Settings", "use_new_budget_controller", True)
+
 	def test_monthly_budget_crossed_ignore(self):
 		set_total_expense_zero(nowdate(), "cost_center")
 
@@ -137,6 +140,7 @@ class TestBudget(ERPNextTestSuite):
 
 		budget.load_from_db()
 		budget.cancel()
+		mr.cancel()
 
 	def test_monthly_budget_crossed_for_po(self):
 		budget = make_budget(
