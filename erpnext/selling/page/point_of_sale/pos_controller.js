@@ -240,42 +240,31 @@ erpnext.PointOfSale.Controller = class {
 
 	prepare_btns() {
 		this.page.clear_custom_actions();
-		this.prepare_fullscreen_btn();
 		this.page.set_primary_action(__("New Invoice"), this.new_invoice_event.bind(this));
-		this.page.add_button(__("Recent Orders"), this.toggle_recent_order.bind(this), {
-			btn_class: "btn-default recent-order-btn",
+		this.page.set_secondary_action(__("Recent Orders"), this.toggle_recent_order.bind(this));
+		this.page.add_button("", this.bind_fullscreen_events.bind(this), {
+			btn_class: "btn-default btn-fullscreen",
 		});
-	}
-
-	prepare_fullscreen_btn() {
-		this.page.add_button(__("Full Screen"), null, { btn_class: "btn-default fullscreen-btn" });
-
-		this.bind_fullscreen_events();
+		this.update_tooltip_btn_fullscreen("fullscreen");
 	}
 
 	bind_fullscreen_events() {
-		this.$fullscreen_btn = this.page.page_actions.find(".fullscreen-btn");
-
-		this.$fullscreen_btn.on("click", function () {
-			if (!document.fullscreenElement) {
-				document.documentElement.requestFullscreen();
-			} else if (document.exitFullscreen) {
-				document.exitFullscreen();
-			}
-		});
-
-		$(document).on("fullscreenchange", this.handle_fullscreen_change_event.bind(this));
+		if (!document.fullscreenElement) {
+			document.documentElement.requestFullscreen();
+			this.update_tooltip_btn_fullscreen("minimize");
+		} else if (document.exitFullscreen) {
+			document.exitFullscreen();
+			this.update_tooltip_btn_fullscreen("fullscreen");
+		}
 	}
 
-	handle_fullscreen_change_event() {
-		let enable_fullscreen_label = __("Full Screen");
-		let exit_fullscreen_label = __("Exit Full Screen");
-
-		if (document.fullscreenElement) {
-			this.$fullscreen_btn[0].innerText = exit_fullscreen_label;
-		} else {
-			this.$fullscreen_btn[0].innerText = enable_fullscreen_label;
+	update_tooltip_btn_fullscreen(label) {
+		const btn_fullscreen = this.page.page_actions.find(".btn-fullscreen");
+		btn_fullscreen.get(0).innerHTML = frappe.utils.icon(label);
+		if (!btn_fullscreen.attr("data-original-title")) {
+			btn_fullscreen.attr("title", "").tooltip({ delay: { show: 600, hide: 100 } });
 		}
+		btn_fullscreen.attr("data-original-title", __(label[0].toUpperCase() + label.substring(1)));
 	}
 
 	open_form_view() {
@@ -285,8 +274,7 @@ erpnext.PointOfSale.Controller = class {
 
 	toggle_recent_order() {
 		const show = this.recent_order_list.$component.is(":hidden");
-		const recent_order_btn = this.page.page_actions.find(".recent-order-btn");
-		recent_order_btn.get(0).innerText = show ? __("Hide Recent Orders") : __("Recent Orders");
+		this.page.btn_secondary.get(0).innerText = show ? __("Hide Recent Orders") : __("Recent Orders");
 		this.toggle_recent_order_list(show);
 	}
 
