@@ -245,7 +245,7 @@ class WorkOrder(Document):
 			if missing:
 				frappe.throw(
 					_("Error in Operations table. The following Sequence IDs are missing: {0}").format(
-						", ".join(map(str, missing))
+						", ".join([str(i) for i in missing])
 					)
 				)
 			elif sequence_id_list != sorted(sequence_id_list):
