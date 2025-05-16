@@ -25,12 +25,14 @@ def get_columns():
 			"label": _("Lead Name"),
 		 	"fieldname": "lead_name", 
 			"fieldtype": "Data", 
-			"width": 120},
+			"width": 120
+		},
 		{
 			"label": _("Status"), 
 			"fieldname": "status", 
 			"fieldtype": "Data", 
-			"width": 100},
+			"width": 100
+		},
 		{
 			"label": _("Lead Owner"),
 			"fieldname": "lead_owner",
@@ -54,17 +56,20 @@ def get_columns():
 			"label": _("Email"), 
 			"fieldname": "email_id", 
 			"fieldtype": "Data", 
-			"width": 120},
+			"width": 120
+		},
 		{
 			"label": _("Mobile"), 
 			"fieldname": "mobile_no", 
 			"fieldtype": "Data", 
-			"width": 120},
+			"width": 120
+		},
 		{
 			"label": _("Phone"), 
 			"fieldname": "phone", 
 			"fieldtype": "Data", 
-			"width": 120},
+			"width": 120
+		},
 		{
 			"label": _("Owner"),
 			"fieldname": "owner",
@@ -83,22 +88,26 @@ def get_columns():
 			"label": _("Address"), 
 			"fieldname": "address", 
 			"fieldtype": "Data", 
-			"width": 130},
+			"width": 130
+		},
 		{
 			"label": _("Postal Code"), 
 			"fieldname": "pincode", 
 			"fieldtype": "Data", 
-			"width": 90},
+			"width": 90
+		},
 		{
 			"label": _("City"), 
 			"fieldname": "city", 
 			"fieldtype": "Data", 
-			"width": 100},
+			"width": 100
+		},
 		{
 			"label": _("State/Province"), 
 			"fieldname": "state", 
 			"fieldtype": "Data", 
-			"width": 100},
+			"width": 100
+		},
 		{
 			"label": _("Country"),
 			"fieldname": "country",
