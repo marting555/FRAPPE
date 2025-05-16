@@ -23,7 +23,7 @@ def get_columns():
 		},
 		{
 			"label": _("Lead Name"),
-		 	"fieldname": "lead_name",
+			"fieldname": "lead_name",
 			"fieldtype": "Data",
 			"width": 120,
 		},
