@@ -224,16 +224,45 @@ class WorkOrder(Document):
 			self.reserve_stock = 1
 
 	def validate_operations_sequence(self):
-		bool_list = [not op.sequence_id for op in self.operations]
-		if all(bool_list):
-			for op in self.operations:
-				op.sequence_id = op.idx
-		elif any(bool_list):
-			frappe.throw(
-				_(
-					"Row #{0}: Incorrect Sequence ID. If any single operation has a Sequence ID then all other operations must have one too."
-				).format(next((op.idx for op in self.operations if not op.sequence_id), None))
-			)
+		sequence_id_list = [op.sequence_id for op in self.operations]
+
+		if sequence_id_list:
+			bool_list = [not sequence_id for sequence_id in sequence_id_list]
+			if all(bool_list):
+				for op in self.operations:
+					op.sequence_id = op.idx
+				return
+			elif any(bool_list):
+				op = next((op for op in self.operations if not op.sequence_id), None)
+				frappe.throw(
+					_(
+						"Row #{0}: Incorrect Sequence ID for Operation {1}. If any single operation has a Sequence ID then all other operations must have one too."
+					).format(op.idx, frappe.bold(op.operation))
+				)
+
+			expected = set(range(1, max(sequence_id_list) + 1))
+			missing = sorted(expected - set(sequence_id_list))
+			if missing:
+				frappe.throw(
+					_("Error in Operations table. The following Sequence IDs are missing: {0}").format(
+						", ".join(map(str, missing))
+					)
+				)
+			elif sequence_id_list != sorted(sequence_id_list):
+				frappe.throw(
+					_(
+						"Row #{0}: Error in Operations table. The Sequence IDs must be in ascending order."
+					).format(
+						next(
+							(
+								op.idx
+								for op in self.operations
+								if op.sequence_id != sorted(sequence_id_list)[0]
+							),
+							None,
+						)
+					)
+				)
 
 	def set_warehouses(self):
 		for row in self.required_items:
