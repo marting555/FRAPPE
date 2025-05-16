@@ -240,31 +240,36 @@ erpnext.PointOfSale.Controller = class {
 
 	prepare_btns() {
 		this.page.clear_custom_actions();
+		this.page.clear_icons();
 		this.page.set_primary_action(__("New Invoice"), this.new_invoice_event.bind(this));
 		this.page.set_secondary_action(__("Recent Orders"), this.toggle_recent_order.bind(this));
-		this.page.add_button("", this.bind_fullscreen_events.bind(this), {
-			btn_class: "btn-default btn-fullscreen",
-		});
-		this.update_tooltip_btn_fullscreen("fullscreen");
+		this.page.add_action_icon(
+			"fullscreen",
+			this.bind_fullscreen_events.bind(this),
+			"btn-fullscreen",
+			"Fullscreen"
+		);
+		this.page.add_action_icon(
+			"minimize",
+			this.bind_fullscreen_events.bind(this),
+			"btn-minimize hide",
+			"Minimize"
+		);
 	}
 
 	bind_fullscreen_events() {
 		if (!document.fullscreenElement) {
 			document.documentElement.requestFullscreen();
-			this.update_tooltip_btn_fullscreen("minimize");
+			this.toggle_fullscreen_btn(".btn-minimize", ".btn-fullscreen");
 		} else if (document.exitFullscreen) {
 			document.exitFullscreen();
-			this.update_tooltip_btn_fullscreen("fullscreen");
+			this.toggle_fullscreen_btn(".btn-fullscreen", ".btn-minimize");
 		}
 	}
 
-	update_tooltip_btn_fullscreen(label) {
-		const btn_fullscreen = this.page.page_actions.find(".btn-fullscreen");
-		btn_fullscreen.get(0).innerHTML = frappe.utils.icon(label);
-		if (!btn_fullscreen.attr("data-original-title")) {
-			btn_fullscreen.attr("title", "").tooltip({ delay: { show: 600, hide: 100 } });
-		}
-		btn_fullscreen.attr("data-original-title", __(label[0].toUpperCase() + label.substring(1)));
+	toggle_fullscreen_btn(show, hide) {
+		this.page.page_actions.find(hide).addClass("hide");
+		this.page.page_actions.find(show).removeClass("hide");
 	}
 
 	open_form_view() {
