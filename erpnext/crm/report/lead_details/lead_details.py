@@ -51,7 +51,7 @@ def get_columns():
 			"label": _("Source"),
 			"fieldname": "source",
 			"fieldtype": "Data",
-			"width": 120
+			"width": 120,
 		},
 		{
 			"label": _("Email"),
