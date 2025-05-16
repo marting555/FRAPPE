@@ -288,20 +288,23 @@ erpnext.PointOfSale.Controller = class {
 		if (!this.$components_wrapper.is(":visible")) return;
 
 		if (this.frm.doc.items.length !== 0 && (this.frm.is_new() || this.frm.is_dirty())) {
-			if (this.settings.always_save_invoice_on_new_invoice) {
+			if (this.settings.action_on_new_invoice === "Always Ask") {
+				frappe.confirm(
+					__("You have unsaved changes. Do you want to save the invoice?"),
+					() => {
+						me.frm.save().then(me.load_new_invoice_on_pos.bind(me));
+					},
+					() => {
+						me.load_new_invoice_on_pos();
+					}
+				);
+				return;
+			} else if (this.settings.action_on_new_invoice === "Save changes and Load New Invoice") {
 				this.frm.save().then(me.load_new_invoice_on_pos.bind(me));
 				return;
 			}
 
-			frappe.confirm(
-				__("You have unsaved changes. Do you want to save the invoice?"),
-				() => {
-					me.frm.save().then(me.load_new_invoice_on_pos.bind(me));
-				},
-				() => {
-					me.load_new_invoice_on_pos();
-				}
-			);
+			this.load_new_invoice_on_pos();
 			return;
 		}
 
@@ -517,7 +520,7 @@ erpnext.PointOfSale.Controller = class {
 					});
 				},
 				edit_order: (doctype, name) => {
-					this.recent_order_list.toggle_component(false);
+					this.toggle_recent_order();
 					frappe.run_serially([
 						() => this.make_invoice_frm(doctype),
 						() => this.sync_draft_invoice_to_frm(doctype, name),

@@ -28,9 +28,11 @@ class POSProfile(Document):
 		from erpnext.accounts.doctype.pos_profile_user.pos_profile_user import POSProfileUser
 
 		account_for_change_amount: DF.Link | None
+		action_on_new_invoice: DF.Literal[
+			"Always Ask", "Save changes and Load New Invoice", "Discard changes and Load New Invoice"
+		]
 		allow_discount_change: DF.Check
 		allow_rate_change: DF.Check
-		always_save_invoice_on_new_invoice: DF.Check
 		applicable_for_users: DF.Table[POSProfileUser]
 		apply_discount_on: DF.Literal["Grand Total", "Net Total"]
 		auto_add_item_to_cart: DF.Check
