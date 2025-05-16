@@ -378,7 +378,7 @@ erpnext.PointOfSale.Controller = class {
 				get_frm: () => this.frm,
 
 				toggle_item_selector: (minimize) => {
-					this.item_selector.resize_selector(minimize);
+					this.item_selector.toggle_component(!minimize);
 					this.cart.toggle_numpad(minimize);
 				},
 
