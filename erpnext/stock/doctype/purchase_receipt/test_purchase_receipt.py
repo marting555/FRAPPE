@@ -5455,8 +5455,6 @@ class TestPurchaseReceipt(FrappeTestCase):
 		self.assertTrue(self.gl_entries)
 
 		# === CASE 4: Landed Cost Voucher Entries ===
-		# Create another PR for landed cost testing
-		# Create necessary accounts
 		from erpnext.accounts.doctype.account.test_account import create_account
 		valuation_account = create_account(
 			account_name="Expenses Included In Valuation",
@@ -5493,7 +5491,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 			"receipt_document": pr4.name,
 			"supplier": supplier.name,
 			"posting_date": today(),
-			"grand_total": 1000  # 10 * 100
+			"grand_total": 1000
 		})
 		
 		lcv.append("taxes", {
@@ -5506,8 +5504,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 		lcv.insert()
 		lcv.submit()
 		
-		# Test landed cost
-		self.gl_entries = []  # Clear existing entries
+		self.gl_entries = []
 		PurchaseReceipt.make_item_gl_entries(
 			pr4, 
 			self.gl_entries, 
@@ -5645,26 +5642,27 @@ class TestPurchaseReceipt(FrappeTestCase):
 				frappe.db.set_value("Purchase Receipt Item", item.name, "purchase_order_item", po_item.name)
 
 		pi1 = make_purchase_invoice(
-        purchase_order=po.name,
-        purchase_receipt=pr1.name,
-        pr_detail=pr1.items[0].name,
-        item_code=item_code,
-        qty=3,
-        rate=100,
-        uom="Nos",
-        stock_uom='Nos',
-        company=company.name,
-        warehouse=warehouse,
-        supplier=supplier.name,
-        expense_account=expense_account,
-        cost_center=cost_center,
-        do_not_submit=True,
-		)
+			purchase_order=po.name,
+			purchase_receipt=pr1.name,
+			pr_detail=pr1.items[0].name,
+			item_code=item_code,
+			qty=3,
+			rate=100,
+			uom="Nos",
+			stock_uom='Nos',
+			company=company.name,
+			warehouse=warehouse,
+			supplier=supplier.name,
+			expense_account=expense_account,
+			cost_center=cost_center,
+			do_not_submit=True)
+		
 		for item in pi1.items:
 			item.po_detail = po_item.name
 		pi1.save()
 		pi1.submit()
 		pi1.submit() 
+		
 		pi2 = make_purchase_invoice(
 			purchase_order=po.name,
 			item_code=item_code,
@@ -5677,8 +5675,8 @@ class TestPurchaseReceipt(FrappeTestCase):
 			supplier=supplier.name,
 			expense_account=expense_account,
 			cost_center=cost_center,
-			do_not_submit=True,
-		)
+			do_not_submit=True)
+		
 		for item in pi2.items:
 			item.po_detail = po_item.name
 		pi2.save()
@@ -5689,7 +5687,7 @@ class TestPurchaseReceipt(FrappeTestCase):
 		pr2.reload()
 
 		# Verify initial billed amounts
-		self.assertEqual(po.items[0].billed_amt, 800.0)  # (3 + 5) * 100
+		self.assertEqual(po.items[0].billed_amt, 800.0)
 
 		# Force update PO billed amount
 		frappe.db.set_value("Purchase Order Item", po_item.name, "billed_amt", 800)
@@ -5700,19 +5698,14 @@ class TestPurchaseReceipt(FrappeTestCase):
 								fields=["name", "parent", "purchase_order_item"])
 		print("PR Items linked to PO:", pr_items)
 
-		# Trigger update logic
 		po_details = [po_item.name]
+		
+		# Trigger update logic
 		update_billed_amount_based_on_po(po_details, update_modified=True)
-
-		# Reload PRs to get updated billed amounts
 		pr1.reload()
 		pr2.reload()
 
 		# Verify billed amounts
-		# PR1: 3 qty billed against PR + portion of 5 qty direct billed (proportional to PR qty)
-		# Total billed against PO: 800 (3*100 + 5*100)
-		# PR1 should have: 300 (direct) + (5*100 * 6/10) = 300 + 300 = 600
-		# PR2 should have: 0 (direct) + (5*100 * 4/10) = 200
 		self.assertEqual(pr1.items[0].billed_amt, 600.0)
 		self.assertEqual(pr2.items[0].billed_amt, 200.0)
 
@@ -5721,7 +5714,6 @@ class TestPurchaseReceipt(FrappeTestCase):
 		frappe.db.set_value("Purchase Receipt Item", pr2.items[0].name, "billed_amt", 0)
 
 		# Test 2: Update with pr_doc
-		# test pr1 only
 		pr1_doc = frappe.get_doc("Purchase Receipt", pr1.name)
 		updated = update_billed_amount_based_on_po(po_details, update_modified=True, pr_doc=pr1_doc)
 		
