@@ -1,6 +1,5 @@
 // Copyright (c) 2016, Frappe Technologies Pvt. Ltd. and contributors
 // For license information, please see license.txt
-
 frappe.query_reports["Sales Order Analysis"] = {
 	filters: [
 		{
@@ -44,11 +43,9 @@ frappe.query_reports["Sales Order Analysis"] = {
 			options: "Sales Order",
 			get_data: function (txt) {
 				let filters = { docstatus: 1 };
-
 				const from_date = frappe.query_report.get_filter_value("from_date");
 				const to_date = frappe.query_report.get_filter_value("to_date");
 				if (from_date && to_date) filters["transaction_date"] = ["between", [from_date, to_date]];
-
 				return frappe.db.get_link_options("Sales Order", txt, filters);
 			},
 		},
@@ -60,76 +57,33 @@ frappe.query_reports["Sales Order Analysis"] = {
 		},
 		{
 			fieldname: "status",
-			label: __("Include Status"),
+			label: __("Status"),
 			fieldtype: "MultiSelectList",
 			options: ["To Pay", "To Bill", "To Deliver", "To Deliver and Bill", "Completed", "Closed"],
-			width: "120",
-			get_data: function(txt) {
-				let status = ["To Pay", "To Bill", "To Deliver", "To Deliver and Bill", "Completed", "Closed"];
-				let excluded_statuses = frappe.query_report.get_filter_value('exclude_status') || [];
+			width: "80",
+			get_data: function (txt) {
+				let status = [
+					"To Pay",
+					"To Bill",
+					"To Deliver",
+					"To Deliver and Bill",
+					"Completed",
+					"Closed",
+				];
 				let options = [];
 				for (let option of status) {
-					if (!excluded_statuses.includes(option)) {
-						options.push({
-							value: option,
-							label: __(option),
-							description: ""
-						});
-					}
+					options.push({
+						value: option,
+						label: __(option),
+						description: "",
+					});
 				}
 				return options;
 			},
-			on_change: function() {
-				frappe.query_report.refresh();
-			}
 		},
 		{
-			fieldname: "exclude_status",
-			label: __("Exclude Status"),
-			fieldtype: "MultiSelectList",
-			options: ["To Pay", "To Bill", "To Deliver", "To Deliver and Bill", "Completed", "Closed", "Stopped", "On Hold"],
-			width: "120",
-			get_data: function(txt) {
-				let status = ["To Pay", "To Bill", "To Deliver", "To Deliver and Bill", "Completed", "Closed", "Stopped", "On Hold"];
-				let included_statuses = frappe.query_report.get_filter_value('status') || [];
-				let options = [];
-				for (let option of status) {
-					if (!included_statuses.includes(option)) {
-						options.push({
-							value: option,
-							label: __(option),
-							description: ""
-						});
-					}
-				}
-				return options;
-			},
-			on_change: function() {
-				frappe.query_report.refresh();
-			}
-		}
-		
-		
-	],
-
-	formatter: function (value, row, column, data, default_formatter) {
-		value = default_formatter(value, row, column, data);
-		let format_fields = ["delivered_qty", "billed_amount"];
-
-		if (in_list(format_fields, column.fieldname) && data && data[column.fieldname] > 0) {
-			value = "<span style='color:green;'>" + value + "</span>";
-		}
-
-		if (column.fieldname == "delay" && data && data[column.fieldname] > 0) {
-			value = "<span style='color:red;'>" + value + "</span>";
-		}
-		return value;
-	},
-
-	onload: function(report) {
-		// Set default values for the exclude_status filter
-		setTimeout(function() {
-			report.set_filter_value("exclude_status", ["Stopped", "On Hold"]);
-		}, 500);
-	}
-};
+			fieldname: "group_by_so",
+			label: __("Group by Sales Order"),
+			fieldtype: "Check",
+			default: 0,
+		},
