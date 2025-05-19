@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-05-18 09:35+0000\n"
-"PO-Revision-Date: 2025-05-18 18:48\n"
+"PO-Revision-Date: 2025-05-19 18:47\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -20621,7 +20621,7 @@ msgstr "Färdig Artikel Kvantitet"
 #. field in DocType 'Work Order'
 #: erpnext/manufacturing/doctype/work_order/work_order.json
 msgid "Finished Good Serial / Batch"
-msgstr "Färdig Artikel Serie / Parti Nummer"
+msgstr "Färdig Artikel Serie / Parti"
 
 #. Label of the finished_good_uom (Link) field in DocType 'Subcontracting BOM'
 #: erpnext/subcontracting/doctype/subcontracting_bom/subcontracting_bom.json
@@ -21016,7 +21016,7 @@ msgstr "För Kvantitet (Producerad Kvantitet) erfordras"
 #. 'Production Plan'
 #: erpnext/manufacturing/doctype/production_plan/production_plan.json
 msgid "For Raw Materials"
-msgstr "För Råmaterial"
+msgstr "Råmaterial"
 
 #: erpnext/controllers/accounts_controller.py:1259
 msgid "For Return Invoices with Stock effect, '0' qty Items are not allowed. Following rows are affected: {0}"
@@ -32581,7 +32581,7 @@ msgstr "Obs: E-post kommer inte att skickas till inaktiverade Användare"
 
 #: erpnext/manufacturing/doctype/bom/bom.py:669
 msgid "Note: If you want to use the finished good {0} as a raw material, then enable the 'Do Not Explode' checkbox in the Items table against the same raw material."
-msgstr "Obs: Om du vill använda färdig artikel {0} som råmaterial, markera kryssruta \"Utvidga Inte\" i Artikel Tabell mot samma råmaterial."
+msgstr "Obs: Om du vill använda färdig artikel {0} som råmaterial, markera kryssruta \"Utvidga Inte\" i Artikel Inställningar mot samma råmaterial."
 
 #: erpnext/manufacturing/doctype/blanket_order/blanket_order.py:94
 msgid "Note: Item {0} added multiple times"
@@ -32954,7 +32954,7 @@ msgstr "När du aktiverar denna annullering kommer poster att publiceras på fak
 
 #: erpnext/manufacturing/doctype/production_plan/production_plan.js:693
 msgid "On expanding a row in the Items to Manufacture table, you'll see an option to 'Include Exploded Items'. Ticking this includes raw materials of the sub-assembly items in the production process."
-msgstr "Vid utökning av rad i Artiklar att Producera Tabell, kommer du att se alternativ \"Inkludera Utvidgade Artiklar\". Genom att välja detta ingår råvaror från delkomponenter i produktion process."
+msgstr "Vid utvidgning av rad i Artiklar att Producera Tabell, kommer du att se alternativ \"Inkludera Utvidgade Artiklar\". Genom att välja detta ingår råvaror från underkomponenter i produktion process."
 
 #. Description of the 'Use Serial / Batch Fields' (Check) field in DocType
 #. 'Stock Settings'
@@ -43377,7 +43377,7 @@ msgstr "Reparation Kostnad"
 #. Repair'
 #: erpnext/assets/doctype/asset_repair/asset_repair.json
 msgid "Repair Purchase Invoices"
-msgstr "Reparera Inköp Fakturor"
+msgstr "Inköp Fakturor för Reparationer"
 
 #. Label of the repair_status (Select) field in DocType 'Asset Repair'
 #: erpnext/assets/doctype/asset_repair/asset_repair.json
@@ -55191,7 +55191,7 @@ msgstr "Att lägga till Åtgärder kryssa i rutan 'Med Åtgärder'."
 
 #: erpnext/manufacturing/doctype/production_plan/production_plan.js:707
 msgid "To add subcontracted Item's raw materials if include exploded items is disabled."
-msgstr "Att lägga till Underleverantör Artikel råmaterial om Inkludera Ej Monterade Artiklar är inaktiverad."
+msgstr "Att lägga till Underleverantör Artikel råmaterial om Inkludera Utvidgade Artiklar är inaktiverad."
 
 #: erpnext/controllers/status_updater.py:381
 msgid "To allow over billing, update \"Over Billing Allowance\" in Accounts Settings or the Item."
