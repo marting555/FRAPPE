@@ -6,6 +6,24 @@
 frappe.ui.form.on('POS Profile', {
 	onload: function(frm) {
         frm.events.get_transactions(frm);
+
+		setTimeout(() => {
+		const input = frm.fields_dict.password_manager?.$wrapper.find('input');
+			if (input && input.length) {
+				input.attr('type', 'password');
+			}
+		}, 300);
+
+		setTimeout(() => {
+			const wrapper = frm.fields_dict.password_manager?.$wrapper;
+
+			if (wrapper) {
+				const toggleBtn = wrapper.find('.toggle-password');
+				if (toggleBtn.length) {
+				toggleBtn.remove();
+				}
+			}
+		}, 300);
     },
 
     get_transactions: function(frm) {
