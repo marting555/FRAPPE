@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-05-18 09:35+0000\n"
-"PO-Revision-Date: 2025-05-18 18:48\n"
+"PO-Revision-Date: 2025-05-19 18:47\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Persian\n"
 "MIME-Version: 1.0\n"
@@ -3043,7 +3043,7 @@ msgstr "اطلاعات تکمیلی"
 
 #: erpnext/selling/page/point_of_sale/pos_payment.js:78
 msgid "Additional Information updated successfully."
-msgstr ""
+msgstr "اطلاعات تکمیلی با موفقیت به‌روزرسانی شد."
 
 #. Label of the additional_notes (Text) field in DocType 'Quotation Item'
 #. Label of the additional_notes (Text) field in DocType 'Sales Order Item'
@@ -4193,13 +4193,13 @@ msgstr "اجازه ایجاد فاکتور خرید بدون رسید خرید"
 #. 'Buying Settings'
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 msgid "Allow Purchase Order with Zero Quantity"
-msgstr ""
+msgstr "اجازه ثبت سفارش خرید با مقدار صفر"
 
 #. Label of the allow_zero_qty_in_quotation (Check) field in DocType 'Selling
 #. Settings'
 #: erpnext/selling/doctype/selling_settings/selling_settings.json
 msgid "Allow Quotation with Zero Quantity"
-msgstr ""
+msgstr "اجازه ثبت پیش‌فاکتور با مقدار صفر"
 
 #. Label of the allow_rename_attribute_value (Check) field in DocType 'Item
 #. Variant Settings'
@@ -4212,7 +4212,7 @@ msgstr "اجازه تغییر نام مقدار ویژگی"
 #. DocType 'Buying Settings'
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 msgid "Allow Request for Quotation with Zero Quantity"
-msgstr ""
+msgstr "اجازه درخواست پیش‌فاکتور با مقدار صفر"
 
 #. Label of the allow_resetting_service_level_agreement (Check) field in
 #. DocType 'Support Settings'
@@ -4249,7 +4249,7 @@ msgstr "اجازه ایجاد سفارش فروش برای قیمت منقضی �
 #. Settings'
 #: erpnext/selling/doctype/selling_settings/selling_settings.json
 msgid "Allow Sales Order with Zero Quantity"
-msgstr ""
+msgstr "اجازه ثبت سفارش خرید با مقدار صفر"
 
 #. Label of the allow_stale (Check) field in DocType 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
@@ -4260,7 +4260,7 @@ msgstr "نرخ های مبادله قدیمی را مجاز کنید"
 #. 'Buying Settings'
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 msgid "Allow Supplier Quotation with Zero Quantity"
-msgstr ""
+msgstr "اجازه ثبت پیش‌فاکتور تأمین‌کننده با مقدار صفر"
 
 #. Label of the allow_uom_with_conversion_rate_defined_in_item (Check) field in
 #. DocType 'Stock Settings'
@@ -4408,31 +4408,31 @@ msgstr "اجازه می دهد تا مقدار مشخصی از موجودی را
 #. in DocType 'Buying Settings'
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 msgid "Allows users to submit Purchase Orders with zero quantity. Useful when rates are fixed but the quantities are not. Eg. Rate Contracts."
-msgstr ""
+msgstr "اجازه می‌دهد کاربران سفارش خرید با مقدار صفر ثبت کنند. این ویژگی زمانی مفید است که نرخ‌ها ثابت هستند اما مقادیر هنوز مشخص نشده‌اند. مثلاً در قراردادهای نرخ‌گذاری."
 
 #. Description of the 'Allow Quotation with Zero Quantity' (Check) field in
 #. DocType 'Selling Settings'
 #: erpnext/selling/doctype/selling_settings/selling_settings.json
 msgid "Allows users to submit Quotations with zero quantity. Useful when rates are fixed but the quantities are not. Eg. Rate Contracts."
-msgstr ""
+msgstr "اجازه می‌دهد کاربران پیش‌فاکتور با مقدار صفر ثبت کنند. این ویژگی زمانی مفید است که نرخ‌ها ثابت هستند اما مقادیر هنوز مشخص نشده‌اند. مثلاً در قراردادهای نرخ‌گذاری."
 
 #. Description of the 'Allow Request for Quotation with Zero Quantity' (Check)
 #. field in DocType 'Buying Settings'
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 msgid "Allows users to submit Request for Quotations with zero quantity. Useful when rates are fixed but the quantities are not. Eg. Rate Contracts."
-msgstr ""
+msgstr "اجازه می‌دهد کاربران درخواست پیش‌فاکتور با مقدار صفر ثبت کنند. این ویژگی زمانی مفید است که نرخ‌ها ثابت هستند اما مقادیر هنوز مشخص نشده‌اند. مثلاً در قراردادهای نرخ‌گذاری."
 
 #. Description of the 'Allow Sales Order with Zero Quantity' (Check) field in
 #. DocType 'Selling Settings'
 #: erpnext/selling/doctype/selling_settings/selling_settings.json
 msgid "Allows users to submit Sales Orders with zero quantity. Useful when rates are fixed but the quantities are not. Eg. Rate Contracts."
-msgstr ""
+msgstr "اجازه می‌دهد کاربران سفارش فروش با مقدار صفر ثبت کنند. این ویژگی زمانی مفید است که نرخ‌ها ثابت هستند اما مقادیر هنوز مشخص نشده‌اند. مثلاً در قراردادهای نرخ‌گذاری."
 
 #. Description of the 'Allow Supplier Quotation with Zero Quantity' (Check)
 #. field in DocType 'Buying Settings'
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 msgid "Allows users to submit Supplier Quotations with zero quantity. Useful when rates are fixed but the quantities are not. Eg. Rate Contracts."
-msgstr ""
+msgstr "اجازه می‌دهد کاربران پیش‌فاکتور تامین کننده با مقدار صفر ثبت کنند. این ویژگی زمانی مفید است که نرخ‌ها ثابت هستند اما مقادیر هنوز مشخص نشده‌اند. مثلاً در قراردادهای نرخ‌گذاری."
 
 #: erpnext/stock/doctype/pick_list/pick_list.py:967
 msgid "Already Picked"
@@ -11835,7 +11835,7 @@ msgstr "آیتم‌‌های مصرفی"
 #. Label of the consumed_items_cost (Currency) field in DocType 'Asset Repair'
 #: erpnext/assets/doctype/asset_repair/asset_repair.json
 msgid "Consumed Items Cost"
-msgstr ""
+msgstr "هزینه آیتم‌های مصرفی"
 
 #. Label of the consumed_qty (Float) field in DocType 'Purchase Order Item
 #. Supplied'
@@ -32477,7 +32477,7 @@ msgstr ""
 #. Digest'
 #: erpnext/setup/doctype/email_digest/email_digest.json
 msgid "Note: Email will not be sent to disabled users"
-msgstr "توجه: برای کاربران ناتوان ایمیل ارسال نخواهد شد"
+msgstr "توجه: برای کاربران غیر فعال ایمیل ارسال نخواهد شد"
 
 #: erpnext/manufacturing/doctype/bom/bom.py:669
 msgid "Note: If you want to use the finished good {0} as a raw material, then enable the 'Do Not Explode' checkbox in the Items table against the same raw material."
@@ -43070,7 +43070,7 @@ msgstr "باقی مانده است"
 
 #: erpnext/selling/page/point_of_sale/pos_payment.js:647
 msgid "Remaining Amount"
-msgstr ""
+msgstr "مبلغ باقی مانده"
 
 #: erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts_accounts_receivable.html:187
 #: erpnext/accounts/report/accounts_receivable/accounts_receivable.html:156
@@ -43276,7 +43276,7 @@ msgstr "هزینه تعمیر"
 #. Repair'
 #: erpnext/assets/doctype/asset_repair/asset_repair.json
 msgid "Repair Purchase Invoices"
-msgstr ""
+msgstr "فاکتورهای خرید تعمیرات"
 
 #. Label of the repair_status (Select) field in DocType 'Asset Repair'
 #: erpnext/assets/doctype/asset_repair/asset_repair.json
@@ -43521,7 +43521,7 @@ msgstr ""
 #. Plan Item'
 #: erpnext/manufacturing/doctype/material_request_plan_item/material_request_plan_item.json
 msgid "Reqd Qty (BOM)"
-msgstr ""
+msgstr "مقدار مورد نیاز (BOM)"
 
 #: erpnext/public/js/utils.js:803
 msgid "Reqd by date"
@@ -43771,7 +43771,7 @@ msgstr "ارسال مجدد ایمیل پرداخت"
 
 #: erpnext/manufacturing/doctype/production_plan/production_plan_dashboard.py:13
 msgid "Reservation"
-msgstr ""
+msgstr "رزرو"
 
 #. Label of the reservation_based_on (Select) field in DocType 'Stock
 #. Reservation Entry'
@@ -43808,11 +43808,11 @@ msgstr "انبار رزرو"
 
 #: erpnext/manufacturing/doctype/production_plan/production_plan.js:254
 msgid "Reserve for Raw Materials"
-msgstr ""
+msgstr "رزرو برای مواد اولیه"
 
 #: erpnext/manufacturing/doctype/production_plan/production_plan.js:228
 msgid "Reserve for Sub-assembly"
-msgstr ""
+msgstr "رزرو برای زیر مونتاژ"
 
 #. Option for the 'Status' (Select) field in DocType 'Stock Reservation Entry'
 #: erpnext/stock/doctype/stock_reservation_entry/stock_reservation_entry.json
@@ -43902,11 +43902,11 @@ msgstr "موجودی رزرو شده برای دسته"
 
 #: erpnext/manufacturing/doctype/production_plan/production_plan.js:268
 msgid "Reserved Stock for Raw Materials"
-msgstr ""
+msgstr "موجودی رزرو شده برای مواد اولیه"
 
 #: erpnext/manufacturing/doctype/production_plan/production_plan.js:242
 msgid "Reserved Stock for Sub-assembly"
-msgstr ""
+msgstr "موجودی رزرو شده برای زیر مونتاژ"
 
 #: erpnext/controllers/buying_controller.py:476
 msgid "Reserved Warehouse is mandatory for the Item {item_code} in Raw Materials supplied."
@@ -60591,7 +60591,7 @@ msgstr "واریانس"
 #. 'Asset Finance Book'
 #: erpnext/assets/doctype/asset_finance_book/asset_finance_book.json
 msgid "via Asset Repair"
-msgstr ""
+msgstr "از طریق تعمیر دارایی"
 
 #: erpnext/manufacturing/doctype/bom_update_log/bom_updation_utils.py:41
 msgid "via BOM Update Tool"
