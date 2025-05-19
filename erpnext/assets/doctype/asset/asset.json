@@ -583,11 +583,7 @@
    "link_fieldname": "target_asset"
   }
  ],
-<<<<<<< HEAD
- "modified": "2024-01-15 17:35:49.226603",
-=======
  "modified": "2025-05-20 00:44:06.229177",
->>>>>>> ff2ccf9bce (fix: asset image field updation issue (#47615))
  "modified_by": "Administrator",
  "module": "Assets",
  "name": "Asset",
