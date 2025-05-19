@@ -1524,6 +1524,7 @@ class TestPricingRule(FrappeTestCase):
 	def test_pr_to_so_with_applied_on_transaction_TC_S_142(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 
+		frappe.set_user("Administrator")
 		item = make_test_item("_Test Item")
 		item.is_stock_item = True
 		item.save()
@@ -1555,6 +1556,7 @@ class TestPricingRule(FrappeTestCase):
 	def test_pr_to_so_with_applied_on_item_code_TC_S_143(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		
+		frappe.set_user("Administrator")
 		item = make_test_item("_Test Item")
 		item.is_stock_item = True
 		item.save()
@@ -1589,6 +1591,7 @@ class TestPricingRule(FrappeTestCase):
 	def test_pr_to_so_with_applied_on_item_group_TC_S_144(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		
+		frappe.set_user("Administrator")
 		create_item_group("_Test Item Group")
 
 		item = make_test_item("_Test Item")
@@ -1635,6 +1638,7 @@ class TestPricingRule(FrappeTestCase):
 	def test_pr_to_so_with_applied_on_brand_TC_S_145(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		
+		frappe.set_user("Administrator")
 		create_brand("_Test Brand 1")
 		create_brand("_Test Brand")
 
