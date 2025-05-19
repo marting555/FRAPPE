@@ -977,7 +977,7 @@ def validate_picked_materials(item_code, required_qty, locations, picked_item_de
 
 
 def filter_locations_by_picked_materials(locations, picked_item_details) -> list[dict]:
-	filterd_locations = []
+	filtered_locations = []
 	precision = frappe.get_precision("Pick List Item", "qty")
 	for row in locations:
 		key = row.warehouse
@@ -986,7 +986,7 @@ def filter_locations_by_picked_materials(locations, picked_item_details) -> list
 
 		picked_qty = picked_item_details.get(key, {}).get("picked_qty", 0)
 		if not picked_qty:
-			filterd_locations.append(row)
+			filtered_locations.append(row)
 			continue
 		if picked_qty > row.qty:
 			row.qty = 0
@@ -998,9 +998,9 @@ def filter_locations_by_picked_materials(locations, picked_item_details) -> list
 				row.serial_nos = list(set(row.serial_nos) - set(picked_item_details[key].get("serial_no")))
 
 		if flt(row.qty, precision) > 0:
-			filterd_locations.append(row)
+			filtered_locations.append(row)
 
-	return filterd_locations
+	return filtered_locations
 
 
 def get_available_item_locations_for_serial_and_batched_item(
