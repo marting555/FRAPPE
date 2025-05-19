@@ -56,7 +56,9 @@
   "apply_discount_on",
   "accounting_dimensions_section",
   "cost_center",
-  "dimension_col_break"
+  "dimension_col_break",
+  "security_section",
+  "password_manager"
  ],
  "fields": [
   {
@@ -389,6 +391,16 @@
    "fieldtype": "Select",
    "label": "Prefix",
    "reqd": 1
+  },
+  {
+   "fieldname": "security_section",
+   "fieldtype": "Section Break",
+   "label": "Security"
+  },
+  {
+   "fieldname": "password_manager",
+   "fieldtype": "Data",
+   "label": "Password Manager"
   }
  ],
  "icon": "icon-cog",
@@ -416,7 +428,7 @@
    "link_fieldname": "pos_profile"
   }
  ],
- "modified": "2025-04-25 11:05:55.980634",
+ "modified": "2025-05-19 12:00:11.907449",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "POS Profile",
