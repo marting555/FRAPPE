@@ -579,7 +579,11 @@
 							align-items: center;
 							justify-content: center;
 							padding: var(--padding-md);
-							box-shadow: var(--shadow-sm);
+							box-shadow: var(--shadow-base);
+
+							&:hover {
+								background-color: var(--control-bg);
+							}
 						}
 
 						> .col-span-2 {
@@ -915,6 +919,10 @@
 								justify-content: center;
 								padding: var(--padding-md);
 								box-shadow: var(--shadow-base);
+
+								&:hover {
+									background-color: var(--control-bg);
+								}
 							}
 						}
 					}
