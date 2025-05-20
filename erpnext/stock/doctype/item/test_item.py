@@ -1191,11 +1191,12 @@ class TestItem(FrappeTestCase):
 		self.assertGreater(len(bom), 0, "BOM not found for the item")
 
 		wo = make_wo_order_test_record(company= company,production_item=item.name,bom_no=bom[0].name ,qty=10)
-	
+
 		wo_items = frappe.get_doc("Work Order", wo.name).required_items
 		alt_item_found = any(item.item_code == alt_item.name for item in wo_items)
 		self.assertTrue(alt_item_found, "Alternative item not found in Work Order")
 
+		wo.submit()
 		self.assertTrue(frappe.db.exists("Work Order", wo.name))
 		alternate_item_in_wo = next((item.item_code for item in wo_items if item.item_code == alt_item.name), None)
 		self.assertEqual(alternate_item_in_wo, alt_item.name, "Alternative item not found in Work Order")

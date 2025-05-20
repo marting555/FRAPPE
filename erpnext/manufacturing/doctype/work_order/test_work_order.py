@@ -4740,10 +4740,10 @@ def make_wo_order_test_record(**args):
 			item.source_warehouse = args.source_warehouse
 
 	if not args.do_not_save:
-		wo_order.insert()
+		wo_order.save()
 
 		if not args.do_not_submit:
-			wo_order.submit()
+			wo_order.save()
 	return wo_order
 
 
