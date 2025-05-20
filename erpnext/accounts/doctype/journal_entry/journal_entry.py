@@ -147,8 +147,9 @@ class JournalEntry(AccountsController):
 		if self.docstatus == 0:
 			self.apply_tax_withholding()
 
-		if not self.title:
-			self.title = self.get_title()
+		title = self.get_title()
+		if not self.title or self.title != title:
+			self.title = title
 
 	def on_submit(self):
 		self.validate_cheque_info()
