@@ -58,3 +58,9 @@ Backup Summary for erpnext.localhost at 2025-05-06 12:00:09.877420
 Config  : /home/aina/Documents/Evaluation/erpnext/frappe-bench/sites/erpnext.localhost/private/backups/20250506_120004-erpnext_localhost-site_config_backup.json 216.0B
 Database: /home/aina/Documents/Evaluation/erpnext/frappe-bench/sites/erpnext.localhost/private/backups/20250506_120004-erpnext_localhost-database.sql.gz 980.3KiB
 Backup for Site erpnext.localhost has been successfully completed
+set -o pipefail; /usr/bin/mariadb-dump --user=_ff705d28fa73f3ef --host=127.0.0.1 --port=3306 --password=********** --single-transaction --quick --lock-tables=false _ff705d28fa73f3ef | /usr/bin/gzip >> ./erpnext.localhost/private/backups/20250507_120002-erpnext_localhost-database.sql.gz
+
+Backup Summary for erpnext.localhost at 2025-05-07 12:00:04.630157
+Config  : /home/aina/Documents/Evaluation/erpnext/frappe-bench/sites/erpnext.localhost/private/backups/20250507_120002-erpnext_localhost-site_config_backup.json 216.0B
+Database: /home/aina/Documents/Evaluation/erpnext/frappe-bench/sites/erpnext.localhost/private/backups/20250507_120002-erpnext_localhost-database.sql.gz 1010.2KiB
+Backup for Site erpnext.localhost has been successfully completed

@@ -311,3 +311,4 @@
 2025-05-07 06:50:54,679 INFO /home/aina/.local/bin/bench watch
 2025-05-07 06:50:54,727 INFO /home/aina/.local/bin/bench schedule
 2025-05-07 06:50:54,740 INFO /home/aina/.local/bin/bench serve --port 8000
+2025-05-07 12:00:01,395 INFO /home/aina/.local/bin/bench --verbose --site all backup
