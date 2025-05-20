@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # 安裝系統依賴
 RUN apt-get update && apt-get install -y \
     git curl build-essential mariadb-client redis wget \
-    nodejs npm supervisor \
+    nodejs npm yarn supervisor \
     && apt-get clean
 
 # 安裝 frappe bench CLI
