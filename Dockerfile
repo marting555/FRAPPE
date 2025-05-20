@@ -6,6 +6,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     git curl build-essential mariadb-client redis wget \
     nodejs npm yarn supervisor \
+    libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev \
+    python3-dev libffi-dev libssl-dev \
     && apt-get clean
 
 # 安裝 frappe bench CLI
