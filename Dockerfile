@@ -2,14 +2,15 @@ FROM python:3.10-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 安裝 Node.js v16 與 Yarn（官方建議版本）
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
-    apt-get update && apt-get install -y \
-    git curl build-essential mariadb-client redis wget \
-    nodejs yarn supervisor \
+    apt-get install -y \
+    nodejs git curl build-essential mariadb-client redis wget \
+    supervisor \
     libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev \
-    python3-dev libffi-dev libssl-dev \
-    && apt-get clean
+    python3-dev libffi-dev libssl-dev && \
+    npm install -g yarn@1.22.19 && \
+    apt-get clean
+
 
 # 安裝 frappe bench CLI
 RUN pip install frappe-bench
