@@ -137,7 +137,7 @@ def get_data(filters):
 			lead.status,
 			lead.lead_owner,
 			lead.territory,
-			lead.source,
+			lead.utm_source,
 			lead.email_id,
 			lead.mobile_no,
 			lead.phone,
