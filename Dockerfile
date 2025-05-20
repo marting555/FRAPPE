@@ -28,7 +28,6 @@ RUN bench init --frappe-branch version-14 frappe-bench
 WORKDIR /home/frappe/frappe-bench
 
 # 複製啟動腳本
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY --chmod=755 entrypoint.sh /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
