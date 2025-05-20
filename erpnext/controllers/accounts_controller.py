@@ -230,6 +230,7 @@ class AccountsController(TransactionBase):
 		self.validate_party_accounts()
 
 		self.validate_inter_company_reference()
+		# validate inter  company transaction rate
 		self.validate_internal_transaction()
 
 		self.disable_pricing_rule_on_internal_transfer()
