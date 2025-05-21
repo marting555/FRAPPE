@@ -898,11 +898,7 @@
  "image_field": "image",
  "links": [],
  "make_attachments_public": 1,
-<<<<<<< HEAD
- "modified": "2024-01-08 18:09:30.225085",
-=======
  "modified": "2025-02-03 23:43:57.253667",
->>>>>>> 2bd596ee3d (fix: remove public access to list items)
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Item",
