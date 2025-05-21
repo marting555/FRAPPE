@@ -107,8 +107,7 @@ class TestSalesInvoice(ERPNextTestSuite):
 	@classmethod
 	def setUpClass(cls):
 		super().setUpClass()
-		# cls.enterClassContext(cls.change_settings("Selling Settings", validate_selling_price=0))
-		frappe.db.set_value("Selling Settings", None, "validate_selling_price", 0)
+		cls.enterClassContext(cls.change_settings("Selling Settings", validate_selling_price=0))
 		cls.make_employees()
 		cls.make_sales_person()
 		unlink_payment_on_cancel_of_invoice()
