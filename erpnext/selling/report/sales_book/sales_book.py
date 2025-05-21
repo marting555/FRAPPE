@@ -89,42 +89,42 @@ def execute(filters=None):
 	data = []
 
 	conditions = return_filters(filters)
-	sales_invoice = frappe.get_all("Sales Invoice", ["name", "posting_date", "customer", "grand_total", "status"], filters = conditions, order_by='name')
+	sales_invoice = frappe.get_all("Sales Invoice", ["*"], filters = conditions, order_by='name')
 	
 	for sales in sales_invoice:
 		customer = frappe.get_doc("Customer", sales.customer)
-		taxes_calculate_15 = 0
-		taxes_calculate_18 = 0
-		base_15 = 0
-		base_18 = 0
-		total_exepmt = 0
-		# amount_exonerated = 0
-		total = 0
-		if sales.status == "Paid" or sales.status == "Unpaid":
-			items = frappe.get_all("Sales Invoice Item", ["item_code", "item_name", "qty", "amount", "discount_amount", "item_tax_template"], filters = {"parent": sales.name})
-			for invoice_item in items:
-				total += invoice_item.amount
-				if invoice_item.item_tax_template == None:
-					total_exepmt = sales.grand_total
-				tax_template = frappe.get_all("Item Tax Template", "name", filters = {"name": invoice_item.item_tax_template})
-				for item_tax in tax_template:
-					tax_rate = frappe.get_all("Item Tax Template Detail", filters = {"parent": item_tax.name}, fields={"tax_rate"})
-					for rate in tax_rate:
-						if rate.tax_rate == 15:
-							taxes_calculate_15 += rate.tax_rate * invoice_item.amount / 100
-							base_15 += invoice_item.amount
-						elif rate.tax_rate == 18:
-							taxes_calculate_18 += rate.tax_rate * invoice_item.amount / 100
-							base_18 += invoice_item.amount
-						# if sales.exonerated == 1:
-							# amount_exonerated = sales.grand_total
-							# taxes_calculate_15 = 0
-							# taxes_calculate_18 = 0
+		# taxes_calculate_15 = 0
+		# taxes_calculate_18 = 0
+		# base_15 = 0
+		# base_18 = 0
+		# # total_exepmt = 0
+		# # amount_exonerated = 0
+		# total = 0
+		# if sales.status == "Paid" or sales.status == "Unpaid":
+		# 	items = frappe.get_all("Sales Invoice Item", ["item_code", "item_name", "qty", "amount", "discount_amount", "item_tax_template"], filters = {"parent": sales.name})
+		# 	for invoice_item in items:
+		# 		total += invoice_item.amount
+		# 		# if invoice_item.item_tax_template == None:
+		# 		# 	total_exepmt = sales.grand_total
+		# 		tax_template = frappe.get_all("Item Tax Template", "name", filters = {"name": invoice_item.item_tax_template})
+		# 		for item_tax in tax_template:
+		# 			tax_rate = frappe.get_all("Item Tax Template Detail", filters = {"parent": item_tax.name}, fields={"tax_rate"})
+		# 			for rate in tax_rate:
+		# 				if rate.tax_rate == 15:
+		# 					taxes_calculate_15 += rate.tax_rate * invoice_item.amount / 100
+		# 					base_15 += invoice_item.amount
+		# 				elif rate.tax_rate == 18:
+		# 					taxes_calculate_18 += rate.tax_rate * invoice_item.amount / 100
+		# 					base_18 += invoice_item.amount
+		# 				# if sales.exonerated == 1:
+		# 					# amount_exonerated = sales.grand_total
+		# 					# taxes_calculate_15 = 0
+		# 					# taxes_calculate_18 = 0
 
-		elif sales.status == "Cancelled":
-			customer.tax_id = "**Cancelled**"
-			sales.customer = "**Cancelled**"
-			sales.grand_total = 0
+		# elif sales.status == "Cancelled":
+		# 	customer.tax_id = "**Cancelled**"
+		# 	sales.customer = "**Cancelled**"
+		# 	sales.grand_total = 0
 
 		row = [
 			sales.posting_date,
@@ -132,13 +132,13 @@ def execute(filters=None):
 			sales.customer,
 			sales.name,
 			sales.grand_total,
-			total,
-			total_exepmt,
+			sales.rounded_total,
+			sales.exempt_amount,
 			# amount_exonerated,
-			base_15,
-			taxes_calculate_15,
-			base_18,
-			taxes_calculate_18
+			sales.taxed_amount_15,
+			sales.isv_15,
+			sales.taxed_amount_18,
+			sales.isv_15
 		]
 		data.append(row)
 
