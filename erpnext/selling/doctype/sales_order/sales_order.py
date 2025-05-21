@@ -58,6 +58,7 @@ class SalesOrder(SellingController):
 		from erpnext.accounts.doctype.sales_taxes_and_charges.sales_taxes_and_charges import SalesTaxesandCharges
 		from erpnext.selling.doctype.sales_order_item.sales_order_item import SalesOrderItem
 		from erpnext.selling.doctype.sales_order_payment_record.sales_order_payment_record import SalesOrderPaymentRecord
+		from erpnext.selling.doctype.sales_order_product_category.sales_order_product_category import SalesOrderProductCategory
 		from erpnext.selling.doctype.sales_order_promotion.sales_order_promotion import SalesOrderPromotion
 		from erpnext.selling.doctype.sales_order_reference.sales_order_reference import SalesOrderReference
 		from erpnext.selling.doctype.sales_team.sales_team import SalesTeam
@@ -151,7 +152,7 @@ class SalesOrder(SellingController):
 		po_no: DF.Data | None
 		price_list_currency: DF.Link
 		pricing_rules: DF.Table[PricingRuleDetail]
-		product_category: DF.Literal[None]
+		product_categories: DF.TableMultiSelect[SalesOrderProductCategory]
 		project: DF.Link | None
 		promotions: DF.TableMultiSelect[SalesOrderPromotion]
 		ref_sales_orders: DF.Table[SalesOrderReference]

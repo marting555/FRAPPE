@@ -58,7 +58,7 @@
   "section_break_31",
   "column_break_33a",
   "promotions",
-  "product_category",
+  "product_categories",
   "column_break_bscz",
   "total_qty",
   "total",
@@ -1756,11 +1756,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "product_category",
-   "fieldtype": "Select",
-   "label": "Product Category"
-  },
-  {
    "fieldname": "section_break_uceh",
    "fieldtype": "Section Break"
   },
@@ -1916,14 +1911,20 @@
   {
    "fieldname": "column_break_ujjh",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "product_categories",
+   "fieldtype": "Table MultiSelect",
+   "label": "Product Category",
+   "options": "Sales Order Product Category"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-21 16:32:28.570640",
- "modified_by": "hung.tran@jemmia.vn",
+ "modified": "2025-05-21 23:26:07.657872",
+ "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
  "naming_rule": "By \"Naming Series\" field",
