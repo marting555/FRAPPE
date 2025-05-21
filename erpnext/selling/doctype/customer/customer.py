@@ -44,6 +44,7 @@ class Customer(TransactionBase):
 		bank_name: DF.Literal["Agribank", "ACB", "BIDV", "Vietcombank", "VietinBank", "Techcombank", "Sacombank", "MB Bank", "Eximbank", "VPBank", "SHB", "NamABank", "OceanBank", "TPBank"]
 		birth_date: DF.Date | None
 		bizfly_code: DF.Data | None
+		bizfly_customer_number: DF.Data | None
 		bizfly_id: DF.Data | None
 		cashback: DF.Currency
 		ceo_name: DF.Data | None
@@ -96,7 +97,8 @@ class Customer(TransactionBase):
 		phone: DF.ReadOnly | None
 		place_of_issuance: DF.Literal["Ministry of Public Security", "Department of Police for Administrative Management of Social Order", "Department of Police for Registration, Residency Management, and National Population Data"]
 		portal_users: DF.Table[PortalUser]
-		primary_address: DF.Text | None
+		primary_address: DF.SmallText | None
+		primary_contact: DF.SmallText | None
 		priority_login_date: DF.Date | None
 		prospect_name: DF.Link | None
 		purchase_amount_last_12_months: DF.Currency

@@ -16,6 +16,7 @@
   "salutation",
   "customer_name",
   "customer_group",
+  "bizfly_customer_number",
   "column_break_eofp",
   "is_internal_customer",
   "customer_type",
@@ -26,13 +27,6 @@
   "opportunity_name",
   "territory",
   "prospect_name",
-  "address_section",
-  "customer_primary_address",
-  "primary_address",
-  "image",
-  "column_break_aqyz",
-  "address_list",
-  "address_html",
   "organization_section",
   "company_name",
   "no_of_employees",
@@ -75,13 +69,19 @@
   "contact_and_address_tab",
   "primary_address_and_contact_detail",
   "column_break_26",
+  "customer_primary_address",
+  "primary_address",
+  "image",
   "column_break_nwor",
   "customer_primary_contact",
+  "primary_contact",
   "mobile_no",
   "email_id",
   "phone",
   "address_contacts",
   "column_break_cgqq",
+  "address_html",
+  "address_list",
   "column_break1",
   "contact_list",
   "contact_html",
@@ -395,7 +395,7 @@
   },
   {
    "fieldname": "primary_address",
-   "fieldtype": "Text",
+   "fieldtype": "Small Text",
    "label": "Primary Address",
    "read_only": 1
   },
@@ -856,15 +856,6 @@
    "label": "Bank Account Name"
   },
   {
-   "fieldname": "address_section",
-   "fieldtype": "Section Break",
-   "label": "Address"
-  },
-  {
-   "fieldname": "column_break_aqyz",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "column_break_cgqq",
    "fieldtype": "Column Break"
   },
@@ -972,6 +963,17 @@
    "fieldname": "pending_cashback",
    "fieldtype": "Currency",
    "label": "Pending Cashback"
+  },
+  {
+   "fieldname": "bizfly_customer_number",
+   "fieldtype": "Data",
+   "label": "Bizfly Customer Number",
+   "unique": 1
+  },
+  {
+   "fieldname": "primary_contact",
+   "fieldtype": "Small Text",
+   "label": "Primary Contact"
   }
  ],
  "icon": "fa fa-user",
@@ -985,7 +987,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-05-21 18:19:29.973556",
+ "modified": "2025-05-21 23:50:20.048613",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
