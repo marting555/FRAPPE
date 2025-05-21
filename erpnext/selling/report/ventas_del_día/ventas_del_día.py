@@ -71,7 +71,7 @@ def return_data(filters):
 				taxed_sales15 += salary_slip.taxed_amount_15
 				isv15 += salary_slip.isv_15
 				taxed_sales18 += salary_slip.taxed_amount_18
-				isv18 = salary_slip.isv_18
+				isv18 += salary_slip.isv_18
 				authorized_range = salary_slip.authorized_range
 				# partial_discount += salary_slip.partial_discount
 				discount_amount += salary_slip.discount_amount
