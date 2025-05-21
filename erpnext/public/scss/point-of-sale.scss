@@ -619,26 +619,30 @@
 			background-color: var(--control-bg);
 		}
 
-		> .invoice-name-date {
+		&.invoice-selected {
+			background-color: var(--control-bg);
+		}
+
+		> .invoice-name-customer {
 			display: flex;
 			flex-direction: column;
 			justify-content: space-around;
 
-			> .invoice-name {
+			> .invoice-customer {
 				@extend .nowrap;
 				font-size: var(--text-md);
+				display: flex;
+				align-items: center;
 				font-weight: 700;
 			}
 
-			> .invoice-date {
+			> .invoice-name {
 				@extend .nowrap;
 				font-size: var(--text-sm);
-				display: flex;
-				align-items: center;
 			}
 		}
 
-		> .invoice-total-status {
+		> .invoice-total-date {
 			display: flex;
 			flex-direction: column;
 			font-weight: 500;
@@ -652,10 +656,12 @@
 				text-align: right;
 			}
 
-			> .invoice-status {
+			> .invoice-date {
 				display: flex;
 				align-items: center;
+				color: var(--gray-500);
 				justify-content: right;
+				font-weight: 400;
 			}
 		}
 	}
@@ -986,18 +992,23 @@
 			background-color: var(--fg-color);
 			padding: var(--padding-lg);
 
-			> .search-field {
-				width: 100%;
-				display: flex;
-				align-items: center;
+			> .status-search-fields {
+				display: grid;
+				grid-template-columns: 30% auto;
+				column-gap: 10px;
 				margin-top: var(--margin-md);
-				margin-bottom: var(--margin-xs);
-			}
 
-			> .status-field {
-				width: 100%;
-				display: flex;
-				align-items: center;
+				> .status-field {
+					width: 100%;
+					display: flex;
+					align-items: center;
+				}
+
+				> .search-field {
+					width: 100%;
+					display: flex;
+					align-items: center;
+				}
 			}
 		}
 
