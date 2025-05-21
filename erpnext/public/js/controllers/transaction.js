@@ -851,7 +851,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		await this.calculate_taxes_and_totals(false);
 		await this.confirm_posting_date_change()
 	}
-	
+
 	async confirm_posting_date_change() {
 		if (!frappe.meta.has_field(this.frm.doc.doctype, "set_posting_time")) return;
 		if (this.frm.doc.set_posting_time) return;
