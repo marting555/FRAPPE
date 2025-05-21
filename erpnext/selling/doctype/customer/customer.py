@@ -45,10 +45,12 @@ class Customer(TransactionBase):
 		birth_date: DF.Date | None
 		bizfly_code: DF.Data | None
 		bizfly_id: DF.Data | None
+		cashback: DF.Currency
 		ceo_name: DF.Data | None
 		companies: DF.Table[AllowedToTransactWith]
 		company_name: DF.Data | None
 		credit_limits: DF.Table[CustomerCreditLimit]
+		cumulative_revenue: DF.Currency
 		customer_details: DF.Text | None
 		customer_group: DF.Link | None
 		customer_journey: DF.SmallText | None
@@ -56,7 +58,7 @@ class Customer(TransactionBase):
 		customer_pos_id: DF.Data | None
 		customer_primary_address: DF.Link | None
 		customer_primary_contact: DF.Link | None
-		customer_rank: DF.Literal["Silver", "Gold", "Platinum"]
+		customer_rank: DF.Literal["No Rank", "Silver", "Gold", "Platinum"]
 		customer_type: DF.Literal["Company", "Individual", "Partnership"]
 		customer_website: DF.Data | None
 		date_of_issuance: DF.Date | None
@@ -86,6 +88,7 @@ class Customer(TransactionBase):
 		no_of_employees: DF.Data | None
 		opportunity_name: DF.Link | None
 		payment_terms: DF.Link | None
+		pending_cashback: DF.Currency
 		person_name: DF.Data | None
 		personal_document_type: DF.Literal["CCCD", "CMND", "Passport"]
 		personal_id: DF.Data | None
@@ -94,7 +97,12 @@ class Customer(TransactionBase):
 		place_of_issuance: DF.Literal["Ministry of Public Security", "Department of Police for Administrative Management of Social Order", "Department of Police for Registration, Residency Management, and National Population Data"]
 		portal_users: DF.Table[PortalUser]
 		primary_address: DF.Text | None
+		priority_login_date: DF.Date | None
 		prospect_name: DF.Link | None
+		purchase_amount_last_12_months: DF.Currency
+		rank: DF.Data | None
+		rank_expired_date: DF.Date | None
+		referrals_revenue: DF.Currency
 		represents_company: DF.Link | None
 		sales_team: DF.Table[SalesTeam]
 		salutation: DF.Link | None
@@ -104,10 +112,12 @@ class Customer(TransactionBase):
 		tax_number: DF.Data | None
 		tax_withholding_category: DF.Link | None
 		territory: DF.Link | None
+		true_cumulative_revenue: DF.Currency
 		vat_address: DF.Data | None
 		vat_email: DF.Data | None
 		vat_name: DF.Data | None
 		website: DF.Data | None
+		withdraw_cashback: DF.Currency
 	# end: auto-generated types
 
 	def onload(self):

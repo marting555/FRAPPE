@@ -122,13 +122,14 @@
   "column_break_xnxx",
   "customer",
   "gender",
-  "birth_date",
   "column_break_93",
   "customer_personal_id",
+  "birth_date",
   "date_of_issuance",
+  "dispatch_address",
+  "column_break_ujjh",
   "place_of_issuance",
   "dispatch_address_name",
-  "dispatch_address",
   "col_break46",
   "company_address",
   "company_address_display",
@@ -140,6 +141,7 @@
   "delivery_status",
   "per_delivered",
   "column_break_81",
+  "per_billed",
   "per_picked",
   "billing_status",
   "sales_team_section_break",
@@ -173,9 +175,14 @@
   "campaign",
   "party_account_currency",
   "payment_schedule_section",
+  "total_amount",
+  "expected_payment_date",
+  "column_break_yifm",
+  "paid_amount",
+  "column_break_ptow",
+  "balance",
   "payment_section_section",
   "payment_records",
-  "per_billed",
   "payment_terms_section",
   "payment_terms_template",
   "payment_schedule",
@@ -1121,7 +1128,7 @@
    "fieldtype": "Tab Break",
    "hide_days": 1,
    "hide_seconds": 1,
-   "label": "Payment Schedule Tab"
+   "label": "Payment Schedule"
   },
   {
    "fieldname": "payment_terms_template",
@@ -1836,7 +1843,7 @@
   {
    "fieldname": "sales_team_tab",
    "fieldtype": "Tab Break",
-   "label": "Sales Team Tab"
+   "label": "Sales Team"
   },
   {
    "fieldname": "details",
@@ -1856,7 +1863,7 @@
   {
    "fieldname": "customer_section_break",
    "fieldtype": "Section Break",
-   "label": "Customer"
+   "label": "Customer Private Information"
   },
   {
    "fieldname": "payment_section_section",
@@ -1877,14 +1884,46 @@
    "fieldtype": "Table",
    "label": "Ref Sales Order",
    "options": "Sales Order Reference"
+  },
+  {
+   "fieldname": "total_amount",
+   "fieldtype": "Currency",
+   "label": "Total Amount"
+  },
+  {
+   "fieldname": "expected_payment_date",
+   "fieldtype": "Date",
+   "label": "Expected Payment Date"
+  },
+  {
+   "fieldname": "column_break_yifm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "paid_amount",
+   "fieldtype": "Currency",
+   "label": "Paid Amount"
+  },
+  {
+   "fieldname": "column_break_ptow",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "balance",
+   "fieldtype": "Currency",
+   "label": "Balance"
+  },
+  {
+   "fieldname": "column_break_ujjh",
+   "fieldtype": "Column Break"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-20 16:49:03.656446",
- "modified_by": "Administrator",
+ "modified": "2025-05-21 16:32:28.570640",
+ "modified_by": "hung.tran@jemmia.vn",
  "module": "Selling",
  "name": "Sales Order",
  "naming_rule": "By \"Naming Series\" field",

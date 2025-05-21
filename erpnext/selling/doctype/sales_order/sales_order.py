@@ -71,6 +71,7 @@ class SalesOrder(SellingController):
 		amount_eligible_for_commission: DF.Currency
 		apply_discount_on: DF.Literal["", "Grand Total", "Net Total"]
 		auto_repeat: DF.Link | None
+		balance: DF.Currency
 		base_discount_amount: DF.Currency
 		base_grand_total: DF.Currency
 		base_in_words: DF.Data | None
@@ -109,6 +110,7 @@ class SalesOrder(SellingController):
 		discount_amount: DF.Currency
 		dispatch_address: DF.SmallText | None
 		dispatch_address_name: DF.Link | None
+		expected_payment_date: DF.Date | None
 		financial_status: DF.Literal["", "Paid", "Partially Paid", "Partially Refunded", "Refunded", "Pending"]
 		from_date: DF.Date | None
 		fulfillment_status: DF.Literal["", "Fulfilled", "Not Fulfilled"]
@@ -135,6 +137,7 @@ class SalesOrder(SellingController):
 		order_type: DF.Literal["Sales", "Maintenance", "Shopping Cart"]
 		other_charges_calculation: DF.TextEditor | None
 		packed_items: DF.Table[PackedItem]
+		paid_amount: DF.Currency
 		party_account_currency: DF.Link | None
 		payment_records: DF.Table[SalesOrderPaymentRecord]
 		payment_schedule: DF.Table[PaymentSchedule]
@@ -179,6 +182,7 @@ class SalesOrder(SellingController):
 		title: DF.Data | None
 		to_date: DF.Date | None
 		total: DF.Currency
+		total_amount: DF.Currency
 		total_commission: DF.Currency
 		total_net_weight: DF.Float
 		total_qty: DF.Float

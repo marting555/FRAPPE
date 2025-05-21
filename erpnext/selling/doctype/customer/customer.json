@@ -15,10 +15,10 @@
   "naming_series",
   "salutation",
   "customer_name",
-  "customer_type",
   "customer_group",
   "column_break_eofp",
   "is_internal_customer",
+  "customer_type",
   "customer_rank",
   "column_break0",
   "account_manager",
@@ -44,8 +44,8 @@
   "ceo_name",
   "advanced_information_selection",
   "personal_document_type",
-  "gender",
   "birth_date",
+  "gender",
   "column_break_bjiq",
   "personal_id",
   "place_of_issuance",
@@ -109,6 +109,22 @@
   "loyalty_program",
   "column_break_54",
   "loyalty_program_tier",
+  "priority_tab",
+  "rank_management_section",
+  "rank",
+  "purchase_amount_last_12_months",
+  "column_break_qwps",
+  "rank_expired_date",
+  "priority_login_date",
+  "cumulative_revenue_management_section",
+  "cumulative_revenue",
+  "cashback",
+  "column_break_ebsn",
+  "true_cumulative_revenue",
+  "withdraw_cashback",
+  "column_break_qgzr",
+  "referrals_revenue",
+  "pending_cashback",
   "sales_team_tab",
   "sales_team",
   "sales_team_section",
@@ -216,6 +232,7 @@
   {
    "fieldname": "account_manager",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Account Manager",
    "options": "User"
   },
@@ -730,7 +747,7 @@
    "fieldname": "customer_rank",
    "fieldtype": "Select",
    "label": "Customer Rank",
-   "options": "Silver\nGold\nPlatinum"
+   "options": "No Rank\nSilver\nGold\nPlatinum"
   },
   {
    "depends_on": "eval:doc.customer_type==\"Company\"",
@@ -878,6 +895,83 @@
    "fieldtype": "Data",
    "label": "Bizfly Code",
    "unique": 1
+  },
+  {
+   "fieldname": "priority_tab",
+   "fieldtype": "Tab Break",
+   "label": "Priority"
+  },
+  {
+   "fieldname": "purchase_amount_last_12_months",
+   "fieldtype": "Currency",
+   "label": "Purchase Amount Last 12 Months"
+  },
+  {
+   "fieldname": "rank",
+   "fieldtype": "Data",
+   "label": "Rank"
+  },
+  {
+   "fieldname": "column_break_qwps",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rank_expired_date",
+   "fieldtype": "Date",
+   "label": "Rank Expired Date"
+  },
+  {
+   "fieldname": "priority_login_date",
+   "fieldtype": "Date",
+   "label": "Priority Login Date"
+  },
+  {
+   "fieldname": "rank_management_section",
+   "fieldtype": "Section Break",
+   "label": "Rank Management"
+  },
+  {
+   "fieldname": "cumulative_revenue_management_section",
+   "fieldtype": "Section Break",
+   "label": "Cumulative Revenue Management"
+  },
+  {
+   "fieldname": "cumulative_revenue",
+   "fieldtype": "Currency",
+   "label": "Cumulative Revenue"
+  },
+  {
+   "fieldname": "column_break_ebsn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "true_cumulative_revenue",
+   "fieldtype": "Currency",
+   "label": "True Cumulative Revenue"
+  },
+  {
+   "fieldname": "column_break_qgzr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "referrals_revenue",
+   "fieldtype": "Currency",
+   "label": "Referrals Revenue"
+  },
+  {
+   "fieldname": "cashback",
+   "fieldtype": "Currency",
+   "label": "Cashback"
+  },
+  {
+   "fieldname": "withdraw_cashback",
+   "fieldtype": "Currency",
+   "label": "Withdraw Cashback"
+  },
+  {
+   "fieldname": "pending_cashback",
+   "fieldtype": "Currency",
+   "label": "Pending Cashback"
   }
  ],
  "icon": "fa fa-user",
@@ -891,7 +985,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-05-20 17:08:04.142854",
+ "modified": "2025-05-21 18:19:29.973556",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
