@@ -592,6 +592,17 @@
    "fieldtype": "Link",
    "label": "Role Allowed to Override Stop Action",
    "options": "Role"
+  },
+  {
+   "fieldname": "budget_settings",
+   "fieldtype": "Tab Break",
+   "label": "Budget"
+  },
+  {
+   "default": "1",
+   "fieldname": "use_new_budget_controller",
+   "fieldtype": "Check",
+   "label": "Use New Budget Controller"
   }
  ],
  "grid_page_length": 50,
