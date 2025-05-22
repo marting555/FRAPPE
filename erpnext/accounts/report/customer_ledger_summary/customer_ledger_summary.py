@@ -95,7 +95,6 @@ class PartyLedgerSummaryReport:
 
 		if self.filters.party:
 			conditions.append(doctype.name == self.filters.party)
-		print("Filters in customer ledger:", self.filters)
 
 		if self.filters.get("ignore_cr_dr_notes"):
 			system_generated_cr_dr_journals = frappe.db.get_all(
