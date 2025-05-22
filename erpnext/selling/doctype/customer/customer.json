@@ -517,7 +517,7 @@
   {
    "fieldname": "customer_pos_id",
    "fieldtype": "Data",
-   "label": "Customer POS id",
+   "label": "Customer POS ID",
    "no_copy": 1,
    "print_hide": 1,
    "read_only": 1,
@@ -695,8 +695,9 @@
   },
   {
    "fieldname": "first_channel",
-   "fieldtype": "Data",
-   "label": "First Channel"
+   "fieldtype": "Select",
+   "label": "First Channel",
+   "options": "\nFacebook\nZalo\nTikTok\nCall Center\nWebsite Form\nVisiting Guests\nEmail"
   },
   {
    "fieldname": "personal_id",
@@ -717,6 +718,7 @@
   {
    "fieldname": "customer_website",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Website"
   },
   {
@@ -769,7 +771,7 @@
   {
    "fieldname": "no_of_employees",
    "fieldtype": "Data",
-   "label": "No Of Employees"
+   "label": "No of Employees"
   },
   {
    "fieldname": "column_break_rwpe",
@@ -1021,7 +1023,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-05-22 09:19:40.073301",
+ "modified": "2025-05-22 09:28:19.473801",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
