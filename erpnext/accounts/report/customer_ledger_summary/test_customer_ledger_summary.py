@@ -9,6 +9,7 @@ from erpnext.accounts.report.customer_ledger_summary.customer_ledger_summary imp
 from erpnext.accounts.test.accounts_mixin import AccountsTestMixin
 from erpnext.controllers.sales_and_purchase_return import make_return_doc
 
+
 class TestCustomerLedgerSummary(AccountsTestMixin, IntegrationTestCase):
 	def setUp(self):
 		self.create_company()

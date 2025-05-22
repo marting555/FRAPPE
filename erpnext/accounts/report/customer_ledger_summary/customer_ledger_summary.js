@@ -113,7 +113,7 @@ frappe.query_reports["Customer Ledger Summary"] = {
 				return frappe.db.get_link_options("Project", txt, {
 					company: frappe.query_report.get_filter_value("company"),
 				});
-			}
+			},
 		},
 		{
 			fieldname: "ignore_cr_dr_notes",

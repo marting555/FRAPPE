@@ -113,8 +113,7 @@ class PartyLedgerSummaryReport:
 					x[0] for x in system_generated_cr_dr_journals
 				]
 				self.filters.update({"voucher_no_not_in": vouchers_to_ignore})
-		
-	
+
 		if self.filters.territory:
 			conditions.append(doctype.territory.isin(self.filters.territory))
 
