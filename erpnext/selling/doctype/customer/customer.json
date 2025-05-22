@@ -145,7 +145,6 @@
   "disabled",
   "haravan_id",
   "bizfly_id",
-  "bizfly_code",
   "portal_users_tab",
   "portal_users",
   "dashboard_tab",
@@ -890,12 +889,6 @@
    "unique": 1
   },
   {
-   "fieldname": "bizfly_code",
-   "fieldtype": "Data",
-   "label": "Bizfly Code",
-   "unique": 1
-  },
-  {
    "fieldname": "priority_tab",
    "fieldtype": "Tab Break",
    "label": "Priority"
@@ -1024,7 +1017,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-05-22 12:30:42.326166",
+ "modified": "2025-05-22 14:22:59.997533",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",

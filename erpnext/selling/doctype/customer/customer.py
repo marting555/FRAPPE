@@ -43,7 +43,6 @@ class Customer(TransactionBase):
 		bank_account_name: DF.Data | None
 		bank_name: DF.Literal["", "Agribank", "ACB", "BIDV", "Vietcombank", "VietinBank", "Techcombank", "Sacombank", "MB Bank", "Eximbank", "VPBank", "SHB", "NamABank", "OceanBank", "TPBank"]
 		birth_date: DF.Date | None
-		bizfly_code: DF.Data | None
 		bizfly_customer_number: DF.Data | None
 		bizfly_id: DF.Data | None
 		cashback: DF.Currency
