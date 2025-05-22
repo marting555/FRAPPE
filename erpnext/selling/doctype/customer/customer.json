@@ -811,8 +811,7 @@
   },
   {
    "fieldname": "bank_section",
-   "fieldtype": "Section Break",
-   "label": "Bank Account"
+   "fieldtype": "Section Break"
   },
   {
    "fieldname": "vat_name",
