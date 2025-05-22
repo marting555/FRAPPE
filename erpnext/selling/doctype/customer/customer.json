@@ -870,7 +870,7 @@
   {
    "fieldname": "person_name",
    "fieldtype": "Data",
-   "label": "Customer Name"
+   "label": "Customer Personal Name"
   },
   {
    "fieldname": "detail_tab",
@@ -1024,7 +1024,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-05-22 09:38:09.010913",
+ "modified": "2025-05-22 12:30:42.326166",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
