@@ -11,8 +11,7 @@
   "source_name",
   "details",
   "pancake_page_id",
-  "pancake_platform",
-  "source"
+  "pancake_platform"
  ],
  "fields": [
   {
@@ -39,17 +38,12 @@
   },
   {
    "fieldname": "id",
-   "fieldtype": "Date",
+   "fieldtype": "Data",
    "label": "ID"
-  },
-  {
-   "fieldname": "source",
-   "fieldtype": "Date",
-   "label": "Source"
   }
  ],
  "links": [],
- "modified": "2025-05-22 02:55:57.768007",
+ "modified": "2025-05-22 03:15:09.803407",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead Source",
