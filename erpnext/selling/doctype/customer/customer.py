@@ -41,7 +41,7 @@ class Customer(TransactionBase):
 		account_number: DF.Data | None
 		accounts: DF.Table[PartyAccount]
 		bank_account_name: DF.Data | None
-		bank_name: DF.Literal["Agribank", "ACB", "BIDV", "Vietcombank", "VietinBank", "Techcombank", "Sacombank", "MB Bank", "Eximbank", "VPBank", "SHB", "NamABank", "OceanBank", "TPBank"]
+		bank_name: DF.Literal["", "Agribank", "ACB", "BIDV", "Vietcombank", "VietinBank", "Techcombank", "Sacombank", "MB Bank", "Eximbank", "VPBank", "SHB", "NamABank", "OceanBank", "TPBank"]
 		birth_date: DF.Date | None
 		bizfly_code: DF.Data | None
 		bizfly_customer_number: DF.Data | None
@@ -101,7 +101,7 @@ class Customer(TransactionBase):
 		primary_contact: DF.SmallText | None
 		priority_account_number: DF.Data | None
 		priority_bank_account_name: DF.Data | None
-		priority_bank_name: DF.Literal[None]
+		priority_bank_name: DF.Literal["", "Agribank", "ACB", "BIDV", "Vietcombank", "VietinBank", "Techcombank", "Sacombank", "MB Bank", "Eximbank", "VPBank", "SHB", "NamABank", "OceanBank", "TPBank"]
 		priority_login_date: DF.Date | None
 		prospect_name: DF.Link | None
 		purchase_amount_last_12_months: DF.Currency

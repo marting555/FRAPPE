@@ -725,7 +725,7 @@
    "fieldname": "bank_name",
    "fieldtype": "Select",
    "label": "Bank Name",
-   "options": "Agribank\nACB\nBIDV\nVietcombank\nVietinBank\nTechcombank\nSacombank\nMB Bank\nEximbank\nVPBank\nSHB\nNamABank\nOceanBank\nTPBank"
+   "options": "\nAgribank\nACB\nBIDV\nVietcombank\nVietinBank\nTechcombank\nSacombank\nMB Bank\nEximbank\nVPBank\nSHB\nNamABank\nOceanBank\nTPBank"
   },
   {
    "fieldname": "account_number",
@@ -991,7 +991,8 @@
   {
    "fieldname": "priority_bank_name",
    "fieldtype": "Select",
-   "label": "Priority Bank Name"
+   "label": "Priority Bank Name",
+   "options": "\nAgribank\nACB\nBIDV\nVietcombank\nVietinBank\nTechcombank\nSacombank\nMB Bank\nEximbank\nVPBank\nSHB\nNamABank\nOceanBank\nTPBank"
   },
   {
    "fieldname": "column_break_eawe",
@@ -1023,7 +1024,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-05-22 09:28:19.473801",
+ "modified": "2025-05-22 09:38:09.010913",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",

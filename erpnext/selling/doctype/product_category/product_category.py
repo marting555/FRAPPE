@@ -14,6 +14,6 @@ class ProductCategory(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		title: DF.Data | None
+		title: DF.Data
 	# end: auto-generated types
 	pass
