@@ -95,11 +95,7 @@
   "column_break_ikkg",
   "personal_tax_id",
   "bank_section",
-  "bank_name",
-  "column_break_kufu",
-  "account_number",
-  "column_break_kqch",
-  "bank_account_name",
+  "bank_account",
   "credit_limit_section",
   "payment_terms",
   "credit_limits",
@@ -126,11 +122,7 @@
   "referrals_revenue",
   "pending_cashback",
   "section_break_waiv",
-  "priority_bank_name",
-  "column_break_eawe",
-  "priority_account_number",
-  "column_break_frot",
-  "priority_bank_account_name",
+  "priority_bank_account",
   "sales_team_tab",
   "sales_team",
   "sales_team_section",
@@ -721,17 +713,6 @@
    "label": "Website"
   },
   {
-   "fieldname": "bank_name",
-   "fieldtype": "Select",
-   "label": "Bank Name",
-   "options": "\nAgribank\nACB\nBIDV\nVietcombank\nVietinBank\nTechcombank\nSacombank\nMB Bank\nEximbank\nVPBank\nSHB\nNamABank\nOceanBank\nTPBank"
-  },
-  {
-   "fieldname": "account_number",
-   "fieldtype": "Data",
-   "label": "Account Number"
-  },
-  {
    "fieldname": "personal_tax_id",
    "fieldtype": "Data",
    "label": "Personal Tax ID"
@@ -848,19 +829,6 @@
    "fieldname": "vat_address",
    "fieldtype": "Data",
    "label": "VAT Address"
-  },
-  {
-   "fieldname": "column_break_kufu",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_kqch",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "bank_account_name",
-   "fieldtype": "Data",
-   "label": "Bank Account Name"
   },
   {
    "fieldname": "column_break_cgqq",
@@ -982,28 +950,16 @@
    "label": "Priority Bank Account"
   },
   {
-   "fieldname": "priority_bank_name",
-   "fieldtype": "Select",
-   "label": "Priority Bank Name",
-   "options": "\nAgribank\nACB\nBIDV\nVietcombank\nVietinBank\nTechcombank\nSacombank\nMB Bank\nEximbank\nVPBank\nSHB\nNamABank\nOceanBank\nTPBank"
+   "fieldname": "bank_account",
+   "fieldtype": "Link",
+   "label": "Bank Account",
+   "options": "Bank Account"
   },
   {
-   "fieldname": "column_break_eawe",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "priority_account_number",
-   "fieldtype": "Data",
-   "label": "Priority Account Number"
-  },
-  {
-   "fieldname": "column_break_frot",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "priority_bank_account_name",
-   "fieldtype": "Data",
-   "label": "Priority Bank Account Name"
+   "fieldname": "priority_bank_account",
+   "fieldtype": "Link",
+   "label": "Priority Bank Account",
+   "options": "Bank Account"
   }
  ],
  "icon": "fa fa-user",
@@ -1017,7 +973,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-05-22 14:22:59.997533",
+ "modified": "2025-05-22 14:56:29.634259",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
