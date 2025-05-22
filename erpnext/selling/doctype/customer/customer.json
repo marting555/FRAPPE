@@ -125,6 +125,12 @@
   "column_break_qgzr",
   "referrals_revenue",
   "pending_cashback",
+  "section_break_waiv",
+  "priority_bank_name",
+  "column_break_eawe",
+  "priority_account_number",
+  "column_break_frot",
+  "priority_bank_account_name",
   "sales_team_tab",
   "sales_team",
   "sales_team_section",
@@ -974,6 +980,34 @@
    "fieldname": "primary_contact",
    "fieldtype": "Small Text",
    "label": "Primary Contact"
+  },
+  {
+   "fieldname": "section_break_waiv",
+   "fieldtype": "Section Break",
+   "label": "Priority Bank Account"
+  },
+  {
+   "fieldname": "priority_bank_name",
+   "fieldtype": "Select",
+   "label": "Priority Bank Name"
+  },
+  {
+   "fieldname": "column_break_eawe",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "priority_account_number",
+   "fieldtype": "Data",
+   "label": "Priority Account Number"
+  },
+  {
+   "fieldname": "column_break_frot",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "priority_bank_account_name",
+   "fieldtype": "Data",
+   "label": "Priority Bank Account Name"
   }
  ],
  "icon": "fa fa-user",
@@ -987,7 +1021,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-05-21 23:50:20.048613",
+ "modified": "2025-05-22 09:19:40.073301",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",

@@ -99,6 +99,9 @@ class Customer(TransactionBase):
 		portal_users: DF.Table[PortalUser]
 		primary_address: DF.SmallText | None
 		primary_contact: DF.SmallText | None
+		priority_account_number: DF.Data | None
+		priority_bank_account_name: DF.Data | None
+		priority_bank_name: DF.Literal[None]
 		priority_login_date: DF.Date | None
 		prospect_name: DF.Link | None
 		purchase_amount_last_12_months: DF.Currency
