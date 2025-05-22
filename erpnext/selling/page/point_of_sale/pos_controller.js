@@ -317,8 +317,8 @@ erpnext.PointOfSale.Controller = class {
 		frappe.run_serially([
 			() => frappe.dom.freeze(),
 			() => this.make_new_invoice(),
-			() => this.payment.toggle_component(false),
-			() => this.item_selector.toggle_component(true),
+			() => this.toggle_recent_order_list(false),
+			() => this.toggle_components(true),
 			() => frappe.dom.unfreeze(),
 		]);
 	}
@@ -470,8 +470,7 @@ erpnext.PointOfSale.Controller = class {
 				submit_invoice: () => {
 					this.frm.savesubmit().then((r) => {
 						this.toggle_components(false);
-						this.order_summary.toggle_component(true);
-						this.order_summary.load_summary_of(this.frm.doc, true);
+						this.toggle_submitted_invoice_summary(true);
 						frappe.show_alert({
 							indicator: "green",
 							message: __("POS invoice {0} created successfully", [r.doc.name]),
@@ -552,17 +551,27 @@ erpnext.PointOfSale.Controller = class {
 	}
 
 	toggle_recent_order_list(show) {
-		this.toggle_components(!show);
+		this.frm.doc.docstatus === 1
+			? this.toggle_submitted_invoice_summary(!show)
+			: this.toggle_components(!show);
+
 		this.recent_order_list.toggle_component(show);
-		this.order_summary.toggle_component(show);
+		if (this.frm.doc.docstatus === 0) this.order_summary.toggle_component(show);
 	}
 
 	toggle_components(show) {
 		this.cart.toggle_component(show);
+		this.cart.toggle_numpad(!show);
+		this.cart.toggle_checkout_btn(show);
 		this.item_selector.toggle_component(show);
 
 		// do not show item details or payment if recent order is toggled off
 		!show ? this.item_details.toggle_component(false) || this.payment.toggle_component(false) : "";
+	}
+
+	toggle_submitted_invoice_summary(show) {
+		this.order_summary.toggle_component(show);
+		this.order_summary.load_summary_of(this.frm.doc, true);
 	}
 
 	make_new_invoice() {
