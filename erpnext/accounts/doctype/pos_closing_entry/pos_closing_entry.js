@@ -36,12 +36,12 @@ frappe.ui.form.on("POS Closing Entry", {
 			}
 		});
 
-		const is_pos_using_sales_invoice = await frappe.db.get_single_value(
+		const invoice_doctype_in_pos = await frappe.db.get_single_value(
 			"Accounts Settings",
-			"use_sales_invoice_in_pos"
+			"invoice_doctype_in_pos"
 		);
 
-		if (is_pos_using_sales_invoice) {
+		if (invoice_doctype_in_pos === "Sales Invoice") {
 			frm.set_df_property("pos_transactions", "hidden", 1);
 		}
 
@@ -160,12 +160,12 @@ frappe.ui.form.on("POS Closing Entry", {
 			row.expected_amount = row.opening_amount;
 		}
 
-		const is_pos_using_sales_invoice = await frappe.db.get_single_value(
+		const invoice_doctype_in_pos = await frappe.db.get_single_value(
 			"Accounts Settings",
-			"use_sales_invoice_in_pos"
+			"invoice_doctype_in_pos"
 		);
 
-		if (is_pos_using_sales_invoice) {
+		if (invoice_doctype_in_pos === "Sales Invoice") {
 			await Promise.all([
 				frappe.call({
 					method: "erpnext.accounts.doctype.pos_closing_entry.pos_closing_entry.get_pos_invoices",

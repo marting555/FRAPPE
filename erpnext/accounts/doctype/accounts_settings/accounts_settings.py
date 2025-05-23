@@ -53,6 +53,7 @@ class AccountsSettings(Document):
 		ignore_is_opening_check_for_reporting: DF.Check
 		maintain_same_internal_transaction_rate: DF.Check
 		maintain_same_rate_action: DF.Literal["Stop", "Warn"]
+		invoice_doctype_in_pos: DF.Literal["Sales Invoice", "POS Invoice"]
 		make_payment_via_journal_entry: DF.Check
 		merge_similar_account_heads: DF.Check
 		over_billing_allowance: DF.Currency
@@ -72,7 +73,6 @@ class AccountsSettings(Document):
 		unlink_advance_payment_on_cancelation_of_order: DF.Check
 		unlink_payment_on_cancellation_of_invoice: DF.Check
 		use_new_budget_controller: DF.Check
-		use_sales_invoice_in_pos: DF.Check
 	# end: auto-generated types
 
 	def validate(self):
@@ -99,8 +99,8 @@ class AccountsSettings(Document):
 		if old_doc.acc_frozen_upto != self.acc_frozen_upto:
 			self.validate_pending_reposts()
 
-		if old_doc.use_sales_invoice_in_pos != self.use_sales_invoice_in_pos:
-			self.validate_invoice_mode_switch_in_pos()
+		if old_doc.invoice_doctype_in_pos != self.invoice_doctype_in_pos:
+			self.validate_invoice_type_switch_in_pos()
 
 		if clear_cache:
 			frappe.clear_cache()
@@ -146,14 +146,14 @@ class AccountsSettings(Document):
 			if cint(self.reconciliation_queue_size) < 5 or cint(self.reconciliation_queue_size) > 100:
 				frappe.throw(_("Queue Size should be between 5 and 100"))
 
-	def validate_invoice_mode_switch_in_pos(self):
+	def validate_invoice_type_switch_in_pos(self):
 		pos_opening_entries_count = frappe.db.count(
 			"POS Opening Entry", filters={"docstatus": 1, "status": "Open"}
 		)
 		if pos_opening_entries_count:
 			frappe.throw(
-				_("{0} can be enabled/disabled after all the POS Opening Entries are closed.").format(
-					frappe.bold(_("Use Sales Invoice"))
+				_("{0} cannot be changed without closing all POS Opening Entries.").format(
+					frappe.bold(_("Invoice Type"))
 				),
-				title=_("Switch Invoice Mode Error"),
+				title=_("Switch Invoice DocType Error"),
 			)

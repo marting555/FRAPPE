@@ -60,15 +60,20 @@ class POSClosingEntry(StatusUpdater):
 		if frappe.db.get_value("POS Opening Entry", self.pos_opening_entry, "status") != "Open":
 			frappe.throw(_("Selected POS Opening Entry should be open."), title=_("Invalid Opening Entry"))
 
+<<<<<<< HEAD
 		self.is_pos_using_sales_invoice = frappe.get_single_value(
 			"Accounts Settings", "use_sales_invoice_in_pos"
+=======
+		self.invoice_doctype_in_pos = frappe.db.get_single_value(
+			"Accounts Settings", "invoice_doctype_in_pos"
+>>>>>>> 57ad7c1924 (fix: invoice doctype selection in accounts settings)
 		)
 
-		if self.is_pos_using_sales_invoice == 0:
+		if self.invoice_doctype_in_pos == "POS Invoice":
 			self.validate_duplicate_pos_invoices()
 			self.validate_pos_invoices()
 
-		if self.is_pos_using_sales_invoice == 1:
+		if self.invoice_doctype_in_pos == "Sales Invoice":
 			if len(self.pos_transactions) != 0:
 				frappe.throw(_("POS Invoices can't be added when Sales Invoice is enabled"))
 
@@ -301,7 +306,7 @@ def make_closing_entry_from_opening(opening_entry):
 	closing_entry.net_total = 0
 	closing_entry.total_quantity = 0
 
-	is_pos_using_sales_invoice = frappe.get_single_value("Accounts Settings", "use_sales_invoice_in_pos")
+	invoice_doctype_in_pos = frappe.db.get_single_value("Accounts Settings", "invoice_doctype_in_pos")
 
 	pos_invoices = (
 		get_pos_invoices(
@@ -310,7 +315,7 @@ def make_closing_entry_from_opening(opening_entry):
 			closing_entry.pos_profile,
 			closing_entry.user,
 		)
-		if is_pos_using_sales_invoice == 0
+		if invoice_doctype_in_pos == "POS Invoice"
 		else []
 	)
 
