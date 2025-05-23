@@ -5,7 +5,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import add_to_date, flt, get_datetime, time_diff_in_hours
+from frappe.utils import add_to_date, flt, get_datetime, time_diff_in_hours, time_diff_in_seconds
 
 
 class TimesheetDetail(Document):
@@ -45,10 +45,12 @@ class TimesheetDetail(Document):
 
 	def set_to_time(self):
 		"""Set to_time based on from_time and hours."""
-		if not (self.from_time and self.hours):
+		if not (data.from_time and data.hours):
 			return
 
-		self.to_time = get_datetime(add_to_date(self.from_time, hours=self.hours, as_datetime=True))
+		_to_time = get_datetime(add_to_date(data.from_time, hours=data.hours, as_datetime=True))
+		if time_diff_in_seconds(_to_time, data.to_time) > 1:
+			data.to_time = _to_time
 
 	def set_project(self):
 		"""Set project based on task."""
