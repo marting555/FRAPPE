@@ -422,7 +422,7 @@
    "fieldname": "action_on_new_invoice",
    "fieldtype": "Select",
    "label": "Action on New Invoice",
-   "options": "Always Ask\nSave changes and Load New Invoice\nDiscard changes and Load New Invoice"
+   "options": "Always Ask\nSave Changes and Load New Invoice\nDiscard Changes and Load New Invoice"
   }
  ],
  "grid_page_length": 50,
@@ -451,7 +451,7 @@
    "link_fieldname": "pos_profile"
   }
  ],
- "modified": "2025-05-19 19:43:52.365563",
+ "modified": "2025-05-23 12:12:32.247652",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "POS Profile",

@@ -29,7 +29,7 @@ class POSProfile(Document):
 
 		account_for_change_amount: DF.Link | None
 		action_on_new_invoice: DF.Literal[
-			"Always Ask", "Save changes and Load New Invoice", "Discard changes and Load New Invoice"
+			"Always Ask", "Save Changes and Load New Invoice", "Discard Changes and Load New Invoice"
 		]
 		allow_discount_change: DF.Check
 		allow_rate_change: DF.Check

@@ -299,7 +299,7 @@ erpnext.PointOfSale.Controller = class {
 					}
 				);
 				return;
-			} else if (this.settings.action_on_new_invoice === "Save changes and Load New Invoice") {
+			} else if (this.settings.action_on_new_invoice === "Save Changes and Load New Invoice") {
 				this.frm.save().then(me.load_new_invoice_on_pos.bind(me));
 				return;
 			}
