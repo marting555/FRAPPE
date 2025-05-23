@@ -7,7 +7,6 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "id",
   "source_name",
   "details",
   "pancake_page_id",
@@ -35,15 +34,10 @@
    "fieldname": "pancake_platform",
    "fieldtype": "Data",
    "label": "Platform"
-  },
-  {
-   "fieldname": "id",
-   "fieldtype": "Data",
-   "label": "ID"
   }
  ],
  "links": [],
- "modified": "2025-05-22 03:15:09.803407",
+ "modified": "2025-05-22 21:19:01.239594",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead Source",

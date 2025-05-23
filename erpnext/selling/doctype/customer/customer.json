@@ -692,13 +692,13 @@
   {
    "fieldname": "place_of_issuance",
    "fieldtype": "Select",
-   "label": "Place Of Issuance",
+   "label": "Place of Issuance",
    "options": "Ministry of Public Security\nDepartment of Police for Administrative Management of Social Order\nDepartment of Police for Registration, Residency Management, and National Population Data"
   },
   {
    "fieldname": "date_of_issuance",
    "fieldtype": "Date",
-   "label": "Date Of Issuance"
+   "label": "Date of Issuance"
   },
   {
    "fieldname": "customer_website",
@@ -972,7 +972,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-05-22 03:11:00.909836",
+ "modified": "2025-05-22 21:19:23.526654",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
