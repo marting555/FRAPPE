@@ -4425,7 +4425,7 @@ class TestSalesInvoice(ERPNextTestSuite):
 		# Deleting all opening entry
 		frappe.db.sql("delete from `tabPOS Opening Entry`")
 
-		with self.change_settings("Accounts Settings", {"use_sales_invoice_in_pos": 0}):
+		with self.change_settings("Accounts Settings", {"invoice_doctype_in_pos": "POS Invoice"}):
 			pos_profile = make_pos_profile()
 
 			pos_profile.payments = []
