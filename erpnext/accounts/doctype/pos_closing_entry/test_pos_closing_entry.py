@@ -25,8 +25,20 @@ from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 
 
 class TestPOSClosingEntry(IntegrationTestCase):
+	@classmethod
+	def setUpClass(cls):
+		frappe.db.sql("delete from `tabPOS Opening Entry`")
+		cls.enterClassContext(
+			cls.change_settings("Accounts Settings", {"invoice_doctype_in_pos": "POS Invoice"})
+		)
+
+	@classmethod
+	def tearDownClass(cls):
+		frappe.db.sql("delete from `tabPOS Opening Entry`")
+
 	def setUp(self):
 		# Make stock available for POS Sales
+		frappe.db.sql("delete from `tabPOS Opening Entry`")
 		make_stock_entry(target="_Test Warehouse - _TC", qty=2, basic_rate=100)
 
 	def tearDown(self):
@@ -293,45 +305,42 @@ class TestPOSClosingEntry(IntegrationTestCase):
 		batch_qty_with_pos = get_batch_qty(batch_no, "_Test Warehouse - _TC", item_code)
 		self.assertEqual(batch_qty_with_pos, 10.0)
 
+	@IntegrationTestCase.change_settings("Accounts Settings", {"invoice_doctype_in_pos": "Sales Invoice"})
 	def test_closing_entries_with_sales_invoice(self):
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
 
 		test_user, pos_profile = init_user_and_profile()
-		# Deleting all opening entry
-		frappe.db.sql("delete from `tabPOS Opening Entry`")
+		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
-		with self.change_settings("Accounts Settings", {"use_sales_invoice_in_pos": 1}):
-			opening_entry = create_opening_entry(pos_profile, test_user.name)
+		pos_si = create_sales_invoice(qty=10, do_not_save=1)
+		pos_si.is_pos = 1
+		pos_si.pos_profile = pos_profile.name
+		pos_si.is_created_using_pos = 1
+		pos_si.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 1000})
+		pos_si.save()
+		pos_si.submit()
 
-			pos_si = create_sales_invoice(qty=10, do_not_save=1)
-			pos_si.is_pos = 1
-			pos_si.pos_profile = pos_profile.name
-			pos_si.is_created_using_pos = 1
-			pos_si.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 1000})
-			pos_si.save()
-			pos_si.submit()
+		pos_si2 = create_sales_invoice(qty=5, do_not_save=1)
+		pos_si2.is_pos = 1
+		pos_si2.pos_profile = pos_profile.name
+		pos_si2.is_created_using_pos = 1
+		pos_si2.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 1000})
+		pos_si2.save()
+		pos_si2.submit()
 
-			pos_si2 = create_sales_invoice(qty=5, do_not_save=1)
-			pos_si2.is_pos = 1
-			pos_si2.pos_profile = pos_profile.name
-			pos_si2.is_created_using_pos = 1
-			pos_si2.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 1000})
-			pos_si2.save()
-			pos_si2.submit()
+		pcv_doc = make_closing_entry_from_opening(opening_entry)
+		payment = pcv_doc.payment_reconciliation[0]
 
-			pcv_doc = make_closing_entry_from_opening(opening_entry)
-			payment = pcv_doc.payment_reconciliation[0]
+		self.assertEqual(payment.mode_of_payment, "Cash")
 
-			self.assertEqual(payment.mode_of_payment, "Cash")
+		for d in pcv_doc.payment_reconciliation:
+			if d.mode_of_payment == "Cash":
+				d.closing_amount = 1500
 
-			for d in pcv_doc.payment_reconciliation:
-				if d.mode_of_payment == "Cash":
-					d.closing_amount = 1500
+		pcv_doc.submit()
 
-			pcv_doc.submit()
-
-			self.assertEqual(pcv_doc.total_quantity, 15)
-			self.assertEqual(pcv_doc.net_total, 1500)
+		self.assertEqual(pcv_doc.total_quantity, 15)
+		self.assertEqual(pcv_doc.net_total, 1500)
 
 
 def init_user_and_profile(**args):
