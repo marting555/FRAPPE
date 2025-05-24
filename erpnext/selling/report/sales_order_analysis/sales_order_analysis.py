@@ -16,6 +16,7 @@ def execute(filters=None):
 		return [], [], None, []
 
 	validate_filters(filters)
+	validate_status_filters(filters)
 
 	columns = get_columns(filters)
 	conditions = get_conditions(filters)
@@ -29,6 +30,18 @@ def execute(filters=None):
 
 	return columns, data, None, chart_data
 
+def validate_status_filters(filters):    
+    status_list = filters.get('status', [])
+    exclude_status_list = filters.get('exclude_status', [])
+
+
+    if status_list and exclude_status_list:
+        status_set = set(status_list)
+        exclude_status_set = set(exclude_status_list)
+        intersection = status_set.intersection(exclude_status_set)
+
+        if intersection:
+            frappe.throw(f"Duplicate selections found in 'Include Status' and 'Exclude Status': {', '.join(intersection)}")
 
 def validate_filters(filters):
 	from_date, to_date = filters.get("from_date"), filters.get("to_date")
@@ -52,6 +65,9 @@ def get_conditions(filters):
 
 	if filters.get("status"):
 		conditions += " and so.status in %(status)s"
+
+	if filters.get("exclude_status"):
+		conditions += " and so.status not in %(exclude_status)s"	
 
 	if filters.get("warehouse"):
 		conditions += " and soi.warehouse = %(warehouse)s"
