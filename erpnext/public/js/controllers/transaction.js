@@ -855,13 +855,13 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 	async confirm_posting_date_change() {
 		if (!frappe.meta.has_field(this.frm.doc.doctype, "set_posting_time")) return;
 		if (this.frm.doc.set_posting_time) return;
+		if (frappe.datetime.get_today() == this.frm.doc.posting_date) return;
 
 		let is_confirmation_reqd = await frappe.db.get_single_value(
 			'Accounts Settings', 'confirm_before_resetting_posting_date'
 		)
 
 		if (!is_confirmation_reqd) return;
-		if (frappe.datetime.get_today() == this.frm.doc.posting_date) return;
 
 		return new Promise((resolve, reject) => {
 			frappe.confirm(
