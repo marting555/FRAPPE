@@ -496,42 +496,18 @@ erpnext.buying.MaterialRequestController = class MaterialRequestController exten
 		set_schedule_date(this.frm);
 	}
 
-<<<<<<< HEAD
 	onload(doc, cdt, cdn) {
-		this.frm.set_query("item_code", "items", function() {
-			if (doc.material_request_type == "Customer Provided") {
-				return{
-					query: "erpnext.controllers.queries.item_query",
-					filters:{
-						'customer': me.frm.doc.customer,
-						'is_stock_item':1
-					}
-				}
-			} else if (doc.material_request_type == "Purchase") {
-				return{
-					query: "erpnext.controllers.queries.item_query",
-					filters: {'is_purchase_item': 1}
-				}
-			} else {
-				return{
-					query: "erpnext.controllers.queries.item_query",
-					filters: {'is_stock_item': 1}
-				}
-=======
-	onload() {
-		this.frm.set_query("item_code", "items", function (doc, cdt, cdn) {
+		this.frm.set_query("item_code", "items", function () {
 			let filters = { is_stock_item: 1 };
 
 			if (doc.material_request_type == "Customer Provided") {
 				filters.customer = doc.customer;
 			} else if (
-				doc.material_request_type == "Purchase" ||
-				doc.material_request_type == "Subcontracting"
+				doc.material_request_type == "Purchase"
 			) {
 				filters = { is_purchase_item: 1 };
 			} else if (doc.material_request_type == "Manufacture") {
 				filters.include_item_in_manufacturing = 1;
->>>>>>> 874750f9ce (fix: filter of item for manufacture type material request (#47712))
 			}
 
 			return {
