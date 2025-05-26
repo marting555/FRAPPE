@@ -100,7 +100,8 @@ def update_lead_by_batch(docs):
 	"""Bulk update leads
 
 	:param docs: JSON list of documents to be updated remotely. Each document must have `docname` property"""
-	docs = json.loads(docs)
+	if isinstance(docs, str):
+		docs = json.loads(docs)
 	failed_docs = []
 	for doc in docs:
 		doc.pop("flags", None)
