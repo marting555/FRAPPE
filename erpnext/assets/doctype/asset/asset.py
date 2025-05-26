@@ -39,15 +39,14 @@ from erpnext.controllers.accounts_controller import AccountsController
 
 class Asset(AccountsController):
 	# begin: auto-generated types
-	# ruff: noqa
-
 	# This code is auto-generated. Do not modify anything in this block.
 
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from erpnext.assets.doctype.asset_finance_book.asset_finance_book import AssetFinanceBook
 		from frappe.types import DF
+
+		from erpnext.assets.doctype.asset_finance_book.asset_finance_book import AssetFinanceBook
 
 		additional_asset_cost: DF.Currency
 		amended_from: DF.Link | None
@@ -78,6 +77,7 @@ class Asset(AccountsController):
 		insured_value: DF.Data | None
 		insurer: DF.Data | None
 		is_composite_asset: DF.Check
+		is_composite_component: DF.Check
 		is_existing_asset: DF.Check
 		is_fully_depreciated: DF.Check
 		item_code: DF.Link
@@ -115,7 +115,6 @@ class Asset(AccountsController):
 		total_asset_cost: DF.Currency
 		total_number_of_depreciations: DF.Int
 		value_after_depreciation: DF.Currency
-	# ruff: noqa
 	# end: auto-generated types
 
 	def validate(self):
@@ -188,7 +187,7 @@ class Asset(AccountsController):
 		self.validate_in_use_date()
 		self.make_asset_movement()
 		self.reload()
-		if not self.booked_fixed_asset and self.validate_make_gl_entry():
+		if not self.booked_fixed_asset and not self.is_composite_component and self.validate_make_gl_entry():
 			self.make_gl_entries()
 		if self.calculate_depreciation and not self.split_from:
 			convert_draft_asset_depr_schedules_into_active(self)
@@ -203,8 +202,9 @@ class Asset(AccountsController):
 		cancel_asset_depr_schedules(self)
 		self.set_status()
 		self.ignore_linked_doctypes = ("GL Entry", "Stock Ledger Entry")
-		make_reverse_gl_entries(voucher_type="Asset", voucher_no=self.name)
-		self.db_set("booked_fixed_asset", 0)
+		if not self.is_composite_component:
+			make_reverse_gl_entries(voucher_type="Asset", voucher_no=self.name)
+			self.db_set("booked_fixed_asset", 0)
 		add_asset_activity(self.name, _("Asset cancelled"))
 
 	def after_insert(self):
@@ -312,7 +312,7 @@ class Asset(AccountsController):
 				)
 
 	def validate_in_use_date(self):
-		if not self.available_for_use_date:
+		if not self.available_for_use_date and not self.is_composite_component:
 			frappe.throw(_("Available for use date is required"))
 
 		for d in self.finance_books:

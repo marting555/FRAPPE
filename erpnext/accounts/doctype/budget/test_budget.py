@@ -5,7 +5,11 @@ import unittest
 import frappe
 from frappe.utils import now_datetime, nowdate
 
-from erpnext.accounts.doctype.budget.budget import BudgetError, get_actual_expense
+from erpnext.accounts.doctype.budget.budget import (
+	BudgetError,
+	get_accumulated_monthly_budget,
+	get_actual_expense,
+)
 from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
 from erpnext.accounts.utils import get_fiscal_year
 from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
@@ -18,6 +22,9 @@ class TestBudget(ERPNextTestSuite):
 		super().setUpClass()
 		cls.make_monthly_distribution()
 		cls.make_projects()
+
+	def setUp(self):
+		frappe.db.set_single_value("Accounts Settings", "use_new_budget_controller", True)
 
 	def test_monthly_budget_crossed_ignore(self):
 		set_total_expense_zero(nowdate(), "cost_center")
@@ -47,10 +54,13 @@ class TestBudget(ERPNextTestSuite):
 
 		frappe.db.set_value("Budget", budget.name, "action_if_accumulated_monthly_budget_exceeded", "Stop")
 
+		accumulated_limit = get_accumulated_monthly_budget(
+			budget.monthly_distribution, nowdate(), budget.fiscal_year, budget.accounts[0].budget_amount
+		)
 		jv = make_journal_entry(
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
-			40000,
+			accumulated_limit + 1,
 			"_Test Cost Center - _TC",
 			posting_date=nowdate(),
 		)
@@ -67,10 +77,13 @@ class TestBudget(ERPNextTestSuite):
 
 		frappe.db.set_value("Budget", budget.name, "action_if_accumulated_monthly_budget_exceeded", "Stop")
 
+		accumulated_limit = get_accumulated_monthly_budget(
+			budget.monthly_distribution, nowdate(), budget.fiscal_year, budget.accounts[0].budget_amount
+		)
 		jv = make_journal_entry(
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
-			40000,
+			accumulated_limit + 1,
 			"_Test Cost Center - _TC",
 			posting_date=nowdate(),
 		)
@@ -127,6 +140,7 @@ class TestBudget(ERPNextTestSuite):
 
 		budget.load_from_db()
 		budget.cancel()
+		mr.cancel()
 
 	def test_monthly_budget_crossed_for_po(self):
 		budget = make_budget(
@@ -139,7 +153,12 @@ class TestBudget(ERPNextTestSuite):
 		frappe.db.set_value("Budget", budget.name, "action_if_accumulated_monthly_budget_exceeded", "Stop")
 		frappe.db.set_value("Budget", budget.name, "fiscal_year", fiscal_year)
 
-		po = create_purchase_order(transaction_date=nowdate(), do_not_submit=True)
+		accumulated_limit = get_accumulated_monthly_budget(
+			budget.monthly_distribution, nowdate(), budget.fiscal_year, budget.accounts[0].budget_amount
+		)
+		po = create_purchase_order(
+			transaction_date=nowdate(), qty=1, rate=accumulated_limit + 1, do_not_submit=True
+		)
 
 		po.set_missing_values()
 
@@ -157,11 +176,13 @@ class TestBudget(ERPNextTestSuite):
 		frappe.db.set_value("Budget", budget.name, "action_if_accumulated_monthly_budget_exceeded", "Stop")
 
 		project = frappe.get_value("Project", {"project_name": "_Test Project"})
-
+		accumulated_limit = get_accumulated_monthly_budget(
+			budget.monthly_distribution, nowdate(), budget.fiscal_year, budget.accounts[0].budget_amount
+		)
 		jv = make_journal_entry(
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
-			40000,
+			accumulated_limit + 1,
 			"_Test Cost Center - _TC",
 			project=project,
 			posting_date=nowdate(),
@@ -276,10 +297,13 @@ class TestBudget(ERPNextTestSuite):
 		budget = make_budget(budget_against="Cost Center", cost_center="_Test Company - _TC")
 		frappe.db.set_value("Budget", budget.name, "action_if_accumulated_monthly_budget_exceeded", "Stop")
 
+		accumulated_limit = get_accumulated_monthly_budget(
+			budget.monthly_distribution, nowdate(), budget.fiscal_year, budget.accounts[0].budget_amount
+		)
 		jv = make_journal_entry(
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
-			40000,
+			accumulated_limit + 1,
 			"_Test Cost Center 2 - _TC",
 			posting_date=nowdate(),
 		)
@@ -306,10 +330,13 @@ class TestBudget(ERPNextTestSuite):
 		budget = make_budget(budget_against="Cost Center", cost_center=cost_center)
 		frappe.db.set_value("Budget", budget.name, "action_if_accumulated_monthly_budget_exceeded", "Stop")
 
+		accumulated_limit = get_accumulated_monthly_budget(
+			budget.monthly_distribution, nowdate(), budget.fiscal_year, budget.accounts[0].budget_amount
+		)
 		jv = make_journal_entry(
 			"_Test Account Cost for Goods Sold - _TC",
 			"_Test Bank - _TC",
-			40000,
+			accumulated_limit + 1,
 			cost_center,
 			posting_date=nowdate(),
 		)
@@ -352,6 +379,44 @@ class TestBudget(ERPNextTestSuite):
 		)
 
 		self.assertRaises(BudgetError, jv.submit)
+
+	def test_action_for_cumulative_limit(self):
+		set_total_expense_zero(nowdate(), "cost_center")
+
+		budget = make_budget(budget_against="Cost Center", applicable_on_cumulative_expense=True)
+
+		accumulated_limit = get_accumulated_monthly_budget(
+			budget.monthly_distribution, nowdate(), budget.fiscal_year, budget.accounts[0].budget_amount
+		)
+
+		jv = make_journal_entry(
+			"_Test Account Cost for Goods Sold - _TC",
+			"_Test Bank - _TC",
+			accumulated_limit - 1,
+			"_Test Cost Center - _TC",
+			posting_date=nowdate(),
+		)
+		jv.submit()
+
+		frappe.db.set_value(
+			"Budget", budget.name, "action_if_accumulated_monthly_exceeded_on_cumulative_expense", "Stop"
+		)
+		po = create_purchase_order(
+			transaction_date=nowdate(), qty=1, rate=accumulated_limit + 1, do_not_submit=True
+		)
+		po.set_missing_values()
+
+		self.assertRaises(BudgetError, po.submit)
+
+		frappe.db.set_value(
+			"Budget", budget.name, "action_if_accumulated_monthly_exceeded_on_cumulative_expense", "Ignore"
+		)
+		po.submit()
+
+		budget.load_from_db()
+		budget.cancel()
+		po.cancel()
+		jv.cancel()
 
 
 def set_total_expense_zero(posting_date, budget_against_field=None, budget_against_CC=None):
@@ -427,6 +492,7 @@ def make_budget(**args):
 
 	monthly_distribution = frappe.get_doc("Monthly Distribution", "_Test Distribution")
 	monthly_distribution.fiscal_year = fiscal_year
+	monthly_distribution.save()
 
 	budget.fiscal_year = fiscal_year
 	budget.monthly_distribution = "_Test Distribution"
@@ -449,6 +515,15 @@ def make_budget(**args):
 		budget.action_if_annual_budget_exceeded_on_po = args.action_if_annual_budget_exceeded_on_po or "Warn"
 		budget.action_if_accumulated_monthly_budget_exceeded_on_po = (
 			args.action_if_accumulated_monthly_budget_exceeded_on_po or "Warn"
+		)
+
+	if args.applicable_on_cumulative_expense:
+		budget.applicable_on_cumulative_expense = 1
+		budget.action_if_annual_exceeded_on_cumulative_expense = (
+			args.action_if_annual_exceeded_on_cumulative_expense or "Warn"
+		)
+		budget.action_if_accumulated_monthly_exceeded_on_cumulative_expense = (
+			args.action_if_accumulated_monthly_exceeded_on_cumulative_expense or "Warn"
 		)
 
 	budget.insert()
