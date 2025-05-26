@@ -256,11 +256,7 @@
  "grid_page_length": 50,
  "is_submittable": 1,
  "links": [],
-<<<<<<< HEAD
- "modified": "2020-12-07 11:15:58.385521",
-=======
  "modified": "2025-05-23 13:54:03.346537",
->>>>>>> 016924361a (refactor: full name field in contract)
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Contract",
