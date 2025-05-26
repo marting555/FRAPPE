@@ -15,7 +15,7 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 )
 
 TREE_DOCTYPES = frozenset(
-	["Customer Group", "Terrirtory", "Supplier Group", "Sales Partner", "Sales Person", "Cost Center"]
+	["Customer Group", "Territory", "Supplier Group", "Sales Partner", "Sales Person", "Cost Center"]
 )
 
 
@@ -405,7 +405,9 @@ class PartyLedgerSummaryReport:
 		gl = qb.DocType("GL Entry")
 		query = (
 			qb.from_(gl)
-			.select(gl.voucher_type, gl.voucher_no)
+			.select(
+				gl.posting_date, gl.account, gl.party, gl.voucher_type, gl.voucher_no, gl.debit, gl.credit
+			)
 			.where(
 				(gl.docstatus < 2)
 				& (gl.is_cancelled == 0)
