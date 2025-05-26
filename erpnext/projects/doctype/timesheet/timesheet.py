@@ -194,7 +194,7 @@ class Timesheet(Document):
 			return
 
 		_to_time = get_datetime(add_to_date(data.from_time, hours=data.hours, as_datetime=True))
-		if abs(time_diff_in_seconds(_to_time, data.to_time)) > 1:
+		if abs(time_diff_in_seconds(_to_time, data.to_time)) >= 1:
 			data.to_time = _to_time
 
 	def validate_overlap(self, data):
