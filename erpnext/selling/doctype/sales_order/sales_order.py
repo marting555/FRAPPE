@@ -119,8 +119,8 @@ class SalesOrder(SellingController):
 		grand_total: DF.Currency
 		group_same_items: DF.Check
 		haravan_created_at: DF.Datetime | None
-		haravan_order_id: DF.Int
-		haravan_ref_order_id: DF.Int
+		haravan_order_id: DF.Data | None
+		haravan_ref_order_id: DF.Data | None
 		ignore_pricing_rule: DF.Check
 		in_words: DF.Data | None
 		incoterm: DF.Link | None
