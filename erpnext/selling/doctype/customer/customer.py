@@ -152,8 +152,7 @@ class Customer(TransactionBase):
 		self.validate_currency_for_receivable_payable_and_advance_account()
 
 		# set loyalty program tier
-		if frappe.db.exists("Customer", self.name):
-			customer = frappe.get_doc("Customer", self.name)
+		if not self.is_new() and (customer := self.get_doc_before_save()):
 			if self.loyalty_program == customer.loyalty_program and not self.loyalty_program_tier:
 				self.loyalty_program_tier = customer.loyalty_program_tier
 
