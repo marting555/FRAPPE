@@ -839,7 +839,7 @@
   },
   {
    "fieldname": "haravan_id",
-   "fieldtype": "Int",
+   "fieldtype": "Data",
    "label": "Haravan ID",
    "read_only": 1
   },
@@ -972,7 +972,7 @@
    "link_fieldname": "party"
   }
  ],
- "modified": "2025-05-22 21:19:23.526654",
+ "modified": "2025-05-26 13:41:06.975779",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Customer",
