@@ -681,7 +681,7 @@
    "options": "Lead Product Item"
   },
   {
-   "fieldname": "customer_demand_section",
+   "fieldname": "qualified_information_section",
    "fieldtype": "Section Break",
    "label": "Qualified Information"
   },
