@@ -178,13 +178,13 @@ class SerialNo(StockController):
 		entries = {}
 		sle_dict = self.get_stock_ledger_entries(serial_no)
 		if sle_dict:
+			last_sle = sle_dict.get("last_sle") or {}
+			entries["last_sle"] = last_sle
+
 			if sle_dict.get("incoming", []):
 				entries["purchase_sle"] = sle_dict["incoming"][-1]
 
-			if len(sle_dict.get("incoming", [])) - len(sle_dict.get("outgoing", [])) > 0:
-				entries["last_sle"] = sle_dict["incoming"][0]
-			else:
-				entries["last_sle"] = sle_dict["outgoing"][0]
+			if last_sle.get("actual_qty") < 0 and sle_dict.get("outgoing", []):
 				entries["delivery_sle"] = sle_dict["outgoing"][0]
 
 		return entries
@@ -221,6 +221,9 @@ class SerialNo(StockController):
 			as_dict=1,
 		):
 			if serial_no.upper() in get_serial_nos(sle.serial_no):
+				if "last_sle" not in sle_dict:
+					sle_dict["last_sle"] = sle
+
 				if cint(sle.actual_qty) > 0:
 					sle_dict.setdefault("incoming", []).append(sle)
 				else:
