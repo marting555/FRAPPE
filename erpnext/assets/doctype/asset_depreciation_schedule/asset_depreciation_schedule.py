@@ -255,6 +255,12 @@ class AssetDepreciationSchedule(Document):
 		value_after_depreciation,
 	):
 		asset_doc.validate_asset_finance_books(row)
+		if (
+			not value_after_depreciation
+			and not asset_doc.flags.decrease_in_asset_value_due_to_value_adjustment
+		):
+			value_after_depreciation = _get_value_after_depreciation_for_making_schedule(asset_doc, row)
+		row.value_after_depreciation = value_after_depreciation
 
 		if update_asset_finance_book_row:
 			row.db_update()
