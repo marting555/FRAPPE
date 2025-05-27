@@ -195,7 +195,6 @@ class AssetValueAdjustment(Document):
 					row.value_after_depreciation += flt(difference_amount)
 					row.db_update()
 
-		asset.value_after_depreciation += flt(difference_amount)
 		asset.db_update()
 
 		make_new_active_asset_depr_schedules_and_cancel_current_ones(
