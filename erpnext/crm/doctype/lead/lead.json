@@ -683,7 +683,7 @@
   {
    "fieldname": "customer_demand_section",
    "fieldtype": "Section Break",
-   "label": "Qualified information"
+   "label": "Qualified Information"
   },
   {
    "fieldname": "expected_delivery_date",
