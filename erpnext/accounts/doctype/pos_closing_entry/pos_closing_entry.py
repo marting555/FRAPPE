@@ -4,6 +4,9 @@
 
 import frappe
 from frappe import _
+from frappe.query_builder import DocType
+from frappe.query_builder import functions as fn
+from frappe.query_builder.custom import ConstantColumn
 from frappe.utils import flt, get_datetime
 
 from erpnext.accounts.doctype.pos_invoice_merge_log.pos_invoice_merge_log import (
@@ -41,12 +44,12 @@ class POSClosingEntry(StatusUpdater):
 		payment_reconciliation: DF.Table[POSClosingEntryDetail]
 		period_end_date: DF.Datetime
 		period_start_date: DF.Datetime
+		pos_invoices: DF.Table[POSInvoiceReference]
 		pos_opening_entry: DF.Link
 		pos_profile: DF.Link
-		pos_transactions: DF.Table[POSInvoiceReference]
 		posting_date: DF.Date
 		posting_time: DF.Time
-		sales_invoice_transactions: DF.Table[SalesInvoiceReference]
+		sales_invoices: DF.Table[SalesInvoiceReference]
 		status: DF.Literal["Draft", "Submitted", "Queued", "Failed", "Cancelled"]
 		taxes: DF.Table[POSClosingEntryTaxes]
 		total_quantity: DF.Float
@@ -54,27 +57,31 @@ class POSClosingEntry(StatusUpdater):
 	# end: auto-generated types
 
 	def validate(self):
+		self.set_posting_date_and_time()
+		self.fetch_invoice_doctype_in_pos()
+		self.validate_pos_opening_entry()
+		self.validate_invoice_mode()
+
+	def set_posting_date_and_time(self):
 		self.posting_date = self.posting_date or frappe.utils.nowdate()
 		self.posting_time = self.posting_time or frappe.utils.nowtime()
 
+	def fetch_invoice_doctype_in_pos(self):
+		self.invoice_doctype_in_pos = frappe.db.get_single_value(
+			"Accounts Settings", "invoice_doctype_in_pos"
+		)
+
+	def validate_pos_opening_entry(self):
 		if frappe.db.get_value("POS Opening Entry", self.pos_opening_entry, "status") != "Open":
 			frappe.throw(_("Selected POS Opening Entry should be open."), title=_("Invalid Opening Entry"))
 
-<<<<<<< HEAD
-		self.is_pos_using_sales_invoice = frappe.get_single_value(
-			"Accounts Settings", "use_sales_invoice_in_pos"
-=======
-		self.invoice_doctype_in_pos = frappe.db.get_single_value(
-			"Accounts Settings", "invoice_doctype_in_pos"
->>>>>>> 57ad7c1924 (fix: invoice doctype selection in accounts settings)
-		)
-
+	def validate_invoice_mode(self):
 		if self.invoice_doctype_in_pos == "POS Invoice":
 			self.validate_duplicate_pos_invoices()
 			self.validate_pos_invoices()
 
 		if self.invoice_doctype_in_pos == "Sales Invoice":
-			if len(self.pos_transactions) != 0:
+			if len(self.pos_invoices) != 0:
 				frappe.throw(_("POS Invoices can't be added when Sales Invoice is enabled"))
 
 		self.validate_duplicate_sales_invoices()
@@ -82,7 +89,7 @@ class POSClosingEntry(StatusUpdater):
 
 	def validate_duplicate_pos_invoices(self):
 		pos_occurences = {}
-		for idx, inv in enumerate(self.pos_transactions, 1):
+		for idx, inv in enumerate(self.pos_invoices, 1):
 			pos_occurences.setdefault(inv.pos_invoice, []).append(idx)
 
 		error_list = []
@@ -97,7 +104,7 @@ class POSClosingEntry(StatusUpdater):
 
 	def validate_pos_invoices(self):
 		invalid_rows = []
-		for d in self.pos_transactions:
+		for d in self.pos_invoices:
 			invalid_row = {"idx": d.idx}
 			pos_invoice = frappe.db.get_values(
 				"POS Invoice",
@@ -135,7 +142,7 @@ class POSClosingEntry(StatusUpdater):
 
 	def validate_duplicate_sales_invoices(self):
 		sales_invoice_occurrences = {}
-		for idx, inv in enumerate(self.sales_invoice_transactions, 1):
+		for idx, inv in enumerate(self.sales_invoices, 1):
 			sales_invoice_occurrences.setdefault(inv.sales_invoice, []).append(idx)
 
 		error_list = []
@@ -150,7 +157,7 @@ class POSClosingEntry(StatusUpdater):
 
 	def validate_sales_invoices(self):
 		invalid_rows = []
-		for d in self.sales_invoice_transactions:
+		for d in self.sales_invoices:
 			invalid_row = {"idx": d.idx}
 			sales_invoice = frappe.db.get_values(
 				"Sales Invoice",
@@ -232,7 +239,7 @@ class POSClosingEntry(StatusUpdater):
 		opening_entry.save()
 
 	def update_sales_invoices_closing_entry(self, cancel=False):
-		for d in self.sales_invoice_transactions:
+		for d in self.sales_invoices:
 			frappe.db.set_value(
 				"Sales Invoice", d.sales_invoice, "pos_closing_entry", self.name if not cancel else None
 			)
@@ -246,51 +253,53 @@ def get_cashiers(doctype, txt, searchfield, start, page_len, filters):
 
 
 @frappe.whitelist()
-def get_pos_invoices(start, end, pos_profile, user):
-	data = frappe.db.sql(
-		"""
-	select
-		name, timestamp(posting_date, posting_time) as "timestamp"
-	from
-		`tabPOS Invoice`
-	where
-		owner = %s and docstatus = 1 and pos_profile = %s and ifnull(consolidated_invoice,'') = ''
-	""",
-		(user, pos_profile),
-		as_dict=1,
+def get_invoices(start, end, pos_profile, user):
+	invoice_doctype = frappe.db.get_single_value("Accounts Settings", "invoice_doctype_in_pos")
+
+	SalesInvoice = DocType("Sales Invoice")
+	sales_inv_query = (
+		frappe.qb.from_(SalesInvoice)
+		.select(
+			SalesInvoice.name,
+			fn.Timestamp(SalesInvoice.posting_date, SalesInvoice.posting_time).as_("timestamp"),
+			ConstantColumn("Sales Invoice").as_("doctype"),
+		)
+		.where(
+			(SalesInvoice.owner == user)
+			& (SalesInvoice.docstatus == 1)
+			& (SalesInvoice.is_pos == 1)
+			& (SalesInvoice.pos_profile == pos_profile)
+			& (SalesInvoice.is_created_using_pos == 1)
+			& fn.IfNull(SalesInvoice.pos_closing_entry, "").eq("")
+		)
 	)
 
-	data = list(filter(lambda d: get_datetime(start) <= get_datetime(d.timestamp) <= get_datetime(end), data))
-	# need to get taxes and payments so can't avoid get_doc
-	data = [frappe.get_doc("POS Invoice", d.name).as_dict() for d in data]
+	query = sales_inv_query
 
-	return data
+	if invoice_doctype == "POS Invoice":
+		POSInvoice = DocType("POS Invoice")
+		pos_inv_query = (
+			frappe.qb.from_(POSInvoice)
+			.select(
+				POSInvoice.name,
+				fn.Timestamp(POSInvoice.posting_date, POSInvoice.posting_time).as_("timestamp"),
+				ConstantColumn("POS Invoice").as_("doctype"),
+			)
+			.where(
+				(POSInvoice.owner == user)
+				& (POSInvoice.docstatus == 1)
+				& (POSInvoice.pos_profile == pos_profile)
+				& fn.IfNull(POSInvoice.consolidated_invoice, "").eq("")
+			)
+		)
+		query = query + pos_inv_query
 
-
-@frappe.whitelist()
-def get_sales_invoices(start, end, pos_profile, user):
-	data = frappe.db.sql(
-		"""
-	select
-		name, timestamp(posting_date, posting_time) as "timestamp"
-	from
-		`tabSales Invoice`
-	where
-		owner = %s
-		and docstatus = 1
-		and is_pos = 1
-		and pos_profile = %s
-		and is_created_using_pos = 1
-		and ifnull(pos_closing_entry,'') = ''
-	""",
-		(user, pos_profile),
-		as_dict=1,
-	)
+	sql_query, params = query.walk()
+	data = frappe.db.sql(sql_query, params, as_dict=1)
 
 	data = [d for d in data if get_datetime(start) <= get_datetime(d.timestamp) <= get_datetime(end)]
 	# need to get taxes and payments so can't avoid get_doc
-	data = [frappe.get_doc("Sales Invoice", d.name).as_dict() for d in data]
-
+	data = [frappe.get_doc(d.doctype, d.name).as_dict() for d in data]
 	return data
 
 
@@ -306,28 +315,15 @@ def make_closing_entry_from_opening(opening_entry):
 	closing_entry.net_total = 0
 	closing_entry.total_quantity = 0
 
-	invoice_doctype_in_pos = frappe.db.get_single_value("Accounts Settings", "invoice_doctype_in_pos")
-
-	pos_invoices = (
-		get_pos_invoices(
-			closing_entry.period_start_date,
-			closing_entry.period_end_date,
-			closing_entry.pos_profile,
-			closing_entry.user,
-		)
-		if invoice_doctype_in_pos == "POS Invoice"
-		else []
-	)
-
-	sales_invoices = get_sales_invoices(
+	invoices = get_invoices(
 		closing_entry.period_start_date,
 		closing_entry.period_end_date,
 		closing_entry.pos_profile,
 		closing_entry.user,
 	)
 
-	pos_transactions = []
-	sales_invoice_transactions = []
+	pos_invoices = []
+	sales_invoices = []
 	taxes = []
 	payments = []
 	for detail in opening_entry.balance_details:
@@ -341,31 +337,22 @@ def make_closing_entry_from_opening(opening_entry):
 			)
 		)
 
-	for d in pos_invoices:
-		pos_transactions.append(
-			frappe._dict(
-				{
-					"pos_invoice": d.name,
-					"posting_date": d.posting_date,
-					"grand_total": d.grand_total,
-					"customer": d.customer,
-				}
-			)
+	for d in invoices:
+		invoice = "pos_invoice" if d.doctype == "POS Invoice" else "sales_invoice"
+		data = frappe._dict(
+			{
+				invoice: d.name,
+				"posting_date": d.posting_date,
+				"grand_total": d.grand_total,
+				"customer": d.customer,
+			}
 		)
+		if d.doctype == "POS Invoice":
+			pos_invoices.append(data)
+		else:
+			sales_invoices.append(data)
 
-	for d in sales_invoices:
-		sales_invoice_transactions.append(
-			frappe._dict(
-				{
-					"sales_invoice": d.name,
-					"posting_date": d.posting_date,
-					"grand_total": d.grand_total,
-					"customer": d.customer,
-				}
-			)
-		)
-
-	for d in [*pos_invoices, *sales_invoices]:
+	for d in invoices:
 		closing_entry.grand_total += flt(d.grand_total)
 		closing_entry.net_total += flt(d.net_total)
 		closing_entry.total_quantity += flt(d.total_qty)
@@ -394,8 +381,8 @@ def make_closing_entry_from_opening(opening_entry):
 					)
 				)
 
-	closing_entry.set("pos_transactions", pos_transactions)
-	closing_entry.set("sales_invoice_transactions", sales_invoice_transactions)
+	closing_entry.set("pos_invoices", pos_invoices)
+	closing_entry.set("sales_invoices", sales_invoices)
 	closing_entry.set("payment_reconciliation", payments)
 	closing_entry.set("taxes", taxes)
 

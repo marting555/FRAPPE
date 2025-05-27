@@ -36,15 +36,6 @@ frappe.ui.form.on("POS Closing Entry", {
 			}
 		});
 
-		const invoice_doctype_in_pos = await frappe.db.get_single_value(
-			"Accounts Settings",
-			"invoice_doctype_in_pos"
-		);
-
-		if (invoice_doctype_in_pos === "Sales Invoice") {
-			frm.set_df_property("pos_transactions", "hidden", 1);
-		}
-
 		set_html_data(frm);
 
 		if (frm.doc.docstatus == 1) {
@@ -91,8 +82,7 @@ frappe.ui.form.on("POS Closing Entry", {
 			frappe.run_serially([
 				() => frappe.dom.freeze(__("Loading Invoices! Please Wait...")),
 				() => frm.trigger("set_opening_amounts"),
-				() => frm.trigger("get_pos_invoices"),
-				() => frm.trigger("get_sales_invoices"),
+				() => frm.trigger("get_invoices"),
 				() => frappe.dom.unfreeze(),
 			]);
 		}
@@ -112,9 +102,9 @@ frappe.ui.form.on("POS Closing Entry", {
 			});
 	},
 
-	get_pos_invoices(frm) {
+	get_invoices(frm) {
 		return frappe.call({
-			method: "erpnext.accounts.doctype.pos_closing_entry.pos_closing_entry.get_pos_invoices",
+			method: "erpnext.accounts.doctype.pos_closing_entry.pos_closing_entry.get_invoices",
 			args: {
 				start: frappe.datetime.get_datetime_as_string(frm.doc.period_start_date),
 				end: frappe.datetime.get_datetime_as_string(frm.doc.period_end_date),
@@ -122,100 +112,12 @@ frappe.ui.form.on("POS Closing Entry", {
 				user: frm.doc.user,
 			},
 			callback: (r) => {
-				let pos_docs = r.message;
-				set_pos_transaction_form_data(pos_docs, frm);
+				let inv_docs = r.message;
+				set_transaction_form_data(inv_docs, frm);
 				refresh_fields(frm);
 				set_html_data(frm);
 			},
 		});
-	},
-
-	get_sales_invoices(frm) {
-		return frappe.call({
-			method: "erpnext.accounts.doctype.pos_closing_entry.pos_closing_entry.get_sales_invoices",
-			args: {
-				start: frappe.datetime.get_datetime_as_string(frm.doc.period_start_date),
-				end: frappe.datetime.get_datetime_as_string(frm.doc.period_end_date),
-				pos_profile: frm.doc.pos_profile,
-				user: frm.doc.user,
-			},
-			callback: (r) => {
-				let sales_docs = r.message;
-				set_sales_invoice_transaction_form_data(sales_docs, frm);
-				refresh_fields(frm);
-				set_html_data(frm);
-			},
-		});
-	},
-
-	before_save: async function (frm) {
-		frappe.dom.freeze(__("Processing Sales! Please Wait..."));
-
-		frm.set_value("grand_total", 0);
-		frm.set_value("net_total", 0);
-		frm.set_value("total_quantity", 0);
-		frm.set_value("taxes", []);
-
-		for (let row of frm.doc.payment_reconciliation) {
-			row.expected_amount = row.opening_amount;
-		}
-
-		const invoice_doctype_in_pos = await frappe.db.get_single_value(
-			"Accounts Settings",
-			"invoice_doctype_in_pos"
-		);
-
-		if (invoice_doctype_in_pos === "Sales Invoice") {
-			await Promise.all([
-				frappe.call({
-					method: "erpnext.accounts.doctype.pos_closing_entry.pos_closing_entry.get_pos_invoices",
-					args: {
-						start: frappe.datetime.get_datetime_as_string(frm.doc.period_start_date),
-						end: frappe.datetime.get_datetime_as_string(frm.doc.period_end_date),
-						pos_profile: frm.doc.pos_profile,
-						user: frm.doc.user,
-					},
-					callback: (r) => {
-						let pos_invoices = r.message;
-						for (let doc of pos_invoices) {
-							frm.doc.grand_total += flt(doc.grand_total);
-							frm.doc.net_total += flt(doc.net_total);
-							frm.doc.total_quantity += flt(doc.total_qty);
-							refresh_payments(doc, frm, false);
-							refresh_taxes(doc, frm);
-							refresh_fields(frm);
-							set_html_data(frm);
-						}
-					},
-				}),
-			]);
-		}
-
-		await Promise.all([
-			frappe.call({
-				method: "erpnext.accounts.doctype.pos_closing_entry.pos_closing_entry.get_sales_invoices",
-				args: {
-					start: frappe.datetime.get_datetime_as_string(frm.doc.period_start_date),
-					end: frappe.datetime.get_datetime_as_string(frm.doc.period_end_date),
-					pos_profile: frm.doc.pos_profile,
-					user: frm.doc.user,
-				},
-				callback: (r) => {
-					let sales_invoices = r.message;
-					for (let doc of sales_invoices) {
-						frm.doc.grand_total += flt(doc.grand_total);
-						frm.doc.net_total += flt(doc.net_total);
-						frm.doc.total_quantity += flt(doc.total_qty);
-						refresh_payments(doc, frm, false);
-						refresh_taxes(doc, frm);
-						refresh_fields(frm);
-						set_html_data(frm);
-					}
-				},
-			}),
-		]);
-
-		frappe.dom.unfreeze();
 	},
 });
 
@@ -226,9 +128,9 @@ frappe.ui.form.on("POS Closing Entry Detail", {
 	},
 });
 
-function set_pos_transaction_form_data(data, frm) {
+function set_transaction_form_data(data, frm) {
 	data.forEach((d) => {
-		add_to_pos_transaction(d, frm);
+		add_to_transaction(d, frm);
 		frm.doc.grand_total += flt(d.grand_total);
 		frm.doc.net_total += flt(d.net_total);
 		frm.doc.total_quantity += flt(d.total_qty);
@@ -237,32 +139,14 @@ function set_pos_transaction_form_data(data, frm) {
 	});
 }
 
-function set_sales_invoice_transaction_form_data(data, frm) {
-	data.forEach((d) => {
-		add_to_sales_invoice_transaction(d, frm);
-		frm.doc.grand_total += flt(d.grand_total);
-		frm.doc.net_total += flt(d.net_total);
-		frm.doc.total_quantity += flt(d.total_qty);
-		refresh_payments(d, frm, true);
-		refresh_taxes(d, frm);
-	});
-}
-
-function add_to_pos_transaction(d, frm) {
-	frm.add_child("pos_transactions", {
-		pos_invoice: d.name,
+function add_to_transaction(d, frm) {
+	const field = d.doctype === "POS Invoice" ? "pos_invoices" : "sales_invoices";
+	frm.add_child(field, {
 		posting_date: d.posting_date,
 		grand_total: d.grand_total,
 		customer: d.customer,
-	});
-}
-
-function add_to_sales_invoice_transaction(d, frm) {
-	frm.add_child("sales_invoice_transactions", {
-		sales_invoice: d.name,
-		posting_date: d.posting_date,
-		grand_total: d.grand_total,
-		customer: d.customer,
+		...(d.doctype === "POS Invoice" && { pos_invoice: d.name }),
+		...(d.doctype === "Sales Invoice" && { sales_invoice: d.name }),
 	});
 }
 
@@ -305,8 +189,8 @@ function refresh_taxes(d, frm) {
 }
 
 function reset_values(frm) {
-	frm.set_value("pos_transactions", []);
-	frm.set_value("sales_invoice_transactions", []);
+	frm.set_value("pos_invoices", []);
+	frm.set_value("sales_invoices", []);
 	frm.set_value("payment_reconciliation", []);
 	frm.set_value("taxes", []);
 	frm.set_value("grand_total", 0);
@@ -315,8 +199,8 @@ function reset_values(frm) {
 }
 
 function refresh_fields(frm) {
-	frm.refresh_field("pos_transactions");
-	frm.refresh_field("sales_invoice_transactions");
+	frm.refresh_field("pos_invoices");
+	frm.refresh_field("sales_invoices");
 	frm.refresh_field("payment_reconciliation");
 	frm.refresh_field("taxes");
 	frm.refresh_field("grand_total");

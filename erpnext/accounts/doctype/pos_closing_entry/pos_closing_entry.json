@@ -20,8 +20,8 @@
   "pos_profile",
   "user",
   "section_break_12",
-  "pos_transactions",
-  "sales_invoice_transactions",
+  "pos_invoices",
+  "sales_invoices",
   "section_break_9",
   "payment_reconciliation_details",
   "section_break_11",
@@ -178,12 +178,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "pos_transactions",
-   "fieldtype": "Table",
-   "label": "POS Transactions",
-   "options": "POS Invoice Reference"
-  },
-  {
    "fieldname": "pos_opening_entry",
    "fieldtype": "Link",
    "label": "POS Opening Entry",
@@ -230,10 +224,18 @@
    "reqd": 1
   },
   {
-   "fieldname": "sales_invoice_transactions",
+   "fieldname": "pos_invoices",
+   "fieldtype": "Table",
+   "label": "POS Transactions",
+   "options": "POS Invoice Reference",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sales_invoices",
    "fieldtype": "Table",
    "label": "Sales Invoice Transactions",
-   "options": "Sales Invoice Reference"
+   "options": "Sales Invoice Reference",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
@@ -244,7 +246,7 @@
    "link_fieldname": "pos_closing_entry"
   }
  ],
- "modified": "2025-03-19 19:49:58.845697",
+ "modified": "2025-05-27 17:14:18.905902",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "POS Closing Entry",
