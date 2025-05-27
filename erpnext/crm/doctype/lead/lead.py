@@ -174,7 +174,7 @@ class Lead(SellingController, CRMNote):
 			Updat lastest message of customer  to sycn data from AI Summary
 			'''
 			contact_doc = frappe.get_doc("Contact", contact)
-			contact_doc.last_message_time = parsed_pancake_data.get("lastest_message_at", contact_doc.last_message_time)
+			contact_doc.last_message_time = parsed_pancake_data.get("latest_message_at", contact_doc.last_message_time)
 			contact_doc.save(ignore_permissions=True)
 			
 		
@@ -393,7 +393,7 @@ class Lead(SellingController, CRMNote):
 				"pancake_updated_at": parsed_pancake_data.get("updated_at") if parsed_pancake_data and parsed_pancake_data.get("updated_at") else None,
 				"pancake_page_id": parsed_pancake_data.get("page_id") if parsed_pancake_data and parsed_pancake_data.get("page_id") else None,
 				"can_inbox": parsed_pancake_data.get("can_inbox") if parsed_pancake_data and parsed_pancake_data.get("can_inbox") else 0,
-				"last_message_time" :  parsed_pancake_data.get("lastest_message_at", None)
+				"last_message_time" :  parsed_pancake_data.get("latest_message_at", None)
 			}
 		)
 
