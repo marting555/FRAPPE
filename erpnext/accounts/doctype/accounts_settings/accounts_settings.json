@@ -38,7 +38,9 @@
   "show_taxes_as_table_in_print",
   "column_break_12",
   "show_payment_schedule_in_print",
+  "item_price_settings_section",
   "maintain_same_internal_transaction_rate",
+  "column_break_feyo",
   "maintain_same_rate_action",
   "role_to_override_stop_action",
   "currency_exchange_section",
@@ -603,6 +605,15 @@
    "fieldname": "use_new_budget_controller",
    "fieldtype": "Check",
    "label": "Use New Budget Controller"
+  },
+  {
+   "fieldname": "item_price_settings_section",
+   "fieldtype": "Section Break",
+   "label": "Item Price Settings"
+  },
+  {
+   "fieldname": "column_break_feyo",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
@@ -611,7 +622,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-05-16 02:44:02.484070",
+ "modified": "2025-05-27 17:52:03.460522",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Accounts Settings",
