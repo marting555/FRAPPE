@@ -261,8 +261,15 @@ def get_invoices(start, end, pos_profile, user):
 		frappe.qb.from_(SalesInvoice)
 		.select(
 			SalesInvoice.name,
+			SalesInvoice.customer,
+			SalesInvoice.posting_date,
+			SalesInvoice.grand_total,
+			SalesInvoice.net_total,
+			SalesInvoice.total_qty,
 			fn.Timestamp(SalesInvoice.posting_date, SalesInvoice.posting_time).as_("timestamp"),
 			ConstantColumn("Sales Invoice").as_("doctype"),
+			SalesInvoice.change_amount,
+			SalesInvoice.account_for_change_amount,
 		)
 		.where(
 			(SalesInvoice.owner == user)
@@ -271,6 +278,10 @@ def get_invoices(start, end, pos_profile, user):
 			& (SalesInvoice.pos_profile == pos_profile)
 			& (SalesInvoice.is_created_using_pos == 1)
 			& fn.IfNull(SalesInvoice.pos_closing_entry, "").eq("")
+			& (
+				(fn.Timestamp(SalesInvoice.posting_date, SalesInvoice.posting_time) >= start)
+				& (fn.Timestamp(SalesInvoice.posting_date, SalesInvoice.posting_time) <= end)
+			)
 		)
 	)
 
@@ -282,25 +293,105 @@ def get_invoices(start, end, pos_profile, user):
 			frappe.qb.from_(POSInvoice)
 			.select(
 				POSInvoice.name,
+				POSInvoice.customer,
+				POSInvoice.posting_date,
+				POSInvoice.grand_total,
+				POSInvoice.net_total,
+				POSInvoice.total_qty,
 				fn.Timestamp(POSInvoice.posting_date, POSInvoice.posting_time).as_("timestamp"),
 				ConstantColumn("POS Invoice").as_("doctype"),
+				POSInvoice.change_amount,
+				POSInvoice.account_for_change_amount,
 			)
 			.where(
 				(POSInvoice.owner == user)
 				& (POSInvoice.docstatus == 1)
 				& (POSInvoice.pos_profile == pos_profile)
+				& (
+					(fn.Timestamp(POSInvoice.posting_date, POSInvoice.posting_time) >= start)
+					& (fn.Timestamp(POSInvoice.posting_date, POSInvoice.posting_time) <= end)
+				)
 				& fn.IfNull(POSInvoice.consolidated_invoice, "").eq("")
 			)
 		)
 		query = query + pos_inv_query
 
+	query = query.orderby(query.timestamp)
+	sql_query, params = query.walk()
+	invoices = frappe.db.sql(sql_query, params, as_dict=1)
+
+	get_payments_and_taxes(invoices)
+
+	return invoices
+
+
+def get_payments_and_taxes(invoices):
+	sales_invoices = [d.name for d in invoices if d.doctype == "Sales Invoice"]
+	pos_invoices = [d.name for d in invoices if d.doctype == "POS Invoice"]
+
+	payments = {
+		"Sales Invoice": get_payments_by_doctype("Sales Invoice", sales_invoices),
+		"POS Invoice": get_payments_by_doctype("POS Invoice", pos_invoices),
+	}
+
+	taxes = {
+		"Sales Invoice": get_taxes_by_doctype("Sales Invoice", sales_invoices),
+		"POS Invoice": get_taxes_by_doctype("POS Invoice", pos_invoices),
+	}
+
+	for d in invoices:
+		d.payments = payments.get(d.doctype, {}).get(d.name, [])
+		d.taxes = taxes.get(d.doctype, {}).get(d.name, [])
+
+
+def get_payments_by_doctype(doctype, invoices):
+	if not len(invoices):
+		return
+
+	SalesInvoicePayment = DocType("Sales Invoice Payment")
+	query = (
+		frappe.qb.from_(SalesInvoicePayment)
+		.select(SalesInvoicePayment.parent, SalesInvoicePayment.mode_of_payment, SalesInvoicePayment.amount)
+		.where((SalesInvoicePayment.parenttype == doctype) & (SalesInvoicePayment.parent.isin(invoices)))
+	)
 	sql_query, params = query.walk()
 	data = frappe.db.sql(sql_query, params, as_dict=1)
 
-	data = [d for d in data if get_datetime(start) <= get_datetime(d.timestamp) <= get_datetime(end)]
-	# need to get taxes and payments so can't avoid get_doc
-	data = [frappe.get_doc(d.doctype, d.name).as_dict() for d in data]
-	return data
+	payment_by_invoice = {}
+	for d in data:
+		payment_by_invoice.setdefault(d.parent, [])
+		payment_by_invoice[d.parent].append(d)
+
+	return payment_by_invoice
+
+
+def get_taxes_by_doctype(doctype, invoices):
+	if not len(invoices):
+		return
+
+	SalesInvoiceTaxesCharges = DocType("Sales Taxes and Charges")
+	query = (
+		frappe.qb.from_(SalesInvoiceTaxesCharges)
+		.select(
+			SalesInvoiceTaxesCharges.parent,
+			SalesInvoiceTaxesCharges.account_head,
+			SalesInvoiceTaxesCharges.rate,
+			SalesInvoiceTaxesCharges.tax_amount,
+		)
+		.where(
+			(SalesInvoiceTaxesCharges.parenttype == doctype)
+			& (SalesInvoiceTaxesCharges.parent.isin(invoices))
+		)
+	)
+	sql_query, params = query.walk()
+	data = frappe.db.sql(sql_query, params, as_dict=1)
+
+	taxes_by_invoice = {}
+	for d in data:
+		taxes_by_invoice.setdefault(d.parent, [])
+		taxes_by_invoice[d.parent].append(d)
+
+	return taxes_by_invoice
 
 
 def make_closing_entry_from_opening(opening_entry):
