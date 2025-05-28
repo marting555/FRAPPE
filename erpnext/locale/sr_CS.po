@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-05-25 09:35+0000\n"
-"PO-Revision-Date: 2025-05-27 20:41\n"
+"PO-Revision-Date: 2025-05-28 20:43\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Serbian (Latin)\n"
 "MIME-Version: 1.0\n"
@@ -4337,11 +4337,11 @@ msgstr "Dozvoli zahtev za ponudu sa nultom količinom"
 #. DocType 'Support Settings'
 #: erpnext/support/doctype/support_settings/support_settings.json
 msgid "Allow Resetting Service Level Agreement"
-msgstr "Dozvoli ponovno postavljanje Ugovora o nivou usluge"
+msgstr "Dozvoli ponovno postavljanje sporazuma o nivou usluge"
 
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.py:777
 msgid "Allow Resetting Service Level Agreement from Support Settings."
-msgstr "Dozvoli ponovno postavljanje Ugovora o nivou usluge iz podešavanja podrške."
+msgstr "Dozvoli ponovno postavljanje sporazuma o nivou usluge iz podešavanja podrške."
 
 #. Label of the is_sales_item (Check) field in DocType 'Item'
 #: erpnext/stock/doctype/item/item.json
@@ -5459,7 +5459,7 @@ msgstr "Primeni pravilo na ostale"
 #. Level Agreement'
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.json
 msgid "Apply SLA for Resolution Time"
-msgstr "Primeni Ugovor o nivou usluga za vreme rešavanja"
+msgstr "Primeni sporazuma o nivou usluge za vreme rešavanja"
 
 #. Label of the apply_tds (Check) field in DocType 'Purchase Invoice Item'
 #. Label of the apply_tds (Check) field in DocType 'Purchase Order Item'
@@ -15774,11 +15774,11 @@ msgstr "Podrazumevani uslovi prodaje"
 #. 'Service Level Agreement'
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.json
 msgid "Default Service Level Agreement"
-msgstr "Podrazumevani Ugovor o nivou usluge"
+msgstr "Podrazumevani sporazum o nivou usluge"
 
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.py:161
 msgid "Default Service Level Agreement for {0} already exists."
-msgstr "Podrazumevani Ugovor o nivou usluga {0} već postoji."
+msgstr "Podrazumevani sporazum o nivou usluge {0} već postoji."
 
 #. Label of the default_source_warehouse (Link) field in DocType 'BOM'
 #. Label of the default_warehouse (Link) field in DocType 'BOM Creator'
@@ -19074,7 +19074,7 @@ msgstr "Omogući ovu opciju za izračunavanje dnevne amortizacije uzimajući u o
 
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.js:34
 msgid "Enable to apply SLA on every {0}"
-msgstr "Omogući primenu Ugovora o nivou usluge za svaki {0}"
+msgstr "Omogući primenu sporazuma o nivou usluge za svaki {0}"
 
 #. Label of the enabled (Check) field in DocType 'Mode of Payment'
 #. Label of the enabled (Check) field in DocType 'Plaid Settings'
@@ -20778,7 +20778,7 @@ msgstr "Rok za prvi odgovor"
 #: erpnext/support/doctype/issue/test_issue.py:238
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.py:898
 msgid "First Response SLA Failed by {}"
-msgstr "Prvi odgovor u okviru ugovora o nivou usluge nije ispoštovan od {}"
+msgstr "Prvi odgovor u okviru sporazuma o nivou usluge nije ispoštovan od {}"
 
 #. Label of the first_response_time (Duration) field in DocType 'Opportunity'
 #. Label of the first_response_time (Duration) field in DocType 'Issue'
@@ -35456,7 +35456,7 @@ msgstr "Pauziraj posao"
 #. Name of a DocType
 #: erpnext/support/doctype/pause_sla_on_status/pause_sla_on_status.json
 msgid "Pause SLA On Status"
-msgstr "Pauziran Ugovor o nivou usluge u statusu"
+msgstr "Pauziran sporazum o nivou usluge u statusu"
 
 #. Option for the 'Status' (Select) field in DocType 'Process Payment
 #. Reconciliation'
@@ -44143,11 +44143,11 @@ msgstr "Resetuj tabelu sirovina"
 #: erpnext/support/doctype/issue/issue.js:48
 #: erpnext/support/doctype/issue/issue.json
 msgid "Reset Service Level Agreement"
-msgstr "Resetuj Ugovor o nivou usluga"
+msgstr "Resetuj sporazum o nivou usluge"
 
 #: erpnext/support/doctype/issue/issue.js:65
 msgid "Resetting Service Level Agreement."
-msgstr "Resetovanje Ugovora o nivou usluga."
+msgstr "Resetovanje sporazuma o nivou usluge."
 
 #. Label of the resignation_letter_date (Date) field in DocType 'Employee'
 #: erpnext/setup/doctype/employee/employee.json
@@ -45896,29 +45896,29 @@ msgstr "Nabavljene stavke od dobavljača"
 #. Agreement'
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.json
 msgid "SLA Fulfilled On"
-msgstr "Ugovor o nivou usluge ispunjen"
+msgstr "Sporazum o nivou usluge ispunjen"
 
 #. Name of a DocType
 #: erpnext/support/doctype/sla_fulfilled_on_status/sla_fulfilled_on_status.json
 msgid "SLA Fulfilled On Status"
-msgstr "Status ispunjenja Ugovora o nivou usluge"
+msgstr "Status ispunjenja sporazuma o nivou usluge"
 
 #. Label of the pause_sla_on (Table) field in DocType 'Service Level Agreement'
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.json
 msgid "SLA Paused On"
-msgstr "Ugovor o nivou usluge je pauziran"
+msgstr "Sporazum o nivou usluge je pauziran"
 
 #: erpnext/public/js/utils.js:1167
 msgid "SLA is on hold since {0}"
-msgstr "Ugovor o nivou usluge je na čekanju od {0}"
+msgstr "Sporazum o nivou usluge je na čekanju od {0}"
 
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.js:52
 msgid "SLA will be applied if {1} is set as {2}{3}"
-msgstr "Ugovor o nivou usluge će se primeniti ukoliko je {1} podešen kao {2}{3}"
+msgstr "Sporazum o nivou usluge će se primeniti ukoliko je {1} podešen kao {2}{3}"
 
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.js:32
 msgid "SLA will be applied on every {0}"
-msgstr "Ugovor o nivou usluge će se primenjivati svakog {0}"
+msgstr "Sporazum o nivou usluge će se primenjivati svakog {0}"
 
 #. Label of a Link in the CRM Workspace
 #. Name of a DocType
@@ -48453,40 +48453,40 @@ msgstr "Uslužne stavke"
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.json
 #: erpnext/support/workspace/support/support.json
 msgid "Service Level Agreement"
-msgstr "Ugovor o nivou usluge"
+msgstr "Sporazum o nivou usluge"
 
 #. Label of the service_level_agreement_creation (Datetime) field in DocType
 #. 'Issue'
 #: erpnext/support/doctype/issue/issue.json
 msgid "Service Level Agreement Creation"
-msgstr "Kreiranje Ugovora o nivou usluge"
+msgstr "Kreiranje sporazuma o nivou usluge"
 
 #. Label of the service_level_section (Section Break) field in DocType 'Issue'
 #: erpnext/support/doctype/issue/issue.json
 msgid "Service Level Agreement Details"
-msgstr "Detalji Ugovora o nivou usluge"
+msgstr "Detalji sporazuma o nivou usluge"
 
 #. Label of the agreement_status (Select) field in DocType 'Issue'
 #: erpnext/support/doctype/issue/issue.json
 msgid "Service Level Agreement Status"
-msgstr "Status Ugovora o nivou usluge"
+msgstr "Status sporazuma o nivou usluge"
 
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.py:176
 msgid "Service Level Agreement for {0} {1} already exists."
-msgstr "Ugovor o nivou usluge za {0} {1} već postoji."
+msgstr "Sporazum o nivou usluge za {0} {1} već postoji."
 
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.py:763
 msgid "Service Level Agreement has been changed to {0}."
-msgstr "Ugovor o nivou usluge je promenjen na {0}."
+msgstr "Sporazum o nivou usluge je promenjen na {0}."
 
 #: erpnext/support/doctype/issue/issue.js:79
 msgid "Service Level Agreement was reset."
-msgstr "Ugovor o nivou usluge je resetovan."
+msgstr "Sporazum o nivou usluge je resetovan."
 
 #. Label of the sb_00 (Section Break) field in DocType 'Support Settings'
 #: erpnext/support/doctype/support_settings/support_settings.json
 msgid "Service Level Agreements"
-msgstr "Ugovori o nivou usluge"
+msgstr "Sporazumi o nivou usluge"
 
 #. Label of the service_level (Data) field in DocType 'Service Level Agreement'
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.json
@@ -53921,7 +53921,7 @@ msgstr "Uslov '{0}' je nevažeći"
 
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.py:206
 msgid "The Document Type {0} must have a Status field to configure Service Level Agreement"
-msgstr "Vrsta dokumenta {0} mora imati polje status za konfiguraciju Ugovora o nivou usluga"
+msgstr "Vrsta dokumenta {0} mora imati polje status za konfiguraciju sporazuma o nivou usluge"
 
 #: erpnext/accounts/doctype/period_closing_voucher/period_closing_voucher.py:154
 msgid "The GL Entries and closing balances will be processed in the background, it can take a few minutes."
@@ -56325,7 +56325,7 @@ msgstr "Praćenje poluproizvoda"
 #: erpnext/support/doctype/service_level_agreement/service_level_agreement.py:147
 #: erpnext/support/doctype/support_settings/support_settings.json
 msgid "Track Service Level Agreement"
-msgstr "Praćenje Ugovora o nivou usluga"
+msgstr "Praćenje sporazuma o nivou usluge"
 
 #. Description of a DocType
 #: erpnext/accounts/doctype/cost_center/cost_center.json
