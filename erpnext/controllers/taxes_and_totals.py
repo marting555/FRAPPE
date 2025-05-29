@@ -25,19 +25,8 @@ ItemWiseTaxDetail = frappe._dict
 
 
 class calculate_taxes_and_totals:
-	@property
-	def discount_amount(self):
-		return self.doc.discount_amount
-
-	@discount_amount.setter
-	def discount_amount(self, value):
-		self.doc.discount_amount = value
-		self.doc.additional_discount_percentage = 0
-
 	def __init__(self, doc: Document):
 		self.doc = doc
-		self.discount_amount = self.doc.discount_amount
-
 		frappe.flags.round_off_applicable_accounts = []
 		frappe.flags.round_row_wise_tax = frappe.db.get_single_value(
 			"Accounts Settings", "round_row_wise_tax"
@@ -718,17 +707,17 @@ class calculate_taxes_and_totals:
 					tax.item_wise_tax_detail = json.dumps(tax.item_wise_tax_detail)
 
 	def set_discount_amount(self):
-		if self.doc.additional_discount_percentage:
-			self.discount_amount = flt(
+		if self.doc.discount_amount:
+			self.doc.additional_discount_percentage = flt(
+				(self.doc.discount_amount / flt(self.doc.get(scrub(self.doc.apply_discount_on)))) * 100,
+				self.doc.precision("additional_discount_percentage"),
+			)
+		elif self.doc.additional_discount_percentage:
+			self.doc.discount_amount = flt(
 				flt(self.doc.get(scrub(self.doc.apply_discount_on)))
 				* self.doc.additional_discount_percentage
 				/ 100,
 				self.doc.precision("discount_amount"),
-			)
-		elif self.discount_amount:
-			self.doc.additional_discount_percentage = flt(
-				(self.discount_amount / flt(self.doc.get(scrub(self.doc.apply_discount_on)))) * 100,
-				self.doc.precision("additional_discount_percentage"),
 			)
 
 	def apply_discount_amount(self):
