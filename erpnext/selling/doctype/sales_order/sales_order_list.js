@@ -1,16 +1,5 @@
 frappe.listview_settings["Sales Order"] = {
-	add_fields: [
-		"base_grand_total",
-		"customer_name",
-		"currency",
-		"delivery_date",
-		"per_delivered",
-		"per_billed",
-		"status",
-		"order_type",
-		"name",
-		"skip_delivery_note",
-	],
+	hide_name_column: true,
 	get_indicator: function (doc) {
 		if (doc.status === "Closed") {
 			// Closed
@@ -86,4 +75,10 @@ frappe.listview_settings["Sales Order"] = {
 			});
 		}
 	},
+
+	refresh: function (listview) {
+		// hide docstatus column
+		$("header > .level-left:first-child").children().eq(2).hide();
+		$(".list-row-container .level.list-row .level-left").children().eq(2).hide();
+	}
 };

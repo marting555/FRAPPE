@@ -40,6 +40,9 @@ frappe.ui.form.on("Sales Order", {
 	},
 
 	refresh: function (frm) {
+		$("div.page-head.flex > div > div > div.col-md-4.col-sm-6.col-xs-7.page-title > div > div > div.flex > span").text(__(frm.doc.cancelled_status));
+		$('.primary-action').prop('disabled', true);
+
 		if (frm.doc.docstatus === 1) {
 			if (
 				frm.doc.status !== "Closed" &&
@@ -409,7 +412,7 @@ frappe.ui.form.on("Sales Order", {
 	cancel_stock_reservation_entries(frm) {
 		const dialog = new frappe.ui.Dialog({
 			title: __("Stock Unreservation"),
-			size: "extra-large",
+		 size: "extra-large",
 			fields: [
 				{
 					fieldname: "sr_entries",
