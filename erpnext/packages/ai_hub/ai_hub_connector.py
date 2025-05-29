@@ -2,7 +2,7 @@ import requests
 
 class AIHubConnector: 
     def __init__ (self, url , token, webhook_url):
-        self.url = f"{url}/api".format({url})
+        self.url = f"{url}/api"
         self.token = token 
         self.webhook_url = webhook_url
         self.headers = self._get_headers(token)
