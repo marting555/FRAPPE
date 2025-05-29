@@ -40,8 +40,17 @@ frappe.ui.form.on("Sales Order", {
 	},
 
 	refresh: function (frm) {
-		$("div.page-head.flex > div > div > div.col-md-4.col-sm-6.col-xs-7.page-title > div > div > div.flex > span").text(__(frm.doc.cancelled_status));
-		$('.primary-action').prop('disabled', true);
+		// Disable Submit button
+		$(".primary-action").prop("disabled", true);
+		// Indicate cancelled status
+		const $statusSpan = $(".page-head-content .title-area span");
+		$statusSpan.text(__(frm.doc.cancelled_status));
+		// Set color based on cancelled_status value
+		if (frm.doc.cancelled_status === "Uncancelled") {
+			$statusSpan.css("color", "green").css("background-color", "whitesmoke");
+		} else if (frm.doc.cancelled_status === "Cancelled") {
+			$statusSpan.css("color", "tomato").css("background-color", "whitesmoke");
+		}
 
 		if (frm.doc.docstatus === 1) {
 			if (
@@ -1030,7 +1039,7 @@ erpnext.selling.SalesOrderController = class SalesOrderController extends erpnex
 						fieldname: "required_qty",
 						reqd: 1,
 						label: __("Qty"),
-						in_list_view: 1,
+					 in_list_view: 1,
 					},
 				],
 				data: r.message,
