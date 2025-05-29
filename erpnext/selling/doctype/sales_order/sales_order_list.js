@@ -1,5 +1,4 @@
 frappe.listview_settings["Sales Order"] = {
-	hide_name_column: true,
 	onload: function (listview) {
 		var method = "erpnext.selling.doctype.sales_order.sales_order.close_or_unclose_sales_orders";
 
