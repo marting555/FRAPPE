@@ -8,7 +8,7 @@ def find_range_budget(budget_from: int | None, budget_to:int | None):
 		filters["budget_to"] = [">=", budget_to]
 	
 	if budget_from:
-		filters["budget_from"] = [">=", budget_from]
+		filters["budget_from"] = ["<=", budget_from]
 
 	lead_budgets = frappe.get_all(
 		"Lead Budget", 
