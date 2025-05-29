@@ -125,6 +125,7 @@ class ERPNextTestSuite(IntegrationTestCase):
 
 	@classmethod
 	def make_persistant_master_data(cls):
+		cls.make_warehouse_type()
 		cls.make_company()
 		frappe.db.commit()
 
@@ -330,6 +331,16 @@ class ERPNextTestSuite(IntegrationTestCase):
 				cls.holiday_list.append(
 					frappe.get_doc("Holiday List", {"holiday_list_name": x.get("holiday_list_name")})
 				)
+
+	@classmethod
+	def make_warehouse_type(cls):
+		records = [{"doctype": "Warehouse Type", "name": "Transit"}]
+		cls.warehouse_type = []
+		for x in records:
+			if not frappe.db.exists("Warehouse Type", {"name": x.get("name")}):
+				cls.warehouse_type.append(frappe.get_doc(x).insert())
+			else:
+				cls.warehouse_type.append(frappe.get_doc("Warehouse Type", {"name": x.get("name")}))
 
 	@classmethod
 	def make_company(cls):
