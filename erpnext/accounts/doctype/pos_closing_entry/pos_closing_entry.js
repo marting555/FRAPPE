@@ -36,8 +36,6 @@ frappe.ui.form.on("POS Closing Entry", {
 			}
 		});
 
-		set_html_data(frm);
-
 		if (frm.doc.docstatus == 1) {
 			if (!frm.doc.posting_date) {
 				frm.set_value("posting_date", frappe.datetime.nowdate());
@@ -115,7 +113,6 @@ frappe.ui.form.on("POS Closing Entry", {
 				let inv_docs = r.message;
 				set_transaction_form_data(inv_docs, frm);
 				refresh_fields(frm);
-				set_html_data(frm);
 			},
 		});
 	},
@@ -134,6 +131,7 @@ function set_transaction_form_data(data, frm) {
 		frm.doc.grand_total += flt(d.grand_total);
 		frm.doc.net_total += flt(d.net_total);
 		frm.doc.total_quantity += flt(d.total_qty);
+		frm.doc.total_taxes_and_charges += flt(d.total_taxes_and_charges);
 		refresh_payments(d, frm, true);
 		refresh_taxes(d, frm);
 	});
@@ -195,6 +193,7 @@ function reset_values(frm) {
 	frm.set_value("taxes", []);
 	frm.set_value("grand_total", 0);
 	frm.set_value("net_total", 0);
+	frm.set_value("total_taxes_and_charges", 0);
 	frm.set_value("total_quantity", 0);
 }
 
@@ -205,17 +204,6 @@ function refresh_fields(frm) {
 	frm.refresh_field("taxes");
 	frm.refresh_field("grand_total");
 	frm.refresh_field("net_total");
+	frm.refresh_field("total_taxes_and_charges");
 	frm.refresh_field("total_quantity");
-}
-
-function set_html_data(frm) {
-	if (frm.doc.docstatus === 1 && frm.doc.status == "Submitted") {
-		frappe.call({
-			method: "get_payment_reconciliation_details",
-			doc: frm.doc,
-			callback: (r) => {
-				frm.get_field("payment_reconciliation_details").$wrapper.html(r.message);
-			},
-		});
-	}
 }

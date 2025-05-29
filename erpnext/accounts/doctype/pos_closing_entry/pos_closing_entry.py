@@ -53,6 +53,7 @@ class POSClosingEntry(StatusUpdater):
 		status: DF.Literal["Draft", "Submitted", "Queued", "Failed", "Cancelled"]
 		taxes: DF.Table[POSClosingEntryTaxes]
 		total_quantity: DF.Float
+		total_taxes_and_charges: DF.Currency
 		user: DF.Link
 	# end: auto-generated types
 
@@ -205,14 +206,6 @@ class POSClosingEntry(StatusUpdater):
 
 		frappe.throw(error_list, title=_("Invalid Sales Invoices"), as_list=True)
 
-	@frappe.whitelist()
-	def get_payment_reconciliation_details(self):
-		currency = frappe.get_cached_value("Company", self.company, "default_currency")
-		return frappe.render_template(
-			"erpnext/accounts/doctype/pos_closing_entry/closing_voucher_details.html",
-			{"data": self, "currency": currency},
-		)
-
 	def on_submit(self):
 		consolidate_pos_invoices(closing_entry=self)
 		frappe.publish_realtime(
@@ -266,6 +259,7 @@ def get_invoices(start, end, pos_profile, user):
 			SalesInvoice.grand_total,
 			SalesInvoice.net_total,
 			SalesInvoice.total_qty,
+			SalesInvoice.total_taxes_and_charges,
 			fn.Timestamp(SalesInvoice.posting_date, SalesInvoice.posting_time).as_("timestamp"),
 			ConstantColumn("Sales Invoice").as_("doctype"),
 			SalesInvoice.change_amount,
@@ -298,6 +292,7 @@ def get_invoices(start, end, pos_profile, user):
 				POSInvoice.grand_total,
 				POSInvoice.net_total,
 				POSInvoice.total_qty,
+				SalesInvoice.total_taxes_and_charges,
 				fn.Timestamp(POSInvoice.posting_date, POSInvoice.posting_time).as_("timestamp"),
 				ConstantColumn("POS Invoice").as_("doctype"),
 				POSInvoice.change_amount,
@@ -405,6 +400,7 @@ def make_closing_entry_from_opening(opening_entry):
 	closing_entry.grand_total = 0
 	closing_entry.net_total = 0
 	closing_entry.total_quantity = 0
+	closing_entry.total_taxes_and_charges = 0
 
 	invoices = get_invoices(
 		closing_entry.period_start_date,
@@ -447,6 +443,7 @@ def make_closing_entry_from_opening(opening_entry):
 		closing_entry.grand_total += flt(d.grand_total)
 		closing_entry.net_total += flt(d.net_total)
 		closing_entry.total_quantity += flt(d.total_qty)
+		closing_entry.total_taxes_and_charges += flt(d.total_taxes_and_charges)
 
 		for t in d.taxes:
 			existing_tax = [tx for tx in taxes if tx.account_head == t.account_head and tx.rate == t.rate]
