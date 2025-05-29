@@ -141,43 +141,6 @@ class Lead(SellingController, CRMNote):
 		if self.lead_name and not any([self.first_name, self.middle_name, self.last_name]):
 			self.first_name, self.middle_name, self.last_name = parse_full_name(self.lead_name)
 
-
-	def before_save(self):
-		"""
-		Trigger before save 
-		"""
-		parsed_pancake_data
-		if self.pancake_data:
-			try:
-				parsed_pancake_data = frappe.parse_json(self.pancake_data)
-			except Exception as e:
-				parsed_pancake_data = None
-
-		if parsed_pancake_data is None: 
-			return 
-		
-		contact = None
-		try:
-			contact = frappe.get_value(
-				"Contact",
-				{
-					"pancake_page_id":  parsed_pancake_data.get("page_id"),
-					"pancake_conversation_id": parsed_pancake_data.get("conversation_id")
-				},
-			)
-		
-		except Exception as e:
-			contact = None
-
-		if contact: 
-			'''
-			Updat lastest message of customer  to sycn data from AI Summary
-			'''
-			contact_doc = frappe.get_doc("Contact", contact)
-			contact_doc.last_message_time = parsed_pancake_data.get("latest_message_at", contact_doc.last_message_time)
-			contact_doc.save(ignore_permissions=True)
-			
-		
 	def check_lead_source(self):
 		lead_source = None
 		parsed_pancake_data = None
