@@ -7,7 +7,7 @@ from frappe import _
 from frappe.query_builder import DocType
 from frappe.query_builder import functions as fn
 from frappe.query_builder.custom import ConstantColumn
-from frappe.utils import flt, get_datetime
+from frappe.utils import flt
 
 from erpnext.accounts.doctype.pos_invoice_merge_log.pos_invoice_merge_log import (
 	consolidate_pos_invoices,
@@ -64,8 +64,10 @@ class POSClosingEntry(StatusUpdater):
 		self.validate_invoice_mode()
 
 	def set_posting_date_and_time(self):
-		self.posting_date = self.posting_date or frappe.utils.nowdate()
-		self.posting_time = self.posting_time or frappe.utils.nowtime()
+		if self.posting_date:
+			self.posting_date = frappe.utils.nowdate()
+		if self.posting_time:
+			self.posting_time = frappe.utils.nowtime()
 
 	def fetch_invoice_doctype_in_pos(self):
 		self.invoice_doctype_in_pos = frappe.db.get_single_value(
