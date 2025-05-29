@@ -1705,6 +1705,7 @@
    "fieldname": "cancelled_status",
    "fieldtype": "Select",
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Cancelled Status",
    "options": "\nUncancelled\nCancelled",
    "read_only": 1
@@ -1926,7 +1927,7 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-29 11:37:42.031511",
+ "modified": "2025-05-29 12:26:56.155724",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

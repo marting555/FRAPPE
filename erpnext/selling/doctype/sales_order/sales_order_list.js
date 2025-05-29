@@ -77,8 +77,19 @@ frappe.listview_settings["Sales Order"] = {
 	},
 
 	refresh: function (listview) {
-		// hide docstatus column
-		$("header > .level-left:first-child").children().eq(2).hide();
-		$(".list-row-container .level.list-row .level-left").children().eq(2).hide();
+		// Hide the 3rd column (docstatus) in the list view using jQuery
+		$(".result .list-header-subject > div:nth-child(3), .result .list-row-container .list-row-col:nth-child(3)").css("display", "none");
+
+		// Observe DOM changes to hide new 3rd columns dynamically
+		const observer = new MutationObserver(function(mutations) {
+			mutations.forEach(function(mutation) {
+				$(mutation.addedNodes).each(function() {
+					if ($(this).is('.list-row-container') || $(this).find('.list-row-col:nth-child(3)').length) {
+						$('.result .list-row-container .list-row-col:nth-child(3)').css('display', 'none');
+					}
+				});
+			});
+		});
+		observer.observe(document.querySelector('.result'), { childList: true, subtree: true });
 	}
 };
