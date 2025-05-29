@@ -12,10 +12,10 @@ from erpnext.accounts.doctype.accounting_dimension.test_accounting_dimension imp
 from erpnext.accounts.doctype.pos_closing_entry.pos_closing_entry import (
 	make_closing_entry_from_opening,
 )
-from erpnext.accounts.doctype.pos_invoice.pos_invoice import make_sales_return
 from erpnext.accounts.doctype.pos_invoice.test_pos_invoice import create_pos_invoice
 from erpnext.accounts.doctype.pos_opening_entry.test_pos_opening_entry import create_opening_entry
 from erpnext.accounts.doctype.pos_profile.test_pos_profile import make_pos_profile
+from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
 from erpnext.selling.page.point_of_sale.point_of_sale import get_items
 from erpnext.stock.doctype.item.test_item import make_item
 from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
@@ -94,6 +94,8 @@ class TestPOSClosingEntry(IntegrationTestCase):
 		"""
 		Test if quantity is calculated correctly for an item in POS Closing Entry
 		"""
+		from erpnext.accounts.doctype.pos_invoice.pos_invoice import make_sales_return
+
 		test_user, pos_profile = init_user_and_profile()
 		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
@@ -212,9 +214,6 @@ class TestPOSClosingEntry(IntegrationTestCase):
 		from erpnext.accounts.doctype.pos_closing_entry.test_pos_closing_entry import (
 			init_user_and_profile,
 		)
-		from erpnext.accounts.doctype.pos_invoice_merge_log.pos_invoice_merge_log import (
-			consolidate_pos_invoices,
-		)
 		from erpnext.stock.doctype.batch.batch import get_batch_qty
 
 		frappe.db.sql("delete from `tabPOS Invoice`")
@@ -307,23 +306,19 @@ class TestPOSClosingEntry(IntegrationTestCase):
 
 	@IntegrationTestCase.change_settings("Accounts Settings", {"invoice_doctype_in_pos": "Sales Invoice"})
 	def test_closing_entries_with_sales_invoice(self):
-		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
-
 		test_user, pos_profile = init_user_and_profile()
 		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
-		pos_si = create_sales_invoice(qty=10, do_not_save=1)
-		pos_si.is_pos = 1
-		pos_si.pos_profile = pos_profile.name
-		pos_si.is_created_using_pos = 1
+		pos_si = create_sales_invoice(
+			qty=10, is_created_using_pos=1, pos_profile=pos_profile.name, do_not_save=1
+		)
 		pos_si.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 1000})
 		pos_si.save()
 		pos_si.submit()
 
-		pos_si2 = create_sales_invoice(qty=5, do_not_save=1)
-		pos_si2.is_pos = 1
-		pos_si2.pos_profile = pos_profile.name
-		pos_si2.is_created_using_pos = 1
+		pos_si2 = create_sales_invoice(
+			qty=5, is_created_using_pos=1, pos_profile=pos_profile.name, do_not_save=11
+		)
 		pos_si2.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 1000})
 		pos_si2.save()
 		pos_si2.submit()
@@ -341,6 +336,9 @@ class TestPOSClosingEntry(IntegrationTestCase):
 
 		self.assertEqual(pcv_doc.total_quantity, 15)
 		self.assertEqual(pcv_doc.net_total, 1500)
+
+		pos_si2.reload()
+		self.assertEqual(pos_si2.pos_closing_entry, pcv_doc.name)
 
 
 def init_user_and_profile(**args):
