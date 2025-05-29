@@ -137,7 +137,7 @@ def update_lead_by_batch(docs):
 				contact = frappe.get_value(
 					"Contact",
 					{
-						"pancake_page_id":   doc.get("pancake_data", {}).get("page_id", None),
+						"pancake_page_id": doc.get("pancake_data", {}).get("page_id", None),
 						"pancake_conversation_id": doc.get("pancake_data", {}).get("conversation_id", None)
 					},
 				)
