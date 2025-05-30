@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-05-25 09:35+0000\n"
-"PO-Revision-Date: 2025-05-27 20:41\n"
+"PO-Revision-Date: 2025-05-30 21:18\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -7653,7 +7653,7 @@ msgstr "Bank"
 #. Name of a UOM
 #: erpnext/setup/setup_wizard/data/uom_data.json
 msgid "Bar"
-msgstr "Bar"
+msgstr "Stapel"
 
 #. Label of the barcode (Data) field in DocType 'POS Invoice Item'
 #. Label of the barcode (Data) field in DocType 'Sales Invoice Item'
@@ -28497,7 +28497,7 @@ msgstr "Register Sammanslagning Konton"
 #. Label of a Card Break in the Financial Reports Workspace
 #: erpnext/accounts/workspace/financial_reports/financial_reports.json
 msgid "Ledgers"
-msgstr "Register"
+msgstr "Bokföring Register"
 
 #. Option for the 'Status' (Select) field in DocType 'Driver'
 #. Option for the 'Status' (Select) field in DocType 'Employee'
