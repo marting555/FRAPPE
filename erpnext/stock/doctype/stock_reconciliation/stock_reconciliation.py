@@ -713,7 +713,7 @@ class StockReconciliation(StockController):
 
 		sl_entries = []
 		for row in self.items:
-			if not row.qty and not row.valuation_rate and not row.current_qty:
+			if not row.qty and not row.valuation_rate:
 				self.make_adjustment_entry(row, sl_entries)
 				continue
 
