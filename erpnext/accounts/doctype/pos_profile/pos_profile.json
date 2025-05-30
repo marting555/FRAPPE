@@ -37,6 +37,7 @@
   "section_break_16",
   "print_format",
   "letter_head",
+  "cash_movements_format",
   "column_break0",
   "tc_name",
   "select_print_heading",
@@ -401,6 +402,12 @@
    "fieldname": "password_manager",
    "fieldtype": "Data",
    "label": "Password Manager"
+  },
+  {
+   "fieldname": "cash_movements_format",
+   "fieldtype": "Link",
+   "label": "Formato movimientos de efectivo",
+   "options": "Print Format"
   }
  ],
  "icon": "icon-cog",
@@ -428,7 +435,7 @@
    "link_fieldname": "pos_profile"
   }
  ],
- "modified": "2025-05-19 12:00:11.907449",
+ "modified": "2025-05-30 11:12:54.474246",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "POS Profile",
