@@ -22,6 +22,7 @@ class TestCompany(ERPNextTestSuite):
 		company.default_currency = "INR"
 		company.create_chart_of_accounts_based_on = "Existing Company"
 		company.existing_company = "_Test Company"
+		company.country = "India"
 		company.save()
 
 		expected_results = {
@@ -68,6 +69,7 @@ class TestCompany(ERPNextTestSuite):
 					company.default_currency = "USD"
 					company.create_chart_of_accounts_based_on = "Standard Template"
 					company.chart_of_accounts = template
+					company.country = country
 					company.save()
 
 					account_types = [
