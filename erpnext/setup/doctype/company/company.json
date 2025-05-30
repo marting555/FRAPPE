@@ -94,6 +94,11 @@
   "depreciation_cost_center",
   "capital_work_in_progress_account",
   "asset_received_but_not_billed",
+  "accounts_closing_tab",
+  "accounts_closing_section",
+  "accounts_frozen_till_date",
+  "column_break_tawz",
+  "role_allowed_for_frozen_entries",
   "buying_and_selling_tab",
   "sales_settings",
   "default_buying_terms",
@@ -834,14 +839,42 @@
    "fieldtype": "Select",
    "label": "Reconciliation Takes Effect On",
    "options": "Advance Payment Date\nOldest Of Invoice Or Advance\nReconciliation Date"
+  },
+  {
+   "description": "Accounting entries are frozen up to this date. Only users with the specified role can create or modify entries before this date.",
+   "fieldname": "accounts_frozen_till_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Accounts Frozen Till Date"
+  },
+  {
+   "fieldname": "accounts_closing_tab",
+   "fieldtype": "Tab Break",
+   "label": "Accounts Closing"
+  },
+  {
+   "fieldname": "column_break_tawz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "role_allowed_for_frozen_entries",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Roles Allowed to Set and Edit Frozen Account Entries",
+   "options": "Role"
+  },
+  {
+   "fieldname": "accounts_closing_section",
+   "fieldtype": "Section Break"
   }
  ],
+ "grid_page_length": 50,
  "icon": "fa fa-building",
  "idx": 1,
  "image_field": "company_logo",
  "is_tree": 1,
  "links": [],
- "modified": "2025-01-09 20:12:25.471544",
+ "modified": "2025-05-30 14:33:32.171699",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Company",
@@ -903,6 +936,7 @@
    "select": 1
   }
  ],
+ "row_format": "Dynamic",
  "show_name_in_global_search": 1,
  "sort_field": "creation",
  "sort_order": "ASC",
