@@ -41,6 +41,7 @@
   "column_break0",
   "tc_name",
   "select_print_heading",
+  "close_pos_format",
   "section_break_19",
   "selling_price_list",
   "currency",
@@ -408,6 +409,12 @@
    "fieldtype": "Link",
    "label": "Formato movimientos de efectivo",
    "options": "Print Format"
+  },
+  {
+   "fieldname": "close_pos_format",
+   "fieldtype": "Link",
+   "label": "Formato de cierre de caja",
+   "options": "Print Format"
   }
  ],
  "icon": "icon-cog",
@@ -435,7 +442,7 @@
    "link_fieldname": "pos_profile"
   }
  ],
- "modified": "2025-05-30 11:12:54.474246",
+ "modified": "2025-05-30 13:07:42.140389",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "POS Profile",
