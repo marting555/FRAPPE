@@ -230,7 +230,7 @@ def get_lead_province(province : str):
 @frappe.whitelist(methods=["POST"])
 def update_lead_from_summary(data):
 	if isinstance(data, str):
-		data = json.load(data)
+		data = json.loads(data)
 
 	conversation_id = data.get("conversation_id", None)
 	if conversation_id is None:
