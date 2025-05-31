@@ -14,7 +14,6 @@ from frappe.query_builder.functions import Coalesce, Locate, Replace, Sum
 from frappe.utils import ceil, cint, floor, flt, get_link_to_form
 from frappe.utils.nestedset import get_descendants_of
 
-from erpnext.controllers.status_updater import StatusUpdater
 from erpnext.selling.doctype.sales_order.sales_order import (
 	make_delivery_note as create_delivery_note_from_sales_order,
 )
@@ -28,11 +27,12 @@ from erpnext.stock.serial_batch_bundle import (
 	get_batches_from_bundle,
 	get_serial_nos_from_bundle,
 )
+from erpnext.utilities.transaction_base import TransactionBase
 
 # TODO: Prioritize SO or WO group warehouse
 
 
-class PickList(StatusUpdater):
+class PickList(TransactionBase):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
 
@@ -79,6 +79,7 @@ class PickList(StatusUpdater):
 		self.validate_for_qty()
 		self.validate_stock_qty()
 		self.check_serial_no_status()
+		self.validate_with_previous_doc()
 
 	def before_save(self):
 		self.update_status()
@@ -151,6 +152,25 @@ class PickList(StatusUpdater):
 					),
 					title=_("Incorrect Warehouse"),
 				)
+
+	def validate_with_previous_doc(self):
+		super().validate_with_previous_doc(
+			{
+				"Sales Order": {
+					"ref_dn_field": "sales_order",
+					"compare_fields": [
+						["customer", "="],
+						["company", "="],
+					],
+				},
+				"Sales Order Item": {
+					"ref_dn_field": "sales_order_item",
+					"compare_fields": [["item_code", "="]],
+					"is_child_table": True,
+					"allow_duplicate_prev_row_id": True,
+				},
+			}
+		)
 
 	def validate_sales_order_percentage(self):
 		# set percentage picked in SO
@@ -335,14 +355,14 @@ class PickList(StatusUpdater):
 		if status:
 			self.db_set("status", status)
 
-	def has_linked_document(self):
+	def stock_entry_exists(self):
 		if self.docstatus != 1:
 			return False
 
 		if self.purpose == "Delivery":
 			return False
 
-		return target_document_exists(self.name, self.purpose)
+		return stock_entry_exists(self.name)
 
 	def update_reference_qty(self):
 		packed_items = []
@@ -1259,7 +1279,9 @@ def map_pl_locations(pick_list, item_mapper, delivery_note, sales_order=None):
 			dn_item.against_pick_list = pick_list.name
 			dn_item.pick_list_item = location.name
 			dn_item.warehouse = location.warehouse
-			dn_item.qty = flt(location.picked_qty) / (flt(location.conversion_factor) or 1)
+			dn_item.qty = flt(location.picked_qty - location.delivered_qty) / (
+				flt(dn_item.conversion_factor) or 1
+			)
 			dn_item.batch_no = location.batch_no
 			dn_item.serial_no = location.serial_no
 			dn_item.use_serial_batch_fields = location.use_serial_batch_fields
@@ -1269,7 +1291,6 @@ def map_pl_locations(pick_list, item_mapper, delivery_note, sales_order=None):
 	add_product_bundles_to_delivery_note(pick_list, delivery_note, item_mapper)
 	set_delivery_note_missing_values(delivery_note)
 
-	delivery_note.pick_list = pick_list.name
 	delivery_note.company = pick_list.company
 	delivery_note.customer = frappe.get_value("Sales Order", sales_order, "customer")
 
@@ -1360,14 +1381,6 @@ def get_pending_work_orders(doctype, txt, searchfield, start, page_length, filte
 		.limit(cint(page_length))
 		.offset(start)
 	).run(as_dict=as_dict)
-
-
-@frappe.whitelist()
-def target_document_exists(pick_list_name, purpose):
-	if purpose == "Delivery":
-		return frappe.db.exists("Delivery Note", {"pick_list": pick_list_name, "docstatus": 1})
-
-	return stock_entry_exists(pick_list_name)
 
 
 @frappe.whitelist()
