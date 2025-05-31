@@ -176,6 +176,19 @@ class DeliveryNote(SellingController):
 				"overflow_type": "delivery",
 				"no_allowance": 1,
 			},
+			{
+				"source_dt": "Delivery Note Item",
+				"target_dt": "Pick List Item",
+				"join_field": "pick_list_item",
+				"target_field": "delivered_qty",
+				"target_parent_dt": "Pick List",
+				"target_parent_field": "per_delivered",
+				"target_ref_field": "picked_qty",
+				"source_field": "stock_qty",
+				"percent_join_field": "against_pick_list",
+				"status_field": "delivery_status",
+				"keyword": "Delivered",
+			},
 		]
 		if cint(self.is_return):
 			self.status_updater.extend(

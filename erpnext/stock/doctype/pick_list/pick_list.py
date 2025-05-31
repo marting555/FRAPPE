@@ -7,7 +7,6 @@ from itertools import groupby
 
 import frappe
 from frappe import _, bold
-from frappe.model.document import Document
 from frappe.model.mapper import map_child_doc
 from frappe.query_builder import Case
 from frappe.query_builder.custom import GROUP_CONCAT
@@ -15,6 +14,7 @@ from frappe.query_builder.functions import Coalesce, Locate, Replace, Sum
 from frappe.utils import ceil, cint, floor, flt, get_link_to_form
 from frappe.utils.nestedset import get_descendants_of
 
+from erpnext.controllers.status_updater import StatusUpdater
 from erpnext.selling.doctype.sales_order.sales_order import (
 	make_delivery_note as create_delivery_note_from_sales_order,
 )
@@ -32,7 +32,7 @@ from erpnext.stock.serial_batch_bundle import (
 # TODO: Prioritize SO or WO group warehouse
 
 
-class PickList(Document):
+class PickList(StatusUpdater):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
 
@@ -330,18 +330,19 @@ class PickList(Document):
 
 	def update_status(self, status=None, update_modified=True):
 		if not status:
-			if self.docstatus == 0:
-				status = "Draft"
-			elif self.docstatus == 1:
-				if target_document_exists(self.name, self.purpose):
-					status = "Completed"
-				else:
-					status = "Open"
-			elif self.docstatus == 2:
-				status = "Cancelled"
+			status = self.get_status().get("status")
 
 		if status:
 			self.db_set("status", status)
+
+	def has_linked_document(self):
+		if self.docstatus != 1:
+			return False
+
+		if self.purpose == "Delivery":
+			return False
+
+		return target_document_exists(self.name, self.purpose)
 
 	def update_reference_qty(self):
 		packed_items = []
