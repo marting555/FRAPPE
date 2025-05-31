@@ -1254,7 +1254,7 @@ def map_pl_locations(pick_list, item_mapper, delivery_note, sales_order=None):
 		if dn_item:
 			dn_item.pick_list_item = location.name
 			dn_item.warehouse = location.warehouse
-			dn_item.qty = flt(location.picked_qty) / (flt(location.conversion_factor) or 1)
+			dn_item.qty = flt(location.picked_qty) / (flt(dn_item.conversion_factor) or 1)
 			dn_item.batch_no = location.batch_no
 			dn_item.serial_no = location.serial_no
 			dn_item.use_serial_batch_fields = location.use_serial_batch_fields
