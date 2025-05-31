@@ -48,6 +48,7 @@ class PickList(Document):
 		consider_rejected_warehouses: DF.Check
 		customer: DF.Link | None
 		customer_name: DF.Data | None
+		delivery_status: DF.Literal["Not Delivered", "Fully Delivered", "Partly Delivered"]
 		for_qty: DF.Float
 		group_same_items: DF.Check
 		ignore_pricing_rule: DF.Check
@@ -55,12 +56,13 @@ class PickList(Document):
 		material_request: DF.Link | None
 		naming_series: DF.Literal["STO-PICK-.YYYY.-"]
 		parent_warehouse: DF.Link | None
+		per_delivered: DF.Percent
 		pick_manually: DF.Check
 		prompt_qty: DF.Check
 		purpose: DF.Literal["Material Transfer for Manufacture", "Material Transfer", "Delivery"]
 		scan_barcode: DF.Data | None
 		scan_mode: DF.Check
-		status: DF.Literal["Draft", "Open", "Completed", "Cancelled"]
+		status: DF.Literal["Draft", "Open", "Partly Delivered", "Completed", "Cancelled"]
 		work_order: DF.Link | None
 	# end: auto-generated types
 
@@ -187,6 +189,7 @@ class PickList(Document):
 	def validate_picked_items(self):
 		for item in self.locations:
 			if self.scan_mode and item.picked_qty < item.stock_qty:
+				return
 				frappe.throw(
 					_(
 						"Row {0} picked quantity is less than the required quantity, additional {1} {2} required."
@@ -1252,6 +1255,7 @@ def map_pl_locations(pick_list, item_mapper, delivery_note, sales_order=None):
 		dn_item = map_child_doc(source_doc, delivery_note, item_mapper)
 
 		if dn_item:
+			dn_item.against_pick_list = pick_list.name
 			dn_item.pick_list_item = location.name
 			dn_item.warehouse = location.warehouse
 			dn_item.qty = flt(location.picked_qty) / (flt(location.conversion_factor) or 1)
