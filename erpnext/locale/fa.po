@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-05-25 09:35+0000\n"
-"PO-Revision-Date: 2025-05-27 20:41\n"
+"PO-Revision-Date: 2025-05-31 21:25\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Persian\n"
 "MIME-Version: 1.0\n"
@@ -33031,7 +33031,8 @@ msgstr "فقط مواردی را از این گروه‌های مورد نشان
 #: erpnext/accounts/doctype/exchange_rate_revaluation/exchange_rate_revaluation.json
 msgid "Only values between [0,1) are allowed. Like {0.00, 0.04, 0.09, ...}\n"
 "Ex: If allowance is set at 0.07, accounts that have balance of 0.07 in either of the currencies will be considered as zero balance account"
-msgstr ""
+msgstr "فقط مقادیر بین [0,1) مجاز هستند. مانند {0.00، 0.04، 0.09، ...}\n"
+"مثال: اگر سقف مجاز 0.07 تعیین شود، حساب‌هایی که موجودی 0.07 در هر یک از ارزها داشته باشند، به عنوان حساب با موجودی صفر در نظر گرفته می‌شوند"
 
 #: erpnext/accounts/doctype/unreconcile_payment/unreconcile_payment.py:43
 msgid "Only {0} are supported"
@@ -37170,7 +37171,7 @@ msgstr "لطفاً مطمئن شوید که واقعاً می‌خواهید ه�
 
 #: erpnext/stock/doctype/item/item.js:525
 msgid "Please mention 'Weight UOM' along with Weight."
-msgstr "لطفا \"وزن UOM\" را همراه با وزن ذکر کنید."
+msgstr "لطفا \"UOM وزن\" را همراه با وزن ذکر کنید."
 
 #: erpnext/accounts/general_ledger.py:622
 #: erpnext/accounts/general_ledger.py:629
@@ -42060,7 +42061,7 @@ msgstr "سطح سفارش مجدد"
 #. Label of the warehouse_reorder_qty (Float) field in DocType 'Item Reorder'
 #: erpnext/stock/doctype/item_reorder/item_reorder.json
 msgid "Re-order Qty"
-msgstr "تعداد سفارش مجدد"
+msgstr "مقدار سفارش مجدد"
 
 #: erpnext/accounts/doctype/bisect_accounting_statements/bisect_accounting_statements.py:227
 msgid "Reached Root"
@@ -54143,7 +54144,7 @@ msgstr "مقدار {0} قبلاً به یک مورد موجود {1} اختصاص
 
 #: erpnext/manufacturing/doctype/work_order/work_order.js:1057
 msgid "The warehouse where you store finished Items before they are shipped."
-msgstr "انباری که اقلام تمام شده را قبل از ارسال در آن ذخیره می‌کنید."
+msgstr "انباری که آیتم‌های تمام شده را قبل از ارسال در آن ذخیره می‌کنید."
 
 #: erpnext/manufacturing/doctype/work_order/work_order.js:1050
 msgid "The warehouse where you store your raw materials. Each required item can have a separate source warehouse. Group warehouse also can be selected as source warehouse. On submission of the Work Order, the raw materials will be reserved in these warehouses for production usage."
@@ -59445,7 +59446,7 @@ msgstr "وزن در واحد"
 #: erpnext/stock/doctype/packing_slip_item/packing_slip_item.json
 #: erpnext/stock/doctype/purchase_receipt_item/purchase_receipt_item.json
 msgid "Weight UOM"
-msgstr "وزن UOM"
+msgstr "UOM وزن"
 
 #. Label of the weighting_function (Small Text) field in DocType 'Supplier
 #. Scorecard'
