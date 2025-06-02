@@ -27,6 +27,7 @@
   "customer_name",
   "order_number",
   "transaction_date",
+  "real_order_date",
   "column_break_dqxa",
   "cancelled_status",
   "financial_status",
@@ -1922,13 +1923,18 @@
    "fieldtype": "Table MultiSelect",
    "label": "Product Category",
    "options": "Sales Order Product Category"
+  },
+  {
+   "fieldname": "real_order_date",
+   "fieldtype": "Date",
+   "label": "Real Order Date"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-29 16:17:53.704744",
+ "modified": "2025-05-30 10:38:13.386251",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",
