@@ -10,6 +10,7 @@ from frappe.core.doctype.user_permission.test_user_permission import create_user
 from frappe.tests import IntegrationTestCase, change_settings
 from frappe.utils import add_days, flt, getdate, nowdate, today
 
+from erpnext.accounts.doctype.account.test_account import create_account
 from erpnext.accounts.test.accounts_mixin import AccountsTestMixin
 from erpnext.controllers.accounts_controller import InvalidQtyError, update_child_qty_rate
 from erpnext.maintenance.doctype.maintenance_schedule.test_maintenance_schedule import (
@@ -160,6 +161,52 @@ class TestSalesOrder(AccountsTestMixin, IntegrationTestCase):
 
 		si1 = make_sales_invoice(so.name)
 		self.assertEqual(len(si1.get("items")), 0)
+
+	def test_overall_discount_calculatin(self):
+		so = make_sales_order(do_not_submit=True)
+
+		discount_percent = 5
+		grand_total = so.grand_total
+		additional_discount_account = create_account(
+			account_name="Discount Account",
+			parent_account="Indirect Expenses - _TC",
+			company="_Test Company",
+		)
+		discount_amount = grand_total * (discount_percent / 100)
+
+		so.apply_discount_on = "Grand Total"
+		so.additional_discount_percentage = discount_percent
+		so.is_cash_or_non_trade_discount = 1
+		so.additional_discount_account = additional_discount_account
+
+		so.save()
+
+		self.assertEqual(so.grand_total, (grand_total - discount_amount))
+
+	def test_sales_invoice_creation_from_sales_order_with_cash_discount_fields(self):
+		so = make_sales_order(do_not_submit=True)
+
+		additional_discount_account = create_account(
+			account_name="Discount Account",
+			parent_account="Indirect Expenses - _TC",
+			company="_Test Company",
+		)
+		discount_percent = 5
+
+		so.apply_discount_on = "Grand Total"
+		so.additional_discount_percentage = discount_percent
+		so.is_cash_or_non_trade_discount = 1
+		so.additional_discount_account = additional_discount_account
+
+		so.submit()
+
+		si = make_sales_invoice(so.name)
+
+		self.assertEqual(so.is_cash_or_non_trade_discount, si.is_cash_or_non_trade_discount)
+		self.assertEqual(so.additional_discount_account, si.additional_discount_account)
+		self.assertEqual(so.apply_discount_on, si.apply_discount_on)
+		self.assertEqual(so.additional_discount_percentage, si.additional_discount_percentage)
+		self.assertEqual(so.grand_total, si.grand_total)
 
 	def test_so_billed_amount_against_return_entry(self):
 		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_sales_return
