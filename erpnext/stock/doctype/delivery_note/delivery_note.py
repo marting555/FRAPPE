@@ -33,6 +33,7 @@ class DeliveryNote(SellingController):
 		from erpnext.stock.doctype.delivery_note_item.delivery_note_item import DeliveryNoteItem
 		from erpnext.stock.doctype.packed_item.packed_item import PackedItem
 
+		additional_discount_account: DF.Link | None
 		additional_discount_percentage: DF.Float
 		address_display: DF.TextEditor | None
 		amended_from: DF.Link | None
@@ -79,6 +80,7 @@ class DeliveryNote(SellingController):
 		installation_status: DF.Literal[None]
 		instructions: DF.Text | None
 		inter_company_reference: DF.Link | None
+		is_cash_or_non_trade_discount: DF.Check
 		is_internal_customer: DF.Check
 		is_return: DF.Check
 		issue_credit_note: DF.Check

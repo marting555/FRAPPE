@@ -68,6 +68,7 @@ class SalesOrder(SellingController):
 		from erpnext.selling.doctype.sales_team.sales_team import SalesTeam
 		from erpnext.stock.doctype.packed_item.packed_item import PackedItem
 
+		additional_discount_account: DF.Link | None
 		additional_discount_percentage: DF.Float
 		address_display: DF.TextEditor | None
 		advance_paid: DF.Currency
@@ -119,6 +120,7 @@ class SalesOrder(SellingController):
 		in_words: DF.Data | None
 		incoterm: DF.Link | None
 		inter_company_order_reference: DF.Link | None
+		is_cash_or_non_trade_discount: DF.Check
 		is_internal_customer: DF.Check
 		items: DF.Table[SalesOrderItem]
 		language: DF.Link | None
