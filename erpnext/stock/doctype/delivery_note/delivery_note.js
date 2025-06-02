@@ -74,6 +74,13 @@ frappe.ui.form.on("Delivery Note", {
 		frm.set_df_property("packed_items", "cannot_delete_rows", true);
 	},
 
+	is_cash_or_non_trade_discount: function (frm) {
+		if (!frm.doc.is_cash_or_non_trade_discount) {
+			frm.set_value("additional_discount_account", "");
+		}
+
+		frm.cscript.calculate_taxes_and_totals();
+	},
 	print_without_amount: function (frm) {
 		erpnext.stock.delivery_note.set_print_hide(frm.doc);
 	},
