@@ -8,6 +8,13 @@ frappe.pages["setup-wizard"].on_page_load = function (wrapper) {
 };
 
 frappe.setup.on("before_load", function () {
+	if (
+		frappe.boot.setup_wizard_completed_apps?.length &&
+		frappe.boot.setup_wizard_completed_apps.includes("erpnext")
+	) {
+		return;
+	}
+
 	erpnext.setup.slides_settings.map(frappe.setup.add_slide);
 });
 
@@ -96,7 +103,7 @@ erpnext.setup.slides_settings = [
 		},
 
 		set_fy_dates: function (slide) {
-			var country = frappe.wizard.values.country;
+			var country = frappe.wizard.values.country || frappe.defaults.get_default("country");
 
 			if (country) {
 				let fy = erpnext.setup.fiscal_years[country];
@@ -118,7 +125,7 @@ erpnext.setup.slides_settings = [
 		},
 
 		load_chart_of_accounts: function (slide) {
-			let country = frappe.wizard.values.country;
+			let country = frappe.wizard.values.country || frappe.defaults.get_default("country");
 
 			if (country) {
 				frappe.call({
