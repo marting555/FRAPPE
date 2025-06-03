@@ -7,7 +7,7 @@ from itertools import groupby
 
 import frappe
 from frappe import _, bold
-from frappe.model.mapper import map_child_doc
+from frappe.model.mapper import get_mapped_doc, map_child_doc
 from frappe.query_builder import Case
 from frappe.query_builder.custom import GROUP_CONCAT
 from frappe.query_builder.functions import Coalesce, Locate, Replace, Sum
@@ -1503,3 +1503,99 @@ def get_rejected_warehouses():
 		)
 
 	return frappe.local.rejected_warehouses
+
+
+@frappe.whitelist()
+def get_purchase_invoice_query(doctype, txt, searchfield, start, page_len, filters):
+	frappe.has_permission("Purchase Invoice", throw=True)
+
+	if not filters.get("company"):
+		frappe.throw(_("Please select a Company "))
+
+	PICK_LIST = frappe.qb.DocType("Pick List")
+	PICK_LIST_ITEM = frappe.qb.DocType("Pick List Item")
+
+	query = (
+		frappe.qb.from_(PICK_LIST)
+		.join(PICK_LIST_ITEM)
+		.on(PICK_LIST.name == PICK_LIST_ITEM.parent)
+		.select(PICK_LIST.name, PICK_LIST.customer, PICK_LIST_ITEM.sales_order)
+		.where(PICK_LIST.docstatus == 1)
+		.where(PICK_LIST.status.isin(["Open", "Partly Delivered"]))
+		.where(PICK_LIST.company == filters.get("company"))
+		.where(PICK_LIST.customer == filters.get("customer"))
+		.groupby(PICK_LIST.name)
+	)
+
+	if filters.get("sales_order"):
+		query = query.where(PICK_LIST_ITEM.sales_order == filters.get("sales_order"))
+
+	if txt:
+		meta = frappe.get_meta("Pick List")
+		search_fields = meta.get_search_fields()
+
+		txt = f"%{txt}%"
+		txt_condition = PICK_LIST[search_fields[-1]].like(txt)
+
+		for field in search_fields[:-1]:
+			txt_condition |= PICK_LIST[field].like(txt)
+
+		query = query.where(txt_condition)
+
+	return query.run(as_dict=True)
+
+
+@frappe.whitelist()
+def make_delivery_note(source_name, target_doc=None, kwargs=None):
+	pick_list = frappe.get_doc("Pick List", source_name)
+	sales_order_item = [row.sales_order_item for row in pick_list.locations if row.sales_order_item]
+	rate_map = {}
+
+	if sales_order_item:
+		rate_map = {
+			row.name: row
+			for row in frappe.db.get_all(
+				"Sales Order Item", {"name": ["in", sales_order_item]}, ["name", "rate", "base_rate"]
+			)
+		}
+
+	def update_items(source, target, source_parent):
+		target.qty = flt(source.picked_qty - source.delivered_qty) / (flt(target.conversion_factor) or 1)
+		if target.so_detail:
+			target.rate = rate_map.get(target.so_detail, {}).get("rate", 0.0)
+			target.base_rate = rate_map.get(target.so_detail, {}).get("base_rate", 0.0)
+			target.base_amount = flt(target.qty * target.base_rate)
+			target.amount = flt(target.qty * target.rate)
+
+	doc = get_mapped_doc(
+		"Pick List",
+		source_name,
+		{
+			"Pick List": {
+				"doctype": "Delivery Note",
+				"field_no_map": ["posting_date"],
+				"validation": {
+					"docstatus": ["=", 1],
+					"status": ["in", ["Open", "Partly Delivered"]],
+				},
+			},
+			"Pick List Item": {
+				"doctype": "Delivery Note Item",
+				"field_map": {
+					"name": "pick_list_item",
+					"sales_order": "against_sales_order",
+					"sales_order_item": "so_detail",
+				},
+				"postprocess": update_items,
+			},
+		},
+		target_doc,
+	)
+
+	doc.items = [item for item in doc.items if item.qty > 0]
+
+	# Correct the idx of items
+	for idx, item in enumerate(doc.items):
+		item.idx = idx + 1
+
+	return doc
