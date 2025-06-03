@@ -367,10 +367,16 @@ class Subscription(Document):
 		billing_interval = billing_info[0]["billing_interval"]
 
 		if billing_interval in ["Day", "Week"] and not self.end_date:
-			frappe.throw(_("Subscription End Date is mandatory to follow calendar months when billing interval is {0}").format
+			frappe.throw(
+				_(
+					"Subscription End Date is mandatory to follow calendar months when billing interval is {0}"
+				).format(billing_interval)
+			)
 
 		if billing_interval not in ["Month", "Year"]:
-			frappe.throw(_("Billing Interval in Subscription Plan must be Month or Year to follow calendar months"))
+			frappe.throw(
+				_("Billing Interval in Subscription Plan must be Month or Year to follow calendar months")
+			)
 
 	def generate_invoice(
 		self,
