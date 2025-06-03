@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-06-01 09:36+0000\n"
-"PO-Revision-Date: 2025-06-01 21:35\n"
+"PO-Revision-Date: 2025-06-03 22:20\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: French\n"
 "MIME-Version: 1.0\n"
@@ -5250,7 +5250,7 @@ msgstr ""
 
 #: erpnext/stock/doctype/putaway_rule/putaway_rule.py:183
 msgid "Applied putaway rules."
-msgstr ""
+msgstr "Règles d'entrée en stock appliquées."
 
 #. Label of the applies_to (Table) field in DocType 'Common Code'
 #: erpnext/edi/doctype/common_code/common_code.json
@@ -5328,7 +5328,7 @@ msgstr "Appliquer Sur"
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.json
 #: erpnext/stock/doctype/stock_entry/stock_entry.json
 msgid "Apply Putaway Rule"
-msgstr "Appliquer la régle de routage d'entrepot"
+msgstr "Appliquer la règle de routage d'entrée en stock"
 
 #. Label of the apply_recursion_over (Float) field in DocType 'Pricing Rule'
 #. Label of the apply_recursion_over (Float) field in DocType 'Promotional
@@ -9646,11 +9646,11 @@ msgstr "Planification de Capacité Pendant (Jours)"
 #. Label of the stock_capacity (Float) field in DocType 'Putaway Rule'
 #: erpnext/stock/doctype/putaway_rule/putaway_rule.json
 msgid "Capacity in Stock UOM"
-msgstr ""
+msgstr "Capacité dans l'unité de stockage"
 
 #: erpnext/stock/doctype/putaway_rule/putaway_rule.py:85
 msgid "Capacity must be greater than 0"
-msgstr ""
+msgstr "Capacité doit être plus grande que 0"
 
 #: erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts.py:26
 #: erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts_with_account_number.py:39
@@ -24837,7 +24837,7 @@ msgstr ""
 #: erpnext/stock/doctype/putaway_rule/putaway_rule.py:81
 #: erpnext/stock/doctype/putaway_rule/putaway_rule.py:308
 msgid "Insufficient Capacity"
-msgstr ""
+msgstr "Capacité insuffisante"
 
 #: erpnext/controllers/accounts_controller.py:3593
 #: erpnext/controllers/accounts_controller.py:3617
@@ -40576,7 +40576,7 @@ msgstr ""
 #: erpnext/stock/doctype/putaway_rule/putaway_rule.json
 #: erpnext/stock/doctype/stock_entry_detail/stock_entry_detail.json
 msgid "Putaway Rule"
-msgstr ""
+msgstr "Règle de routage d'entrée en stock"
 
 #: erpnext/stock/doctype/putaway_rule/putaway_rule.py:52
 msgid "Putaway Rule already exists for Item {0} in Warehouse {1}."
@@ -56953,7 +56953,7 @@ msgstr "Montant Non Alloué"
 
 #: erpnext/stock/doctype/putaway_rule/putaway_rule.py:306
 msgid "Unassigned Qty"
-msgstr ""
+msgstr "Qté non affectée"
 
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.js:105
 msgid "Unblock Invoice"
