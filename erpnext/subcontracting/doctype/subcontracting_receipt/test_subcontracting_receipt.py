@@ -372,9 +372,7 @@ class TestSubcontractingReceipt(FrappeTestCase):
 		self.assertTrue(get_gl_entries("Subcontracting Receipt", scr.name))
 		frappe.db.set_single_value("Stock Settings", "use_serial_batch_fields", 1)
 
-<<<<<<< HEAD
 	@change_settings("Stock Settings", {"use_serial_batch_fields": 0})
-=======
 	def test_subcontracting_receipt_gl_entry_with_different_rm_expense_accounts(self):
 		service_items = [
 			{
@@ -424,8 +422,7 @@ class TestSubcontractingReceipt(FrappeTestCase):
 			self.assertEqual(expected_values[gle.account][0], gle.debit)
 			self.assertEqual(expected_values[gle.account][1], gle.credit)
 
-	@IntegrationTestCase.change_settings("Stock Settings", {"use_serial_batch_fields": 0})
->>>>>>> 4861856b8f (test: add test)
+	@change_settings("Stock Settings", {"use_serial_batch_fields": 0})
 	def test_subcontracting_receipt_with_zero_service_cost(self):
 		warehouse = "Stores - TCP1"
 		service_items = [
