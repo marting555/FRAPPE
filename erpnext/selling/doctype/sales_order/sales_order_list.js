@@ -40,15 +40,15 @@ frappe.listview_settings["Sales Order"] = {
 		const resultEl = document.querySelector('.result');
 		if (resultEl) {
 			const observer = new MutationObserver(function (mutationsList, observer) {
-      // Order Number
-      for (let i = 0; i < listview.data.length; i++) {
-        if (listview.data[i].cancelled_status === "Uncancelled") {
+				// Order Number
+				for (let i = 0; i < listview.data.length; i++) {
+					if (listview.data[i].cancelled_status === "Uncancelled") {
 						$(`.result .list-row-container:nth-child(${i + 3}) .list-row-col:nth-child(1) a`).css("color", "rgb(35, 98, 235)");
 					} else {
 						$(`.result .list-row-container:nth-child(${i + 3}) .list-row-col:nth-child(1) a`).css("color", "rgb(219, 48, 48)");
 					}
 				}
-				
+
 				$('span[data-filter]').removeAttr('class').addClass('indicator-pill').addClass('no-indicator-dot').addClass('filterable');
 				// Cancelled Status
 				$('span[data-filter="cancelled_status,=,Uncancelled"]').addClass('green');
@@ -63,5 +63,7 @@ frappe.listview_settings["Sales Order"] = {
 			});
 			observer.observe(resultEl, { childList: true, subtree: true });
 		}
+		// Remove the title status
+		$(".page-head-content .title-area span").removeAttr('style').text("");
 	}
 };
