@@ -366,7 +366,7 @@ def get_basic_details(ctx: ItemDetailsCtx, item, overwrite_warehouse=True) -> It
 	"""
 
 	if not item:
-		item = frappe.get_doc("Item", ctx.item_code)
+		item = frappe.get_cached_doc("Item", ctx.item_code)
 
 	if item.variant_of and not item.taxes and frappe.db.exists("Item Tax", {"parent": item.variant_of}):
 		item.update_template_tables()
@@ -532,8 +532,8 @@ def get_basic_details(ctx: ItemDetailsCtx, item, overwrite_warehouse=True) -> It
 			out.manufacturer_part_no = None
 			out.manufacturer = None
 	else:
-		data = frappe.get_value(
-			"Item", item.name, ["default_item_manufacturer", "default_manufacturer_part_no"], as_dict=1
+		data = frappe.get_cached_value(
+			"Item", item.name, ["default_item_manufacturer", "default_manufacturer_part_no"], as_dict=True
 		)
 
 		if data:
@@ -1178,9 +1178,8 @@ def check_packing_list(price_list_rate_name, desired_qty, item_code):
 	"""
 
 	flag = True
-	item_price = frappe.get_doc("Item Price", price_list_rate_name)
-	if item_price.packing_unit:
-		packing_increment = desired_qty % item_price.packing_unit
+	if packing_unit := frappe.db.get_value("Item Price", price_list_rate_name, "packing_unit"):
+		packing_increment = desired_qty % packing_unit
 
 		if packing_increment != 0:
 			flag = False
@@ -1447,7 +1446,7 @@ def apply_price_list(ctx: ItemDetailsCtx, as_doc=False, doc=None):
 
 
 def apply_price_list_on_item(ctx, doc=None):
-	item_doc = frappe.db.get_value("Item", ctx.item_code, ["name", "variant_of"], as_dict=1)
+	item_doc = frappe.get_cached_doc("Item", ctx.item_code)
 	item_details = get_price_list_rate(ctx, item_doc)
 	item_details.update(get_pricing_rule_for_item(ctx, doc=doc))
 
