@@ -1231,11 +1231,17 @@ class TestDeliveryNote(IntegrationTestCase):
 
 		discount_percent = 5
 		grand_total = dn.grand_total
-		additional_discount_account = create_account(
-			account_name="Discount Account",
-			parent_account="Indirect Expenses - _TC",
-			company="_Test Company",
+		net_total = dn.net_total
+		additional_discount_account = frappe.db.get_value(
+			"Account", {"account_name": "Test Discount Account", "company": "_Test Company"}, "name"
 		)
+
+		if not additional_discount_account:
+			additional_discount_account = create_account(
+				account_name="Test Discount Account",
+				parent_account="Indirect Expenses - _TC",
+				company="_Test Company",
+			)
 		discount_amount = grand_total * (discount_percent / 100)
 
 		dn.apply_discount_on = "Grand Total"
@@ -1246,15 +1252,23 @@ class TestDeliveryNote(IntegrationTestCase):
 		dn.save()
 
 		self.assertEqual(dn.grand_total, (grand_total - discount_amount))
+		self.assertEqual(dn.net_total, net_total)
+
+		dn.submit()
 
 	def test_sales_invoice_creation_from_delivery_note_with_cash_discount_fields(self):
 		dn = create_delivery_note(do_not_submit=True)
 
-		additional_discount_account = create_account(
-			account_name="Discount Account",
-			parent_account="Indirect Expenses - _TC",
-			company="_Test Company",
+		additional_discount_account = frappe.db.get_value(
+			"Account", {"account_name": "Test Discount Account", "company": "_Test Company"}, "name"
 		)
+
+		if not additional_discount_account:
+			additional_discount_account = create_account(
+				account_name="Test Discount Account",
+				parent_account="Indirect Expenses - _TC",
+				company="_Test Company",
+			)
 
 		dn.apply_discount_on = "Grand Total"
 		dn.additional_discount_percentage = 5
@@ -1270,6 +1284,10 @@ class TestDeliveryNote(IntegrationTestCase):
 		self.assertEqual(dn.apply_discount_on, si.apply_discount_on)
 		self.assertEqual(dn.additional_discount_percentage, si.additional_discount_percentage)
 		self.assertEqual(dn.grand_total, si.grand_total)
+		self.assertEqual(dn.net_total, si.net_total)
+
+		si.save()
+		si.submit()
 
 	def test_make_sales_invoice_from_dn_with_returned_qty_duplicate_items(self):
 		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
