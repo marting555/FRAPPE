@@ -142,8 +142,6 @@ class Lead(SellingController, CRMNote):
 		
 	def before_save(self):
 		self.update_lead_stage()
-		self.create_opportunity()
-
 
 	def update_lead_stage(self):
 
@@ -196,7 +194,6 @@ class Lead(SellingController, CRMNote):
 
 	def after_insert(self):
 		self.link_to_contact()
-		self.create_opportunity()
 
 	def on_update(self):
 		self.update_prospect()
@@ -344,7 +341,6 @@ class Lead(SellingController, CRMNote):
 		if self.lead_stage != "Opportunity":
 			return 
 		
-
 		opportunity = None 
 		try:
 			opportunity = frappe.get_doc("Lead", {
@@ -475,8 +471,6 @@ class Lead(SellingController, CRMNote):
 		
 
 		return "Opportunity"
-
-		
 
 @frappe.whitelist()
 def make_customer(source_name, target_doc=None):
