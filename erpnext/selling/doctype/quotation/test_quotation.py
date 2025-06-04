@@ -887,6 +887,21 @@ class TestQuotation(IntegrationTestCase):
 		sales_order_2.submit()
 		quotation.reload()
 		self.assertEqual(quotation.status, "Ordered")
+  
+  
+	def test_make_quotation_qar_to_inr(self):
+		quotation = make_quotation(
+			currency="QAR",
+			transaction_date="2026-06-04",
+		)
+
+		expected_rate = 23.521978021978022
+
+		self.assertEqual(
+			quotation.conversion_rate,
+			expected_rate,
+			f"Expected conversion rate {expected_rate}, got {quotation.conversion_rate}",
+		)
 
 
 def enable_calculate_bundle_price(enable=1):
