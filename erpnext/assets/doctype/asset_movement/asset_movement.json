@@ -33,7 +33,7 @@
    "fieldname": "purpose",
    "fieldtype": "Select",
    "label": "Purpose",
-   "options": "\nIssue\nReceipt\nTransfer",
+   "options": "\nIssue\nReceipt\nTransfer\nTransfer and Issue",
    "reqd": 1
   },
   {
@@ -93,10 +93,15 @@
    "fieldtype": "Column Break"
   }
  ],
+ "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2023-06-28 16:54:26.571083",
+=======
+ "modified": "2025-05-30 17:01:55.864353",
+>>>>>>> f5e5146021 (feat: added Transfer and Issue option in purpose)
  "modified_by": "Administrator",
  "module": "Assets",
  "name": "Asset Movement",
@@ -149,7 +154,12 @@
    "write": 1
   }
  ],
+<<<<<<< HEAD
  "sort_field": "modified",
+=======
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+>>>>>>> f5e5146021 (feat: added Transfer and Issue option in purpose)
  "sort_order": "DESC",
  "states": []
 }
