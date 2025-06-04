@@ -29,6 +29,7 @@
   "gender",
   "province",
   "region",
+  "qualified_lead_date",
   "col_break123",
   "lead_owner",
   "source",
@@ -747,6 +748,12 @@
    "options": "Province"
   },
   {
+   "fieldname": "qualified_lead_date",
+   "fieldtype": "Datetime",
+   "hidden": 1,
+   "label": "Qualified Date Date"
+  },
+  {
    "fieldname": "region",
    "fieldtype": "Link",
    "label": "Region",
@@ -757,7 +764,7 @@
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-06-04 04:42:44.194989",
+ "modified": "2025-06-04 09:31:11.855702",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",
