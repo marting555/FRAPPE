@@ -770,7 +770,9 @@ frappe.ui.form.on("Sales Invoice", {
 	},
 	onload: function (frm) {
 		frm.redemption_conversion_factor = null;
-		toggle_additional_discount_account(frm);
+		if (frm.doc.is_cash_or_non_trade_discount) {
+			toggle_additional_discount_account(frm);
+		}
 	},
 
 	update_stock: function (frm, dt, dn) {
