@@ -163,8 +163,16 @@ class StockReconciliation(StockController):
 	def set_current_serial_and_batch_bundle(self, voucher_detail_no=None, save=False) -> None:
 		"""Set Serial and Batch Bundle for each item"""
 		for item in self.items:
+<<<<<<< HEAD
 			if not frappe.db.exists("Item", item.item_code):
 				frappe.throw(_("Item {0} does not exist").format(item.item_code))
+=======
+			if voucher_detail_no and voucher_detail_no != item.name:
+				continue
+
+			if not item.item_code:
+				continue
+>>>>>>> 86e4a658a5 (fix: do not remove item which has zero qty and zero valuation)
 
 			item_details = frappe.get_cached_value(
 				"Item", item.item_code, ["has_serial_no", "has_batch_no"], as_dict=1
@@ -230,9 +238,6 @@ class StockReconciliation(StockController):
 				continue
 
 			if not save and item.use_serial_batch_fields:
-				continue
-
-			if voucher_detail_no and voucher_detail_no != item.name:
 				continue
 
 			if not item.current_serial_and_batch_bundle:
