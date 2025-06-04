@@ -32,6 +32,7 @@ def after_install():
 	add_app_name()
 	update_roles()
 	make_default_operations()
+	update_pegged_currencies()
 	frappe.db.commit()
 
 
@@ -228,6 +229,28 @@ def create_default_role_profiles():
 			role_profile.append("roles", {"role": role})
 
 		role_profile.insert(ignore_permissions=True)
+
+
+def update_pegged_currencies():
+	doc = frappe.get_doc("Pegged Currencies", "Pegged Currencies")
+
+	existing_sources = {item.source_currency for item in doc.pegged_currency_item}
+
+	currencies_to_add = [
+		{"source_currency": "AED", "pegged_currency": "USD", "currency_ratio": 3.6725},
+		{"source_currency": "BHD", "pegged_currency": "USD", "currency_ratio": 0.376},
+		{"source_currency": "JOD", "pegged_currency": "USD", "currency_ratio": 0.709},
+		{"source_currency": "OMR", "pegged_currency": "USD", "currency_ratio": 0.3845},
+		{"source_currency": "QAR", "pegged_currency": "USD", "currency_ratio": 3.64},
+		{"source_currency": "SAR", "pegged_currency": "USD", "currency_ratio": 3.75},
+	]
+
+	for currency in currencies_to_add:
+		if currency["source_currency"] not in existing_sources:
+			doc.append("pegged_currency_item", currency)
+
+	doc.save()
+	frappe.db.commit()
 
 
 DEFAULT_ROLE_PROFILES = {
