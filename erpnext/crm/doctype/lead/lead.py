@@ -341,7 +341,7 @@ class Lead(SellingController, CRMNote):
 		every lead stage convert to opportunity will create opportunity if not exist
 		"""
 
-		if self.lead_stage is not "Opportunity":
+		if self.lead_stage != "Opportunity":
 			return 
 		
 

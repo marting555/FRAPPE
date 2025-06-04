@@ -591,8 +591,14 @@ def schedule_to_update_opportunity():
 	for opportunity in opportunities:
 		# this code below will trigger before save  hooks
 		# before save hooks will update  status
-		print(opportunity)
-		opportunity_doc = frappe.get_doc("Opportunity", {
-			"name" : opportunity.name
-		})
-		opportunity_doc.save()
+		opportunity_doc = None
+
+		try:
+			opportunity_doc = frappe.get_doc("Opportunity", {
+				"name" : opportunity.name
+			})
+		except Exception:
+			opportunity_doc = None
+		
+		if opportunity_doc:
+			opportunity_doc.save()
