@@ -417,8 +417,5 @@ erpnext.patches.v15_0.set_cancelled_status_to_cancelled_pos_invoice
 erpnext.patches.v15_0.rename_group_by_to_categorize_by_in_custom_reports
 erpnext.patches.v15_0.remove_agriculture_roles
 erpnext.patches.v14_0.update_full_name_in_contract
-<<<<<<< HEAD
-erpnext.patches.v15_0.update_pegged_currencies
-=======
 erpnext.patches.v15_0.drop_sle_indexes
->>>>>>> b49a835b4c (fix: improved indexing for SLE queries. (#47194))
+erpnext.patches.v15_0.update_pegged_currencies
