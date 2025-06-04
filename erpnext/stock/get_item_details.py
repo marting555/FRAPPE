@@ -3,6 +3,7 @@
 
 
 import json
+import typing
 from functools import WRAPPER_ASSIGNMENTS, wraps
 
 import frappe
@@ -1178,7 +1179,7 @@ def check_packing_list(price_list_rate_name, desired_qty, item_code):
 	"""
 
 	flag = True
-	if packing_unit := frappe.db.get_value("Item Price", price_list_rate_name, "packing_unit"):
+	if packing_unit := frappe.db.get_value("Item Price", price_list_rate_name, "packing_unit", cache=True):
 		packing_increment = desired_qty % packing_unit
 
 		if packing_increment != 0:
@@ -1316,15 +1317,20 @@ def get_pos_profile(company, pos_profile=None, user=None):
 
 @frappe.whitelist()
 def get_conversion_factor(item_code, uom):
-	variant_of = frappe.db.get_value("Item", item_code, "variant_of", cache=True)
+	item = frappe.get_cached_value("Item", item_code, ["variant_of", "stock_uom"], as_dict=True)
+	if not item_code or not item:
+		return {"conversion_factor": 1.0}
+
+	if uom == item.stock_uom:
+		return {"conversion_factor": 1.0}
+
 	filters = {"parent": item_code, "uom": uom}
 
-	if variant_of:
-		filters["parent"] = ("in", (item_code, variant_of))
+	if item.variant_of:
+		filters["parent"] = ("in", (item_code, item.variant_of))
 	conversion_factor = frappe.db.get_value("UOM Conversion Detail", filters, "conversion_factor")
 	if not conversion_factor:
-		stock_uom = frappe.db.get_value("Item", item_code, "stock_uom")
-		conversion_factor = get_uom_conv_factor(uom, stock_uom)
+		conversion_factor = get_uom_conv_factor(uom, item.stock_uom)
 
 	return {"conversion_factor": conversion_factor or 1.0}
 
@@ -1514,7 +1520,6 @@ def get_valuation_rate(item_code, company, warehouse=None):
 	item = get_item_defaults(item_code, company)
 	item_group = get_item_group_defaults(item_code, company)
 	brand = get_brand_defaults(item_code, company)
-	# item = frappe.get_doc("Item", item_code)
 	if item.get("is_stock_item"):
 		if not warehouse:
 			warehouse = (
