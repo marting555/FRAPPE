@@ -5,6 +5,7 @@
 import json
 
 import frappe
+from frappe.query_builder import DocType
 from frappe.utils import cint, get_datetime
 from frappe.utils.nestedset import get_root_of
 
@@ -65,6 +66,9 @@ def search_by_term(search_term, warehouse, price_list):
 
 	if batch_no:
 		price_filters["batch_no"] = ["in", [batch_no, ""]]
+
+	if serial_no:
+		price_filters["uom"] = item_doc.stock_uom
 
 	price = frappe.get_list(
 		doctype="Item Price",
@@ -158,7 +162,8 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 			item.description,
 			item.stock_uom,
 			item.image AS item_image,
-			item.is_stock_item
+			item.is_stock_item,
+			item.sales_uom
 		FROM
 			`tabItem` item {bin_join_selection}
 		WHERE
@@ -192,10 +197,14 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 	current_date = frappe.utils.today()
 
 	for item in items_data:
-		uoms = frappe.get_doc("Item", item.item_code).get("uoms", [])
+		UOMConversionDetail = DocType("UOM Conversion Detail")
+		item_uoms = (
+			frappe.qb.from_(UOMConversionDetail)
+			.where(UOMConversionDetail.parent == item.item_code)
+			.select("uom", "conversion_factor")
+		).run(as_dict=1)
 
 		item.actual_qty, _ = get_stock_availability(item.item_code, warehouse)
-		item.uom = item.stock_uom
 
 		item_price = frappe.get_all(
 			"Item Price",
@@ -208,27 +217,31 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 				"valid_upto": ["in", [None, "", current_date]],
 			},
 			order_by="valid_from desc",
-			limit=1,
 		)
 
-		if not item_price:
-			result.append(item)
+		item_uom = item.sales_uom or item.stock_uom
+		uom_exists_in_item_price = any(item_uom in d.get("uom") for d in item_price)
 
-		for price in item_price:
-			uom = next(filter(lambda x: x.uom == price.uom, uoms), {})
+		if item_price and (not item_uom or not uom_exists_in_item_price):
+			uom_exists_in_item_uoms = any(item_price[0].uom in d.get("uom") for d in item_uoms)
+			item_uom = item_price[0].uom if uom_exists_in_item_uoms else item_uom
 
-			if price.uom != item.stock_uom and uom and uom.conversion_factor:
-				item.actual_qty = item.actual_qty // uom.conversion_factor
+		uom_wise_price_rate = next(filter(lambda x: x.get("uom") == item_uom, item_price), {})
+		uom_data = next(filter(lambda x: x.get("uom") == item_uom, item_uoms), {})
 
-			result.append(
-				{
-					**item,
-					"price_list_rate": price.get("price_list_rate"),
-					"currency": price.get("currency"),
-					"uom": price.uom or item.uom,
-					"batch_no": price.batch_no,
-				}
-			)
+		if item.stock_uom != uom_wise_price_rate.get("uom") and uom_data and uom_data.conversion_factor:
+			item.actual_qty = item.actual_qty // uom_data.conversion_factor
+
+		result.append(
+			{
+				**item,
+				"price_list_rate": uom_wise_price_rate.get("price_list_rate"),
+				"currency": uom_wise_price_rate.get("currency"),
+				"uom": uom_wise_price_rate.get("uom") or item_uom,
+				"batch_no": uom_wise_price_rate.get("batch_no"),
+			}
+		)
+
 	return {"items": result}
 
 
