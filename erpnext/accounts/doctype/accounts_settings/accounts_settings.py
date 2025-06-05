@@ -142,3 +142,11 @@ class AccountsSettings(Document):
 		if self.has_value_changed("reconciliation_queue_size"):
 			if cint(self.reconciliation_queue_size) < 5 or cint(self.reconciliation_queue_size) > 100:
 				frappe.throw(_("Queue Size should be between 5 and 100"))
+
+	@frappe.whitelist()
+	def drop_ar_sql_procedures(self):
+		from erpnext.accounts.report.accounts_receivable.accounts_receivable import InitSQLProceduresForAR
+
+		frappe.db.sql(f"drop function if exists {InitSQLProceduresForAR.genkey_function_name}")
+		frappe.db.sql(f"drop procedure if exists {InitSQLProceduresForAR.init_procedure_name}")
+		frappe.db.sql(f"drop procedure if exists {InitSQLProceduresForAR.allocate_procedure_name}")

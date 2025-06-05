@@ -1430,13 +1430,17 @@ class InitSQLProceduresForAR:
 	end;
 	"""
 
-	def __init__(self):
-		existing_procedures = frappe.db.sql(
+	def get_existing_procedures(self):
+		procedures = frappe.db.sql(
 			f"select routine_name from information_schema.routines where routine_type in ('FUNCTION','PROCEDURE') and routine_schema='{frappe.conf.db_name}';"
 		)
-		if existing_procedures:
+		if procedures:
 			# normalize
-			existing_procedures = [x[0] for x in existing_procedures]
+			procedures = [x[0] for x in procedures]
+		return procedures
+
+	def __init__(self):
+		existing_procedures = self.get_existing_procedures()
 
 		if self.genkey_function_name not in existing_procedures:
 			frappe.db.sql(self.genkey_function_sql)
