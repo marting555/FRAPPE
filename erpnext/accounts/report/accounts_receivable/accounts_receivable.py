@@ -341,7 +341,7 @@ class ReceivablePayableReport:
 		"""
 		frappe.db.sql(build_balance)
 
-		res = frappe.db.sql(
+		balances = frappe.db.sql(
 			f"""select
 			name,
 			voucher_type,
@@ -362,7 +362,7 @@ class ReceivablePayableReport:
 			from `{self.proc._voucher_balance_name}` group by name order by posting_date;""",
 			as_dict=True,
 		)
-		for x in res:
+		for x in balances:
 			if self.filters.get("ignore_accounts"):
 				key = (x.voucher_type, x.voucher_no, x.party)
 			else:
