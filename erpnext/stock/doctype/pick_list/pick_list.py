@@ -163,12 +163,6 @@ class PickList(TransactionBase):
 						["company", "="],
 					],
 				},
-				"Sales Order Item": {
-					"ref_dn_field": "sales_order_item",
-					"compare_fields": [["item_code", "="]],
-					"is_child_table": True,
-					"allow_duplicate_prev_row_id": True,
-				},
 			}
 		)
 
@@ -763,10 +757,11 @@ class PickList(TransactionBase):
 		for item in self.locations:
 			if not item.product_bundle_item:
 				continue
-			product_bundles[item.product_bundle_item] = frappe.db.get_value(
-				"Sales Order Item",
+
+			product_bundles[item.sales_order_item] = frappe.db.get_value(
+				"Packed Item",
 				item.product_bundle_item,
-				"item_code",
+				"parent_item",
 			)
 		return product_bundles
 
@@ -781,10 +776,9 @@ class PickList(TransactionBase):
 	def _compute_picked_qty_for_bundle(self, bundle_row, bundle_items) -> int:
 		"""Compute how many full bundles can be created from picked items."""
 		precision = frappe.get_precision("Stock Ledger Entry", "qty_after_transaction")
-
 		possible_bundles = []
 		for item in self.locations:
-			if item.product_bundle_item != bundle_row:
+			if item.sales_order_item != bundle_row:
 				continue
 
 			if qty_in_bundle := bundle_items.get(item.item_code):
