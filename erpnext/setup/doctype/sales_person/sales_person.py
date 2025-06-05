@@ -30,8 +30,8 @@ class SalesPerson(NestedSet):
 		bizfly_id: DF.Data | None
 		commission_rate: DF.Data | None
 		department: DF.Link | None
-		email: DF.Data | None
 		employee: DF.Link | None
+		employee_email: DF.Data | None
 		enabled: DF.Check
 		is_group: DF.Check
 		lft: DF.Int

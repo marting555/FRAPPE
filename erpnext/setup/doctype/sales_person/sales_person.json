@@ -20,7 +20,7 @@
   "bizfly_id",
   "cb0",
   "employee",
-  "email",
+  "employee_email",
   "department",
   "lft",
   "rgt",
@@ -166,16 +166,16 @@
   },
   {
    "fetch_from": "employee.user_email",
-   "fieldname": "email",
+   "fieldname": "employee_email",
    "fieldtype": "Data",
-   "label": "Email"
+   "label": "Employee Email"
   }
  ],
  "icon": "icon-user",
  "idx": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2025-06-05 09:52:25.447241",
+ "modified": "2025-06-05 10:06:39.955247",
  "modified_by": "Administrator",
  "module": "Setup",
  "name": "Sales Person",
