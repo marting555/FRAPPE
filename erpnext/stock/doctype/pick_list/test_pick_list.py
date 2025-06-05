@@ -3,7 +3,6 @@
 
 import frappe
 from frappe import _dict
-from frappe.tests import IntegrationTestCase
 
 from erpnext.selling.doctype.sales_order.sales_order import create_pick_list
 from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
@@ -20,9 +19,10 @@ from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 from erpnext.stock.doctype.stock_reconciliation.stock_reconciliation import (
 	EmptyStockReconciliationItemsError,
 )
+from erpnext.tests.utils import ERPNextTestSuite
 
 
-class TestPickList(IntegrationTestCase):
+class TestPickList(ERPNextTestSuite):
 	def test_pick_list_picks_warehouse_for_each_item(self):
 		item_code = make_item().name
 		try:

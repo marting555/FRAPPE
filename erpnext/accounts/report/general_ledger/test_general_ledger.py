@@ -3,7 +3,6 @@
 
 import frappe
 from frappe import qb
-from frappe.tests import IntegrationTestCase, change_settings
 from frappe.utils import flt, today
 
 from erpnext.accounts.doctype.account.test_account import create_account
@@ -11,10 +10,10 @@ from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_pay
 from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
 from erpnext.accounts.report.general_ledger.general_ledger import execute
 from erpnext.controllers.sales_and_purchase_return import make_return_doc
-from erpnext.selling.doctype.customer.test_customer import create_internal_customer
+from erpnext.tests.utils import ERPNextTestSuite
 
 
-class TestGeneralLedger(IntegrationTestCase):
+class TestGeneralLedger(ERPNextTestSuite):
 	def setUp(self):
 		self.company = "_Test Company"
 		self.clear_old_entries()
@@ -171,7 +170,7 @@ class TestGeneralLedger(IntegrationTestCase):
 		self.assertEqual(data[3]["debit"], 100)
 		self.assertEqual(data[3]["credit"], 100)
 
-	@change_settings("Accounts Settings", {"delete_linked_ledger_entries": True})
+	@ERPNextTestSuite.change_settings("Accounts Settings", {"delete_linked_ledger_entries": True})
 	def test_debit_in_exchange_gain_loss_account(self):
 		company = "_Test Company"
 
