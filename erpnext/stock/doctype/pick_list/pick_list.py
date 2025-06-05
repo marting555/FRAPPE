@@ -1504,7 +1504,7 @@ def get_purchase_invoice_query(doctype, txt, searchfield, start, page_len, filte
 	frappe.has_permission("Purchase Invoice", throw=True)
 
 	if not filters.get("company"):
-		frappe.throw(_("Please select a Company "))
+		frappe.throw(_("Please select a Company"))
 
 	PICK_LIST = frappe.qb.DocType("Pick List")
 	PICK_LIST_ITEM = frappe.qb.DocType("Pick List Item")
