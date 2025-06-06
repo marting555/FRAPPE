@@ -110,8 +110,10 @@ frappe.ui.form.on("POS Closing Entry", {
 				user: frm.doc.user,
 			},
 			callback: (r) => {
-				let inv_docs = r.message;
+				let inv_docs = r.message.invoices;
 				set_transaction_form_data(inv_docs, frm);
+				refresh_payments(r.message.payments, frm);
+				add_taxes(r.message.taxes, frm);
 				refresh_fields(frm);
 			},
 		});
@@ -132,8 +134,6 @@ function set_transaction_form_data(data, frm) {
 		frm.doc.net_total += flt(d.net_total);
 		frm.doc.total_quantity += flt(d.total_qty);
 		frm.doc.total_taxes_and_charges += flt(d.total_taxes_and_charges);
-		refresh_payments(d, frm, true);
-		refresh_taxes(d, frm);
 	});
 }
 
@@ -148,17 +148,14 @@ function add_to_transaction(d, frm) {
 	});
 }
 
-function refresh_payments(d, frm, is_new) {
-	d.payments.forEach((p) => {
+function refresh_payments(payments, frm) {
+	payments.forEach((p) => {
 		const payment = frm.doc.payment_reconciliation.find(
 			(pay) => pay.mode_of_payment === p.mode_of_payment
 		);
-		if (p.account == d.account_for_change_amount) {
-			p.amount -= flt(d.change_amount);
-		}
 		if (payment) {
 			payment.expected_amount += flt(p.amount);
-			if (is_new) payment.closing_amount = payment.expected_amount;
+			payment.closing_amount = payment.expected_amount;
 			payment.difference = payment.closing_amount - payment.expected_amount;
 		} else {
 			frm.add_child("payment_reconciliation", {
@@ -171,18 +168,12 @@ function refresh_payments(d, frm, is_new) {
 	});
 }
 
-function refresh_taxes(d, frm) {
-	d.taxes.forEach((t) => {
-		const tax = frm.doc.taxes.find((tx) => tx.account_head === t.account_head && tx.rate === t.rate);
-		if (tax) {
-			tax.amount += flt(t.tax_amount);
-		} else {
-			frm.add_child("taxes", {
-				account_head: t.account_head,
-				rate: t.rate,
-				amount: t.tax_amount,
-			});
-		}
+function add_taxes(taxes, frm) {
+	taxes.forEach((t) => {
+		frm.add_child("taxes", {
+			account_head: t.account_head,
+			amount: t.tax_amount,
+		});
 	});
 }
 

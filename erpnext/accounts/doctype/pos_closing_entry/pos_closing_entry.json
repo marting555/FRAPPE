@@ -22,8 +22,6 @@
   "section_break_12",
   "pos_invoices",
   "sales_invoices",
-  "section_break_11",
-  "payment_reconciliation",
   "taxes_and_charges_section",
   "taxes",
   "section_break_13",
@@ -33,6 +31,8 @@
   "net_total",
   "total_taxes_and_charges",
   "grand_total",
+  "section_break_11",
+  "payment_reconciliation",
   "failure_description_section",
   "error_message",
   "section_break_14",
@@ -74,10 +74,12 @@
    "label": "User Details"
   },
   {
+   "fetch_if_empty": 1,
    "fieldname": "company",
    "fieldtype": "Link",
    "label": "Company",
    "options": "Company",
+   "read_only": 1,
    "reqd": 1
   },
   {
@@ -86,11 +88,13 @@
   },
   {
    "fetch_from": "pos_opening_entry.pos_profile",
+   "fetch_if_empty": 1,
    "fieldname": "pos_profile",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "POS Profile",
    "options": "POS Profile",
+   "read_only": 1,
    "reqd": 1
   },
   {
@@ -231,6 +235,7 @@
    "read_only": 1
   },
   {
+   "collapsible": 1,
    "fieldname": "taxes_and_charges_section",
    "fieldtype": "Section Break",
    "label": "Taxes and Charges"
@@ -254,7 +259,7 @@
    "link_fieldname": "pos_closing_entry"
   }
  ],
- "modified": "2025-05-29 11:20:57.138300",
+ "modified": "2025-06-06 12:00:31.955176",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "POS Closing Entry",

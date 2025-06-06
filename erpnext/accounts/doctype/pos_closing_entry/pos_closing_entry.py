@@ -315,78 +315,69 @@ def get_invoices(start, end, pos_profile, user):
 	sql_query, params = query.walk()
 	invoices = frappe.db.sql(sql_query, params, as_dict=1)
 
-	get_payments_and_taxes(invoices)
+	data = {"invoices": invoices, "payments": get_payments(invoices), "taxes": get_taxes(invoices)}
 
-	return invoices
-
-
-def get_payments_and_taxes(invoices):
-	sales_invoices = [d.name for d in invoices if d.doctype == "Sales Invoice"]
-	pos_invoices = [d.name for d in invoices if d.doctype == "POS Invoice"]
-
-	payments = {
-		"Sales Invoice": get_payments_by_doctype("Sales Invoice", sales_invoices),
-		"POS Invoice": get_payments_by_doctype("POS Invoice", pos_invoices),
-	}
-
-	taxes = {
-		"Sales Invoice": get_taxes_by_doctype("Sales Invoice", sales_invoices),
-		"POS Invoice": get_taxes_by_doctype("POS Invoice", pos_invoices),
-	}
-
-	for d in invoices:
-		d.payments = payments.get(d.doctype, {}).get(d.name, [])
-		d.taxes = taxes.get(d.doctype, {}).get(d.name, [])
+	return data
 
 
-def get_payments_by_doctype(doctype, invoices):
+def get_payments(invoices):
 	if not len(invoices):
 		return
+
+	invoices_name = [d.name for d in invoices]
 
 	SalesInvoicePayment = DocType("Sales Invoice Payment")
 	query = (
 		frappe.qb.from_(SalesInvoicePayment)
-		.select(SalesInvoicePayment.parent, SalesInvoicePayment.mode_of_payment, SalesInvoicePayment.amount)
-		.where((SalesInvoicePayment.parenttype == doctype) & (SalesInvoicePayment.parent.isin(invoices)))
+		.where(
+			(SalesInvoicePayment.parenttype.isin(["Sales Invoice", "POS Invoice"]))
+			& (SalesInvoicePayment.parent.isin(invoices_name))
+		)
+		.groupby(SalesInvoicePayment.mode_of_payment)
+		.select(
+			SalesInvoicePayment.mode_of_payment,
+			SalesInvoicePayment.account,
+			fn.Sum(SalesInvoicePayment.amount).as_("amount"),
+		)
 	)
 	sql_query, params = query.walk()
 	data = frappe.db.sql(sql_query, params, as_dict=1)
 
-	payment_by_invoice = {}
+	change_amount_by_account = {}
+	for d in invoices:
+		change_amount_by_account.setdefault(d.account_for_change_amount, 0)
+		change_amount_by_account[d.account_for_change_amount] += flt(d.change_amount)
+
 	for d in data:
-		payment_by_invoice.setdefault(d.parent, [])
-		payment_by_invoice[d.parent].append(d)
+		if change_amount_by_account.get(d.account):
+			d.amount -= flt(change_amount_by_account.get(d.account))
 
-	return payment_by_invoice
+	return data
 
 
-def get_taxes_by_doctype(doctype, invoices):
+def get_taxes(invoices):
 	if not len(invoices):
 		return
+
+	invoices_name = [d.name for d in invoices]
 
 	SalesInvoiceTaxesCharges = DocType("Sales Taxes and Charges")
 	query = (
 		frappe.qb.from_(SalesInvoiceTaxesCharges)
-		.select(
-			SalesInvoiceTaxesCharges.parent,
-			SalesInvoiceTaxesCharges.account_head,
-			SalesInvoiceTaxesCharges.rate,
-			SalesInvoiceTaxesCharges.tax_amount,
-		)
 		.where(
-			(SalesInvoiceTaxesCharges.parenttype == doctype)
-			& (SalesInvoiceTaxesCharges.parent.isin(invoices))
+			(SalesInvoiceTaxesCharges.parenttype.isin(["Sales Invoice", "POS Invoice"]))
+			& (SalesInvoiceTaxesCharges.parent.isin(invoices_name))
+		)
+		.groupby(SalesInvoiceTaxesCharges.account_head)
+		.select(
+			SalesInvoiceTaxesCharges.account_head,
+			fn.Sum(SalesInvoiceTaxesCharges.tax_amount_after_discount_amount).as_("tax_amount"),
 		)
 	)
 	sql_query, params = query.walk()
 	data = frappe.db.sql(sql_query, params, as_dict=1)
 
-	taxes_by_invoice = {}
-	for d in data:
-		taxes_by_invoice.setdefault(d.parent, [])
-		taxes_by_invoice[d.parent].append(d)
-
-	return taxes_by_invoice
+	return data
 
 
 def make_closing_entry_from_opening(opening_entry):
@@ -402,7 +393,7 @@ def make_closing_entry_from_opening(opening_entry):
 	closing_entry.total_quantity = 0
 	closing_entry.total_taxes_and_charges = 0
 
-	invoices = get_invoices(
+	data = get_invoices(
 		closing_entry.period_start_date,
 		closing_entry.period_end_date,
 		closing_entry.pos_profile,
@@ -411,20 +402,21 @@ def make_closing_entry_from_opening(opening_entry):
 
 	pos_invoices = []
 	sales_invoices = []
-	taxes = []
-	payments = []
-	for detail in opening_entry.balance_details:
-		payments.append(
-			frappe._dict(
-				{
-					"mode_of_payment": detail.mode_of_payment,
-					"opening_amount": detail.opening_amount,
-					"expected_amount": detail.opening_amount,
-				}
-			)
+	taxes = [
+		frappe._dict({"account_head": tx.account_head, "amount": tx.tax_amount}) for tx in data.get("taxes")
+	]
+	payments = [
+		frappe._dict(
+			{
+				"mode_of_payment": p.mode_of_payment,
+				"opening_amount": 0,
+				"expected_amount": p.amount,
+			}
 		)
+		for p in data.get("payments")
+	]
 
-	for d in invoices:
+	for d in data.get("invoices"):
 		invoice = "pos_invoice" if d.doctype == "POS Invoice" else "sales_invoice"
 		data = frappe._dict(
 			{
@@ -439,35 +431,10 @@ def make_closing_entry_from_opening(opening_entry):
 		else:
 			sales_invoices.append(data)
 
-	for d in invoices:
 		closing_entry.grand_total += flt(d.grand_total)
 		closing_entry.net_total += flt(d.net_total)
 		closing_entry.total_quantity += flt(d.total_qty)
 		closing_entry.total_taxes_and_charges += flt(d.total_taxes_and_charges)
-
-		for t in d.taxes:
-			existing_tax = [tx for tx in taxes if tx.account_head == t.account_head and tx.rate == t.rate]
-			if existing_tax:
-				existing_tax[0].amount += flt(t.tax_amount)
-			else:
-				taxes.append(
-					frappe._dict({"account_head": t.account_head, "rate": t.rate, "amount": t.tax_amount})
-				)
-
-		for p in d.payments:
-			existing_pay = [pay for pay in payments if pay.mode_of_payment == p.mode_of_payment]
-			if existing_pay:
-				existing_pay[0].expected_amount += flt(p.amount)
-			else:
-				payments.append(
-					frappe._dict(
-						{
-							"mode_of_payment": p.mode_of_payment,
-							"opening_amount": 0,
-							"expected_amount": p.amount,
-						}
-					)
-				)
 
 	closing_entry.set("pos_invoices", pos_invoices)
 	closing_entry.set("sales_invoices", sales_invoices)
