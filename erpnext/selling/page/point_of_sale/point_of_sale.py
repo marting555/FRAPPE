@@ -206,7 +206,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 
 		item.actual_qty, _ = get_stock_availability(item.item_code, warehouse)
 
-		item_price = frappe.get_all(
+		item_prices = frappe.get_all(
 			"Item Price",
 			fields=["price_list_rate", "currency", "uom", "batch_no", "valid_from", "valid_upto"],
 			filters={
@@ -220,25 +220,25 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 		)
 
 		item_uom = item.sales_uom or item.stock_uom
-		uom_exists_in_item_price = any(item_uom in d.get("uom") for d in item_price)
+		uom_exists_in_item_price = any(item_uom in d.get("uom") for d in item_prices)
 
-		if item_price and (not item_uom or not uom_exists_in_item_price):
-			uom_exists_in_item_uoms = any(item_price[0].uom in d.get("uom") for d in item_uoms)
-			item_uom = item_price[0].uom if uom_exists_in_item_uoms else item_uom
+		if item_prices and (not item_uom or not uom_exists_in_item_price):
+			uom_exists_in_item_uoms = any(item_prices[0].uom in d.get("uom") for d in item_uoms)
+			item_uom = item_prices[0].uom if uom_exists_in_item_uoms else item_uom
 
-		uom_wise_price_rate = next(filter(lambda x: x.get("uom") == item_uom, item_price), {})
-		uom_data = next(filter(lambda x: x.get("uom") == item_uom, item_uoms), {})
+		item_uom_price = next((d for d in item_prices if d.get("uom") == item_uom), {})
+		uom_data = next((d for d in item_uoms if d.get("uom") == item_uom), {})
 
-		if item.stock_uom != uom_wise_price_rate.get("uom") and uom_data and uom_data.conversion_factor:
+		if item.stock_uom != item_uom_price.get("uom") and uom_data and uom_data.conversion_factor:
 			item.actual_qty = item.actual_qty // uom_data.conversion_factor
 
 		result.append(
 			{
 				**item,
-				"price_list_rate": uom_wise_price_rate.get("price_list_rate"),
-				"currency": uom_wise_price_rate.get("currency"),
-				"uom": uom_wise_price_rate.get("uom") or item_uom,
-				"batch_no": uom_wise_price_rate.get("batch_no"),
+				"price_list_rate": item_uom_price.get("price_list_rate"),
+				"currency": item_uom_price.get("currency"),
+				"uom": item_uom_price.get("uom") or item_uom,
+				"batch_no": item_uom_price.get("batch_no"),
 			}
 		)
 
