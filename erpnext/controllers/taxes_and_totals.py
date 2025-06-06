@@ -12,7 +12,6 @@ from frappe.utils import cint, flt, round_based_on_smallest_currency_fraction
 import erpnext
 from erpnext.accounts.doctype.journal_entry.journal_entry import get_exchange_rate
 from erpnext.accounts.doctype.pricing_rule.utils import get_applied_pricing_rules
-from erpnext.accounts.utils import get_currency_precision
 from erpnext.controllers.accounts_controller import (
 	validate_conversion_rate,
 	validate_inclusive_tax,
@@ -29,9 +28,7 @@ class calculate_taxes_and_totals:
 	def __init__(self, doc: Document):
 		self.doc = doc
 		frappe.flags.round_off_applicable_accounts = []
-		frappe.flags.round_row_wise_tax = frappe.db.get_single_value(
-			"Accounts Settings", "round_row_wise_tax"
-		)
+		frappe.flags.round_row_wise_tax = frappe.get_settings("Accounts Settings", "round_row_wise_tax")
 
 		if doc.get("round_off_applicable_accounts_for_tax_withholding"):
 			frappe.flags.round_off_applicable_accounts.append(
@@ -708,16 +705,7 @@ class calculate_taxes_and_totals:
 					tax.item_wise_tax_detail = json.dumps(tax.item_wise_tax_detail)
 
 	def set_discount_amount(self):
-		if self.doc.discount_amount:
-			self.doc.additional_discount_percentage = flt(
-				flt(
-					self.doc.discount_amount / flt(self.doc.get(scrub(self.doc.apply_discount_on))),
-					get_currency_precision(),
-				)
-				* 100,
-				self.doc.precision("additional_discount_percentage"),
-			)
-		elif self.doc.additional_discount_percentage:
+		if self.doc.additional_discount_percentage:
 			self.doc.discount_amount = flt(
 				flt(self.doc.get(scrub(self.doc.apply_discount_on)))
 				* self.doc.additional_discount_percentage
@@ -1180,7 +1168,7 @@ def get_rounded_tax_amount(itemised_tax, precision):
 
 @frappe.whitelist()
 def get_rounding_tax_settings():
-	return frappe.db.get_single_value("Accounts Settings", "round_row_wise_tax")
+	return frappe.get_settings("Accounts Settings", "round_row_wise_tax")
 
 
 class init_landed_taxes_and_totals:
