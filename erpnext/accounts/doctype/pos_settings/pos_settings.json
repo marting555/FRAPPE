@@ -14,7 +14,7 @@
   {
    "fieldname": "invoice_fields",
    "fieldtype": "Table",
-   "label": "POS Field",
+   "label": "POS Additional Fields",
    "options": "POS Field"
   },
   {
@@ -38,7 +38,7 @@
  ],
  "issingle": 1,
  "links": [],
- "modified": "2025-06-06 11:31:41.530242",
+ "modified": "2025-06-06 11:36:44.885353",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "POS Settings",
