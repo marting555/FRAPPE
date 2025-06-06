@@ -739,7 +739,8 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Lead Stage",
-   "options": "Lead\nQualified Lead\nOpportunity\nCustomer"
+   "options": "Lead\nQualified Lead\nOpportunity\nCustomer",
+   "read_only": 1
   },
   {
    "fieldname": "province",
@@ -751,7 +752,7 @@
    "fieldname": "qualified_lead_date",
    "fieldtype": "Datetime",
    "hidden": 1,
-   "label": "Qualified Date Date"
+   "label": "Qualified Lead Date"
   },
   {
    "fieldname": "region",
@@ -764,7 +765,7 @@
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-06-04 09:31:11.855702",
+ "modified": "2025-06-06 10:22:20.134879",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",
