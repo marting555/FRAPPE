@@ -84,7 +84,7 @@ class Opportunity(TransactionBase, CRMNote):
 		sales_stage: DF.Link | None
 		source: DF.Link | None
 		state: DF.Data | None
-		status: DF.Literal["Opportunity", "Hot Opportunity", "Warn Opportunity", "Cold Opportunity"]
+		status: DF.Literal["Opportunity", "Hot Opportunity", "Warm Opportunity", "Cold Opportunity"]
 		territory: DF.Link | None
 		title: DF.Data | None
 		total: DF.Currency
@@ -384,7 +384,7 @@ class Opportunity(TransactionBase, CRMNote):
 			return "Hot Opportunity"
 		
 		if diff_day >= 30 and diff_day< 90:
-			return "Warn Opportunity"
+			return "Warm Opportunity"
 		
 		return "Cold Opportunity"
 
@@ -584,7 +584,7 @@ def schedule_to_update_opportunity():
 	"""
 
 	opportunities = frappe.get_all("Opportunity", filters= {
-		"status" : ["in", ["Opportunity", "Hot Opportunity", "Warn Opportunity"] ],
+		"status" : ["in", ["Opportunity", "Hot Opportunity", "Warm Opportunity"] ],
 		"opportunity_from" : "Lead",
 	})
 

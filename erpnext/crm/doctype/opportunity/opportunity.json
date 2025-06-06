@@ -182,7 +182,7 @@
    "no_copy": 1,
    "oldfieldname": "status",
    "oldfieldtype": "Select",
-   "options": "Opportunity\nHot Opportunity\nWarn Opportunity\nCold Opportunity",
+   "options": "Opportunity\nHot Opportunity\nWarm Opportunity\nCold Opportunity",
    "print_hide": 1,
    "reqd": 1
   },
@@ -694,7 +694,7 @@
  "icon": "fa fa-info-sign",
  "idx": 195,
  "links": [],
- "modified": "2025-06-04 09:54:32.087052",
+ "modified": "2025-06-06 04:39:06.752536",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Opportunity",
