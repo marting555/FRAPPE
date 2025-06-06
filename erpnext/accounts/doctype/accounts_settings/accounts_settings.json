@@ -65,7 +65,6 @@
   "pos_setting_section",
   "post_change_gl_entries",
   "column_break_xrnd",
-  "invoice_doctype_in_pos",
   "assets_tab",
   "asset_settings_section",
   "calculate_depr_using_total_days",
@@ -615,14 +614,6 @@
   {
    "fieldname": "column_break_feyo",
    "fieldtype": "Column Break"
-  },
-  {
-   "default": "Sales Invoice",
-   "description": "For high-volume transactions, it is advisable to use POS Invoice.",
-   "fieldname": "invoice_doctype_in_pos",
-   "fieldtype": "Select",
-   "label": "Invoice DocType",
-   "options": "Sales Invoice\nPOS Invoice"
   }
  ],
  "grid_page_length": 50,
@@ -631,7 +622,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-05-27 17:52:03.460522",
+ "modified": "2025-06-06 11:03:28.095723",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Accounts Settings",

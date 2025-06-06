@@ -139,10 +139,7 @@ erpnext.PointOfSale.Controller = class {
 			this.allow_negative_stock = flt(message.allow_negative_stock) || false;
 		});
 
-		const invoice_doctype = await frappe.db.get_single_value(
-			"Accounts Settings",
-			"invoice_doctype_in_pos"
-		);
+		const invoice_doctype = await frappe.db.get_single_value("POS Settings", "invoice_type");
 
 		frappe.call({
 			method: "erpnext.selling.page.point_of_sale.point_of_sale.get_pos_profile_data",

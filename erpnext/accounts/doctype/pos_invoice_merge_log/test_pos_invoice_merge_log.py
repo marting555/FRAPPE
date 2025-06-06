@@ -27,7 +27,7 @@ class TestPOSInvoiceMergeLog(IntegrationTestCase):
 		super().setUpClass()
 		frappe.db.sql("delete from `tabPOS Opening Entry`")
 		cls.enterClassContext(cls.change_settings("Selling Settings", validate_selling_price=0))
-		cls.enterClassContext(cls.change_settings("Accounts Settings", invoice_doctype_in_pos="POS Invoice"))
+		cls.enterClassContext(cls.change_settings("POS Settings", invoice_type="POS Invoice"))
 		mode_of_payment = frappe.get_doc("Mode of Payment", "Bank Draft")
 		set_default_account_for_mode_of_payment(mode_of_payment, "_Test Company", "_Test Bank - _TC")
 

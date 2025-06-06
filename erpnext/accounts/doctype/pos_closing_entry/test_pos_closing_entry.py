@@ -28,9 +28,7 @@ class TestPOSClosingEntry(IntegrationTestCase):
 	@classmethod
 	def setUpClass(cls):
 		frappe.db.sql("delete from `tabPOS Opening Entry`")
-		cls.enterClassContext(
-			cls.change_settings("Accounts Settings", {"invoice_doctype_in_pos": "POS Invoice"})
-		)
+		cls.enterClassContext(cls.change_settings("POS Settings", {"invoice_type": "POS Invoice"}))
 
 	@classmethod
 	def tearDownClass(cls):
@@ -304,7 +302,7 @@ class TestPOSClosingEntry(IntegrationTestCase):
 		batch_qty_with_pos = get_batch_qty(batch_no, "_Test Warehouse - _TC", item_code)
 		self.assertEqual(batch_qty_with_pos, 10.0)
 
-	@IntegrationTestCase.change_settings("Accounts Settings", {"invoice_doctype_in_pos": "Sales Invoice"})
+	@IntegrationTestCase.change_settings("POS Settings", {"invoice_type": "Sales Invoice"})
 	def test_closing_entries_with_sales_invoice(self):
 		test_user, pos_profile = init_user_and_profile()
 		opening_entry = create_opening_entry(pos_profile, test_user.name)
@@ -348,7 +346,7 @@ class TestPOSClosingEntry(IntegrationTestCase):
 
 		test_user, pos_profile = init_user_and_profile()
 
-		with self.change_settings("Accounts Settings", {"invoice_doctype_in_pos": "Sales Invoice"}):
+		with self.change_settings("POS Settings", {"invoice_type": "Sales Invoice"}):
 			opening_entry1 = create_opening_entry(pos_profile, test_user.name)
 
 			pos_si1 = create_sales_invoice(
@@ -382,7 +380,7 @@ class TestPOSClosingEntry(IntegrationTestCase):
 			self.assertEqual(pos_si1.pos_closing_entry, pcv_doc1.name)
 			self.assertEqual(pos_si2.pos_closing_entry, pcv_doc1.name)
 
-		with self.change_settings("Accounts Settings", {"invoice_doctype_in_pos": "POS Invoice"}):
+		with self.change_settings("POS Settings", {"invoice_type": "POS Invoice"}):
 			opening_entry2 = create_opening_entry(pos_profile, test_user.name)
 
 			pos_inv1 = create_pos_invoice(rate=100, do_not_submit=1)
@@ -424,7 +422,7 @@ class TestPOSClosingEntry(IntegrationTestCase):
 
 		test_user, pos_profile = init_user_and_profile()
 
-		with self.change_settings("Accounts Settings", {"invoice_doctype_in_pos": "POS Invoice"}):
+		with self.change_settings("POS Settings", {"invoice_type": "POS Invoice"}):
 			opening_entry1 = create_opening_entry(pos_profile, test_user.name)
 
 			pos_inv1 = create_pos_invoice(rate=100, do_not_save=1)
@@ -456,7 +454,7 @@ class TestPOSClosingEntry(IntegrationTestCase):
 			self.assertIn(pos_inv1.name, [d.pos_invoice for d in pcv_doc1.pos_invoices])
 			self.assertEqual(pcv_doc1.grand_total, 300)
 
-		with self.change_settings("Accounts Settings", {"invoice_doctype_in_pos": "Sales Invoice"}):
+		with self.change_settings("POS Settings", {"invoice_type": "Sales Invoice"}):
 			opening_entry2 = create_opening_entry(pos_profile, test_user.name)
 
 			pos_si1 = create_sales_invoice(

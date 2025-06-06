@@ -59,7 +59,7 @@ class POSClosingEntry(StatusUpdater):
 
 	def validate(self):
 		self.set_posting_date_and_time()
-		self.fetch_invoice_doctype_in_pos()
+		self.fetch_invoice_type()
 		self.validate_pos_opening_entry()
 		self.validate_invoice_mode()
 
@@ -69,21 +69,19 @@ class POSClosingEntry(StatusUpdater):
 		if self.posting_time:
 			self.posting_time = frappe.utils.nowtime()
 
-	def fetch_invoice_doctype_in_pos(self):
-		self.invoice_doctype_in_pos = frappe.db.get_single_value(
-			"Accounts Settings", "invoice_doctype_in_pos"
-		)
+	def fetch_invoice_type(self):
+		self.invoice_type = frappe.db.get_single_value("POS Settings", "invoice_type")
 
 	def validate_pos_opening_entry(self):
 		if frappe.db.get_value("POS Opening Entry", self.pos_opening_entry, "status") != "Open":
 			frappe.throw(_("Selected POS Opening Entry should be open."), title=_("Invalid Opening Entry"))
 
 	def validate_invoice_mode(self):
-		if self.invoice_doctype_in_pos == "POS Invoice":
+		if self.invoice_type == "POS Invoice":
 			self.validate_duplicate_pos_invoices()
 			self.validate_pos_invoices()
 
-		if self.invoice_doctype_in_pos == "Sales Invoice":
+		if self.invoice_type == "Sales Invoice":
 			if len(self.pos_invoices) != 0:
 				frappe.throw(_("POS Invoices can't be added when Sales Invoice is enabled"))
 
@@ -249,7 +247,7 @@ def get_cashiers(doctype, txt, searchfield, start, page_len, filters):
 
 @frappe.whitelist()
 def get_invoices(start, end, pos_profile, user):
-	invoice_doctype = frappe.db.get_single_value("Accounts Settings", "invoice_doctype_in_pos")
+	invoice_doctype = frappe.db.get_single_value("POS Settings", "invoice_type")
 
 	SalesInvoice = DocType("Sales Invoice")
 	sales_inv_query = (
