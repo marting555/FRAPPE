@@ -14,6 +14,7 @@ class PaymentReconciliationPayment(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
+		account: DF.Link | None
 		amount: DF.Currency
 		cost_center: DF.Link | None
 		currency: DF.Link | None

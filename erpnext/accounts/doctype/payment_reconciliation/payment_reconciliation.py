@@ -8,6 +8,7 @@ from frappe.model.document import Document
 from frappe.query_builder import Criterion
 from frappe.query_builder.custom import ConstantColumn
 from frappe.utils import flt, fmt_money, get_link_to_form, getdate, nowdate, today
+from frappe.utils.nestedset import get_descendants_of
 
 import erpnext
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import get_dimensions
@@ -127,6 +128,8 @@ class PaymentReconciliation(Document):
 
 	@frappe.whitelist()
 	def get_unreconciled_entries(self):
+		self.rec_pay_accounts = [self.receivable_payable_account]
+		self.rec_pay_accounts.extend(get_descendants_of("Account", self.receivable_payable_account))
 		self.get_nonreconciled_payment_entries()
 		self.get_invoice_entries()
 
@@ -153,7 +156,7 @@ class PaymentReconciliation(Document):
 		self.add_payment_entries(non_reconciled_payments)
 
 	def get_payment_entries(self):
-		party_account = [self.receivable_payable_account]
+		party_account = self.rec_pay_accounts
 
 		order_doctype = "Sales Order" if self.party_type == "Customer" else "Purchase Order"
 		condition = frappe._dict(
@@ -231,6 +234,7 @@ class PaymentReconciliation(Document):
 				je.posting_date,
 				je.remark.as_("remarks"),
 				jea.name.as_("reference_row"),
+				jea.account,
 				dr_or_cr.as_("amount"),
 				jea.is_advance,
 				jea.exchange_rate,
@@ -241,7 +245,7 @@ class PaymentReconciliation(Document):
 				(je.docstatus == 1)
 				& (jea.party_type == self.party_type)
 				& (jea.party == self.party)
-				& (jea.account == self.receivable_payable_account)
+				& (jea.account.isin(self.rec_pay_accounts))
 				& (
 					(jea.reference_type == "")
 					| (jea.reference_type.isnull())
@@ -295,7 +299,7 @@ class PaymentReconciliation(Document):
 			self.common_filter_conditions.append(ple.account_type == "Receivable")
 		else:
 			self.common_filter_conditions.append(ple.account_type == "Payable")
-		self.common_filter_conditions.append(ple.account == self.receivable_payable_account)
+		self.common_filter_conditions.append(ple.account.isin(self.rec_pay_accounts))
 
 		self.get_return_invoices()
 
@@ -324,6 +328,7 @@ class PaymentReconciliation(Document):
 								"currency": inv.currency,
 								"cost_center": inv.cost_center,
 								"remarks": inv.remarks,
+								"account": inv.account,
 							}
 						)
 					)
@@ -336,13 +341,15 @@ class PaymentReconciliation(Document):
 			row = self.append("payments", {})
 			row.update(payment)
 			row.is_advance = payment.book_advance_payments_in_separate_party_account
+			if not row.get("account"):
+				row.account = row.get("paid_from") or row.get("paid_to")
 
 	def get_invoice_entries(self):
 		# Fetch JVs, Sales and Purchase Invoices for 'invoices' to reconcile against
 
 		self.build_qb_filter_conditions(get_invoices=True)
 
-		accounts = [self.receivable_payable_account]
+		accounts = self.rec_pay_accounts
 
 		if self.default_advance_account:
 			accounts.append(self.default_advance_account)
@@ -393,9 +400,7 @@ class PaymentReconciliation(Document):
 
 	def get_difference_amount(self, payment_entry, invoice, allocated_amount):
 		difference_amount = 0
-		if frappe.get_cached_value(
-			"Account", self.receivable_payable_account, "account_currency"
-		) != frappe.get_cached_value("Company", self.company, "default_currency"):
+		if invoice.get("currency") != payment_entry.get("currency"):
 			if invoice.get("exchange_rate") and payment_entry.get("exchange_rate", 1) != invoice.get(
 				"exchange_rate", 1
 			):
@@ -533,22 +538,25 @@ class PaymentReconciliation(Document):
 	@frappe.whitelist()
 	def reconcile(self):
 		if frappe.db.get_single_value("Accounts Settings", "auto_reconcile_payments"):
-			running_doc = is_any_doc_running(
-				dict(
-					company=self.company,
-					party_type=self.party_type,
-					party=self.party,
-					receivable_payable_account=self.receivable_payable_account,
+			self.rec_pay_accounts = [self.receivable_payable_account]
+			self.rec_pay_accounts.extend(get_descendants_of("Account", self.receivable_payable_account))
+			for account in self.rec_pay_accounts:
+				running_doc = is_any_doc_running(
+					dict(
+						company=self.company,
+						party_type=self.party_type,
+						party=self.party,
+						receivable_payable_account=account,
+					)
 				)
-			)
 
-			if running_doc:
-				frappe.throw(
-					_(
-						"A Reconciliation Job {0} is running for the same filters. Cannot reconcile now"
-					).format(get_link_to_form("Auto Reconcile", running_doc))
-				)
-				return
+				if running_doc:
+					frappe.throw(
+						_(
+							"A Reconciliation Job {0} is running for the same filters. Cannot reconcile now"
+						).format(get_link_to_form("Auto Reconcile", running_doc))
+					)
+					return
 
 		self.validate_allocation()
 		self.reconcile_allocations()
@@ -564,7 +572,7 @@ class PaymentReconciliation(Document):
 				"voucher_detail_no": row.get("reference_row"),
 				"against_voucher_type": row.get("invoice_type"),
 				"against_voucher": row.get("invoice_number"),
-				"account": self.receivable_payable_account,
+				"account": row.get("account"),
 				"exchange_rate": row.get("exchange_rate"),
 				"party_type": self.party_type,
 				"party": self.party,
@@ -599,6 +607,9 @@ class PaymentReconciliation(Document):
 			frappe.throw(_("No records found in the Payments table"))
 
 	def get_invoice_exchange_map(self, invoices, payments):
+		self.rec_pay_accounts = [self.receivable_payable_account]
+		self.rec_pay_accounts.extend(get_descendants_of("Account", self.receivable_payable_account))
+
 		sales_invoices = [
 			d.get("invoice_number") for d in invoices if d.get("invoice_type") == "Sales Invoice"
 		]
@@ -650,7 +661,7 @@ class PaymentReconciliation(Document):
 					"Journal Entry Account",
 					filters={
 						"parent": ("in", journals),
-						"account": ("in", [self.receivable_payable_account]),
+						"account": ("in", self.rec_pay_accounts),
 						"party_type": self.party_type,
 						"party": self.party,
 					},
