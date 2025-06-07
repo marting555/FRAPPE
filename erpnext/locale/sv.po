@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-06-01 09:36+0000\n"
-"PO-Revision-Date: 2025-06-05 23:00\n"
+"PO-Revision-Date: 2025-06-07 23:26\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -2900,7 +2900,7 @@ msgstr "Lägg till Artikel i Artikel Plats Tabell"
 #. Charges'
 #: erpnext/accounts/doctype/purchase_taxes_and_charges/purchase_taxes_and_charges.json
 msgid "Add or Deduct"
-msgstr "Lägg till eller Ta Bort"
+msgstr "Lägg till eller Dra av"
 
 #: erpnext/utilities/activation.py:113
 msgid "Add the rest of your organization as your users. You can also add invite Customers to your portal by adding them from Contacts"
@@ -7634,7 +7634,7 @@ msgstr "Bank / Kassa Konto {0} tillhör inte bolag {1}"
 #: erpnext/accounts/workspace/accounting/accounting.json
 #: erpnext/setup/setup_wizard/data/industry_type.txt:8
 msgid "Banking"
-msgstr "Bank"
+msgstr "Bankverksamhet"
 
 #. Name of a UOM
 #: erpnext/setup/setup_wizard/data/uom_data.json
@@ -15379,7 +15379,7 @@ msgstr "Ange som Förlorad"
 #: erpnext/accounts/doctype/advance_taxes_and_charges/advance_taxes_and_charges.json
 #: erpnext/accounts/doctype/purchase_taxes_and_charges/purchase_taxes_and_charges.json
 msgid "Deduct"
-msgstr "Dra Av"
+msgstr "Dra av"
 
 #. Label of the section_break_3 (Section Break) field in DocType 'Lower
 #. Deduction Certificate'
