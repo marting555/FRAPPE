@@ -60,18 +60,8 @@ def get_funnel_data(from_date, to_date, company):
 
 
 @frappe.whitelist()
-def get_opp_by_utm_source(from_date, to_date, company):
-	return get_opp_by("utm_source", from_date, to_date, company)
-
-
-@frappe.whitelist()
-def get_opp_by_utm_campaign(from_date, to_date, company):
-	return get_opp_by("utm_campaign", from_date, to_date, company)
-
-
-@frappe.whitelist()
-def get_opp_by_utm_medium(from_date, to_date, company):
-	return get_opp_by("utm_medium", from_date, to_date, company)
+def get_opp_by_source(from_date, to_date, company):
+	return get_opp_by("source", from_date, to_date, company)
 
 
 def get_opp_by(by_field, from_date, to_date, company):
