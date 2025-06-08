@@ -135,10 +135,6 @@ class DeliveryNote(SellingController):
 		total_taxes_and_charges: DF.Currency
 		transporter: DF.Link | None
 		transporter_name: DF.Data | None
-		utm_campaign: DF.Link | None
-		utm_content: DF.Data | None
-		utm_medium: DF.Link | None
-		utm_source: DF.Link | None
 		vehicle_no: DF.Data | None
 	# end: auto-generated types
 
