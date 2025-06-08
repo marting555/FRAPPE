@@ -159,6 +159,8 @@
   "inter_company_reference",
   "customer_group",
   "territory",
+  "source",
+  "campaign",
   "column_break_pxls",
   "excise_page",
   "instructions",
@@ -1375,13 +1377,27 @@
    "label": "Company Contact Person",
    "options": "Contact",
    "print_hide": 1
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Link",
+   "label": "Source",
+   "options": "Lead Source",
+   "print_hide": 1
+  },
+  {
+   "fieldname": "campaign",
+   "fieldtype": "Link",
+   "label": "Campaign",
+   "options": "Campaign",
+   "print_hide": 1
   }
  ],
  "icon": "fa fa-truck",
  "idx": 146,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-06-09 02:21:09.063255",
+ "modified": "2025-06-09 02:27:15.121226",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note",
