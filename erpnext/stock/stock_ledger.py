@@ -919,6 +919,22 @@ class update_entries_after:
 				* -1
 			)
 
+		# Make sure the balance is also zero otherwise, book the difference value in stock_value_difference
+		if (
+			sle.qty_after_transaction == 0.0
+			and not sle.is_adjustment_entry
+			and not sle.serial_and_batch_bundle
+		):
+			expected_stock_value_difference = (
+				get_stock_value_difference(
+					sle.item_code, sle.warehouse, sle.posting_date, sle.posting_time, sle.voucher_no
+				)
+				* -1
+			)
+
+			if sle.stock_value_difference != expected_stock_value_difference:
+				sle.stock_value_difference = expected_stock_value_difference
+
 		sle.doctype = "Stock Ledger Entry"
 		frappe.get_doc(sle).db_update()
 
