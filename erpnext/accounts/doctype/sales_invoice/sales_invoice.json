@@ -209,14 +209,11 @@
   "more_information",
   "status",
   "inter_company_invoice_reference",
+  "campaign",
   "represents_company",
+  "source",
   "customer_group",
   "column_break_imbx",
-  "utm_source",
-  "utm_campaign",
-  "utm_medium",
-  "utm_content",
-  "col_break23",
   "is_internal_customer",
   "is_discounted",
   "remarks",
@@ -1639,13 +1636,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "col_break23",
-   "fieldtype": "Column Break",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "width": "50%"
-  },
-  {
    "default": "Draft",
    "fieldname": "status",
    "fieldtype": "Select",
@@ -2030,7 +2020,8 @@
   {
    "fieldname": "more_info_tab",
    "fieldtype": "Tab Break",
-   "label": "More Info"
+   "label": "More Info",
+   "print_hide": 1
   },
   {
    "fieldname": "connections_tab",
@@ -2161,41 +2152,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "utm_medium",
-   "fieldtype": "Link",
-   "label": "Medium",
-   "options": "UTM Medium",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_content",
-   "fieldtype": "Data",
-   "label": "Content",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_campaign",
-   "fieldtype": "Link",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Campaign",
-   "oldfieldname": "campaign",
-   "oldfieldtype": "Link",
-   "options": "UTM Campaign",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_source",
-   "fieldtype": "Link",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Source",
-   "oldfieldname": "source",
-   "oldfieldtype": "Select",
-   "options": "UTM Source",
-   "print_hide": 1
-  },
-  {
    "fieldname": "company_contact_person",
    "fieldtype": "Link",
    "label": "Company Contact Person",
@@ -2218,6 +2174,24 @@
    "label": "POS Closing Entry",
    "options": "POS Closing Entry",
    "print_hide": 1
+  },
+  {
+   "fieldname": "campaign",
+   "fieldtype": "Link",
+   "hide_days": 1,
+   "hide_seconds": 1,
+   "label": "Campaign",
+   "options": "Campaign",
+   "print_hide": 1
+  },
+  {
+   "fieldname": "source",
+   "hide_days": 1,
+   "hide_seconds": 1,
+   "fieldtype": "Link",
+   "label": "Source",
+   "options": "Lead Source",
+   "print_hide": 1
   }
  ],
  "grid_page_length": 50,
@@ -2231,7 +2205,7 @@
    "link_fieldname": "consolidated_invoice"
   }
  ],
- "modified": "2025-03-17 19:32:31.809658",
+ "modified": "2025-06-09 02:03:37.368410",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Sales Invoice",

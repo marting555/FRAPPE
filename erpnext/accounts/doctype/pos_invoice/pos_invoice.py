@@ -141,6 +141,7 @@ class POSInvoice(SalesInvoice):
 		shipping_address: DF.TextEditor | None
 		shipping_address_name: DF.Link | None
 		shipping_rule: DF.Link | None
+		source: DF.Link | None
 		status: DF.Literal[
 			"",
 			"Draft",
@@ -174,9 +175,6 @@ class POSInvoice(SalesInvoice):
 		update_billed_amount_in_delivery_note: DF.Check
 		update_billed_amount_in_sales_order: DF.Check
 		update_stock: DF.Check
-		utm_campaign: DF.Link | None
-		utm_medium: DF.Link | None
-		utm_source: DF.Link | None
 		write_off_account: DF.Link | None
 		write_off_amount: DF.Currency
 		write_off_cost_center: DF.Link | None
@@ -720,9 +718,6 @@ class POSInvoice(SalesInvoice):
 		if profile:
 			return {
 				"print_format": print_format,
-				"utm_source": profile.get("utm_source"),
-				"utm_campaign": profile.get("utm_campaign"),
-				"utm_medium": profile.get("utm_medium"),
 				"allow_print_before_pay": profile.get("allow_print_before_pay"),
 			}
 

@@ -158,11 +158,8 @@
   "customer_group",
   "is_discounted",
   "col_break23",
-  "utm_source",
-  "utm_campaign",
-  "utm_medium",
-  "column_break_gpiw",
   "status",
+  "source",
   "more_info",
   "debit_to",
   "party_account_currency",
@@ -1534,46 +1531,24 @@
    "label": "Update Billed Amount in Delivery Note"
   },
   {
-   "fieldname": "column_break_gpiw",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "utm_medium",
-   "fieldtype": "Link",
-   "label": "Medium",
-   "options": "UTM Medium",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_campaign",
-   "fieldtype": "Link",
-   "label": "Campaign",
-   "oldfieldname": "campaign",
-   "oldfieldtype": "Link",
-   "options": "UTM Campaign",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_source",
-   "fieldtype": "Link",
-   "label": "Source",
-   "oldfieldname": "source",
-   "oldfieldtype": "Select",
-   "options": "UTM Source",
-   "print_hide": 1
-  },
-  {
    "fieldname": "company_contact_person",
    "fieldtype": "Link",
    "label": "Company Contact Person",
    "options": "Contact",
+   "print_hide": 1
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Link",
+   "label": "Source",
+   "options": "Lead Source",
    "print_hide": 1
   }
  ],
  "icon": "fa fa-file-text",
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-06 15:03:19.957277",
+ "modified": "2025-06-09 01:46:51.624848",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "POS Invoice",
@@ -1618,6 +1593,7 @@
    "role": "All"
   }
  ],
+ "row_format": "Dynamic",
  "search_fields": "posting_date, due_date, customer, base_grand_total, outstanding_amount",
  "show_name_in_global_search": 1,
  "sort_field": "creation",
