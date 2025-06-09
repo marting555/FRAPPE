@@ -184,6 +184,7 @@ class PurchaseInvoice(BuyingController):
 			"Overdue",
 			"Cancelled",
 			"Internal Transfer",
+			"Adjusted",
 		]
 		subscription: DF.Link | None
 		supplied_items: DF.Table[PurchaseReceiptItemSupplied]
@@ -1946,6 +1947,8 @@ class PurchaseInvoice(BuyingController):
 					"Purchase Invoice", {"is_return": 1, "return_against": self.name, "docstatus": 1}
 				):
 					self.status = "Debit Note Issued"
+				elif self.is_return == 1 and outstanding_amount == 0:
+					self.status = "Adjusted"
 				elif self.is_return == 1:
 					self.status = "Return"
 				elif outstanding_amount <= 0:

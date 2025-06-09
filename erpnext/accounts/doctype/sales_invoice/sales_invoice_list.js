@@ -26,6 +26,7 @@ frappe.listview_settings["Sales Invoice"] = {
 			Overdue: "red",
 			"Partly Paid": "yellow",
 			"Internal Transfer": "darkgrey",
+			Adjusted: "gray",
 		};
 		return [__(doc.status), status_colors[doc.status], "status,=," + doc.status];
 	},
