@@ -292,7 +292,7 @@ def get_invoices(start, end, pos_profile, user):
 				POSInvoice.grand_total,
 				POSInvoice.net_total,
 				POSInvoice.total_qty,
-				SalesInvoice.total_taxes_and_charges,
+				POSInvoice.total_taxes_and_charges,
 				fn.Timestamp(POSInvoice.posting_date, POSInvoice.posting_time).as_("timestamp"),
 				ConstantColumn("POS Invoice").as_("doctype"),
 				POSInvoice.change_amount,
