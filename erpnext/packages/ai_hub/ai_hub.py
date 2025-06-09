@@ -19,7 +19,7 @@ class AIHubClient(AIHubConnector):
         data = {
             "conversationId" : conversation_id,
             "pageId": page_id,
-            "webhookUrl": f"{self.webhook_url}/webhook/erp/leads/info"
+            "webhookUrl": f"{self.webhook_url}/webhook/ai-hub/erp/leads"
         }
 
         print(data)
