@@ -191,8 +191,6 @@ class TestCustomerLedgerSummary(AccountsTestMixin, IntegrationTestCase):
 					"company": si.company,
 					"from_date": si.posting_date,
 					"to_date": si.posting_date,
-					"account": [si.debit_to],
-					"categorize_by": "Categorize by Voucher (Consolidated)",
 					"ignore_cr_dr_notes": False,
 				}
 			)
@@ -208,8 +206,6 @@ class TestCustomerLedgerSummary(AccountsTestMixin, IntegrationTestCase):
 					"company": si.company,
 					"from_date": si.posting_date,
 					"to_date": si.posting_date,
-					"account": [si.debit_to],
-					"categorize_by": "Categorize by Voucher (Consolidated)",
 					"ignore_cr_dr_notes": True,
 				}
 			)
