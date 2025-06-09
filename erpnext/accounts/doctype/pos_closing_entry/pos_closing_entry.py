@@ -312,8 +312,7 @@ def get_invoices(start, end, pos_profile, user):
 		query = query + pos_inv_query
 
 	query = query.orderby(query.timestamp)
-	sql_query, params = query.walk()
-	invoices = frappe.db.sql(sql_query, params, as_dict=1)
+	invoices = query.run(as_dict=1)
 
 	data = {"invoices": invoices, "payments": get_payments(invoices), "taxes": get_taxes(invoices)}
 
@@ -340,8 +339,7 @@ def get_payments(invoices):
 			fn.Sum(SalesInvoicePayment.amount).as_("amount"),
 		)
 	)
-	sql_query, params = query.walk()
-	data = frappe.db.sql(sql_query, params, as_dict=1)
+	data = query.run(as_dict=1)
 
 	change_amount_by_account = {}
 	for d in invoices:
@@ -374,8 +372,7 @@ def get_taxes(invoices):
 			fn.Sum(SalesInvoiceTaxesCharges.tax_amount_after_discount_amount).as_("tax_amount"),
 		)
 	)
-	sql_query, params = query.walk()
-	data = frappe.db.sql(sql_query, params, as_dict=1)
+	data = query.run(as_dict=1)
 
 	return data
 
