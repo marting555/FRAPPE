@@ -145,7 +145,7 @@ class Budget(Document):
 
 def validate_expense_against_budget(args, expense_amount=0):
 	args = frappe._dict(args)
-	if not frappe.get_all("Budget", limit=1):
+	if not frappe.db.count("Budget", cache=True):
 		return
 
 	if args.get("company") and not args.fiscal_year:
@@ -154,7 +154,7 @@ def validate_expense_against_budget(args, expense_amount=0):
 			"Company", args.get("company"), "exception_budget_approver_role"
 		)
 
-	if not frappe.get_cached_value("Budget", {"fiscal_year": args.fiscal_year, "company": args.company}):  # nosec
+	if not frappe.db.get_value("Budget", {"fiscal_year": args.fiscal_year, "company": args.company}):
 		return
 
 	if not args.account:

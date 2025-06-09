@@ -8,6 +8,7 @@ from frappe.query_builder import Criterion, Tuple
 from frappe.query_builder.functions import IfNull
 from frappe.utils import getdate, nowdate
 from frappe.utils.nestedset import get_descendants_of
+from pypika.terms import LiteralValue
 
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 	get_accounting_dimensions,
@@ -77,13 +78,12 @@ class PartyLedgerSummaryReport:
 
 		from frappe.desk.reportview import build_match_conditions
 
-		query, params = query.walk()
 		match_conditions = build_match_conditions(party_type)
 
 		if match_conditions:
-			query += "and" + match_conditions
+			query = query.where(LiteralValue(match_conditions))
 
-		party_details = frappe.db.sql(query, params, as_dict=True)
+		party_details = query.run(as_dict=True)
 
 		for row in party_details:
 			self.parties.append(row.party)
@@ -210,6 +210,7 @@ class PartyLedgerSummaryReport:
 				"fieldtype": "Link",
 				"options": "Currency",
 				"width": 50,
+				"hidden": 1,
 			},
 		]
 
@@ -242,6 +243,7 @@ class PartyLedgerSummaryReport:
 				}
 			]
 
+		columns.append({"label": _("Dr/Cr"), "fieldname": "dr_or_cr", "fieldtype": "Data", "width": 100})
 		return columns
 
 	def get_data(self):
@@ -299,6 +301,13 @@ class PartyLedgerSummaryReport:
 				adjustments = self.party_adjustment_details.get(party, {})
 				for account in self.party_adjustment_accounts:
 					row["adj_" + scrub(account)] = adjustments.get(account, 0)
+
+				if self.filters.party_type == "Customer":
+					balance = row.get("closing_balance", 0)
+					row["dr_or_cr"] = "Dr" if balance > 0 else "Cr" if balance < 0 else ""
+				else:
+					balance = row.get("closing_balance", 0)
+					row["dr_or_cr"] = "Cr" if balance > 0 else "Dr" if balance < 0 else ""
 
 				out.append(row)
 
@@ -458,9 +467,16 @@ class PartyLedgerSummaryReport:
 
 
 def get_children(doctype, value):
-	children = get_descendants_of(doctype, value)
+	if not isinstance(value, list):
+		value = [d.strip() for d in value.strip().split(",") if d]
 
-	return [value, *children]
+	all_children = []
+
+	for d in value:
+		all_children += get_descendants_of(doctype, value)
+		all_children.append(d)
+
+	return list(set(all_children))
 
 
 def execute(filters=None):
