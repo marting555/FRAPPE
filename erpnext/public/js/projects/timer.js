@@ -26,8 +26,7 @@ erpnext.timesheet.timer = function (frm, row, timestamp = 0) {
 			task: row.task,
 			expected_hours: row.expected_hours,
 		});
-	}
-	else {
+	} else {
 		dialog.set_values({
 			project: project_value,
 		});
