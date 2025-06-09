@@ -46,7 +46,6 @@ frappe.listview_settings["Lead"] = {
 	},
 
 	refresh: function (listview) {
-		// $(".list-row-container .list-row .level-right .modified").remove();
 		$(".list-row-container .list-row .level-right .comment-count").remove();
 		$(".list-row-container .list-row .level-right .mx-2").remove();
 		$(".list-row-container .list-row .level-right .list-row-like").remove();
@@ -54,7 +53,7 @@ frappe.listview_settings["Lead"] = {
 		$(`.result .list-row-container .list-row .level-right .list-row-activity .btn-pancake`).remove();
 		// Add Pancake button to each row
 		for (let i = 0; i < listview.data.length; i++) {
-			const row = $(`.result .list-row-container:nth-child(${i + 2}) .list-row .level-right .list-row-activity`);
+			const row = $(`.result .list-row-container:nth-child(${i + 3}) .list-row .level-right .list-row-activity`);
 			const doc = listview.data[i];
 			frappe.db.get_list("Contact", {
 				filters: [
