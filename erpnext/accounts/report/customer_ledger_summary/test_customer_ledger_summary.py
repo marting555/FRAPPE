@@ -183,7 +183,17 @@ class TestCustomerLedgerSummary(AccountsTestMixin, IntegrationTestCase):
 			fields=["name"],
 		)
 		self.assertEqual(len(system_generated_journal), 1)
-		expected = set([si.name, cr_note.name, system_generated_journal[0].name])
+		expected = {
+			"party": "_Test Customer",
+			"customer_name": "_Test Customer",
+			"party_name": "_Test Customer",
+			"opening_balance": 0.0,
+			"invoiced_amount": 200.0,
+			"paid_amount": 100.0,
+			"return_amount": 100.0,
+			"closing_balance": 0.0,
+			"currency": "INR",
+		}
 		# Without ignore_cr_dr_notes
 		columns, data = execute(
 			frappe._dict(
@@ -195,11 +205,21 @@ class TestCustomerLedgerSummary(AccountsTestMixin, IntegrationTestCase):
 				}
 			)
 		)
-		actual = set([x.voucher_no for x in data if x.voucher_no])
-		self.assertEqual(expected, actual)
+		self.assertEqual(len(data), 1)
+		self.assertDictEqual(expected, data[0])
 
-		# Without ignore_cr_dr_notes
-		expected = set([si.name, cr_note.name])
+		# With ignore_cr_dr_notes
+		expected = {
+			"party": "_Test Customer",
+			"customer_name": "_Test Customer",
+			"party_name": "_Test Customer",
+			"opening_balance": 0.0,
+			"invoiced_amount": 100.0,
+			"paid_amount": 0.0,
+			"return_amount": 100.0,
+			"closing_balance": 0.0,
+			"currency": "INR",
+		}
 		columns, data = execute(
 			frappe._dict(
 				{
@@ -210,5 +230,5 @@ class TestCustomerLedgerSummary(AccountsTestMixin, IntegrationTestCase):
 				}
 			)
 		)
-		actual = set([x.voucher_no for x in data if x.voucher_no])
-		self.assertEqual(expected, actual)
+		self.assertEqual(len(data), 1)
+		self.assertEqual(expected, data[0])
