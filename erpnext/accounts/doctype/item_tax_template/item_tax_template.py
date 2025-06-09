@@ -40,7 +40,7 @@ class ItemTaxTemplate(Document):
 		for d in self.get("taxes"):
 			if d.tax_type:
 				account_type, account_company = frappe.get_cached_value(
-					"Account", d.tax_type, "account_type", "company"
+					"Account", d.tax_type, ["account_type", "company"]
 				)
 
 				if account_company != self.company:
