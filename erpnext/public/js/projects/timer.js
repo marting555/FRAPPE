@@ -18,13 +18,18 @@ erpnext.timesheet.timer = function (frm, row, timestamp = 0) {
 			{ fieldtype: "HTML", fieldname: "timer_html" },
 		],
 	});
-
+	let project_value = (row && row.project) || frm.doc.parent_project;
 	if (row) {
 		dialog.set_values({
 			activity_type: row.activity_type,
 			project: row.project,
 			task: row.task,
 			expected_hours: row.expected_hours,
+		});
+	}
+	else {
+		dialog.set_values({
+			project: project_value,
 		});
 	}
 	dialog.get_field("timer_html").$wrapper.append(get_timer_html());
