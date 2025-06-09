@@ -243,7 +243,7 @@ frappe.ui.form.on('Lead', {
 				frappe.db.get_doc("Contact", data[0].name).then(doc => {
 					// Add web link to Pancake Conversation
 					if (doc.pancake_conversation_id) {
-						frm.add_web_link("https://pancake.vn/JEMMIA.JEWELRY?c_id=" + doc.pancake_conversation_id, "Pancake Conversation");
+						frm.add_web_link(`https://pancake.vn/${doc.pancake_page_id}?c_id=` + doc.pancake_conversation_id, "Pancake Conversation");
 					}
 				})
 			}
