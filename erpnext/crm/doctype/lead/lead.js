@@ -235,6 +235,7 @@ frappe.ui.form.on('Lead', {
 		// Check Contact associated with this Lead
 		frappe.db.get_list("Contact", {
 			filters: [
+				["Dynamic Link", "link_doctype", "=", "Lead"],
 				["Dynamic Link", "link_name", "=", frm.doc.name]
 			]
 		}).then(data => {
