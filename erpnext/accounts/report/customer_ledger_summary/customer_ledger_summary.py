@@ -347,7 +347,7 @@ class PartyLedgerSummaryReport:
 
 		voucher_no_not_in = self.filters.get("voucher_no_not_in", [])
 		if voucher_no_not_in:
-			query = query.where(~gle.voucher_no.isin(voucher_no_not_in))
+			query = query.where(gle.voucher_no.notin(voucher_no_not_in))
 
 		query = self.prepare_conditions(query)
 
