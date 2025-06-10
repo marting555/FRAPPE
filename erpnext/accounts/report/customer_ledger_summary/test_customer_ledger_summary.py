@@ -152,7 +152,7 @@ class TestCustomerLedgerSummary(AccountsTestMixin, IntegrationTestCase):
 			with self.subTest(field=field):
 				self.assertEqual(report[0].get(field), expected_after_cr_and_payment.get(field))
 
-	def test_ignore_cr_dr_notes_filter(self):
+	def test_customer_ledger_ignore_cr_dr_filter(self):
 		si = create_sales_invoice()
 
 		cr_note = make_return_doc(si.doctype, si.name)
@@ -187,12 +187,13 @@ class TestCustomerLedgerSummary(AccountsTestMixin, IntegrationTestCase):
 			"party": "_Test Customer",
 			"customer_name": "_Test Customer",
 			"party_name": "_Test Customer",
-			"opening_balance": 0.0,
+			"opening_balance": 0,
 			"invoiced_amount": 200.0,
 			"paid_amount": 100.0,
 			"return_amount": 100.0,
 			"closing_balance": 0.0,
 			"currency": "INR",
+			"dr_or_cr": "",
 		}
 		# Without ignore_cr_dr_notes
 		columns, data = execute(
@@ -213,12 +214,13 @@ class TestCustomerLedgerSummary(AccountsTestMixin, IntegrationTestCase):
 			"party": "_Test Customer",
 			"customer_name": "_Test Customer",
 			"party_name": "_Test Customer",
-			"opening_balance": 0.0,
+			"opening_balance": 0,
 			"invoiced_amount": 100.0,
 			"paid_amount": 0.0,
 			"return_amount": 100.0,
 			"closing_balance": 0.0,
 			"currency": "INR",
+			"dr_or_cr": "",
 		}
 		columns, data = execute(
 			frappe._dict(
