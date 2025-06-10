@@ -254,6 +254,7 @@
   {
    "fieldname": "phone",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Phone",
    "oldfieldname": "contact_no",
@@ -764,7 +765,7 @@
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-06-09 16:36:01.401938",
+ "modified": "2025-06-10 09:21:38.772745",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",
