@@ -364,7 +364,7 @@ class PickList(TransactionBase):
 
 		for item in self.locations:
 			if item.product_bundle_item:
-				packed_items.append(item.sales_order_item)
+				packed_items.append(item.product_bundle_item)
 			elif item.sales_order_item:
 				so_items.append(item.sales_order_item)
 
@@ -375,12 +375,12 @@ class PickList(TransactionBase):
 			self.update_sales_order_item_qty(so_items)
 
 	def update_packed_items_qty(self, packed_items):
-		picked_items = get_picked_items_qty(packed_items)
+		picked_items = get_picked_items_qty(packed_items, contains_packed_items=True)
 		self.validate_picked_qty(picked_items)
 
 		picked_qty = frappe._dict()
 		for d in picked_items:
-			picked_qty[d.sales_order_item] = d.picked_qty
+			picked_qty[d.product_bundle_item] = d.picked_qty
 
 		for packed_item in packed_items:
 			frappe.db.set_value(
@@ -593,7 +593,6 @@ class PickList(TransactionBase):
 			# maintain count of each item (useful to limit get query)
 			self.item_count_map.setdefault(item_code, 0)
 			self.item_count_map[item_code] += flt(item.stock_qty, item.precision("stock_qty"))
-
 		return item_map.values()
 
 	def validate_for_qty(self):
@@ -818,24 +817,35 @@ def update_pick_list_status(pick_list):
 		doc.run_method("update_status")
 
 
-def get_picked_items_qty(items) -> list[dict]:
+def get_picked_items_qty(items, contains_packed_items=False) -> list[dict]:
 	pi_item = frappe.qb.DocType("Pick List Item")
-	return (
+
+	query = (
 		frappe.qb.from_(pi_item)
 		.select(
 			pi_item.sales_order_item,
+			pi_item.product_bundle_item,
 			pi_item.item_code,
 			pi_item.sales_order,
 			Sum(pi_item.stock_qty).as_("stock_qty"),
 			Sum(pi_item.picked_qty).as_("picked_qty"),
 		)
-		.where((pi_item.docstatus == 1) & (pi_item.sales_order_item.isin(items)))
-		.groupby(
+		.where(pi_item.docstatus == 1)
+		.for_update()
+	)
+
+	if contains_packed_items:
+		query = query.groupby(
+			pi_item.product_bundle_item,
+			pi_item.sales_order,
+		).where(pi_item.product_bundle_item.isin(items))
+	else:
+		query = query.groupby(
 			pi_item.sales_order_item,
 			pi_item.sales_order,
-		)
-		.for_update()
-	).run(as_dict=True)
+		).where(pi_item.sales_order_item.isin(items))
+
+	return query.run(as_dict=True)
 
 
 def validate_item_locations(pick_list):
