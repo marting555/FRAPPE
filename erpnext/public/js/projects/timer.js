@@ -18,7 +18,6 @@ erpnext.timesheet.timer = function (frm, row, timestamp = 0) {
 			{ fieldtype: "HTML", fieldname: "timer_html" },
 		],
 	});
-	let project_value = (row && row.project) || frm.doc.parent_project;
 	if (row) {
 		dialog.set_values({
 			activity_type: row.activity_type,
@@ -28,7 +27,7 @@ erpnext.timesheet.timer = function (frm, row, timestamp = 0) {
 		});
 	} else {
 		dialog.set_values({
-			project: project_value,
+			project: frm.doc.parent_project,
 		});
 	}
 	dialog.get_field("timer_html").$wrapper.append(get_timer_html());
