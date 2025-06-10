@@ -427,6 +427,9 @@ scheduler_events = {
 		"45 0 * * *": [
 			"erpnext.stock.reorder_item.reorder_item",
 		],
+        "*/15 * * * *": [
+            "erpnext.crm.doctype.lead.lead_methods.get_leads_to_summary_from_pancake"
+		]
 	},
 	"hourly": [
 		"erpnext.erpnext_integrations.doctype.plaid_settings.plaid_settings.automatic_synchronization",
