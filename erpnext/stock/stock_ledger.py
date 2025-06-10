@@ -912,8 +912,11 @@ class update_entries_after:
 		if not sle.is_adjustment_entry:
 			sle.stock_value_difference = stock_value_difference
 		elif sle.is_adjustment_entry and not self.args.get("sle_id"):
-			sle.stock_value_difference = get_stock_value_difference(
-				sle.item_code, sle.warehouse, sle.posting_date, sle.posting_time, sle.voucher_no
+			sle.stock_value_difference = (
+				get_stock_value_difference(
+					sle.item_code, sle.warehouse, sle.posting_date, sle.posting_time, sle.voucher_no
+				)
+				* -1
 			)
 
 		sle.doctype = "Stock Ledger Entry"
@@ -1422,7 +1425,10 @@ class update_entries_after:
 					return 0.0
 
 			stock_queue.remove_stock(
-				qty=abs(actual_qty), outgoing_rate=outgoing_rate, rate_generator=rate_generator
+				qty=abs(actual_qty),
+				outgoing_rate=outgoing_rate,
+				rate_generator=rate_generator,
+				is_return_purchase_entry=self.is_return_purchase_entry(sle),
 			)
 
 		_qty, stock_value = stock_queue.get_total_stock_and_value()
@@ -1439,6 +1445,12 @@ class update_entries_after:
 
 		if self.wh_data.qty_after_transaction:
 			self.wh_data.valuation_rate = self.wh_data.stock_value / self.wh_data.qty_after_transaction
+
+	def is_return_purchase_entry(self, sle):
+		if sle.voucher_type in ["Purchase Invoice", "Purchase Receipt"]:
+			return frappe.get_cached_value(sle.voucher_type, sle.voucher_no, "is_return")
+
+		return False
 
 	def update_batched_values(self, sle):
 		from erpnext.stock.serial_batch_bundle import BatchNoValuation
@@ -2177,9 +2189,9 @@ def validate_reserved_batch_nos(item_code, warehouse, batch_nos):
 
 
 def is_negative_stock_allowed(*, item_code: str | None = None) -> bool:
-	if cint(frappe.db.get_single_value("Stock Settings", "allow_negative_stock", cache=True)):
+	if frappe.get_cached_doc("Stock Settings").allow_negative_stock:
 		return True
-	if item_code and cint(frappe.db.get_value("Item", item_code, "allow_negative_stock", cache=True)):
+	if item_code and cint(frappe.get_cached_value("Item", item_code, "allow_negative_stock")):
 		return True
 	return False
 

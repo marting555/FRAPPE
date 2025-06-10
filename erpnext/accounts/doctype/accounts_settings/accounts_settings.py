@@ -37,6 +37,7 @@ class AccountsSettings(Document):
 		book_tax_discount_loss: DF.Check
 		calculate_depr_using_total_days: DF.Check
 		check_supplier_invoice_uniqueness: DF.Check
+		confirm_before_resetting_posting_date: DF.Check
 		create_pr_in_draft_status: DF.Check
 		credit_controller: DF.Link | None
 		delete_linked_ledger_entries: DF.Check
@@ -50,6 +51,8 @@ class AccountsSettings(Document):
 		general_ledger_remarks_length: DF.Int
 		ignore_account_closing_balance: DF.Check
 		ignore_is_opening_check_for_reporting: DF.Check
+		maintain_same_internal_transaction_rate: DF.Check
+		maintain_same_rate_action: DF.Literal["Stop", "Warn"]
 		make_payment_via_journal_entry: DF.Check
 		merge_similar_account_heads: DF.Check
 		over_billing_allowance: DF.Currency
@@ -58,6 +61,7 @@ class AccountsSettings(Document):
 		receivable_payable_remarks_length: DF.Int
 		reconciliation_queue_size: DF.Int
 		role_allowed_to_over_bill: DF.Link | None
+		role_to_override_stop_action: DF.Link | None
 		round_row_wise_tax: DF.Check
 		show_balance_in_coa: DF.Check
 		show_inclusive_tax_in_print: DF.Check

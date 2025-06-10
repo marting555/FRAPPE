@@ -118,7 +118,7 @@ class AccountsController(TransactionBase):
 	def onload(self):
 		self.set_onload(
 			"make_payment_via_journal_entry",
-			frappe.db.get_single_value("Accounts Settings", "make_payment_via_journal_entry"),
+			frappe.client_cache.get_doc("Accounts Settings").make_payment_via_journal_entry,
 		)
 
 		if self.is_new():
@@ -230,6 +230,8 @@ class AccountsController(TransactionBase):
 		self.validate_party_accounts()
 
 		self.validate_inter_company_reference()
+		# validate inter  company transaction rate
+		self.validate_internal_transaction()
 
 		self.disable_pricing_rule_on_internal_transfer()
 		self.disable_tax_included_prices_for_internal_transfer()
@@ -401,7 +403,7 @@ class AccountsController(TransactionBase):
 		self.remove_serial_and_batch_bundle()
 
 		# delete sl and gl entries on deletion of transaction
-		if frappe.db.get_single_value("Accounts Settings", "delete_linked_ledger_entries"):
+		if frappe.get_single_value("Accounts Settings", "delete_linked_ledger_entries"):
 			# delete linked exchange gain/loss journal
 			delete_exchange_gain_loss_journal(self)
 
@@ -741,6 +743,89 @@ class AccountsController(TransactionBase):
 					msg = f"At Row {row.idx}: The field {bold(label)} is mandatory for internal transfer"
 					frappe.throw(_(msg), title=_("Internal Transfer Reference Missing"))
 
+	def validate_internal_transaction(self):
+		if not cint(frappe.get_single_value("Accounts Settings", "maintain_same_internal_transaction_rate")):
+			return
+
+		doctypes_list = ["Sales Order", "Sales Invoice", "Purchase Order", "Purchase Invoice"]
+
+		if self.doctype in doctypes_list and (
+			self.get("is_internal_customer") or self.get("is_internal_supplier")
+		):
+			self.validate_internal_transaction_based_on_voucher_type()
+
+	def validate_internal_transaction_based_on_voucher_type(self):
+		order = ["Sales Order", "Purchase Order"]
+		invoice = ["Sales Invoice", "Purchase Invoice"]
+
+		if self.doctype in order and self.get("inter_company_order_reference"):
+			# Fetch the linked order
+			linked_doctype = "Sales Order" if self.doctype == "Purchase Order" else "Purchase Order"
+			self.validate_line_items(
+				linked_doctype,
+				"sales_order" if linked_doctype == "Sales Order" else "purchase_order",
+				"sales_order_item" if linked_doctype == "Sales Order" else "purchase_order_item",
+			)
+		elif self.doctype in invoice and self.get("inter_company_invoice_reference"):
+			# Fetch the linked invoice
+			linked_doctype = "Sales Invoice" if self.doctype == "Purchase Invoice" else "Purchase Invoice"
+			self.validate_line_items(
+				linked_doctype,
+				"sales_invoice" if linked_doctype == "Sales Invoice" else "purchase_invoice",
+				"sales_invoice_item" if linked_doctype == "Sales Invoice" else "purchase_invoice_item",
+			)
+
+	def validate_line_items(self, ref_dt, ref_dn_field, ref_link_field):
+		action, role_allowed_to_override = frappe.get_cached_value(
+			"Accounts Settings", "None", ["maintain_same_rate_action", "role_to_override_stop_action"]
+		)
+
+		reference_names = [d.get(ref_link_field) for d in self.get("items") if d.get(ref_link_field)]
+		reference_details = self.get_reference_details(reference_names, ref_dt + " Item")
+
+		stop_actions = []
+
+		for d in self.get("items"):
+			if d.get(ref_link_field):
+				ref_rate = reference_details.get(d.get(ref_link_field))
+				if ref_rate is not None and abs(flt(d.rate - ref_rate, d.precision("rate"))) >= 0.01:
+					if action == "Stop":
+						user_roles = [
+							r["role"]
+							for r in frappe.get_all(
+								"Has Role", filters={"parent": frappe.session.user}, fields=["role"]
+							)
+						]
+						if role_allowed_to_override not in user_roles:
+							stop_actions.append(
+								_("Row #{0}: Rate must be same as {1}: {2} ({3} / {4})").format(
+									d.idx,
+									ref_dt,
+									self.inter_company_invoice_reference
+									if d.parenttype in ("Sales Invoice", "Purchase Invoice")
+									else d.get(ref_dn_field),
+									d.rate,
+									ref_rate,
+								)
+							)
+					else:
+						frappe.msgprint(
+							_("Row #{0}: Rate must be same as {1}: {2} ({3} / {4})").format(
+								d.idx,
+								ref_dt,
+								self.inter_company_invoice_reference
+								if d.parenttype in ("Sales Invoice", "Purchase Invoice")
+								else d.get(ref_dn_field),
+								d.rate,
+								ref_rate,
+							),
+							title=_("Warning"),
+							indicator="orange",
+						)
+
+		if stop_actions:
+			frappe.throw(stop_actions, as_list=True)
+
 	def disable_pricing_rule_on_internal_transfer(self):
 		if not self.get("ignore_pricing_rule") and self.is_internal_transfer():
 			self.ignore_pricing_rule = 1
@@ -1056,7 +1141,7 @@ class AccountsController(TransactionBase):
 			return True
 
 	def set_taxes_and_charges(self):
-		if frappe.db.get_single_value("Accounts Settings", "add_taxes_from_item_tax_template"):
+		if frappe.get_single_value("Accounts Settings", "add_taxes_from_item_tax_template"):
 			if hasattr(self, "taxes_and_charges") and not self.get("taxes") and not self.get("is_pos"):
 				if tax_master_doctype := self.meta.get_field("taxes_and_charges").options:
 					self.append_taxes_from_master(tax_master_doctype)
@@ -1069,7 +1154,7 @@ class AccountsController(TransactionBase):
 			self.extend("taxes", get_taxes_and_charges(tax_master_doctype, self.get("taxes_and_charges")))
 
 	def append_taxes_from_item_tax_template(self):
-		if not frappe.db.get_single_value("Accounts Settings", "add_taxes_from_item_tax_template"):
+		if not frappe.get_single_value("Accounts Settings", "add_taxes_from_item_tax_template"):
 			return
 
 		for row in self.items:
@@ -1160,6 +1245,8 @@ class AccountsController(TransactionBase):
 
 		with temporary_flag("company", self.company):
 			update_gl_dict_with_regional_fields(self, gl_dict)
+
+		update_gl_dict_with_app_based_fields(self, gl_dict)
 
 		accounting_dimensions = get_accounting_dimensions()
 		dimension_dict = frappe._dict()
@@ -1408,7 +1495,7 @@ class AccountsController(TransactionBase):
 		return res
 
 	def is_inclusive_tax(self):
-		is_inclusive = cint(frappe.db.get_single_value("Accounts Settings", "show_inclusive_tax_in_print"))
+		is_inclusive = cint(frappe.get_single_value("Accounts Settings", "show_inclusive_tax_in_print"))
 
 		if is_inclusive:
 			is_inclusive = 0
@@ -1418,7 +1505,7 @@ class AccountsController(TransactionBase):
 		return is_inclusive
 
 	def should_show_taxes_as_table_in_print(self):
-		return cint(frappe.db.get_single_value("Accounts Settings", "show_taxes_as_table_in_print"))
+		return cint(frappe.get_single_value("Accounts Settings", "show_taxes_as_table_in_print"))
 
 	def validate_advance_entries(self):
 		order_field = "sales_order" if self.doctype == "Sales Invoice" else "purchase_order"
@@ -1795,13 +1882,11 @@ class AccountsController(TransactionBase):
 			cancel_exchange_gain_loss_journal(self)
 			cancel_common_party_journal(self)
 
-			if frappe.db.get_single_value("Accounts Settings", "unlink_payment_on_cancellation_of_invoice"):
+			if frappe.get_single_value("Accounts Settings", "unlink_payment_on_cancellation_of_invoice"):
 				unlink_ref_doc_from_payment_entries(self)
 
 		elif self.doctype in ["Sales Order", "Purchase Order"]:
-			if frappe.db.get_single_value(
-				"Accounts Settings", "unlink_advance_payment_on_cancelation_of_order"
-			):
+			if frappe.get_single_value("Accounts Settings", "unlink_advance_payment_on_cancelation_of_order"):
 				unlink_ref_doc_from_payment_entries(self)
 
 			if self.doctype == "Sales Order":
@@ -1877,7 +1962,7 @@ class AccountsController(TransactionBase):
 
 	def make_discount_gl_entries(self, gl_entries):
 		enable_discount_accounting = cint(
-			frappe.db.get_single_value("Selling Settings", "enable_discount_accounting")
+			frappe.get_single_value("Selling Settings", "enable_discount_accounting")
 		)
 
 		if enable_discount_accounting:
@@ -2359,7 +2444,7 @@ class AccountsController(TransactionBase):
 			grand_total = grand_total - flt(self.write_off_amount)
 			po_or_so, doctype, fieldname = self.get_order_details()
 			automatically_fetch_payment_terms = cint(
-				frappe.db.get_single_value("Accounts Settings", "automatically_fetch_payment_terms")
+				frappe.get_single_value("Accounts Settings", "automatically_fetch_payment_terms")
 			)
 
 		if self.get("total_advance"):
@@ -2642,7 +2727,7 @@ class AccountsController(TransactionBase):
 		if not is_invoice:
 			return
 
-		if frappe.db.get_single_value("Accounts Settings", "enable_common_party_accounting"):
+		if frappe.get_single_value("Accounts Settings", "enable_common_party_accounting"):
 			party_link = self.get_common_party_link()
 			if party_link and self.outstanding_amount:
 				self.create_advance_and_reconcile(party_link)
@@ -3428,7 +3513,7 @@ def set_child_tax_template_and_map(item, child_item, parent_doc):
 
 
 def add_taxes_from_tax_template(child_item, parent_doc, db_insert=True):
-	add_taxes_from_item_tax_template = frappe.db.get_single_value(
+	add_taxes_from_item_tax_template = frappe.get_single_value(
 		"Accounts Settings", "add_taxes_from_item_tax_template"
 	)
 
@@ -3964,3 +4049,8 @@ def validate_einvoice_fields(doc):
 @erpnext.allow_regional
 def update_gl_dict_with_regional_fields(doc, gl_dict):
 	pass
+
+
+def update_gl_dict_with_app_based_fields(doc, gl_dict):
+	for method in frappe.get_hooks("update_gl_dict_with_app_based_fields", default=[]):
+		frappe.get_attr(method)(doc, gl_dict)

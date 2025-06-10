@@ -260,6 +260,7 @@ erpnext.patches.v14_0.clear_reconciliation_values_from_singles
 execute:frappe.rename_doc("Report", "TDS Payable Monthly", "Tax Withholding Details", force=True)
 erpnext.patches.v14_0.update_proprietorship_to_individual
 erpnext.patches.v15_0.rename_subcontracting_fields
+erpnext.patches.v15_0.unset_incorrect_additional_discount_percentage
 
 [post_model_sync]
 erpnext.patches.v15_0.create_asset_depreciation_schedules_from_assets
@@ -419,3 +420,4 @@ erpnext.patches.v15_0.remove_agriculture_roles
 erpnext.patches.v14_0.update_full_name_in_contract
 erpnext.patches.v15_0.drop_sle_indexes
 erpnext.patches.v15_0.update_pick_list_fields
+execute:frappe.db.set_single_value("Accounts Settings", "confirm_before_resetting_posting_date", 1)

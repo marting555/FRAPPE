@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_field
-from frappe.tests import IntegrationTestCase, UnitTestCase
+from frappe.tests import IntegrationTestCase
 from frappe.utils import nowdate, nowtime
 
 from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
@@ -19,15 +19,6 @@ from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_pu
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 from erpnext.stock.doctype.stock_ledger_entry.stock_ledger_entry import InventoryDimensionNegativeStockError
 from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
-
-
-class UnitTestInventoryDimension(UnitTestCase):
-	"""
-	Unit tests for InventoryDimension.
-	Use this class for testing individual functions and methods.
-	"""
-
-	pass
 
 
 class TestInventoryDimension(IntegrationTestCase):
@@ -87,7 +78,7 @@ class TestInventoryDimension(IntegrationTestCase):
 		self.assertFalse(custom_field)
 
 	def test_inventory_dimension(self):
-		frappe.local.document_wise_inventory_dimensions = {}
+		frappe.clear_cache(doctype="Inventory Dimension")
 
 		warehouse = "Shelf Warehouse - _TC"
 		item_code = "_Test Item"
@@ -159,7 +150,7 @@ class TestInventoryDimension(IntegrationTestCase):
 		self.assertRaises(DoNotChangeError, inv_dim1.save)
 
 	def test_inventory_dimension_for_purchase_receipt_and_delivery_note(self):
-		frappe.local.document_wise_inventory_dimensions = {}
+		frappe.clear_cache(doctype="Inventory Dimension")
 
 		inv_dimension = create_inventory_dimension(
 			reference_document="Rack", dimension_name="Rack", apply_to_all_doctypes=1

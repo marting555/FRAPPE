@@ -1,7 +1,7 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and Contributors
 # See license.txt
 import frappe
-from frappe.tests import IntegrationTestCase, UnitTestCase
+from frappe.tests import IntegrationTestCase
 from frappe.utils import add_to_date, flt, getdate, now_datetime, nowdate
 
 from erpnext.controllers.item_variant import create_variant
@@ -25,15 +25,6 @@ from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import
 	create_stock_reconciliation,
 )
 from erpnext.stock.doctype.stock_reservation_entry.stock_reservation_entry import StockReservation
-
-
-class UnitTestProductionPlan(UnitTestCase):
-	"""
-	Unit tests for ProductionPlan.
-	Use this class for testing individual functions and methods.
-	"""
-
-	pass
 
 
 class TestProductionPlan(IntegrationTestCase):
@@ -2335,6 +2326,63 @@ class TestProductionPlan(IntegrationTestCase):
 		reserved_entries = sre.get_reserved_entries("Production Plan", plan.name)
 		self.assertTrue(len(reserved_entries) == 0)
 		frappe.db.set_single_value("Stock Settings", "enable_stock_reservation", 0)
+
+	def test_production_plan_for_partial_sub_assembly_items(self):
+		from erpnext.controllers.status_updater import OverAllowanceError
+		from erpnext.manufacturing.doctype.bom.test_bom import create_nested_bom
+		from erpnext.subcontracting.doctype.subcontracting_bom.test_subcontracting_bom import (
+			create_subcontracting_bom,
+		)
+
+		frappe.flags.test_print = False
+
+		fg_wo_item = "Test Motherboard 11"
+		bom_tree_1 = {"Test Laptop 11": {fg_wo_item: {"Test Motherboard Wires 11": {}}}}
+		create_nested_bom(bom_tree_1, prefix="")
+
+		plan = create_production_plan(
+			item_code="Test Laptop 11",
+			planned_qty=10,
+			use_multi_level_bom=1,
+			do_not_submit=True,
+			company="_Test Company",
+			skip_getting_mr_items=True,
+		)
+		plan.get_sub_assembly_items()
+		plan.submit()
+		plan.make_work_order()
+
+		work_order = frappe.db.get_value("Work Order", {"production_plan": plan.name, "docstatus": 0}, "name")
+		wo_doc = frappe.get_doc("Work Order", work_order)
+
+		wo_doc.qty = 5.0
+		wo_doc.skip_transfer = 1
+		wo_doc.from_wip_warehouse = 1
+		wo_doc.wip_warehouse = "_Test Warehouse - _TC"
+		wo_doc.fg_warehouse = "_Test Warehouse - _TC"
+		wo_doc.submit()
+
+		plan.reload()
+
+		for row in plan.sub_assembly_items:
+			self.assertEqual(row.ordered_qty, 5.0)
+
+		plan.make_work_order()
+
+		work_order = frappe.db.get_value("Work Order", {"production_plan": plan.name, "docstatus": 0}, "name")
+		wo_doc = frappe.get_doc("Work Order", work_order)
+		self.assertEqual(wo_doc.qty, 5.0)
+
+		wo_doc.skip_transfer = 1
+		wo_doc.from_wip_warehouse = 1
+		wo_doc.wip_warehouse = "_Test Warehouse - _TC"
+		wo_doc.fg_warehouse = "_Test Warehouse - _TC"
+		wo_doc.submit()
+
+		plan.reload()
+
+		for row in plan.sub_assembly_items:
+			self.assertEqual(row.ordered_qty, 10.0)
 
 
 def create_production_plan(**args):
