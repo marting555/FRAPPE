@@ -505,7 +505,7 @@ def get_test_item_qty(pos_profile):
 
 
 def create_multiple_sales_invoices(pos_profile):
-	pos_si1 = create_sales_invoice(qty=1, is_created_using_pos=1, pos_profile=pos_profile, do_not_save=1)
+	pos_si1 = create_sales_invoice(qty=1, is_created_using_pos=1, pos_profile=pos_profile.name, do_not_save=1)
 	pos_si1.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 100})
 	pos_si1.save()
 	pos_si1.submit()
@@ -519,12 +519,12 @@ def create_multiple_sales_invoices(pos_profile):
 
 
 def create_multiple_pos_invoices(pos_profile):
-	pos_inv1 = create_pos_invoice(pos_profile=pos_profile, rate=100, do_not_save=1)
+	pos_inv1 = create_pos_invoice(pos_profile=pos_profile.name, rate=100, do_not_save=1)
 	pos_inv1.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 100})
 	pos_inv1.save()
 	pos_inv1.submit()
 
-	pos_inv2 = create_pos_invoice(pos_profile=pos_profile, qty=2, do_not_save=1)
+	pos_inv2 = create_pos_invoice(pos_profile=pos_profile.name, qty=2, do_not_save=1)
 	pos_inv2.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 200})
 	pos_inv2.save()
 	pos_inv2.submit()
