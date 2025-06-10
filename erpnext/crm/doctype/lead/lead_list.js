@@ -50,10 +50,10 @@ frappe.listview_settings["Lead"] = {
 		$(".list-row-container .list-row .level-right .mx-2").remove();
 		$(".list-row-container .list-row .level-right .list-row-like").remove();
 
-		// Hide phone column
-		const phones = $('[data-filter^="phone,="]');
-		phones.each(function() {
-			const phoneCell = $(this);
+  // Mask phone numbers in list view
+  const phoneCells = $('.list-row-container [data-fieldname="phone"]');
+  phoneCells.each(function() {
+      const phoneCell = $(this);
 			const phone = phoneCell.text().trim();
 			if (phone && phone.length > 5) {
 				phoneCell.text(maskPhoneNumber(phone));
