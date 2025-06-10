@@ -216,50 +216,6 @@ def write_xlsx(data, sheet_name, wb=None, column_widths=None, file_path=None):
 
 
 @frappe.whitelist()
-<<<<<<< HEAD
-=======
-def get_import_status(docname):
-	import_status = {}
-
-	data_import = frappe.get_doc("Bank Statement Import", docname)
-	import_status["status"] = data_import.status
-
-	logs = frappe.get_all(
-		"Data Import Log",
-		fields=["count(*) as count", "success"],
-		filters={"data_import": docname},
-		group_by="success",
-	)
-
-	total_payload_count = 0
-
-	for log in logs:
-		total_payload_count += log.get("count", 0)
-		if log.get("success"):
-			import_status["success"] = log.get("count")
-		else:
-			import_status["failed"] = log.get("count")
-
-	import_status["total_records"] = total_payload_count
-
-	return import_status
-
-
-@frappe.whitelist()
-def get_import_logs(docname: str):
-	frappe.has_permission("Bank Statement Import", throw=True)
-
-	return frappe.get_all(
-		"Data Import Log",
-		fields=["success", "docname", "messages", "exception", "row_indexes"],
-		filters={"data_import": docname},
-		limit_page_length=5000,
-		order_by="log_index",
-	)
-
-
-@frappe.whitelist()
->>>>>>> 8b6a8d0c4f (fix: throw permission error (#47976))
 def upload_bank_statement(**args):
 	args = frappe._dict(args)
 	bsi = frappe.new_doc("Bank Statement Import")
