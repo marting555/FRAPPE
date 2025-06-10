@@ -755,17 +755,19 @@
    "label": "Qualified Lead Date"
   },
   {
+   "fetch_from": "province.region",
    "fieldname": "region",
    "fieldtype": "Link",
    "label": "Region",
-   "options": "Region"
+   "options": "Region",
+   "read_only": 1
   }
  ],
  "icon": "fa fa-user",
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-06-10 09:21:38.772745",
+ "modified": "2025-06-10 05:35:54.563433",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",
