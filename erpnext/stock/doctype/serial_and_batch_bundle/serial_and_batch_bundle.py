@@ -65,6 +65,7 @@ class SerialandBatchBundle(Document):
 		has_batch_no: DF.Check
 		has_serial_no: DF.Check
 		is_cancelled: DF.Check
+		is_packed: DF.Check
 		is_rejected: DF.Check
 		item_code: DF.Link
 		item_group: DF.Link | None
@@ -83,7 +84,7 @@ class SerialandBatchBundle(Document):
 	# end: auto-generated types
 
 	def autoname(self):
-		if frappe.db.get_single_value(
+		if frappe.get_single_value(
 			"Stock Settings", "set_serial_and_batch_bundle_naming_based_on_naming_series"
 		):
 			if not self.naming_series:
@@ -160,7 +161,7 @@ class SerialandBatchBundle(Document):
 		if self.type_of_transaction == "Outward" or not self.has_serial_no:
 			return
 
-		if frappe.db.get_single_value("Stock Settings", "allow_existing_serial_no"):
+		if frappe.get_single_value("Stock Settings", "allow_existing_serial_no"):
 			return
 
 		if self.voucher_type not in ["Purchase Receipt", "Purchase Invoice", "Stock Entry"]:
@@ -725,19 +726,19 @@ class SerialandBatchBundle(Document):
 
 	def reset_qty(self, row, qty_field=None):
 		qty_field = self.get_qty_field(row, qty_field=qty_field)
-		qty = abs(row.get(qty_field))
+		qty = abs(flt(row.get(qty_field), self.precision("total_qty")))
 
 		idx = None
 		while qty > 0:
 			for d in self.entries:
-				row_qty = abs(d.qty)
+				row_qty = abs(flt(d.qty, d.precision("qty")))
 				if row_qty >= qty:
 					d.db_set("qty", qty if self.type_of_transaction == "Inward" else qty * -1)
 					qty = 0
 					idx = d.idx
 					break
 				else:
-					qty -= row_qty
+					qty = flt(qty - row_qty, d.precision("qty"))
 					idx = d.idx
 
 		if idx and len(self.entries) > idx:

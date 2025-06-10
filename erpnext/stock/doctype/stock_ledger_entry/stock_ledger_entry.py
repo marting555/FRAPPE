@@ -299,7 +299,7 @@ class StockLedgerEntry(Document):
 		is_group_warehouse(self.warehouse)
 
 	def validate_with_last_transaction_posting_time(self):
-		authorized_role = frappe.db.get_single_value(
+		authorized_role = frappe.get_single_value(
 			"Stock Settings", "role_allowed_to_create_edit_back_dated_transactions"
 		)
 		if authorized_role:
@@ -345,5 +345,4 @@ class StockLedgerEntry(Document):
 def on_doctype_update():
 	frappe.db.add_index("Stock Ledger Entry", ["voucher_no", "voucher_type"])
 	frappe.db.add_index("Stock Ledger Entry", ["batch_no", "item_code", "warehouse"])
-	frappe.db.add_index("Stock Ledger Entry", ["warehouse", "item_code"], "item_warehouse")
-	frappe.db.add_index("Stock Ledger Entry", ["posting_datetime", "creation"])
+	frappe.db.add_index("Stock Ledger Entry", ["item_code", "warehouse", "posting_datetime", "creation"])

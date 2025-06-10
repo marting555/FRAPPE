@@ -46,7 +46,6 @@ from erpnext.accounts.party import (
 from erpnext.accounts.utils import (
 	cancel_exchange_gain_loss_journal,
 	get_account_currency,
-	get_balance_on,
 	get_outstanding_invoices,
 )
 from erpnext.controllers.accounts_controller import (
@@ -2786,7 +2785,6 @@ def get_party_details(company, party_type, party, date, cost_center=None):
 
 	party_account = get_party_account(party_type, party, company)
 	account_currency = get_account_currency(party_account)
-	account_balance = get_balance_on(party_account, date, cost_center=cost_center)
 	_party_name = "title" if party_type == "Shareholder" else party_type.lower() + "_name"
 	party_name = frappe.db.get_value(party_type, party, _party_name)
 
@@ -2798,7 +2796,6 @@ def get_party_details(company, party_type, party, date, cost_center=None):
 		"party_account": party_account,
 		"party_name": party_name,
 		"party_account_currency": account_currency,
-		"account_balance": account_balance,
 		"party_bank_account": party_bank_account,
 		"bank_account": bank_account,
 	}
@@ -2816,12 +2813,9 @@ def get_account_details(account, date, cost_center=None):
 	if not account_list:
 		frappe.throw(_("Account: {0} is not permitted under Payment Entry").format(account))
 
-	account_balance = get_balance_on(account, date, cost_center=cost_center, ignore_account_permission=True)
-
 	return frappe._dict(
 		{
 			"account_currency": get_account_currency(account),
-			"account_balance": account_balance,
 			"account_type": frappe.get_cached_value("Account", account, "account_type"),
 		}
 	)
@@ -2969,7 +2963,7 @@ def get_payment_entry(
 	created_from_payment_request=False,
 ):
 	doc = frappe.get_doc(dt, dn)
-	over_billing_allowance = frappe.db.get_single_value("Accounts Settings", "over_billing_allowance")
+	over_billing_allowance = frappe.get_single_value("Accounts Settings", "over_billing_allowance")
 	if dt in ("Sales Order", "Purchase Order") and flt(doc.per_billed, 2) >= (100.0 + over_billing_allowance):
 		frappe.throw(_("Can only make payment against unbilled {0}").format(_(dt)))
 
@@ -3109,7 +3103,7 @@ def get_payment_entry(
 	if party_account and bank:
 		if discount_amount:
 			base_total_discount_loss = 0
-			if frappe.db.get_single_value("Accounts Settings", "book_tax_discount_loss"):
+			if frappe.get_single_value("Accounts Settings", "book_tax_discount_loss"):
 				base_total_discount_loss = split_early_payment_discount_loss(pe, doc, valid_discounts)
 
 			set_pending_discount_loss(
@@ -3311,11 +3305,16 @@ def get_bank_cash_account(doc, bank_account):
 		"Bank",
 		mode_of_payment=doc.get("mode_of_payment"),
 		account=bank_account,
+		fetch_balance=False,
 	)
 
 	if not bank:
 		bank = get_default_bank_cash_account(
-			doc.company, "Cash", mode_of_payment=doc.get("mode_of_payment"), account=bank_account
+			doc.company,
+			"Cash",
+			mode_of_payment=doc.get("mode_of_payment"),
+			account=bank_account,
+			fetch_balance=False,
 		)
 
 	return bank
@@ -3463,7 +3462,7 @@ def set_pending_discount_loss(pe, doc, discount_amount, base_total_discount_loss
 
 		# If tax loss booking is enabled, pending loss will be rounding loss.
 		# Otherwise it will be the total discount loss.
-		book_tax_loss = frappe.db.get_single_value("Accounts Settings", "book_tax_discount_loss")
+		book_tax_loss = frappe.get_single_value("Accounts Settings", "book_tax_discount_loss")
 		account_type = "round_off_account" if book_tax_loss else "default_discount_account"
 
 		pe.append(

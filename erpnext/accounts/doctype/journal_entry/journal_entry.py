@@ -1171,7 +1171,7 @@ class JournalEntry(AccountsController):
 	def make_gl_entries(self, cancel=0, adv_adj=0):
 		from erpnext.accounts.general_ledger import make_gl_entries
 
-		merge_entries = frappe.db.get_single_value("Accounts Settings", "merge_similar_account_heads")
+		merge_entries = frappe.get_single_value("Accounts Settings", "merge_similar_account_heads")
 
 		gl_map = self.build_gl_map()
 		if self.voucher_type in ("Deferred Revenue", "Deferred Expense"):
@@ -1296,7 +1296,9 @@ class JournalEntry(AccountsController):
 
 
 @frappe.whitelist()
-def get_default_bank_cash_account(company, account_type=None, mode_of_payment=None, account=None):
+def get_default_bank_cash_account(
+	company, account_type=None, mode_of_payment=None, account=None, *, fetch_balance=True
+):
 	from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
 
 	if mode_of_payment:
@@ -1330,15 +1332,14 @@ def get_default_bank_cash_account(company, account_type=None, mode_of_payment=No
 		account_details = frappe.get_cached_value(
 			"Account", account, ["account_currency", "account_type"], as_dict=1
 		)
-
-		return frappe._dict(
-			{
-				"account": account,
-				"balance": get_balance_on(account),
-				"account_currency": account_details.account_currency,
-				"account_type": account_details.account_type,
-			}
-		)
+		result = {
+			"account": account,
+			"account_currency": account_details.account_currency,
+			"account_type": account_details.account_type,
+		}
+		if fetch_balance:
+			result["balance"] = get_balance_on(account)
+		return frappe._dict(result)
 	else:
 		return frappe._dict()
 
