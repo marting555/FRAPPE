@@ -415,7 +415,7 @@ def make_closing_entry_from_opening(opening_entry):
 
 	for d in data.get("invoices"):
 		invoice = "pos_invoice" if d.doctype == "POS Invoice" else "sales_invoice"
-		data = frappe._dict(
+		invoice_data = frappe._dict(
 			{
 				invoice: d.name,
 				"posting_date": d.posting_date,
@@ -424,9 +424,9 @@ def make_closing_entry_from_opening(opening_entry):
 			}
 		)
 		if d.doctype == "POS Invoice":
-			pos_invoices.append(data)
+			pos_invoices.append(invoice_data)
 		else:
-			sales_invoices.append(data)
+			sales_invoices.append(invoice_data)
 
 		closing_entry.grand_total += flt(d.grand_total)
 		closing_entry.net_total += flt(d.net_total)
