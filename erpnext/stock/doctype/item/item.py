@@ -210,6 +210,7 @@ class Item(Document):
 		self.clear_retain_sample()
 		self.validate_retain_sample()
 		self.validate_uom_conversion_factor()
+		self.validate_sales_and_purchase_uom()
 		self.validate_customer_provided_part()
 		self.update_defaults_from_item_group()
 		self.validate_item_defaults()
@@ -908,6 +909,31 @@ class Item(Document):
 				value = get_uom_conv_factor(d.uom, self.stock_uom)
 				if value:
 					d.conversion_factor = value
+
+	def validate_sales_and_purchase_uom(self):
+		if (
+			self.purchase_uom
+			and any(d.uom == self.purchase_uom for d in self.uoms)
+			and not get_uom_conv_factor(self.purchase_uom, self.stock_uom)
+		):
+			frappe.throw(
+				title=_("Default Purchase Unit of Measure Error"),
+				msg=_(
+					"Default Purchase Unit of Measure - {0} should either exist in the UOM Conversion Factors or be the inverse of the Default Unit of Measure - {1}."
+				).format(frappe.bold(self.purchase_uom), frappe.bold(self.stock_uom)),
+			)
+
+		if (
+			self.sales_uom
+			and any(d.uom == self.sales_uom for d in self.uoms)
+			and not get_uom_conv_factor(self.sales_uom, self.stock_uom)
+		):
+			frappe.throw(
+				title=_("Default Sales Unit of Measure Error"),
+				msg=_(
+					"Default Sales Unit of Measure - {0} should either exist in the UOM Conversion Factors or be the inverse of the Default Unit of Measure - {1}."
+				).format(frappe.bold(self.sales_uom), frappe.bold(self.stock_uom)),
+			)
 
 	def validate_attributes(self):
 		if not (self.has_variants or self.variant_of):
