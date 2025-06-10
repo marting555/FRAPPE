@@ -1207,7 +1207,6 @@ def get_material_request_items(
 			get_conversion_factor(row.item_code, item_details.purchase_uom).get("conversion_factor") or 1.0
 		)
 
-<<<<<<< HEAD
 	if required_qty > 0:
 		return {
 			"item_code": row.item_code,
@@ -1230,32 +1229,8 @@ def get_material_request_items(
 			"sales_order": sales_order,
 			"description": row.get("description"),
 			"uom": row.get("purchase_uom") or row.get("stock_uom"),
+			"main_bom_item": row.get("main_bom_item"),
 		}
-=======
-	return {
-		"item_code": row.item_code,
-		"item_name": row.item_name,
-		"quantity": required_qty / conversion_factor,
-		"conversion_factor": conversion_factor,
-		"required_bom_qty": total_qty,
-		"stock_uom": row.get("stock_uom"),
-		"warehouse": warehouse
-		or row.get("source_warehouse")
-		or row.get("default_warehouse")
-		or item_group_defaults.get("default_warehouse"),
-		"safety_stock": row.safety_stock,
-		"actual_qty": bin_dict.get("actual_qty", 0),
-		"projected_qty": bin_dict.get("projected_qty", 0),
-		"ordered_qty": bin_dict.get("ordered_qty", 0),
-		"reserved_qty_for_production": bin_dict.get("reserved_qty_for_production", 0),
-		"min_order_qty": row["min_order_qty"],
-		"material_request_type": row.get("default_material_request_type"),
-		"sales_order": sales_order,
-		"description": row.get("description"),
-		"uom": row.get("purchase_uom") or row.get("stock_uom"),
-		"main_bom_item": row.get("main_bom_item"),
-	}
->>>>>>> 2b9ca79291 (fix: incorrect warehouse in MR)
 
 
 def get_sales_orders(self):
