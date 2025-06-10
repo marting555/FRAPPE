@@ -407,9 +407,7 @@ class TestPickList(IntegrationTestCase):
 		self.assertEqual(pick_list.locations[1].sales_order_item, sales_order.items[0].name)
 
 	def test_pick_list_for_items_with_multiple_UOM(self):
-		item_code = make_item(
-			uoms=[{"uom": "Nos", "conversion_factor": 1}, {"uom": "Unit", "conversion_factor": 0.5}]
-		).name
+		item_code = make_item().name
 		purchase_receipt = make_purchase_receipt(item_code=item_code, qty=10)
 		purchase_receipt.submit()
 
@@ -451,7 +449,7 @@ class TestPickList(IntegrationTestCase):
 						"item_code": item_code,
 						"qty": 2,
 						"stock_qty": 1,
-						"stock_uom": "Unit",
+						"conversion_factor": 0.5,
 						"sales_order": sales_order.name,
 						"sales_order_item": sales_order.items[0].name,
 					},
@@ -459,7 +457,7 @@ class TestPickList(IntegrationTestCase):
 						"item_code": item_code,
 						"qty": 1,
 						"stock_qty": 1,
-						"stock_uom": "Nos",
+						"conversion_factor": 1,
 						"sales_order": sales_order.name,
 						"sales_order_item": sales_order.items[1].name,
 					},
