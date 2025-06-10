@@ -41,7 +41,7 @@ class TestPOSInvoiceMergeLog(IntegrationTestCase):
 
 	def test_consolidated_invoice_creation(self):
 		test_user, pos_profile = init_user_and_profile()
-		opening_entry = create_opening_entry(pos_profile, test_user)
+		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
 		pos_inv = create_pos_invoice(rate=300, do_not_submit=1)
 		pos_inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 300})
@@ -72,7 +72,7 @@ class TestPOSInvoiceMergeLog(IntegrationTestCase):
 
 	def test_consolidated_credit_note_creation(self):
 		test_user, pos_profile = init_user_and_profile()
-		opening_entry = create_opening_entry(pos_profile, test_user)
+		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
 		pos_inv = create_pos_invoice(rate=300, do_not_submit=1)
 		pos_inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 300})
@@ -119,7 +119,7 @@ class TestPOSInvoiceMergeLog(IntegrationTestCase):
 
 	def test_consolidated_invoice_item_taxes(self):
 		test_user, pos_profile = init_user_and_profile()
-		opening_entry = create_opening_entry(pos_profile, test_user)
+		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
 		inv = create_pos_invoice(qty=1, rate=100, do_not_save=True)
 
@@ -192,7 +192,7 @@ class TestPOSInvoiceMergeLog(IntegrationTestCase):
 		)
 
 		test_user, pos_profile = init_user_and_profile()
-		opening_entry = create_opening_entry(pos_profile, test_user)
+		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
 		inv = create_pos_invoice(qty=3, rate=10000, do_not_save=True)
 		inv.append(
@@ -249,7 +249,7 @@ class TestPOSInvoiceMergeLog(IntegrationTestCase):
 		)
 
 		test_user, pos_profile = init_user_and_profile()
-		opening_entry = create_opening_entry(pos_profile, test_user)
+		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
 		inv = create_pos_invoice(qty=6, rate=10000, do_not_save=True)
 		inv.append(
@@ -310,7 +310,7 @@ class TestPOSInvoiceMergeLog(IntegrationTestCase):
 			qty=10,
 		)
 		test_user, pos_profile = init_user_and_profile()
-		opening_entry = create_opening_entry(pos_profile, test_user)
+		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
 		item_rates = [69, 59, 29]
 		for _i in [1, 2]:
@@ -368,7 +368,7 @@ class TestPOSInvoiceMergeLog(IntegrationTestCase):
 		)
 
 		test_user, pos_profile = init_user_and_profile()
-		opening_entry = create_opening_entry(pos_profile, test_user)
+		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
 		inv = create_pos_invoice(qty=1, rate=69.5, do_not_save=True)
 		inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 70})
@@ -405,7 +405,7 @@ class TestPOSInvoiceMergeLog(IntegrationTestCase):
 		serial_no = get_serial_nos_from_bundle(se.get("items")[0].serial_and_batch_bundle)[0]
 
 		test_user, pos_profile = init_user_and_profile()
-		opening_entry = create_opening_entry(pos_profile, test_user)
+		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
 		pos_inv = create_pos_invoice(
 			item_code="_Test Serialized Item With Series",
@@ -455,7 +455,7 @@ class TestPOSInvoiceMergeLog(IntegrationTestCase):
 		create_cost_center(cost_center_name="_Test POS Cost Center 2", is_group=0)
 
 		test_user, pos_profile = init_user_and_profile()
-		opening_entry = create_opening_entry(pos_profile, test_user)
+		opening_entry = create_opening_entry(pos_profile, test_user.name)
 
 		pos_inv = create_pos_invoice(rate=300, do_not_submit=1)
 		pos_inv.append("payments", {"mode_of_payment": "Cash", "account": "Cash - _TC", "amount": 300})
