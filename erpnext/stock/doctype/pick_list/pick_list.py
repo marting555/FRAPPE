@@ -1527,7 +1527,11 @@ def get_pick_list_query(doctype, txt, searchfield, start, page_len, filters):
 		frappe.qb.from_(PICK_LIST)
 		.join(PICK_LIST_ITEM)
 		.on(PICK_LIST.name == PICK_LIST_ITEM.parent)
-		.select(PICK_LIST.name, PICK_LIST.customer, PICK_LIST_ITEM.sales_order)
+		.select(
+			PICK_LIST.name,
+			PICK_LIST.customer,
+			Replace(GROUP_CONCAT(PICK_LIST_ITEM.sales_order).distinct(), ",", "<br>").as_("sales_order"),
+		)
 		.where(PICK_LIST.docstatus == 1)
 		.where(PICK_LIST.status.isin(["Open", "Partly Delivered"]))
 		.where(PICK_LIST.company == filters.get("company"))
