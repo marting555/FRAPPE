@@ -758,9 +758,9 @@ class PickList(TransactionBase):
 				continue
 
 			product_bundles[item.sales_order_item] = frappe.db.get_value(
-				"Packed Item",
-				item.product_bundle_item,
-				"parent_item",
+				"Sales Order Item",
+				item.sales_order_item,
+				"item_code",
 			)
 		return product_bundles
 
@@ -1292,14 +1292,16 @@ def map_pl_locations(pick_list, item_mapper, delivery_note, sales_order=None):
 
 			update_delivery_note_item(source_doc, dn_item, delivery_note)
 
-	add_product_bundles_to_delivery_note(pick_list, delivery_note, item_mapper)
+	add_product_bundles_to_delivery_note(pick_list, delivery_note, item_mapper, sales_order)
 	set_delivery_note_missing_values(delivery_note)
 
 	delivery_note.company = pick_list.company
 	delivery_note.customer = frappe.get_value("Sales Order", sales_order, "customer")
 
 
-def add_product_bundles_to_delivery_note(pick_list: "PickList", delivery_note, item_mapper) -> None:
+def add_product_bundles_to_delivery_note(
+	pick_list: "PickList", delivery_note, item_mapper, sales_order=None
+) -> None:
 	"""Add product bundles found in pick list to delivery note.
 
 	When mapping pick list items, the bundle item itself isn't part of the
@@ -1309,6 +1311,9 @@ def add_product_bundles_to_delivery_note(pick_list: "PickList", delivery_note, i
 
 	for so_row, item_code in product_bundles.items():
 		sales_order_item = frappe.get_doc("Sales Order Item", so_row)
+		if sales_order and sales_order_item.parent != sales_order:
+			continue
+
 		dn_bundle_item = map_child_doc(sales_order_item, delivery_note, item_mapper)
 		dn_bundle_item.qty = pick_list._compute_picked_qty_for_bundle(
 			so_row, product_bundle_qty_map[item_code]
@@ -1552,54 +1557,30 @@ def get_pick_list_query(doctype, txt, searchfield, start, page_len, filters):
 @frappe.whitelist()
 def make_delivery_note(source_name, target_doc=None, kwargs=None):
 	pick_list = frappe.get_doc("Pick List", source_name)
-	sales_order_item = [row.sales_order_item for row in pick_list.locations if row.sales_order_item]
-	rate_map = {}
+	validate_item_locations(pick_list)
+	sales_orders = {row.sales_order for row in pick_list.locations if row.sales_order}
+	if not sales_orders:
+		return
 
-	if sales_order_item:
-		rate_map = {
-			row.name: row
-			for row in frappe.db.get_all(
-				"Sales Order Item", {"name": ["in", sales_order_item]}, ["name", "rate", "base_rate"]
-			)
-		}
-
-	def update_items(source, target, source_parent):
-		target.qty = flt(source.picked_qty - source.delivered_qty) / (flt(target.conversion_factor) or 1)
-		if target.so_detail:
-			target.rate = rate_map.get(target.so_detail, {}).get("rate", 0.0)
-			target.base_rate = rate_map.get(target.so_detail, {}).get("base_rate", 0.0)
-			target.base_amount = flt(target.qty * target.base_rate)
-			target.amount = flt(target.qty * target.rate)
-
-	doc = get_mapped_doc(
-		"Pick List",
-		source_name,
-		{
-			"Pick List": {
-				"doctype": "Delivery Note",
-				"field_no_map": ["posting_date"],
-				"validation": {
-					"docstatus": ["=", 1],
-					"status": ["in", ["Open", "Partly Delivered"]],
-				},
-			},
-			"Pick List Item": {
-				"doctype": "Delivery Note Item",
-				"field_map": {
-					"name": "pick_list_item",
-					"sales_order": "against_sales_order",
-					"sales_order_item": "so_detail",
-				},
-				"postprocess": update_items,
-			},
+	item_table_mapper = {
+		"doctype": "Delivery Note Item",
+		"field_map": {
+			"rate": "rate",
+			"name": "so_detail",
+			"parent": "against_sales_order",
 		},
-		target_doc,
-	)
+		"condition": lambda doc: abs(doc.delivered_qty) < abs(doc.qty) and doc.delivered_by_supplier != 1,
+	}
 
-	doc.items = [item for item in doc.items if item.qty > 0]
+	kwargs = {"skip_item_mapping": True, "ignore_pricing_rule": pick_list.ignore_pricing_rule}
+	delivery_note = create_delivery_note_from_sales_order(next(iter(sales_orders)), target_doc, kwargs=kwargs)
 
-	# Correct the idx of items
-	for idx, item in enumerate(doc.items):
-		item.idx = idx + 1
+	if not delivery_note:
+		return
 
-	return doc
+	for so in sales_orders:
+		map_pl_locations(pick_list, item_table_mapper, delivery_note, so)
+
+	update_packed_item_details(pick_list, delivery_note)
+
+	return delivery_note
