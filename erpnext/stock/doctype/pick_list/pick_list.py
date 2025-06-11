@@ -1510,8 +1510,8 @@ def get_rejected_warehouses():
 
 
 @frappe.whitelist()
-def get_purchase_invoice_query(doctype, txt, searchfield, start, page_len, filters):
-	frappe.has_permission("Purchase Invoice", throw=True)
+def get_pick_list_query(doctype, txt, searchfield, start, page_len, filters):
+	frappe.has_permission("Pick List", throw=True)
 
 	if not filters.get("company"):
 		frappe.throw(_("Please select a Company"))

@@ -229,8 +229,7 @@ erpnext.stock.DeliveryNoteController = class DeliveryNoteController extends (
 						get_query_filters: {
 							company: me.frm.doc.company,
 						},
-						get_query_method:
-							"erpnext.stock.doctype.pick_list.pick_list.get_purchase_invoice_query",
+						get_query_method: "erpnext.stock.doctype.pick_list.pick_list.get_pick_list_query",
 					});
 				},
 				__("Get Items From")
