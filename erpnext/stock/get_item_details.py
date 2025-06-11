@@ -13,7 +13,7 @@ from frappe.model.document import Document
 from frappe.model.meta import get_field_precision
 from frappe.model.utils import get_fetch_values
 from frappe.query_builder.functions import IfNull, Sum
-from frappe.utils import add_days, add_months, cint, cstr, flt, getdate, parse_json
+from frappe.utils import add_days, add_months, cint, cstr, flt, get_datetime, getdate, parse_json
 
 import erpnext
 from erpnext import get_company_currency
@@ -816,6 +816,29 @@ def get_item_tax_map(*, doc: str | dict | Document, tax_template: str | None = N
 				item_tax_map[d.tax_type] = d.tax_rate
 
 	return json.dumps(item_tax_map) if as_json else item_tax_map
+
+
+@frappe.whitelist()
+def get_applicable_item_tax_template(item_name: str, item_price: float, valid_from: str) -> str:
+	item_taxes = frappe.get_all(
+		"Item Tax",
+		filters={"parenttype": "Item", "parent": item_name},
+		fields=["item_tax_template", "minimum_net_rate", "maximum_net_rate", "valid_from"],
+	)
+
+	default_template = []
+
+	for tax in item_taxes:
+		if tax.get("valid_from") and get_datetime(tax["valid_from"]) > get_datetime(valid_from):
+			continue
+
+		if flt(tax.get("minimum_net_rate")) <= flt(item_price) <= flt(tax.get("maximum_net_rate")):
+			return tax["item_tax_template"]
+
+		elif flt(tax.get("minimum_net_rate")) == flt(0) and flt(tax.get("maximum_net_rate")) == flt(0):
+			default_template.append(tax["item_tax_template"])
+
+	return default_template[0] if default_template else None
 
 
 @frappe.whitelist()
