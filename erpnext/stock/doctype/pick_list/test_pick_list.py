@@ -1312,3 +1312,59 @@ class TestPickList(IntegrationTestCase):
 
 		for loc in pl.locations:
 			self.assertEqual(loc.batch_no, batch2)
+
+	def test_multiple_pick_lists_delivery_note(self):
+		from erpnext.stock.doctype.pick_list.pick_list import make_delivery_note
+
+		item_code = make_item().name
+		warehouse = "_Test Warehouse - _TC"
+
+		stock_entry = make_stock_entry(item=item_code, to_warehouse=warehouse, qty=500, basic_rate=100)
+
+		def create_pick_list(qty):
+			pick_list = frappe.get_doc(
+				{
+					"doctype": "Pick List",
+					"company": "_Test Company",
+					"customer": "_Test Customer",
+					"purpose": "Delivery",
+					"locations": [
+						{
+							"item_code": item_code,
+							"warehouse": warehouse,
+							"qty": qty,
+							"stock_qty": qty,
+							"picked_qty": 0,
+							"sales_order": sales_order.name,
+							"sales_order_item": sales_order.items[0].name,
+						},
+					],
+				}
+			)
+			pick_list.submit()
+			return pick_list
+
+		sales_order = make_sales_order(item_code=item_code, qty=50, rate=100)
+		pick_list_1 = create_pick_list(10)
+		pick_list_2 = create_pick_list(20)
+
+		delivery_note = make_delivery_note(pick_list_1.name)
+		delivery_note = make_delivery_note(pick_list_2.name, delivery_note)
+		delivery_note.items[0].qty = 5
+		delivery_note.submit()
+
+		sales_order.reload()
+		pick_list_1.reload()
+		pick_list_2.reload()
+
+		self.assertEqual(sales_order.items[0].picked_qty, 30)
+		self.assertEqual(pick_list_1.locations[0].delivered_qty, delivery_note.items[0].qty)
+		self.assertEqual(pick_list_1.status, "Partly Delivered")
+		self.assertEqual(pick_list_2.status, "Completed")
+
+		pick_list_1.cancel()
+		pick_list_2.cancel()
+		delivery_note.cancel()
+		sales_order.reload()
+		sales_order.cancel()
+		stock_entry.cancel()

@@ -203,7 +203,6 @@ class PickList(TransactionBase):
 	def validate_picked_items(self):
 		for item in self.locations:
 			if self.scan_mode and item.picked_qty < item.stock_qty:
-				return
 				frappe.throw(
 					_(
 						"Row {0} picked quantity is less than the required quantity, additional {1} {2} required."
