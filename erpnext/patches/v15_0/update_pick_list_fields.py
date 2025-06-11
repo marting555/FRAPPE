@@ -1,4 +1,5 @@
 import frappe
+from frappe.query_builder.functions import IfNull
 
 
 def execute():
@@ -7,35 +8,21 @@ def execute():
 
 
 def update_delivery_note():
-	delivery_notes = frappe.get_all(
-		"Delivery Note",
-		fields=["name", "pick_list"],
-		filters={"pick_list": ("is", "set")},
-	)
+	DN = frappe.qb.DocType("Delivery Note")
+	DNI = frappe.qb.DocType("Delivery Note Item")
 
-	for delivery_note in delivery_notes:
-		frappe.db.set_value(
-			"Delivery Note Item",
-			{"parent": delivery_note.name},
-			"against_pick_list",
-			delivery_note.pick_list,
-		)
+	frappe.qb.update(DNI).join(DN).on(DN.name == DNI.parent).set(DNI.against_pick_list, DN.pick_list).where(
+		IfNull(DN.pick_list, "") != ""
+	).run()
 
 
 def update_pick_list_items():
-	PICK_LIST = frappe.qb.DocType("Pick List")
-	PICK_LIST_ITEM = frappe.qb.DocType("Pick List Item")
+	PL = frappe.qb.DocType("Pick List")
+	PLI = frappe.qb.DocType("Pick List Item")
 
-	pick_lists = (
-		frappe.qb.from_(PICK_LIST)
-		.select(PICK_LIST.name)
-		.where(PICK_LIST.status == "Completed")
-		.run(pluck="name")
-	)
+	pick_lists = frappe.qb.from_(PL).select(PL.name).where(PL.status == "Completed").run(pluck="name")
 
 	if not pick_lists:
 		return
 
-	frappe.qb.update(PICK_LIST_ITEM).set(PICK_LIST_ITEM.delivered_qty, PICK_LIST_ITEM.picked_qty).where(
-		PICK_LIST_ITEM.parent.isin(pick_lists)
-	).run()
+	frappe.qb.update(PLI).set(PLI.delivered_qty, PLI.picked_qty).where(PLI.parent.isin(pick_lists)).run()
