@@ -9,10 +9,6 @@ from frappe.utils.nestedset import get_root_of
 
 from erpnext import get_default_company
 
-PEGGED_CURRENCIES = {
-	"USD": {"AED": 3.6725},  # AED is pegged to USD at a rate of 3.6725 since 1997
-}
-
 
 def before_tests():
 	frappe.clear_cache()
@@ -47,11 +43,52 @@ def before_tests():
 	frappe.db.commit()
 
 
-def get_pegged_rate(from_currency: str, to_currency: str, transaction_date) -> float | None:
-	if rate := PEGGED_CURRENCIES.get(from_currency, {}).get(to_currency):
-		return rate
-	elif rate := PEGGED_CURRENCIES.get(to_currency, {}).get(from_currency):
-		return 1 / rate
+def get_pegged_currencies():
+	pegged_currencies = frappe.get_all(
+		"Pegged Currency Details",
+		filters={"parent": "Pegged Currencies"},
+		fields=["source_currency", "pegged_currency", "currency_ratio"],
+	)
+
+	pegged_map = {
+		currency.source_currency: {
+			"pegged_currency": currency.pegged_currency,
+			"ratio": flt(currency.currency_ratio),
+		}
+		for currency in pegged_currencies
+	}
+	return pegged_map
+
+
+def get_pegged_rate(pegged_map, from_currency, to_currency, transaction_date=None):
+	from_entry = pegged_map.get(from_currency)
+	to_entry = pegged_map.get(to_currency)
+
+	if from_currency in pegged_map and to_currency in pegged_map:
+		# Case 1: Both are present and pegged to same bases
+		if from_entry["pegged_currency"] == to_entry["pegged_currency"]:
+			print("Both currencies are pegged to the same base currency")
+			return (1 / from_entry["ratio"]) * to_entry["ratio"]
+
+		# Case 2: Both are present but pegged to different bases
+		base_from = from_entry["pegged_currency"]
+		base_to = to_entry["pegged_currency"]
+		base_rate = get_exchange_rate(base_from, base_to, transaction_date)
+
+		if not base_rate:
+			return None
+
+		return (1 / from_entry["ratio"]) * base_rate * to_entry["ratio"]
+
+	# Case 3: from_currency is pegged to to_currency
+	if from_entry and from_entry["pegged_currency"] == to_currency:
+		return flt(from_entry["ratio"])
+
+	# Case 4: to_currency is pegged to from_currency
+	if to_entry and to_entry["pegged_currency"] == from_currency:
+		return 1 / flt(to_entry["ratio"])
+
+	""" If only one entry exists but doesn’t match pegged currency logic, return None """
 	return None
 
 
@@ -95,7 +132,9 @@ def get_exchange_rate(from_currency, to_currency, transaction_date=None, args=No
 	if frappe.get_cached_value("Currency Exchange Settings", "Currency Exchange Settings", "disabled"):
 		return 0.00
 
-	if rate := get_pegged_rate(from_currency, to_currency, transaction_date):
+	pegged_currencies = get_pegged_currencies()
+
+	if rate := get_pegged_rate(pegged_currencies, from_currency, to_currency, transaction_date):
 		return rate
 
 	try:
@@ -109,8 +148,12 @@ def get_exchange_rate(from_currency, to_currency, transaction_date=None, args=No
 			settings = frappe.get_cached_doc("Currency Exchange Settings")
 			req_params = {
 				"transaction_date": transaction_date,
-				"from_currency": from_currency if from_currency != "AED" else "USD",
-				"to_currency": to_currency if to_currency != "AED" else "USD",
+				"from_currency": from_currency
+				if from_currency not in pegged_currencies
+				else pegged_currencies[from_currency]["pegged_currency"],
+				"to_currency": to_currency
+				if to_currency not in pegged_currencies
+				else pegged_currencies[to_currency]["pegged_currency"],
 			}
 			params = {}
 			for row in settings.req_params:
@@ -123,12 +166,12 @@ def get_exchange_rate(from_currency, to_currency, transaction_date=None, args=No
 				value = value[format_ces_api(str(res_key.key), req_params)]
 			cache.setex(name=key, time=21600, value=flt(value))
 
-		# Support AED conversion through pegged USD
+		# Support multiple pegged currencies
 		value = flt(value)
-		if to_currency == "AED":
-			value *= 3.6725
-		if from_currency == "AED":
-			value /= 3.6725
+		if to_currency in pegged_currencies:
+			value *= flt(pegged_currencies[to_currency]["ratio"])
+		if from_currency in pegged_currencies:
+			value /= flt(pegged_currencies[from_currency]["ratio"])
 
 		return flt(value)
 	except Exception:
