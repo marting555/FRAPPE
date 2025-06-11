@@ -315,11 +315,13 @@ class ReceivablePayableReport:
 	def init_and_run_sql_procedures(self):
 		self.proc = InitSQLProceduresForAR()
 
+		query, param = self.ple_query
+
 		build_balance = f"""
 		begin not atomic
 		declare done boolean default false;
 		declare rec1 row type of `{self.proc._row_def_table_name}`;
-		declare ple cursor for {self.ple_query.get_sql()};
+		declare ple cursor for {query};
 		declare continue handler for not found set done = true;
 
 		open ple;
@@ -340,7 +342,7 @@ class ReceivablePayableReport:
 		close ple;
 		end;
 		"""
-		frappe.db.sql(build_balance)
+		frappe.db.sql(build_balance, param)
 
 		balances = frappe.db.sql(
 			f"""select
@@ -920,7 +922,7 @@ class ReceivablePayableReport:
 			.where(Criterion.any(self.or_filters))
 		)
 
-		if self.filters.get("show_remarks"):
+		if self.filters.get("show_remarks") and self.ple_fetch_method != "Raw SQL":
 			if remarks_length := frappe.get_single_value(
 				"Accounts Settings", "receivable_payable_remarks_length"
 			):
