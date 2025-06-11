@@ -408,3 +408,5 @@ erpnext.patches.v14_0.set_update_price_list_based_on
 erpnext.seeds.item_group.create_default_lead_source
 erpnext.seeds.item_group.create_default_lead_budget
 erpnext.seeds.item_group.create_default_lead_demand
+# 2025-06-11
+erpnext.seeds.lead.update_region

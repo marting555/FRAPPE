@@ -150,7 +150,7 @@ class Lead(SellingController, CRMNote):
 		
 	def before_save(self):
 		self.update_lead_stage()
-
+		self.fetch_region_from_province()
 		self.update_first_reach_at()
 
 	def update_lead_stage(self):
@@ -187,6 +187,10 @@ class Lead(SellingController, CRMNote):
 			user =None
 		if user:
 			self.lead_owner = user.name
+
+	def fetch_region_from_province(self):
+		if self.province:
+			self.region = frappe.db.get_value("Province", self.province, "region")
 
 	def update_first_reach_at(self):
 		if self.pancake_data:
