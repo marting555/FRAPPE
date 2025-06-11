@@ -870,7 +870,10 @@ class TestQuotation(IntegrationTestCase):
 			transaction_date="2026-06-04",
 		)
 
-		expected_rate = 23.521978021978022
+		cache = frappe.cache()
+		key = "currency_exchange_rate_{}:{}:{}".format("2026-06-04", "QAR", "INR")
+		value = cache.get(key)
+		expected_rate = flt(value) / 3.64
 
 		self.assertEqual(
 			quotation.conversion_rate,

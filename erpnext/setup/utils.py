@@ -67,7 +67,6 @@ def get_pegged_rate(pegged_map, from_currency, to_currency, transaction_date=Non
 	if from_currency in pegged_map and to_currency in pegged_map:
 		# Case 1: Both are present and pegged to same bases
 		if from_entry["pegged_currency"] == to_entry["pegged_currency"]:
-			print("Both currencies are pegged to the same base currency")
 			return (1 / from_entry["ratio"]) * to_entry["ratio"]
 
 		# Case 2: Both are present but pegged to different bases
