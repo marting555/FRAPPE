@@ -414,7 +414,6 @@
   {
    "collapsible": 1,
    "collapsible_depends_on": "total_additional_costs",
-   "depends_on": "eval:!doc.subcontracting_inward_order",
    "fieldname": "additional_costs_section",
    "fieldtype": "Tab Break",
    "label": "Additional Costs"
@@ -757,7 +756,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-20 12:46:46.084734",
+ "modified": "2025-06-12 11:46:08.153736",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Stock Entry",
