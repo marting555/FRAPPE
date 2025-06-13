@@ -16,7 +16,7 @@ from frappe.www.contact import get_contact_by_conversation_id
 
 import frappe 
 from frappe import _
-from frappe.utils import validate_phone_number
+from frappe.utils import validate_phone_number, get_datetime
 import re
 
 if TYPE_CHECKING:
@@ -56,7 +56,7 @@ def insert_lead(doc) -> "Document":
 		if not (doc.parenttype and doc.parent and doc.parentfield):
 			frappe.throw(_("Parenttype, Parent and Parentfield are required to insert a child record"))
 
-		# inserting a child record
+		# inserting a c hild record
 		parent = frappe.get_doc(doc.parenttype, doc.parent)
 		parent.append(doc.parentfield, doc)
 		parent.save()
@@ -79,6 +79,23 @@ def insert_lead(doc) -> "Document":
 		if len(pancake_list_tags) > 0:
 			for tag in pancake_list_tags:
 				frappe_doc.add_tag(tag)
+
+		# only exist when migrate from pancake
+		# lead reach at before 2025/06/19 21:00:00
+		if frappe_doc.first_reach_at  and  \
+			get_datetime(frappe_doc.first_reach_at) < get_datetime(config.DATE_ASSIGN_LEAD_OWNER):
+			try:
+				todo_doc = frappe.new_doc("ToDo")
+				todo_doc.description = f"Assignment Rule for Lead {frappe_doc.name}"
+				todo_doc.priority =  "Medium"
+				todo_doc.reference_type= "Lead"
+				todo_doc.reference_name = frappe_doc.name
+
+				todo_doc.allocated_to = frappe_doc.lead_owner
+				todo_doc.insert()
+			except Exception as e :
+				print(e)
+		
 		return frappe_doc
 	except Exception as e:
 		try: 
