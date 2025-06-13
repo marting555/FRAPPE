@@ -6,7 +6,6 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "type",
   "title",
   "scope",
   "is_expired",
@@ -19,13 +18,6 @@
   "description"
  ],
  "fields": [
-  {
-   "fieldname": "type",
-   "fieldtype": "Select",
-   "label": "Type",
-   "options": "Percentage\nFix Amount\nGift",
-   "reqd": 1
-  },
   {
    "fieldname": "scope",
    "fieldtype": "Select",
@@ -69,30 +61,31 @@
    "label": "Description"
   },
   {
-   "depends_on": "eval:doc.discount_type == 'Amount'",
+   "depends_on": "eval:doc.discount_type == 'Fix Amount'",
    "fieldname": "discount_amount",
    "fieldtype": "Currency",
    "label": "Discount Amount",
-   "mandatory_depends_on": "eval:doc.discount_type == 'Amount'"
+   "mandatory_depends_on": "eval:doc.discount_type == 'Fix Amount'"
   },
   {
-   "depends_on": "eval:doc.discount_type == 'Percent'",
+   "depends_on": "eval:doc.discount_type == 'Percentage'",
    "fieldname": "discount_percent",
    "fieldtype": "Percent",
    "label": "Discount Percent",
-   "mandatory_depends_on": "eval:doc.discount_type == 'Percent'"
+   "mandatory_depends_on": "eval:doc.discount_type == 'Percentage'"
   },
   {
    "fieldname": "discount_type",
    "fieldtype": "Select",
    "label": "Discount Type",
-   "options": "Amount\nPercent"
+   "options": "Percentage\nFix Amount\nGift",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-06-13 10:12:48.775082",
+ "modified": "2025-06-13 14:50:14.257825",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Promotion",
