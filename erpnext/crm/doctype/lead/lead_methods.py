@@ -81,7 +81,7 @@ def insert_lead(doc) -> "Document":
 				frappe_doc.add_tag(tag)
 
 		# only exist when migrate from pancake
-		# lead reach at before 2025/06/19 21:00:00
+		# lead reach at before 2025/06/15 21:00:00
 		if frappe_doc.first_reach_at  and  \
 			get_datetime(frappe_doc.first_reach_at) < get_datetime(config.DATE_ASSIGN_LEAD_OWNER):
 			try:
