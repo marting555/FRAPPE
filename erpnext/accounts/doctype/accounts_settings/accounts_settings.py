@@ -23,7 +23,6 @@ class AccountsSettings(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		acc_frozen_upto: DF.Date | None
 		add_taxes_from_item_tax_template: DF.Check
 		allow_multi_currency_invoices_against_single_party_account: DF.Check
 		allow_pegged_currencies_exchange_rates: DF.Check
@@ -48,7 +47,6 @@ class AccountsSettings(Document):
 		enable_immutable_ledger: DF.Check
 		enable_party_matching: DF.Check
 		exchange_gain_loss_posting_date: DF.Literal["Invoice", "Payment", "Reconciliation Date"]
-		frozen_accounts_modifier: DF.Link | None
 		general_ledger_remarks_length: DF.Int
 		ignore_account_closing_balance: DF.Check
 		ignore_is_opening_check_for_reporting: DF.Check
