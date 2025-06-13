@@ -8,4 +8,5 @@ class BaseConfig:
     AI_HUB_WEBHOOK : str = frappe.conf.get("ai_hub_webhook")
     DEFAULT_MAIL_OWNER : str = frappe.conf.get("default_mail_lead_owner")
     DATE_ASSIGN_LEAD_OWNER : str = "2025-06-13 21:00:00"
+    
 config = BaseConfig()

@@ -56,7 +56,7 @@ def insert_lead(doc) -> "Document":
 		if not (doc.parenttype and doc.parent and doc.parentfield):
 			frappe.throw(_("Parenttype, Parent and Parentfield are required to insert a child record"))
 
-		# inserting a c hild record
+		# inserting a child record
 		parent = frappe.get_doc(doc.parenttype, doc.parent)
 		parent.append(doc.parentfield, doc)
 		parent.save()
