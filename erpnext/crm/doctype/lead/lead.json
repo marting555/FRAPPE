@@ -203,6 +203,7 @@
   {
    "fieldname": "source",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Lead Source",
    "oldfieldname": "source",
@@ -755,8 +756,6 @@
    "label": "Qualified Lead Date"
   },
   {
-   "fetch_from": "province.region",
-   "fetch_if_empty": 1,
    "fieldname": "region",
    "fieldtype": "Link",
    "label": "Region",
@@ -774,7 +773,7 @@
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-06-11 04:37:17.310173",
+ "modified": "2025-06-13 09:11:48.906859",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",
