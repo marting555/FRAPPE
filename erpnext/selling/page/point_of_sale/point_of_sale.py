@@ -157,6 +157,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 			item.item_name,
 			item.description,
 			item.stock_uom,
+			item.sales_uom,
 			item.image AS item_image,
 			item.is_stock_item
 		FROM
@@ -195,13 +196,14 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 		uoms = frappe.get_doc("Item", item.item_code).get("uoms", [])
 
 		item.actual_qty, _ = get_stock_availability(item.item_code, warehouse)
-		item.uom = item.stock_uom
+		item.uom = item.sales_uom or item.stock_uom
 
 		item_price = frappe.get_all(
 			"Item Price",
 			fields=["price_list_rate", "currency", "uom", "batch_no", "valid_from", "valid_upto"],
 			filters={
 				"price_list": price_list,
+				"uom": item.sales_uom or item.stock_uom,
 				"item_code": item.item_code,
 				"selling": True,
 				"valid_from": ["<=", current_date],
