@@ -773,7 +773,7 @@
   {
    "fetch_from": "source.source_name",
    "fieldname": "lead_source_name",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "hidden": 1,
    "label": "Lead Source Name",
    "options": "Lead"
@@ -781,17 +781,17 @@
   {
    "fetch_from": "source.pancake_platform",
    "fieldname": "lead_source_platform",
-   "fieldtype": "Link",
-   "hidden": 1,
+   "fieldtype": "Data",
    "label": "Lead Source Platform",
-   "options": "Lead"
+   "options": "Lead",
+   "read_only": 1
   }
  ],
  "icon": "fa fa-user",
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-06-13 01:26:39.540075",
+ "modified": "2025-06-15 08:47:39.108254",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",
