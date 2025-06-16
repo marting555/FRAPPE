@@ -1238,11 +1238,21 @@ def create_dn_wo_so(pick_list):
 
 @frappe.whitelist()
 def create_dn_for_pick_lists(source_name, target_doc=None, kwargs=None):
-	"""Get Items from Multiple Pick Lists and create a Delivery Note"""
+	"""Get Items from Multiple Pick Lists and create a Delivery Note for filtered customer"""
 	pick_list = frappe.get_doc("Pick List", source_name)
 	validate_item_locations(pick_list)
 
-	sales_orders = {row.sales_order for row in pick_list.locations if row.sales_order}
+	if kwargs and (order := kwargs.get("sales_order")):
+		sales_orders = {order}
+	else:
+		sales_orders = {row.sales_order for row in pick_list.locations if row.sales_order}
+
+		if kwargs and (customer := kwargs.get("customer")):
+			sales_orders = frappe.get_all(
+				"Sales Order",
+				filters={"customer": customer, "name": ["in", list(sales_orders)]},
+				pluck="name",
+			)
 
 	if not sales_orders:
 		return
