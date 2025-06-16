@@ -25,6 +25,7 @@
   "company",
   "skip_delivery_note",
   "has_unit_price_items",
+  "is_subcontracted",
   "amended_from",
   "accounting_dimensions_section",
   "cost_center",
@@ -1036,8 +1037,8 @@
   },
   {
    "collapsible": 1,
-   "collapsible_depends_on": "packed_items",
-   "depends_on": "packed_items",
+   "collapsible_depends_on": "eval:!parent.is_subcontracted",
+   "depends_on": "eval:!parent.is_subcontracted",
    "fieldname": "packing_list",
    "fieldtype": "Section Break",
    "hide_days": 1,
@@ -1607,7 +1608,7 @@
   },
   {
    "default": "0",
-   "depends_on": "eval: (doc.docstatus == 0 || doc.reserve_stock)",
+   "depends_on": "eval: ((doc.docstatus == 0 || doc.reserve_stock) && !doc.is_subcontracted)",
    "description": "If checked, Stock will be reserved on <b>Submit</b>",
    "fieldname": "reserve_stock",
    "fieldtype": "Check",
@@ -1681,13 +1682,21 @@
    "hidden": 1,
    "label": "Has Unit Price Items",
    "no_copy": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_subcontracted",
+   "fieldtype": "Check",
+   "label": "Is Subcontracted",
+   "print_hide": 1
   }
  ],
+ "grid_page_length": 50,
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-03-03 16:49:00.676927",
+ "modified": "2025-03-25 15:12:57.888361",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

@@ -31,7 +31,13 @@ class StockReservationEntry(Document):
 		from_voucher_detail_no: DF.Data | None
 		from_voucher_no: DF.DynamicLink | None
 		from_voucher_type: DF.Literal[
-			"", "Pick List", "Purchase Receipt", "Stock Entry", "Work Order", "Production Plan"
+			"",
+			"Pick List",
+			"Purchase Receipt",
+			"Stock Entry",
+			"Work Order",
+			"Production Plan",
+			"Subcontracting Inward Order",
 		]
 		has_batch_no: DF.Check
 		has_serial_no: DF.Check
@@ -48,7 +54,9 @@ class StockReservationEntry(Document):
 		voucher_detail_no: DF.Data | None
 		voucher_no: DF.DynamicLink | None
 		voucher_qty: DF.Float
-		voucher_type: DF.Literal["", "Sales Order", "Work Order", "Production Plan"]
+		voucher_type: DF.Literal[
+			"", "Sales Order", "Work Order", "Subcontracting Inward Order", "Production Plan"
+		]
 		warehouse: DF.Link | None
 	# end: auto-generated types
 
@@ -152,7 +160,7 @@ class StockReservationEntry(Document):
 	def validate_reservation_based_on_qty(self) -> None:
 		"""Validates `Reserved Qty` when `Reservation Based On` is `Qty`."""
 
-		if self.reservation_based_on == "Qty":
+		if self.reservation_based_on == "Qty" and self.voucher_type != "Subcontracting Inward Order":
 			self.validate_with_allowed_qty(self.reserved_qty)
 
 	def auto_reserve_serial_and_batch(self, based_on: str | None = None) -> None:
@@ -324,7 +332,8 @@ class StockReservationEntry(Document):
 				frappe.throw(msg)
 
 			# Should be called after validating Serial and Batch Nos.
-			self.validate_with_allowed_qty(qty_to_be_reserved)
+			if self.voucher_type != "Subcontracting Inward Order":
+				self.validate_with_allowed_qty(qty_to_be_reserved)
 			self.db_set("reserved_qty", qty_to_be_reserved)
 
 	def update_reserved_qty_in_voucher(

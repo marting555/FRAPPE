@@ -514,7 +514,10 @@ class StockController(AccountsController):
 
 		elif row.batch_no:
 			batches = frappe.get_all(
-				"Serial and Batch Entry", fields=["batch_no"], filters={"parent": row.serial_and_batch_bundle}
+				"Serial and Batch Entry",
+				fields=["batch_no"],
+				filters={"parent": row.serial_and_batch_bundle},
+				distinct=True,
 			)
 			batches = sorted([d.batch_no for d in batches])
 
@@ -1141,6 +1144,10 @@ class StockController(AccountsController):
 			# Customer Provided parts will have zero valuation rate
 			if frappe.get_cached_value("Item", d.item_code, "is_customer_provided_item"):
 				d.allow_zero_valuation_rate = 1
+			elif self.get("stock_entry_type") == "Receive from Customer":
+				frappe.throw(
+					_("Item {0} should be a customer provided item.").format(frappe.bold(d.item_code))
+				)
 
 	def set_rate_of_stock_uom(self):
 		if self.doctype in [
