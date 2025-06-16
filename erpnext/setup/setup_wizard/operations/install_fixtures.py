@@ -357,6 +357,7 @@ def add_uom_data():
 		open(frappe.get_app_path("erpnext", "setup", "setup_wizard", "data", "uom_data.json")).read()
 	)
 	for d in uoms:
+<<<<<<< HEAD
 		if not frappe.db.exists("UOM", _(d.get("uom_name"))):
 			frappe.get_doc(
 				{
@@ -367,6 +368,12 @@ def add_uom_data():
 					"enabled": 1,
 				}
 			).db_insert()
+=======
+		if not frappe.db.exists("UOM", d.get("uom_name")):
+			doc = frappe.new_doc("UOM")
+			doc.update(d)
+			doc.insert(ignore_permissions=True)
+>>>>>>> 666bf65f48 (fix: permission issue while completing setup wizard)
 
 	# bootstrap uom conversion factors
 	uom_conversions = json.loads(
@@ -504,6 +511,7 @@ def update_stock_settings():
 	stock_settings.auto_insert_price_list_rate_if_missing = 1
 	stock_settings.update_price_list_based_on = "Rate"
 	stock_settings.set_qty_in_transactions_based_on_serial_no_input = 1
+	stock_settings.flags.ignore_permissions = True
 	stock_settings.save()
 
 
