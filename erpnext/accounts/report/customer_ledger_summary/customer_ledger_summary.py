@@ -295,7 +295,6 @@ class PartyLedgerSummaryReport:
 					else:
 						party_data.paid_amount -= amount
 
-
 		out = []
 		for party, row in self.party_data.items():
 			if (
@@ -303,7 +302,7 @@ class PartyLedgerSummaryReport:
 				or row.invoiced_amount
 				or row.paid_amount
 				or row.return_amount
-				or row.closing_balance # Fixed typo from closing_amount to closing_balance
+				or row.closing_balance  # Fixed typo from closing_amount to closing_balance
 			):
 				total_party_adjustment = sum(
 					amount for amount in self.party_adjustment_details.get(party, {}).values()
@@ -327,7 +326,7 @@ class PartyLedgerSummaryReport:
 				gle.party,
 				gle.voucher_type,
 				gle.voucher_no,
-				gle.against_voucher, # For handling returned invoices (Credit/Debit Notes)
+				gle.against_voucher,  # For handling returned invoices (Credit/Debit Notes)
 				gle.debit,
 				gle.credit,
 				gle.is_opening,
