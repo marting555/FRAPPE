@@ -502,6 +502,15 @@ class PaymentEntry(AccountsController):
 				doc.delink_advance_entries(self.name)
 
 	def set_missing_values(self):
+		if self.mode_of_payment and self.company:
+			account = get_default_bank_cash_account(
+				self.company, mode_of_payment=self.mode_of_payment, fetch_balance=False
+			)
+			if self.payment_type == "Receive" and not self.paid_to:
+				self.paid_to = account
+			elif not self.paid_from:
+				self.paid_from = account
+
 		if self.payment_type == "Internal Transfer":
 			for field in (
 				"party",
