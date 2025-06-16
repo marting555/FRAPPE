@@ -205,7 +205,7 @@ erpnext.stock.DeliveryNoteController = class DeliveryNoteController extends (
 						});
 					}
 					erpnext.utils.map_current_doc({
-						method: "erpnext.stock.doctype.pick_list.pick_list.make_delivery_note",
+						method: "erpnext.stock.doctype.pick_list.pick_list.create_dn_for_pick_lists",
 						source_doctype: "Pick List",
 						target: me.frm,
 						setters: [

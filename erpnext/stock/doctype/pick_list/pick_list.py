@@ -1236,9 +1236,31 @@ def create_dn_wo_so(pick_list):
 	return delivery_note
 
 
+@frappe.whitelist()
+def create_dn_for_pick_lists(source_name, target_doc=None, kwargs=None):
+	"""Get Items from Multiple Pick Lists and create a Delivery Note"""
+	pick_list = frappe.get_doc("Pick List", source_name)
+	validate_item_locations(pick_list)
+
+	sales_orders = {row.sales_order for row in pick_list.locations if row.sales_order}
+
+	if not sales_orders:
+		return
+
+	return create_dn_from_so(pick_list, sales_orders, delivery_note=target_doc)
+
+
 def create_dn_with_so(sales_dict, pick_list):
+	"""Create Delivery Note for each customer (based on SO) in a Pick List."""
 	delivery_note = None
 
+	for customer in sales_dict:
+		delivery_note = create_dn_from_so(pick_list, sales_dict[customer], None)
+
+	return delivery_note
+
+
+def create_dn_from_so(pick_list, sales_order_list, delivery_note=None):
 	item_table_mapper = {
 		"doctype": "Delivery Note Item",
 		"field_map": {
@@ -1249,17 +1271,19 @@ def create_dn_with_so(sales_dict, pick_list):
 		"condition": lambda doc: abs(doc.delivered_qty) < abs(doc.qty) and doc.delivered_by_supplier != 1,
 	}
 
-	for customer in sales_dict:
-		for so in sales_dict[customer]:
-			delivery_note = None
-			kwargs = {"skip_item_mapping": True, "ignore_pricing_rule": pick_list.ignore_pricing_rule}
-			delivery_note = create_delivery_note_from_sales_order(so, delivery_note, kwargs=kwargs)
-			break
-		if delivery_note:
-			# map all items of all sales orders of that customer
-			for so in sales_dict[customer]:
-				map_pl_locations(pick_list, item_table_mapper, delivery_note, so)
-			update_packed_item_details(pick_list, delivery_note)
+	kwargs = {"skip_item_mapping": True, "ignore_pricing_rule": pick_list.ignore_pricing_rule}
+	delivery_note = create_delivery_note_from_sales_order(
+		next(iter(sales_order_list)), delivery_note, kwargs=kwargs
+	)
+
+	if not delivery_note:
+		return
+
+	if delivery_note:
+		for so in sales_order_list:
+			map_pl_locations(pick_list, item_table_mapper, delivery_note, so)
+
+		update_packed_item_details(pick_list, delivery_note)
 
 	return delivery_note
 
@@ -1555,35 +1579,3 @@ def get_pick_list_query(doctype, txt, searchfield, start, page_len, filters):
 		query = query.where(txt_condition)
 
 	return query.run(as_dict=True)
-
-
-@frappe.whitelist()
-def make_delivery_note(source_name, target_doc=None, kwargs=None):
-	pick_list = frappe.get_doc("Pick List", source_name)
-	validate_item_locations(pick_list)
-	sales_orders = {row.sales_order for row in pick_list.locations if row.sales_order}
-	if not sales_orders:
-		return
-
-	item_table_mapper = {
-		"doctype": "Delivery Note Item",
-		"field_map": {
-			"rate": "rate",
-			"name": "so_detail",
-			"parent": "against_sales_order",
-		},
-		"condition": lambda doc: abs(doc.delivered_qty) < abs(doc.qty) and doc.delivered_by_supplier != 1,
-	}
-
-	kwargs = {"skip_item_mapping": True, "ignore_pricing_rule": pick_list.ignore_pricing_rule}
-	delivery_note = create_delivery_note_from_sales_order(next(iter(sales_orders)), target_doc, kwargs=kwargs)
-
-	if not delivery_note:
-		return
-
-	for so in sales_orders:
-		map_pl_locations(pick_list, item_table_mapper, delivery_note, so)
-
-	update_packed_item_details(pick_list, delivery_note)
-
-	return delivery_note
