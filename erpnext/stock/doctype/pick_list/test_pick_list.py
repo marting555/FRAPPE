@@ -398,7 +398,13 @@ class TestPickList(IntegrationTestCase):
 		self.assertEqual(pick_list.locations[1].sales_order_item, sales_order.items[0].name)
 
 	def test_pick_list_for_items_with_multiple_UOM(self):
-		item_code = make_item().name
+		item_code = make_item(
+			uoms=[
+				{"uom": "Nos", "conversion_factor": 1},
+				{"uom": "Box", "conversion_factor": 5},
+				{"uom": "Unit", "conversion_factor": 0.5},
+			]
+		).name
 		purchase_receipt = make_purchase_receipt(item_code=item_code, qty=10)
 		purchase_receipt.submit()
 
@@ -411,8 +417,7 @@ class TestPickList(IntegrationTestCase):
 					{
 						"item_code": item_code,
 						"qty": 1,
-						"conversion_factor": 5,
-						"stock_qty": 5,
+						"uom": "Box",
 						"delivery_date": frappe.utils.today(),
 						"warehouse": "_Test Warehouse - _TC",
 					},
@@ -426,6 +431,7 @@ class TestPickList(IntegrationTestCase):
 				],
 			}
 		).insert()
+
 		sales_order.submit()
 
 		pick_list = frappe.get_doc(
@@ -440,6 +446,7 @@ class TestPickList(IntegrationTestCase):
 						"item_code": item_code,
 						"qty": 2,
 						"stock_qty": 1,
+						"uom": "Unit",
 						"conversion_factor": 0.5,
 						"sales_order": sales_order.name,
 						"sales_order_item": sales_order.items[0].name,
@@ -461,7 +468,11 @@ class TestPickList(IntegrationTestCase):
 		delivery_note = create_delivery_note(pick_list.name)
 		pick_list.load_from_db()
 
-		self.assertEqual(pick_list.locations[0].qty, delivery_note.items[0].qty)
+		#  pick list stk_qty / dn conversion_factor = dn qty (1/5 = 0.2)
+		self.assertEqual(
+			pick_list.locations[0].picked_qty,
+			delivery_note.items[0].qty * delivery_note.items[0].conversion_factor,
+		)
 		self.assertEqual(pick_list.locations[1].qty, delivery_note.items[1].qty)
 		self.assertEqual(sales_order.items[0].conversion_factor, delivery_note.items[0].conversion_factor)
 
