@@ -131,10 +131,12 @@ def get_exchange_rate(from_currency, to_currency, transaction_date=None, args=No
 	if frappe.get_cached_value("Currency Exchange Settings", "Currency Exchange Settings", "disabled"):
 		return 0.00
 
-	pegged_currencies = get_pegged_currencies()
+	pegged_currencies = {}
 
-	if rate := get_pegged_rate(pegged_currencies, from_currency, to_currency, transaction_date):
-		return rate
+	if currency_settings.allow_pegged_currencies_exchange_rates:
+		pegged_currencies = get_pegged_currencies()
+		if rate := get_pegged_rate(pegged_currencies, from_currency, to_currency, transaction_date):
+			return rate
 
 	try:
 		cache = frappe.cache()
@@ -167,9 +169,10 @@ def get_exchange_rate(from_currency, to_currency, transaction_date=None, args=No
 
 		# Support multiple pegged currencies
 		value = flt(value)
-		if to_currency in pegged_currencies:
+
+		if currency_settings.allow_pegged_currencies_exchange_rates and to_currency in pegged_currencies:
 			value *= flt(pegged_currencies[to_currency]["ratio"])
-		if from_currency in pegged_currencies:
+		if currency_settings.allow_pegged_currencies_exchange_rates and from_currency in pegged_currencies:
 			value /= flt(pegged_currencies[from_currency]["ratio"])
 
 		return flt(value)

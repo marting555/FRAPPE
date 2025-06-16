@@ -864,6 +864,7 @@ class TestQuotation(IntegrationTestCase):
 		quotation.reload()
 		self.assertEqual(quotation.status, "Ordered")
 
+	@change_settings("Accounts Settings", {"allow_pegged_currencies_exchange_rates": True})
 	def test_make_quotation_qar_to_inr(self):
 		quotation = make_quotation(
 			currency="QAR",
