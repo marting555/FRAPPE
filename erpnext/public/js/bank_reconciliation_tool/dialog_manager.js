@@ -47,6 +47,10 @@ erpnext.accounts.bank_reconciliation.DialogManager = class DialogManager {
 			callback: (r) => {
 				if (r.message) {
 					this.bank_transaction = r.message;
+					this.original_party_details = {
+						party_type: this.bank_transaction.party_type,
+						party: this.bank_transaction.party,
+					};
 					r.message.payment_entry = 1;
 					r.message.journal_entry = 1;
 					this.dialog.set_values(r.message);
@@ -336,6 +340,34 @@ erpnext.accounts.bank_reconciliation.DialogManager = class DialogManager {
 							company: this.company,
 						},
 					};
+				},
+				onchange: () => {
+					const values = this.dialog.get_values();
+					if (values && values.second_account) {
+						frappe.db.get_value("Account", values.second_account, "account_type").then((r) => {
+							if (r && r.message) {
+								const is_party_account = ["Receivable", "Payable"].includes(
+									r.message.account_type
+								);
+
+								if (is_party_account) {
+									if (this.original_party_details) {
+										this.dialog.set_value(
+											"party_type",
+											this.original_party_details.party_type
+										);
+										this.dialog.set_value("party", this.original_party_details.party);
+									}
+								} else {
+									this.dialog.set_value("party_type", "");
+									this.dialog.set_value("party", "");
+								}
+							}
+						});
+					} else {
+						this.dialog.set_value("party_type", "");
+						this.dialog.set_value("party", "");
+					}
 				},
 			},
 			{
