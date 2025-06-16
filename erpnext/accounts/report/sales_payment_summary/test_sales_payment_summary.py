@@ -6,6 +6,9 @@ import frappe
 from frappe.tests import IntegrationTestCase
 from frappe.utils import today
 
+from erpnext.accounts.doctype.mode_of_payment.test_mode_of_payment import (
+	set_default_account_for_mode_of_payment,
+)
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 from erpnext.accounts.report.sales_payment_summary.sales_payment_summary import (
 	get_mode_of_payment_details,
@@ -29,6 +32,10 @@ class TestSalesPaymentSummary(IntegrationTestCase):
 			frappe.db.set_value("Journal Entry", je.name, "docstatus", 2)
 		for si in sis:
 			frappe.db.set_value("Sales Invoice", si.name, "docstatus", 2)
+
+		credit_card_mop = frappe.get_doc("Mode of Payment", "Credit Card")
+		if credit_card_mop:
+			set_default_account_for_mode_of_payment(credit_card_mop, "_Test Company", "_Test Bank - _TC")
 
 	def test_get_mode_of_payments(self):
 		filters = get_filters()
