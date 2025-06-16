@@ -1325,7 +1325,7 @@ class TestPickList(IntegrationTestCase):
 			self.assertEqual(loc.batch_no, batch2)
 
 	def test_multiple_pick_lists_delivery_note(self):
-		from erpnext.stock.doctype.pick_list.pick_list import make_delivery_note
+		from erpnext.stock.doctype.pick_list.pick_list import create_dn_for_pick_lists
 
 		item_code = make_item().name
 		warehouse = "_Test Warehouse - _TC"
@@ -1359,8 +1359,8 @@ class TestPickList(IntegrationTestCase):
 		pick_list_1 = create_pick_list(10)
 		pick_list_2 = create_pick_list(20)
 
-		delivery_note = make_delivery_note(pick_list_1.name)
-		delivery_note = make_delivery_note(pick_list_2.name, delivery_note)
+		delivery_note = create_dn_for_pick_lists(pick_list_1.name)
+		delivery_note = create_dn_for_pick_lists(pick_list_2.name, delivery_note)
 		delivery_note.items[0].qty = 5
 		delivery_note.submit()
 
