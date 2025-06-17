@@ -7,28 +7,28 @@
  "engine": "InnoDB",
  "field_order": [
   "source_currency",
-  "pegged_currency",
-  "currency_ratio"
+  "pegged_against",
+  "pegged_exchange_rate"
  ],
  "fields": [
-  {
-   "fieldname": "pegged_currency",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Pegged Currency",
-   "options": "Currency"
-  },
-  {
-   "fieldname": "currency_ratio",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Currency Ratio"
-  },
   {
    "fieldname": "source_currency",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Currency",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "pegged_exchange_rate",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Exchange Rate"
+  },
+  {
+   "fieldname": "pegged_against",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Pegged Against",
    "options": "Currency"
   }
  ],
@@ -36,7 +36,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-06-02 11:50:29.059345",
+ "modified": "2025-06-17 14:11:16.521193",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Pegged Currency Details",

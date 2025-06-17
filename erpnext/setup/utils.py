@@ -47,13 +47,13 @@ def get_pegged_currencies():
 	pegged_currencies = frappe.get_all(
 		"Pegged Currency Details",
 		filters={"parent": "Pegged Currencies"},
-		fields=["source_currency", "pegged_currency", "currency_ratio"],
+		fields=["source_currency", "pegged_against", "pegged_exchange_rate"],
 	)
 
 	pegged_map = {
 		currency.source_currency: {
-			"pegged_currency": currency.pegged_currency,
-			"ratio": flt(currency.currency_ratio),
+			"pegged_against": currency.pegged_against,
+			"ratio": flt(currency.pegged_exchange_rate),
 		}
 		for currency in pegged_currencies
 	}
@@ -66,12 +66,12 @@ def get_pegged_rate(pegged_map, from_currency, to_currency, transaction_date=Non
 
 	if from_currency in pegged_map and to_currency in pegged_map:
 		# Case 1: Both are present and pegged to same bases
-		if from_entry["pegged_currency"] == to_entry["pegged_currency"]:
+		if from_entry["pegged_against"] == to_entry["pegged_against"]:
 			return (1 / from_entry["ratio"]) * to_entry["ratio"]
 
 		# Case 2: Both are present but pegged to different bases
-		base_from = from_entry["pegged_currency"]
-		base_to = to_entry["pegged_currency"]
+		base_from = from_entry["pegged_against"]
+		base_to = to_entry["pegged_against"]
 		base_rate = get_exchange_rate(base_from, base_to, transaction_date)
 
 		if not base_rate:
@@ -80,11 +80,11 @@ def get_pegged_rate(pegged_map, from_currency, to_currency, transaction_date=Non
 		return (1 / from_entry["ratio"]) * base_rate * to_entry["ratio"]
 
 	# Case 3: from_currency is pegged to to_currency
-	if from_entry and from_entry["pegged_currency"] == to_currency:
+	if from_entry and from_entry["pegged_against"] == to_currency:
 		return flt(from_entry["ratio"])
 
 	# Case 4: to_currency is pegged to from_currency
-	if to_entry and to_entry["pegged_currency"] == from_currency:
+	if to_entry and to_entry["pegged_against"] == from_currency:
 		return 1 / flt(to_entry["ratio"])
 
 	""" If only one entry exists but doesn’t match pegged currency logic, return None """
@@ -151,10 +151,10 @@ def get_exchange_rate(from_currency, to_currency, transaction_date=None, args=No
 				"transaction_date": transaction_date,
 				"from_currency": from_currency
 				if from_currency not in pegged_currencies
-				else pegged_currencies[from_currency]["pegged_currency"],
+				else pegged_currencies[from_currency]["pegged_against"],
 				"to_currency": to_currency
 				if to_currency not in pegged_currencies
-				else pegged_currencies[to_currency]["pegged_currency"],
+				else pegged_currencies[to_currency]["pegged_against"],
 			}
 			params = {}
 			for row in settings.req_params:

@@ -230,12 +230,12 @@ def update_pegged_currencies():
 	existing_sources = {item.source_currency for item in doc.pegged_currency_item}
 
 	currencies_to_add = [
-		{"source_currency": "AED", "pegged_currency": "USD", "currency_ratio": 3.6725},
-		{"source_currency": "BHD", "pegged_currency": "USD", "currency_ratio": 0.376},
-		{"source_currency": "JOD", "pegged_currency": "USD", "currency_ratio": 0.709},
-		{"source_currency": "OMR", "pegged_currency": "USD", "currency_ratio": 0.3845},
-		{"source_currency": "QAR", "pegged_currency": "USD", "currency_ratio": 3.64},
-		{"source_currency": "SAR", "pegged_currency": "USD", "currency_ratio": 3.75},
+		{"source_currency": "AED", "pegged_against": "USD", "pegged_exchange_rate": 3.6725},
+		{"source_currency": "BHD", "pegged_against": "USD", "pegged_exchange_rate": 0.376},
+		{"source_currency": "JOD", "pegged_against": "USD", "pegged_exchange_rate": 0.709},
+		{"source_currency": "OMR", "pegged_against": "USD", "pegged_exchange_rate": 0.3845},
+		{"source_currency": "QAR", "pegged_against": "USD", "pegged_exchange_rate": 3.64},
+		{"source_currency": "SAR", "pegged_against": "USD", "pegged_exchange_rate": 3.75},
 	]
 
 	for currency in currencies_to_add:

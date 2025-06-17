@@ -14,11 +14,11 @@ class PeggedCurrencyDetails(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		currency_ratio: DF.Data | None
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data
-		pegged_currency: DF.Link | None
+		pegged_against: DF.Link | None
+		pegged_exchange_rate: DF.Data | None
 		source_currency: DF.Link | None
 	# end: auto-generated types
 
