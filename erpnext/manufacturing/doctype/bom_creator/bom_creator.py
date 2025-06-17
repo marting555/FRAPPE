@@ -78,6 +78,8 @@ class BOMCreator(Document):
 		self.validate_items()
 
 	def validate_items(self):
+		unique_items = set()
+
 		for row in self.items:
 			if row.is_expandable and row.item_code == self.item_code:
 				frappe.throw(_("Item {0} cannot be added as a sub-assembly of itself").format(row.item_code))
@@ -93,6 +95,14 @@ class BOMCreator(Document):
 					_("At row {0}: Parent Row No cannot be set for item {1}").format(row.idx, row.item_code),
 					title=_("Remove Parent Row No in Items Table"),
 				)
+
+			if row.item_code in unique_items:
+				frappe.throw(
+					_("At row {0}: Item {1} already added.").format(row.idx, frappe.bold(row.item_code)),
+					title=_("Duplicate Item Found"),
+				)
+			else:
+				unique_items.add(row.item_code)
 
 	def set_status(self, save=False):
 		self.status = {
