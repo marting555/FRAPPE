@@ -16,6 +16,7 @@ from frappe.utils.nestedset import NestedSet, rebuild_tree
 
 from erpnext.accounts.doctype.account.account import get_account_currency
 from erpnext.setup.setup_wizard.operations.taxes_setup import setup_taxes_and_charges
+from erpnext.stock.utils import check_pending_reposting
 
 
 class Company(NestedSet):
@@ -140,6 +141,7 @@ class Company(NestedSet):
 		return exists
 
 	def validate(self):
+		old_doc = self.get_doc_before_save()
 		self.update_default_account = False
 		if self.is_new():
 			self.update_default_account = True
@@ -155,6 +157,7 @@ class Company(NestedSet):
 		self.check_parent_changed()
 		self.set_chart_of_accounts()
 		self.validate_parent_company()
+		self.validate_pending_reposts(old_doc)
 
 	def validate_abbr(self):
 		if not self.abbr:
@@ -491,6 +494,11 @@ class Company(NestedSet):
 
 			if not is_group:
 				frappe.throw(_("Parent Company must be a group company"))
+
+	def validate_pending_reposts(self, old_doc):
+		if old_doc.accounts_frozen_till_date != self.accounts_frozen_till_date:
+			if self.accounts_frozen_till_date:
+				check_pending_reposting(self.accounts_frozen_till_date)
 
 	def set_default_accounts(self):
 		default_accounts = {
