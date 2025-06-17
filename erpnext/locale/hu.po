@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-06-15 09:36+0000\n"
-"PO-Revision-Date: 2025-06-16 03:00\n"
+"PO-Revision-Date: 2025-06-17 02:55\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Hungarian\n"
 "MIME-Version: 1.0\n"
@@ -8871,7 +8871,7 @@ msgstr "TÖRÖLVE"
 #. Label of the cc (Link) field in DocType 'Process Statement Of Accounts CC'
 #: erpnext/accounts/doctype/process_statement_of_accounts_cc/process_statement_of_accounts_cc.json
 msgid "CC"
-msgstr ""
+msgstr "CC"
 
 #. Label of the cc_to (Table MultiSelect) field in DocType 'Process Statement
 #. Of Accounts'
@@ -19901,7 +19901,7 @@ msgstr ""
 #. Settings'
 #: erpnext/selling/doctype/selling_settings/selling_settings.json
 msgid "Experimental"
-msgstr ""
+msgstr "Kísérleti"
 
 #. Option for the 'Status' (Select) field in DocType 'Supplier Quotation'
 #. Option for the 'Status' (Select) field in DocType 'Quotation'
