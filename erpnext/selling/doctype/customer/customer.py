@@ -724,7 +724,6 @@ def make_contact(args, is_primary_contact=1):
 	values = {
 		"doctype": "Contact",
 		"is_primary_contact": is_primary_contact,
-		"links": [{"link_doctype": args.get("doctype"), "link_name": args.get("name")}],
 	}
 
 	party_type = args.customer_type if args.doctype == "Customer" else args.supplier_type
@@ -748,6 +747,11 @@ def make_contact(args, is_primary_contact=1):
 
 	contact = frappe.get_doc(values)
 
+	if flags := args.get("flags"):
+		contact.insert(ignore_permissions=flags.get("ignore_permissions"))
+	else:
+		contact.insert()
+
 	if args.get("email_id"):
 		contact.add_email(args.get("email_id"), is_primary=True)
 	if args.get("mobile_no"):
@@ -756,12 +760,10 @@ def make_contact(args, is_primary_contact=1):
 		contact.first_name = args.get("first_name")
 	if args.get("last_name"):
 		contact.last_name = args.get("last_name")
-
-	if flags := args.get("flags"):
-		contact.insert(ignore_permissions=flags.get("ignore_permissions"))
-	else:
-		contact.insert()
-
+		
+	contact.append("links", {"link_doctype": args.get("doctype"), "link_name": args.get("name")})
+	contact.save()
+	
 	return contact
 
 
@@ -792,7 +794,6 @@ def make_address(args, is_primary_address=1, is_shipping_address=1):
 			"country": args.get("country"),
 			"is_primary_address": is_primary_address,
 			"is_shipping_address": is_shipping_address,
-			"links": [{"link_doctype": args.get("doctype"), "link_name": args.get("name")}],
 		}
 	)
 
@@ -800,6 +801,9 @@ def make_address(args, is_primary_address=1, is_shipping_address=1):
 		address.insert(ignore_permissions=flags.get("ignore_permissions"))
 	else:
 		address.insert()
+		
+	address.append("links", {"link_doctype": args.get("doctype"), "link_name": args.get("name")})
+	address.save()
 
 	return address
 
