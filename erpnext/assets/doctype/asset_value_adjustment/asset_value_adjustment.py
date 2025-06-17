@@ -163,7 +163,58 @@ class AssetValueAdjustment(Document):
 
 		self.db_set("journal_entry", je.name)
 
+<<<<<<< HEAD
 	def update_asset(self, asset_value=None):
+=======
+	def get_entry_for_asset_value_decrease(self, fixed_asset_account, entry_template):
+		credit_entry = {
+			"account": fixed_asset_account,
+			"credit_in_account_currency": -self.difference_amount,
+			**entry_template,
+		}
+		debit_entry = {
+			"account": self.difference_account,
+			"debit_in_account_currency": -self.difference_amount,
+			**entry_template,
+		}
+
+		return credit_entry, debit_entry
+
+	def get_entry_for_asset_value_increase(self, fixed_asset_account, entry_template):
+		credit_entry = {
+			"account": self.difference_account,
+			"credit_in_account_currency": self.difference_amount,
+			**entry_template,
+		}
+		debit_entry = {
+			"account": fixed_asset_account,
+			"debit_in_account_currency": self.difference_amount,
+			**entry_template,
+		}
+
+		return credit_entry, debit_entry
+
+	def update_accounting_dimensions(self, credit_entry, debit_entry):
+		accounting_dimensions = get_checks_for_pl_and_bs_accounts()
+
+		for dimension in accounting_dimensions:
+			dimension_value = self.get(dimension["fieldname"]) or dimension.get("default_dimension")
+			if dimension.get("mandatory_for_bs"):
+				credit_entry.update({dimension["fieldname"]: dimension_value})
+
+			if dimension.get("mandatory_for_pl"):
+				debit_entry.update({dimension["fieldname"]: dimension_value})
+
+	def update_asset(self):
+		asset = self.update_asset_value_after_depreciation()
+		note = self.get_adjustment_note()
+		reschedule_depreciation(asset, note)
+		asset.set_status()
+
+	def update_asset_value_after_depreciation(self):
+		difference_amount = self.difference_amount if self.docstatus == 1 else -1 * self.difference_amount
+
+>>>>>>> da2663b8dc (fix: update asset status after making asset value adjustment record)
 		asset = frappe.get_doc("Asset", self.asset)
 
 		if not asset.calculate_depreciation:
