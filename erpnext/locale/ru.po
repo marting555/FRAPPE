@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-06-15 09:36+0000\n"
-"PO-Revision-Date: 2025-06-16 03:00\n"
+"PO-Revision-Date: 2025-06-17 02:55\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Russian\n"
 "MIME-Version: 1.0\n"
@@ -47785,7 +47785,7 @@ msgstr ""
 
 #: erpnext/templates/includes/footer/footer_extension.html:20
 msgid "Sending..."
-msgstr ""
+msgstr "Посылаю..."
 
 #. Label of the sent (Check) field in DocType 'Project Update'
 #: erpnext/projects/doctype/project_update/project_update.json
@@ -58398,7 +58398,7 @@ msgstr ""
 #. Label of the version (Data) field in DocType 'Code List'
 #: erpnext/edi/doctype/code_list/code_list.json
 msgid "Version"
-msgstr ""
+msgstr "Версия"
 
 #. Name of a UOM
 #: erpnext/setup/setup_wizard/data/uom_data.json
