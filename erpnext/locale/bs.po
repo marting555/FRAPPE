@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-06-15 09:36+0000\n"
-"PO-Revision-Date: 2025-06-16 03:00\n"
+"PO-Revision-Date: 2025-06-17 02:56\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Bosnian\n"
 "MIME-Version: 1.0\n"
@@ -2581,7 +2581,7 @@ msgstr "Stvarni Datum Završetka (preko Radnog Lista)"
 
 #: erpnext/manufacturing/doctype/work_order/work_order.py:205
 msgid "Actual End Date cannot be before Actual Start Date"
-msgstr ""
+msgstr "Stvarni datum završetka ne može biti prije stvarnog datuma početka"
 
 #. Label of the actual_end_time (Datetime) field in DocType 'Work Order
 #. Operation'
@@ -9076,7 +9076,7 @@ msgstr "Obračunato Stanje Bankovnog Izvoda"
 #. Name of a report
 #: erpnext/accounts/report/calculated_discount_mismatch/calculated_discount_mismatch.json
 msgid "Calculated Discount Mismatch"
-msgstr ""
+msgstr "Izračunata Razlika Popusta"
 
 #. Label of the section_break_11 (Section Break) field in DocType 'Supplier
 #. Scorecard Period'
@@ -11772,7 +11772,7 @@ msgstr "Konfiguriši standard Cijenovnik prilikom kreiranja nove transakcije Kup
 #. 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Confirm before resetting posting date"
-msgstr ""
+msgstr "Potvrdi prije poništavanja datuma registracije"
 
 #. Label of the final_confirmation_date (Date) field in DocType 'Employee'
 #: erpnext/setup/doctype/employee/employee.json
@@ -17403,7 +17403,7 @@ msgstr "Iznos Popusta"
 
 #: erpnext/accounts/report/calculated_discount_mismatch/calculated_discount_mismatch.py:58
 msgid "Discount Amount in Transaction"
-msgstr ""
+msgstr "Iznos Popusta u Transakciji"
 
 #. Label of the discount_date (Date) field in DocType 'Payment Schedule'
 #: erpnext/accounts/doctype/payment_schedule/payment_schedule.json
@@ -17423,7 +17423,7 @@ msgstr "Popust Precentualno"
 
 #: erpnext/accounts/report/calculated_discount_mismatch/calculated_discount_mismatch.py:52
 msgid "Discount Percentage in Transaction"
-msgstr ""
+msgstr "Procenat Popusta u Transakciji"
 
 #. Label of the section_break_8 (Section Break) field in DocType 'Payment Term'
 #. Label of the section_break_8 (Section Break) field in DocType 'Payment Terms
@@ -18077,7 +18077,7 @@ msgstr "Dr"
 
 #: erpnext/accounts/report/customer_ledger_summary/customer_ledger_summary.py:246
 msgid "Dr/Cr"
-msgstr ""
+msgstr "Dr/Cr"
 
 #. Option for the 'Status' (Select) field in DocType 'Dunning'
 #. Option for the 'Status' (Select) field in DocType 'Invoice Discounting'
@@ -21584,7 +21584,7 @@ msgstr "Od Personala"
 
 #: erpnext/assets/doctype/asset_movement/asset_movement.py:85
 msgid "From Employee is required while issuing Asset {0}"
-msgstr ""
+msgstr "Personal je obavezan prilikom izdavanja Imovine {0}"
 
 #. Label of the from_external_ecomm_platform (Check) field in DocType 'Coupon
 #. Code'
@@ -23600,7 +23600,7 @@ msgstr "Ako je omogućeno, sistem će samo potvrditi pravilo cijena i neće se a
 #. DocType 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "If enabled, user will be alerted before resetting posting date to current date in relevant transactions"
-msgstr ""
+msgstr "Ako je omogućeno, korisnik će biti upozoren prije poništavanja datuma registracije na trenutni datum u relevantnim transakcijama"
 
 #. Description of the 'Variant Of' (Link) field in DocType 'Item'
 #: erpnext/stock/doctype/item/item.json
@@ -25481,7 +25481,7 @@ msgstr "Popust Fakture"
 
 #: erpnext/accounts/doctype/pos_settings/pos_settings.py:55
 msgid "Invoice Document Type Selection Error"
-msgstr ""
+msgstr "Pogreška Odabira Faktura Tipa Dokumenta"
 
 #: erpnext/accounts/report/accounts_receivable/accounts_receivable.py:1118
 msgid "Invoice Grand Total"
@@ -25564,7 +25564,7 @@ msgstr "Tip Fakture"
 #. Label of the invoice_type (Select) field in DocType 'POS Settings'
 #: erpnext/accounts/doctype/pos_settings/pos_settings.json
 msgid "Invoice Type Created via POS Screen"
-msgstr ""
+msgstr "Tip Fakture kreirana putem Kase"
 
 #: erpnext/projects/doctype/timesheet/timesheet.py:403
 msgid "Invoice already created for all billing hours"
@@ -27234,7 +27234,7 @@ msgstr "Artikal PDV Red {0} mora imati račun tipa PDV ili Prihod ili Trošak il
 
 #: erpnext/accounts/doctype/item_tax_template/item_tax_template.py:48
 msgid "Item Tax Row {0}: Account must belong to Company - {1}"
-msgstr ""
+msgstr "Artikal PDV Red {0}: Račun mora pripadati kompaniji - {1}"
 
 #. Name of a DocType
 #. Label of the item_tax_template (Link) field in DocType 'POS Invoice Item'
@@ -27581,7 +27581,7 @@ msgstr "Prodajni Registar po Artiklu"
 
 #: erpnext/stock/get_item_details.py:697
 msgid "Item/Item Code required to get Item Tax Template."
-msgstr ""
+msgstr "Artikal/Artikal Šifra je obavezan pri preuzimanju PDV Šablona Artikla."
 
 #: erpnext/manufacturing/doctype/bom/bom.py:346
 msgid "Item: {0} does not exist in the system"
@@ -34403,7 +34403,7 @@ msgstr "Kasa"
 #. Label of the invoice_fields (Table) field in DocType 'POS Settings'
 #: erpnext/accounts/doctype/pos_settings/pos_settings.json
 msgid "POS Additional Fields"
-msgstr ""
+msgstr "Dodatna polja Kase"
 
 #: erpnext/selling/page/point_of_sale/pos_controller.js:182
 msgid "POS Closed"
@@ -37577,7 +37577,7 @@ msgstr "Odaberite kod artikla prije postavljanja skladišta."
 
 #: erpnext/selling/doctype/sales_order/sales_order.js:874
 msgid "Please select atleast one item to continue"
-msgstr ""
+msgstr "Odaberi jedan artikal za nastavak"
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:1674
 msgid "Please select correct account"
@@ -38189,7 +38189,7 @@ msgstr "Datum knjiženja ne može biti budući datum"
 
 #: erpnext/public/js/controllers/transaction.js:893
 msgid "Posting Date will change to today's date as Edit Posting Date and Time is unchecked. Are you sure want to proceed?"
-msgstr ""
+msgstr "Datum registracije će se promijeniti u današnji datum jer nije odabrano polje za uređivanje datuma i vremena registracije. Jeste li sigurni da želite nastaviti?"
 
 #. Label of the posting_datetime (Datetime) field in DocType 'Stock Closing
 #. Balance'
@@ -52545,7 +52545,7 @@ msgstr "Slučajevi Podrške"
 
 #: erpnext/accounts/report/calculated_discount_mismatch/calculated_discount_mismatch.py:64
 msgid "Suspected Discount Amount"
-msgstr ""
+msgstr "Očekivani Iznos Popusta"
 
 #. Option for the 'Status' (Select) field in DocType 'Driver'
 #. Option for the 'Status' (Select) field in DocType 'Employee'
@@ -52930,11 +52930,11 @@ msgstr "Lokacija"
 
 #: erpnext/assets/doctype/asset_movement/asset_movement.py:70
 msgid "Target Location is required for transferring Asset {0}"
-msgstr ""
+msgstr "Lokacija je obavezna za prenos imovine {0}"
 
 #: erpnext/assets/doctype/asset_movement/asset_movement.py:76
 msgid "Target Location is required while receiving Asset {0}"
-msgstr ""
+msgstr "Lokacija je obavezna prilikom primanja imovine {0}"
 
 #: erpnext/selling/report/sales_partner_target_variance_based_on_item_group/sales_partner_target_variance_based_on_item_group.js:41
 #: erpnext/selling/report/sales_person_target_variance_based_on_item_group/sales_person_target_variance_based_on_item_group.js:41
@@ -54283,7 +54283,7 @@ msgstr "Sinhronizacija je počela u pozadini, provjerite listu {0} za nove zapis
 #. DocType 'POS Settings'
 #: erpnext/accounts/doctype/pos_settings/pos_settings.json
 msgid "The system will create a Sales Invoice or a POS Invoice from the POS interface based on this setting. For high-volume transactions, it is recommended to use POS Invoice."
-msgstr ""
+msgstr "Sistem će kreirati Prodajnu Fakturu ili Kasa Fkturu iz Kase na osnovu ove postavke. Za transakcije velikog obima preporučuje se korištenje Kasa Fakture."
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:174
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:181
@@ -56624,7 +56624,7 @@ msgstr "Tip Prijenosa"
 #. Option for the 'Purpose' (Select) field in DocType 'Asset Movement'
 #: erpnext/assets/doctype/asset_movement/asset_movement.json
 msgid "Transfer and Issue"
-msgstr ""
+msgstr "Prenesi i Izdaj"
 
 #. Option for the 'Status' (Select) field in DocType 'Material Request'
 #: erpnext/stock/doctype/material_request/material_request.json
@@ -60978,7 +60978,7 @@ msgstr "{0} ne može biti negativan"
 
 #: erpnext/accounts/doctype/pos_settings/pos_settings.py:52
 msgid "{0} cannot be changed with opened Opening Entries."
-msgstr ""
+msgstr "{0} se ne može mijenjati s otvorenim Početnim Unosima."
 
 #: erpnext/accounts/doctype/cost_center_allocation/cost_center_allocation.py:136
 msgid "{0} cannot be used as a Main Cost Center because it has been used as child in Cost Center Allocation {1}"
