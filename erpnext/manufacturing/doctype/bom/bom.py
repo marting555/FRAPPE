@@ -281,6 +281,7 @@ class BOM(WebsiteGenerator):
 		self.set_process_loss_qty()
 		self.validate_scrap_items()
 		self.set_default_uom()
+		self.validate_duplicate_items()
 
 	def set_default_uom(self):
 		if not self.get("items"):
@@ -298,6 +299,22 @@ class BOM(WebsiteGenerator):
 		for row in self.get("items"):
 			if row.stock_uom != item_wise_uom.get(row.item_code):
 				row.stock_uom = item_wise_uom.get(row.item_code)
+
+	def validate_duplicate_items(self):
+		unique_items = set()
+
+		for row in self.items:
+			identifier = row.item_code
+
+			if identifier in unique_items:
+				frappe.throw(
+					_("At row {0}: Item {1} entered multiple times.").format(
+						row.idx, frappe.bold(row.item_code)
+					),
+					title=_("Duplicate Item Found"),
+				)
+			else:
+				unique_items.add(identifier)
 
 	def get_context(self, context):
 		context.parents = [{"name": "boms", "title": _("All BOMs")}]
