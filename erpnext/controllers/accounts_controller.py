@@ -2035,6 +2035,7 @@ class AccountsController(TransactionBase):
 		from erpnext.controllers.status_updater import get_allowance_for
 
 		item_allowance = {}
+		item_ref_total = {}
 		global_qty_allowance, global_amount_allowance = None, None
 
 		role_allowed_to_over_bill = frappe.get_cached_value(
@@ -2048,10 +2049,11 @@ class AccountsController(TransactionBase):
 		reference_details = self.get_billing_reference_details(reference_names, ref_dt + " Item", based_on)
 
 		for item in self.get("items"):
-			if not item.get(item_ref_dn):
+			key = item.get(item_ref_dn)
+			if not key:
 				continue
 
-			ref_amt = flt(reference_details.get(item.get(item_ref_dn)), self.precision(based_on, item))
+			ref_amt = flt(reference_details.get(key), self.precision(based_on, item))
 			based_on_amt = flt(item.get(based_on))
 
 			if not ref_amt:
@@ -2065,7 +2067,14 @@ class AccountsController(TransactionBase):
 					)
 				continue
 
-			already_billed = self.get_billed_amount_for_item(item, item_ref_dn, based_on)
+			# for getting already billed amount for item from doc
+			item_ref_total.setdefault(key, 0.0)
+
+			already_billed = (
+				self.get_billed_amount_for_item(item, item_ref_dn, based_on) + item_ref_total[key]
+			)
+
+			item_ref_total[key] += flt(based_on_amt, self.precision(based_on, item))
 
 			total_billed_amt = flt(flt(already_billed) + based_on_amt, self.precision(based_on, item))
 
@@ -2117,11 +2126,8 @@ class AccountsController(TransactionBase):
 		Returns Sum of Amount of
 		Sales/Purchase Invoice Items
 		that are linked to `item_ref_dn` (`dn_detail` / `pr_detail`)
-		that are submitted OR not submitted but are under current invoice
+		that are submitted
 		"""
-
-		from frappe.query_builder import Criterion
-		from frappe.query_builder.functions import Sum
 
 		item_doctype = frappe.qb.DocType(item.doctype)
 		based_on_field = frappe.qb.Field(based_on)
@@ -2131,28 +2137,10 @@ class AccountsController(TransactionBase):
 			frappe.qb.from_(item_doctype)
 			.select(Sum(based_on_field))
 			.where(join_field == item.get(item_ref_dn))
-			.where(
-				Criterion.any(
-					[  # select all items from other invoices OR current invoices
-						Criterion.all(
-							[  # for selecting items from other invoices
-								item_doctype.docstatus == 1,
-								item_doctype.parent != self.name,
-							]
-						),
-						Criterion.all(
-							[  # for selecting items from current invoice, that are linked to same reference
-								item_doctype.docstatus == 0,
-								item_doctype.parent == self.name,
-								item_doctype.name != item.name,
-							]
-						),
-					]
-				)
-			)
+			.where((item_doctype.docstatus == 1) & (item_doctype.parent != self.name))
 		).run()
 
-		return result[0][0] if result else 0
+		return flt(result[0][0]) if result else 0
 
 	def throw_overbill_exception(self, item, max_allowed_amt):
 		frappe.throw(
