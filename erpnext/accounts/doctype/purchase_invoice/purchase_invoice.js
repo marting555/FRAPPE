@@ -91,14 +91,14 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 					function () {
 						me.change_release_date();
 					},
-					__("Hold Invoice")
+					__("Status")
 				);
 				this.frm.add_custom_button(
 					__("Unblock Invoice"),
 					function () {
 						me.unblock_invoice();
 					},
-					__("Create")
+					__("Status")
 				);
 			} else if (!doc.on_hold) {
 				this.frm.add_custom_button(
@@ -106,7 +106,7 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 					function () {
 						me.block_invoice();
 					},
-					__("Create")
+					__("Status")
 				);
 			}
 		}
