@@ -6,8 +6,7 @@ import json
 from collections import defaultdict
 
 import frappe
-from frappe.tests import change_settings
-from frappe.tests.utils import FrappeTestCase
+from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, cstr, flt, getdate, nowdate, nowtime, today
 
 from erpnext.accounts.doctype.account.test_account import get_inventory_account
