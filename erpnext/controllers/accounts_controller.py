@@ -2034,78 +2034,47 @@ class AccountsController(TransactionBase):
 	def validate_multiple_billing(self, ref_dt, item_ref_dn, based_on):
 		from erpnext.controllers.status_updater import get_allowance_for
 
-		item_allowance = {}
-		item_ref_total = {}
-		global_qty_allowance, global_amount_allowance = None, None
+		ref_wise_billed_amount = self.get_reference_wise_billed_amt(ref_dt, item_ref_dn, based_on)
 
-		role_allowed_to_over_bill = frappe.get_cached_value(
-			"Accounts Settings", None, "role_allowed_to_over_bill"
-		)
-		user_roles = frappe.get_roles()
+		if not ref_wise_billed_amount:
+			return
 
 		total_overbilled_amt = 0.0
+		overbilled_items = []
 
-		reference_names = [d.get(item_ref_dn) for d in self.get("items") if d.get(item_ref_dn)]
-		reference_details = self.get_billing_reference_details(reference_names, ref_dt + " Item", based_on)
+		role_allowed_to_overbill = frappe.get_single_value("Accounts Settings", "role_allowed_to_over_bill")
+		user_roles = frappe.get_roles()
+		is_overbilling_allowed = role_allowed_to_overbill in user_roles
 
-		for item in self.get("items"):
-			key = item.get(item_ref_dn)
-			if not key:
-				continue
+		for row in ref_wise_billed_amount.values():
+			total_billed_amt = row.billed_amt
+			allowance, __, __, __ = get_allowance_for(row.item_code, {}, None, None, "amount")
 
-			ref_amt = flt(reference_details.get(key), self.precision(based_on, item))
-			based_on_amt = flt(item.get(based_on))
-
-			if not ref_amt:
-				if based_on_amt:  # Skip warning for free items
-					frappe.msgprint(
-						_(
-							"System will not check over billing since amount for Item {0} in {1} is zero"
-						).format(item.item_code, ref_dt),
-						title=_("Warning"),
-						indicator="orange",
-					)
-				continue
-
-			# for getting already billed amount for item from doc
-			item_ref_total.setdefault(key, 0.0)
-
-			already_billed = (
-				self.get_billed_amount_for_item(item, item_ref_dn, based_on) + item_ref_total[key]
-			)
-
-			item_ref_total[key] += flt(based_on_amt, self.precision(based_on, item))
-
-			total_billed_amt = flt(flt(already_billed) + based_on_amt, self.precision(based_on, item))
-
-			allowance, item_allowance, global_qty_allowance, global_amount_allowance = get_allowance_for(
-				item.item_code, item_allowance, global_qty_allowance, global_amount_allowance, "amount"
-			)
-
-			max_allowed_amt = flt(ref_amt * (100 + allowance) / 100)
+			max_allowed_amt = flt(row.ref_amt * (100 + allowance) / 100)
 
 			if total_billed_amt < 0 and max_allowed_amt < 0:
 				# while making debit note against purchase return entry(purchase receipt) getting overbill error
-				total_billed_amt = abs(total_billed_amt)
-				max_allowed_amt = abs(max_allowed_amt)
+				total_billed_amt, max_allowed_amt = abs(total_billed_amt), abs(max_allowed_amt)
 
 			overbill_amt = total_billed_amt - max_allowed_amt
+			row["max_allowed_amt"] = max_allowed_amt
 			total_overbilled_amt += overbill_amt
 
-			if overbill_amt > 0.01 and role_allowed_to_over_bill not in user_roles:
-				if self.doctype != "Purchase Invoice":
-					self.throw_overbill_exception(item, max_allowed_amt)
-				elif not cint(
+			if overbill_amt > 0.01 and not is_overbilling_allowed:
+				if self.doctype != "Purchase Invoice" or not cint(
 					frappe.db.get_single_value(
 						"Buying Settings", "bill_for_rejected_quantity_in_purchase_invoice"
 					)
 				):
-					self.throw_overbill_exception(item, max_allowed_amt)
+					overbilled_items.append(row)
 
-		if role_allowed_to_over_bill in user_roles and total_overbilled_amt > 0.1:
+		if overbilled_items:
+			self.throw_overbill_exception(overbilled_items)
+
+		if is_overbilling_allowed and total_overbilled_amt > 0.1:
 			frappe.msgprint(
 				_("Overbilling of {} ignored because you have {} role.").format(
-					total_overbilled_amt, role_allowed_to_over_bill
+					total_overbilled_amt, role_allowed_to_overbill
 				),
 				indicator="orange",
 				alert=True,
@@ -2121,33 +2090,89 @@ class AccountsController(TransactionBase):
 			)
 		)
 
-	def get_billed_amount_for_item(self, item, item_ref_dn, based_on):
+	def get_reference_wise_billed_amt(self, ref_dt, item_ref_dn, based_on):
 		"""
 		Returns Sum of Amount of
 		Sales/Purchase Invoice Items
 		that are linked to `item_ref_dn` (`dn_detail` / `pr_detail`)
-		that are submitted
+		that are submitted OR not submitted but are under current invoice
 		"""
+		reference_names = [d.get(item_ref_dn) for d in self.get("items") if d.get(item_ref_dn)]
 
-		item_doctype = frappe.qb.DocType(item.doctype)
+		if not reference_names:
+			return
+
+		ref_wise_billed_amount = {}
+		precision = self.precision(based_on, self.items[0])
+		reference_details = self.get_billing_reference_details(reference_names, ref_dt + " Item", based_on)
+		already_billed = self.get_already_billed_amount(item_ref_dn, based_on, reference_names)
+
+		for item in self.get("items"):
+			key = item.get(item_ref_dn)
+			if not key:
+				continue
+
+			ref_amt = flt(reference_details.get(key), precision)
+			based_on_amt = flt(item.get(based_on), precision)
+
+			if not ref_amt:
+				if based_on_amt:  # Skip warning for free items
+					frappe.msgprint(
+						_(
+							"System will not check over billing since amount for Item {0} in {1} is zero"
+						).format(item.item_code, ref_dt),
+						title=_("Warning"),
+						indicator="orange",
+					)
+				continue
+
+			ref_wise_billed_amount.setdefault(
+				key,
+				frappe._dict({"item_code": item.item_code, "billed_amt": 0.0, "ref_amt": 0.0, "rows": []}),
+			)
+
+			ref_wise_billed_amount[key]["ref_amt"] = ref_amt
+			ref_wise_billed_amount[key]["billed_amt"] += based_on_amt
+			ref_wise_billed_amount[key]["rows"].append(item.idx)
+
+			if key in already_billed:
+				ref_wise_billed_amount[key]["billed_amt"] += flt(already_billed.get(key, 0), precision)
+				already_billed.pop(key, None)
+
+		return ref_wise_billed_amount
+
+	def get_already_billed_amount(self, item_ref_dn, based_on, reference_names):
+		item_doctype = frappe.qb.DocType(self.items[0].doctype)
 		based_on_field = frappe.qb.Field(based_on)
 		join_field = frappe.qb.Field(item_ref_dn)
 
-		result = (
-			frappe.qb.from_(item_doctype)
-			.select(Sum(based_on_field))
-			.where(join_field == item.get(item_ref_dn))
-			.where((item_doctype.docstatus == 1) & (item_doctype.parent != self.name))
-		).run()
-
-		return flt(result[0][0]) if result else 0
-
-	def throw_overbill_exception(self, item, max_allowed_amt):
-		frappe.throw(
-			_(
-				"Cannot overbill for Item {0} in row {1} more than {2}. To allow over-billing, please set allowance in Accounts Settings"
-			).format(item.item_code, item.idx, max_allowed_amt)
+		return frappe._dict(
+			(
+				frappe.qb.from_(item_doctype)
+				.select(join_field, Sum(based_on_field))
+				.where(join_field.isin(reference_names))
+				.where((item_doctype.docstatus == 1) & (item_doctype.parent != self.name))
+				.groupby(item_ref_dn)
+			).run()
 		)
+
+	def throw_overbill_exception(self, overbilled_items):
+		message = (
+			_("Cannot overbill for the following Items:")
+			+ "<br><ul><li>"
+			+ "<br><li>".join(
+				_("Item {0} in row {1} more than {2}.").format(
+					frappe.bold(item.item_code),
+					",".join(str(x) for x in item.rows),
+					frappe.bold(item.max_allowed_amt),
+				)
+				for item in overbilled_items
+			)
+			+ "</li></ul>"
+		)
+		message += _("To allow over-billing, please set allowance in Accounts Settings")
+
+		frappe.throw(_(message))
 
 	def get_company_default(self, fieldname, ignore_validation=False):
 		from erpnext.accounts.utils import get_company_default
