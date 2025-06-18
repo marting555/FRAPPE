@@ -42,6 +42,7 @@
  ],
  "fields": [
   {
+   "default": "ACC-BTN-.YYYY.-",
    "fieldname": "naming_series",
    "fieldtype": "Select",
    "label": "Series",
@@ -237,7 +238,7 @@
  "grid_page_length": 50,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-06-18 12:20:24.322068",
+ "modified": "2025-06-18 17:24:57.044666",
  "modified_by": "Administrator",
  "module": "Accounts",
  "name": "Bank Transaction",
