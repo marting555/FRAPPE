@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-06-15 09:36+0000\n"
-"PO-Revision-Date: 2025-06-16 03:00\n"
+"PO-Revision-Date: 2025-06-19 02:57\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Turkish\n"
 "MIME-Version: 1.0\n"
@@ -8329,7 +8329,7 @@ msgstr "Fatura para birimi, şirketin varsayılan para birimi veya carinin hesap
 #. Name of a DocType
 #: erpnext/stock/doctype/bin/bin.json
 msgid "Bin"
-msgstr "Kutu"
+msgstr "Stok Hücresi"
 
 #: erpnext/stock/doctype/bin/bin.js:16
 msgid "Bin Qty Recalculated"
