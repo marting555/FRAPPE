@@ -804,7 +804,7 @@ class PurchaseReceipt(BuyingController):
 		debit_currency = get_account_currency(item.expense_account)
 		remarks = self.get("remarks") or _("Accounting Entry for Service")
 		multiplication_factor = 1
-		amount = item.base_amount
+		amount = item.base_net_amount
 
 		if reverse:
 			multiplication_factor = -1
