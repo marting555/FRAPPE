@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-06-15 09:36+0000\n"
-"PO-Revision-Date: 2025-06-16 03:00\n"
+"PO-Revision-Date: 2025-06-19 02:57\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Persian\n"
 "MIME-Version: 1.0\n"
@@ -20995,7 +20995,7 @@ msgstr "برای مقدار (تعداد تولید شده) اجباری است"
 #. 'Production Plan'
 #: erpnext/manufacturing/doctype/production_plan/production_plan.json
 msgid "For Raw Materials"
-msgstr ""
+msgstr "برای مواد اولیه"
 
 #: erpnext/controllers/accounts_controller.py:1346
 msgid "For Return Invoices with Stock effect, '0' qty Items are not allowed. Following rows are affected: {0}"
@@ -57247,7 +57247,7 @@ msgstr "لغو رزرو موجودی"
 
 #: erpnext/manufacturing/doctype/production_plan/production_plan.js:282
 msgid "Unreserve for Raw Materials"
-msgstr ""
+msgstr "لغو رزرو مواد اولیه"
 
 #: erpnext/manufacturing/doctype/production_plan/production_plan.js:256
 msgid "Unreserve for Sub-assembly"
