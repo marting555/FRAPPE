@@ -952,11 +952,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
-<<<<<<< HEAD
- "modified": "2025-02-05 14:28:33.322181",
-=======
  "modified": "2025-05-31 18:51:32.651562",
->>>>>>> 527cfe9c7d (fix: better integration of Pick List with Delivery Note (#47831))
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note Item",

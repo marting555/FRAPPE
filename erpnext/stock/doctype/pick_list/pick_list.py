@@ -1283,22 +1283,6 @@ def create_dn_from_so(pick_list, sales_order_list, delivery_note=None):
 		"condition": lambda doc: abs(doc.delivered_qty) < abs(doc.qty) and doc.delivered_by_supplier != 1,
 	}
 
-<<<<<<< HEAD
-	for customer in sales_dict:
-		for so in sales_dict[customer]:
-			delivery_note = None
-			kwargs = {"skip_item_mapping": True, "ignore_pricing_rule": pick_list.ignore_pricing_rule}
-			delivery_note = create_delivery_note_from_sales_order(so, delivery_note, kwargs=kwargs)
-			break
-		if delivery_note:
-			# map all items of all sales orders of that customer
-			for so in sales_dict[customer]:
-				map_pl_locations(pick_list, item_table_mapper, delivery_note, so)
-			delivery_note.flags.ignore_mandatory = True
-			delivery_note.insert()
-			update_packed_item_details(pick_list, delivery_note)
-			delivery_note.save()
-=======
 	kwargs = {"skip_item_mapping": True, "ignore_pricing_rule": pick_list.ignore_pricing_rule}
 	delivery_note = create_delivery_note_from_sales_order(
 		next(iter(sales_order_list)), delivery_note, kwargs=kwargs
@@ -1311,8 +1295,13 @@ def create_dn_from_so(pick_list, sales_order_list, delivery_note=None):
 		for so in sales_order_list:
 			map_pl_locations(pick_list, item_table_mapper, delivery_note, so)
 
+		# insert before as item.name is used
+		delivery_note.flags.ignore_mandatory = True
+		delivery_note.insert()
+		
 		update_packed_item_details(pick_list, delivery_note)
->>>>>>> 527cfe9c7d (fix: better integration of Pick List with Delivery Note (#47831))
+
+		delivery_note.save()
 
 	return delivery_note
 
