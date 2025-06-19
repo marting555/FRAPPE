@@ -751,7 +751,7 @@ def make_contact(args, is_primary_contact=1):
 		contact.insert(ignore_permissions=flags.get("ignore_permissions"))
 	else:
 		contact.insert()
-
+		
 	if args.get("email_id"):
 		contact.add_email(args.get("email_id"), is_primary=True)
 	if args.get("mobile_no"):
@@ -804,7 +804,7 @@ def make_address(args, is_primary_address=1, is_shipping_address=1):
 		
 	address.append("links", {"link_doctype": args.get("doctype"), "link_name": args.get("name")})
 	address.save()
-
+	
 	return address
 
 
