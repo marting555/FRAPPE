@@ -342,11 +342,10 @@ class PickList(TransactionBase):
 					doc.submit()
 
 	def update_status(self, status=None, update_modified=True):
-		if not status:
-			status = self.get_status().get("status")
-
 		if status:
-			self.db_set("status", status)
+			self.db_set("status", status, update_modified=update_modified)
+		else:
+			self.set_status(update=True)
 
 	def stock_entry_exists(self):
 		if self.docstatus != 1:
@@ -1295,13 +1294,7 @@ def create_dn_from_so(pick_list, sales_order_list, delivery_note=None):
 		for so in sales_order_list:
 			map_pl_locations(pick_list, item_table_mapper, delivery_note, so)
 
-		# insert before as item.name is used
-		delivery_note.flags.ignore_mandatory = True
-		delivery_note.insert()
-		
 		update_packed_item_details(pick_list, delivery_note)
-
-		delivery_note.save()
 
 	return delivery_note
 
