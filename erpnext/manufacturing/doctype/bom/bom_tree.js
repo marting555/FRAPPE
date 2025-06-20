@@ -16,7 +16,12 @@ frappe.treeview_settings["BOM"] = {
 	show_expand_all: false,
 	get_label: function (node) {
 		if (node.data.qty) {
-			return node.data.qty + " x " + node.data.item_code;
+			return `
+			<span style="font-weight: bold;">
+				${node.data.item_code}: ${node.data.item_name}
+			</span>
+			<span> — [${node.data.qty} ${node.data.stock_uom}]</span>
+			`;
 		} else {
 			return node.data.item_code || node.data.value;
 		}
