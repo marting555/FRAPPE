@@ -330,11 +330,8 @@
  "show_name_in_global_search": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
-<<<<<<< HEAD
-=======
  "states": [],
  "title_field": "party_name",
->>>>>>> bf56c73c6c (feat: add naming series for Contract Doctype)
  "track_changes": 1,
  "track_seen": 1
 }
