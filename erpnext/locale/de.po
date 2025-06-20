@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-06-15 09:36+0000\n"
-"PO-Revision-Date: 2025-06-16 03:00\n"
+"PO-Revision-Date: 2025-06-20 02:54\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: German\n"
 "MIME-Version: 1.0\n"
@@ -1554,7 +1554,7 @@ msgstr "Konto {0} ist ungültig. Kontenwährung muss {1} sein"
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:280
 msgid "Account {0} should be of type Expense"
-msgstr ""
+msgstr "Konto {0} sollte vom Typ „Ausgaben“ sein"
 
 #: erpnext/accounts/doctype/account/account.py:148
 msgid "Account {0}: Parent account {1} can not be a ledger"
@@ -2103,7 +2103,7 @@ msgstr "Forderungen"
 #. field in DocType 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Accounts Receivable / Payable Tuning"
-msgstr ""
+msgstr "Forderungen/Verbindlichkeiten"
 
 #. Label of the accounts_receivable_credit (Link) field in DocType 'Invoice
 #. Discounting'
@@ -2392,13 +2392,13 @@ msgstr "Aktion, wenn das Jahresbudget für die Bestellung überschritten wurde"
 #. in DocType 'Budget'
 #: erpnext/accounts/doctype/budget/budget.json
 msgid "Action if Anual Budget Exceeded on Cumulative Expense"
-msgstr ""
+msgstr "Maßnahmen bei Überschreitung des Jahresbudgets für kumulierte Ausgaben"
 
 #. Label of the maintain_same_rate_action (Select) field in DocType 'Accounts
 #. Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Action if Same Rate is Not Maintained Throughout  Internal Transaction"
-msgstr ""
+msgstr "Maßnahmen, wenn derselbe Preis nicht während des gesamten Verkaufszyklus beibehalten wird"
 
 #. Label of the maintain_same_rate_action (Select) field in DocType 'Selling
 #. Settings'
@@ -2409,7 +2409,7 @@ msgstr "Maßnahmen, wenn derselbe Preis nicht während des gesamten Verkaufszykl
 #. Label of the action_on_new_invoice (Select) field in DocType 'POS Profile'
 #: erpnext/accounts/doctype/pos_profile/pos_profile.json
 msgid "Action on New Invoice"
-msgstr ""
+msgstr "Aktion bei neuer Rechnung"
 
 #. Label of the actions (Section Break) field in DocType 'Supplier Scorecard
 #. Scoring Standing'
@@ -2587,7 +2587,7 @@ msgstr "Ist-Enddatum (via Zeiterfassung)"
 
 #: erpnext/manufacturing/doctype/work_order/work_order.py:205
 msgid "Actual End Date cannot be before Actual Start Date"
-msgstr ""
+msgstr "Das tatsächliche Enddatum kann nicht vor dem tatsächlichen Startdatum liegen"
 
 #. Label of the actual_end_time (Datetime) field in DocType 'Work Order
 #. Operation'
@@ -3174,7 +3174,7 @@ msgstr "Weitere Informationen"
 
 #: erpnext/selling/page/point_of_sale/pos_payment.js:84
 msgid "Additional Information updated successfully."
-msgstr ""
+msgstr "Zusätzliche Informationen erfolgreich aktualisiert."
 
 #. Label of the additional_notes (Text) field in DocType 'Quotation Item'
 #. Label of the additional_notes (Text) field in DocType 'Sales Order Item'
@@ -4314,13 +4314,13 @@ msgstr "Erstellen von Eingangsrechnungen ohne Eingangsbeleg zulassen"
 #. 'Buying Settings'
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 msgid "Allow Purchase Order with Zero Quantity"
-msgstr ""
+msgstr "Bestellung mit Nullmenge zulassen"
 
 #. Label of the allow_zero_qty_in_quotation (Check) field in DocType 'Selling
 #. Settings'
 #: erpnext/selling/doctype/selling_settings/selling_settings.json
 msgid "Allow Quotation with Zero Quantity"
-msgstr ""
+msgstr "Angebot mit Nullmenge zulassen"
 
 #. Label of the allow_rename_attribute_value (Check) field in DocType 'Item
 #. Variant Settings'
@@ -4333,7 +4333,7 @@ msgstr "Umbenennen von Attributwert zulassen"
 #. DocType 'Buying Settings'
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 msgid "Allow Request for Quotation with Zero Quantity"
-msgstr ""
+msgstr "Angebotsanfrage mit Nullmenge zulassen"
 
 #. Label of the allow_resetting_service_level_agreement (Check) field in
 #. DocType 'Support Settings'
@@ -4370,7 +4370,7 @@ msgstr "Erstellung von Aufträgen aus abgelaufenen Angeboten zulassen"
 #. Settings'
 #: erpnext/selling/doctype/selling_settings/selling_settings.json
 msgid "Allow Sales Order with Zero Quantity"
-msgstr ""
+msgstr "Auftrag mit Nullmenge zulassen"
 
 #. Label of the allow_stale (Check) field in DocType 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
@@ -4381,7 +4381,7 @@ msgstr "Veraltete Wechselkurse zulassen"
 #. 'Buying Settings'
 #: erpnext/buying/doctype/buying_settings/buying_settings.json
 msgid "Allow Supplier Quotation with Zero Quantity"
-msgstr ""
+msgstr "Lieferantenangebot mit Nullmenge zulassen"
 
 #. Label of the allow_uom_with_conversion_rate_defined_in_item (Check) field in
 #. DocType 'Stock Settings'
@@ -4547,7 +4547,7 @@ msgstr ""
 #. DocType 'Selling Settings'
 #: erpnext/selling/doctype/selling_settings/selling_settings.json
 msgid "Allows users to submit Sales Orders with zero quantity. Useful when rates are fixed but the quantities are not. Eg. Rate Contracts."
-msgstr ""
+msgstr "Ermöglicht es Benutzern, Aufträge mit einer Menge von Null zu buchen. Nützlich, wenn die Preise festgelegt sind, die Mengen jedoch nicht. Z. B. Einzelpreis-Verträge."
 
 #. Description of the 'Allow Supplier Quotation with Zero Quantity' (Check)
 #. field in DocType 'Buying Settings'
@@ -4607,7 +4607,7 @@ msgstr "Alternativ können Sie auch die Vorlage herunterladen und Ihre Daten ein
 #. Profile'
 #: erpnext/accounts/doctype/pos_profile/pos_profile.json
 msgid "Always Ask"
-msgstr ""
+msgstr "Immer fragen"
 
 #. Label of the amended_from (Link) field in DocType 'Bank Guarantee'
 #. Label of the amended_from (Link) field in DocType 'Bank Transaction'
@@ -9917,43 +9917,43 @@ msgstr "Catch All"
 #. Accounts'
 #: erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts.json
 msgid "Categorize By"
-msgstr ""
+msgstr "Kategorisieren nach"
 
 #: erpnext/accounts/report/general_ledger/general_ledger.js:116
 #: erpnext/buying/report/supplier_quotation_comparison/supplier_quotation_comparison.js:80
 msgid "Categorize by"
-msgstr ""
+msgstr "Kategorisieren nach"
 
 #: erpnext/accounts/report/general_ledger/general_ledger.js:129
 msgid "Categorize by Account"
-msgstr ""
+msgstr "Nach Konto kategorisieren"
 
 #: erpnext/buying/report/supplier_quotation_comparison/supplier_quotation_comparison.js:84
 msgid "Categorize by Item"
-msgstr ""
+msgstr "Nach Artikel kategorisieren"
 
 #: erpnext/accounts/report/general_ledger/general_ledger.js:133
 msgid "Categorize by Party"
-msgstr ""
+msgstr "Nach Partei kategorisieren"
 
 #: erpnext/buying/report/supplier_quotation_comparison/supplier_quotation_comparison.js:83
 #: erpnext/buying/report/supplier_quotation_comparison/supplier_quotation_comparison.js:86
 msgid "Categorize by Supplier"
-msgstr ""
+msgstr "Nach Lieferant kategorisieren"
 
 #. Option for the 'Categorize By' (Select) field in DocType 'Process Statement
 #. Of Accounts'
 #: erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts.json
 #: erpnext/accounts/report/general_ledger/general_ledger.js:121
 msgid "Categorize by Voucher"
-msgstr ""
+msgstr "Nach Belegen kategorisieren"
 
 #. Option for the 'Categorize By' (Select) field in DocType 'Process Statement
 #. Of Accounts'
 #: erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts.json
 #: erpnext/accounts/report/general_ledger/general_ledger.js:125
 msgid "Categorize by Voucher (Consolidated)"
-msgstr ""
+msgstr "Nach Belegen kategorisieren (konsolidiert)"
 
 #. Label of the category (Link) field in DocType 'UOM Conversion Factor'
 #: erpnext/setup/doctype/uom_conversion_factor/uom_conversion_factor.json
@@ -10650,7 +10650,7 @@ msgstr "Text schließen"
 
 #: erpnext/accounts/report/general_ledger/general_ledger.html:135
 msgid "Closing [Opening + Total] "
-msgstr ""
+msgstr "Schluss [Eröffnung + Gesamt] "
 
 #. Label of the code (Data) field in DocType 'Incoterm'
 #: erpnext/edi/doctype/code_list/code_list_import.js:172
@@ -11778,7 +11778,7 @@ msgstr "Konfigurieren Sie die Standardpreisliste beim Erstellen einer neuen Kauf
 #. 'Accounts Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Confirm before resetting posting date"
-msgstr ""
+msgstr "Bestätigen Sie, bevor Sie das Buchungsdatum zurücksetzen"
 
 #. Label of the final_confirmation_date (Date) field in DocType 'Employee'
 #: erpnext/setup/doctype/employee/employee.json
@@ -11841,7 +11841,7 @@ msgstr "Berücksichtigen Sie die Abrechnungsdimensionen"
 #. Withholding Category'
 #: erpnext/accounts/doctype/tax_withholding_category/tax_withholding_category.json
 msgid "Consider Entire Party Ledger Amount"
-msgstr ""
+msgstr "Gesamten Parteikontobetrag berücksichtigen"
 
 #. Label of the consider_minimum_order_qty (Check) field in DocType 'Production
 #. Plan'
@@ -17605,7 +17605,7 @@ msgstr "Absendeadresse"
 #. 'Purchase Order'
 #: erpnext/buying/doctype/purchase_order/purchase_order.json
 msgid "Dispatch Address Details"
-msgstr ""
+msgstr "Details zur Absendeadresse"
 
 #. Label of the dispatch_address_name (Link) field in DocType 'Sales Invoice'
 #. Label of the dispatch_address_name (Link) field in DocType 'Sales Order'
@@ -17619,7 +17619,7 @@ msgstr "ID der Absendeadresse"
 #. Label of the dispatch_address (Link) field in DocType 'Purchase Receipt'
 #: erpnext/stock/doctype/purchase_receipt/purchase_receipt.json
 msgid "Dispatch Address Template"
-msgstr ""
+msgstr "Vorlage Absendeadresse"
 
 #. Label of the section_break_9 (Section Break) field in DocType 'Delivery
 #. Stop'
@@ -17968,7 +17968,7 @@ msgstr "Kostenlose Artikelmenge nicht erzwingen"
 #. DocType 'Selling Settings'
 #: erpnext/selling/doctype/selling_settings/selling_settings.json
 msgid "Don't Reserve Sales Order Qty on Sales Return"
-msgstr ""
+msgstr "Menge des Auftrags nicht bei der Rücksendung reservieren"
 
 #. Label of the mute_emails (Check) field in DocType 'Bank Statement Import'
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.json
@@ -18083,7 +18083,7 @@ msgstr "S"
 
 #: erpnext/accounts/report/customer_ledger_summary/customer_ledger_summary.py:246
 msgid "Dr/Cr"
-msgstr ""
+msgstr "S/H"
 
 #. Option for the 'Status' (Select) field in DocType 'Dunning'
 #. Option for the 'Status' (Select) field in DocType 'Invoice Discounting'
@@ -33309,7 +33309,7 @@ msgstr "Angebote öffnen"
 
 #: erpnext/stock/report/item_variant_details/item_variant_details.py:110
 msgid "Open Sales Orders"
-msgstr "Offene Kundenaufträge"
+msgstr "Offene Aufträge"
 
 #: erpnext/public/js/templates/crm_activities.html:33
 #: erpnext/public/js/templates/crm_activities.html:92
@@ -35088,7 +35088,7 @@ msgstr "Teilerfolg"
 #. 'Stock Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "Partial stock can be reserved. For example, If you have a Sales Order of 100 units and the Available Stock is 90 units then a Stock Reservation Entry will be created for 90 units. "
-msgstr ""
+msgstr "Teilbestände können reserviert werden. Wenn Sie beispielsweise einen Auftrag über 100 Einheiten haben und der verfügbare Bestand 90 Einheiten beträgt, wird eine Bestandsreservierung für 90 Einheiten erstellt. "
 
 #. Option for the 'Completion Status' (Select) field in DocType 'Maintenance
 #. Schedule Detail'
@@ -35952,7 +35952,7 @@ msgstr "Zahlungsauftragstyp"
 #. Settings'
 #: erpnext/accounts/doctype/accounts_settings/accounts_settings.json
 msgid "Payment Request created from Sales Order or Purchase Order will be in Draft status. When disabled document will be in unsaved state."
-msgstr ""
+msgstr "Eine Zahlungsanforderung, die aus einem Auftrag oder einer Bestellung erstellt wurde, wird im Entwurfsstatus sein. Falls deaktiviert, wird das Dokument in ungespeichertem Zustand sein."
 
 #: erpnext/accounts/doctype/payment_request/payment_request.py:618
 msgid "Payment Request for {0}"
@@ -36050,7 +36050,7 @@ msgstr "Zahlungsbedingungen"
 #. Name of a report
 #: erpnext/selling/report/payment_terms_status_for_sales_order/payment_terms_status_for_sales_order.json
 msgid "Payment Terms Status for Sales Order"
-msgstr ""
+msgstr "Status für Zahlungsbedingungen für Aufträge"
 
 #. Name of a DocType
 #. Label of the payment_terms_template (Link) field in DocType 'POS Invoice'
@@ -46469,7 +46469,7 @@ msgstr "Auftragsposition"
 #. Item'
 #: erpnext/buying/doctype/purchase_order_item/purchase_order_item.json
 msgid "Sales Order Packed Item"
-msgstr ""
+msgstr "Auftrag Verpackter Artikel"
 
 #. Label of the sales_order (Link) field in DocType 'Production Plan Item
 #. Reference'
@@ -51254,7 +51254,7 @@ msgstr "Lagerbewegungen, die älter als die genannten Tage sind, können nicht g
 #. field in DocType 'Stock Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "Stock will be reserved on submission of <b>Purchase Receipt</b> created against Material Request for Sales Order."
-msgstr ""
+msgstr "Der Bestand wird mit der Buchung des <b>Eingangsbelegs</b> reserviert, der gegen eine Materialanfrage für einen Auftrag erstellt wurde."
 
 #: erpnext/stock/utils.py:568
 msgid "Stock/Accounts can not be frozen as processing of backdated entries is going on. Please try again later."
@@ -57685,7 +57685,7 @@ msgstr "Laden Sie XML-Rechnungen hoch"
 #. Settings'
 #: erpnext/stock/doctype/stock_settings/stock_settings.json
 msgid "Upon submission of the Sales Order, Work Order, or Production Plan, the system will automatically reserve the stock."
-msgstr ""
+msgstr "Nach der Buchung eines Auftrags, Arbeitsauftrags oder Produktionsplans reserviert das System automatisch den nötigen Bestand."
 
 #: erpnext/setup/setup_wizard/operations/install_fixtures.py:294
 #: erpnext/setup/setup_wizard/operations/install_fixtures.py:402
@@ -59200,7 +59200,7 @@ msgstr "Lager {0} gehört nicht zu Unternehmen {1}"
 
 #: erpnext/manufacturing/doctype/work_order/work_order.py:217
 msgid "Warehouse {0} is not allowed for Sales Order {1}, it should be {2}"
-msgstr ""
+msgstr "Lager {0} ist für den Auftrag {1} nicht zulässig, es sollte {2} sein"
 
 #: erpnext/controllers/stock_controller.py:654
 msgid "Warehouse {0} is not linked to any account, please mention the account in the warehouse record or set default inventory account in company {1}."
@@ -60756,7 +60756,7 @@ msgstr ""
 #. Item'
 #: erpnext/stock/doctype/pick_list_item/pick_list_item.json
 msgid "product bundle item row's name in sales order. Also indicates that picked item is to be used for a product bundle"
-msgstr ""
+msgstr "Name der Produktbündel-Artikelzeile im Auftrag. Zeigt auch an, dass der ausgewählte Artikel für ein Produktbündel verwendet werden soll."
 
 #. Option for the 'Plaid Environment' (Select) field in DocType 'Plaid
 #. Settings'
