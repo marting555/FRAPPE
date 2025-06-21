@@ -47,6 +47,7 @@ class TestProcessDeferredAccounting(ERPNextTestSuite):
 				start_date="2023-05-01",
 				end_date="2023-06-30",
 				type="Income",
+				company=self.companies[0].name,
 			)
 		)
 
@@ -73,6 +74,7 @@ class TestProcessDeferredAccounting(ERPNextTestSuite):
 				start_date="2019-01-01",
 				end_date="2019-01-31",
 				type="Income",
+				company=self.companies[0].name,
 			)
 		)
 		pda.submit()
