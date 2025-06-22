@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: frappe\n"
 "Report-Msgid-Bugs-To: hello@frappe.io\n"
 "POT-Creation-Date: 2025-06-15 09:36+0000\n"
-"PO-Revision-Date: 2025-06-19 02:56\n"
+"PO-Revision-Date: 2025-06-22 03:32\n"
 "Last-Translator: hello@frappe.io\n"
 "Language-Team: Swedish\n"
 "MIME-Version: 1.0\n"
@@ -241,7 +241,7 @@ msgstr "'Poster' kan inte vara tom"
 #: erpnext/stock/report/batch_wise_balance_history/batch_wise_balance_history.py:120
 #: erpnext/stock/report/stock_analytics/stock_analytics.py:313
 msgid "'From Date' is required"
-msgstr "'Från Datum' erfodras"
+msgstr "'Från Datum' erfordras"
 
 #: erpnext/stock/report/itemwise_recommended_reorder_level/itemwise_recommended_reorder_level.py:18
 msgid "'From Date' must be after 'To Date'"
@@ -268,7 +268,7 @@ msgstr "'Öppning'"
 #: erpnext/stock/report/batch_wise_balance_history/batch_wise_balance_history.py:122
 #: erpnext/stock/report/stock_analytics/stock_analytics.py:319
 msgid "'To Date' is required"
-msgstr "'Till Datum' erfodras"
+msgstr "'Till Datum' erfordras"
 
 #: erpnext/stock/doctype/packing_slip/packing_slip.py:94
 msgid "'To Package No.' cannot be less than 'From Package No.'"
@@ -1681,7 +1681,7 @@ msgstr "Bokföring Dimension <b>{0}</b> erfordras för 'Balans Rapport' konto {1
 #: erpnext/accounts/doctype/gl_entry/gl_entry.py:193
 #: erpnext/accounts/doctype/payment_ledger_entry/payment_ledger_entry.py:140
 msgid "Accounting Dimension <b>{0}</b> is required for 'Profit and Loss' account {1}."
-msgstr "Bokföring Dimension <b>{0}</b> erfodras för 'Resultat Rapport' konto {1}."
+msgstr "Bokföring Dimension <b>{0}</b> erfordras för 'Resultat Rapport' konto {1}."
 
 #. Name of a DocType
 #: erpnext/accounts/doctype/accounting_dimension_detail/accounting_dimension_detail.json
@@ -15339,7 +15339,7 @@ msgstr "Debet Till"
 
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.py:949
 msgid "Debit To is required"
-msgstr "Debet till erfodras"
+msgstr "Debet till erfordras"
 
 #: erpnext/accounts/general_ledger.py:506
 msgid "Debit and Credit not equal for {0} #{1}. Difference is {2}."
@@ -16374,7 +16374,7 @@ msgstr "Leverera Till"
 
 #: erpnext/selling/doctype/sales_order/sales_order.py:392
 msgid "Delivery warehouse required for stock item {0}"
-msgstr "Leverans Lager erfodras för Artikel {0}"
+msgstr "Leverans Lager erfordras för Artikel {0}"
 
 #: erpnext/manufacturing/report/exponential_smoothing_forecasting/exponential_smoothing_forecasting.py:233
 msgid "Demand"
@@ -18571,7 +18571,7 @@ msgstr "Mål Kvantitet eller Mål Belopp erfordras"
 
 #: erpnext/setup/doctype/sales_person/sales_person.py:54
 msgid "Either target qty or target amount is mandatory."
-msgstr "Mål Kvantitet eller Mål Belopp erfodras."
+msgstr "Mål Kvantitet eller Mål Belopp erfordras."
 
 #. Option for the 'Fuel Type' (Select) field in DocType 'Vehicle'
 #: erpnext/setup/doctype/vehicle/vehicle.json
@@ -19979,7 +19979,7 @@ msgstr "Kostnad Konto Ändrad"
 
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.py:591
 msgid "Expense account is mandatory for item {0}"
-msgstr "Kostnad Konto erfodras för Artikel {0}"
+msgstr "Kostnad Konto erfordras för Artikel {0}"
 
 #: erpnext/assets/doctype/asset_repair/asset_repair.py:108
 msgid "Expense account {0} not present in Purchase Invoice {1}"
@@ -24879,13 +24879,13 @@ msgstr "Kontroll Erfordras"
 #. 'Item'
 #: erpnext/stock/doctype/item/item.json
 msgid "Inspection Required before Delivery"
-msgstr "Kontroll Erfodras före Leverans"
+msgstr "Kontroll Erfordras före Leverans"
 
 #. Label of the inspection_required_before_purchase (Check) field in DocType
 #. 'Item'
 #: erpnext/stock/doctype/item/item.json
 msgid "Inspection Required before Purchase"
-msgstr "Kontroll Erfodras före Inköp"
+msgstr "Kontroll Erfordras före Inköp"
 
 #: erpnext/controllers/stock_controller.py:1115
 msgid "Inspection Submission"
@@ -26685,7 +26685,7 @@ msgstr "Artikel Kod kan inte ändras för Serie Nummer"
 
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.py:444
 msgid "Item Code required at Row No {0}"
-msgstr "Artikel Kod erfodras på Rad Nummer {0}"
+msgstr "Artikel Kod erfordras vid Rad Nummer {0}"
 
 #: erpnext/selling/page/point_of_sale/pos_controller.js:822
 #: erpnext/selling/page/point_of_sale/pos_item_details.js:275
@@ -28267,7 +28267,7 @@ msgstr "Efternamn"
 
 #: erpnext/stock/doctype/shipment/shipment.js:275
 msgid "Last Name, Email or Phone/Mobile of the user are mandatory to continue."
-msgstr "Efternamn, E-post eller Telefon/Mobil erfodras för användare att fortsätta."
+msgstr "Efternamn, E-post eller Telefon/Mobil erfordras för användare att fortsätta."
 
 #: erpnext/selling/report/inactive_customers/inactive_customers.py:81
 msgid "Last Order Amount"
@@ -34583,7 +34583,7 @@ msgstr "Kassa Profil erfordras för att välja denna faktura som Kassa Transakti
 
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.py:1249
 msgid "POS Profile required to make POS Entry"
-msgstr "Kassa Profil erfodras att skapa Kassa Post"
+msgstr "Kassa Profil erfordras att skapa Kassa Post"
 
 #: erpnext/accounts/doctype/mode_of_payment/mode_of_payment.py:63
 msgid "POS Profile {} contains Mode of Payment {}. Please remove them to disable this mode."
@@ -35445,7 +35445,7 @@ msgstr "Parti Typ och Parti erfodras för {0} konto"
 
 #: erpnext/accounts/doctype/bank_reconciliation_tool/bank_reconciliation_tool.py:161
 msgid "Party Type and Party is required for Receivable / Payable account {0}"
-msgstr "Parti Typ och Parti erfodras för Fordring / Skuld konto {0}"
+msgstr "Parti Typ och Parti erfordras för Fordring / Skuld konto {0}"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:516
 msgid "Party Type is mandatory"
@@ -41175,7 +41175,7 @@ msgstr "Kvalitet Kontroll Läsning"
 #. Label of the inspection_required (Check) field in DocType 'BOM'
 #: erpnext/manufacturing/doctype/bom/bom.json
 msgid "Quality Inspection Required"
-msgstr "Kvalitet Kontroll Erfodras"
+msgstr "Kvalitet Kontroll Erfordras"
 
 #. Label of the quality_inspection_settings_section (Section Break) field in
 #. DocType 'Stock Settings'
@@ -43594,7 +43594,7 @@ msgstr "Rapport Typ"
 
 #: erpnext/accounts/doctype/account/account.py:425
 msgid "Report Type is mandatory"
-msgstr "Rapport Typ erfodras"
+msgstr "Rapport Typ erfordras"
 
 #: erpnext/accounts/report/balance_sheet/balance_sheet.js:13
 #: erpnext/accounts/report/profit_and_loss_statement/profit_and_loss_statement.js:13
@@ -44759,7 +44759,7 @@ msgstr "Konto Klass för {0} måste vara en av följande klasser: Tillgång, Sku
 
 #: erpnext/accounts/doctype/account/account.py:422
 msgid "Root Type is mandatory"
-msgstr "Konto Klass erfodras"
+msgstr "Konto Klass erfordras"
 
 #: erpnext/accounts/doctype/account/account.py:211
 msgid "Root cannot be edited."
@@ -45017,7 +45017,7 @@ msgstr "Rad # {0}: Godkänd Lager och Avvisat Lager kan inte vara samma"
 
 #: erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.py:480
 msgid "Row #{0}: Accepted Warehouse is mandatory for the accepted Item {1}"
-msgstr "Rad # {0}: Godkänd Lager erfodras för godkänd Artikel {1}"
+msgstr "Rad #{0}: Godkänd Lager erfordras för godkänd Artikel {1}"
 
 #: erpnext/controllers/accounts_controller.py:1202
 msgid "Row #{0}: Account {1} does not belong to company {2}"
@@ -45130,7 +45130,7 @@ msgstr "Rad # {0}: Standard Stycklista hittades inte för Färdig Artikel {1} "
 
 #: erpnext/assets/doctype/asset/asset.py:536
 msgid "Row #{0}: Depreciation Start Date is required"
-msgstr "Rad # #{0}: Avskrivning Start Datum erfodras"
+msgstr "Rad # #{0}: Avskrivning Start Datum erfordras"
 
 #: erpnext/accounts/doctype/payment_entry/payment_entry.py:330
 msgid "Row #{0}: Duplicate entry in References {1} {2}"
@@ -45162,7 +45162,7 @@ msgstr "Rad #{0}: Färdig Artikel måste vara {1}"
 
 #: erpnext/subcontracting/doctype/subcontracting_receipt/subcontracting_receipt.py:468
 msgid "Row #{0}: Finished Good reference is mandatory for Scrap Item {1}."
-msgstr "Rad #{0}: Färdig Artikel referens erfodras för Skrot Artikel {1}."
+msgstr "Rad #{0}: Färdig Artikel referens erfordras för Skrot Artikel {1}."
 
 #: erpnext/accounts/doctype/bank_clearance/bank_clearance.py:100
 msgid "Row #{0}: For {1} Clearance date {2} cannot be before Cheque Date {3}"
@@ -45246,7 +45246,7 @@ msgstr "Rad # {0}: Åtgärd {1} är inte Klar för {2} Kvantitet färdiga artikl
 
 #: erpnext/accounts/doctype/bank_clearance/bank_clearance.py:96
 msgid "Row #{0}: Payment document is required to complete the transaction"
-msgstr "Rad # {0}: Betal Dokument erfodras att slutföra transaktion"
+msgstr "Rad #{0}: Betalning Dokument erfordras att slutföra transaktion"
 
 #: erpnext/manufacturing/doctype/production_plan/production_plan.py:1005
 msgid "Row #{0}: Please select Item Code in Assembly Items"
@@ -45323,7 +45323,7 @@ msgstr "Rad # {0}: Avvisad Kvantitet kan inte anges för Skrot Artikel {1}."
 
 #: erpnext/controllers/subcontracting_controller.py:65
 msgid "Row #{0}: Rejected Warehouse is mandatory for the rejected Item {1}"
-msgstr "Rad # {0}: Avvisad Lager erfodras för avvisad Artikel {1}"
+msgstr "Rad # {0}: Avvisad Lager erfordras för avvisad Artikel {1}"
 
 #: erpnext/accounts/doctype/sales_invoice/sales_invoice.py:392
 msgid "Row #{0}: Return Against is required for returning asset"
@@ -45365,7 +45365,7 @@ msgstr "Rad # {0}: Service Start Datum kan inte vara senare än Slut datum för 
 
 #: erpnext/controllers/accounts_controller.py:559
 msgid "Row #{0}: Service Start and End Date is required for deferred accounting"
-msgstr "Rad # {0}: Service start och slutdatum erfodras för uppskjuten Bokföring"
+msgstr "Rad # {0}: Service start och slutdatum erfordras för uppskjuten Bokföring"
 
 #: erpnext/selling/doctype/sales_order/sales_order.py:432
 msgid "Row #{0}: Set Supplier for item {1}"
@@ -45373,7 +45373,7 @@ msgstr "Rad # {0}: Ange Leverantör för artikel {1}"
 
 #: erpnext/manufacturing/doctype/workstation/workstation.py:92
 msgid "Row #{0}: Start Time and End Time are required"
-msgstr "Rad # {0}: Från Tid och till Tid erfodras. "
+msgstr "Rad # {0}: Från Tid och till Tid erfordras."
 
 #: erpnext/manufacturing/doctype/workstation/workstation.py:95
 msgid "Row #{0}: Start Time must be before End Time"
@@ -45381,7 +45381,7 @@ msgstr "Rad # {0}: Från Tid måste vara före till Tid "
 
 #: erpnext/stock/doctype/quality_inspection/quality_inspection.py:231
 msgid "Row #{0}: Status is mandatory"
-msgstr "Rad # {0}: Status erfodras"
+msgstr "Rad # {0}: Status erfordras"
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:467
 msgid "Row #{0}: Status must be {1} for Invoice Discounting {2}"
@@ -45450,7 +45450,7 @@ msgstr "Rad #{0}: {1} är inte giltigt läsfält. Se fält beskrivning."
 
 #: erpnext/accounts/doctype/opening_invoice_creation_tool/opening_invoice_creation_tool.py:115
 msgid "Row #{0}: {1} is required to create the Opening {2} Invoices"
-msgstr "Rad # {0}: {1} erfodras för att skapa Öppning {2} Fakturor"
+msgstr "Rad # {0}: {1} erfordras för att skapa Öppning {2} Fakturor"
 
 #: erpnext/assets/doctype/asset_category/asset_category.py:89
 msgid "Row #{0}: {1} of {2} should be {3}. Please update the {1} or select a different account."
@@ -45458,7 +45458,7 @@ msgstr "Rad # {0}: {1} av {2} ska vara {3}. Uppdatera {1} eller välj ett annat 
 
 #: erpnext/buying/utils.py:106
 msgid "Row #{1}: Warehouse is mandatory for stock Item {0}"
-msgstr "Rad # {1}: Lager erfodras för lager artikel {0} "
+msgstr "Rad # {1}: Lager erfordras för lager artikel {0}"
 
 #: erpnext/controllers/buying_controller.py:269
 msgid "Row #{idx}: Cannot select Supplier Warehouse while suppling raw materials to subcontractor."
@@ -45563,7 +45563,7 @@ msgstr "Rad # {}: {} {} tillhör inte bolag {}. Välj giltig {}."
 
 #: erpnext/accounts/doctype/purchase_invoice/purchase_invoice.py:433
 msgid "Row No {0}: Warehouse is required. Please set a Default Warehouse for Item {1} and Company {2}"
-msgstr "Rad # {0}: Lager erfodras. Ange Standard Lager för Artikel {1} och Bolag {2}"
+msgstr "Rad # {0}: Lager erfordras. Ange Standard Lager för Artikel {1} och Bolag {2}"
 
 #: erpnext/accounts/doctype/bank_statement_import/bank_statement_import.js:515
 msgid "Row Number"
@@ -45579,7 +45579,7 @@ msgstr "Rad # {0}: Åtgärd erfodras mot Råmaterial post {1}"
 
 #: erpnext/stock/doctype/pick_list/pick_list.py:193
 msgid "Row {0} picked quantity is less than the required quantity, additional {1} {2} required."
-msgstr "Rad # {0}: Plockad kvantitet är lägre än erfodrad kvantitet, ytterligare {1} {2} erfodras."
+msgstr "Rad # {0}: Plockad kvantitet är lägre än erfordrad kvantitet, ytterligare {1} {2} erfordras."
 
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:1219
 msgid "Row {0}# Item {1} cannot be transferred more than {2} against {3} {4}"
@@ -45599,7 +45599,7 @@ msgstr "Rad # {0}: Konto {1} och Parti Typ {2} har olika konto typer"
 
 #: erpnext/projects/doctype/timesheet/timesheet.py:151
 msgid "Row {0}: Activity Type is mandatory."
-msgstr "Rad # {0}: Aktivitet Typ erfodras."
+msgstr "Rad # {0}: Aktivitet Typ erfordras."
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:666
 msgid "Row {0}: Advance against Customer must be credit"
@@ -45631,7 +45631,7 @@ msgstr "Rad # {0}: Både debet och kredit värdena kan inte vara noll"
 
 #: erpnext/controllers/selling_controller.py:234
 msgid "Row {0}: Conversion Factor is mandatory"
-msgstr "Rad # {0}: Konvertering Faktor erfodras"
+msgstr "Rad # {0}: Konvertering Faktor erfordras"
 
 #: erpnext/controllers/accounts_controller.py:3080
 msgid "Row {0}: Cost Center {1} does not belong to Company {2}"
@@ -45639,7 +45639,7 @@ msgstr "Rad # {0}: Resultat Enhet {1} tillhör inte Bolag {2}"
 
 #: erpnext/stock/doctype/landed_cost_voucher/landed_cost_voucher.py:137
 msgid "Row {0}: Cost center is required for an item {1}"
-msgstr "Rad # {0}: Resultat Enhet erfodras för ett Artikel {1}"
+msgstr "Rad # {0}: Resultat Enhet erfodras för Artikel {1}"
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:765
 msgid "Row {0}: Credit entry can not be linked with a {1}"
@@ -45668,7 +45668,7 @@ msgstr "Rad # {0}: Antingen Följesedel eller Packad Artikel Referens erfordras"
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:1010
 #: erpnext/controllers/taxes_and_totals.py:1203
 msgid "Row {0}: Exchange Rate is mandatory"
-msgstr "Rad # {0}: Valutaväxling Kurs erfodras"
+msgstr "Rad # {0}: Valutaväxling Kurs erfordras"
 
 #: erpnext/assets/doctype/asset/asset.py:477
 msgid "Row {0}: Expected Value After Useful Life must be less than Gross Purchase Amount"
@@ -45688,11 +45688,11 @@ msgstr "Rad # {0}: Kostnad har ändrats till {1} eftersom kostnad bokförs mot d
 
 #: erpnext/buying/doctype/request_for_quotation/request_for_quotation.py:126
 msgid "Row {0}: For Supplier {1}, Email Address is Required to send an email"
-msgstr "Rad # {0}: För Leverantör {1} erfodras E-post att skicka E-post meddelande"
+msgstr "Rad # {0}: För Leverantör {1} erfordras E-post att skicka E-post meddelande"
 
 #: erpnext/projects/doctype/timesheet/timesheet.py:148
 msgid "Row {0}: From Time and To Time is mandatory."
-msgstr "Rad # {0}: Från Tid och till Tid erfodras."
+msgstr "Rad # {0}: Från Tid och till Tid erfordras."
 
 #: erpnext/manufacturing/doctype/job_card/job_card.py:260
 #: erpnext/projects/doctype/timesheet/timesheet.py:212
@@ -45701,7 +45701,7 @@ msgstr "Rad # {0}: Från Tid och till Tid av {1} överlappar med {2}"
 
 #: erpnext/controllers/stock_controller.py:1192
 msgid "Row {0}: From Warehouse is mandatory for internal transfers"
-msgstr "Rad # {0}: Från Lager erfodras för interna överföringar"
+msgstr "Rad # {0}: Från Lager erfordras för interna överföringar"
 
 #: erpnext/manufacturing/doctype/job_card/job_card.py:251
 msgid "Row {0}: From time must be less than to time"
@@ -45749,7 +45749,7 @@ msgstr "Rad # {0}: Parti / Konto stämmer inte med {1} / {2} i {3} {4}"
 
 #: erpnext/accounts/doctype/journal_entry/journal_entry.py:591
 msgid "Row {0}: Party Type and Party is required for Receivable / Payable account {1}"
-msgstr "Rad # {0}: Parti Typ och Parti erfodras för Intäkt / Skuld Konto {1}"
+msgstr "Rad # {0}: Parti Typ och Parti erfordras för Intäkt / Skuld Konto {1}"
 
 #: erpnext/accounts/doctype/payment_terms_template/payment_terms_template.py:45
 msgid "Row {0}: Payment Term is mandatory"
@@ -45825,11 +45825,11 @@ msgstr "Rad {0}: Skift kan inte ändras eftersom avskrivning redan är behandlad
 
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:1256
 msgid "Row {0}: Subcontracted Item is mandatory for the raw material {1}"
-msgstr "Rad # {0}: Underleverantör Artikel erfodras för Råmaterial {1}"
+msgstr "Rad # {0}: Underleverantör Artikel erfordras för Råmaterial {1}"
 
 #: erpnext/controllers/stock_controller.py:1183
 msgid "Row {0}: Target Warehouse is mandatory for internal transfers"
-msgstr "Rad # {0}: Till Lager erfodras för interna överföringar"
+msgstr "Rad # {0}: Till Lager erfordras för interna överföringar"
 
 #: erpnext/projects/doctype/timesheet_detail/timesheet_detail.py:115
 msgid "Row {0}: Task {1} does not belong to Project {2}"
@@ -46496,7 +46496,7 @@ msgstr "Försäljning Order Trender"
 
 #: erpnext/stock/doctype/delivery_note/delivery_note.py:253
 msgid "Sales Order required for Item {0}"
-msgstr "Försäljning Order erfodras för Artikel {0}"
+msgstr "Försäljning Order erfordras för Artikel {0}"
 
 #: erpnext/selling/doctype/sales_order/sales_order.py:293
 msgid "Sales Order {0} already exists against Customer's Purchase Order {1}. To allow multiple Sales Orders, Enable {2} in {3}"
@@ -47689,7 +47689,7 @@ msgstr "Välj Datum och Tidzon"
 
 #: erpnext/manufacturing/doctype/bom/bom.js:877
 msgid "Select the raw materials (Items) required to manufacture the Item"
-msgstr "Välj Råmaterial (Artiklar) som erfodras för att producera artikel"
+msgstr "Välj Råmaterial (Artiklar) som erfordras för att producera artikel"
 
 #: erpnext/manufacturing/doctype/bom/bom.js:431
 msgid "Select variant item code for the template item {0}"
@@ -48104,11 +48104,11 @@ msgstr "Serie Nummer och Parti Väljare kan inte användas när Använd Serie Nu
 
 #: erpnext/stock/doctype/serial_and_batch_bundle/serial_and_batch_bundle.py:860
 msgid "Serial No is mandatory"
-msgstr "Serie Nummer erfodras"
+msgstr "Serie Nummer erfordras"
 
 #: erpnext/selling/doctype/installation_note/installation_note.py:77
 msgid "Serial No is mandatory for Item {0}"
-msgstr "Serie Nummer erfodras för Artikel {0}"
+msgstr "Serie Nummer erfordras för Artikel {0}"
 
 #: erpnext/public/js/utils/serial_no_batch_selector.js:588
 msgid "Serial No {0} already exists"
@@ -48431,7 +48431,7 @@ msgstr "Tillgång Avskrivning Nummer Serie (Journal Post)"
 
 #: erpnext/buying/doctype/supplier/supplier.py:140
 msgid "Series is mandatory"
-msgstr "Nummer Serie erfodras"
+msgstr "Nummer Serie erfordras"
 
 #: erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts.py:80
 #: erpnext/accounts/doctype/account/chart_of_accounts/verified/standard_chart_of_accounts_with_account_number.py:108
@@ -48950,7 +48950,7 @@ msgstr "Konfigurerar Bolag"
 #: erpnext/manufacturing/doctype/bom/bom.py:1040
 #: erpnext/manufacturing/doctype/work_order/work_order.py:1167
 msgid "Setting {} is required"
-msgstr "Konfigurera {} erfodras"
+msgstr "Inställning {} erfordras"
 
 #. Label of the settings_tab (Tab Break) field in DocType 'Supplier'
 #. Label of a Card Break in the Buying Workspace
@@ -49221,7 +49221,7 @@ msgstr "Leveransadress tillhör inte {0}"
 
 #: erpnext/accounts/doctype/shipping_rule/shipping_rule.py:129
 msgid "Shipping Address does not have country, which is required for this Shipping Rule"
-msgstr "Leverans adress har inget land, vilket erfodras för denna Leverans Regel"
+msgstr "Leverans adress land är inte angiven, vilket erfordras för denna Leverans Regel"
 
 #. Label of the shipping_amount (Currency) field in DocType 'Shipping Rule'
 #. Label of the shipping_amount (Currency) field in DocType 'Shipping Rule
@@ -49893,7 +49893,7 @@ msgstr "Skulder"
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:596
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:613
 msgid "Source warehouse is mandatory for row {0}"
-msgstr "Från Lager erfodras för rad {0}"
+msgstr "Från Lager erfordras för rad {0}"
 
 #. Label of the sourced_by_supplier (Check) field in DocType 'BOM Creator Item'
 #. Label of the sourced_by_supplier (Check) field in DocType 'BOM Explosion
@@ -50201,7 +50201,7 @@ msgstr "Start År"
 
 #: erpnext/accounts/report/financial_statements.py:125
 msgid "Start Year and End Year are mandatory"
-msgstr "Från och Till År Erfodras"
+msgstr "Från och Till År Erfordras"
 
 #. Label of the section_break_18 (Section Break) field in DocType 'Project'
 #: erpnext/projects/doctype/project/project.json
@@ -53005,7 +53005,7 @@ msgstr "Fel vid reservation av Till Lager"
 
 #: erpnext/manufacturing/doctype/work_order/work_order.py:532
 msgid "Target Warehouse is required before Submit"
-msgstr "För Lager erfodras före Godkännande"
+msgstr "För Lager erfordras före Godkännande"
 
 #: erpnext/controllers/selling_controller.py:792
 msgid "Target Warehouse is set for some items but the customer is not an internal customer."
@@ -53014,7 +53014,7 @@ msgstr "Till Lager angiven för vissa artiklar men kund är inte intern kund."
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:602
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:609
 msgid "Target warehouse is mandatory for row {0}"
-msgstr "Till Lager erfodras för rad {0}"
+msgstr "Till Lager erfordras för rad {0}"
 
 #. Label of the targets (Table) field in DocType 'Sales Partner'
 #. Label of the targets (Table) field in DocType 'Sales Person'
@@ -53334,7 +53334,7 @@ msgstr "Moms Inställningar"
 
 #: erpnext/accounts/doctype/tax_rule/tax_rule.py:83
 msgid "Tax Template is mandatory."
-msgstr "Moms Mall erfodras."
+msgstr "Moms Mall erfordras."
 
 #: erpnext/accounts/report/sales_register/sales_register.py:295
 msgid "Tax Total"
@@ -54831,7 +54831,7 @@ msgstr "Tid i minuter"
 
 #: erpnext/manufacturing/doctype/job_card/job_card.py:739
 msgid "Time logs are required for {0} {1}"
-msgstr "Tid loggar erfodras för {0} {1}"
+msgstr "Tidloggar erfordras för {0} {1}"
 
 #: erpnext/crm/doctype/appointment/appointment.py:60
 msgid "Time slot is not available"
@@ -57062,7 +57062,7 @@ msgstr "Enhet Konvertering Faktor ({0} -> {1}) hittades inte för Artikel: {2}"
 
 #: erpnext/buying/utils.py:43
 msgid "UOM Conversion factor is required in row {0}"
-msgstr "Enhet Konvertering Faktor erfodras på rad {0}"
+msgstr "Enhet Konvertering Faktor erfordras på rad {0}"
 
 #. Label of the uom_name (Data) field in DocType 'UOM'
 #: erpnext/setup/doctype/uom/uom.json
@@ -57071,7 +57071,7 @@ msgstr "Enhet Namn"
 
 #: erpnext/stock/doctype/stock_entry/stock_entry.py:3138
 msgid "UOM conversion factor required for UOM: {0} in Item: {1}"
-msgstr "Enhet Konvertering Faktor erfodras för Enhet: {0} för Artikel: {1}"
+msgstr "Enhet Konvertering Faktor erfordras för Enhet: {0} för Artikel: {1}"
 
 #: erpnext/stock/doctype/item_price/item_price.py:61
 msgid "UOM {0} not found in Item {1}"
@@ -58222,11 +58222,11 @@ msgstr "Grund Pris Saknas"
 
 #: erpnext/stock/stock_ledger.py:1874
 msgid "Valuation Rate for the Item {0}, is required to do accounting entries for {1} {2}."
-msgstr "Grund Pris för Artikel {0} erfodras att skapa bokföring poster för {1} {2}."
+msgstr "Grund Pris för Artikel {0} erfordras att skapa bokföring poster för {1} {2}."
 
 #: erpnext/stock/doctype/item/item.py:269
 msgid "Valuation Rate is mandatory if Opening Stock entered"
-msgstr "Grund Pris erfodras om Öppning Lager anges"
+msgstr "Grund Pris erfordras om Öppning Lager anges"
 
 #: erpnext/stock/doctype/stock_reconciliation/stock_reconciliation.py:749
 msgid "Valuation Rate required for Item {0} at row {1}"
@@ -60972,7 +60972,7 @@ msgstr "{0} och {1}"
 #: erpnext/accounts/report/general_ledger/general_ledger.py:63
 #: erpnext/accounts/report/pos_register/pos_register.py:111
 msgid "{0} and {1} are mandatory"
-msgstr "{0} och {1} erfodras"
+msgstr "{0} och {1} erfordras"
 
 #: erpnext/assets/doctype/asset_movement/asset_movement.py:41
 msgid "{0} asset cannot be transferred"
