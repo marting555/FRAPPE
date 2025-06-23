@@ -11,6 +11,7 @@ from frappe.utils.nestedset import get_root_of
 
 from erpnext.accounts.doctype.pos_invoice.pos_invoice import get_stock_availability
 from erpnext.accounts.doctype.pos_profile.pos_profile import get_child_nodes, get_item_groups
+from erpnext.stock.get_item_details import get_conversion_factor
 from erpnext.stock.utils import scan_barcode
 
 
@@ -197,13 +198,6 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 	current_date = frappe.utils.today()
 
 	for item in items_data:
-		UOMConversionDetail = DocType("UOM Conversion Detail")
-		item_uoms = (
-			frappe.qb.from_(UOMConversionDetail)
-			.where(UOMConversionDetail.parent == item.item_code)
-			.select("uom", "conversion_factor")
-		).run(as_dict=1)
-
 		item.actual_qty, _ = get_stock_availability(item.item_code, warehouse)
 
 		item_prices = frappe.get_all(
@@ -219,25 +213,34 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 			order_by="valid_from desc",
 		)
 
-		item_uom = item.sales_uom or item.stock_uom
-		uom_exists_in_item_price = any(item_uom in d.get("uom") for d in item_prices)
+		stock_uom_price = next((d for d in item_prices if d.get("uom") == item.stock_uom), {})
+		item_uom = item.stock_uom
+		item_uom_price = stock_uom_price
 
-		if item_prices and (not item_uom or not uom_exists_in_item_price):
-			uom_exists_in_item_uoms = any(item_prices[0].uom in d.get("uom") for d in item_uoms)
-			item_uom = item_prices[0].uom if uom_exists_in_item_uoms else item_uom
+		if item.sales_uom and item.sales_uom != item.stock_uom:
+			item_uom = item.sales_uom
+			sales_uom_price = next((d for d in item_prices if d.get("uom") == item.sales_uom), {})
+			if sales_uom_price:
+				item_uom_price = sales_uom_price
 
-		item_uom_price = next((d for d in item_prices if d.get("uom") == item_uom), {})
-		uom_data = next((d for d in item_uoms if d.get("uom") == item_uom), {})
+		if item_prices and not item_uom_price:
+			item_uom = item_prices[0].get("uom")
+			item_uom_price = item_prices[0]
 
-		if item.stock_uom != item_uom_price.get("uom") and uom_data and uom_data.conversion_factor:
-			item.actual_qty = item.actual_qty // uom_data.conversion_factor
+		item_conversion_factor = get_conversion_factor(item.item_code, item_uom).get("conversion_factor")
+
+		if item.stock_uom != item_uom_price.get("uom"):
+			item.actual_qty = item.actual_qty // item_conversion_factor
+
+		if item_uom_price and item_uom != item_uom_price.get("uom"):
+			item_uom_price.price_list_rate = item_uom_price.price_list_rate * item_conversion_factor
 
 		result.append(
 			{
 				**item,
 				"price_list_rate": item_uom_price.get("price_list_rate"),
 				"currency": item_uom_price.get("currency"),
-				"uom": item_uom_price.get("uom") or item_uom,
+				"uom": item_uom,
 				"batch_no": item_uom_price.get("batch_no"),
 			}
 		)
