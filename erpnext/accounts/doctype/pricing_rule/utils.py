@@ -658,7 +658,7 @@ def get_product_discount_rule(pricing_rule, item_details, args=None, doc=None):
 				if not row.is_free_item
 				and row.item_code == args.item_code
 				and row.pricing_rules == args.pricing_rules
-			]
+			] if doc and doc.get('items') else [0]
 		)
 		transaction_qty = transaction_qty - pricing_rule.apply_recursion_over
 		if transaction_qty and transaction_qty > 0:
