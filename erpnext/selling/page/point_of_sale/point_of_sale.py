@@ -5,7 +5,6 @@
 import json
 
 import frappe
-from frappe.query_builder import DocType
 from frappe.utils import cint, get_datetime
 from frappe.utils.nestedset import get_root_of
 
