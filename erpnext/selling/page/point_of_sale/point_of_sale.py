@@ -229,7 +229,7 @@ def get_items(start, page_length, price_list, item_group, pos_profile, search_te
 
 		item_conversion_factor = get_conversion_factor(item.item_code, item_uom).get("conversion_factor")
 
-		if item.stock_uom != item_uom_price.get("uom"):
+		if item.stock_uom != item_uom:
 			item.actual_qty = item.actual_qty // item_conversion_factor
 
 		if item_uom_price and item_uom != item_uom_price.get("uom"):
