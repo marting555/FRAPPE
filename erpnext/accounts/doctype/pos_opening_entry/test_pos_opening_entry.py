@@ -58,8 +58,8 @@ class TestPOSOpeningEntry(IntegrationTestCase):
 		cashier_user = create_user("test_cashier@example.com", "Accounts Manager", "Sales Manager")
 		frappe.set_user(cashier_user.name)
 
-		pos_profile = make_pos_profile(name="_Test POS Profile 2")
-		opening_entry_2 = create_opening_entry(pos_profile, cashier_user.name)
+		pos_profile2 = make_pos_profile(name="_Test POS Profile 2")
+		opening_entry_2 = create_opening_entry(pos_profile2, cashier_user.name)
 
 		self.assertEqual(opening_entry_2.status, "Open")
 		self.assertEqual(opening_entry_2.user, cashier_user.name)
@@ -73,6 +73,15 @@ class TestPOSOpeningEntry(IntegrationTestCase):
 
 		with self.assertRaises(frappe.ValidationError):
 			create_opening_entry(pos_profile, cashier_user.name)
+
+	def test_user_assignment_to_multiple_pos_profile(self):
+		test_user, pos_profile = self.init_user_and_profile()
+		opening_entry_1 = create_opening_entry(pos_profile, test_user.name)
+		self.assertEqual(opening_entry_1.user, test_user.name)
+
+		pos_profile2 = make_pos_profile(name="_Test POS Profile 2")
+		with self.assertRaises(frappe.ValidationError):
+			create_opening_entry(pos_profile2, test_user.name)
 
 	def test_cancel_pos_opening_entry_without_invoices(self):
 		test_user, pos_profile = self.init_user_and_profile()
