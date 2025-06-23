@@ -3,14 +3,29 @@
 
 
 import frappe
-import frappe.share
 from frappe import _
 from frappe.utils import cint, flt, get_time, now_datetime
 
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import get_dimensions
 from erpnext.controllers.status_updater import StatusUpdater
-from erpnext.stock.get_item_details import get_item_details
+from erpnext.stock.get_item_details import get_item_details, purchase_doctypes, sales_doctypes
 from erpnext.stock.utils import get_incoming_rate
+
+TRANSACTION_REFERENCE_FIELDS = {
+	("Quotation", "Sales Order"): "prevdoc_docname",
+	("Delivery Note", "Sales Invoice"): "delivery_note",
+	("Delivery Note", "POS Invoice"): "delivery_note",
+	("Sales Order", "Sales Invoice"): "sales_order",
+	("Sales Order", "Delivery Note"): "against_sales_order",
+	("Sales Order", "POS Invoice"): "sales_order",
+	("POS Invoice", "Sales Invoice"): "pos_invoice",
+	("Sales Invoice", "Delivery Note"): "against_sales_invoice",
+	("Supplier Quotation", "Purchase Order"): "supplier_quotation",
+	("Purchase Order", "Purchase Receipt"): "purchase_order",
+	("Purchase Order", "Purchase Invoice"): "purchase_order",
+	("Purchase Invoice", "Purchase Receipt"): "purchase_invoice",
+	("Purchase Receipt", "Purchase Invoice"): "purchase_receipt",
+}
 
 
 class UOMMustBeIntegerError(frappe.ValidationError):
@@ -562,3 +577,48 @@ def validate_uom_is_integer(doc, uom_field, qty_fields, child_dt=None):
 							),
 							UOMMustBeIntegerError,
 						)
+
+
+def after_mapping(doc, method, source_doc):
+	if (doc.doctype in sales_doctypes and source_doc.doctype in purchase_doctypes) or (
+		doc.doctype in purchase_doctypes and source_doc.doctype in sales_doctypes
+	):
+		return
+
+	if not (doc.meta.get_field("discount_amount") and source_doc.meta.get_field("discount_amount")):
+		return
+
+	if not source_doc.discount_amount or source_doc.additional_discount_percentage:
+		return
+
+	reference_fieldname = TRANSACTION_REFERENCE_FIELDS.get((source_doc.doctype, doc.doctype))
+	if not reference_fieldname:
+		return
+
+	item_table = f"{doc.doctype} Item"
+	previous_documents = frappe.get_all(
+		doc.doctype,
+		fields=["name", "discount_amount"],
+		filters=(
+			(doc.doctype, "docstatus", "=", 1),
+			(doc.doctype, "discount_amount", "!=", 0),
+			(
+				item_table,
+				reference_fieldname,
+				"=",
+				source_doc.name,
+			),
+		),
+		distinct=True,
+	)
+
+	if not previous_documents:
+		return
+
+	for previous_doc in previous_documents:
+		doc.discount_amount -= previous_doc.discount_amount
+
+	if -0.1 < doc.discount_amount < 0:
+		doc.discount_amount = 0
+
+	doc.run_method("calculate_taxes_and_totals")

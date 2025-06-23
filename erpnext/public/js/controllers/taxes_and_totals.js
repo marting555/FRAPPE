@@ -705,10 +705,20 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 	}
 
 	set_discount_amount() {
-		if(this.frm.doc.additional_discount_percentage) {
-			this.frm.doc.discount_amount = flt(flt(this.frm.doc[frappe.scrub(this.frm.doc.apply_discount_on)])
+		let discount_amount = this.frm.doc.discount_amount;
+		if (this.frm.doc.additional_discount_percentage) {
+			discount_amount = flt(flt(this.frm.doc[frappe.scrub(this.frm.doc.apply_discount_on)])
 				* this.frm.doc.additional_discount_percentage / 100, precision("discount_amount"));
+
 		}
+
+		if (discount_amount) {
+			if (Math.abs(discount_amount) > Math.abs(this.frm.doc.grand_total)) {
+				frappe.throw(__("Discount Amount {0} cannot be greater than Grand Total {1}", [format_currency(discount_amount, this.frm.doc.currency, precision("discount_amount")), format_currency(this.frm.doc.grand_total, this.frm.doc.currency, precision("grand_total"))]));
+			}
+		}
+
+		this.frm.doc.discount_amount = discount_amount;
 	}
 
 	apply_discount_amount() {
