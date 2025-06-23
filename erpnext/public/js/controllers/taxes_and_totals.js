@@ -335,7 +335,7 @@ erpnext.taxes_and_totals = class TaxesAndTotals extends erpnext.payments {
 					let child = frappe.model.add_child(me.frm.doc, "taxes");
 					child.charge_type = "On Net Total";
 					child.account_head = tax;
-					child.rate = 0;
+					child.rate = rate;
 					child.set_by_item_tax_template = true;
 				}
 			});
