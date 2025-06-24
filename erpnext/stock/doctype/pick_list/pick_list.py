@@ -1216,13 +1216,15 @@ def create_delivery_note(source_name, target_doc=None):
 		delivery_note = create_dn_with_so(sales_dict, pick_list)
 
 	if not all(item.sales_order for item in pick_list.locations):
-		delivery_note = create_dn_wo_so(pick_list)
+		delivery_note = create_dn_wo_so(pick_list, delivery_note)
 
 	return delivery_note
 
 
-def create_dn_wo_so(pick_list):
-	delivery_note = frappe.new_doc("Delivery Note")
+def create_dn_wo_so(pick_list, delivery_note=None):
+	if not delivery_note:
+		delivery_note = frappe.new_doc("Delivery Note")
+
 	delivery_note.company = pick_list.company
 
 	item_table_mapper_without_so = {
@@ -1244,22 +1246,30 @@ def create_dn_for_pick_lists(source_name, target_doc=None, kwargs=None):
 	pick_list = frappe.get_doc("Pick List", source_name)
 	validate_item_locations(pick_list)
 
-	if kwargs and (order := kwargs.get("sales_order")):
-		sales_orders = {order}
+	sales_order_arg = kwargs.get("sales_order") if kwargs else None
+	customer_arg = kwargs.get("customer") if kwargs else None
+
+	if sales_order_arg:
+		sales_orders = {sales_order_arg}
 	else:
 		sales_orders = {row.sales_order for row in pick_list.locations if row.sales_order}
 
-		if kwargs and (customer := kwargs.get("customer")):
+		if customer_arg:
 			sales_orders = frappe.get_all(
 				"Sales Order",
-				filters={"customer": customer, "name": ["in", list(sales_orders)]},
+				filters={"customer": customer_arg, "name": ["in", list(sales_orders)]},
 				pluck="name",
 			)
 
-	if not sales_orders:
-		return
+	delivery_note = create_dn_from_so(pick_list, sales_orders, delivery_note=target_doc)
 
-	return create_dn_from_so(pick_list, sales_orders, delivery_note=target_doc)
+	if not sales_order_arg and not all(item.sales_order for item in pick_list.locations):
+		if isinstance(delivery_note, str):
+			delivery_note = frappe.get_doc(frappe.parse_json(delivery_note))
+
+		delivery_note = create_dn_wo_so(pick_list, delivery_note)
+
+	return delivery_note
 
 
 def create_dn_with_so(sales_dict, pick_list):
@@ -1273,6 +1283,9 @@ def create_dn_with_so(sales_dict, pick_list):
 
 
 def create_dn_from_so(pick_list, sales_order_list, delivery_note=None):
+	if not sales_order_list:
+		return delivery_note
+
 	item_table_mapper = {
 		"doctype": "Delivery Note Item",
 		"field_map": {
@@ -1284,6 +1297,7 @@ def create_dn_from_so(pick_list, sales_order_list, delivery_note=None):
 	}
 
 	kwargs = {"skip_item_mapping": True, "ignore_pricing_rule": pick_list.ignore_pricing_rule}
+
 	delivery_note = create_delivery_note_from_sales_order(
 		next(iter(sales_order_list)), delivery_note, kwargs=kwargs
 	)
@@ -1291,11 +1305,10 @@ def create_dn_from_so(pick_list, sales_order_list, delivery_note=None):
 	if not delivery_note:
 		return
 
-	if delivery_note:
-		for so in sales_order_list:
-			map_pl_locations(pick_list, item_table_mapper, delivery_note, so)
+	for so in sales_order_list:
+		map_pl_locations(pick_list, item_table_mapper, delivery_note, so)
 
-		update_packed_item_details(pick_list, delivery_note)
+	update_packed_item_details(pick_list, delivery_note)
 
 	return delivery_note
 
@@ -1331,7 +1344,7 @@ def map_pl_locations(pick_list, item_mapper, delivery_note, sales_order=None):
 	set_delivery_note_missing_values(delivery_note)
 
 	delivery_note.company = pick_list.company
-	delivery_note.customer = frappe.get_value("Sales Order", sales_order, "customer")
+	delivery_note.customer = pick_list.customer
 
 
 def add_product_bundles_to_delivery_note(
