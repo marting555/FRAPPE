@@ -3135,6 +3135,65 @@ class TestSalesInvoice(FrappeTestCase):
 			self.assertEqual(expected_values[i][2], schedule.accumulated_depreciation_amount)
 			self.assertEqual(schedule.journal_entry, schedule.journal_entry)
 
+	def test_depreciation_on_cancel_invoice(self):
+		from erpnext.controllers.sales_and_purchase_return import make_return_doc
+
+		create_asset_data()
+
+		asset = create_asset(
+			item_code="Macbook Pro",
+			purchase_date="2020-01-01",
+			available_for_use_date="2023-01-01",
+			depreciation_start_date="2023-04-01",
+			calculate_depreciation=1,
+			submit=1,
+		)
+		post_depreciation_entries()
+
+		si = create_sales_invoice(
+			item_code="Macbook Pro", asset=asset.name, qty=1, rate=10000, posting_date=getdate("2025-05-01")
+		)
+		return_si = make_return_doc("Sales Invoice", si.name)
+		return_si.posting_date = getdate("2025-05-01")
+		return_si.submit()
+		return_si.reload()
+		return_si.cancel()
+
+		asset.load_from_db()
+
+		# Check if the asset schedule is updated while cancel the return invoice
+		expected_values = [
+			["2023-04-01", 4986.30, 4986.30, True],
+			["2024-04-01", 20000.0, 24986.30, True],
+			["2025-04-01", 20000.0, 44986.30, True],
+			["2025-05-01", 1643.84, 46630.14, True],
+		]
+		for i, schedule in enumerate(get_depr_schedule(asset.name, "Active")):
+			self.assertEqual(getdate(expected_values[i][0]), schedule.schedule_date)
+			self.assertEqual(expected_values[i][1], schedule.depreciation_amount)
+			self.assertEqual(expected_values[i][2], schedule.accumulated_depreciation_amount)
+			self.assertEqual(schedule.journal_entry, schedule.journal_entry)
+
+		si.reload()
+		si.cancel()
+		asset.load_from_db()
+
+		# Check if the asset schedule is updated while cancel the sales invoice
+		expected_values = [
+			["2023-04-01", 4986.30, 4986.30, True],
+			["2024-04-01", 20000.0, 24986.30, True],
+			["2025-04-01", 20000.0, 44986.30, True],
+			["2026-04-01", 20000.0, 64986.30, False],
+			["2027-04-01", 20000.0, 84986.30, False],
+			["2028-01-01", 15013.70, 100000.0, False],
+		]
+
+		for i, schedule in enumerate(get_depr_schedule(asset.name, "Active")):
+			self.assertEqual(getdate(expected_values[i][0]), schedule.schedule_date)
+			self.assertEqual(expected_values[i][1], schedule.depreciation_amount)
+			self.assertEqual(expected_values[i][2], schedule.accumulated_depreciation_amount)
+			self.assertEqual(schedule.journal_entry, schedule.journal_entry)
+
 	def test_sales_invoice_against_supplier(self):
 		from erpnext.accounts.doctype.opening_invoice_creation_tool.test_opening_invoice_creation_tool import (
 			make_customer,
