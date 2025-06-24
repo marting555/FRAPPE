@@ -239,6 +239,11 @@ def on_doctype_update():
 
 
 def get_bin_details(bin_name):
+	bin_details = frappe.get_doc("Bin", bin_name)
+	if bin_details:
+		# recalculate qty for the latest values
+		bin_details.recalculate_qty()
+
 	return frappe.db.get_value(
 		"Bin",
 		bin_name,
