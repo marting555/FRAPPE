@@ -161,12 +161,9 @@
   "is_internal_customer",
   "represents_company",
   "column_break_yvzv",
-  "utm_source",
-  "utm_campaign",
-  "utm_medium",
-  "utm_content",
-  "column_break_152",
+  "source",
   "inter_company_order_reference",
+  "campaign",
   "party_account_currency",
   "connections_tab"
  ],
@@ -1590,10 +1587,6 @@
    "label": "Additional Info"
   },
   {
-   "fieldname": "column_break_152",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "incoterm",
    "fieldtype": "Link",
    "label": "Incoterm",
@@ -1633,41 +1626,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "utm_medium",
-   "fieldtype": "Link",
-   "label": "Medium",
-   "options": "UTM Medium",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_content",
-   "fieldtype": "Data",
-   "label": "Content",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_source",
-   "fieldtype": "Link",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Source",
-   "oldfieldname": "source",
-   "oldfieldtype": "Select",
-   "options": "UTM Source",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_campaign",
-   "fieldtype": "Link",
-   "hide_days": 1,
-   "hide_seconds": 1,
-   "label": "Campaign",
-   "oldfieldname": "campaign",
-   "oldfieldtype": "Link",
-   "options": "UTM Campaign",
-   "print_hide": 1
-  },
-  {
    "fieldname": "company_contact_person",
    "fieldtype": "Link",
    "label": "Company Contact Person",
@@ -1681,13 +1639,31 @@
    "hidden": 1,
    "label": "Has Unit Price Items",
    "no_copy": 1
+  },
+  {
+   "fieldname": "source",
+   "hide_days": 1,
+   "hide_seconds": 1,
+   "fieldtype": "Link",
+   "label": "Source",
+   "options": "Lead Source",
+   "print_hide": 1
+  },
+  {
+   "fieldname": "campaign",
+   "hide_days": 1,
+   "hide_seconds": 1,
+   "fieldtype": "Link",
+   "label": "Campaign",
+   "options": "Campaign",
+   "print_hide": 1
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-03-03 16:49:00.676927",
+ "modified": "2025-06-09 02:13:54.153458",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

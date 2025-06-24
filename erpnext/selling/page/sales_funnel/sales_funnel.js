@@ -45,9 +45,7 @@ erpnext.SalesFunnel = class SalesFunnel {
 				chart: wrapper.page.add_select(__("Chart"), [
 					{ value: "sales_funnel", label: __("Sales Funnel") },
 					{ value: "sales_pipeline", label: __("Sales Pipeline") },
-					{ value: "opp_by_utm_source", label: __("Opportunities by Source") },
-					{ value: "opp_by_utm_campaign", label: __("Opportunities by Campaign") },
-					{ value: "opp_by_utm_medium", label: __("Opportunities by Medium") },
+					{ value: "opp_by_source", label: __("Opportunities by Source") },
 				]),
 				refresh_btn: wrapper.page.set_primary_action(
 					__("Refresh"),
@@ -113,9 +111,7 @@ erpnext.SalesFunnel = class SalesFunnel {
 
 		const method_map = {
 			sales_funnel: "erpnext.selling.page.sales_funnel.sales_funnel.get_funnel_data",
-			opp_by_utm_source: "erpnext.selling.page.sales_funnel.sales_funnel.get_opp_by_utm_source",
-			opp_by_utm_campaign: "erpnext.selling.page.sales_funnel.sales_funnel.get_opp_by_utm_campaign",
-			opp_by_utm_medium: "erpnext.selling.page.sales_funnel.sales_funnel.get_opp_by_utm_medium",
+			opp_by_source: "erpnext.selling.page.sales_funnel.sales_funnel.get_opp_by_source",
 			sales_pipeline: "erpnext.selling.page.sales_funnel.sales_funnel.get_pipeline_data",
 		};
 		frappe.call({
@@ -144,12 +140,8 @@ erpnext.SalesFunnel = class SalesFunnel {
 		let me = this;
 		if (me.options.chart == "sales_funnel") {
 			me.render_funnel();
-		} else if (me.options.chart == "opp_by_utm_source") {
+		} else if (me.options.chart == "opp_by_source") {
 			me.render_chart(__("Sales Opportunities by Source"));
-		} else if (me.options.chart == "opp_by_utm_campaign") {
-			me.render_chart(__("Sales Opportunities by Campaign"));
-		} else if (me.options.chart == "opp_by_utm_medium") {
-			me.render_chart(__("Sales Opportunities by Medium"));
 		} else if (me.options.chart == "sales_pipeline") {
 			me.render_chart(__("Sales Pipeline by Stage"));
 		}

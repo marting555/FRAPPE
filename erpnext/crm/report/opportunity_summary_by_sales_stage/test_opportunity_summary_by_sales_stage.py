@@ -41,7 +41,7 @@ class TestOpportunitySummaryBySalesStage(IntegrationTestCase):
 
 		report = execute(filters)
 
-		expected_data = [{"utm_source": "Cold Calling", "Prospecting": 1}]
+		expected_data = [{"source": "Cold Calling", "Prospecting": 1}]
 
 		self.assertEqual(expected_data, report[1])
 

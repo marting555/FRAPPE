@@ -19,6 +19,7 @@
   "lead_name",
   "job_title",
   "gender",
+  "source",
   "col_break123",
   "lead_owner",
   "status",
@@ -52,19 +53,13 @@
   "country",
   "column_break2",
   "contact_html",
-  "section_break_analytics",
-  "utm_source",
-  "utm_content",
-  "column_break_gkxo",
-  "utm_campaign",
-  "column_break_gqka",
-  "utm_medium",
   "qualification_tab",
   "qualification_status",
   "column_break_64",
   "qualified_by",
   "qualified_on",
   "other_info_tab",
+  "campaign_name",
   "company",
   "column_break_22",
   "language",
@@ -501,52 +496,23 @@
    "show_dashboard": 1
   },
   {
-   "fieldname": "column_break_gkxo",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_gqka",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "utm_content",
-   "fieldtype": "Data",
-   "label": "Content",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_source",
+   "fieldname": "source",
    "fieldtype": "Link",
    "label": "Source",
-   "oldfieldname": "source",
-   "oldfieldtype": "Select",
-   "options": "UTM Source"
+   "options": "Lead Source"
   },
   {
-   "fieldname": "utm_medium",
+   "fieldname": "campaign_name",
    "fieldtype": "Link",
-   "label": "Medium",
-   "options": "UTM Medium"
-  },
-  {
-   "fieldname": "utm_campaign",
-   "fieldtype": "Link",
-   "label": "Campaign",
-   "oldfieldname": "campaign_name",
-   "oldfieldtype": "Link",
-   "options": "UTM Campaign"
-  },
-  {
-   "fieldname": "section_break_analytics",
-   "fieldtype": "Section Break",
-   "label": "Analytics"
+   "label": "Campaign Name",
+   "options": "Campaign"
   }
  ],
  "icon": "fa fa-user",
  "idx": 5,
  "image_field": "image",
  "links": [],
- "modified": "2025-01-31 13:40:08.094759",
+ "modified": "2025-06-09 01:32:58.424512",
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Lead",
@@ -605,6 +571,7 @@
    "role": "Sales User"
   }
  ],
+ "row_format": "Dynamic",
  "search_fields": "lead_name,lead_owner,status",
  "sender_field": "email_id",
  "sender_name_field": "lead_name",

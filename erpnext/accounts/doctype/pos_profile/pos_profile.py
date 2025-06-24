@@ -63,9 +63,6 @@ class POSProfile(Document):
 		taxes_and_charges: DF.Link | None
 		tc_name: DF.Link | None
 		update_stock: DF.Check
-		utm_campaign: DF.Link | None
-		utm_medium: DF.Link | None
-		utm_source: DF.Link | None
 		validate_stock_on_save: DF.Check
 		warehouse: DF.Link
 		write_off_account: DF.Link

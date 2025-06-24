@@ -158,12 +158,9 @@
   "inter_company_reference",
   "customer_group",
   "territory",
+  "source",
+  "campaign",
   "column_break_pxls",
-  "utm_source",
-  "utm_campaign",
-  "utm_medium",
-  "utm_content",
-  "column_break5",
   "excise_page",
   "instructions",
   "connections_tab"
@@ -962,14 +959,6 @@
    "options": "Project"
   },
   {
-   "fieldname": "column_break5",
-   "fieldtype": "Column Break",
-   "oldfieldtype": "Column Break",
-   "print_hide": 1,
-   "print_width": "50%",
-   "width": "50%"
-  },
-  {
    "fieldname": "per_billed",
    "fieldtype": "Percent",
    "label": "% Amount Billed",
@@ -1373,41 +1362,24 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "utm_medium",
-   "fieldtype": "Link",
-   "label": "Medium",
-   "options": "UTM Medium",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_content",
-   "fieldtype": "Data",
-   "label": "Content",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_source",
-   "fieldtype": "Link",
-   "label": "Source",
-   "oldfieldname": "source",
-   "oldfieldtype": "Select",
-   "options": "UTM Source",
-   "print_hide": 1
-  },
-  {
-   "fieldname": "utm_campaign",
-   "fieldtype": "Link",
-   "label": "Campaign",
-   "oldfieldname": "campaign",
-   "oldfieldtype": "Link",
-   "options": "UTM Campaign",
-   "print_hide": 1
-  },
-  {
    "fieldname": "company_contact_person",
    "fieldtype": "Link",
    "label": "Company Contact Person",
    "options": "Contact",
+   "print_hide": 1
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Link",
+   "label": "Source",
+   "options": "Lead Source",
+   "print_hide": 1
+  },
+  {
+   "fieldname": "campaign",
+   "fieldtype": "Link",
+   "label": "Campaign",
+   "options": "Campaign",
    "print_hide": 1
   }
  ],
@@ -1415,7 +1387,7 @@
  "idx": 146,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-06 15:02:30.558756",
+ "modified": "2025-06-09 02:27:15.121226",
  "modified_by": "Administrator",
  "module": "Stock",
  "name": "Delivery Note",
@@ -1506,6 +1478,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "search_fields": "status,customer,customer_name, territory,base_grand_total",
  "show_name_in_global_search": 1,
  "sort_field": "creation",

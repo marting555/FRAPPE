@@ -46,6 +46,7 @@ class Quotation(SellingController):
 		base_rounding_adjustment: DF.Currency
 		base_total: DF.Currency
 		base_total_taxes_and_charges: DF.Currency
+		campaign: DF.Link | None
 		company: DF.Link
 		company_address: DF.Link | None
 		company_address_display: DF.TextEditor | None
@@ -98,6 +99,7 @@ class Quotation(SellingController):
 		shipping_address: DF.TextEditor | None
 		shipping_address_name: DF.Link | None
 		shipping_rule: DF.Link | None
+		source: DF.Link | None
 		status: DF.Literal[
 			"Draft", "Open", "Replied", "Partially Ordered", "Ordered", "Lost", "Cancelled", "Expired"
 		]
@@ -113,10 +115,6 @@ class Quotation(SellingController):
 		total_qty: DF.Float
 		total_taxes_and_charges: DF.Currency
 		transaction_date: DF.Date
-		utm_campaign: DF.Link | None
-		utm_content: DF.Data | None
-		utm_medium: DF.Link | None
-		utm_source: DF.Link | None
 		valid_till: DF.Date | None
 	# end: auto-generated types
 
