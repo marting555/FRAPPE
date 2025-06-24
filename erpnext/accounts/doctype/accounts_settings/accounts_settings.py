@@ -58,7 +58,7 @@ class AccountsSettings(Document):
 		merge_similar_account_heads: DF.Check
 		over_billing_allowance: DF.Currency
 		post_change_gl_entries: DF.Check
-		receivable_payable_fetch_method: DF.Literal["Buffered Cursor", "UnBuffered Cursor"]
+		receivable_payable_fetch_method: DF.Literal["Buffered Cursor", "UnBuffered Cursor", "Raw SQL"]
 		receivable_payable_remarks_length: DF.Int
 		reconciliation_queue_size: DF.Int
 		role_allowed_to_over_bill: DF.Link | None
@@ -142,3 +142,11 @@ class AccountsSettings(Document):
 		if self.has_value_changed("reconciliation_queue_size"):
 			if cint(self.reconciliation_queue_size) < 5 or cint(self.reconciliation_queue_size) > 100:
 				frappe.throw(_("Queue Size should be between 5 and 100"))
+
+	@frappe.whitelist()
+	def drop_ar_sql_procedures(self):
+		from erpnext.accounts.report.accounts_receivable.accounts_receivable import InitSQLProceduresForAR
+
+		frappe.db.sql(f"drop function if exists {InitSQLProceduresForAR.genkey_function_name}")
+		frappe.db.sql(f"drop procedure if exists {InitSQLProceduresForAR.init_procedure_name}")
+		frappe.db.sql(f"drop procedure if exists {InitSQLProceduresForAR.allocate_procedure_name}")
