@@ -4409,29 +4409,6 @@ class TestSalesInvoice(FrappeTestCase):
 
 		self.assertRaises(StockOverReturnError, return_doc.save)
 
-<<<<<<< HEAD
-=======
-	def test_pos_sales_invoice_creation_during_pos_invoice_mode(self):
-		# Deleting all opening entry
-		frappe.db.sql("delete from `tabPOS Opening Entry`")
-
-		with self.change_settings("POS Settings", {"invoice_type": "POS Invoice"}):
-			pos_profile = make_pos_profile()
-
-			pos_profile.payments = []
-			pos_profile.append("payments", {"default": 1, "mode_of_payment": "Cash"})
-
-			pos_profile.save()
-
-			pos = create_sales_invoice(qty=10, do_not_save=True)
-
-			pos.is_pos = 1
-			pos.pos_profile = pos_profile.name
-			pos.is_created_using_pos = 1
-
-			pos.append("payments", {"mode_of_payment": "Cash", "amount": 1000})
-			self.assertRaises(frappe.ValidationError, pos.insert)
-
 	def test_stand_alone_credit_note_valuation(self):
 		from erpnext.stock.doctype.item.test_item import make_item
 
@@ -4520,7 +4497,6 @@ def make_item_for_si(item_code, properties=None):
 	item.save()
 	return item
 
->>>>>>> b06eca8dcb (fix: incoming rate for the stand-alone credit note)
 
 def set_advance_flag(company, flag, default_account):
 	frappe.db.set_value(
