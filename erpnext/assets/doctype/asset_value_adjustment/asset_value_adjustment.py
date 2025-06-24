@@ -165,6 +165,18 @@ class AssetValueAdjustment(Document):
 
 	def update_asset(self, asset_value=None):
 		asset = frappe.get_doc("Asset", self.asset)
+<<<<<<< HEAD
+=======
+		if asset.calculate_depreciation:
+			for row in asset.finance_books:
+				if cstr(row.finance_book) == cstr(self.finance_book):
+					salvage_value_adjustment = (
+						self.get_adjusted_salvage_value_amount(row, difference_amount) or 0
+					)
+					row.expected_value_after_useful_life += salvage_value_adjustment
+					row.value_after_depreciation = row.value_after_depreciation + flt(difference_amount)
+					row.db_update()
+>>>>>>> 5e672990b3 (fix: salvage value after value adjustment)
 
 		if not asset.calculate_depreciation:
 			asset.value_after_depreciation = asset_value
@@ -173,6 +185,15 @@ class AssetValueAdjustment(Document):
 
 		asset.flags.decrease_in_asset_value_due_to_value_adjustment = True
 
+<<<<<<< HEAD
+=======
+	def get_adjusted_salvage_value_amount(self, row, difference_amount):
+		if row.expected_value_after_useful_life:
+			salvage_value_adjustment = (difference_amount * row.salvage_value_percentage) / 100
+			return flt(salvage_value_adjustment)
+
+	def get_adjustment_note(self):
+>>>>>>> 5e672990b3 (fix: salvage value after value adjustment)
 		if self.docstatus == 1:
 			notes = _(
 				"This schedule was created when Asset {0} was adjusted through Asset Value Adjustment {1}."
