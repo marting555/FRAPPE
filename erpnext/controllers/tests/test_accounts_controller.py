@@ -931,14 +931,10 @@ class TestAccountsController(FrappeTestCase):
 		self.assertEqual(exc_je_for_si, [])
 		self.assertEqual(exc_je_for_pe, [])
 
-<<<<<<< HEAD
-	@change_settings("Accounts Settings", {"add_taxes_from_item_tax_template": 1})
-=======
-	@IntegrationTestCase.change_settings(
+	@change_settings(
 		"Accounts Settings",
 		{"add_taxes_from_item_tax_template": 0, "add_taxes_from_taxes_and_charges_template": 1},
 	)
->>>>>>> 4cb1fa2b6b (fix: auto append_taxes_from_item_tax_template in backend)
 	def test_18_fetch_taxes_based_on_taxes_and_charges_template(self):
 		# Create a Sales Taxes and Charges Template
 		if not frappe.db.exists("Sales Taxes and Charges Template", "_Test Tax - _TC"):
@@ -967,7 +963,7 @@ class TestAccountsController(FrappeTestCase):
 
 		self.assertEqual(sinv.total_taxes_and_charges, 4.5)
 
-	@IntegrationTestCase.change_settings(
+	@change_settings(
 		"Accounts Settings",
 		{"add_taxes_from_item_tax_template": 1, "add_taxes_from_taxes_and_charges_template": 0},
 	)
