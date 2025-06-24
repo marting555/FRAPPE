@@ -39,14 +39,6 @@ def after_install():
 	frappe.db.commit()
 
 
-<<<<<<< HEAD
-def check_setup_wizard_not_completed():
-	if cint(frappe.db.get_single_value("System Settings", "setup_complete") or 0):
-		message = """ERPNext can only be installed on a fresh site where the setup wizard is not completed.
-You can reinstall this site (after saving your data) using: bench --site [sitename] reinstall"""
-		frappe.throw(message)  # nosemgrep
-
-
 def check_frappe_version():
 	def major_version(v: str) -> str:
 		return v.split(".")[0]
@@ -64,14 +56,6 @@ def check_frappe_version():
 	)
 
 	raise SystemExit(1)
-=======
-def make_default_operations():
-	for operation in ["Assembly"]:
-		if not frappe.db.exists("Operation", operation):
-			doc = frappe.get_doc({"doctype": "Operation", "name": operation})
-			doc.flags.ignore_mandatory = True
-			doc.insert(ignore_permissions=True)
->>>>>>> 75b5ba6e67 (refactor: track completed app setup wizards and re-run the setup wizard upon new app installation. (#47691))
 
 
 def set_single_defaults():
