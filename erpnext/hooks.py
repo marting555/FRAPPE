@@ -100,6 +100,19 @@ demo_transaction_doctypes = [
 	"sales_order",
 ]
 
+doctypes_supporting_discount = (
+	"POS Invoice",
+	"Purchase Invoice",
+	"Sales Invoice",
+	"Purchase Order",
+	"Supplier Quotation",
+	"Quotation",
+	"Sales Order",
+	"Delivery Note",
+	"Purchase Receipt",
+)
+
+
 jinja = {
 	"methods": [
 		"erpnext.stock.serial_batch_bundle.get_serial_or_batch_nos",
@@ -393,6 +406,7 @@ doc_events = {
 	"Integration Request": {
 		"validate": "erpnext.accounts.doctype.payment_request.payment_request.validate_payment"
 	},
+	doctypes_supporting_discount: {"after_mapping": "erpnext.utilities.transaction_base.after_mapping"},
 }
 
 # function should expect the variable and doc as arguments
