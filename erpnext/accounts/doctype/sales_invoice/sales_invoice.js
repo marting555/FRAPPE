@@ -556,21 +556,7 @@ erpnext.accounts.SalesInvoiceController = class SalesInvoiceController extends (
 	}
 
 	is_cash_or_non_trade_discount() {
-		this.frm.set_df_property(
-			"additional_discount_account",
-			"hidden",
-			1 - this.frm.doc.is_cash_or_non_trade_discount
-		);
-		this.frm.set_df_property(
-			"additional_discount_account",
-			"reqd",
-			this.frm.doc.is_cash_or_non_trade_discount
-		);
-
-		if (!this.frm.doc.is_cash_or_non_trade_discount) {
-			this.frm.set_value("additional_discount_account", "");
-		}
-
+		toggle_additional_discount_account(this.frm);
 		this.calculate_taxes_and_totals();
 	}
 };
@@ -784,6 +770,9 @@ frappe.ui.form.on("Sales Invoice", {
 	},
 	onload: function (frm) {
 		frm.redemption_conversion_factor = null;
+		if (frm.doc.is_cash_or_non_trade_discount) {
+			toggle_additional_discount_account(frm);
+		}
 	},
 
 	update_stock: function (frm, dt, dn) {
@@ -1112,6 +1101,15 @@ var set_timesheet_detail_rate = function (cdt, cdn, currency, timelog) {
 		},
 	});
 };
+
+function toggle_additional_discount_account(frm) {
+	frm.set_df_property("additional_discount_account", "hidden", !frm.doc.is_cash_or_non_trade_discount);
+	frm.set_df_property("additional_discount_account", "reqd", frm.doc.is_cash_or_non_trade_discount);
+
+	if (!frm.doc.is_cash_or_non_trade_discount) {
+		frm.set_value("additional_discount_account", "");
+	}
+}
 
 var select_loyalty_program = function (frm, loyalty_programs) {
 	var dialog = new frappe.ui.Dialog({

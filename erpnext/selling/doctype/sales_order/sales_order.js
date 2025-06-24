@@ -48,6 +48,14 @@ frappe.ui.form.on("Sales Order", {
 		frm.set_df_property("packed_items", "cannot_delete_rows", true);
 	},
 
+	is_cash_or_non_trade_discount: function (frm) {
+		if (!frm.doc.is_cash_or_non_trade_discount) {
+			frm.set_value("additional_discount_account", "");
+		}
+
+		frm.cscript.calculate_taxes_and_totals();
+	},
+
 	refresh: function (frm) {
 		if (frm.doc.docstatus === 1) {
 			if (

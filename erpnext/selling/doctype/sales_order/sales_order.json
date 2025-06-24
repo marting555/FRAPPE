@@ -84,6 +84,8 @@
   "apply_discount_on",
   "base_discount_amount",
   "coupon_code",
+  "is_cash_or_non_trade_discount",
+  "additional_discount_account",
   "column_break_50",
   "additional_discount_percentage",
   "discount_amount",
@@ -1681,13 +1683,29 @@
    "hidden": 1,
    "label": "Has Unit Price Items",
    "no_copy": 1
+  },
+  {
+   "default": "0",
+   "depends_on": "eval: doc.apply_discount_on == \"Grand Total\"",
+   "fieldname": "is_cash_or_non_trade_discount",
+   "fieldtype": "Check",
+   "label": "Is Cash or Non Trade Discount"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval: doc.is_cash_or_non_trade_discount",
+   "fieldname": "additional_discount_account",
+   "fieldtype": "Link",
+   "label": "Discount Account",
+   "mandatory_depends_on": "eval: doc.is_cash_or_non_trade_discount",
+   "options": "Account"
   }
  ],
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-03-03 16:49:00.676927",
+ "modified": "2025-06-02 15:05:23.067656",
  "modified_by": "Administrator",
  "module": "Selling",
  "name": "Sales Order",

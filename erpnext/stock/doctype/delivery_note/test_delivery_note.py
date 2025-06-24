@@ -9,7 +9,7 @@ import frappe
 from frappe.tests import IntegrationTestCase, change_settings
 from frappe.utils import add_days, cstr, flt, getdate, nowdate, nowtime, today
 
-from erpnext.accounts.doctype.account.test_account import get_inventory_account
+from erpnext.accounts.doctype.account.test_account import create_account, get_inventory_account
 from erpnext.accounts.doctype.cost_center.test_cost_center import create_cost_center
 from erpnext.accounts.utils import get_balance_on
 from erpnext.controllers.accounts_controller import InvalidQtyError
@@ -1240,6 +1240,69 @@ class TestDeliveryNote(IntegrationTestCase):
 
 		si = make_sales_invoice(dn.name)
 		self.assertEqual(si.items[0].qty, 1)
+
+	def test_overall_discount_calculatin(self):
+		dn = create_delivery_note(do_not_submit=True)
+
+		discount_percent = 5
+		grand_total = dn.grand_total
+		net_total = dn.net_total
+		additional_discount_account = frappe.db.get_value(
+			"Account", {"account_name": "Test Discount Account", "company": "_Test Company"}, "name"
+		)
+
+		if not additional_discount_account:
+			additional_discount_account = create_account(
+				account_name="Test Discount Account",
+				parent_account="Indirect Expenses - _TC",
+				company="_Test Company",
+			)
+		discount_amount = grand_total * (discount_percent / 100)
+
+		dn.apply_discount_on = "Grand Total"
+		dn.additional_discount_percentage = discount_percent
+		dn.is_cash_or_non_trade_discount = 1
+		dn.additional_discount_account = additional_discount_account
+
+		dn.save()
+
+		self.assertEqual(dn.grand_total, (grand_total - discount_amount))
+		self.assertEqual(dn.net_total, net_total)
+
+		dn.submit()
+
+	def test_sales_invoice_creation_from_delivery_note_with_cash_discount_fields(self):
+		dn = create_delivery_note(do_not_submit=True)
+
+		additional_discount_account = frappe.db.get_value(
+			"Account", {"account_name": "Test Discount Account", "company": "_Test Company"}, "name"
+		)
+
+		if not additional_discount_account:
+			additional_discount_account = create_account(
+				account_name="Test Discount Account",
+				parent_account="Indirect Expenses - _TC",
+				company="_Test Company",
+			)
+
+		dn.apply_discount_on = "Grand Total"
+		dn.additional_discount_percentage = 5
+		dn.is_cash_or_non_trade_discount = 1
+		dn.additional_discount_account = additional_discount_account
+
+		dn.submit()
+
+		si = make_sales_invoice(dn.name)
+
+		self.assertEqual(dn.is_cash_or_non_trade_discount, si.is_cash_or_non_trade_discount)
+		self.assertEqual(dn.additional_discount_account, si.additional_discount_account)
+		self.assertEqual(dn.apply_discount_on, si.apply_discount_on)
+		self.assertEqual(dn.additional_discount_percentage, si.additional_discount_percentage)
+		self.assertEqual(dn.grand_total, si.grand_total)
+		self.assertEqual(dn.net_total, si.net_total)
+
+		si.save()
+		si.submit()
 
 	def test_make_sales_invoice_from_dn_with_returned_qty_duplicate_items(self):
 		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_invoice
