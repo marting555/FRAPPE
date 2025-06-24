@@ -1213,7 +1213,7 @@ def create_delivery_note(source_name, target_doc=None):
 		delivery_note = create_dn_with_so(sales_dict, pick_list)
 
 	if not all(item.sales_order for item in pick_list.locations):
-		delivery_note = create_dn_wo_so(pick_list)
+		delivery_note = create_dn_wo_so(pick_list, delivery_note)
 
 	frappe.msgprint(_("Delivery Note(s) created for the Pick List"))
 	return delivery_note
