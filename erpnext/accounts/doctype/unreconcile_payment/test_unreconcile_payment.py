@@ -2,7 +2,6 @@
 # See license.txt
 
 import frappe
-from frappe.tests import IntegrationTestCase
 from frappe.utils import today
 
 from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_payment_entry
@@ -11,9 +10,10 @@ from erpnext.accounts.party import get_party_account
 from erpnext.accounts.test.accounts_mixin import AccountsTestMixin
 from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
+from erpnext.tests.utils import ERPNextTestSuite
 
 
-class TestUnreconcilePayment(AccountsTestMixin, IntegrationTestCase):
+class TestUnreconcilePayment(AccountsTestMixin, ERPNextTestSuite):
 	def setUp(self):
 		self.create_company()
 		self.create_customer()

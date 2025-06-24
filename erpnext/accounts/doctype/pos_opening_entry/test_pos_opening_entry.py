@@ -3,10 +3,11 @@
 import unittest
 
 import frappe
-from frappe.tests import IntegrationTestCase
+
+from erpnext.tests.utils import ERPNextTestSuite
 
 
-class TestPOSOpeningEntry(IntegrationTestCase):
+class TestPOSOpeningEntry(ERPNextTestSuite):
 	pass
 
 
