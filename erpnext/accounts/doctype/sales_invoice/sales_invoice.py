@@ -1101,9 +1101,10 @@ class SalesInvoice(SellingController):
 			frappe.throw(_("Transactions using Sales Invoice in POS are disabled."))
 
 	def validate_full_payment(self):
+		allow_partial_payment = frappe.db.get_value("POS Profile", self.pos_profile, "allow_partial_payment")
 		invoice_total = flt(self.rounded_total) or flt(self.grand_total)
 
-		if self.docstatus == 1:
+		if not allow_partial_payment and self.docstatus == 1:
 			if self.is_return and self.paid_amount != invoice_total:
 				frappe.throw(
 					msg=_("Partial Payment in POS Transactions are not allowed."),
