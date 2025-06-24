@@ -281,7 +281,7 @@ class JobCard(Document):
 				)
 
 		for row in self.sub_operations:
-			self.total_completed_qty += row.completed_qty
+			self.total_completed_qty += flt(row.completed_qty)
 
 	def get_overlap_for(self, args, open_job_cards=None):
 		time_logs = []
