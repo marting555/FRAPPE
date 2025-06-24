@@ -1347,7 +1347,7 @@ def get_conversion_factor(item_code, uom):
 	if not conversion_factor:
 		conversion_factor = get_uom_conv_factor(uom, item.stock_uom)
 
-	return {"conversion_factor": conversion_factor or 1.0}
+	return {"conversion_factor": conversion_factor or 0}
 
 
 @frappe.whitelist()
