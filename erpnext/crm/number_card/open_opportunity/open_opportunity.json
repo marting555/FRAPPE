@@ -4,21 +4,13 @@
  "doctype": "Number Card",
  "document_type": "Opportunity",
  "dynamic_filters_json": "[[\"Opportunity\",\"company\",\"=\",\"frappe.defaults.get_user_default(\\\"Company\\\")\"]]",
-<<<<<<< HEAD
- "filters_json": "[[\"Opportunity\",\"company\",\"=\",null,false]]",
-=======
  "filters_json": "[]",
->>>>>>> c8c1c96298 (fix(open_opportunity): remove company=null filter (#48222))
  "function": "Count",
  "idx": 0,
  "is_public": 1,
  "is_standard": 1,
  "label": "Open Opportunity",
-<<<<<<< HEAD
- "modified": "2020-07-22 16:16:16.420446",
-=======
  "modified": "2025-06-24 11:10:17.468713",
->>>>>>> c8c1c96298 (fix(open_opportunity): remove company=null filter (#48222))
  "modified_by": "Administrator",
  "module": "CRM",
  "name": "Open Opportunity",
