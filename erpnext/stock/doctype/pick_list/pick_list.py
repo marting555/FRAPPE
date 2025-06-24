@@ -1224,8 +1224,6 @@ def create_delivery_note(source_name, target_doc=None):
 def create_dn_wo_so(pick_list, delivery_note=None):
 	if not delivery_note:
 		delivery_note = frappe.new_doc("Delivery Note")
-	if isinstance(delivery_note, str):
-		delivery_note = frappe.get_doc(frappe.parse_json(delivery_note))
 
 	delivery_note.company = pick_list.company
 
@@ -1266,7 +1264,10 @@ def create_dn_for_pick_lists(source_name, target_doc=None, kwargs=None):
 	delivery_note = create_dn_from_so(pick_list, sales_orders, delivery_note=target_doc)
 
 	if not sales_order_arg and not all(item.sales_order for item in pick_list.locations):
-		delivery_note = create_dn_wo_so(pick_list, delivery_note if delivery_note else target_doc)
+		if isinstance(delivery_note, str):
+			delivery_note = frappe.get_doc(frappe.parse_json(delivery_note))
+
+		delivery_note = create_dn_wo_so(pick_list, delivery_note)
 
 	return delivery_note
 
@@ -1283,7 +1284,7 @@ def create_dn_with_so(sales_dict, pick_list):
 
 def create_dn_from_so(pick_list, sales_order_list, delivery_note=None):
 	if not sales_order_list:
-		return
+		return delivery_note
 
 	item_table_mapper = {
 		"doctype": "Delivery Note Item",
