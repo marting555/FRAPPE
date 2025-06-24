@@ -3287,7 +3287,7 @@ class TestSalesInvoice(FrappeTestCase):
 		si.posting_date = getdate()
 		si.submit()
 
-	@IntegrationTestCase.change_settings("Accounts Settings", {"over_billing_allowance": 0})
+	@change_settings("Accounts Settings", {"over_billing_allowance": 0})
 	def test_over_billing_case_against_delivery_note(self):
 		"""
 		Test a case where duplicating the item with qty = 1 in the invoice
@@ -3295,12 +3295,6 @@ class TestSalesInvoice(FrappeTestCase):
 		"""
 		from erpnext.stock.doctype.delivery_note.test_delivery_note import create_delivery_note
 
-<<<<<<< HEAD
-		over_billing_allowance = frappe.db.get_single_value("Accounts Settings", "over_billing_allowance")
-		frappe.db.set_value("Accounts Settings", None, "over_billing_allowance", 0)
-
-=======
->>>>>>> 47c3c4808e (fix: get already billed amount from current doc instead of database (#48079))
 		dn = create_delivery_note()
 		dn.submit()
 
@@ -3317,12 +3311,7 @@ class TestSalesInvoice(FrappeTestCase):
 			si.save()
 
 		self.assertTrue("cannot overbill" in str(err.exception).lower())
-<<<<<<< HEAD
-
-		frappe.db.set_value("Accounts Settings", None, "over_billing_allowance", over_billing_allowance)
-=======
 		dn.cancel()
->>>>>>> 47c3c4808e (fix: get already billed amount from current doc instead of database (#48079))
 
 	@change_settings(
 		"Accounts Settings",
