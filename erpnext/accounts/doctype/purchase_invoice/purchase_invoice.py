@@ -1228,7 +1228,7 @@ class PurchaseInvoice(BuyingController):
 		pr_items = frappe.get_all(
 			"Purchase Receipt Item",
 			filters={"parent": ("in", linked_purchase_receipts)},
-			fields=["name", "provisional_expense_account", "qty", "base_rate", "rate"],
+			fields=["name", "provisional_expense_account", "qty", "base_rate", "rate", "net_rate"],
 		)
 		default_provisional_account = self.get_company_default("default_provisional_account")
 		provisional_accounts = set(
@@ -1257,6 +1257,7 @@ class PurchaseInvoice(BuyingController):
 				"qty": item.qty,
 				"base_rate": item.base_rate,
 				"rate": item.rate,
+				"net_rate": item.net_rate,
 				"has_provisional_entry": item.name in rows_with_provisional_entries,
 			}
 
@@ -1274,7 +1275,7 @@ class PurchaseInvoice(BuyingController):
 					pr_item.get("provisional_account"),
 					reverse=1,
 					item_amount=(
-						(min(item.qty, pr_item.get("qty")) * pr_item.get("rate"))
+						(min(item.qty, pr_item.get("qty")) * pr_item.get("net_rate"))
 						* purchase_receipt_doc.get("conversion_rate")
 					),
 				)
