@@ -16,4 +16,5 @@ __pycache__
 .idea/
 .vscode/
 node_modules/
-.backportrc.json
+.backportrc.json.venv/
+.venv/
