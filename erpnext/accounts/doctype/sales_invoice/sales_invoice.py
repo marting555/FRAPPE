@@ -206,6 +206,7 @@ class SalesInvoice(SellingController):
 			"Overdue",
 			"Cancelled",
 			"Internal Transfer",
+			"Adjusted",
 		]
 		subscription: DF.Link | None
 		tax_category: DF.Link | None
@@ -2046,6 +2047,8 @@ class SalesInvoice(SellingController):
 					"Sales Invoice", {"is_return": 1, "return_against": self.name, "docstatus": 1}
 				):
 					self.status = "Credit Note Issued"
+				elif self.is_return == 1 and not outstanding_amount:
+					self.status = "Adjusted"
 				elif self.is_return == 1:
 					self.status = "Return"
 				elif outstanding_amount <= 0:
