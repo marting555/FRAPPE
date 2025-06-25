@@ -65,59 +65,10 @@ class AssetMovement(Document):
 					)
 			else:
 				d.source_location = current_location
-
-<<<<<<< HEAD
-			if self.purpose == "Transfer":
-				if d.to_employee:
-					frappe.throw(
-						_(
-							"Transferring cannot be done to an Employee. Please enter location where Asset {0} has to be transferred"
-						).format(d.asset),
-						title=_("Incorrect Movement Purpose"),
-					)
-				if not d.target_location:
-					frappe.throw(
-						_("Target Location is required while transferring Asset {0}").format(d.asset)
-					)
-				if d.source_location == d.target_location:
-					frappe.throw(_("Source and Target Location cannot be same"))
-
-			if self.purpose == "Receipt":
-				if not (d.source_location) and not (d.target_location or d.to_employee):
-					frappe.throw(
-						_("Target Location or To Employee is required while receiving Asset {0}").format(
-							d.asset
-						)
-					)
-				elif d.source_location:
-					if d.from_employee and not d.target_location:
-						frappe.throw(
-							_(
-								"Target Location is required while receiving Asset {0} from an employee"
-							).format(d.asset)
-						)
-					elif d.to_employee and d.target_location:
-						frappe.throw(
-							_(
-								"Asset {0} cannot be received at a location and given to an employee in a single movement"
-							).format(d.asset)
-						)
-
-	def validate_employee(self):
-		for d in self.assets:
-			if d.from_employee:
-				current_custodian = frappe.db.get_value("Asset", d.asset, "custodian")
-
-				if current_custodian != d.from_employee:
-					frappe.throw(
-						_("Asset {0} does not belongs to the custodian {1}").format(d.asset, d.from_employee)
-					)
-=======
 			if not d.target_location:
 				frappe.throw(_("Target Location is required for transferring Asset {0}").format(d.asset))
 			if d.source_location == d.target_location:
 				frappe.throw(_("Source and Target Location cannot be same"))
->>>>>>> 07d1a0ed9c (fix: saperated validations for each purpose of validation)
 
 		if self.purpose == "Receipt":
 			if not d.target_location:
