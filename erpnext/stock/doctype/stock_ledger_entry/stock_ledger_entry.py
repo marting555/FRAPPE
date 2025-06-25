@@ -172,7 +172,10 @@ class StockLedgerEntry(Document):
 		self.check_stock_frozen_date()
 
 		# Added to handle few test cases where serial_and_batch_bundles are not required
-		if frappe.flags.in_test and frappe.flags.ignore_serial_batch_bundle_validation:
+		if frappe.in_test and frappe.flags.ignore_serial_batch_bundle_validation:
+			return
+
+		if self.is_adjustment_entry:
 			return
 
 		if not self.get("via_landed_cost_voucher"):

@@ -302,6 +302,7 @@ class StockEntry(StockController):
 			self.set_material_request_transfer_status("In Transit")
 
 	def on_update(self):
+		super().on_update()
 		self.set_serial_and_batch_bundle()
 
 	def set_job_card_data(self):
@@ -1022,12 +1023,12 @@ class StockEntry(StockController):
 
 			if d.transfer_qty:
 				d.amount = flt(
-					flt(d.basic_amount) + flt(d.additional_cost) + flt(d.landed_cost_voucher_amount),
+					flt(flt(d.basic_amount) + flt(d.additional_cost) + flt(d.landed_cost_voucher_amount)),
 					d.precision("amount"),
 				)
 				# Do not round off valuation rate to avoid precision loss
 				d.valuation_rate = flt(d.basic_rate) + (
-					flt(d.additional_cost) + flt(d.landed_cost_voucher_amount) / flt(d.transfer_qty)
+					flt(flt(d.additional_cost) + flt(d.landed_cost_voucher_amount)) / flt(d.transfer_qty)
 				)
 
 	def set_total_incoming_outgoing_value(self):
@@ -1660,14 +1661,16 @@ class StockEntry(StockController):
 					)
 
 					account_currency = get_account_currency(item.expense_account)
+
+					# credit amount in negative to knock off the debit entry
 					gl_entries.append(
 						self.get_gl_dict(
 							{
 								"account": item.expense_account,
-								"against": account,
+								"against": warehouse_account.get(item.t_warehouse)["account"],
 								"cost_center": item.cost_center,
-								"debit": credit_amount,
-								"credit": 0.0,
+								"debit": 0.0,
+								"credit": credit_amount * -1,
 								"remarks": _("Accounting Entry for LCV in Stock Entry {0}").format(self.name),
 								"debit_in_account_currency": flt(amount["amount"]),
 								"account_currency": account_currency,

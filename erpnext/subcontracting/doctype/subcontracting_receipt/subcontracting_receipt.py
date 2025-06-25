@@ -131,7 +131,7 @@ class SubcontractingReceipt(SubcontractingController):
 
 		super().validate()
 
-		if self.is_new() and self.get("_action") == "save" and not frappe.flags.in_test:
+		if self.is_new() and self.get("_action") == "save" and not frappe.in_test:
 			self.get_scrap_items()
 
 		self.set_missing_values()
@@ -645,11 +645,11 @@ class SubcontractingReceipt(SubcontractingController):
 							self.add_gl_entry(
 								gl_entries=gl_entries,
 								account=supplier_warehouse_account,
-								cost_center=rm_item.cost_center,
+								cost_center=rm_item.cost_center or item.cost_center,
 								debit=0.0,
 								credit=flt(rm_item.amount),
 								remarks=remarks,
-								against_account=rm_item.expense_account,
+								against_account=rm_item.expense_account or item.expense_account,
 								account_currency=get_account_currency(supplier_warehouse_account),
 								project=item.project,
 								item=item,
@@ -657,8 +657,8 @@ class SubcontractingReceipt(SubcontractingController):
 							# Expense Account (Debit)
 							self.add_gl_entry(
 								gl_entries=gl_entries,
-								account=rm_item.expense_account,
-								cost_center=rm_item.cost_center,
+								account=rm_item.expense_account or item.expense_account,
+								cost_center=rm_item.cost_center or item.cost_center,
 								debit=flt(rm_item.amount),
 								credit=0.0,
 								remarks=remarks,
@@ -777,12 +777,14 @@ class SubcontractingReceipt(SubcontractingController):
 						)
 
 						account_currency = get_account_currency(item.expense_account)
+
+						# credit amount in negative to knock off the debit entry
 						self.add_gl_entry(
 							gl_entries=gl_entries,
 							account=item.expense_account,
 							cost_center=item.cost_center,
-							debit=credit_amount,
-							credit=0.0,
+							debit=0.0,
+							credit=credit_amount * -1,
 							remarks=remarks,
 							against_account=warehouse_account.get(item.warehouse)["account"],
 							debit_in_account_currency=flt(amount["amount"]),
