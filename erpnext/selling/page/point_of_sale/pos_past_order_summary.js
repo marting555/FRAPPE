@@ -75,6 +75,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		let indicator_color = "";
 
 		["Paid", "Consolidated"].includes(status) && (indicator_color = "green");
+		status === "Partly Paid" && (indicator_color = "yellow");
 		status === "Draft" && (indicator_color = "red");
 		status === "Return" && (indicator_color = "grey");
 

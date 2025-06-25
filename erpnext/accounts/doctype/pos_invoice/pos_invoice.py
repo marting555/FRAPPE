@@ -149,7 +149,9 @@ class POSInvoice(SalesInvoice):
 			"Consolidated",
 			"Submitted",
 			"Paid",
+			"Partly Paid",
 			"Unpaid",
+			"Partly Paid and Discounted",
 			"Unpaid and Discounted",
 			"Overdue and Discounted",
 			"Overdue",
@@ -558,6 +560,8 @@ class POSInvoice(SalesInvoice):
 				self.status = "Draft"
 			return
 
+		total = flt(self.rounded_total) or flt(self.grand_total)
+
 		if not status:
 			if self.docstatus == 2:
 				status = "Cancelled"
@@ -573,6 +577,14 @@ class POSInvoice(SalesInvoice):
 					self.status = "Overdue and Discounted"
 				elif flt(self.outstanding_amount) > 0 and getdate(self.due_date) < getdate(nowdate()):
 					self.status = "Overdue"
+				elif (
+					0 < flt(self.outstanding_amount) < total
+					and self.is_discounted
+					and self.get_discounting_status() == "Disbursed"
+				):
+					self.status = "Partly Paid and Discounted"
+				elif 0 < flt(self.outstanding_amount) < total:
+					self.status = "Partly Paid"
 				elif (
 					flt(self.outstanding_amount) > 0
 					and getdate(self.due_date) >= getdate(nowdate())
@@ -793,6 +805,26 @@ class POSInvoice(SalesInvoice):
 		if pr:
 			return frappe.get_doc("Payment Request", pr)
 
+	@frappe.whitelist()
+	def update_payments(self, payments, paid_amount, outstanding_amount, change_amount, current_date):
+		idx = self.payments[-1].idx
+
+		for d in payments:
+			idx += 1
+			payment = create_payment(self, idx, frappe._dict(d), current_date)
+			payment.submit()
+
+		frappe.db.set_value(self.doctype, self.name, "paid_amount", paid_amount)
+		frappe.db.set_value(self.doctype, self.name, "base_paid_amount", paid_amount * self.conversion_rate)
+		frappe.db.set_value(self.doctype, self.name, "outstanding_amount", outstanding_amount)
+		frappe.db.set_value(self.doctype, self.name, "change_amount", change_amount)
+		frappe.db.set_value(
+			self.doctype, self.name, "base_change_amount", change_amount * self.conversion_rate
+		)
+		self.reload()
+
+		self.set_status(update=True)
+
 
 @frappe.whitelist()
 def get_stock_availability(item_code, warehouse):
@@ -944,3 +976,20 @@ def get_item_group(pos_profile):
 			item_groups.extend(get_descendants_of("Item Group", row.item_group))
 
 	return list(set(item_groups))
+
+
+def create_payment(doc, idx, payment_details, current_date):
+	from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
+
+	payment = frappe.new_doc("Sales Invoice Payment")
+	payment.idx = idx
+	payment.mode_of_payment = payment_details.mode_of_payment
+	payment.amount = payment_details.amount
+	payment.base_amount = payment.amount * doc.conversion_rate
+	payment.parent = doc.name
+	payment.parentfield = "payments"
+	payment.parenttype = doc.doctype
+	payment.clearance_date = current_date
+	payment.account = get_bank_cash_account(payment.mode_of_payment, doc.company).get("account")
+
+	return payment
