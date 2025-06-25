@@ -309,26 +309,33 @@ erpnext.selling.POSInvoiceController = class POSInvoiceController extends erpnex
 			],
 			primary_action_label: __("Submit"),
 			primary_action(values) {
-				values.payments = values.payments.filter((d) => d.amount != 0);
-				values.paid_amount = flt(values.paid_amount);
-				values.outstanding_amount = flt(values.outstanding_amount);
-				values.change_amount = flt(values.change_amount);
+				dialog.hide();
 				me.frm.call({
 					doc: me.frm.doc,
 					method: "update_payments",
 					args: {
-						payments: values.payments,
-						paid_amount: values.paid_amount,
-						outstanding_amount: values.outstanding_amount,
-						change_amount: values.change_amount,
+						payments: values.payments.filter((d) => d.amount != 0),
+						paid_amount: flt(values.paid_amount),
+						outstanding_amount: flt(values.outstanding_amount),
+						change_amount: flt(values.change_amount),
 						current_date: frappe.datetime.nowdate(),
 					},
 					freeze: true,
 					callback: function (r) {
-						me.frm.reload_doc();
+						if (!r.exc) {
+							frappe.show_alert({
+								message: __("Payments updated."),
+								indicator: "green",
+							});
+							me.frm.reload_doc();
+						} else {
+							frappe.show_alert({
+								message: __("Payments could not be updated."),
+								indicator: "red",
+							});
+						}
 					},
 				});
-				dialog.hide();
 			},
 		});
 		dialog.show();
