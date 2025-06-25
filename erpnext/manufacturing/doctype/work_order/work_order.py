@@ -1672,6 +1672,8 @@ def create_job_card(work_order, row, enable_capacity_planning=False, auto_create
 		doc.flags.ignore_mandatory = True
 		if enable_capacity_planning:
 			doc.schedule_time_logs(row)
+		else:
+			doc.time_required = row.get("time_in_mins")
 
 		doc.insert()
 		frappe.msgprint(_("Job card {0} created").format(get_link_to_form("Job Card", doc.name)), alert=True)
