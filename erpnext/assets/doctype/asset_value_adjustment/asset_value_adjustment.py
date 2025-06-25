@@ -217,6 +217,7 @@ class AssetValueAdjustment(Document):
 			salvage_value_adjustment = (difference_amount * row.salvage_value_percentage) / 100
 			return flt(salvage_value_adjustment if self.docstatus == 1 else -1 * salvage_value_adjustment)
 
+
 @frappe.whitelist()
 def get_value_of_accounting_dimensions(asset_name):
 	dimension_fields = [*frappe.get_list("Accounting Dimension", pluck="fieldname"), "cost_center"]
