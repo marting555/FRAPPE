@@ -43,3 +43,12 @@ Thumbs.db
 sites/
 node_modules/
 *.pyc
+*.py~
+conf.py
+locale
+latest_updates.json
+.wnf-lang-status
+erpnext/docs/current
+*.swp
+*.swo
+*~
