@@ -157,55 +157,29 @@ class Gstr1Report(object):
 				invoice_details = self.invoices.get(inv)
 				for rate, items in items_based_on_rate.items():
 					place_of_supply = invoice_details.get("place_of_supply")
-<<<<<<< HEAD
-					ecommerce_gstin = invoice_details.get("ecommerce_gstin")
+                                        ecommerce_gstin = invoice_details.get("ecommerce_gstin")
 
-					b2cs_output.setdefault(
-						(rate, place_of_supply, ecommerce_gstin),
-						{
-							"place_of_supply": "",
-							"ecommerce_gstin": "",
-							"rate": "",
-							"taxable_value": 0,
-							"cess_amount": 0,
-							"type": "",
-							"invoice_number": invoice_details.get("invoice_number"),
-							"posting_date": invoice_details.get("posting_date"),
-							"invoice_value": invoice_details.get("base_grand_total"),
-						},
-					)
-=======
-					ecommerce_gstin =  invoice_details.get("ecommerce_gstin")
-
-					b2cs_output.setdefault((rate, place_of_supply, ecommerce_gstin), {
-						"place_of_supply": "",
-						"ecommerce_gstin": "",
-						"rate": "",
-						"taxable_value": 0,
-						"cess_amount": 0,
-						"type": "",
-						"invoice_number": invoice_details.get("invoice_number"),
-						"posting_date": invoice_details.get("posting_date"),
-						"invoice_value": invoice_details.get("base_grand_total"),
-					})
->>>>>>> e1f55df4d7 (fix: GSTR-1 Reports not showing any data)
+                                        b2cs_output.setdefault((rate, place_of_supply, ecommerce_gstin), {
+                                                "place_of_supply": "",
+                                                "ecommerce_gstin": "",
+                                                "rate": "",
+                                                "taxable_value": 0,
+                                                "cess_amount": 0,
+                                                "type": "",
+                                                "invoice_number": invoice_details.get("invoice_number"),
+                                                "posting_date": invoice_details.get("posting_date"),
+                                                "invoice_value": invoice_details.get("base_grand_total"),
+                                        })
 
 					row = b2cs_output.get((rate, place_of_supply, ecommerce_gstin))
 					row["place_of_supply"] = place_of_supply
 					row["ecommerce_gstin"] = ecommerce_gstin
 					row["rate"] = rate
-<<<<<<< HEAD
-					row["taxable_value"] += sum(
-						[
-							abs(net_amount)
-							for item_code, net_amount in self.invoice_items.get(inv).items()
-							if item_code in items
-						]
-					)
-=======
-					row["taxable_value"] += sum([abs(net_amount)
-						for item_code, net_amount in self.invoice_items.get(inv).items() if item_code in items])
->>>>>>> e1f55df4d7 (fix: GSTR-1 Reports not showing any data)
+                                        row["taxable_value"] += sum([
+                                                abs(net_amount)
+                                                for item_code, net_amount in self.invoice_items.get(inv).items()
+                                                if item_code in items
+                                        ])
 					row["cess_amount"] += flt(self.invoice_cess.get(inv), 2)
 					row["type"] = "E" if ecommerce_gstin else "OE"
 
@@ -266,45 +240,25 @@ class Gstr1Report(object):
 
 	def get_invoice_data(self):
 		self.invoices = frappe._dict()
-		conditions = self.get_conditions()
+                conditions = self.get_conditions()
 
-<<<<<<< HEAD
-		invoice_data = frappe.db.sql(
-			"""
-=======
-		company_gstins = get_company_gstin_number(self.filters.get('company'), all_gstins=True)
+                company_gstins = get_company_gstin_number(self.filters.get('company'), all_gstins=True)
 
-		if company_gstins:
-			self.filters.update({
-				'company_gstins': company_gstins
-			})
+                if company_gstins:
+                        self.filters.update({'company_gstins': company_gstins})
 
-		invoice_data = frappe.db.sql("""
->>>>>>> e1f55df4d7 (fix: GSTR-1 Reports not showing any data)
-			select
-				{select_columns}
-			from `tab{doctype}`
-			where docstatus = 1 {where_conditions}
-			and is_opening = 'No'
-			order by posting_date desc
-<<<<<<< HEAD
-			""".format(
-				select_columns=self.select_columns, doctype=self.doctype, where_conditions=conditions
-			),
-			self.filters,
-			as_dict=1,
-		)
-=======
-			""".format(select_columns=self.select_columns, doctype=self.doctype,
-<<<<<<< HEAD
-				where_conditions=conditions), self.filters, as_dict=1, debug=1)
->>>>>>> e1f55df4d7 (fix: GSTR-1 Reports not showing any data)
-=======
-				where_conditions=conditions), self.filters, as_dict=1)
->>>>>>> 6dfcc1e2ae (fix: Remove print and debug)
+                invoice_data = frappe.db.sql("""
+                        select
+                                {select_columns}
+                        from `tab{doctype}`
+                        where docstatus = 1 {where_conditions}
+                        and is_opening = 'No'
+                        order by posting_date desc
+                        """.format(select_columns=self.select_columns, doctype=self.doctype,
+                                where_conditions=conditions), self.filters, as_dict=1)
 
-		for d in invoice_data:
-			self.invoices.setdefault(d.invoice_number, d)
+                for d in invoice_data:
+                        self.invoices.setdefault(d.invoice_number, d)
 
 	def get_advance_entries(self):
 		return frappe.db.sql(
@@ -1149,11 +1103,7 @@ def get_company_gstin_number(company, address=None, all_gstins=False):
 			["Dynamic Link", "link_doctype", "=", "Company"],
 			["Dynamic Link", "link_name", "=", company],
 			["Dynamic Link", "parenttype", "=", "Address"],
-<<<<<<< HEAD
-			["gstin", "!=", ""],
-=======
-			["gstin", "!=", '']
->>>>>>> e1f55df4d7 (fix: GSTR-1 Reports not showing any data)
+                        ["gstin", "!=", '']
 		]
 		gstin = frappe.get_all(
 			"Address", filters=filters, pluck="gstin", order_by="is_primary_address desc"
