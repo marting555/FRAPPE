@@ -49,6 +49,36 @@ The Easy Way: our install script for bench will install all dependencies (e.g. M
 
 New passwords will be created for the ERPNext "Administrator" user, the MariaDB root user, and the frappe user (the script displays the passwords and saves them to ~/frappe_passwords.txt).
 
+### Native Ubuntu Setup
+
+To run ERPNext natively on Ubuntu without Docker:
+
+1. Install prerequisites:
+   ```bash
+   sudo apt update
+   sudo apt install git python3-dev python3-pip mariadb-server redis-server nodejs npm
+   ```
+2. Install Bench:
+   ```bash
+   pip3 install frappe-bench
+   ```
+3. Initialize Bench and get ERPNext:
+   ```bash
+   bench init erpnext-bench
+   cd erpnext-bench
+   bench get-app erpnext
+   ```
+4. Create a new site and install the app:
+   ```bash
+   bench new-site site1.local
+   bench --site site1.local install-app erpnext
+   ```
+5. Start the development server:
+   ```bash
+   bench start
+   ```
+
+ERPNext will now be running locally at `http://localhost:8000`.
 ### Virtual Image
 
 You can download a virtual image to run ERPNext in a virtual machine on your local system.
