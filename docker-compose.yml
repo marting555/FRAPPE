@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  mariadb:
+    image: mariadb:10.6
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - mariadb-data:/var/lib/mysql
+
+  redis:
+    image: redis:alpine
+
+  frappe:
+    image: frappe/bench:latest
+    command: >
+      bash -c "\
+        if [ ! -d sites/ansimaq.local ]; then \
+          bench new-site ansimaq.local --admin-password admin --mariadb-root-password root && \
+          bench --site ansimaq.local install-app erpnext; \
+        fi && \
+        bench start"
+    volumes:
+      - ./sites:/home/frappe/frappe-bench/sites
+      - ./scripts:/home/frappe/frappe-bench/scripts
+    ports:
+      - '8000:8000'
+    depends_on:
+      - mariadb
+      - redis
+
+volumes:
+  mariadb-data:
